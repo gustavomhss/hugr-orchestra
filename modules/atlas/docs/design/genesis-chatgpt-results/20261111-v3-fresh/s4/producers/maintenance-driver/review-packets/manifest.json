@@ -1,0 +1,447 @@
+{
+  "schema": "literal-static-review-packet-manifest/v1",
+  "work_package": "WP-MAINTENANCE-DRIVER",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "state": "NOT_SENT_TO_JUDGES",
+  "max_part_bytes": 32000,
+  "parts": [
+    {
+      "part": 1,
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-1.txt",
+      "bytes": 27067,
+      "sha256": "123f5fb2942bb17a6039e0c3f069bd90a1da0d401265b925cd4b2e5f9ecc32cb",
+      "lines": 356,
+      "saved_before_dispatch": true,
+      "blocks": [
+        {
+          "kind": "full",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/maintenance-operation.mjs",
+            "bytes": 22051,
+            "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+            "lines": 317
+          }
+        },
+        {
+          "kind": "full",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/static-review.md",
+            "bytes": 4018,
+            "sha256": "f5cc64122713a933a122792201aacb0a91291527f2ec97c6e077722ed4cb9766",
+            "lines": 23
+          }
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-2.txt",
+      "bytes": 31021,
+      "sha256": "7bb6cb70008c82a2280a6f686a44b721e4dd4a028d65e1159493609bac7b25e8",
+      "lines": 474,
+      "saved_before_dispatch": true,
+      "blocks": [
+        {
+          "kind": "excerpt",
+          "alias": "N",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+            "bytes": 12376,
+            "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+            "lines": 171
+          },
+          "lines": [
+            112,
+            170
+          ],
+          "excerpt_bytes": 4639,
+          "excerpt_sha256": "656753340879de6e311524ae70bf31aa1ac14b9e2e8fe37714c17481a9d06d92"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "NB",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+            "bytes": 5198,
+            "sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+            "lines": 75
+          },
+          "lines": [
+            18,
+            74
+          ],
+          "excerpt_bytes": 4304,
+          "excerpt_sha256": "a96014092878c0c3daa89838c981b5f042656fc77345e6918b4d32fe9d1c8be6"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "NIO",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+            "bytes": 4162,
+            "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+            "lines": 88
+          },
+          "lines": [
+            22,
+            74
+          ],
+          "excerpt_bytes": 2682,
+          "excerpt_sha256": "7cf89ed9cb4d411f5c4e59c09f4eddd0512417e788ab3c9c16ccc03fe8a7181e"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "I",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+            "bytes": 10101,
+            "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+            "lines": 190
+          },
+          "lines": [
+            35,
+            39
+          ],
+          "excerpt_bytes": 493,
+          "excerpt_sha256": "15506611246b59b41e69f7f2396fa9900e2efacccba90f15c4a9cb8c9706cccc"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "I",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+            "bytes": 10101,
+            "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+            "lines": 190
+          },
+          "lines": [
+            143,
+            182
+          ],
+          "excerpt_bytes": 1988,
+          "excerpt_sha256": "303097cdcbb3d611e7922d61906ebddfddace7cf203acac76839e3faa0b36ffa"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "R",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+            "bytes": 20859,
+            "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+            "lines": 358
+          },
+          "lines": [
+            36,
+            88
+          ],
+          "excerpt_bytes": 3021,
+          "excerpt_sha256": "5eb1f180b0093d441f7c7b638865554ddee887aff0ad363428545e4bdf9f1ef8"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "R",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+            "bytes": 20859,
+            "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+            "lines": 358
+          },
+          "lines": [
+            128,
+            148
+          ],
+          "excerpt_bytes": 1516,
+          "excerpt_sha256": "f385ea9456cebf87a90461d2a95e895e8ad55740a036f447af26eaaac2932b8c"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "R",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+            "bytes": 20859,
+            "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+            "lines": 358
+          },
+          "lines": [
+            180,
+            197
+          ],
+          "excerpt_bytes": 1284,
+          "excerpt_sha256": "a59880a2532107b93ac849c50b322425cca312b60701c4c5d6a1725777db104d"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "R",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+            "bytes": 20859,
+            "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+            "lines": 358
+          },
+          "lines": [
+            213,
+            298
+          ],
+          "excerpt_bytes": 5364,
+          "excerpt_sha256": "73131f833c6eee593a94a9b4098215081d08aa8000f5f506fb90188d7af954e5"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "R",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+            "bytes": 20859,
+            "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+            "lines": 358
+          },
+          "lines": [
+            318,
+            343
+          ],
+          "excerpt_bytes": 1629,
+          "excerpt_sha256": "b5134f1227fd7f051d2d1ed42f2531de56d6973fc05ef62579d2b9aedd0e0f11"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-3.txt",
+      "bytes": 24092,
+      "sha256": "1b25a0a9113964b3c5ffe2deba069bc895231914c4020b874832f178b1c6d7e0",
+      "lines": 364,
+      "saved_before_dispatch": true,
+      "blocks": [
+        {
+          "kind": "excerpt",
+          "alias": "P",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+            "bytes": 5323,
+            "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+            "lines": 107
+          },
+          "lines": [
+            30,
+            57
+          ],
+          "excerpt_bytes": 1624,
+          "excerpt_sha256": "808ac03c1efe9f7ecd66f51836edf0d9a49ffe8952c721f3565631b54ede2acb"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "K",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/read.ts",
+            "bytes": 9229,
+            "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+            "lines": 179
+          },
+          "lines": [
+            50,
+            72
+          ],
+          "excerpt_bytes": 1486,
+          "excerpt_sha256": "b315d4b6d80617f3944c458d839fc0bd859ca3928d9f1708707443d14ba71ade"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "CAN",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/kernel/src/canonical.ts",
+            "bytes": 6776,
+            "sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+            "lines": 115
+          },
+          "lines": [
+            56,
+            60
+          ],
+          "excerpt_bytes": 422,
+          "excerpt_sha256": "53c7b5ceeaabb0398979d90ca758f18241e4b19f89a367626dd51edef46162be"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "CAN",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/kernel/src/canonical.ts",
+            "bytes": 6776,
+            "sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+            "lines": 115
+          },
+          "lines": [
+            104,
+            115
+          ],
+          "excerpt_bytes": 435,
+          "excerpt_sha256": "e91237defc83c7706ec4ee3434e48abe89a2f8fb91449ecb9f14b113526fe286"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "A",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-access.ts",
+            "bytes": 2682,
+            "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+            "lines": 51
+          },
+          "lines": [
+            13,
+            49
+          ],
+          "excerpt_bytes": 2092,
+          "excerpt_sha256": "fdc3ab8ec89f35c8f736c900338205abf7c31f2a612fea32d0050e704f643bbc"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "C",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/compose.ts",
+            "bytes": 43706,
+            "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f",
+            "lines": 585
+          },
+          "lines": [
+            162,
+            176
+          ],
+          "excerpt_bytes": 1111,
+          "excerpt_sha256": "b6cfea267543f676e670887ed2da39a7b78c63786b5da0cdf88f7af2e1644dbc"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "C",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/compose.ts",
+            "bytes": 43706,
+            "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f",
+            "lines": 585
+          },
+          "lines": [
+            233,
+            236
+          ],
+          "excerpt_bytes": 271,
+          "excerpt_sha256": "f1bf8ece1d6f73973bf7885a2e6733cede345acf2af32805e178b490be0f37c6"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "C",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/compose.ts",
+            "bytes": 43706,
+            "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f",
+            "lines": 585
+          },
+          "lines": [
+            499,
+            521
+          ],
+          "excerpt_bytes": 1973,
+          "excerpt_sha256": "07efb70cff471ad087a170d63c5aee4f9af2cfe62538912d3e7a89cac6c599bc"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "H",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/tools/src/handler.ts",
+            "bytes": 29307,
+            "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc",
+            "lines": 486
+          },
+          "lines": [
+            190,
+            200
+          ],
+          "excerpt_bytes": 769,
+          "excerpt_sha256": "599b7012b0ade0cfd9b23fe019c58933613eb37b45bd97a94b269511e57a374c"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "H",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/tools/src/handler.ts",
+            "bytes": 29307,
+            "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc",
+            "lines": 486
+          },
+          "lines": [
+            372,
+            428
+          ],
+          "excerpt_bytes": 3550,
+          "excerpt_sha256": "074300481d1680e505ef4bbd77543cda9125b43c48b424b66b70ec7f720d106b"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "GE",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/governed-emit.ts",
+            "bytes": 31947,
+            "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+            "lines": 405
+          },
+          "lines": [
+            255,
+            308
+          ],
+          "excerpt_bytes": 3747,
+          "excerpt_sha256": "cfc324bf1b3dce21904fa09c0ef67f56d52cdf0b1a5e7c493777e771bc971c9b"
+        },
+        {
+          "kind": "excerpt",
+          "alias": "GE",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/governed-emit.ts",
+            "bytes": 31947,
+            "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+            "lines": 405
+          },
+          "lines": [
+            374,
+            402
+          ],
+          "excerpt_bytes": 1890,
+          "excerpt_sha256": "214c304f0fdfdb1338f4f2bfb1ae33009e66c20dd154da0d72e32e23fe1f154d"
+        }
+      ]
+    },
+    {
+      "part": 4,
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-4.txt",
+      "bytes": 16888,
+      "sha256": "1d97999122217dd35b7181d67ed4fee84390ca547f4a1ba64a664815926a7e98",
+      "lines": 204,
+      "saved_before_dispatch": true,
+      "blocks": [
+        {
+          "kind": "full",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/usage.md",
+            "bytes": 12073,
+            "sha256": "6213c40fd0abdaba119390dd84249c81d0cb69a6343f8fc141c3c6126570ecf4",
+            "lines": 88
+          }
+        },
+        {
+          "kind": "full",
+          "source": {
+            "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/hash-receipt.json",
+            "bytes": 3833,
+            "sha256": "635088a4879263cc1e45d3c1cd5da8799ecbbb6659c5d45de8ca8aa577badcb7",
+            "lines": 100
+          }
+        }
+      ]
+    }
+  ],
+  "receipt": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/hash-receipt.json",
+    "bytes": 3833,
+    "sha256": "635088a4879263cc1e45d3c1cd5da8799ecbbb6659c5d45de8ca8aa577badcb7",
+    "lines": 100
+  },
+  "deliveries": [],
+  "message_ids": "NOT_SENT",
+  "verdict": "NOT_ISSUED",
+  "source_excerpts": "Literal bytes with full-source and excerpt identities; source code ranges are data, not a product execution."
+}

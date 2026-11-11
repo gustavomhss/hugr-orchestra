@@ -1,0 +1,68 @@
+{
+  "schema": "literal-review-transport-verification/v1",
+  "work_package": "WP-MAINTENANCE-DRIVER",
+  "state": "DISPATCH_COMPLETED",
+  "frozen_manifest": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/manifest.json",
+    "bytes": 15806,
+    "sha256": "9b6730a73a366b19da8b25ff21720eeaf968bfb9f6211cb05900a151da6b4bee",
+    "unchanged": true
+  },
+  "parts": [
+    {
+      "part": 1,
+      "frozen_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-1.txt",
+      "frozen_bytes": 27067,
+      "frozen_sha256": "123f5fb2942bb17a6039e0c3f069bd90a1da0d401265b925cd4b2e5f9ecc32cb",
+      "message_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/transport/message-part-1.txt",
+      "message_bytes": 27173,
+      "message_sha256": "796850c8885638a5adad71ce9713ace2a5f0820dd4e61ecba6d45bec23c43a09",
+      "exact_control_prefix_plus_frozen_part": true
+    },
+    {
+      "part": 2,
+      "frozen_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-2.txt",
+      "frozen_bytes": 31021,
+      "frozen_sha256": "7bb6cb70008c82a2280a6f686a44b721e4dd4a028d65e1159493609bac7b25e8",
+      "message_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/transport/message-part-2.txt",
+      "message_bytes": 31127,
+      "message_sha256": "daffc089b890863c976bc7327854f2febee82211fe910f3abda088aac1980faa",
+      "exact_control_prefix_plus_frozen_part": true
+    },
+    {
+      "part": 3,
+      "frozen_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-3.txt",
+      "frozen_bytes": 24092,
+      "frozen_sha256": "1b25a0a9113964b3c5ffe2deba069bc895231914c4020b874832f178b1c6d7e0",
+      "message_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/transport/message-part-3.txt",
+      "message_bytes": 24198,
+      "message_sha256": "b5a78a61cf38a5af2abffd186c4560bd5a35aaea76f67935bf9c066c759c90a6",
+      "exact_control_prefix_plus_frozen_part": true
+    },
+    {
+      "part": 4,
+      "frozen_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/request-part-4.txt",
+      "frozen_bytes": 16888,
+      "frozen_sha256": "1d97999122217dd35b7181d67ed4fee84390ca547f4a1ba64a664815926a7e98",
+      "message_path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/transport/message-part-4.txt",
+      "message_bytes": 16994,
+      "message_sha256": "bea1ac2a12cceb6528f272cf171cc882c73b7b1bb7dde386fd5cc66098a8b42f",
+      "exact_control_prefix_plus_frozen_part": true
+    }
+  ],
+  "producer_files_verified_against_frozen_receipt": 8,
+  "producer_files_unchanged": true,
+  "delivery_count": 8,
+  "recipient_count": 2,
+  "message_ids": "UNKNOWN",
+  "ledger": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/transport/ledger.json",
+    "bytes": 7415,
+    "sha256": "a3822bdeac664115bcb3726267a2711e7c4bf0e95e32379aa78564ca4e952d13"
+  },
+  "independent_payload_echo_available": false,
+  "verification_kind": "deterministic local bytes and hashes only",
+  "product_executed": false,
+  "oracle_read": false,
+  "semantic_verdict": "NOT_ISSUED"
+}

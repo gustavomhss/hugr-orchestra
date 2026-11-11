@@ -1,0 +1,47 @@
+{
+  "schema": "s4-primary-correction-record/v1",
+  "unit": "l2b",
+  "correction": "WP-L2B-P1",
+  "original_body": {
+    "bytes": 7993,
+    "sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94",
+    "git_blob_sha": "04d704525f035332963d7fa285be525b3ae0fbeb"
+  },
+  "corrected_body": {
+    "bytes": 7949,
+    "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+    "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b"
+  },
+  "input_freeze_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.freeze.json",
+    "sha256": "141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea"
+  },
+  "items": [
+    {
+      "id": "L2B-P1-01",
+      "implemented_in_sections": [
+        "Pipeline e revisão têm identidades distintas",
+        "Comparação exige uma mudança isolada",
+        "Diagnóstico e percurso de manutenção"
+      ],
+      "evidence": [
+        "S4:L1:continuity-rag / Revision and retrieval semantics / Question, trace, and proof contracts",
+        "modules/rag-studio/src/revision.ts:5-78",
+        "modules/rag-studio/src/compare.ts:5-50"
+      ],
+      "author_action": "Added API signatures, pipeline identity, snapshot/member/fill distinctions, coercions, comparison admission and result limits; retained current-corpus and trace/question limitation."
+    },
+    {
+      "id": "L2B-P1-02",
+      "implemented_in_sections": [
+        "Mascaramento preserva uma cauda recuperável"
+      ],
+      "evidence": [
+        "S4:L1:continuity-rag / Masking contract"
+      ],
+      "author_action": "Restored protected tail, urgent latest-message exclusion, error preservation, token savings and archive-before-mask; explained operational consequence."
+    }
+  ],
+  "status": "AUTHOR_CORRECTION_COMPLETE_AWAITING_PRIMARY_REVIEW",
+  "semantic_or_runtime_verdict": null
+}

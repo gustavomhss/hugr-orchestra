@@ -1,0 +1,22 @@
+[
+  {
+    "source_ref": {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+      "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+    },
+    "byte_length": 6997,
+    "copied_path": "inputs/ci-r2b-receipt.json"
+  },
+  {
+    "source_ref": {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "git_blob_sha": "9344e06b86a1913178e101a640bae3c7f8252e11",
+      "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
+    },
+    "byte_length": 17593,
+    "copied_path": "inputs/runtime-release.json"
+  }
+]

@@ -1,0 +1,129 @@
+{
+  "schema": "genesis-mechanical-integrity/v1",
+  "version": "l2a-v1-preservation",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "basis": "Registro produzido ao iniciar WP-L2A-P1; preserva os bytes existentes da v1. Não declara julgamento semântico, execução de produto ou receipt do kernel.",
+  "files": [
+    {
+      "path": "additional-captures.json",
+      "byte_length": 866,
+      "sha256": "3febce170326801fb90e8a7652d0554bddc530ff4f236e3c64ac2ba398198407"
+    },
+    {
+      "path": "artifacts.json",
+      "byte_length": 15017,
+      "sha256": "a24b333d6e1fa77f801c27d1166f3eb30458bbe1c897f146ada40c7600307a02"
+    },
+    {
+      "path": "atlas-system-sources.json",
+      "byte_length": 9923,
+      "sha256": "b03797e41c6112f3d8a6c73acf92a88684f6a8efe3b3507339df26737e065c0f"
+    },
+    {
+      "path": "atlas-system.md",
+      "byte_length": 7954,
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    {
+      "path": "genesis-governance-sources.json",
+      "byte_length": 9559,
+      "sha256": "51b7e8cdcabe4fdcc2f69231faabae549ff1b7d0d2cc92e9992b3e11036f598f"
+    },
+    {
+      "path": "genesis-governance.md",
+      "byte_length": 7933,
+      "sha256": "b84b7c172ed2c777f259e3ff16dff83f27867c80db954d8e8c24ba8924c12228"
+    },
+    {
+      "path": "input-manifest.json",
+      "byte_length": 12610,
+      "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca"
+    },
+    {
+      "path": "inputs/atlas-engine.md",
+      "byte_length": 17987,
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+    },
+    {
+      "path": "inputs/atlas-host-genesis.md",
+      "byte_length": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "path": "inputs/ci-r2b-receipt.json",
+      "byte_length": 6997,
+      "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+    },
+    {
+      "path": "inputs/coverage-governance.md",
+      "byte_length": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    },
+    {
+      "path": "inputs/host-boundaries.md",
+      "byte_length": 11972,
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+    },
+    {
+      "path": "inputs/native-runtime-delta.md",
+      "byte_length": 11980,
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+    },
+    {
+      "path": "inputs/ownership-boundaries.md",
+      "byte_length": 17959,
+      "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+    },
+    {
+      "path": "inputs/runtime-release.json",
+      "byte_length": 17593,
+      "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
+    },
+    {
+      "path": "package_deliverables.py",
+      "byte_length": 21519,
+      "sha256": "b9045039384ed0b106f1abe019952212905d08c7f61835add4789101c11be963"
+    },
+    {
+      "path": "recipe.json",
+      "byte_length": 8647,
+      "sha256": "f19c56dca48f8ba0b826660631742451a457645ae303580d16633686273fbe7f"
+    },
+    {
+      "path": "request.md",
+      "byte_length": 3906,
+      "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+    },
+    {
+      "path": "response.md",
+      "byte_length": 3323,
+      "sha256": "1f27a82f630023cf6329c42fc606a5645239d7447fc821c69ace695c936a30e6"
+    },
+    {
+      "path": "review-packet-01.txt",
+      "byte_length": 25064,
+      "sha256": "9bfcb759da73b6921c53df014e9533526193a77f4360d706c414ae86eddefbea"
+    },
+    {
+      "path": "review-packet-02.txt",
+      "byte_length": 24871,
+      "sha256": "1d4dc30cc8a58fcd46f25b64c4b13095208c947c777eee044f60f4984eeafe43"
+    },
+    {
+      "path": "review-packets.json",
+      "byte_length": 601,
+      "sha256": "d49736063de0643d47ee21fbe783c4b192ff0e2a5a43a088d5972a3133b67502"
+    },
+    {
+      "path": "source-captures.json",
+      "byte_length": 6114,
+      "sha256": "9848051e83143f8e368de0a0951158d31de4323980a202842a43457d2a5e0984"
+    },
+    {
+      "path": "steering-transport.md",
+      "byte_length": 734,
+      "sha256": "add609d0046aacbb45471dd87eeee1ca035c63b3e18cf8a4d379b413d371bf9a"
+    }
+  ],
+  "self_excluded": true
+}

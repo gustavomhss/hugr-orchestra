@@ -1,0 +1,113 @@
+{
+  "schema": "s4-production-provenance/v1",
+  "unit": "l2b",
+  "revision": "v2",
+  "correction": "WP-L2B-P1",
+  "producer_agent": "/root/producer_runtime",
+  "parent_agent": "/root",
+  "model_id": "UNKNOWN",
+  "token_usage": "UNKNOWN",
+  "host_message_id": "UNKNOWN",
+  "created_at_utc": "2026-11-11T19:07:39.401790+00:00",
+  "original_body_preserved": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/continuity-rag-operations.md",
+    "bytes": 7993,
+    "sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94",
+    "git_blob_sha": "04d704525f035332963d7fa285be525b3ae0fbeb"
+  },
+  "corrected_body": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/continuity-rag-operations-v2.md",
+    "bytes": 7949,
+    "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+    "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b"
+  },
+  "prior_files_preserved_count": 17,
+  "v1_preservation_record": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/v1-preservation-v2.json",
+  "input_manifest_freeze_record": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/input-manifest-v2.freeze.json",
+  "original_request": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/request.md",
+    "bytes": 3856,
+    "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4",
+    "git_blob_sha": "c62a4f76fdc26cd62250bfb84be74de55a4adb1f"
+  },
+  "correction_request": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/correction-request-v2.md",
+    "bytes": 3091,
+    "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333",
+    "git_blob_sha": "97ce75c618043c9ff629edade880fa5247ce6561"
+  },
+  "combined_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+    "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+  },
+  "original_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/response-v2.md",
+    "sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a"
+  },
+  "build_dependencies": [
+    {
+      "key": "S4:L1:continuity-rag",
+      "same_package": true
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "same_package": true
+    }
+  ],
+  "source_refs": [
+    {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+      "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/revision.ts",
+      "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+      "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/compare.ts",
+      "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+      "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+    }
+  ],
+  "authorized_progressive_reads_only": [
+    "modules/rag-studio/src/revision.ts",
+    "modules/rag-studio/src/compare.ts"
+  ],
+  "other_raw_sources_read": false,
+  "reserved_oracles_read": false,
+  "judge_response_bodies_read": false,
+  "product_tests_build_runtime_or_git_executed": false,
+  "github_written": false,
+  "packet_sent_to_judges": false,
+  "document_checks": {
+    "issues": [],
+    "body_limit": 8000,
+    "body_bytes": 7949,
+    "unique_h2": [
+      "Responsabilidades e base",
+      "Session define quais hooks existem",
+      "Mascaramento preserva uma cauda recuperável",
+      "RAG cruza leitura e persistência por requisição",
+      "Pipeline e revisão têm identidades distintas",
+      "Comparação exige uma mudança isolada",
+      "Diagnóstico e percurso de manutenção",
+      "Localizadores"
+    ],
+    "manifest_changed_only_by_two_added_sources": true,
+    "all_17_v1_files_byte_hash_unchanged": true,
+    "request_and_packet_literals_match": true,
+    "transport_ref_hashes_match": true
+  },
+  "check_limit": "Mechanical document checks; no semantic acceptance, product execution, runtime binding or publication."
+}

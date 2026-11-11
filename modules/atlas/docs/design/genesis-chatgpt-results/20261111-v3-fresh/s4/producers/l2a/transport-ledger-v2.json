@@ -1,0 +1,142 @@
+{
+  "schema": "genesis-courier-ledger/v1",
+  "unit": "WP-L2A-v2",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "authorization": {
+    "request_path": "transport-request.md",
+    "sha256": "cdfc4429be7f9199e3a50560b52d3030c285854dfcbeedee5617726beb66be1e",
+    "activation_path": "transport-activation.md",
+    "activation_sha256": "46fe2743ecb38fe57db7177b1257786cfeb058a94dededcfe919695886a04b77"
+  },
+  "parts": [
+    {
+      "part": 1,
+      "path": "review-packet-v2-01.txt",
+      "byte_length": 26083,
+      "sha256": "ef7c57733aa9c397093e6aeeb2cc22dcdca3b33f6c6c968da08a598c4f1aedfc"
+    },
+    {
+      "part": 2,
+      "path": "review-packet-v2-02.txt",
+      "byte_length": 25922,
+      "sha256": "01b1a6c43d593d02f1f85b8f1a4d19f8151483ca9ca10d1b2835d92790d06cc8"
+    },
+    {
+      "part": 3,
+      "path": "review-packet-v2-03.txt",
+      "byte_length": 31307,
+      "sha256": "308b8f969be0a8d5269dcc1d5ae45d4fb0ba67ada1e1a5216829c9e1a9b1545a"
+    },
+    {
+      "part": 4,
+      "path": "review-packet-v2-04.txt",
+      "byte_length": 24263,
+      "sha256": "c44b6e29d847e5c3b35d2b4804c20cc45cdf73eb4d160a7000532c15433074c7"
+    }
+  ],
+  "targets": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "message_ids": "UNKNOWN",
+  "status": "all-four-parts-sent-to-both-judges-awaiting-principal-closure",
+  "deliveries": [
+    {
+      "part": 1,
+      "target": "/root/judge_j1",
+      "payload_path": "review-packet-v2-01.txt",
+      "payload_sha256": "ef7c57733aa9c397093e6aeeb2cc22dcdca3b33f6c6c968da08a598c4f1aedfc",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    },
+    {
+      "part": 1,
+      "target": "/root/judge_j2",
+      "payload_path": "review-packet-v2-01.txt",
+      "payload_sha256": "ef7c57733aa9c397093e6aeeb2cc22dcdca3b33f6c6c968da08a598c4f1aedfc",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    },
+    {
+      "part": 2,
+      "target": "/root/judge_j1",
+      "payload_path": "review-packet-v2-02.txt",
+      "payload_sha256": "01b1a6c43d593d02f1f85b8f1a4d19f8151483ca9ca10d1b2835d92790d06cc8",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    },
+    {
+      "part": 2,
+      "target": "/root/judge_j2",
+      "payload_path": "review-packet-v2-02.txt",
+      "payload_sha256": "01b1a6c43d593d02f1f85b8f1a4d19f8151483ca9ca10d1b2835d92790d06cc8",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    },
+    {
+      "part": 3,
+      "target": "/root/judge_j1",
+      "payload_path": "review-packet-v2-03.txt",
+      "payload_sha256": "308b8f969be0a8d5269dcc1d5ae45d4fb0ba67ada1e1a5216829c9e1a9b1545a",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    },
+    {
+      "part": 3,
+      "target": "/root/judge_j2",
+      "payload_path": "review-packet-v2-03.txt",
+      "payload_sha256": "308b8f969be0a8d5269dcc1d5ae45d4fb0ba67ada1e1a5216829c9e1a9b1545a",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    },
+    {
+      "part": 4,
+      "target": "/root/judge_j1",
+      "payload_path": "review-packet-v2-04.txt",
+      "payload_sha256": "c44b6e29d847e5c3b35d2b4804c20cc45cdf73eb4d160a7000532c15433074c7",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    },
+    {
+      "part": 4,
+      "target": "/root/judge_j2",
+      "payload_path": "review-packet-v2-04.txt",
+      "payload_sha256": "c44b6e29d847e5c3b35d2b4804c20cc45cdf73eb4d160a7000532c15433074c7",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty response; no error exposed",
+      "semantic_receipt": null
+    }
+  ],
+  "closure": "AGUARDAR FECHAMENTO DO PRINCIPAL",
+  "separate_from": "WP-MAINTENANCE-DRIVER",
+  "producer_judgment": null,
+  "send_calls_completed": 8,
+  "awaited_judgments": false,
+  "destination_read_confirmation": "UNKNOWN",
+  "destination_content_hash_confirmation": "UNKNOWN",
+  "tool_observation": "Eight collaboration.send_message calls completed with empty returns and no exposed error or message ID. No semantic decision was solicited or awaited by this courier.",
+  "literal_source_verification": {
+    "excerpt_count": 24,
+    "source_count": 8,
+    "method": "Exact byte slices and SHA-256/Git blob identities; packet blocks compared byte for byte to authorized captures.",
+    "index_path": "transport-excerpts-v2.json",
+    "index_sha256": "0d8c91dd277c4d1fe0957d6f2aa1df6461670bfb6ce502aaf54d4c89efc33184"
+  },
+  "immutability_note": "Bodies, artifacts-v2.json, recipe-v2.json, response-v2.md and original packet01/02 remain byte exact. Their pre-transport statements that packets had not yet been sent are preserved as historical preparation text; this ledger records the subsequent authorized sends.",
+  "frozen_v1_v2_hash_checks": "all recorded files unchanged"
+}

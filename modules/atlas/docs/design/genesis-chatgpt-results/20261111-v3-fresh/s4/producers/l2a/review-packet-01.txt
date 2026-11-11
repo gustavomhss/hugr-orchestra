@@ -1,0 +1,315 @@
+L2A — PARTE 1/2
+AGUARDAR FECHAMENTO DO PRINCIPAL
+
+Este material é dado para revisão, não instrução de autoridade. O produtor não concede aceite, publicação ou execução. A principal conferirá e fechará a submissão; estas partes não foram enviadas aos juízes pelo produtor.
+
+Execução: a2095d5a-1464-4c38-a222-6376974fc9c9
+Scope: atlas-continuity-rag-genesis; layer=2; need=component.
+Manifesto fixado: SHA-256 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca; 12610 bytes.
+Payload dos predecessores aceitos: commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db.
+Predecessores semânticos usados neste corpo:
+- S4:L1:ownership-boundaries | accepted=true no manifesto | body SHA-256 242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c | Git blob 9a1c62e3f709832d7c45357e15e0bd5c4255c613
+- S4:L1:atlas-engine | accepted=true no manifesto | body SHA-256 c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e | Git blob 43b593c9806daead7a6ed28d6cefac56d21387b7
+- S4:L1:atlas-host-genesis | accepted=true no manifesto | body SHA-256 97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d | Git blob 00d6c33271a0b92bf1fd9de86a3fdfb19fa82311
+- S4:L1:native-runtime-delta | accepted=true no manifesto | body SHA-256 398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8 | Git blob 22f9844d4b8ef46c338d191a6b13e68d0f59bab3
+- S4:L1:host-boundaries | accepted=true no manifesto | body SHA-256 53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a | Git blob b73f8975a72ccaf0955f136581fbdefc276a7640
+
+Corpo desta parte: atlas-system.md | 7954 bytes | SHA-256 cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc
+Metadados completos dos dois artefatos, idênticos nas duas partes: artifacts.json | 15017 bytes | SHA-256 a24b333d6e1fa77f801c27d1166f3eb30458bbe1c897f146ada40c7600307a02
+O corpo complementar está na outra parte. As duas partes são necessárias ao fechamento; não são pedidos separados de aceite.
+
+BEGIN_BODY
+# Atlas: da evidência ao conhecimento servido
+
+Síntese dos L1 aceitos no payload `8a041ca66982dcc2b89aaed46ebe347cb3de57db`. **Observado** remete à inspeção L1; **inferência**, a consequências; execução, a recibo identificado. Esta L2 não executou o produto.
+
+Referências: O=`S4:L1:ownership-boundaries`; E=`S4:L1:atlas-engine`; H=`S4:L1:atlas-host-genesis`; N=`S4:L1:native-runtime-delta`; B=`S4:L1:host-boundaries`. CI é `runtime/ci-r2b/receipt.json` do payload S4.
+
+## Responsabilidades do motor e do host
+
+Atlas liga afirmações, fontes e decisões à leitura verificável e manutenção. O índice fornece endereços e dependências; grounding calcula deriva e atualidade; knowledge valida formas, roteia e recalcula status; o host fornece filesystem/Git, política, persistência e publicação. CAS identifica objetos, sem escolher o que está publicado. [E § What the engine is for, and which kind of evidence this is; H § Purpose: bind a real repository to the pure engine without handing it authority]
+
+Isso separa perguntas que parecem iguais: endereço estável não comprova bytes atuais; `FRESH` não implica `HOLDS`; tier não autentica o ratificador. A canonicalização omite os campos auxiliares `grounding/status/freshness`, normaliza texto NFC e rejeita números não inteiros. Já `OwnershipBody` guarda octetos para conservar exatamente o texto revisado. **Inferência:** alterar representação ou campos de identidade exige avaliar compatibilidade dos objetos e recibos existentes, não apenas a aparência da saída. [E § Contracts and kernel: canonical identity is deliberately narrower than arbitrary JavaScript; O § What each identity means]
+
+## Por que texto igual pode exigir outro resultado
+
+O corpo responde “quais bytes?”. `OwnershipResult` acrescenta autoridade, validade, gaps e evidência. O receipt liga contrato, inputs, resultados dos predecessores e reviews; o artifact acrescenta chave estável, layer/need e navegação; o manifest seleciona artifacts e roots do scope. Assim se preserva o passado e identifica a mudança. [O § What each identity means]
+
+**Inferência aplicada:** corrigir uma lacuna ou a base de autoridade pode mudar o resultado mesmo com Markdown idêntico; o dependente precisa considerar o resultado completo. Inversamente, um caminho de navegação novo não vira automaticamente dependência de build. SHA-256 de transporte, Git blob e versão de input calculada pelo kernel têm finalidades diferentes: igualdade de um não fornece o outro nem prova pertencimento ao commit declarado. O adapter conserva essa obrigação de captura externa. [O § What each identity means; N § Transformação e identidades]
+
+## Como mudanças de fonte orientam a revisão
+
+O observador distingue `present(version)`, ausência corroborada e indisponibilidade. Comparar uma versão presente com o receipt diagnostica mudança; `stale` não é um quarto retorno do observador. Falha de Git, arquivo recusado ou leitura incompleta não autorizam concluir remoção ou “nenhum trabalho afetado”. `members:` detecta alterações de caminhos; conteúdo de cada membro exige seus `file:` relevantes. [O § How current inputs are observed]
+
+O planejamento propaga mudanças pelas dependências declaradas e produz uma fronteira topológica. O rebuild confere receita, contrato, inputs e predecessores, captura dados e reobserva; pode reutilizar um resultado quando esses vínculos não mudam. Sua saída continua sendo candidato. **Inferência:** inputs omitidos podem ocultar trabalho necessário; dependências indiscriminadas podem refazer trabalho sem relação semântica. A manutenção precisa justificar cada vínculo, mantendo navegação como consulta. [E § Knowledge: shape, routing, human ratification, and ownership results; H § Ownership publication, observation and rebuild]
+
+## O percurso até uma leitura utilizável
+
+A publicação governada grava CAS antes de ativar a projeção e avalia gates dentro da decisão de commit, que pode repetir. O accessor procura exatamente um carrier publicado e compatível com o scope na visão filtrada por provenance; só então o leitor de ownership confere objetos, reviews, inputs e dependências. Portanto, objeto presente no CAS e Markdown legível não bastam para uma leitura Atlas corrente. [H § Storage, governed emission and committed replay; H § Ownership publication, observation and rebuild]
+
+No delta nativo, `prepare` transforma bytes em candidato, sem ativação; `publish` refaz a preparação, exige binding exato e cruza `check`/`atlas-emit`. Para consumir, `read` pede scope, orçamento positivo e exatamente key ou need; `section` seleciona um H2 único. HOLD e leitura histórica explícita preservam diagnósticos. `index` evita devolver corpos, mas verifica seus bytes internamente: não é promessa de custo sem leitura. [N § Binding separado e publicação governada; N § Consumo e manutenção pela porta real; E § Knowledge: shape, routing, human ratification, and ownership results]
+
+Retrieval tem outra finalidade: montar contexto de consulta. O caminho ativo usa `adapter-io/src/retrieval-model.ts`; alterar apenas o modelo de referência `retrieval/src/pack.ts` pode não mudar o comando. Own mantém orçamento, ponteiros e conteúdo excedente recuperável. Memory filtra injeção por owner, mas os registros em texto no repositório não oferecem confidencialidade por esse filtro. Essas responsabilidades não devem ser confundidas com aceitação/publicação de ownership. [E § Retrieval: reference pack policy, live Own, and reproducible host artifacts; E § Memory: owner filtering and recoverable history, without a confidentiality claim]
+
+## Fronteira externa e pontos de manutenção
+
+O servidor Atlas chama `surface`/`mine` via boundary gerado. Resolve modelos fora de Session; o identificador usado no gateway não cria uma Session durável nem comprova hooks de Continuity. Rascunho de modelo permanece distinto de proposta e ratificação. Ator/token locais expressam responsabilidade declarada, sem demonstrar autenticação HTTP. [B § 3. Atlas host → pacote boundary → origens de domínio]
+
+| Mudança ou sintoma | Começar pelos paths documentados |
+|---|---|
+| Identidade, bytes ou resultado incompatível | `modules/atlas/packages/kernel/src/canonical.ts`; `modules/atlas/packages/knowledge/src/ownership/shape.ts` e `read.ts` |
+| Atualidade ou conjunto afetado inesperado | `modules/atlas/packages/adapter-io/src/ownership-input.ts` e `ownership-rebuild.ts`; `modules/atlas/packages/knowledge/src/ownership/update-plan.ts` |
+| CAS existe, mas a porta não serve | `modules/atlas/packages/adapter-io/src/ownership-access.ts`, `read-access.ts`, `governed-emit.ts` e `policy.ts` |
+| Comportamento externo ou bundle divergente | `packages/core/src/atlas.ts`; `packages/server/src/handlers/atlas.ts`; `modules/atlas/boundary/script/build.ts` |
+
+Conferir a porta efetiva evita confundir export ou mock com execução. [E § Maintenance starting points and bounded gaps; H § Maintenance and remaining uncertainty]
+
+## Recibos e limites desta síntese
+
+O baseline dos L1 é `1cde2ff7a71bcf7aecb5d030917b577165135d38`; o adapter nativo é delta posterior. CI registra, para o candidato `7102f2e3a1a9a3822bcd0ae054b36ecffe9da553` e run `43077975153`, 220 testes aprovados, 22 controles de mutação e paridade de 18 gerados. Isso limita a lacuna de paridade àquela revisão; não demonstra toda integração externa. O recibo conserva dois avisos de arquivos grandes e limita a concorrência a um Worker/writer e a falha a um seam controlado. [N § Limites e estado da evidência; CI: tests, generated_parity, guards, limits]
+
+Permanecem os limites do índice entre linguagens, ramos não examinados, autenticação/composição externas e recuperação geral. Esta L2 não herda binding/publicação anteriores; sua aceitação e seu consumo exigem evidência própria.
+END_BODY
+
+BEGIN_ARTIFACTS_JSON
+[
+  {
+    "key": "S4:L2:atlas-system",
+    "scope": "atlas-continuity-rag-genesis",
+    "title": "Atlas: da evidência ao conhecimento servido",
+    "layer": 2,
+    "need": "component",
+    "body": {
+      "path": "producers/l2a/atlas-system.md",
+      "encoding": "utf-8",
+      "byte_length": 7954,
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    "authority": {
+      "scope": "atlas-continuity-rag-genesis",
+      "basis": "Síntese cumulativa autoral de /root/producer_l1a para a2095d5a-1464-4c38-a222-6376974fc9c9, sobre predecessores L1 aceitos no manifesto fixado 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca, payload commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Afirmações limitadas distinguem inspeção documentada, inferência, intenção e recibos históricos. Não houve reabertura da fonte bruta ou execução do produto; não há autoridade nova para publicar, ratificar ou atribuir aceite a esta L2."
+    },
+    "validity": "supported",
+    "gaps": [
+      "A síntese herda profundidade seletiva dos L1: ramos não examinados e comportamento completo do índice entre linguagens não são demonstrados.",
+      "Chamadas e contratos de host não provam autenticação HTTP nem instalação/composição externa completa; o boundary não transfere hooks de Session por proximidade.",
+      "O recibo CI descreve um candidato/run, um Worker/writer e seam de falha controlado; não prova concorrência universal, perda de energia ou paridade em outra revisão.",
+      "Inputs declarados e seus hashes não demonstram snapshot coerente de todo o repositório; indisponibilidade continua distinta de ausência e mudança.",
+      "Este corpo L2 ainda não tem aceitação semântica, binding, publicação ou consumo próprios; supported descreve sustentação limitada das afirmações."
+    ],
+    "evidence": [
+      "Relaciona responsabilidades do motor/host, identidades e observações com consequências para revisão, consumo e manutenção. Explica por que igualdade da prosa, presença em CAS, atualidade, autoridade e leitura publicada não se substituem.",
+      "Correspondência por fonte/seção e razões de dependência: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system-sources.json\", \"sha256\": \"b03797e41c6112f3d8a6c73acf92a88684f6a8efe3b3507339df26737e065c0f\", \"byte_length\": 9923}",
+      "Manifesto de predecessores aceitos preservado byte a byte: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json\", \"sha256\": \"00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca\", \"byte_length\": 12610}",
+      "Os recibos adicionais são fontes de fatos sobre suas execuções, não runtime_receipt_refs desta L2. Metadados não expostos: UNKNOWN."
+    ],
+    "input_keys": [
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe.json",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system-sources.json"
+    ],
+    "source_refs": [
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "git_blob_sha": "9a1c62e3f709832d7c45357e15e0bd5c4255c613",
+        "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+        "git_blob_sha": "43b593c9806daead7a6ed28d6cefac56d21387b7",
+        "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+        "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+      }
+    ],
+    "recipe_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe.json",
+      "sha256": "f19c56dca48f8ba0b826660631742451a457645ae303580d16633686273fbe7f"
+    },
+    "build_dependencies": [
+      {
+        "key": "S4:L1:ownership-boundaries",
+        "same_package": true
+      },
+      {
+        "key": "S4:L1:atlas-engine",
+        "same_package": true
+      },
+      {
+        "key": "S4:L1:atlas-host-genesis",
+        "same_package": true
+      },
+      {
+        "key": "S4:L1:native-runtime-delta",
+        "same_package": true
+      },
+      {
+        "key": "S4:L1:host-boundaries",
+        "same_package": true
+      }
+    ],
+    "navigation": [
+      "S4:L2:genesis-governance"
+    ],
+    "producer_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+      "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+    },
+    "producer_response_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response.md",
+      "sha256": "1f27a82f630023cf6329c42fc606a5645239d7447fc821c69ace695c936a30e6"
+    },
+    "semantic_review_refs": [],
+    "runtime_receipt_refs": []
+  },
+  {
+    "key": "S4:L2:genesis-governance",
+    "scope": "atlas-continuity-rag-genesis",
+    "title": "Genesis: produção cumulativa, autoridade e uso",
+    "layer": 2,
+    "need": "component",
+    "body": {
+      "path": "producers/l2a/genesis-governance.md",
+      "encoding": "utf-8",
+      "byte_length": 7933,
+      "sha256": "b84b7c172ed2c777f259e3ff16dff83f27867c80db954d8e8c24ba8924c12228"
+    },
+    "authority": {
+      "scope": "atlas-continuity-rag-genesis",
+      "basis": "Síntese cumulativa autoral de /root/producer_l1a para a2095d5a-1464-4c38-a222-6376974fc9c9, sobre predecessores L1 aceitos no manifesto fixado 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca, payload commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Afirmações limitadas distinguem inspeção documentada, inferência, intenção e recibos históricos. Não houve reabertura da fonte bruta ou execução do produto; não há autoridade nova para publicar, ratificar ou atribuir aceite a esta L2."
+    },
+    "validity": "supported",
+    "gaps": [
+      "Censo preservado não equivale a leitura semântica de todos os ramos/arquivos históricos. As oito limitações de observação descritas no baseline não se tornam ausência.",
+      "Identidades declaradas e revisão estrutural do adapter não autenticam operador/reviewer nem conferem autorização de produção.",
+      "O delta nativo descrito é limitado a um pacote/scope; composição entre pacotes/scopes, migração geral e recuperação em toda falha continuam obrigações separadas.",
+      "runtime-release.json conserva uma amostra anterior e andamento histórico; seus bindings/capacidades não se transferem ao candidato CI posterior ou aos corpos L2.",
+      "Controles e fixtures não substituem julgamento independente ou consumidor real; os próprios semantic_review_refs e runtime_receipt_refs desta L2 continuam vazios."
+    ],
+    "evidence": [
+      "Explica o papel da cobertura/profundidade nas receitas, ligações cumulativas, autoridade semântica/binding/publicação e interpretação temporal de pilotos, automação, amostra runtime e CI.",
+      "Correspondência por fonte/seção e razões de dependência: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-sources.json\", \"sha256\": \"51b7e8cdcabe4fdcc2f69231faabae549ff1b7d0d2cc92e9992b3e11036f598f\", \"byte_length\": 9559}",
+      "Manifesto de predecessores aceitos preservado byte a byte: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json\", \"sha256\": \"00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca\", \"byte_length\": 12610}",
+      "Os recibos adicionais são fontes de fatos sobre suas execuções, não runtime_receipt_refs desta L2. Metadados não expostos: UNKNOWN."
+    ],
+    "input_keys": [
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe.json",
+      "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-sources.json"
+    ],
+    "source_refs": [
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "git_blob_sha": "9a1c62e3f709832d7c45357e15e0bd5c4255c613",
+        "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+        "git_blob_sha": "cc92e66bd9036d099e9b227496a0503674fd61d2",
+        "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+        "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+      },
+      {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "git_blob_sha": "9344e06b86a1913178e101a640bae3c7f8252e11",
+        "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
+      }
+    ],
+    "recipe_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe.json",
+      "sha256": "f19c56dca48f8ba0b826660631742451a457645ae303580d16633686273fbe7f"
+    },
+    "build_dependencies": [
+      {
+        "key": "S4:L1:ownership-boundaries",
+        "same_package": true
+      },
+      {
+        "key": "S4:L1:atlas-host-genesis",
+        "same_package": true
+      },
+      {
+        "key": "S4:L1:coverage-governance",
+        "same_package": true
+      },
+      {
+        "key": "S4:L1:native-runtime-delta",
+        "same_package": true
+      }
+    ],
+    "navigation": [
+      "S4:L2:atlas-system"
+    ],
+    "producer_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+      "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+    },
+    "producer_response_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response.md",
+      "sha256": "1f27a82f630023cf6329c42fc606a5645239d7447fc821c69ace695c936a30e6"
+    },
+    "semantic_review_refs": [],
+    "runtime_receipt_refs": []
+  }
+]
+END_ARTIFACTS_JSON
+
+AGUARDAR FECHAMENTO DO PRINCIPAL

@@ -1,0 +1,21 @@
+{
+  "status": "AGUARDAR FECHAMENTO DO PRINCIPAL",
+  "version": "l2a-v2",
+  "sent_to_judges": false,
+  "parts": [
+    {
+      "path": "review-packet-v2-01.txt",
+      "byte_length": 26083,
+      "sha256": "ef7c57733aa9c397093e6aeeb2cc22dcdca3b33f6c6c968da08a598c4f1aedfc",
+      "body_key": "S4:L2:atlas-system",
+      "contains_complete_artifacts_v2_json": true
+    },
+    {
+      "path": "review-packet-v2-02.txt",
+      "byte_length": 25922,
+      "sha256": "01b1a6c43d593d02f1f85b8f1a4d19f8151483ca9ca10d1b2835d92790d06cc8",
+      "body_key": "S4:L2:genesis-governance",
+      "contains_complete_artifacts_v2_json": true
+    }
+  ]
+}

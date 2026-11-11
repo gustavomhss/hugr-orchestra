@@ -1,0 +1,48 @@
+{
+  "schema": "s4-review-packet-manifest/v1",
+  "unit": "l2b",
+  "producer": "/root/producer_runtime",
+  "status": "AWAITING_PRINCIPAL_CHECK",
+  "sent_to_judges": false,
+  "sends": [],
+  "parts": [
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/review-packet-01.txt",
+      "bytes": 28113,
+      "sha256": "ba5040479293550c250d89e4f67d4613b90c5b7ff1bd9a67e701a0eff0bc31f7",
+      "maximum_bytes": 32000,
+      "embedded_literal_files": [
+        {
+          "file": "continuity-rag-operations.md",
+          "bytes": 7993,
+          "sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94"
+        },
+        {
+          "file": "artifacts.json",
+          "bytes": 5875,
+          "sha256": "042d59823ea1ecf3a823f410688c1ec30e3a088b94554c3214d76d1053e81d15"
+        },
+        {
+          "file": "recipe.json",
+          "bytes": 5353,
+          "sha256": "7574858d2403bb05df856c753421345007cce1884dd9cdf3ed9f16b8e14db666"
+        },
+        {
+          "file": "request.md",
+          "bytes": 3856,
+          "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4"
+        },
+        {
+          "file": "response.md",
+          "bytes": 2292,
+          "sha256": "41a21515ac6e2e057623e74b3fa67cf1fea90bf4ee5fb7096a3fd5637764799c"
+        }
+      ]
+    }
+  ],
+  "predecessor_keys": [
+    "S4:L1:continuity-rag",
+    "S4:L1:host-boundaries"
+  ],
+  "reserved_oracle_contents_included": false
+}

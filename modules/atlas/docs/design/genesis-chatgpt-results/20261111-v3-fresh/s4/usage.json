@@ -36,7 +36,7 @@
     },
     {
       "stage": "WP-L2",
-      "status": "authorized-after-complete-seven-unit-L1;dispatch-being-frozen"
+      "status": "three bodies produced; primary corrections preserved as v2; both persistent judges evaluating"
     },
     {
       "stage": "WP-L3",
@@ -188,7 +188,7 @@
     {
       "operation": "maintenance-port-inspection",
       "agent": "/root/producer_runtime",
-      "status": "in progress;read-only mechanics memo, not evaluated knowledge production or execution"
+      "status": "completed read-only memo; not operational proof"
     },
     {
       "operation": "runtimeR2-reassessment",
@@ -197,6 +197,60 @@
       "finding_fragment_sha256": "d51c0cec655401fb6e4752c1f23930599264f638c2a5189fb47f6cc4ae8592b3",
       "final": "Both persistent judges PASS semantic L1 and named runtime controls",
       "no_new_product_execution_for_evidence_request": true
+    },
+    {
+      "operation": "WP-L2-production",
+      "agents": [
+        "/root/producer_l1a",
+        "/root/producer_runtime"
+      ],
+      "bodies": 3,
+      "primary_corrections": [
+        "L2A-P1",
+        "L2B-P1-01",
+        "L2B-P1-02"
+      ],
+      "status": "corrected v2 in semantic evaluation",
+      "input_manifest_sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+      "l2b_progressive_manifest_sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+    },
+    {
+      "operation": "maintenance-driver-static-review",
+      "producer": "/root/review_courier",
+      "parse_exit": 0,
+      "product_execution": "NOT_RUN",
+      "decisions": [
+        {
+          "agent_id": "/root/judge_j1",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j1-response.json",
+          "sha256": "af169fb0afb2e25358df8c8d72c4112cf4045be366d2091a846366103429498f"
+        },
+        {
+          "agent_id": "/root/judge_j2",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j2-response.json",
+          "sha256": "4b1e530fb29a40303af1f307cfbf808161946bd66f0813935951acef14b1a49e"
+        }
+      ],
+      "judge_dispatch_events": [
+        "J1 accepted",
+        "J2 thread-limit rejection before start",
+        "same J2 accepted after producer completed"
+      ]
+    },
+    {
+      "operation": "L2-review-transport",
+      "l2a_tool_calls_to_judges": 8,
+      "l2b_canonical_content_sends": 6,
+      "l2b_superseded_content_sends": 1,
+      "l2b_correction_notices": 2,
+      "message_ids": "UNKNOWN",
+      "receipt": "producer courier ledgers; receiver-side digest not exposed"
+    },
+    {
+      "operation": "maintenance-driver-review-transport",
+      "tool_calls_to_judges": 8,
+      "message_ids": "UNKNOWN",
+      "truncation_warning": "part3/J2 tool response context truncated; J2 explicitly confirmed decisive part3 evidence available in its PASS"
     }
   ],
   "native_input_tokens": "UNKNOWN",
@@ -209,13 +263,14 @@
   "historical_campaign_usage": "GLOBAL_UNRECONCILED_BY_ROOT;not_reset",
   "guarantee": "Finite visible native task queue and preserved outputs/decisions. No monetary cap, physical-attempt reservation enforcement or invisible retry telemetry claimed.",
   "pending_reservations": [
-    "Two same persistent judges for last two L1 units and R1 control evidence",
-    "One native producer each finite L2/L3/L4 wave after predecessor-layer acceptance",
-    "Same two judges each layer and corrections",
-    "Exact native runtime-binding and governed publication",
-    "Fresh Atlas-only consumer with frozen cases and limits",
-    "Domain-specific update/reuse proof and same final two judgments"
+    "Complete L2 evaluation by same two judges and mandatory fixes, if any",
+    "One L3 producer after L2 acceptance; same two judges",
+    "Two complementary L4 producers after L3 acceptance; same two judges",
+    "Full native package exact binding by same two judges and actual governed publication",
+    "One domain maintenance author, same two semantic and exact binding decisions; actual existing rebuild/reuse operations",
+    "One fresh Atlas-only consumer; same two case evaluations",
+    "Final two-judge evidence/matrix review; final payload and sealed handoff"
   ],
   "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero.",
-  "last_reconciled_utc": "2026-11-11T18:35:21.905205+00:00"
+  "last_reconciled_utc": "2026-11-11T19:29:41.711255+00:00"
 }

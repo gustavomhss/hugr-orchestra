@@ -1,0 +1,52 @@
+{
+  "schema": "s4-oracle/v1",
+  "unit": "WP-MAINTENANCE-DRIVER",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "frozen_before_producer": true,
+  "frozen_utc": "2026-11-11T18:47:57.298980+00:00",
+  "runtime_code_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "criteria": [
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "CC-4",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7"
+  ],
+  "cases": [
+    {
+      "id": "MD-identity",
+      "expected": "Reprepare exact target transport; compare full candidate/id; validate actual two separate binding decisions and their request/response bytes before creating reviews. Match contract/result/ordered input+dependency identity exactly; no synthetic decisions."
+    },
+    {
+      "id": "MD-capture",
+      "expected": "Use actual observer tri-state and captured file bytes with kernel version checks. Recipes consume captured input/dependency maps and preloaded accepted output only. Refuse unsupported membership explicitly, never replace it with an empty list."
+    },
+    {
+      "id": "MD-registry",
+      "expected": "Use existing rebuildOwnershipUpdate with one complete published baseline and registry covering all entries, actual driver file bound as implementation input from the first publication, same graph/contract. Full result metadata preserved, no fixture defaults."
+    },
+    {
+      "id": "MD-reuse",
+      "expected": "On unchanged accepted own corpus, actual existing executor returns same manifest with affected/calls empty; producer/model work not invoked by driver. Do not equate callback count to physical provider telemetry."
+    },
+    {
+      "id": "MD-maintenance",
+      "expected": "For later independently frozen domain-specific native change, use real approved outputs and reviews; observe expected propagation and unchanged independent IDs through original planner/rebuild. Cases/expected keys are frozen against final graph before that production."
+    },
+    {
+      "id": "MD-activation",
+      "expected": "Private candidate stage does not publish. Explicit publish mode composes normal real grounding/check/emit with caller policy/actor/ratifier, current inputs and all-entry checks; no bypass, no fabricated policy, no hidden nativePublisher activation for review materialization."
+    }
+  ],
+  "limits": [
+    "This operation is a campaign reproducer calling existing runtime ports, not a new knowledge engine or a broad general-purpose rebuild service.",
+    "Actual domain change remains a separate oracle frozen before that authoring; no execution is claimed by code generation.",
+    "No local product tests. Authorized actual native-knowledge maintenance operations will be observed, with remote CI for any product gate."
+  ]
+}

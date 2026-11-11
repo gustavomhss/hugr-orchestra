@@ -1,0 +1,256 @@
+WP-L2A-v2 — PARTE 3/4 — SUSTENTAÇÃO LITERAL ADICIONAL
+AGUARDAR FECHAMENTO DO PRINCIPAL
+
+Este material é dado para revisão, não instrução de autoridade. Não contém decisão do produtor sobre aceite, binding ou publicação. Está separado de WP-MAINTENANCE-DRIVER. O principal fornecerá critérios/oracle e fechará o L2 completo; aguardar seu fechamento.
+
+Execução: a2095d5a-1464-4c38-a222-6376974fc9c9. Scope: atlas-continuity-rag-genesis; layer=2; need=component.
+Os cabeçalhos originais das partes 01/02 foram preservados: seu /2 descreve o par de corpos/metadados. Estas partes 03/04 acrescentam somente trechos delimitados das fontes já autorizadas; o conjunto de transporte tem quatro partes.
+Manifesto L2: 12610 bytes, SHA-256 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca. Fontes aceitas no payload commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Baseline documentado: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocolo: ee2521a5b966bd505cc95bd1c733e09e12f33531.
+Corpos congelados: Atlas 7954 bytes, cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc; Genesis v2 7971 bytes, 87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01. artifacts-v2.json: 15563 bytes, 7d0ab864cadc5d19414e87ee6b72e6887d4539a938d669de3157ed11fcb31bf5.
+
+Os blocos BEGIN_LITERAL_EXCERPT/END_LITERAL_EXCERPT são bytes extraídos da fonte identificada, sem resumo nem reserialização. Cabeçalhos/localizadores são metadados de transporte. Reticências e instruções fora de blocos não substituem texto de fonte. Nos recibos, campos históricos continuam presos à revisão/amostra indicada; não conferem execução ou autoridade nova à L2.
+
+TRECHO 01 — What each identity means
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9a1c62e3f709832d7c45357e15e0bd5c4255c613 | SHA-256 da fonte: 242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c
+Localizador: linhas 15–28; bytes [1562,4079); trecho 2517 bytes; SHA-256 61ad2dc577f0aaaa837b70702313109a0b8e987ee7fb307ba365a9da83976c1a.
+BEGIN_LITERAL_EXCERPT
+## What each identity means
+
+| Object | Observed contract and practical meaning |
+| --- | --- |
+| `OwnershipBody` | `kind: ownership-body`, version 1, numeric bytes. The comment explicitly preserves byte distinctions that NFC canonicalization could collapse. Preserve the reviewed UTF-8 bytes, including newlines. [T:11-16] |
+| `OwnershipResult` | Body CAS hash plus `authority {scope,basis}`, `validity: supported|blocked`, `gaps`, and `evidence`. The code warns against naming validity `status` or `freshness`, since those side-index keys are excluded by existing CAS identity. Authority/validity changes matter even if prose stays equal. [T:18-30] |
+| `OwnershipContract` / `OwnershipReview` | The contract contains criteria. A review names reviewer, contract hash, input hash, result hash, criteria, `pass|hold`, and provenance. A free-standing PASS cannot fill in these bindings. [T:32-48] |
+| `OwnershipReceipt` | Contract hash, named `{key,version}` inputs, exact predecessor `{key,result}` pairs, and review hashes. Predecessor result identity and external input version are different relationships. [T:5-9,50-57] |
+| `OwnershipArtifact` | Stable key and scope, title, layer 1-4, one of seven needs, result/receipt hashes, and navigation strings. Navigation is separately represented from receipt dependencies. [T:3,59-70] |
+| `OwnershipManifest` | Scope, entries mapping keys to artifact hashes, and partial roots mapping needs to entry keys. The type permits partial roots; the protocol separately requires completeness for a claimed selection. [T:72-78; P:29-34] |
+
+**Observed distinction:** Git blob identity and captured SHA-256 identify source or transported bytes. `observeOwnershipInput` instead returns kernel `id(...)` values for typed source/membership objects. The pilot uses `store.put(...)` to derive CAS object hashes and `id({inputs,dependencies})` to bind reviews. Those values are not interchangeable with a transport SHA-256 or a Git commit. [I:141,182; H:61,69-79,129-140; P:128-138]
+
+**Inferred maintenance consequence:** body equality does not prove equal authority, validity, dependencies, or review. A current input hash establishes byte correspondence only; it cannot resolve a disagreement between documented intention and implemented behavior. Conversely, semantic acceptance does not establish that the live reader serves those exact accepted bytes. Keep source revision, protocol revision, runtime candidate revision, and transport commit distinct. [T:18-69; C:18,52-58; R:30-39]
+END_LITERAL_EXCERPT
+
+TRECHO 02 — How current inputs are observed
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9a1c62e3f709832d7c45357e15e0bd5c4255c613 | SHA-256 da fonte: 242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c
+Localizador: linhas 30–52; bytes [4080,8080); trecho 4000 bytes; SHA-256 42c971df333749ddb67c636ad9b3bafc4f5994bba9d1f1c89397b47d0e597d00.
+BEGIN_LITERAL_EXCERPT
+## How current inputs are observed
+
+**Observed:** the host observer accepts only `file:<relative-path>` and `members:<relative-directory>`. It refuses empty paths, backslashes, absolute/drive paths, empty path segments, `.`/`..`, and `.git`/`.atlas` segments. It resolves the repository root, checks containment, and refuses symlink/non-directory ancestors and unsuitable targets. Root resolution itself does not establish a valid Git checkout or its HEAD. [I:31-46,71-110,143-155; R:34-39]
+
+| Observation or situation | What it establishes | What a maintainer must preserve |
+| --- | --- | --- |
+| `present(version)` | A version from the actual bytes or effective membership read. | Compare with the receipt's recorded version; retain the key and both versions when diagnosing change. [I:141,182; T:50-56] |
+| `absent` | A negative lookup corroborated by successful enumeration of an ancestor checked to be a directory; its inode must match before/after enumeration. | It is evidence of missing input, not unchanged content. A removal can affect dependents. [I:50-68,99-109,143-150; C:55] |
+| `unavailable` | Invalid/refused key or path, I/O/Git failure, unsuitable target, oversized file, malformed/truncated membership, or failed consistency checks. | Keep the uncertainty. Do not infer deletion, an empty affected set, or permission to omit the source. [I:40-46,99-182; P:140-144] |
+| Recorded version differs from a present version | **Inferred:** the input changed relative to that receipt; this is a freshness issue, not an observer state named `stale`. | Reevaluate affected knowledge using the real runtime; the read contract includes `ownership-input-changed`. A prior accepted version or rollback does not make it current. [T:80-102; C:53-55] |
+| `ownershipInput(...)` returns `undefined` | The legacy projection collapses both absent and unavailable; it also catches thrown failures. | Never invert `undefined` into proof of absence. The pilot's `bind` labels undefined as input unavailable and stops. [I:21-29,185-190; H:35-39] |
+
+### File bytes
+
+**Observed:** the default file path opens with read-only and, where available, `O_NOFOLLOW`/`O_NONBLOCK`; verifies the opened target is a file; reads chunks; closes the descriptor; and rejects more than 256,000 bytes. It compares path inode and size before/after the read, then returns `id({kind:"ownership-source",version:1,bytes:[...]})`. A read failure or post-read disappearance is unavailable, not corroborated absent. The 256,000-byte guard also applies after injected reads. [I:143-182]
+
+**Unknown:** these inspected checks do not by themselves prove a repository-wide atomic snapshot or rule out every concurrent same-inode, same-size edit. The version names bytes actually returned by this observation; a statement that an entire checkout was coherently observed requires additional evidence. [I:154-182; R:34-39]
+
+### Directory membership
+
+**Observed:** membership invokes strict Git `ls-files --cached --others --exclude-standard -z -- :(literal)<dir>`. It rejects thrown failure, truncation, nonempty stderr, malformed NUL termination, newline/carriage-return names, and empty candidate names. Candidates are deduplicated/sorted, must remain contained files without symlinks, and a missing candidate is dropped only after corroborated absence. The requested directory is checked again before success. The resulting version is `id({kind:"ownership-membership",version:2,bytes:UTF8(sortedPaths.join("\0"))})`. [I:99-141]
+
+**Inferred impact:** membership can detect effective path additions/removals, including nonignored untracked files. It does not incorporate each member's contents. A consumer needing edits as well as membership must declare relevant `file:` keys too. A valid present empty membership is different from an absent directory and different from failed Git observation. This file delegates Git execution to `runGitStrict`; its internal process/error implementation was not inspected in this unit. [I:6-7,112-141]
+END_LITERAL_EXCERPT
+
+TRECHO 03 — **Observed identity rules.**
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 43b593c9806daead7a6ed28d6cefac56d21387b7 | SHA-256 da fonte: c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e
+Localizador: linhas 17–17; bytes [2881,3625); trecho 744 bytes; SHA-256 00c8ded33722aded7cc94e63791ffa4c7372e2a58b957776f93fb5e6f0cd6045.
+BEGIN_LITERAL_EXCERPT
+**Observed identity rules.** Canonicalization recursively omits `grounding`, `status`, and `freshness` side-index keys; omits undefined object properties; maps a scalar undefined to null; accepts finite integers but rejects non-integer numbers; NFC-normalizes strings and keys; sorts normalized keys; and refuses normalization collisions and unsupported value kinds. UTF-8 canonical bytes feed the default BLAKE3 encoder. Thus this hash is not a Git blob SHA or transport SHA-256, and changing side-index metadata does not necessarily change object identity. Arrays, key normalization, integer-only numeric representation, and omitted keys are maintenance-critical compatibility choices. [K/canonical.ts:35-96,104-115; K/encoder.ts:7-10,30-34]
+END_LITERAL_EXCERPT
+
+TRECHO 04 — The basic emit lifecycle
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 43b593c9806daead7a6ed28d6cefac56d21387b7 | SHA-256 da fonte: c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e
+Localizador: linhas 43–43; bytes [8538,8982); trecho 444 bytes; SHA-256 566deb084b206ef633b0a5e4398bb647ca974667e062cb695dd6577a10fc8935.
+BEGIN_LITERAL_EXCERPT
+The basic emit lifecycle calls an injected grounding predicate before its sink. This isolated primitive is not the full shipped authorization door. `write/authz.ts`'s `isScope` checks only that scope is a nonempty string; actual actor membership belongs to host policy. For the governed path, start with `A/governed-emit.ts` and `A/policy.ts`. [N/lifecycle/emit.ts:67-70; N/write/authz.ts:1-37,58-60; H/gates/reference-model-guard.mjs:122-127]
+END_LITERAL_EXCERPT
+
+TRECHO 05 — `stage` only wraps a node;
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 43b593c9806daead7a6ed28d6cefac56d21387b7 | SHA-256 da fonte: c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e
+Localizador: linhas 47–47; bytes [9573,9969); trecho 396 bytes; SHA-256 6eadbc6c805442d05a94f2ca915c01000f677d2b567abf70b569c80ca6a259d5.
+BEGIN_LITERAL_EXCERPT
+`stage` only wraps a node; persistence is the adapter's job. Ratification requires a nonempty `by`, with literal `billy` for T0. The source explicitly describes this as a caller-supplied anti-accident check, **not authentication**. A process owner who can choose environment/input values is not cryptographically distinguished from the named ratifier. [N/ratify/ratify.ts:94-107,118-119,129-145]
+END_LITERAL_EXCERPT
+
+TRECHO 06 — The low-level ownership reader
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 43b593c9806daead7a6ed28d6cefac56d21387b7 | SHA-256 da fonte: c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e
+Localizador: linhas 51–51; bytes [10341,10935); trecho 594 bytes; SHA-256 6b2e5734cd61dc5d7054047bf102429a28040508867154565bb3b10f556d11b8.
+BEGIN_LITERAL_EXCERPT
+The low-level ownership reader requires a scope and positive safe-integer byte budget and exactly one of need/key. It loads and re-hashes artifacts, results, contracts and receipts; requires supported results; checks review PASS, contract, input hash, result hash, exact criteria and distinct reviewers; and recursively checks dependency identities/cycles. Without historical mode, an undefined current input is unavailable and a mismatched version is changed. Historical mode permits inspecting the recorded past; it does not establish current validity. [N/ownership/read.ts:16,23-95,133-150]
+END_LITERAL_EXCERPT
+
+TRECHO 07 — Body reads enforce UTF-8 validity
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 43b593c9806daead7a6ed28d6cefac56d21387b7 | SHA-256 da fonte: c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e
+Localizador: linhas 53–53; bytes [10936,11460); trecho 524 bytes; SHA-256 bf871f3483ebdca8e6e5c19bc296128ec866dba0ecde008379115ff07cf226b1.
+BEGIN_LITERAL_EXCERPT
+Body reads enforce UTF-8 validity and byte bounds, supporting selected unique second-level headings outside fenced blocks. The index call reports `bodiesReturned: false` yet internally invokes full reading with a large budget to verify body identity. It therefore avoids returning bodies, not necessarily loading their bytes. This reader explicitly lacks publication authorization; the host must first resolve a published carrier under provenance and scope. [N/ownership/read.ts:99-130,133-179; A/ownership-access.ts:18-48]
+END_LITERAL_EXCERPT
+
+TRECHO 08 — The host ownership accessor first searches
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 00d6c33271a0b92bf1fd9de86a3fdfb19fa82311 | SHA-256 da fonte: 97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d
+Localizador: linhas 41–41; bytes [7457,8005); trecho 548 bytes; SHA-256 683f4066f7469e4ec46491f1c9b8fc9188b2f2bc4cbafe389862866532f070f7.
+BEGIN_LITERAL_EXCERPT
+The host ownership accessor first searches a provenance-filtered projection for exactly one matching scoped advisory carrier with the required row tier, predicate slot and ownership claim/receipt. Retired carriers are skipped; no carrier is unpublished, multiple carriers are ambiguous. Only then does it invoke the low-level knowledge read/index operation. Storing artifact/result/review objects in the CAS is therefore insufficient to make them discoverable through the published door. [A/ownership-access.ts:18-48; N/ownership/read.ts:16,36-95]
+END_LITERAL_EXCERPT
+
+TRECHO 09 — Rebuild uses `planOwnershipUpdate`
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 00d6c33271a0b92bf1fd9de86a3fdfb19fa82311 | SHA-256 da fonte: 97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d
+Localizador: linhas 45–45; bytes [8602,9463); trecho 861 bytes; SHA-256 ab2b2078b2b4c0b9a688ea3d18f8133b096cd28b0e307c5683939f1b4e2a2201.
+BEGIN_LITERAL_EXCERPT
+Rebuild uses `planOwnershipUpdate`, registered recipes and captured observations. It checks recipe identity/version, input/contract/predecessor declarations and complete membership; clones captured bytes/lists; and reobserves around work. Unavailable observations or missing mandatory input HOLD. It follows the affected topological order, can skip unchanged precise input/dependency hashes, invokes the registered recipe and evaluator, then reads the candidate graph again. An unchanged manifest returns a candidate with no calls. The result is a candidate, not activation. The source's default basis/evidence explicitly call its fixture recipe output “not semantic acceptance”; a supplied evaluator or pair of structurally valid reviews cannot be described as independent semantic judgment without evidence of that process. [A/ownership-rebuild.ts:1-300]
+END_LITERAL_EXCERPT
+
+TRECHO 10 — Binding separado e publicação governada
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 22f9844d4b8ef46c338d191a6b13e68d0f59bab3 | SHA-256 da fonte: 398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8
+Localizador: linhas 86–117; bytes [5045,7203); trecho 2158 bytes; SHA-256 578c632f62fa51356e118281c45d0e75c18c82a1d98d71b7d3c990ab5d9d6208.
+BEGIN_LITERAL_EXCERPT
+## Binding separado e publicação governada
+
+Depois da preparação, o mesmo par local independente recebe o candidato e a
+transformação exatos. O registro `genesis-native-binding-approval/v1` deve nomear
+os dois IDs reais e distintos desta execução, com propósito
+`runtime-import-binding`. Cada decisão cobre o candidate ID, o contrato, todos
+os critérios e todos os pares de result/input dos artefatos. O adapter não
+deduz PASS lendo prosa e não converte aceitação semântica antiga em binding novo.
+
+Pedidos e respostas originais ficam preservados por referência e corpo CAS.
+Quando o host não expõe um message ID, `decision_id_kind:response-sha256`
+identifica os bytes da resposta; o valor deve coincidir com seu digest. Esse
+identificador não é telemetria de mensagem. O provenance gerado diz que é um
+registro do adapter, não a fala original do juiz. IDs e transcrição fiel da
+decisão são fornecidos pelo operador; esta porta não autentica identidades.
+
+`publish` refaz a preparação. Qualquer mudança no candidato, incluindo fontes,
+corpos, refs, receita, HEAD observado ou código do adapter, exige novo binding.
+Em seguida monta `OwnershipReview`, `OwnershipReceipt`, `OwnershipArtifact` e
+`OwnershipManifest` nos tipos existentes. Cada artefato passa por `readOwnership`,
+inclusive os alcançados somente por navegação: blocked não é promovido a supported.
+O carrier usa a derivação de grounding existente e percorre
+`composeRuntime.check` e `atlas-emit`. Não há publicação direta de projeção.
+
+Política, ator, provenance do store e ratificação continuam portas independentes.
+No baseline, `ATLAS_ACTOR` e `ATLAS_RATIFY_TOKEN` são declarações locais; o segundo
+nomeia quem assume a ratificação, não constitui segredo ou autenticação. Uma
+execução isolada explicitamente autorizada pode configurar sua política normal
+e nomear seu principal real, preservando a origem da autorização. Não pode
+imitar um ator histórico, copiar autoridade de fixture ou alegar autorização de
+produção. O adapter não cria política nem modifica essas variáveis. Binding PASS
+não remove uma recusa do gate.
+END_LITERAL_EXCERPT
+
+TRECHO 11 — Delta R1 e controles de recuperação
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 22f9844d4b8ef46c338d191a6b13e68d0f59bab3 | SHA-256 da fonte: 398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8
+Localizador: linhas 144–173; bytes [8565,10623); trecho 2058 bytes; SHA-256 4fd882ba9dfb73e6bfa3ce8349267147ae32d3f4414a8081f9f8f001ee5c3f22.
+BEGIN_LITERAL_EXCERPT
+## Delta R1 e controles de recuperação
+
+R1 mantém toda a validação de v1 e troca três casts duplos por um cast do valor
+original já validado para seu tipo nomeado. Não adiciona um mecanismo de runtime.
+O novo `genesis-native-recovery.test.ts` apenas dirige portas existentes com
+fixtures explicitamente sintéticas:
+
+- **NR1-01:** uma interrupção na fronteira real de sidecar, depois do CAS durável
+  e antes da ativação, deixa HOLD ou o manifesto antigo ainda válido. A retomada
+  desserializa o candidato preservado, usa seus mesmos resultados e não repete
+  o callback de autoria sintética. Essa contagem não é telemetria de modelo.
+- **NR1-02:** após drift da fonte e falha de ativação, a leitura atual fica HOLD;
+  a histórica permanece explicitamente rotulada. A retomada aceita a nova
+  seleção, e tentativas de rollback incompatível são recusadas tanto no adapter
+  como no emit governado. Estado antigo e scope independente permanecem preservados.
+- **NR1-03:** transporte v0, rebinding de scope, approval antigo para candidato novo
+  e relocalização pelo emit não substituem o scope aceito. Isso não inventa um
+  bloqueio cronológico universal por versão de produtor: republicação compatível
+  de um candidato antigo é uma decisão separada de rollback.
+- **NR1-04:** um Worker usa o runtime compilado da mesma revisão e lê a porta real
+  continuamente enquanto outra thread ativa o sidecar pelo emit governado.
+  Barreira e intervalos monotônicos exigem leitura sobreposta à serialização,
+  link e commit depois de liberar a barreira, e não apenas reopen posterior.
+  Cada resposta ready deve corresponder integralmente a um dos manifestos aceitos;
+  o scope independente continua legível.
+
+As semânticas de CAS-before-projection, geração imutável, fallback de predecessor
+legível e recusa de store totalmente corrompido já pertencem ao sidecar/G3.
+R1 não duplica os testes existentes de cache, rebuild ou update-input e não
+transforma o antigo G3-02 sequencial em prova de sobreposição real.
+END_LITERAL_EXCERPT
+
+TRECHO 12 — All **2,220** inventory paths
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: cc92e66bd9036d099e9b227496a0503674fd61d2 | SHA-256 da fonte: 201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381
+Localizador: linhas 9–9; bytes [1119,1836); trecho 717 bytes; SHA-256 52b16e91b2d5c39913fc0a56ab1210e03ff81cafe7ca57d2ca91857021173539.
+BEGIN_LITERAL_EXCERPT
+All **2,220** inventory paths have one matching row and one primary group. Their captured raw bytes were checked against byte length, SHA-256 and Git blob SHA-1 (`blob <length> NUL <bytes>`). This is an integrity/accounting check, not a product test or a claim that every file's behavior was understood. No symlink entries exist. Sorted repository paths, each with a final LF, hash to `0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d`. Capture receipt SHA-256 is `a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b`; inventory SHA-256 is `3a24c33385bb1f302bf7136707461935378ce541f3fe15a0ff3a64c4be9c6877`. The generated coverage metadata records these computations and their encodings.
+END_LITERAL_EXCERPT
+
+TRECHO 13 — Depth is explicit:
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: cc92e66bd9036d099e9b227496a0503674fd61d2 | SHA-256 da fonte: 201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381
+Localizador: linhas 21–21; bytes [3143,3451); trecho 308 bytes; SHA-256 26e7567a9501ad8bf12ef14af45861711d154fd610bdbaebbdcb98452090cc9d.
+BEGIN_LITERAL_EXCERPT
+Depth is explicit: excerpts support claims; other executables retain group context; tests retain their validation role; generated outputs retain the generator route; archives retain their origin. Integrity is checked throughout. None of these dispositions grants every branch or caller semantic sufficiency.
+END_LITERAL_EXCERPT
+
+TRECHO 14 — The ownership observer refuses
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: cc92e66bd9036d099e9b227496a0503674fd61d2 | SHA-256 da fonte: 201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381
+Localizador: linhas 25–25; bytes [3493,3839); trecho 346 bytes; SHA-256 d59146a53165297fccdc1918facc7ab4506ccf688ee0a9433b65ff0860229277.
+BEGIN_LITERAL_EXCERPT
+The ownership observer refuses `.atlas`/`.git` segments, symlinks and file bodies larger than 256,000 bytes. A fixed-baseline Git capture can preserve such files even when that runtime observer cannot version them. These are eight preserved paths, not eight absent source inputs. [modules/atlas/packages/adapter-io/src/ownership-input.ts:21-190]
+END_LITERAL_EXCERPT
+
+TRECHO 15 — Continuation policy requires exact
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: cc92e66bd9036d099e9b227496a0503674fd61d2 | SHA-256 da fonte: 201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381
+Localizador: linhas 60–60; bytes [9563,10212); trecho 649 bytes; SHA-256 894375773d9df55da0a4a95e613375d8f9676910691763042bc226a1c16b5dcc.
+BEGIN_LITERAL_EXCERPT
+Continuation policy requires exact source identity, retry request, budget, arms, index/retained runs, wrapper/profile, settings and seed hashes; a separate completed successful proof receipt must match repository/workflow/event/branch/run/attempt/head and nonexpired artifact identity. It hardcodes pool width eight and subscription auth mode and freezes a clone of the accepted policy. That specificity matters: this function is not a general “resume any successful run” permission. How every HTTP/remote/compiled worker handles all failures remains a semantic gap outside the inspected core. [AG/checkpoint-continuation-policy.mjs:4-48,51-70]
+END_LITERAL_EXCERPT
+
+TRECHO 16 — The workflow explicitly says this is not independent-model calibration.
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: cc92e66bd9036d099e9b227496a0503674fd61d2 | SHA-256 da fonte: 201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381
+Localizador: linhas 64–64; bytes [10787,11213); trecho 426 bytes; SHA-256 f2fc1e907c67b5f810ac41c3bc4324110363357bbae9cce6223b12b3c911c962.
+BEGIN_LITERAL_EXCERPT
+The workflow explicitly says this is not independent-model calibration. It prepares prompts, runs up to three request jobs in parallel, retries malformed answers once and makes the score binding only on publish runs. That sampled candidate judge is not the two independent reviewers of these fresh L1 artifacts, and its archived verdicts cannot be reused as current acceptance. [.github/workflows/atlas-genesis.yml:1323-1338]
+END_LITERAL_EXCERPT
+
+TRECHO 17 — 3. Atlas host → pacote boundary → origens de domínio
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: b73f8975a72ccaf0955f136581fbdefc276a7640 | SHA-256 da fonte: 53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a
+Localizador: linhas 63–75; bytes [8719,11972); trecho 3253 bytes; SHA-256 de107592a35973226b629b59ed5cf9c94e5500effda8975765fb4eff0f0bf4ef.
+BEGIN_LITERAL_EXCERPT
+## 3. Atlas host → pacote boundary → origens de domínio
+
+**Entrada efetiva.** P:28,530 exporta o adaptador e depende de `@orchestra/atlas-boundary`. AH:19–37 obtém Location e abre Atlas na raiz escolhida por `storeRoot`; AC:103–147 usa o projeto salvo o caso `Project.isRoot`, envolve chamadas síncronas em `Effect.try` e traduz exceções em `Unavailable`. O handler mapeia isso a `ServiceUnavailable`. `territory` injeta o projectId do host. A origem de `openSurface` retorna `{state:"empty"}` quando falta `.atlas`, exceto `install`; ausência da loja é distinta de exceção. [A/surface/index.ts:136–159]
+
+AC:5–34 importa `./surface` e `./mine`; B/package.json:23–29 exporta arquivos gerados. B/script/build.ts:16–19,29–81 mapeia entradas para `A/surface/index.ts` e M e oferece verificação `--check`. A falta de caller interno citada em A/surface/index.ts:3–6 não significa falta de caller no host. **Limite:** a ligação é com as origens declaradas; paridade dos bundles não foi estabelecida nem build executado.
+
+**Modelos e autoridade.** AH:40–71 resolve catálogo, integração e credenciais fora de Session e cria chamadas diretas a `LLMClient`, recolhendo texto. O `sessionID` usado no gateway é descritivo; esse código não cria uma Session durável. Não há fundamento para atribuir a essas chamadas os hooks/permissões/arquivo de Continuity do runner. AC:248–279 solicita rascunhos e grava `answer` com `drafted:{model,why}`; A/review-answer.ts:61–86 impede que esse caso crie proposta. A proposta de tier de uma resposta humana ainda precisa de decisão; o caminho de decisão reemite pelo runtime. [A/surface/review.ts:134–174]
+
+A origem resolve o ator por `ATLAS_ACTOR` ou git user.email e o chama de declaração, não autenticação. Territórios exigem token de ratificador e um ratificador específico para T0; a resposta manda comprometer o catálogo. Essas regras de domínio não demonstram autenticação HTTP. O middleware global, a instalação das rotas e a resolução de Location não foram capturados; não se conclui nem acesso anônimo nem autorização completa. [A/surface/review.ts:200–254; AH:19–37,73–114]
+
+**Mineração e setup.** AC:318–341 lista sites, chama o modelo com concorrência 4 e passa respostas por chave ao segundo passe; falha de uma chamada omite a resposta. M:1–7,43–86 usa o passe `advisory`, histórico de HEAD e admissão de resposta; o contrato de origem é staging, sem promoção automática. Como há dois passes em torno das chamadas assíncronas, não se deduz uma fotografia imutável entre eles. Indexação em AC:152–196 escolhe plano TypeScript/Python, resolve binário, executa processo com timeout e consulta saúde depois; é uma capacidade do host observada no código, não prova de dependência instalada ou índice produzido.
+
+**Manutenção:** AH para rotas/modelos; AC para raiz, falhas e processos; origens Atlas para revisão/mineração; B para empacotamento. A unidade sustenta essas ligações estáticas, preservando lacunas de composição, atomicidade, autenticação e paridade. Aceite independente e vinculação em runtime permanecem pendentes; este corpo não confere autoridade para publicar ou ratificar.
+END_LITERAL_EXCERPT
+
+AGUARDAR FECHAMENTO DO PRINCIPAL

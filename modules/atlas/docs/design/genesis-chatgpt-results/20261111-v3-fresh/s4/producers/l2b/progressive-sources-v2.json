@@ -1,0 +1,38 @@
+{
+  "schema": "s4-progressive-source-capture/v1",
+  "unit": "l2b",
+  "input_manifest_v2_sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a",
+  "sources": [
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/rag-studio/src/revision.ts",
+        "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+        "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+      },
+      "byte_length": 2701,
+      "local_read_path": "/workspace/scratch/aff930d22ec7/s4/source/modules/rag-studio/src/revision.ts",
+      "progressive_read_reason": "WP-L2B-P1-01: nomes e assinaturas exatos das portas de configuração de pipeline, snapshot e abertura de revisão; exceção estreita autorizada pelo principal.",
+      "preserved_copy": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/sources-v2/revision.ts",
+      "observed_bytes": 2701,
+      "observed_sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0",
+      "observed_git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1"
+    },
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/rag-studio/src/compare.ts",
+        "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+        "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+      },
+      "byte_length": 2337,
+      "local_read_path": "/workspace/scratch/aff930d22ec7/s4/source/modules/rag-studio/src/compare.ts",
+      "progressive_read_reason": "WP-L2B-P1-01: nome e assinatura exatos da comparação e condições/limites de parâmetros, snapshot, questões e traces; exceção estreita autorizada pelo principal.",
+      "preserved_copy": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/sources-v2/compare.ts",
+      "observed_bytes": 2337,
+      "observed_sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825",
+      "observed_git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8"
+    }
+  ],
+  "other_raw_sources_read": false
+}

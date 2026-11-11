@@ -1,0 +1,26 @@
+{
+  "schema": "s4-dispatch-events/v1",
+  "unit": "WP-MAINTENANCE-DRIVER",
+  "events": [
+    {
+      "target": "/root/judge_j1",
+      "operation": "collaboration.followup_task",
+      "status": "accepted",
+      "close_request_path": "review-packets/maintenance-driver-close.txt"
+    },
+    {
+      "target": "/root/judge_j2",
+      "operation": "collaboration.followup_task",
+      "status": "rejected-before-start",
+      "tool_error": "agent thread limit reached",
+      "next": "retry same preserved request after active producer finishes; no new judge"
+    },
+    {
+      "target": "/root/judge_j2",
+      "operation": "collaboration.followup_task",
+      "status": "accepted-after-producer-completed",
+      "same_preserved_request": true
+    }
+  ],
+  "observed_utc": "2026-11-11T19:20:32.144720+00:00"
+}

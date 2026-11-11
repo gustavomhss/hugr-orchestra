@@ -1,0 +1,364 @@
+WP-MAINTENANCE-DRIVER — data for independent STATIC composition review.
+Execution a2095d5a-1464-4c38-a222-6376974fc9c9. Await dispatch and closure by the principal.
+Complete producer script and static evidence; no product/runtime/test execution, no activation or semantic acceptance claimed.
+Runtime revision 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553 is principal-declared; local source identities are explicit below.
+No reserved oracle content or judge response supplied. Public criteria: AC-04/05/06, CC-4, QS-3/4/5, GO-I3/4/5/7.
+Part 3/4.
+
+BEGIN EXACT SOURCE EXCERPT P: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/update-plan.ts
+Full file: 5323 bytes; SHA256 4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb. Lines 30-57: 1624 bytes; SHA256 808ac03c1efe9f7ecd66f51836edf0d9a49ffe8952c721f3565631b54ede2acb.
+/** Analyze a complete prior generation; affected descendants are not permission to run their recipes. */
+export function planOwnershipUpdate(
+  store: StoreApi,
+  manifestRef: Hash,
+  scope: string,
+  observe: (key: string) => OwnershipInputObservation,
+): OwnershipUpdatePlan {
+  const manifest = store.get(manifestRef)
+  if (manifest === undefined) return hold("ownership-missing", [manifestRef])
+  if (!isOwnershipManifest(manifest)) return hold("malformed-ownership", [manifestRef])
+  if (id(manifest) !== manifestRef) return hold("ownership-integrity", [manifestRef])
+  if (manifest.scope !== scope) return hold("ownership-scope", [scope])
+
+  // Historical mode permits source drift, not invalid roots, reviews, result bindings or body bytes.
+  for (const need of Object.keys(manifest.roots)) {
+    if (!isOwnershipNeed(need)) return hold("ownership-selection", [need])
+    const read = readOwnership(store, manifestRef, { scope, need, historical: true, maxBytes: Number.MAX_SAFE_INTEGER }, () => undefined)
+    if (read.kind === "hold") return read
+  }
+  const receipts = new Map<string, OwnershipReceipt>()
+  for (const key of manifest.entries.map((entry) => entry.key).sort()) {
+    const read = readOwnership(store, manifestRef, { scope, key, historical: true, maxBytes: Number.MAX_SAFE_INTEGER }, () => undefined)
+    if (read.kind === "hold") return read
+    const receipt = store.get(read.receipt)
+    if (!isOwnershipReceipt(receipt)) return hold("malformed-ownership", [read.receipt])
+    if (id(receipt) !== read.receipt) return hold("ownership-integrity", [read.receipt])
+    receipts.set(key, receipt)
+  }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT K: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/read.ts
+Full file: 9229 bytes; SHA256 2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15. Lines 50-72: 1486 bytes; SHA256 b315d4b6d80617f3944c458d839fc0bd859ca3928d9f1708707443d14ba71ade.
+    const inputHash = id({ inputs: receipt.value.inputs, dependencies: receipt.value.dependencies })
+    const reviewers = new Set<string>()
+    for (const reviewRef of receipt.value.reviews) {
+      const review = load(store, reviewRef, isOwnershipReview)
+      if ("kind" in review) return review
+      if (review.value.verdict !== "pass" || review.value.contract !== receipt.value.contract ||
+        review.value.inputs !== inputHash || review.value.result !== artifact.value.result ||
+        reviewers.has(review.value.reviewer) || review.value.criteria.length !== contract.value.criteria.length ||
+        !contract.value.criteria.every((criterion) => review.value.criteria.includes(criterion))) return hold("ownership-review", [key, reviewRef])
+      reviewers.add(review.value.reviewer)
+    }
+    if (!query.historical) {
+      for (const input of receipt.value.inputs) {
+        const version = current(input.key)
+        if (version === undefined) return hold("ownership-input-unavailable", [key, input.key])
+        if (version !== input.version) return hold("ownership-input-changed", [key, input.key])
+      }
+    }
+    const body = load(store, result.value.body, isOwnershipBody)
+    if ("kind" in body) return body
+    const decoded = decode(body.value.bytes)
+    if (decoded === undefined) return hold("malformed-ownership", [key, "body-utf8"])
+    return { artifact: artifact.value, result: result.value, ref, body: decoded, dependencies: receipt.value.dependencies }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT CAN: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/kernel/src/canonical.ts
+Full file: 6776 bytes; SHA256 53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f. Lines 56-60: 422 bytes; SHA256 53c7b5ceeaabb0398979d90ca758f18241e4b19f89a367626dd51edef46162be.
+      if (Array.isArray(v)) return `[${v.map(serialize).join(",")}]`
+      const o = v as Record<string, unknown>
+      // Side-indexes (KERNEL-8) and `undefined`-valued keys are dropped FIRST: a key that never reaches the
+      // preimage cannot collide in it, so the guard below prices only keys that are actually serialized.
+      const present = Object.keys(o).filter((k) => !SIDE_INDEX.has(k) && o[k] !== undefined)
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT CAN: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/kernel/src/canonical.ts
+Full file: 6776 bytes; SHA256 53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f. Lines 104-115: 435 bytes; SHA256 e91237defc83c7706ec4ee3434e48abe89a2f8fb91449ecb9f14b113526fe286.
+export function canonicalForm(obj: CasObject): Uint8Array {
+  return UTF8.encode(serialize(obj))
+}
+
+/**
+ * Content-addressed identity: `id = Encoder.hash(canonicalForm(obj))` (KERNEL-1), reached only through the
+ * encoder seam (KERNEL-2a). Never hand-rolled — a caller-supplied id that ≠ this value is not the object's
+ * identity.
+ */
+export function id(obj: CasObject): Hash {
+  return defaultEncoder.hash(canonicalForm(obj))
+}
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT A: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-access.ts
+Full file: 2682 bytes; SHA256 722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271. Lines 13-49: 2092 bytes; SHA256 fdc3ab8ec89f35c8f736c900338205abf7c31f2a612fea32d0050e704f643bbc.
+/** The read side sees only the existing provenance-filtered, governed projection; a CAS put cannot publish. */
+export function createOwnershipAccess(deps: {
+  readonly access: ReadAccess
+  readonly current: (key: string) => string | undefined
+}) {
+  const published = (scope: string) => {
+    const fail = (reason: OwnershipRefusal["reason"], evidence: readonly string[]): OwnershipRefusal => ({ kind: "hold", reason, evidence })
+    if (deps.access.refusal !== undefined) return fail("ownership-untrusted", [deps.access.refusal])
+    const projection = deps.access.store.loadProjection()
+    if (projection === undefined) return fail("ownership-store-unavailable", [scope])
+    const rows = [...projection.current.values()].filter((row) => row.scope === scope && row.claims.includes(ownershipClaim(scope)))
+    const refs = []
+    for (const row of rows) {
+      const prepared = prepareClaimReceipts(deps.access.store, row)
+      if ("rejected" in prepared) return fail("ownership-carrier", [prepared.rejected])
+      for (const entry of prepared.claims) {
+        const fact = entry.fact
+        if (fact.kind !== "advisory" || fact.claimNorm !== ownershipClaim(scope) || isRetired(fact)) continue
+        if (fact.scope !== scope || fact.tier !== row.tier || fact.predicateSlot !== "ownership" || fact.ownership === undefined)
+          return fail("ownership-carrier", [row.nodeKey])
+        refs.push(fact.ownership)
+      }
+    }
+    if (refs.length === 0) return fail("ownership-unpublished", [scope])
+    if (refs.length !== 1) return fail("ownership-ambiguous", [scope])
+    return { manifest: refs[0]! }
+  }
+
+  return {
+    read(query: OwnershipQuery): OwnershipRead {
+      const selected = published(query.scope)
+      return "kind" in selected ? selected : readOwnership(deps.access.store, selected.manifest, query, deps.current)
+    },
+    index(scope: string, need: OwnershipNeed): OwnershipIndex {
+      const selected = published(scope)
+      return "kind" in selected ? selected : indexOwnership(deps.access.store, selected.manifest, { scope, need }, deps.current)
+    },
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT C: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/compose.ts
+Full file: 43706 bytes; SHA256 2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f. Lines 162-176: 1111 bytes; SHA256 b6cfea267543f676e670887ed2da39a7b78c63786b5da0cdf88f7af2e1644dbc.
+export function composeRuntime(repoPath: string): ComposedRuntime {
+  // Resolve the KNOW-11 write actor at the composition root: ATLAS_ACTOR (env) wins; else the LOCAL git
+  // identity (`git config user.email`); else empty (fail-closed ⇒ every write denied). Passed EXPLICITLY to
+  // the assembler below (no global env write).
+  //
+  // NOT AUTHENTICATION — see the doc block above. This line reads a self-asserted string; it does not
+  // establish who anyone is, and no code downstream of it does either.
+  const actor = process.env.ATLAS_ACTOR ?? gitUserEmail(repoPath) ?? ""
+  // The KNOW-8 ratify token for a full-ratify (T0/predicate/contested) commit. Env-sourced ONLY
+  // (`ATLAS_RATIFY_TOKEN`) — the SAME payload-free channel as the actor; there is NO git/machine fallback (a
+  // ratifier signature is deliberate, not a local default). ABSENT ⇒ passed as absent below ⇒ the door fails
+  // closed on a full-ratify fact (a T0 fact requires the `billy` token). NEVER sourced from an emitted fact.
+  const ratifyToken = process.env.ATLAS_RATIFY_TOKEN
+
+  const policy = loadPolicy(repoPath)
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT C: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/compose.ts
+Full file: 43706 bytes; SHA256 2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f. Lines 233-236: 271 bytes; SHA256 f1bf8ece1d6f73973bf7885a2e6733cede345acf2af32805e178b490be0f37c6.
+  const provenance = gitStoreProvenance(repoPath)
+  const trusted: SidecarTrust = () => provenance() === "trusted"
+  const disk = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), trusted)
+  const store = withKnowledgeLog(disk, { repoPath, seat: actor })
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT C: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/compose.ts
+Full file: 43706 bytes; SHA256 2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f. Lines 499-521: 1973 bytes; SHA256 07efb70cff471ad087a170d63c5aee4f9af2cfe62538912d3e7a89cac6c599bc.
+    // THE `own_<scope>` READ LEG. `readAccess.store` (TRAVEL-BY-REPROOF) and `axes` here are the very
+    // objects the handler's query leg reads — passed, not rebuilt — so `atlas own <scope>` and
+    // `atlas query <scope>` are two projections of ONE (possibly filtered) store, and `policy` is the same
+    // loaded `.atlas/policy.json` the write door gates on (it supplies the terrain OWNER, which is the
+    // declared scope membership, not a second notion of ownership).
+    own: createOwnLeg({ axes, store: readAccess.store, policy }),
+    ownership: createOwnershipAccess({ access: readAccess, current: (key) => ownershipInput(repoPath, key) }),
+    // THE `anchors` DISCOVERY PLANNER (WP-10.A1 / ADR-0004) — the ARCH-3 binding that makes `createAnchors`
+    // running code (its production caller), over the ONE grounding computer. Read-only; not a `Tool`.
+    anchors: anchorsLeg.anchors,
+    // THE `slots` DISCOVERY PLANNER (WP-10.A2-a / ADR-0004) — the ARCH-3 binding that makes `createSlots`
+    // running code (its production caller). No port injected (see the `slotsLeg` build site above).
+    slots: slotsLeg.slots,
+    // THE `draft` COMPOSITION PLANNER (WP-10.A2-a / ADR-0004) — the ARCH-3 binding that makes `createDraft`
+    // running code (its production caller), over the SAME grounding computer `anchors` reads.
+    draft: draftLeg.draft,
+    // THE `draftSupersede` RETIRE/SUPERSEDE VARIANT (WP-10.A2-b / ADR-0004, AUTHOR-13) — the SAME
+    // composition as `draft`, opening NO new write door; the drafted fact differs only in `authoring`.
+    draftSupersede: draftLeg.draftSupersede,
+    // THE `check` DRY-RUN PLANNER (WP-10.A3 / ADR-0004, AUTHOR-11/12) — the ARCH-3 binding that makes
+    // `createCheck` running code (its production caller), over the `GateChainRunner` port built above
+    // (`buildCheckPort` → `runGateChain`, WP-10.A3.ADAPTER). Read-only; not a `Tool`; opens no write path.
+    check: checkLeg.check,
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT H: /workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/tools/src/handler.ts
+Full file: 29307 bytes; SHA256 6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc. Lines 190-200: 769 bytes; SHA256 599b7012b0ade0cfd9b23fe019c58933613eb37b45bd97a94b269511e57a374c.
+/** A leg return is a FAIL-CLOSED governed write iff it carries `emitted:false` (`EmitOut`), `linked:false`
+ *  (`LinkOut`, WP-SAMEAS), OR `admitted:false` (`MemoryEmitOut`, WP-11.W8). A fail-closed write is a
+ *  GOVERNANCE refusal, NOT a success — it MUST surface as a rejected `Verdict`, legible on BOTH user doors
+ *  (MCP `isError:true`, CLI exit 2), never a silent `ok:true` an agent reads as success (F2/F5). All three
+ *  write doors funnel through this one refusal-visibility guard. */
+const isFailClosedWrite = (data: ToolData): boolean =>
+  typeof data === "object" &&
+  data !== null &&
+  ((data as { emitted?: unknown }).emitted === false ||
+    (data as { linked?: unknown }).linked === false ||
+    (data as { admitted?: unknown }).admitted === false)
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT H: /workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/tools/src/handler.ts
+Full file: 29307 bytes; SHA256 6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc. Lines 372-428: 3550 bytes; SHA256 074300481d1680e505ef4bbd77543cda9125b43c48b424b66b70ec7f720d106b.
+export function createHandler(legs: ToolLegs, nodes?: NodeSource): HandlerApi {
+  const handle = (tool: Tool, args: unknown): Verdict<ToolData> => {
+    const guidance = guidanceFor(tool)
+    const leg = legs[tool]
+    if (leg === undefined) {
+      return { ok: false, rejected: `tool '${tool}' not wired at this seam`, guidance }
+    }
+    // CLASS (a) — the arguments, judged by the DOOR against this tool's own published schema (TOOLS-3),
+    // BEFORE the leg runs. Deciding it here is the whole point: inferring "malformed args" from a throw is
+    // what let an internal `TypeError` be reported as the caller's bad input (see ./fault.ts).
+    const argFault = malformedArgsReason(tool, schema(tool), args)
+    if (argFault !== undefined) {
+      return { ok: false, rejected: argFault, guidance }
+    }
+    try {
+      const data = leg(args)
+      if (isFailClosedWrite(data)) {
+        // F2/F5: a fail-closed write (emit OR link OR memory-emit) is a governance REJECTION, not a silent
+        // ok. Surface it uniformly across doors as an `ok:false` verdict carrying the reason. The record
+        // rides `data` so the CLI can still classify it exit-2 (rejected) — distinct from the exit-1 error
+        // of a malformed/unwired call. Fallback reason is write-kind-specific — our doors always set `rejected`.
+        const d = data as { emitted?: unknown; linked?: unknown; admitted?: unknown; rejected?: string }
+        const fallback =
+          d.emitted === false
+            ? "emit failed closed (ungrounded)"
+            : d.linked === false
+              ? "link failed closed"
+              : "memory write failed closed"
+        return { ok: false, data, rejected: d.rejected ?? fallback, guidance }
+      }
+      return { ok: true, data, guidance }
+    } catch (e) {
+      // TOOLS-2: fail CLOSED — a structured rejected verdict, never a throw. ATTRIBUTED, which is the part
+      // this catch used to get wrong: it stamped `malformed args — fail-closed:` on every throw, so a fault
+      // INSIDE a door arrived at the operator as their own bad input, carrying the door's caller-facing
+      // guidance. The three classes and how each is decided are documented in ./fault.ts.
+      const kind = classifyThrown(e)
+      if (kind === "internal-fault") {
+        // Before claiming a defect of ours: did the caller leave a REQUIRED argument out? That is the better
+        // explanation for a crash the engine raised, and it is the one case an up-front `required` check
+        // cannot cover (see `missingRequiredReason`). It never over-fires — a leg that tolerates the
+        // omission returns normally and never reaches this catch.
+        const missing = missingRequiredReason(tool, schema(tool), args)
+        if (missing !== undefined) {
+          return { ok: false, rejected: missing, guidance }
+        }
+        // It NAMES ITSELF, and it does NOT borrow the tool guidance — that guidance tells the caller to go
+        // and change their arguments, which is precisely the wrong instruction for a defect of ours.
+        return { ok: false, rejected: internalReason(tool, e), guidance: INTERNAL_GUIDANCE }
+      }
+      if (kind === "malformed-args") {
+        return { ok: false, rejected: malformedReason(e), guidance }
+      }
+      // A governed refusal: its reason travels VERBATIM, so a refusal that already carries a discriminant
+      // (`untrusted-store: …`) keeps it and `reasonOf` still answers WHICH gate refused.
+      return { ok: false, rejected: reason(e), guidance }
+    }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT GE: /workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/governed-emit.ts
+Full file: 31947 bytes; SHA256 100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165. Lines 255-308: 3747 bytes; SHA256 cfc324bf1b3dce21904fa09c0ef67f56d52cdf0b1a5e7c493777e771bc971c9b.
+    // The callback is re-run FROM SCRATCH when another writer publishes first, and it contains the GATES,
+    // not merely the upsert. That is a security requirement, not an implementation detail:
+    // `incumbentRefusal` resolves target authority from the incumbent ROW on THIS snapshot (ADR-0007), so
+    // re-publishing a decision taken against a snapshot that has since acquired a billy-ratified T0
+    // incumbent — or acquired a `scope` carrier where there was none — would apply a write that never faced
+    // the gate it now owes. That is the confused deputy, re-entered through the back door of a retry.
+    // The commit's CAS door is the SECOND addressability leg (gate 0.5) and is NOT redundant with the first:
+    // MEASURED, a bigint in `grounding` canonicalizes fine and still reaches `sidecar-commit.ts`'s CAS_EMPTY
+    // guard through this door — where it refuses by THROWING. Caught here and re-filed as a decision.
+    let committed: CommitResult<EmitOut>
+    try {
+      committed = deps.store.commitProjection<EmitOut>((projection) => {
+        const incumbent: CurrentNode | undefined = projection.current.get(targetKey)
+        const authzVerdict = evalAuthzGate({
+          policy: deps.policy,
+          actor: deps.actor,
+          scope,
+          tier,
+          node,
+          candidateView,
+          primaryAnchor,
+          incumbent,
+          store: deps.store,
+        })
+        if (!authzVerdict.pass) {
+          return { out: { emitted: false, rejected: authzVerdict.result.reason ?? authzVerdict.result.gate } }
+        }
+        // ARCH-9: the class the RESOURCE carries. Absent on a CREATE (nothing to derive from — ARCH-D3b, the
+        // OPEN owner DEFINE) and on a refusal (the write does not reach `route` at all).
+        const derivedTier = authzVerdict.derivedTier
+        const ownershipRefusal = ownershipAttachmentRefusal(node, deps.store, deps.ownershipInput)
+        if (ownershipRefusal !== undefined) return { out: { emitted: false, rejected: ownershipRefusal } }
+
+        // RATIFY (`GateName:'ratify'`, gate 2.5) — the KNOW-8/KNOW-18 tier-ratification gate, BETWEEN authz
+        //    and upsert. EXTRACTED to `evalRatifyGate`. The fast-path `route` auto-accepts a grounded ∧
+        //    lowRisk ∧ T2 ∧ advisory ∧ ¬contested fact (the common case — straight to upsert, unchanged
+        //    behavior). A T0 / predicate / contested fact routes to FULL ratification: it commits ONLY with
+        //    a valid KNOW-8 token, and a T0 fact requires the `billy` token. The token is env-sourced by the
+        //    composition root (never the payload). Absent/invalid ⇒ REJECTED fail-closed, nothing persisted
+        //    — this is the door that was previously bypassing the human+billy gate. ARCH-9: the route is
+        //    selected by `strictestTier(derived, declared)` when the door could derive a class from the
+        //    incumbent, and by the declared class alone on a CREATE. See `ratifyCtxFor`.
+        const ratifyVerdict = evalRatifyGate({
+          candidateView,
+          derivedTier,
+          origin: Object.hasOwn(node, "ownership") ? "composed" : origin,
+          ratifyToken: deps.ratifyToken,
+          // ARCH-D3b (INV-AUTH-15) — DEVIVED fast-path verdicts. `lowRisk` from the TRUTH gate the write
+          // already cleared (`truthVerdict.pass`, sealed above); `contested` from a CONFLICTING NODE —
+          // the incumbent at this `(anchor, slot)` carries DIFFERENT bytes than this write (KNOW-18b).
+          verdicts: deriveFastPathVerdicts(truthVerdict.pass, false),
+        })
+        if (!ratifyVerdict.pass) {
+          return { out: { emitted: false, rejected: ratifyVerdict.reason ?? ratifyVerdict.gate } }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT GE: /workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/governed-emit.ts
+Full file: 31947 bytes; SHA256 100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165. Lines 374-402: 1890 bytes; SHA256 214c304f0fdfdb1338f4f2bfb1ae33009e66c20dd154da0d72e32e23fe1f154d.
+        return {
+          out: { emitted: true, id: contentHash, nodeKey: targetKey as unknown as NodeKey },
+          next,
+          put: [node as CasObject],
+        }
+      })
+    } catch (e) {
+      // ONLY a REFUSAL is re-filed (unaddressable-CAS-object; closed-slot, gate 3.5); every other throw propagates UNCHANGED — laundering one hides a broken disk behind a verdict. `commitRefusalOf` says why.
+      return { emitted: false, rejected: commitRefusalOf(e) }
+    }
+    // 5. THE COMMIT'S OWN REFUSALS — visible, never silent, and door-wide rather than incumbent-derived
+    //    (neither discloses anything about a node). `contended`: other writers published on all 64 attempts;
+    //    nothing was written and no gate was bypassed. `unreadable store`: the sidecar exists but no
+    //    generation parses, so the incumbent cannot be read — refuse rather than treat "corrupt" as "empty",
+    //    which is the amplification that turned a torn read into a 402-node erasure. Both rank strictly
+    //    above the silent loss they replace.
+    //    `untrusted` (the THIRD `CommitRefusal` member) was collapsed into `unreadable store` here, and that
+    //    was not a cosmetic mislabel: `unreadable store` tells the operator to restore
+    //    `.atlas/projection.*.json` from a backup, which for a COMMITTED store is the wrong diagnosis, the
+    //    wrong fix, and hides the only thing they need to know (`git rm -r --cached .atlas/…`). The store
+    //    layer had the named refusal all along; now it uses the SAME constant as the read doors.
+    if (committed.settled) return committed.out
+    const commitRefusal =
+      committed.refusal === "contended"
+        ? REJECTED_CONTENDED
+        : committed.refusal === "untrusted"
+          ? REJECTED_UNTRUSTED_STORE
+          : REJECTED_UNREADABLE_STORE
+    return { emitted: false, rejected: commitRefusal }
+
+END EXACT SOURCE EXCERPT

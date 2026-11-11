@@ -1,0 +1,20 @@
+{
+  "status": "AGUARDAR FECHAMENTO DO PRINCIPAL",
+  "sent_to_judges": false,
+  "parts": [
+    {
+      "path": "review-packet-01.txt",
+      "byte_length": 25064,
+      "sha256": "9bfcb759da73b6921c53df014e9533526193a77f4360d706c414ae86eddefbea",
+      "body_key": "S4:L2:atlas-system",
+      "contains_complete_artifacts_json": true
+    },
+    {
+      "path": "review-packet-02.txt",
+      "byte_length": 24871,
+      "sha256": "1d4dc30cc8a58fcd46f25b64c4b13095208c947c777eee044f60f4984eeafe43",
+      "body_key": "S4:L2:genesis-governance",
+      "contains_complete_artifacts_json": true
+    }
+  ]
+}

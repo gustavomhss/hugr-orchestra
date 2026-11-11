@@ -12,16 +12,16 @@ Status: IN_PROGRESS. No completion or runtime acceptance claimed.
 
 | Unit | Need and output | Predecessor | State |
 | --- | --- | --- | --- |
-| WP-R0 | Native package validator/adapter using existing ownership ports; runtime release per demonstrated capability | fixed transport contract and baseline sources | IMPLEMENTED; TYPECHECK PASS; NATIVE PREPARE OBSERVED |
+| WP-R0 | Native package validator/adapter using existing ownership ports; runtime release per demonstrated capability | fixed transport contract and baseline sources | PROVEN isolated sample: prepare, exact two bindings, governed publish, index/read |
 | WP-L1A | Exact evidence base and authority/input boundaries of Atlas ownership | frozen L1A oracle | ACCEPTED BY J1 AND J2 |
-| WP-L1B | Complete 2220-entry census, classifications, source needs including continuity/RAG/specs/history | fixed partition | RUNNING |
-| WP-L1C | Remaining Atlas, continuity, RAG and Genesis evidence units | census and frozen per-unit oracle | PENDING |
-| WP-L2 | Local explanations across all component needs | accepted required L1 units | PENDING |
+| WP-L1B | Complete 2220-entry census, classifications, source needs including continuity/RAG/specs/history | fixed partition | ACCEPTED: four bodies plus complete census |
+| WP-L1C | Remaining Atlas, continuity, RAG and Genesis evidence units | census and frozen per-unit oracle | ACCEPTED: host boundaries and native-runtime delta close all seven L1 |
+| WP-L2 | Local explanations across all component needs | accepted required L1 units | THREE BODIES PRODUCED; corrected v2; both judges evaluating complete L2 |
 | WP-L3 | Cross-component flows, change impact and failure relationships | accepted required L2 units | PENDING |
 | WP-L4 | Entry, ownership, maintenance and operational actions | accepted required L3 units | PENDING |
 | WP-C | Independent consumers: change, violation, impact, failure, abstention; shallow/deep Atlas reads | exact accepted native package and runtime capability | PENDING |
-| WP-R1 | Shared import/binding/read/cache/affected/rebuild/recovery/rollback/migration/refusal controls | adapter candidate | PENDING |
-| WP-G | Package typecheck, scoped remote tests and required guards | changed candidate | PENDING |
+| WP-R1 | Shared import/binding/read/cache/affected/rebuild/recovery/rollback/migration/refusal controls | adapter candidate | PROVEN named common controls at 7102f2e, both judges PASS |
+| WP-G | Package typecheck, scoped remote tests and required guards | changed candidate | 7102f2e runtime gates PASS; new campaign driver static PASS only |
 | WP-H | Exact two-judge decisions, corrections, usage reconciliation, sealed GitHub handoff | all own obligations | PENDING |
 
 All producers write disjoint local areas; primary integrates and publishes through GitHub with expected HEAD and force=false. Persistent fresh-context judge IDs: /root/judge_j1 and /root/judge_j2; both accepted the exact L1A body. Both remain the pair for all deltas. Products tests follow root AGENTS.md and run only through permitted GitHub Actions route. No gh/login/GH_TOKEN. No PR/merge/production activation.
@@ -62,3 +62,9 @@ Both independent judges accepted host-boundaries v2. Six of seven L1 units are a
 ## Complete L1 accepted
 
 All seven required L1 units now have the two persistent semantic decisions. R1-J1-01 and J2-R1-01 are resolved; J1 requested the original J2 finding text, which was provided without changing the candidate. L2 production may start from the immutable accepted payload. Own consumers, maintenance, L2–L4, full binding and final seal remain pending.
+
+## Current L2 and maintenance composition
+
+All three L2 bodies are produced and mechanically reconciled, with primary corrections preserved as v2. Both persistent judges now evaluate the complete layer; no L3 production is released before both decisions. The maintenance-operation.mjs campaign reproducer has two static PASS decisions, parser-only verification and no operational execution claim. It composes existing ports; actual full-package publication, reuse and own maintenance are still pending.
+
+Branch protection read returned HTTP403 (Resource not accessible by integration): enforcement remains UNKNOWN. This does not change the observed CI results.

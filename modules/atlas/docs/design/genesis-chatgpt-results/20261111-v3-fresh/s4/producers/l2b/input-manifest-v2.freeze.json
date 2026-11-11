@@ -1,0 +1,27 @@
+{
+  "schema": "s4-progressive-input-freeze/v1",
+  "unit": "l2b",
+  "correction": "WP-L2B-P1",
+  "frozen_before_v2_body_creation_utc": "2026-11-11T19:01:22.946138+00:00",
+  "original_manifest": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/input-manifest.json",
+    "bytes": 12610,
+    "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca"
+  },
+  "v2_manifest": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/input-manifest-v2.json",
+    "bytes": 13899,
+    "sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+  },
+  "only_content_change": "Append the two explicitly authorized source records to additional_evidence. All original manifest fields/records retained, including its original frozen_utc.",
+  "appended_source_paths": [
+    "modules/rag-studio/src/revision.ts",
+    "modules/rag-studio/src/compare.ts"
+  ],
+  "correction_request": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/correction-request-v2.md",
+    "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333"
+  },
+  "host_message_id": "UNKNOWN",
+  "original_v1_files_manifest": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/v1-preservation-v2.json"
+}

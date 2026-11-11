@@ -1,0 +1,153 @@
+{
+  "schema": "s4-cumulative-production-recipe/v1",
+  "version": 2,
+  "unit": "l2b",
+  "correction": "WP-L2B-P1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "producer_agent": "/root/producer_runtime",
+  "model_id": "UNKNOWN",
+  "token_usage": "UNKNOWN",
+  "prior_version": {
+    "recipe_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe.json",
+      "sha256": "7574858d2403bb05df856c753421345007cce1884dd9cdf3ed9f16b8e14db666"
+    },
+    "body_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations.md",
+      "sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94"
+    },
+    "body_bytes": 7993,
+    "preservation_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/v1-preservation-v2.json",
+      "sha256": "5a282ab07b7519080f077355886fe6bf81372c9bf64c8ee3e2ce022b5d3e97a6"
+    }
+  },
+  "output": {
+    "key": "S4:L2:continuity-rag-operations",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+    "layer": 2,
+    "need": "component",
+    "scope": "atlas-continuity-rag-genesis",
+    "max_utf8_bytes": 8000
+  },
+  "public_criteria": [
+    "AC-01",
+    "CC-2",
+    "CC-3",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "inputs": {
+    "accepted_predecessors": [
+      {
+        "key": "S4:L1:continuity-rag",
+        "source_ref": {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+          "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+          "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+        },
+        "byte_length": 17429
+      },
+      {
+        "key": "S4:L1:host-boundaries",
+        "source_ref": {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+          "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+        },
+        "byte_length": 11972
+      }
+    ],
+    "progressive_sources": [
+      {
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/revision.ts",
+          "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+          "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+        },
+        "byte_length": 2701,
+        "read_reason": "WP-L2B-P1-01: nomes e assinaturas exatos das portas de configuração de pipeline, snapshot e abertura de revisão; exceção estreita autorizada pelo principal."
+      },
+      {
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/compare.ts",
+          "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+          "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+        },
+        "byte_length": 2337,
+        "read_reason": "WP-L2B-P1-01: nome e assinatura exatos da comparação e condições/limites de parâmetros, snapshot, questões e traces; exceção estreita autorizada pelo principal."
+      }
+    ],
+    "original_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md",
+      "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4"
+    },
+    "correction_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md",
+      "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333"
+    },
+    "combined_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+      "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+    },
+    "input_manifest_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+      "sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+    },
+    "input_freeze_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.freeze.json",
+      "sha256": "141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea"
+    },
+    "transport_contract_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/transport-contract.md",
+      "sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f"
+    }
+  },
+  "input_keys": [
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+    "file:modules/rag-studio/src/revision.ts",
+    "file:modules/rag-studio/src/compare.ts",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/transport-contract.md"
+  ],
+  "build_dependencies": [
+    {
+      "key": "S4:L1:continuity-rag",
+      "same_package": true
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "same_package": true
+    }
+  ],
+  "navigation": [],
+  "procedure": [
+    "Preservar todos os arquivos v1; registrar pedido de correção literal; congelar manifesto v2 antes de alterar o corpo, acrescentando apenas revision.ts e compare.ts autorizados.",
+    "Conferir bytes/SHA-256/Git blob dos dois arquivos adicionais contra o pedido; reler masking e revisão no predecessor aceito continuity-rag. Nenhuma outra fonte bruta ou oracle é autorizada.",
+    "Completar identidade do pipeline e assinaturas readPipeline/setPipeline/openRevision/readRevision; distinguir snapshot/membership, parâmetros, fill e corpus corrente. Preservar coerções sem validação.",
+    "Completar compareRevisions: revisões existentes, snapshot comum igual a proofSetId e exatamente um campo alterado; explicar todas as perguntas, dados atuais, recorte/boundary e limites dos flags.",
+    "Restaurar masking com últimos cinco passos protegidos, última mensagem excluída do alívio urgente, erros de 20 linhas/erros curtos, economia estimada e archive-before-mask; explicar impacto operacional.",
+    "Manter trace por revisionId versus questionId, limites de identidade/persistência e duas dependências cumulativas. Cortar repetição; até 8000 bytes UTF-8, H2 únicas.",
+    "Produzir metadata v2 que vincula pedidos original/correção, fontes exatas e receita. Manter reviews semânticas/runtime vazias e supported limitado à sustentação estática, sem antecipar aceite.",
+    "Preparar pacotes literais de até 32000 bytes para conferência primária, sem envio aos juízes. Verificar apenas identidade/forma documental; não executar produto, testes, build, Git ou GitHub."
+  ],
+  "source_rule_exception": "Apenas os dois arquivos especificados em WP-L2B-P1-01; todos os demais paths de manutenção continuam transmitidos pelas L1.",
+  "judgment_state": "PENDING_PRIMARY_CHECK_AND_INDEPENDENT_REVIEW",
+  "runtime_state": "NOT_EXECUTED",
+  "self_identity": "SHA-256 real em artifacts-v2.json/recipe_ref; nenhuma versão kernel inventada."
+}

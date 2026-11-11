@@ -1,0 +1,474 @@
+WP-MAINTENANCE-DRIVER — data for independent STATIC composition review.
+Execution a2095d5a-1464-4c38-a222-6376974fc9c9. Await dispatch and closure by the principal.
+Complete producer script and static evidence; no product/runtime/test execution, no activation or semantic acceptance claimed.
+Runtime revision 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553 is principal-declared; local source identities are explicit below.
+No reserved oracle content or judge response supplied. Public criteria: AC-04/05/06, CC-4, QS-3/4/5, GO-I3/4/5/7.
+Part 2/4.
+
+BEGIN EXACT SOURCE EXCERPT N: /workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native.ts
+Full file: 12376 bytes; SHA256 bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312. Lines 112-170: 4639 bytes; SHA256 656753340879de6e311524ae70bf31aa1ac14b9e2e8fe37714c17481a9d06d92.
+/** Re-derive the candidate from current bytes before considering the separate binding decision. */
+export async function publishNativePackage(repoPath: string, value: unknown, approvalPath: string) {
+  const record = nativeRecord(value, "prepared record")
+  if (record.schema !== "genesis-native-prepared/v1") throw new Error("native-prepared-schema")
+  const candidate = nativeRecord(record.candidate, "candidate")
+  const transport = nativeRecord(candidate.transport, "candidate.transport")
+  const fresh = prepareNativePackage(repoPath, nativePath(transport.path))
+  if (record.candidate_id !== id(candidate) || record.candidate_id !== fresh.candidate_id || JSON.stringify(candidate) !== JSON.stringify(fresh.candidate))
+    throw new Error("native-candidate-drift: prepare again and obtain new exact binding decisions")
+  const root = fresh.candidate.repo_root
+  const store = createDiskStore(nativeCasDirectory(root))
+  const approvalBytes = readNativeFile(root, nativePath(approvalPath))
+  const binding = validateNativeBinding(JSON.parse(decodeNativeUtf8(approvalBytes)), fresh)
+  const provenance = nativeBody(store, approvalBytes)
+  const decisionBodies = binding.decisions.map((decision) => {
+    const capture = (reference: NativeReference) => {
+      const bytes = readNativeFile(root, nativeReferencePath(reference))
+      if (nativeSha256(bytes) !== reference.sha256) throw new Error("native-binding-reference-drift")
+      return nativeBody(store, bytes)
+    }
+    return { request: capture(decision.request_ref), response: capture(decision.response_ref) }
+  })
+  const entries = fresh.candidate.entries.map((entry) => {
+    const reviews = binding.decisions.map((decision, index) => {
+      const review: OwnershipReview = {
+        kind: "ownership-review", version: 1, reviewer: decision.reviewer, contract: fresh.candidate.contract,
+        inputs: entry.inputs_id, result: entry.artifact.result, criteria: fresh.candidate.criteria, verdict: "pass",
+        provenance: `Operator-supplied NEW runtime binding; decision ${decision.decision_id_kind} ${decision.decision_id}; candidate ${fresh.candidate_id}; preserved approval ${provenance}; request ${decisionBodies[index]!.request}; response ${decisionBodies[index]!.response}. This adapter record is not original reviewer prose.`,
+      }
+      return nativePut(store, review)
+    })
+    const receipt: OwnershipReceipt = { kind: "ownership-receipt", version: 1, contract: fresh.candidate.contract, inputs: entry.inputs, dependencies: entry.dependencies, reviews }
+    return { key: entry.key, artifact: nativePut(store, { ...entry.artifact, receipt: nativePut(store, receipt) }) }
+  })
+  const manifest: OwnershipManifest = { kind: "ownership-manifest", version: 1, scope: fresh.candidate.scope, entries, roots: fresh.candidate.roots }
+  const ownership = nativePut(store, manifest)
+  // The existing attachment gate visits roots. Check every transported entry too, so a blocked or
+  // unreviewed disconnected entry cannot hide behind a supported root.
+  for (const entry of entries) {
+    const read = readOwnership(store, ownership, { scope: manifest.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, (key) => ownershipInput(root, key))
+    if (read.kind === "hold") return { kind: "hold" as const, stage: "ownership-validation", candidate_id: fresh.candidate_id, ownership, refusal: read }
+  }
+  const { composeRuntime } = await import("./compose.js")
+  const { deriveGroundingAxes } = await import("./grounding-computer.js")
+  const { walkFileTree } = await import("./fs.js")
+  const { readScipOrEmpty } = await import("./scip.js")
+  const axes = deriveGroundingAxes(walkFileTree(root), readScipOrEmpty(posix.join(root, ".atlas/index.scip"))).axes
+  const node: GroundedFact = {
+    kind: "advisory", id: asNodeKey(String(id({ ownership }))), tier: "T2", scope: manifest.scope,
+    claimNorm: ownershipClaim(manifest.scope), predicateSlot: "ownership", ownership,
+    grounding: { entries: [{ anchor: { kind: "repo", qualifiedPath: axes.spatial.key, subtreeHash: axes.spatial.subtreeHash }, path: "." }] },
+    freshness: "FRESH", claims: [], authoring: "ADVISORY",
+  }
+  const at = id({ kind: "genesis-native-binding", candidate: fresh.candidate_id })
+  const runtime = composeRuntime(root)
+  const check = runtime.check(node, at)
+  if (!check.wouldEmit) return { kind: "hold" as const, stage: "governed-check", candidate_id: fresh.candidate_id, ownership, check }
+  const emission = runtime.handler.handle("atlas-emit", { node, at })
+  return { kind: "publication-attempt" as const, candidate_id: fresh.candidate_id, ownership, at, check, emission }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT NB: /workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts
+Full file: 5198 bytes; SHA256 ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021. Lines 18-74: 4304 bytes; SHA256 a96014092878c0c3daa89838c981b5f042656fc77345e6918b4d32fe9d1c8be6.
+/** This verifies an operator-supplied record, not the identity of its author. Original responses
+ * remain evidence; a semantic approval cannot satisfy this distinct purpose or exact binding. */
+export function validateNativeBinding(value: unknown, prepared: PreparedNativePackage): NativeBinding {
+  const binding = nativeRecord(value, "binding")
+  nativeKeys(binding, ["schema", "purpose", "candidate_id", "contract", "reviewers", "decisions"], "binding")
+  if (binding.schema !== "genesis-native-binding-approval/v1" || binding.purpose !== "runtime-import-binding") throw new Error("native-binding-purpose")
+  if (binding.candidate_id !== prepared.candidate_id || binding.contract !== prepared.candidate.contract) throw new Error("native-binding-candidate")
+  const reviewers = nativeStrings(binding.reviewers, "binding.reviewers")
+  if (reviewers.length !== 2) throw new Error("native-binding-two-reviewers")
+  if (!Array.isArray(binding.decisions) || binding.decisions.length !== 2) throw new Error("native-binding-two-decisions")
+  const seen = new Set<string>()
+  const hostMessages = new Set<string>()
+  const responses = new Set<string>()
+  for (const value of binding.decisions) {
+    const decision = nativeRecord(value, "binding decision")
+    nativeKeys(decision, ["reviewer", "decision_id", "decision_id_kind", "purpose", "candidate_id", "contract", "verdict", "criteria", "entries", "request_ref", "response_ref"], "binding decision")
+    const reviewer = nativeText(decision.reviewer, "reviewer")
+    if (!reviewers.includes(reviewer) || seen.has(reviewer)) throw new Error("native-binding-reviewer")
+    seen.add(reviewer)
+    const decisionID = nativeText(decision.decision_id, "decision_id")
+    if (decision.purpose !== "runtime-import-binding" || decision.verdict !== "PASS" || decision.candidate_id !== prepared.candidate_id || decision.contract !== prepared.candidate.contract)
+      throw new Error("native-binding-exact-decision")
+    nativeReference(decision.request_ref)
+    const response = nativeReference(decision.response_ref)
+    if (decision.decision_id_kind === "response-sha256") {
+      if (decisionID !== `sha256:${response.sha256}`) throw new Error("native-binding-decision-digest")
+    }
+    if (decision.decision_id_kind === "host-message") {
+      if (hostMessages.has(decisionID)) throw new Error("native-binding-duplicate-message")
+      hostMessages.add(decisionID)
+    }
+    if (decision.decision_id_kind !== "response-sha256" && decision.decision_id_kind !== "host-message") throw new Error("native-binding-decision-id-kind")
+    if (responses.has(nativeReferenceKey(response))) throw new Error("native-binding-duplicate-response")
+    responses.add(nativeReferenceKey(response))
+    if (!Array.isArray(decision.criteria) || decision.criteria.length !== prepared.candidate.criteria.length) throw new Error("native-binding-criteria")
+    const criteria = decision.criteria.map((value) => {
+      const criterion = nativeRecord(value, "binding criterion")
+      nativeKeys(criterion, ["id", "verdict"], "binding criterion")
+      if (criterion.verdict !== "PASS") throw new Error("native-binding-criterion-hold")
+      return nativeText(criterion.id, "criterion.id")
+    })
+    if (new Set(criteria).size !== criteria.length || !prepared.candidate.criteria.every((criterion) => criteria.includes(criterion))) throw new Error("native-binding-criteria")
+    if (!Array.isArray(decision.entries) || decision.entries.length !== prepared.candidate.entries.length) throw new Error("native-binding-entries")
+    const keys = new Set<string>()
+    for (const value of decision.entries) {
+      const entry = nativeRecord(value, "binding entry")
+      nativeKeys(entry, ["key", "result", "inputs"], "binding entry")
+      const key = nativeText(entry.key, "binding entry.key")
+      if (keys.has(key)) throw new Error("native-binding-duplicate-entry")
+      keys.add(key)
+      nativeDigest(entry.result, 64, "binding result")
+      nativeDigest(entry.inputs, 64, "binding inputs")
+      const expected = prepared.candidate.entries.find((entry) => entry.key === key)
+      if (!expected || entry.result !== expected.artifact.result || entry.inputs !== expected.inputs_id) throw new Error(`native-binding-entry-drift: ${key}`)
+    }
+  }
+  return value as NativeBinding
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT NIO: /workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-io.ts
+Full file: 4162 bytes; SHA256 04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983. Lines 22-74: 2682 bytes; SHA256 7cf89ed9cb4d411f5c4e59c09f4eddd0512417e788ab3c9c16ccc03fe8a7181e.
+/** Descriptor-bound, bounded reads; reject symlinks in every path component before and after reading. */
+export function readNativeFile(root: string, relative: string, maximum = nativeMaxBytes): Uint8Array {
+  nativePath(relative)
+  const parts = relative.split("/")
+  const observed = parts.map((_, index) => {
+    const path = resolve(root, ...parts.slice(0, index + 1))
+    const stat = lstatSync(path)
+    if (stat.isSymbolicLink() || (index < parts.length - 1 ? !stat.isDirectory() : !stat.isFile())) throw new Error(`native-file-kind: ${relative}`)
+    return { path, stat }
+  })
+  const last = observed.at(-1)!
+  if (last.stat.size > maximum) throw new Error(`native-file-limit: ${relative}`)
+  const fd = openSync(last.path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
+  try {
+    const before = fstatSync(fd)
+    if (!before.isFile() || before.ino !== last.stat.ino || before.dev !== last.stat.dev || before.size > maximum) throw new Error(`native-file-changed: ${relative}`)
+    const chunks: Buffer[] = []
+    const buffer = Buffer.alloc(8192)
+    let length = 0
+    for (;;) {
+      const count = readSync(fd, buffer, 0, buffer.length, null)
+      if (!count) break
+      length += count
+      if (length > maximum) throw new Error(`native-file-limit: ${relative}`)
+      chunks.push(Buffer.from(buffer.subarray(0, count)))
+    }
+    const after = fstatSync(fd)
+    if (after.size !== before.size || after.mtimeMs !== before.mtimeMs || after.ctimeMs !== before.ctimeMs || length !== after.size)
+      throw new Error(`native-file-changed: ${relative}`)
+    for (const entry of observed) {
+      const stat = lstatSync(entry.path)
+      if (stat.isSymbolicLink() || stat.ino !== entry.stat.ino || stat.dev !== entry.stat.dev || stat.isDirectory() !== entry.stat.isDirectory())
+        throw new Error(`native-file-changed: ${relative}`)
+    }
+    return Buffer.concat(chunks, length)
+  } finally { closeSync(fd) }
+}
+
+export function decodeNativeUtf8(bytes: Uint8Array): string {
+  return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes)
+}
+
+export function nativeBody(store: StoreApi, bytes: Uint8Array) {
+  return nativePut(store, { kind: "ownership-body", version: 1, bytes: Array.from(bytes) })
+}
+
+/** Keep the existing CAS refusal and read-back integrity checks visible to the adapter. */
+export function nativePut(store: StoreApi, value: Parameters<StoreApi["put"]>[0]) {
+  const hash = store.put(value)
+  const persisted = hash ? store.get(hash) : undefined
+  if (!hash || persisted === undefined || id(persisted) !== hash || hash !== id(value)) throw new Error("native-cas-write-failed")
+  return hash
+}
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT I: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-input.ts
+Full file: 10101 bytes; SHA256 71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78. Lines 35-39: 493 bytes; SHA256 15506611246b59b41e69f7f2396fa9900e2efacccba90f15c4a9cb8c9706cccc.
+/** Tri-state host observation for one `file:` / `members:` key. G2.2 contract §1: `present`
+ *  carries the kernel `id` of the exact bytes read; `absent` is established only by a verified
+ *  negative lookup under a valid root (corroborated by a successful enumeration of the existing
+ *  ancestor with identity checks); everything else is `unavailable`. */
+export function observeOwnershipInput(repoPath: string, key: string, seams: OwnershipObserveSeams = {}): OwnershipInputObservation {
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT I: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-input.ts
+Full file: 10101 bytes; SHA256 71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78. Lines 143-182: 1988 bytes; SHA256 303097cdcbb3d611e7922d61906ebddfddace7cf203acac76839e3faa0b36ffa.
+  const missingAncestor = ancestorAbsent(relPath)
+  if (missingAncestor === "unavailable") return { kind: "unavailable" }
+  if (missingAncestor === "absent") return corroborateAbsent(relPath)
+  const requested = resolve(root, relPath)
+  if (!isContainedIn(root, requested)) return { kind: "unavailable" }
+  let st: { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
+  try { st = lstat(requested) } catch (err) {
+    return codeOf(err) === "ENOENT" ? corroborateAbsent(relPath) : { kind: "unavailable" }
+  }
+  if (st.isSymbolicLink) return { kind: "unavailable" }
+  if (!st.isFile) return { kind: "unavailable" }
+  let before: ReturnType<typeof lstatSync>
+  try { before = lstatSync(requested) } catch { return { kind: "unavailable" } }
+  let bytes: Uint8Array
+  try {
+    if (seams.readBytes !== undefined) bytes = seams.readBytes(requested)
+    else {
+      const fd = openSync(requested, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
+      try {
+        const file = fstatSync(fd)
+        if (!file.isFile()) return { kind: "unavailable" }
+        const chunks: Buffer[] = []
+        let total = 0
+        const probe = Buffer.alloc(8192)
+        for (;;) {
+          const n = readSync(fd, probe, 0, probe.length, null)
+          if (n === 0) break
+          chunks.push(Buffer.from(probe.subarray(0, n)))
+          total += n
+          if (total > 256000) return { kind: "unavailable" }
+        }
+        bytes = Buffer.concat(chunks, total)
+      } finally { closeSync(fd) }
+    }
+  } catch { return { kind: "unavailable" } }
+  let after: ReturnType<typeof lstatSync>
+  try { after = lstatSync(requested) } catch { return { kind: "unavailable" } }
+  if (after.ino !== before.ino || after.size !== before.size) return { kind: "unavailable" }
+  if (bytes.length > 256000) return { kind: "unavailable" }
+  return { kind: "present", version: String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })) }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT R: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+Full file: 20859 bytes; SHA256 83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa. Lines 36-88: 3021 bytes; SHA256 5eb1f180b0093d441f7c7b638865554ddee887aff0ad363428545e4bdf9f1ef8.
+/** One artifact's explicitly declared recipe + identity of the implementation that may run. */
+export interface OwnershipRecipe {
+  /** Artifact key this recipe rebuilds. */
+  readonly key: string
+  /** Recipe implementation input, e.g. `file:recipe-a.ts`; its observed version binds the
+   *  implementation identity into the receipt. */
+  readonly recipeInputKey: string
+  /** Implementation identity executed; must equal the version bound from the baseline declaration
+   *  (RB-07/RB-16) — scalar, because F1 keeps recipes fixed. */
+  readonly recipeVersion: string
+  /** Obligatory input keys the baseline receipt must bind (contract §2.2). A receipt omitting one
+   *  is a HOLD (RB-14); the executor never invents a binding for an invisible dependency. */
+  readonly declaredInputs: readonly string[]
+  /** Fixed mandatory inputs (subset of `declaredInputs`; defaults to all declared inputs).
+   *  Declared inputs outside this list are removable dynamic set members (§1.4). */
+  readonly mandatoryInputs?: readonly string[]
+  /** Prerequisite artifact keys whose result binding the baseline receipt must carry (RB-15).
+   *  Must match the baseline receipt edges exactly — omitting or adding an edge is a graph change. */
+  readonly required: readonly string[]
+  /** Deterministic transform of the captured inputs + resolved prerequisite results. */
+  readonly run: (input: OwnershipRecipeInput) => OwnershipRecipeOutput
+}
+
+/** Post-production evaluation of one rebuilt artifact. Implemented outside the executor so the
+ *  candidate cannot fabricate approvals: it returns persisted review refs bound to the current
+ *  inputs/dependencies/result, or a HOLD. */
+export type OwnershipEvaluationResult = OwnershipRefusal | {
+  readonly kind: "ready"
+  readonly reviews: readonly Hash[]
+}
+
+/** Full request. The baseline is authoritative for reuse; no new global cache. */
+export interface OwnershipRebuildRequest {
+  readonly store: StoreApi
+  readonly manifest: Hash
+  readonly scope: string
+  readonly observe: (key: string) => OwnershipInputObservation
+  /** Captured bytes for one key from the same capture that produced its observation (host: the
+   *  descriptor bytes hashed into the version). Undefined for non-file bindings. */
+  readonly readCapturedBytes: (key: string) => Uint8Array | undefined
+  /** Effective member list per `members:` dir (without prefix), for consuming new/removed members
+   *  (RB-03/RB-04, contract §2.3 step 3). Captured once per rebuild; execution consumes the capture. */
+  readonly listMembers: (dir: string) => readonly string[]
+  readonly recipes: ReadonlyMap<string, OwnershipRecipe>
+  readonly contract: Hash
+  /** Current evaluation for one rebuilt artifact (contract §2.3 step 8). */
+  readonly evaluate: (input: {
+    readonly key: string
+    readonly scope: string
+    readonly inputs: readonly OwnershipInput[]
+    readonly dependencies: readonly { readonly key: string; readonly result: Hash }[]
+    readonly result: Hash
+  }) => OwnershipEvaluationResult
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT R: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+Full file: 20859 bytes; SHA256 83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa. Lines 128-148: 1516 bytes; SHA256 f385ea9456cebf87a90461d2a95e895e8ad55740a036f447af26eaaac2932b8c.
+  for (const entry of baselineManifest.entries) {
+    const recipe = request.recipes.get(entry.key)
+    if (recipe === undefined) return hold("malformed-ownership", [entry.key, "recipe"])
+    const bound = baselineArtifacts.get(entry.key)?.receipt
+    if (bound?.contract !== request.contract) return hold("ownership-review", [entry.key, bound?.contract ?? "no-contract"])
+    const mandatory = new Set(recipe.mandatoryInputs ?? recipe.declaredInputs)
+    const boundKeys = new Set((bound?.inputs ?? []).map((input) => input.key))
+    for (const input of mandatory) {
+      if (!boundKeys.has(input)) return hold("malformed-ownership", [entry.key, input])
+    }
+    for (const input of bound?.inputs ?? []) {
+      if (mandatory.has(input.key) || recipe.declaredInputs.includes(input.key) || isUnderMembers(input.key, bound as OwnershipReceipt)) continue
+      return hold("malformed-ownership", [entry.key, input.key])
+    }
+    const depKeys = new Set((bound?.dependencies ?? []).map((dependency) => dependency.key))
+    const requiredSet = new Set(recipe.required)
+    if (requiredSet.size !== recipe.required.length || depKeys.size !== requiredSet.size || [...requiredSet].some((dep) => !depKeys.has(dep)))
+      return hold("ownership-dependency-changed", [entry.key])
+    const recipeObservation = captured.get(recipe.recipeInputKey)
+    if (recipeObservation?.kind !== "present" || recipeObservation.version !== recipe.recipeVersion) return hold("malformed-ownership", [entry.key, recipe.recipeInputKey])
+  }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT R: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+Full file: 20859 bytes; SHA256 83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa. Lines 180-197: 1284 bytes; SHA256 a59880a2532107b93ac849c50b322425cca312b60701c4c5d6a1725777db104d.
+  const capturedBytes = new Map<string, Uint8Array>()
+  for (const [key, observed] of captured) {
+    if (observed.kind !== "present" || !key.startsWith("file:")) continue
+    const live = request.readCapturedBytes(key)
+    if (live !== undefined) capturedBytes.set(key, new Uint8Array(live))
+  }
+  const snapshotForRecipe = (): OwnershipRecipeInput => ({
+    captured: new Map([...captured].map(([snapshotKey, snapshotValue]) => [snapshotKey, copyObservation(snapshotValue)] as [string, OwnershipInputObservation])),
+    bytes: new Map([...capturedBytes].map(([snapshotKey, snapshotValue]) => [snapshotKey, new Uint8Array(snapshotValue)] as [string, Uint8Array])),
+    lists: new Map([...initialMembers].map(([snapshotKey, snapshotValue]) => [snapshotKey, [...snapshotValue]] as [string, readonly string[]])),
+    dependencies: new Map(),
+  })
+  const snapshotForRecipeInput = (dependencies: ReadonlyMap<string, Hash>): OwnershipRecipeInput => ({ ...snapshotForRecipe(), dependencies })
+  const preflightMap = new Map<string, OwnershipInputObservation>()
+  for (const key of captured.keys()) preflightMap.set(key, request.observe(key))
+  for (const [key, fresh] of preflightMap) {
+    if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key])
+  }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT R: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+Full file: 20859 bytes; SHA256 83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa. Lines 213-298: 5364 bytes; SHA256 73131f833c6eee593a94a9b4098215081d08aa8000f5f506fb90188d7af954e5.
+  if (plan.affected.length === 0) return { kind: "candidate", manifest: request.manifest, affected: [], calls: [] }
+  for (const key of plan.affected) {
+    const bound = baselineArtifacts.get(key)
+    if (bound === undefined) return hold("malformed-ownership", [key])
+    const recipe = request.recipes.get(key)
+    if (recipe === undefined) return hold("malformed-ownership", [key, "recipe"])
+    const candidateInputs = effectiveInputs(key, bound.receipt, recipe, captured, initialMembers)
+    if ("kind" in candidateInputs) return candidateInputs
+    for (const input of candidateInputs) {
+      const observed = captured.get(input.key)
+      if (observed === undefined) return hold("ownership-input-unavailable", [key, input.key])
+      if (observed.kind === "absent" && (recipe.mandatoryInputs ?? recipe.declaredInputs).includes(input.key)) return hold("ownership-input-unavailable", [key, input.key])
+      if (observed.kind === "unavailable") return hold("ownership-input-unavailable", [key, input.key])
+    }
+    for (const input of bound.receipt.inputs) {
+      if (!input.key.startsWith("members:")) continue
+      const observed = captured.get(input.key)
+      if (observed?.kind !== "present" && observed?.kind !== "absent") return hold("ownership-input-unavailable", [key, input.key])
+      if (observed?.kind === "absent") return hold("ownership-input-unavailable", [key, input.key])
+    }
+    const ownChanged = inputsChanged(bound.receipt.inputs, candidateInputs, captured)
+    const depChanged = recipe.required.some((dep) => newResults.get(dep) !== bound.receipt.dependencies.find((dependency) => dependency.key === dep)?.result)
+    const precise = ownChanged || depChanged
+    if (!precise) continue
+    for (const input of candidateInputs) {
+      const fresh = request.observe(input.key)
+      if (!sameObservation(captured.get(input.key), fresh)) return hold("ownership-input-changed", [key, input.key])
+    }
+    const dependencies = new Map<string, Hash>()
+    for (const dep of recipe.required) {
+      const resolved = newResults.get(dep)
+      if (resolved === undefined) return hold("ownership-dependency-changed", [key, dep])
+      dependencies.set(dep, resolved)
+    }
+    const output = recipe.run(snapshotForRecipeInput(dependencies))
+    calls.push(key)
+    if (output.validity === "blocked") return hold("ownership-blocked", [key, ...(output.gaps ?? [])])
+    for (const input of candidateInputs) {
+      const fresh = request.observe(input.key)
+      if (!sameObservation(captured.get(input.key), fresh)) return hold("ownership-input-changed", [key, input.key])
+    }
+    const result: OwnershipResult = {
+      kind: "ownership-result", version: 1,
+      body: request.store.put({ kind: "ownership-body", version: 1, bytes: Array.from(new TextEncoder().encode(output.body)) }),
+      authority: { scope: bound.artifact.scope, basis: output.authorityBasis ?? "fixture recipe" },
+      validity: "supported", gaps: output.gaps ?? [], evidence: output.evidence ?? ["fixture, not semantic acceptance"],
+    }
+    const resultRef = request.store.put(result)
+    const newDependencies = recipe.required.map((dep) => ({ key: dep, result: newResults.get(dep) as Hash }))
+    const evaluated = request.evaluate({ key, scope: bound.artifact.scope, inputs: candidateInputs, dependencies: newDependencies, result: resultRef })
+    if (evaluated.kind === "hold") return evaluated
+    const newReceipt: OwnershipReceipt = {
+      kind: "ownership-receipt", version: 1, contract: request.contract,
+      inputs: candidateInputs, dependencies: newDependencies,
+      reviews: evaluated.reviews,
+    }
+    const receiptRef = request.store.put(newReceipt)
+    const newArtifact: OwnershipArtifact = { ...bound.artifact, result: resultRef, receipt: receiptRef }
+    candidateArtifacts.set(key, request.store.put(newArtifact))
+    const partialManifest: OwnershipManifest = {
+      ...baselineManifest,
+      entries: baselineManifest.entries.map((entry) => ({ key: entry.key, artifact: candidateArtifacts.get(entry.key) as Hash })),
+    }
+    const partialRef = request.store.put(partialManifest)
+    const nodeRead = readOwnership(request.store, partialRef, { scope: request.scope, key, maxBytes: Number.MAX_SAFE_INTEGER }, currentFromCaptured)
+    if (nodeRead.kind === "hold") return nodeRead
+    newResults.set(key, resultRef)
+  }
+  for (const key of captured.keys()) {
+    const fresh = request.observe(key)
+    if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key])
+  }
+  for (const [dir, listed] of initialMembers) {
+    const now = [...request.listMembers(dir)].sort()
+    if (now.join("\0") !== listed.join("\0")) return hold("ownership-input-changed", [dir])
+  }
+  const candidateManifest: OwnershipManifest = {
+    ...baselineManifest,
+    entries: baselineManifest.entries.map((entry) => ({ key: entry.key, artifact: candidateArtifacts.get(entry.key) as Hash })),
+  }
+  const candidateManifestRef = request.store.put(candidateManifest)
+  for (const entry of candidateManifest.entries) {
+    const read = readOwnership(request.store, candidateManifestRef, { scope: request.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, currentFromCaptured)
+    if (read.kind === "hold") return read
+  }
+  return { kind: "candidate", manifest: candidateManifestRef, affected: plan.affected, calls }
+
+END EXACT SOURCE EXCERPT
+
+BEGIN EXACT SOURCE EXCERPT R: /workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+Full file: 20859 bytes; SHA256 83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa. Lines 318-343: 1629 bytes; SHA256 b5134f1227fd7f051d2d1ed42f2531de56d6973fc05ef62579d2b9aedd0e0f11.
+function effectiveInputs(key: string, receipt: OwnershipReceipt, recipe: OwnershipRecipe, captured: ReadonlyMap<string, OwnershipInputObservation>, initialMembers: ReadonlyMap<string, readonly string[]>): readonly OwnershipInput[] | OwnershipRefusal {
+  void key
+  const mandatory = new Set(recipe.mandatoryInputs ?? recipe.declaredInputs)
+  const membersDirs = receipt.inputs.filter((input) => input.key.startsWith("members:")).map((input) => input.key.slice("members:".length))
+  const effective = new Map<string, string>()
+  for (const path of membersDirs.flatMap((dir) => initialMembers.get(dir) ?? [])) {
+    const memberKey = `file:${path}`
+    const observed = captured.get(memberKey)
+    if (observed?.kind === "present") effective.set(memberKey, observed.version)
+    else if (observed?.kind === "absent") effective.delete(memberKey)
+    else if (observed !== undefined) return hold("ownership-input-unavailable", [memberKey])
+  }
+  const out: OwnershipInput[] = []
+  for (const input of receipt.inputs) {
+    if (input.key.startsWith("file:") && isUnderMembers(input.key, receipt) && !mandatory.has(input.key)) {
+      const version = effective.get(input.key)
+      if (version !== undefined) out.push({ key: input.key, version })
+      continue
+    }
+    const observed = captured.get(input.key)
+    out.push(observed?.kind === "present" ? { key: input.key, version: observed.version } : input)
+  }
+  for (const [memberKey, version] of effective) {
+    if (!out.some((input) => input.key === memberKey)) out.push({ key: memberKey, version })
+  }
+  return out.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
+
+END EXACT SOURCE EXCERPT

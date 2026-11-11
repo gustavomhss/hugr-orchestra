@@ -1,0 +1,87 @@
+{
+  "schema": "s4-section-source-map/v1",
+  "artifact_key": "S4:L2:continuity-rag-operations",
+  "body_sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94",
+  "sections": {
+    "Propósito e alcance": {
+      "predecessors": [
+        "S4:L1:continuity-rag"
+      ],
+      "source_sections": [
+        "Continuity: recoverable request reduction around the Session core",
+        "RAG Studio: admitted-document diagnostics, with embedding off"
+      ],
+      "role": "purpose and evidence boundary"
+    },
+    "Continuity depende do caminho da sessão": {
+      "predecessors": [
+        "S4:L1:continuity-rag",
+        "S4:L1:host-boundaries"
+      ],
+      "source_sections": [
+        "Continuity: recoverable request reduction around the Session core",
+        "1. Session → runner → compaction/Continuity"
+      ],
+      "role": "default, contribution, sequencing, path-dependent impact"
+    },
+    "Redução recuperável exige arquivo, permissão e contexto": {
+      "predecessors": [
+        "S4:L1:continuity-rag",
+        "S4:L1:host-boundaries"
+      ],
+      "source_sections": [
+        "Continuity: recoverable request reduction around the Session core",
+        "Maintenance impact and evidence limits",
+        "1. Session → runner → compaction/Continuity"
+      ],
+      "role": "capture and retrieval contracts, persistence and privacy limits"
+    },
+    "RAG atravessa extração, Store e persistência por requisição": {
+      "predecessors": [
+        "S4:L1:continuity-rag",
+        "S4:L1:host-boundaries"
+      ],
+      "source_sections": [
+        "RAG Studio: admitted-document diagnostics, with embedding off",
+        "2. HTTP RAG → Store por requisição → SQLite"
+      ],
+      "role": "domain-to-host synthesis and admission/change sequence"
+    },
+    "Diagnóstico deve seguir a identidade que cada porta usa": {
+      "predecessors": [
+        "S4:L1:continuity-rag",
+        "S4:L1:host-boundaries"
+      ],
+      "source_sections": [
+        "RAG Studio: admitted-document diagnostics, with embedding off",
+        "2. HTTP RAG → Store por requisição → SQLite"
+      ],
+      "role": "operational interpretation of stale input, trace identity, allocation and historical corpus limits"
+    },
+    "Percurso de mudança e limites de sustentação": {
+      "predecessors": [
+        "S4:L1:continuity-rag",
+        "S4:L1:host-boundaries"
+      ],
+      "source_sections": [
+        "RAG Studio: admitted-document diagnostics, with embedding off",
+        "Maintenance impact and evidence limits",
+        "1. Session → runner → compaction/Continuity",
+        "2. HTTP RAG → Store por requisição → SQLite"
+      ],
+      "role": "maintenance impact and explicit limits"
+    },
+    "Localizadores dos predecessores": {
+      "predecessors": [
+        "S4:L1:continuity-rag",
+        "S4:L1:host-boundaries"
+      ],
+      "source_sections": [
+        "all referenced sections above"
+      ],
+      "role": "citation alias resolution"
+    }
+  },
+  "direct_raw_source_claims": false,
+  "maintenance_paths_are_transmitted_by_predecessors": true
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "s4-review-packet-manifest/v1",
+  "unit": "l2b",
+  "revision": "v2",
+  "correction": "WP-L2B-P1",
+  "status": "AWAITING_PRIMARY_CHECK",
+  "sent_to_judges": false,
+  "sends": [],
+  "parts": [
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/review-packet-v2-01.txt",
+      "relative_path": "review-packet-v2-01.txt",
+      "bytes": 29850,
+      "sha256": "415953649fb972177b5ac0476ad7c79200b9519d6f69a38afc3fb1fb077d0baa",
+      "max_bytes": 32000,
+      "embedded_literal_files": [
+        {
+          "file": "continuity-rag-operations-v2.md",
+          "bytes": 7949,
+          "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+        },
+        {
+          "file": "artifacts-v2.json",
+          "bytes": 7852,
+          "sha256": "ee3beed1896ad4abe3a119df2e62e9d24fb7ebc6907c591965852290e50e00c0"
+        },
+        {
+          "file": "recipe-v2.json",
+          "bytes": 8374,
+          "sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199"
+        },
+        {
+          "file": "response-v2.md",
+          "bytes": 2584,
+          "sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a"
+        }
+      ]
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/review-packet-v2-02.txt",
+      "relative_path": "review-packet-v2-02.txt",
+      "bytes": 17315,
+      "sha256": "755111e7986c73670f0e2c55426458f3a0c3a6500d8500b279620b0c652ca3ed",
+      "max_bytes": 32000,
+      "embedded_literal_files": [
+        {
+          "file": "request-v2.md",
+          "bytes": 7394,
+          "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+        },
+        {
+          "file": "input-manifest-v2.freeze.json",
+          "bytes": 1241,
+          "sha256": "141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea"
+        },
+        {
+          "file": "sources-v2/revision.ts",
+          "bytes": 2701,
+          "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+        },
+        {
+          "file": "sources-v2/compare.ts",
+          "bytes": 2337,
+          "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+        },
+        {
+          "file": "changes-v2.json",
+          "bytes": 1923,
+          "sha256": "8c15b48a40092b7a0871611bb3574a47df4de1cbe49267a8ac0d55f77a137477"
+        }
+      ]
+    }
+  ],
+  "build_dependency_keys": [
+    "S4:L1:continuity-rag",
+    "S4:L1:host-boundaries"
+  ],
+  "progressive_source_paths": [
+    "modules/rag-studio/src/revision.ts",
+    "modules/rag-studio/src/compare.ts"
+  ],
+  "oracle_contents_included": false
+}

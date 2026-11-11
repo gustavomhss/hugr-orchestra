@@ -1,0 +1,123 @@
+{
+  "schema": "genesis-mechanical-integrity/v1",
+  "version": "l2a-v2",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "verification_kind": "static-files-only",
+  "files": [
+    {
+      "path": "primary-correction-request.md",
+      "byte_length": 1445,
+      "sha256": "d8952808b1db8ca5ff65b88e78f6fcb2e632d443376df09947d7d2ec1b8454d9"
+    },
+    {
+      "path": "genesis-governance-v2.md",
+      "byte_length": 7971,
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+    },
+    {
+      "path": "genesis-governance-v2-sources.json",
+      "byte_length": 10822,
+      "sha256": "0af4a4fa55285b22c7d2e4a26d427ffb648992a970782bd6cab1b56d58ec8129"
+    },
+    {
+      "path": "recipe-v2.json",
+      "byte_length": 11215,
+      "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141"
+    },
+    {
+      "path": "response-v2.md",
+      "byte_length": 3902,
+      "sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42"
+    },
+    {
+      "path": "artifacts-v2.json",
+      "byte_length": 15563,
+      "sha256": "7d0ab864cadc5d19414e87ee6b72e6887d4539a938d669de3157ed11fcb31bf5"
+    },
+    {
+      "path": "review-packet-v2-01.txt",
+      "byte_length": 26083,
+      "sha256": "ef7c57733aa9c397093e6aeeb2cc22dcdca3b33f6c6c968da08a598c4f1aedfc"
+    },
+    {
+      "path": "review-packet-v2-02.txt",
+      "byte_length": 25922,
+      "sha256": "01b1a6c43d593d02f1f85b8f1a4d19f8151483ca9ca10d1b2835d92790d06cc8"
+    },
+    {
+      "path": "review-packets-v2.json",
+      "byte_length": 636,
+      "sha256": "c1eca9962cc85f69f7fd25e763eac28fc359b2d88f745d4361a78b0e36a1d2bd"
+    }
+  ],
+  "unchanged_atlas_body": {
+    "path": "atlas-system.md",
+    "byte_length": 7954,
+    "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+  },
+  "v1_preservation_receipt": {
+    "path": "integrity-receipt-v1.json",
+    "byte_length": 4268,
+    "sha256": "f1e0e06a1f1667330d9a24cd632e7fdfcf87d280fd249fdaf46ab21265540a4e"
+  },
+  "frozen_v1_files_unchanged": 24,
+  "authorized_source_copies_verified_sha256_git_blob_bytes": 8,
+  "source_manifest": {
+    "path": "input-manifest.json",
+    "byte_length": 12610,
+    "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca"
+  },
+  "artifact_checks": [
+    {
+      "key": "S4:L2:atlas-system",
+      "body": {
+        "path": "atlas-system.md",
+        "byte_length": 7954,
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      "unique_h2": 6,
+      "semantic_predecessors": 5,
+      "source_refs": 6,
+      "file_inputs": 11,
+      "max_input_bytes": 17987
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "body": {
+        "path": "genesis-governance-v2.md",
+        "byte_length": 7971,
+        "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+      },
+      "unique_h2": 8,
+      "semantic_predecessors": 4,
+      "source_refs": 6,
+      "file_inputs": 11,
+      "max_input_bytes": 17988
+    }
+  ],
+  "checks": {
+    "exactly_two_artifacts": true,
+    "source_refs_equal_v1_and_manifest": true,
+    "file_input_for_every_source_path": true,
+    "all_inputs_within_256000_bytes": true,
+    "all_payload_refs_use_real_hashes": true,
+    "no_new_semantic_build_dependency": true,
+    "atlas_only_mechanical_metadata_changes": [
+      "input_keys",
+      "producer_response_ref",
+      "recipe_ref"
+    ],
+    "literal_packet_bodies_metadata_verified": true,
+    "packets_below_32000_bytes": true,
+    "semantic_review_refs_empty": true,
+    "runtime_receipt_refs_empty": true,
+    "own_payload_refs_verified": 17
+  },
+  "limits": [
+    "Somente leitura e conferência estática de arquivos autorizados; nenhum teste/build/runtime de produto.",
+    "Não é judgment semântico, receipt do kernel, binding, aceite ou publicação.",
+    "Inputs copiados coincidem com refs do manifesto; esta conferência não refaz a captura Git externa.",
+    "Metadados de modelo/tokens/custo/tentativas físicas não expostos são UNKNOWN; não há garantia financeira."
+  ],
+  "self_excluded": true
+}
