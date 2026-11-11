@@ -1,0 +1,17 @@
+[
+  {
+    "id": "R1-J1-01",
+    "criteria": [
+      "QS-1",
+      "AC-07",
+      "CC-4",
+      "QS-4",
+      "GO-I4"
+    ],
+    "location": "genesis-native-recovery.test.ts: concurrentReader(), função sample(), e NR1-04; native-runtime-delta.md: descrição de NR1-04.",
+    "expected": "O controle deve exigir que uma chamada real de ownership.read da seleção substituída tenha intervalo sobreposto à ativação após a liberação da barreira.",
+    "observed": "sample.started é registrado antes de main = runtime.ownership.read(query); sample.finished só é registrado depois de independent = runtime.ownership.read(independentQuery) e das operações intermediárias. A asserção usa esse envelope combinado. É possível que main termine antes da ativação, o Worker seja suspenso entre as chamadas e independent comece depois da ativação. O envelope se sobrepõe, os resultados old/new podem aparecer nas demais amostras e todas as asserções ainda passam, sem uma leitura sobreposta.",
+    "correction": "Registrar timestamps próprios imediatamente ao redor da chamada main de ownership.read(query), separados dos da leitura independente, e exigir a sobreposição usando esse par. Preservar as verificações de resultados completos old/new, HOLD e scope independente. Executar novamente o controle na rota remota autorizada e atualizar commit, recibo e source_refs para os bytes corrigidos. O corpo pode permanecer igual se o controle corrigido efetivamente sustentar sua descrição.",
+    "scope": "Correção da exigência já congelada no caso 3; não solicita novo motor, concorrência universal ou repetição redundante dos demais controles."
+  }
+]

@@ -1,0 +1,33 @@
+--- body.md
++++ body-v2.md
+@@ -1,10 +1,10 @@
+ # Fronteiras do host: Session, RAG e Atlas
+ 
+-**Evidência estática sustentada, com limites.** Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. Os 12 arquivos externos foram lidos e ligados às fontes de S4. São consultas: a população atribuída permanece em 2.220 caminhos. Constatações descrevem código; inferências, suas consequências; prompts/comentários indicam intenção. Nenhuma integração, chamada de modelo, CI ou teste foi executado.
++**Evidência estática sustentada, com limites.** Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. Os 12 externos foram lidos e ligados a S4, sem ampliar seus 2.220 caminhos. Constatações descrevem código; inferências, suas consequências; prompts/comentários indicam intenção. Nenhuma integração, chamada de modelo, CI ou teste foi executado.
+ 
+ ## Localizadores
+ 
+-Linhas inclusivas do baseline; `artifact.json` e `source-provenance.json` vinculam caminhos a commit, Git blob e SHA-256.
++Linhas inclusivas do baseline; `artifact-v2.json` e `source-provenance-v2.json` vinculam caminhos a commit, Git blob e SHA-256.
+ 
+ | Sigla | Caminho exato ou prefixo |
+ |---|---|
+@@ -34,13 +34,15 @@
+ 
+ **Persistência e transformação.** `Session.messages` consulta `SessionMessageTable`; `events/history` leem eventos e `context` delega ao Store. A compactação publica `Compaction.Started/Ended`, com resumo e mensagens recentes; limita o resumo a 4.096 tokens e trunca resultados de ferramentas na serialização. A fidelidade pedida no prompt não é garantia. Projetor/Store não foram capturados: atomicidade completa e recuperação após crash não estão demonstradas. [S:435–489,749–764; C:17–60,108–179,197–275]
+ 
+-**Ligação com Continuity.** `V/index.ts:3–17` declara substituição de `SessionCompaction.node` e acrescenta ferramentas; os exports públicos existem em P:340–357. Instalação na composição global não está demonstrada. Habilitada, a estratégia arquiva conteúdo antes de persistir máscaras e exige recall disponível para mascarar. A sumarização em segundo plano descarta resultado se o contexto mudou e limita falhas consecutivas. Os gatilhos dependem do modelo e da última entrada guardados pelos hooks. [V/strategy.ts:122–180,183–300]
++**Default:** `SessionCompaction.node` combina `make` (`compact`, `compactIfNeeded`, `compactAfterOverflow`) com `transform` que devolve `input.messages` e `afterStep` sem efeito. [C:277–329]
++
++**Ligação com Continuity.** `V/index.ts:3–17` declara a substituição e ferramentas (exports P:340–357), sem demonstrar instalação global. Habilitada, a estratégia arquiva conteúdo antes de persistir máscaras e exige recall disponível para mascarar. A sumarização em segundo plano descarta resultado se o contexto mudou e limita falhas consecutivas. Os gatilhos dependem do modelo e da última entrada guardados pelos hooks. [V/strategy.ts:122–180,183–300]
+ 
+ O recall autoriza a ferramenta e chama `SessionHistory.loadAll` com a sessão do contexto; a API não recebe outra sessão. Distingue busca sem resultado, referência ausente e arquivo indisponível; pagina em UTF-16 com limite de bytes. O arquivo local usa `<data>/continuity/<sha256(sessionID)>`, índice, Markdown por hash e máscaras em `memory.json`. Exportação ao repositório é função separada, com opção `commit`, sem execução demonstrada. [V/tools.ts:22–55,77–152,154–219,248–286; V/archive.ts:76–177]
+ 
+ **Outros caminhos.** Engine hospedada recebe histórico sem `transform`/`compactIfNeeded`; `memory.archive` publica evento sintético. `afterStep` ocorre, mas seus pré-requisitos de estado não se estabelecem nesse caminho isoladamente: não comprova o arquivo recuperável de Continuity. `generate` não tem ferramentas, registro de mensagens ou esses hooks; `compact` manual resolve modelo e chama compactador. [L:231–272,358–383,427–448,559–564,684–717; I:33–39; V/strategy.ts:257–300]
+ 
+-**Manutenção:** alterar admissão/exclusão em S; ordem de governança, ferramentas e hooks em L; orçamento/serialização em C; retenção, recall e substituição em V. O checklist introdutório de L:67–115 ainda marca continuação pós-compactação como pendente, mas L:588–613 contém esse fluxo: a lista não é prova de ausência.
++**Manutenção:** alterar admissão/exclusão em S; ordem de governança, ferramentas e hooks em L; orçamento/serialização em C; retenção, recall e substituição em V. L:67–115 marca continuação pós-compactação como pendente; L:588–613 implementa o fluxo. O checklist não prova ausência.
+ 
+ ## 2. HTTP RAG → Store por requisição → SQLite
+ 

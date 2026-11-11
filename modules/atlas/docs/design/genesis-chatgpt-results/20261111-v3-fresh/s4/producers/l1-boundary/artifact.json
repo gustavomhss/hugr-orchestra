@@ -1,0 +1,324 @@
+{
+  "key": "S4:L1:host-boundaries",
+  "scope": "atlas-continuity-rag-genesis",
+  "title": "Fronteiras do host: Session, persistência RAG e entrada Atlas",
+  "layer": 1,
+  "need": "evidence",
+  "body": {
+    "path": "producers/l1-boundary/body.md",
+    "encoding": "utf-8",
+    "byte_length": 11955,
+    "sha256": "c282b8edc6383dc3af07ed43fbcb75318bde5b581868eefdf606f40e245f6ef6"
+  },
+  "source_refs": [
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+      "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/boundary/package.json",
+      "git_blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+      "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/boundary/script/build.ts",
+      "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+      "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/review-answer.ts",
+      "git_blob_sha": "cbfe58cd0d65307d91cb5171981f330a97ffd89b",
+      "sha256": "d9f6d00a5abf557c3861ba24ed03c46961de8c1466588dc9c297584a59acade5"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "git_blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+      "sha256": "8560562009ce02522725630941c9fbd05dadceea64d09728ec32398641e8885f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/surface/review.ts",
+      "git_blob_sha": "7767aba8e29f78962c25dae5934328c24548de99",
+      "sha256": "b7e922af1b3df0613ef997539157067dbf9ed45e2581ae1a821bd7490e212fe9"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/cli/src/surface-mine.ts",
+      "git_blob_sha": "634b50b31754c9597865557ede58ad63c8b7d254",
+      "sha256": "03e7a1007a0858a4023bc715b3b74191686b7d6bc2af6f45fbb050da17deace1"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/archive.ts",
+      "git_blob_sha": "138ccd42749b0fa259b4fb8b1b81c08fdeddb608",
+      "sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/index.ts",
+      "git_blob_sha": "89e51c378a048c9b48e70da78c6e2479ebb0f96d",
+      "sha256": "8389f6d19d977e4403d2acc9c5e74c37b56ea3eb405bc03ae0a48751a6a53430"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/strategy.ts",
+      "git_blob_sha": "95a8648eb828779cfcedbc32868fb178bcf03876",
+      "sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/tools.ts",
+      "git_blob_sha": "eca80f15d3c970659a0138cc0e82ad3914186429",
+      "sha256": "86e9f6677a2e3fa088cefeb85150e7b98befbd5a781a83da57a906985af086df"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/admit.ts",
+      "git_blob_sha": "30d3beb66b79c99a18acb949ac2436d3458855ed",
+      "sha256": "1ea61a8352cc98d7fb6c2d51b6d20f1e59d7b99e37a06b453a8f1f5265661b06"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/ask.ts",
+      "git_blob_sha": "629f9ae2cda44f9a936e864d9f8f3148a362cc3c",
+      "sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/context.ts",
+      "git_blob_sha": "0fdf7227c4118e336c60ebabf8f0c509f04e5a9c",
+      "sha256": "f6d07d8da485a0e8119ec982b9a39b1ddfcf908673888c74f48ad69120fd17b6"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/extract.ts",
+      "git_blob_sha": "f1eaafe9993154469b5c0fae4697424ceabdc297",
+      "sha256": "b45b137f1a23432385312a6f5132a0622e68a31a83652c4a3efb69043f98a8d8"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/proof.ts",
+      "git_blob_sha": "c5f37d7d6d096378146f7e32c82512399d21b8ec",
+      "sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/reparse.ts",
+      "git_blob_sha": "353768de7b40ffcd835a9eaea101771962d00421",
+      "sha256": "3b378c3cad88e9916449cd99672be4259a5926fe6c8c2b197f39bffba709a6cc"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/revision.ts",
+      "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+      "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/search.ts",
+      "git_blob_sha": "8fa79755fcaeb8d16f3099e1265ab868cb70aaec",
+      "sha256": "d0021c6ef9f5747ea9f61664cfa2f0c0ad8a77373582b0195393b9bbfe395843"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/trace.ts",
+      "git_blob_sha": "39c42039f59f3b0b947b45afbcb8cb9844ebe4ff",
+      "sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/package.json",
+      "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/atlas.ts",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session.ts",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/compaction.ts",
+      "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+      "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/runner/index.ts",
+      "git_blob_sha": "6da5d89f1fb9528d1d1bb53ac4a72d3aa3506845",
+      "sha256": "08188f1e93d6b49e27f1b02d227516f6b2cd61f8ebc2f831ab8e6903685af109"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/rag-studio.ts",
+      "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+      "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/rag-studio.ts",
+      "git_blob_sha": "b553ee9dc72cbb7d87ff01eba7cb7608a5ab89df",
+      "sha256": "948d52ca2c846da8059bb297a8e564aa82e5cec5dc1edf97906eb010f71b9918"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/server/src/handlers/atlas.ts",
+      "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+      "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/server/src/handlers/rag-studio-session.ts",
+      "git_blob_sha": "42a0cb7a6250df1edc566fa0409dde0463f29639",
+      "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/server/src/handlers/rag-studio.ts",
+      "git_blob_sha": "b91a9e061bb8f818a34756ea7e26e9f27dace4a7",
+      "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e"
+    }
+  ],
+  "input_keys": [
+    "file:.orchestra/skills/execute-genesis/SKILL.md",
+    "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+    "file:.orchestra/skills/execute-genesis/references/principles.md",
+    "file:.orchestra/skills/execute-genesis/references/runtime.md",
+    "file:.orchestra/skills/execute-genesis/references/transport.md",
+    "file:AGENTS.md",
+    "file:modules/atlas/boundary/package.json",
+    "file:modules/atlas/boundary/script/build.ts",
+    "file:modules/atlas/packages/adapter-io/src/review-answer.ts",
+    "file:modules/atlas/packages/adapter-io/src/surface/index.ts",
+    "file:modules/atlas/packages/adapter-io/src/surface/review.ts",
+    "file:modules/atlas/packages/cli/src/surface-mine.ts",
+    "file:modules/continuity/src/v2/archive.ts",
+    "file:modules/continuity/src/v2/index.ts",
+    "file:modules/continuity/src/v2/strategy.ts",
+    "file:modules/continuity/src/v2/tools.ts",
+    "file:modules/rag-studio/src/admit.ts",
+    "file:modules/rag-studio/src/ask.ts",
+    "file:modules/rag-studio/src/context.ts",
+    "file:modules/rag-studio/src/extract.ts",
+    "file:modules/rag-studio/src/proof.ts",
+    "file:modules/rag-studio/src/reparse.ts",
+    "file:modules/rag-studio/src/revision.ts",
+    "file:modules/rag-studio/src/search.ts",
+    "file:modules/rag-studio/src/trace.ts",
+    "file:packages/core/package.json",
+    "file:packages/core/src/atlas.ts",
+    "file:packages/core/src/rag-studio/sql.ts",
+    "file:packages/core/src/session.ts",
+    "file:packages/core/src/session/compaction.ts",
+    "file:packages/core/src/session/runner/index.ts",
+    "file:packages/core/src/session/runner/llm.ts",
+    "file:packages/protocol/src/groups/rag-studio.ts",
+    "file:packages/schema/src/rag-studio.ts",
+    "file:packages/server/src/handlers/atlas.ts",
+    "file:packages/server/src/handlers/rag-studio-session.ts",
+    "file:packages/server/src/handlers/rag-studio.ts",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/request.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/response.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/source-provenance.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/inspection-register.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/read_source.py",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/build_delivery.py"
+  ],
+  "authority": {
+    "scope": "atlas-continuity-rag-genesis",
+    "basis": "Produção direta de WP-L1-BOUNDARY por /root/producer_l1a na execução a2095d5a-1464-4c38-a222-6376974fc9c9; fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38, protocolo ee2521a5b966bd505cc95bd1c733e09e12f33531. Evidência de inspeção estática com distinção de inferência, intenção e execução. Referências externas somente de leitura; população S4 permanece 2220. supported sustenta somente as afirmações limitadas do corpo; não declara aceite independente, integração, publicação ou autoridade de ratificação. Materialização multi-pin, observed_head=null, sem alegação de checkout único."
+  },
+  "validity": "supported",
+  "gaps": [
+    "Instalação global de Continuity e implementação interna de SessionExecution/Store/History/projetor não foram capturadas; não se afirma integração completa, atomicidade da sessão ou recuperação após crash.",
+    "RAG mantém conflitos materiais entre trace de ask por revisionId e persistência/prova por questionId; contador recriado permite inferir reutilização de IDs. São constatações/inferências estáticas, sem reprodução executada.",
+    "Leitura RAG anterior ao gate, conservação de metadados sob arquivo indisponível e ausência de transação explícita do ciclo exigem cuidado; autorização e isolamento oferecidos externamente não foram demonstrados.",
+    "Middleware, autenticação e registro global das rotas/Location não foram capturados. Ator/token Atlas são contratos de domínio e não provam autenticação HTTP.",
+    "Imports do host apontam a bundles gerados; origem e receita foram examinadas, mas paridade integral de bytes não foi estabelecida. Dois passes de mineração não provam snapshot imutável entre chamadas de modelo.",
+    "Inspeção estática não é teste, CI, build, chamada externa ou integração executada; revisão independente, prepare/binding e recibos runtime permanecem pendentes."
+  ],
+  "evidence": [
+    "Corpo com 56 localizadores em 31 fontes semânticas, incluindo todos os 12 externos; hashes e intervalos conferidos contra capturas fixas.",
+    "Proveniência e correspondência semântica: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/source-provenance.json\", \"sha256\": \"2269506b716862099388f71b2598467474245dcb4070e65d51f2511951a311d0\", \"byte_length\": 37056}",
+    "Registro de leituras: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/inspection-register.json\", \"sha256\": \"375f93761e02e5d5d95e44aff8a0ca02599ddfd2629d8f6f06ec8d64c04dc822\", \"byte_length\": 7778}",
+    "Critérios públicos QS-1, QS-2, CC-3, CC-7, GO-I2, GO-I5, GO-I7, GO-I8 são alvos de avaliação, não parecer de aceite.",
+    "Não foi alterada a população de 2220 caminhos ou qualquer corpo L1A/L1B. Navegação abaixo é consulta, sem dependência de build."
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe.json",
+    "sha256": "b6aa3e05d44ef6a5a824de7421eedd120010fadbf03390cb82e04d0fa4e2ba78"
+  },
+  "build_dependencies": [],
+  "navigation": [
+    "S4:L1:ownership-boundaries",
+    "S4:L1:atlas-host-genesis",
+    "S4:L1:continuity-rag",
+    "S4:L1:coverage-governance"
+  ],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/request.md",
+    "sha256": "222d944f611edfe9627164437d8c4909898bd20ce315173fea4e9129037cbbc7"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/response.md",
+    "sha256": "1aa49ca659bd16f49cb68ef48270eac4626b9c59235e35dc8dd2fb3157dba5ee"
+  },
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": []
+}

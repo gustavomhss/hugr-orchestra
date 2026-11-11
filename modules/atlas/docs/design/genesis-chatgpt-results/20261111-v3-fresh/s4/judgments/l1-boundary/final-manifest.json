@@ -1,0 +1,118 @@
+{
+  "schema": "s4-courier-final-manifest/v1",
+  "unit": "S4:L1:host-boundaries",
+  "review_payload_send_count": 8,
+  "active_review_payload_version": "v2",
+  "files": [
+    {
+      "path": "s4/review-packets/l1-boundary/courier-request-record.json",
+      "byte_length": 297,
+      "sha256": "9cba15ef7a444601a256ed93cec0c86ce94aa5a9e5eac67923bd7ca641c38f1e"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/courier-request.txt",
+      "byte_length": 1775,
+      "sha256": "dd9b36e2462372e9caa0db89f83b8200a9ec77e8424a41ec5f323a11146eadb5"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/courier-response.md",
+      "byte_length": 2219,
+      "sha256": "4f0c66bc3b01f43a2b2ec45fa35361ccc520eccaf06ecb42f31c7b1486487a42"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/excerpt-manifest-v2.json",
+      "byte_length": 14593,
+      "sha256": "e3d99773cf41e0b6861accd3adfa6865445b45f0ee58f90283d93a36028988b5"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/excerpt-manifest.json",
+      "byte_length": 14040,
+      "sha256": "6b19fd0671e2939e7459c4659d527847f6173936d40e11e9b571ec58fcc22954"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/mechanical-summary-v2.json",
+      "byte_length": 6585,
+      "sha256": "9d09cebd58828db79b3f0c58b7a25506fe71c2da846a2530266e3e9e35c1caf9"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/mechanical-summary.json",
+      "byte_length": 10477,
+      "sha256": "87330f64b0424abadb99ba049fbb71cd3713ad5e9abbb9324cbf0bb2d85ef3f6"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/part-01.txt",
+      "byte_length": 30167,
+      "sha256": "5386edc301113650a88c5271e17dfd4baa90f60cf837a140c428314c5e76a5a0"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/part-02.txt",
+      "byte_length": 28072,
+      "sha256": "24a04b3dad4b41455fcb142eb262c30677398ae0a2c997cca846a83a74408ff0"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/part-03.txt",
+      "byte_length": 26619,
+      "sha256": "87f45545c122f4fb4862b5faf4aaa392553cc910657793c99a293641a3ce4b9a"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/part-v2-01.txt",
+      "byte_length": 31097,
+      "sha256": "2ff8c3089dae943270bdde00eb050c2dd520225e0974be27025d878d68621af3"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/part-v2-02.txt",
+      "byte_length": 30675,
+      "sha256": "45813371f5608cce9b6c75fa5d863862bcb2df998dd2db56ae47987901382fc7"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/part-v2-03.txt",
+      "byte_length": 28448,
+      "sha256": "3cb8423648e6145ee65444ace09e255334ca97cc7941a27e351fb3e4909796dd"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/payload-manifest-v2.json",
+      "byte_length": 1031,
+      "sha256": "a50e77015a926107df426c30da01c41af5a85d586a5caa81e619403a3ed6a30d"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/payload-manifest.json",
+      "byte_length": 907,
+      "sha256": "100e72d2ef3d1be7898fe18cd7e8d2b07447cb0aad9da1f36e7f267bffbfef9c"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/pending-default-compaction-record.json",
+      "byte_length": 533,
+      "sha256": "57bd85cb3e9c238fba8844af4c053cb669faa776c79e5e4a16d505662936e95d"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/pending-default-compaction.txt",
+      "byte_length": 631,
+      "sha256": "ca4368de58966f5f85a223a1d8147642c6e72b0f9d640675a03350893317af72"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/principal-criteria.txt",
+      "byte_length": 3576,
+      "sha256": "bf3dae18602cd0d9ac4fb61c155f62c1250fe92d44591cabc4d90cbaf6a44708"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/send-ledger.json",
+      "byte_length": 5436,
+      "sha256": "425bb4497d9b575d983016e22215d6d39f279703fae300d56f5fa45ebf023f55"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/steering-primary-check-v2.txt",
+      "byte_length": 388,
+      "sha256": "b2325101056c3e820cbc1d6aede0c82c670628712b322efa607bf407e59543f8"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/steering-v2-ready.txt",
+      "byte_length": 663,
+      "sha256": "bbe4095b38cf4ef8d459a9c0cb725dfb03fde4f4f34f3fbc6106b7d4799b8dcf"
+    },
+    {
+      "path": "s4/review-packets/l1-boundary/steering-v2-request.txt",
+      "byte_length": 500,
+      "sha256": "8db8a1ef5a512956958e9baaa39c4a892853170982c3acd224d1438841d6c3a8"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "sender": "/root",
+  "recipient": "/root/producer_runtime",
+  "role": "courier-only",
+  "host_message_id": "UNKNOWN",
+  "request_path": "s4/review-packets/l1-boundary/courier-request.txt",
+  "byte_length": 1775,
+  "sha256": "dd9b36e2462372e9caa0db89f83b8200a9ec77e8424a41ec5f323a11146eadb5"
+}

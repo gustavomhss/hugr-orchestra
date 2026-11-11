@@ -1,0 +1,107 @@
+{
+  "agent_id": "/root/judge_j1",
+  "identity_role": "parallel-v3-fresh/S4/J1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "verdict_semantic_L1": "FIX-FIRST",
+  "verdict_runtime_controls": "FIX-FIRST",
+  "identities": {
+    "key": "S4:L1:native-runtime-delta",
+    "body_bytes": 11980,
+    "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+    "metadata_v2_sha256": "6d5d60a4be902b4a831a136c7ca8c4d5b5edf520774349b0f5a10ce07a666394",
+    "code_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+    "recovery_test_sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387",
+    "run_id": 43070538154,
+    "job_id": 130696884358,
+    "packet_manifest": "fafd4f513f8d1f45e1d48e4f4fb7050e285cd1fc3c1e88ab9ba88c82de244cd1"
+  },
+  "criteria_semantic_L1": [
+    {
+      "ids": ["QS-1"],
+      "verdict": "FIX-FIRST",
+      "reason": "O parágrafo NR1-04 afirma que os intervalos exigem leitura sobreposta à ativação real. O teste transportado mede uma amostra com duas leituras e operações intermediárias; sua asserção não exige sobreposição de uma chamada individual. Finding R1-J1-01."
+    },
+    {
+      "ids": ["QS-2", "QS-3", "QS-5", "CC-3", "GO-I2", "GO-I3", "GO-I5", "GO-I7", "GO-I8"],
+      "verdict": "PASS",
+      "reason": "O restante explica a transformação, portas existentes, identidades e manutenção com limites claros. Separa baseline/v1/R1, preserva NOT_RUN histórico e correções de origem, distingue semântica/binding/policy/publicação e não autentica nomes de revisores nem converte hashes em suficiência."
+    }
+  ],
+  "criteria_runtime_controls": [
+    {
+      "ids": ["AC-07", "CC-4", "QS-4", "GO-I4"],
+      "verdict": "FIX-FIRST",
+      "reason": "A exigência de não vacuidade do oracle R1, caso 3, permanece incompleta: NR1-04 pode passar sem uma chamada ownership.read sobreposta à ativação. Finding R1-J1-01."
+    },
+    {
+      "ids": ["AC-04", "AC-05", "AC-06", "AC-09", "AC-10", "CC-5", "QS-5", "GO-I3", "GO-I5", "GO-I7"],
+      "verdict": "PASS",
+      "reason": "NR1-01/02/03 e os controles existentes fornecem evidência delimitada de retomada, invalidação, rollback incompatível, preservação, reuso e autoridade. O recibo final identifica 220 testes, 22 mutantes recusados e guards aprovados, preservando as versões anteriores. Esses resultados são reais como resultados dos testes; não resolvem a lacuna específica de NR1-04."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "case": "R1-1: durabilidade anterior à ativação e retomada",
+      "verdict": "PASS",
+      "evidence": "NR1-01; prepare/publish existentes; controles G3/sidecar.",
+      "reason": "Candidato/CAS são preservados, a interrupção mantém HOLD ou geração antiga válida e a retomada desserializa o candidato sem repetir o callback sintético de autoria."
+    },
+    {
+      "case": "R1-2: drift seguido de falha",
+      "verdict": "PASS",
+      "evidence": "NR1-02.",
+      "reason": "A leitura atual exige ownership-input-changed; a histórica permanece explicitamente marcada, e o scope independente continua legível."
+    },
+    {
+      "case": "R1-3: leitura realmente sobreposta à ativação",
+      "verdict": "FIX-FIRST",
+      "evidence": "concurrentReader.sample() e asserção temporal de NR1-04.",
+      "reason": "started/finished delimitam main read, independent read e operações intermediárias conjuntamente. Sobreposição desse envelope não prova sobreposição de uma leitura."
+    },
+    {
+      "case": "R1-4: rollback incompatível e bindings atuais",
+      "verdict": "PASS",
+      "evidence": "NR1-02; re-preparação e validação de binding.",
+      "reason": "Fonte antiga incompatível, approval antigo para candidato novo e emissão governada incompatível são recusados sem substituir a projeção aceita."
+    },
+    {
+      "case": "R1-5: legado, formato e preservação histórica",
+      "verdict": "PASS",
+      "evidence": "NR1-03; recipe-v2.json; primary-check-v2.json; preservação conferida pelo principal.",
+      "reason": "As recusas cobrem formato v0, scope incoerente, approval incompatível, candidato adulterado e relocalização. Não se inventa uma barreira cronológica universal contra rollback compatível."
+    },
+    {
+      "case": "R1-6: independência de scopes e corrupção compartilhada",
+      "verdict": "PASS",
+      "evidence": "NR1-02/03/04; controles sidecar e ownership existentes.",
+      "reason": "Há verificações do scope independente e controles de predecessor legível, store ilegível e recusa segura. O aceite fica limitado aos casos registrados."
+    },
+    {
+      "case": "Controles existentes de cache, rebuild e impacto",
+      "verdict": "PASS",
+      "evidence": "RB-01/03/04/06/07/08/10/12/13/14/15/16/19; UP; TC; 22 mutantes.",
+      "reason": "A evidência cobre zero callbacks em reuso, propagação por identidade completa de resultado, parada após renovação sem mudança de resultado, navegação distinta de dependência e mudanças de fonte, intenção, receita e membership."
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "R1-J1-01",
+      "criteria": ["QS-1", "AC-07", "CC-4", "QS-4", "GO-I4"],
+      "location": "genesis-native-recovery.test.ts: concurrentReader(), função sample(), e NR1-04; native-runtime-delta.md: descrição de NR1-04.",
+      "expected": "O controle deve exigir que uma chamada real de ownership.read da seleção substituída tenha intervalo sobreposto à ativação após a liberação da barreira.",
+      "observed": "sample.started é registrado antes de main = runtime.ownership.read(query); sample.finished só é registrado depois de independent = runtime.ownership.read(independentQuery) e das operações intermediárias. A asserção usa esse envelope combinado. É possível que main termine antes da ativação, o Worker seja suspenso entre as chamadas e independent comece depois da ativação. O envelope se sobrepõe, os resultados old/new podem aparecer nas demais amostras e todas as asserções ainda passam, sem uma leitura sobreposta.",
+      "correction": "Registrar timestamps próprios imediatamente ao redor da chamada main de ownership.read(query), separados dos da leitura independente, e exigir a sobreposição usando esse par. Preservar as verificações de resultados completos old/new, HOLD e scope independente. Executar novamente o controle na rota remota autorizada e atualizar commit, recibo e source_refs para os bytes corrigidos. O corpo pode permanecer igual se o controle corrigido efetivamente sustentar sua descrição.",
+      "scope": "Correção da exigência já congelada no caso 3; não solicita novo motor, concorrência universal ou repetição redundante dos demais controles."
+    }
+  ],
+  "optional_suggestions": [],
+  "limits": [
+    "Os três lotes, incluindo corpo e metadata-v2 completos, estão visíveis para J1.",
+    "O recibo verde permanece registrado; o finding questiona o poder discriminante de uma asserção, não a autenticidade do resultado informado.",
+    "A exceção injetada não demonstra power-loss ou queda arbitrária de processo; um Worker não demonstra todos os escalonamentos ou concorrência distribuída.",
+    "NOT_RUN do produtor e recibo remoto posterior são fatos de etapas diferentes; nenhum foi reescrito.",
+    "Fixtures não fornecem votos ou autoridade desta campanha.",
+    "Este parecer não emite runtime-import-binding, julgamento de host-boundaries, consumo, L2 ou conclusão S4.",
+    "Nenhuma ferramenta, edição, delegação ou execução foi realizada por este juiz."
+  ]
+}

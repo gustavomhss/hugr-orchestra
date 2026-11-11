@@ -1,0 +1,31 @@
+{
+  "schema": "s4-courier-payload-manifest/v1",
+  "unit": "S4:L1:host-boundaries",
+  "source_producer": "/root/producer_l1a",
+  "courier": "/root/producer_runtime",
+  "recipients": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "hold_instruction": "AGUARDAR FECHAMENTO DO PRINCIPAL",
+  "parts": [
+    {
+      "part": 1,
+      "path": "s4/review-packets/l1-boundary/part-01.txt",
+      "byte_length": 30167,
+      "sha256": "5386edc301113650a88c5271e17dfd4baa90f60cf837a140c428314c5e76a5a0"
+    },
+    {
+      "part": 2,
+      "path": "s4/review-packets/l1-boundary/part-02.txt",
+      "byte_length": 28072,
+      "sha256": "24a04b3dad4b41455fcb142eb262c30677398ae0a2c997cca846a83a74408ff0"
+    },
+    {
+      "part": 3,
+      "path": "s4/review-packets/l1-boundary/part-03.txt",
+      "byte_length": 26619,
+      "sha256": "87f45545c122f4fb4862b5faf4aaa392553cc910657793c99a293641a3ce4b9a"
+    }
+  ]
+}

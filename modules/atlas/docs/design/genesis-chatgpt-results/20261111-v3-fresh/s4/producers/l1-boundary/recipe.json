@@ -1,0 +1,103 @@
+{
+  "schema": "genesis-producer-recipe-v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "work_package": "WP-L1-BOUNDARY",
+  "producer": "/root/producer_l1a",
+  "artifact_key": "S4:L1:host-boundaries",
+  "scope": "atlas-continuity-rag-genesis",
+  "layer": 1,
+  "need": "evidence",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "observed_head": null,
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/request.md",
+    "sha256": "222d944f611edfe9627164437d8c4909898bd20ce315173fea4e9129037cbbc7",
+    "byte_length": 2831
+  },
+  "source_provenance_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/source-provenance.json",
+    "sha256": "2269506b716862099388f71b2598467474245dcb4070e65d51f2511951a311d0",
+    "byte_length": 37056
+  },
+  "inspection_register_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/inspection-register.json",
+    "sha256": "375f93761e02e5d5d95e44aff8a0ca02599ddfd2629d8f6f06ec8d64c04dc822",
+    "byte_length": 7778
+  },
+  "source_reader_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/read_source.py",
+    "sha256": "1967dc30109585016ea38e97d6a391a8df1497bacc2ca0d6706efe0fadd7f227",
+    "byte_length": 795
+  },
+  "metadata_builder_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/build_delivery.py",
+    "sha256": "49bd3efeb3c6e9c58e5f92c6aaae0f90e6ca861350dbfa788348064ca7734298",
+    "byte_length": 24042
+  },
+  "protocol_refs": [
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+      "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    }
+  ],
+  "public_criteria": [
+    "QS-1",
+    "QS-2",
+    "CC-3",
+    "CC-7",
+    "GO-I2",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "steps": [
+    "Preservar o pedido literal antes da produção, sem acessar oracle nem delegar.",
+    "Ler os 12 arquivos externos e conferir suas identidades contra o recibo de captura do conector.",
+    "Seguir as ligações necessárias para 19 fontes do domínio já capturado; selecionar claims e intervalos efetivamente usados.",
+    "Escrever corpo português <=12000 bytes, separando constatação, inferência, intenção e execução; preservar conflitos que alteram uso.",
+    "Conferir localizadores dentro de intervalos lidos; anexar somente fontes semânticas/instruções efetivas, com file input no path original.",
+    "Empacotar receita/proveniência compactas, request/response e hashes finais. Manter build_dependencies e recibos de julgamento/runtime vazios."
+  ],
+  "semantic_bound": "supported significa que as afirmações limitadas do corpo são sustentadas pela inspeção. Não é aceite independente, integração comprovada, equivalência de bundles, autorização HTTP ou completude do domínio.",
+  "critical_input_availability": "Todos os bytes necessários às afirmações delimitadas estão capturados, conferidos e abaixo do limite de file input. As dependências externas não examinadas aparecem como limites; não sustentam afirmações positivas de integração.",
+  "navigation_only": [
+    "S4:L1:ownership-boundaries",
+    "S4:L1:atlas-host-genesis",
+    "S4:L1:continuity-rag",
+    "S4:L1:coverage-governance"
+  ],
+  "build_dependencies": [],
+  "limits": [
+    "Nenhum teste de produto, CI, build, chamada externa/modelo, importador nativo, Git remoto ou publicação.",
+    "Nenhuma leitura de oracle ou edição dos corpos/arquivos L1A/L1B.",
+    "Nenhuma expansão do censo de 2220 arquivos; fronteiras externas são referências somente de leitura.",
+    "Não há nova delegação; esta unidade foi produzida diretamente."
+  ]
+}

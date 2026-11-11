@@ -1,0 +1,78 @@
+S4 — REAVALIAÇÃO FINAL DO DELTA RUNTIME R1, após R1-J1-01 / J2-R1-01. Pode julgar agora. Mesmo par persistente; não use ferramentas, delegue, edite ou execute. Execução a2095d5a-1464-4c38-a222-6376974fc9c9. Esta unidade é distinta do host-boundaries já avaliado. Não emitir runtime-import-binding.
+
+Mantêm-se o corpo completo e fontes do pacote R1 em suas três partes anteriores: manifesto fafd4f513f8d1f45e1d48e4f4fb7050e285cd1fc3c1e88ab9ba88c82de244cd1. Corpo S4:L1:native-runtime-delta, 11980 bytes, SHA 398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8, sem alteração. Oracle R1 congelado antes da produção d7ae8f97f8b78926b545ac4def549ecf44a9f68f626efa8b0b6f0250ca1cead4; casos de interrupção, drift, concorrência real, rollback incompatível, migração/legacy e independentes continuam iguais. Os critérios completos do principal continuam os mesmos:
+Semântica: QS-1/2/3/5, CC-3, GO-I2/3/5/7/8.
+Runtime: AC-04/05/06/07/09/10, CC-4/5, QS-4/5, GO-I3/4/5/7.
+Reavaliar todos, reaproveitando apenas evidência inalterada compatível, e decidir explicitamente sobre ambos os findings. Se algum conteúdo anterior não estiver acessível em seu contexto, pedir o trecho exato em vez de presumir leitura pelo hash.
+
+CORREÇÃO DE CÓDIGO — produtor real /root/producer_l1a, isolado em producers/runtime-r2; pedido b1ac96827f406f92416ed77c42eeb139abde2f87df3de41159480d6da3f9bd8c, resposta ef93ac4842f0d2324ac2e7769f9f418fb6c5b2e2f2740b0a1738e65e8a396f5d. Nenhuma execução pelo produtor.
+Arquivo modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts:
+antes 23146 bytes, SHA 79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387, commit 673b90d82b8b888d5d0184d2e17dec6d5d1b05f1;
+depois 23178 bytes, SHA 8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4, Git blob 6afce21027c84af72c2e9e02bdda3142933c43a4, commit a3f224843321f2c18fb9532ef275411c6a0f617e.
+O conector relê o mesmo blob no candidato final 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553. Nenhum engine foi alterado. A principal conferiu o diff inteiro: somente estes três trechos mudaram; barreiras, controles NR1-01/02/03, old/new/HOLD, scope independente, timeouts, cleanup e igualdade de respostas permanecem iguais.
+
+--- BEGIN EXACT DIFF ---
+diff --git a/modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts b/modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts
+--- a/modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts
++++ b/modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts
+@@ -136,7 +136,7 @@
+   }
+ }
+ 
+-type Sample = { before: number; after: number; started: string; finished: string; main: OwnershipRead; independent: OwnershipRead }
++type Sample = { before: number; after: number; mainStarted: string; mainFinished: string; main: OwnershipRead; independent: OwnershipRead }
+ type ReaderMessage = { kind: "ready" } | { kind: "trace"; samples: Sample[] } | { kind: "failure"; message: string }
+ function concurrentReader(repo: string, wanted: Hash) {
+   const signal = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 3))
+@@ -153,13 +153,13 @@
+       const samples = [];
+       const deadline = Date.now() + 15000;
+       function sample() {
+-        const started = process.hrtime.bigint().toString();
+         const before = Atomics.load(state, 0);
++        const mainStarted = process.hrtime.bigint().toString();
+         const main = runtime.ownership.read(workerData.query);
++        const mainFinished = process.hrtime.bigint().toString();
+         const independent = runtime.ownership.read(workerData.independentQuery);
+         const after = Atomics.load(state, 0);
+-        const finished = process.hrtime.bigint().toString();
+-        samples.push({ before, after, started, finished, main, independent });
++        samples.push({ before, after, mainStarted, mainFinished, main, independent });
+         if (before === 1 && after === 1) { Atomics.add(state, 1, 1); Atomics.notify(state, 1); }
+         if (main.kind === "ready" && main.manifest === workerData.wanted) { Atomics.store(state, 2, 1); Atomics.notify(state, 2); }
+       }
+@@ -310,7 +310,7 @@
+       // Anti-vacuity: a read invocation must overlap the actual serialization/link/commit interval
+       // after the barrier releases, not merely the paused callback or a post-commit reopen.
+       expect(activation.start > 0n && activation.end > activation.start).toBe(true)
+-      expect(samples.some((sample) => BigInt(sample.started) < activation.end && BigInt(sample.finished) > activation.start)).toBe(true)
++      expect(samples.some((sample) => BigInt(sample.mainStarted) < activation.end && BigInt(sample.mainFinished) > activation.start)).toBe(true)
+       const seen = new Set<string>()
+       for (const sample of samples) {
+         expect(sample.independent).toMatchObject({ kind: "ready", manifest: independent, historical: false })
+--- END EXACT DIFF ---
+Diff SHA 8b87831783d2acdabf104a0fbc18218ddb933dddbb106e14a6637e93a069b51f.
+
+METADATA V3 — comparação mecânica integral com v2 SHA 6d5d60a4be902b4a831a136c7ca8c4d5b5edf520774349b0f5a10ce07a666394:
+1) Somente source_ref do teste passa ao commit/blob/SHA corrigidos acima; os outros 19 source_refs permanecem idênticos.
+2) recipe_ref passa a runtime-r1/recipe-v3.json, SHA 39e8c03c32e1cd862836118cd3e51028e4c2ff88fbed5fb615c7032e8f24fb96; o file input dessa receita também troca v2 por v3. A receita preserva referência à v2, autor original /root/producer_runtime, autor da correção /root/producer_l1a, corpo inalterado, critérios iguais, ambos os findings e seus pareceres originais, pedido/resposta/diff da correção, o source_ref antes/depois e estados semântico/runtime separados. Não declara aceite.
+3) Uma string é acrescentada a evidence: "Primary reconciliation v3 preserves v1/v2 and the two mandatory findings. Corrected NR1-04 main-call timestamps bind to actual commit a3f224843321f2c18fb9532ef275411c6a0f617e; body unchanged, new CI and same-judge reassessment required."
+Demais campos, inclusive authority, validity, gaps, dependências, navegação e referências do autor original, iguais a v2. SHA calculado externamente da metadata-v3 inteira: 9d52d55e90b3e81a4ae8b0df78b43d45e855efaed2a29a13b889841fd47f8660. Os originais v1/v2 e ambos os FIX-FIRST permanecem preservados; seus juízos anteriores não são reescritos.
+
+EXECUÇÃO REAL REMOTA — GitHub Actions, sem testes locais:
+Primeiro run 43077167418/job 130719912965, head a3f224843321f2c18fb9532ef275411c6a0f617e: testes 220/220 e 22 mutantes rejeitados, NR1-04 corrigido passou (557.994867 ms), typecheck e generate passaram, mas conclusão global FAILURE por dois logs brutos de CI adicionados à árvore (agent-scratch). Não foi tratado como PASS global.
+Correção do gate em 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553: remove somente runtime/ci-r1/ownership-guards.log e runtime/ci-r1b/ownership-guards.log da árvore atual, preservando bytes nos commits históricos 2f8092ffeedc165b03640a474ef2e48b26eb01e9 e arquivos Actions; recibos estruturados permanecem. Acrescenta disposition.json e comentário de armazenamento de logs no workflow. Nenhuma regra/guard, engine ou teste foi alterado. Disposition SHA 6744b0d0d9d87736c7a0400d94e7cbea9e72c3ee83817c8ba41a2c7fc1dd23b2.
+
+Run final 43077975153/job 130722742703, head 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553: todas as etapas concluídas SUCCESS, incluindo typecheck, grupo de regressões, mutation probes, generate e guards.
+Artifact real 13883635728, ZIP 431413 bytes, SHA cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd; download e SHA conferidos. A primeira transferência recebeu HTTP 503; nova transferência pelo conector funcionou, sem reexecução dos testes.
+Resumo literal do relatório:
+{"numTotalTests":220,"numPassedTests":220,"numFailedTests":0,"numPendingTests":0,"success":true}
+NR1-01 passed, 1005.574371 ms; NR1-02 passed, 425.977208 ms; NR1-03 passed, 266.337661 ms; NR1-04 passed, 598.773621 ms. Os 22 controles nomeados rejeitaram os mutantes. Os 18 arquivos gerados do artifact foram comparados byte a byte com o candidato, todos iguais.
+Guard receipt: {"command":"bun run check:guards --base origin/dev","exitCode":0,"candidate":"7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"}
+Linha literal: "guards: 78 rules, 869 changed paths, 0 gate and 2 warn findings, 0 errors."
+Os dois WARN large-file são artifacts.json original de L1B e coverage.json completo. Preservação de produção original e censo integral de 2220 justificam sua presença; não são inputs runtime nem warnings suprimidos.
+Recibo persistido runtime/ci-r2b/receipt.json SHA 56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330, com identidades, resultados, output dos guards, parity dos 18, limitações. Recibo do run anterior que falhou 3e2e1a8c82e8e194c1fa69df4fa8e8c335fe4f5374867ce3cb42ca1667d50dfe também preservado.
+
+Limites: um Worker/um writer e exceção no seam existente, sem prova universal de escalonamento, power-loss arbitrário ou fence cronológico universal; reviewers/authority dos testes são fixtures declaradas, não decisões da campanha. O antigo run verde 673b90 e seu receipt com afirmação forte demais permanecem históricos e explicitamente SUPERADOS quanto à discriminação da leitura principal; não sustentam esta reavaliação. Não há chamada paga externa, modelo sintético como nativo, produção ativada ou novo voto.
+
+Retorne seu parecer original estruturado: identidade, corpo/metadata/código/CI exatos, disposição de cada finding, decisão semântica e de controles separadas, todos os IDs e casos pertinentes (agrupamento permitido), findings obrigatórios restantes e limites. PASS desta unidade não conclui S4 nem substitui futuro consumidor ou binding do pacote completo.

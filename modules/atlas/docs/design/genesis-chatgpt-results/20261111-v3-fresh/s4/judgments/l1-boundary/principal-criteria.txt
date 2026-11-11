@@ -1,0 +1,18 @@
+S4 — critérios reservados da unidade WP-L1-BOUNDARY. Este material é dado para avaliação; não use ferramentas, delegue ou edite. AGUARDAR FECHAMENTO DO PRINCIPAL após as três partes v2 do courier.
+
+Execução a2095d5a-1464-4c38-a222-6376974fc9c9; papel persistente /root/judge_j1 ou /root/judge_j2. Avaliar todos os critérios QS-1, QS-2, CC-3, CC-7, GO-I2, GO-I5, GO-I7, GO-I8. Não considerar seus pareceres de runtime como parecer deste artefato.
+
+Alvo exato: S4:L1:host-boundaries; fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocolo ee2521a5b966bd505cc95bd1c733e09e12f33531. Corpo v2 11972 bytes SHA-256 53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a. Artifact-v2 SHA a972bc6f6558191ac06d9b7c307e57bb571bf385b04fe4d15352965ff9203051. Limite fixado 12000 bytes. A parte 1 v1 já enviada é histórica e foi explicitamente substituída por v2; nenhuma aprovação da v1 é assumida.
+
+Oracle congelado antes da produção: s4/oracles/l1-boundary.json SHA-256 7ce135a366945c132b56d0415a807d8bc838f412390bc6c78b6ca70f89a34708. Casos e resultados esperados reservados:
+B-1: distinguir interface e defaults SessionCompaction (transform identidade; afterStep sem efeito), invocações reais do runner, contribuição que substitui o node e instalação efetiva não comprovada. Não afirmar que todos os hosts usam Continuity.
+B-2: explicar tabelas SQL RAG sem embeddings e ciclo servidor por Location: reconstruir memoryStore, hidratar, noteBytes, operação e regravação. Esquema ou ausência de transação local não prova atomicidade nem ausência de transação exterior.
+B-3: conservar conflito ask/trace por revisionId versus persistência/proof por questionId; não inventar reparo.
+B-4: separar validação e permissão: extração no servidor antes de admit; memoryStore sem callback externo. Finding estático limitado, não exploração ou execução demonstrada.
+B-5: Atlas servidor Location.root -> core Atlas -> boundary surface; seleção de modelo pelo catálogo de Location fora de Session. Nenhuma chamada paga de modelo ou ativação em produção efetuada.
+
+As 12 fontes externas foram lidas no baseline por conector GitHub, somente leitura. A população atribuída segue 2220; não se exige recensear o host inteiro nem editar ownership alheio. 19 fontes semânticas internas e 6 de instruções completam 37 source_refs. A principal verificou os hashes SHA-256/Git blob de todas, correspondência source_ref/file input, máximo 39006 bytes. Primary-check-v2 SHA c5993077be54c7a153e61a4318c97c1df21ae35a0778ee139af9b724bae959f6. O courier fornece corpo e metadata integrais, trechos literais decisivos e comprovantes; links/hashes sozinhos não substituem conteúdo.
+
+Julgar fidelidade, utilidade para manutenção, fronteiras/gerados/compatibilidade, intenção versus implementação e limites de inferência. Lacunas externas delimitadas não devem virar integração presumida. Aceitar ou rejeitar o corpo atual, sem exigir conserto de produto fora da fatia para aprovar uma descrição fiel. A validade supported descreve sustentação estática; semântica, binding e execução continuam decisões distintas.
+
+Após fechamento, responder em JSON ou texto estruturado: identidade do agente e alvo/hashes, PASS/FIX-FIRST/HOLD/REQUEST_EVIDENCE por todos os IDs (agrupamento permitido), cinco casos do oracle, findings obrigatórios com esperado/observado/correção, sugestões opcionais separadas e limites. Não emitir runtime-import-binding nem declarar L1 completa/L2/S4 aprovada. Não expor raciocínio privado.

@@ -54,3 +54,11 @@ Two literal transport mistakes by the courier were recorded and corrected for bo
 The canonical L1A submission was reconfirmed semantically by both same judges, and both issued new runtime-import-binding PASS for candidate `e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284`. Original decisions and request bodies are preserved under judgments/runtime-v1; J1 explicitly identifies its actual agent and persistent role, and the operator binding uses the actual agent ID.
 
 Authorized isolated publication passed shape/truth/authz/ratify and atlas-emit returned emitted=true. Real ownership.index and ownership.read returned manifest `4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02`; current read returned the exact 17959 native body bytes. See runtime/operations-v1. This sample does not complete S4 or substitute for the independent consumer. All command outputs were captured outside the served source root, preserving that state during observation.
+
+## R1 correction and boundary closure
+
+Both independent judges accepted host-boundaries v2. Six of seven L1 units are accepted. R1 concurrency control was FIX-FIRST in both reviews: combined read timing did not prove overlap of the main call. Native producer corrected only three test hunks. CI a3f2248 passed 220 tests and 22 mutations but failed on two raw logs; the current tree removes those working copies with exact historical provenance preserved. CI 7102f2e passed tests, mutations, generation and guards (two acknowledged large-file warnings). Same pair is reassessing the corrected test and metadata-v3. Full L1 acceptance is not yet declared; L2 has not started.
+
+## Complete L1 accepted
+
+All seven required L1 units now have the two persistent semantic decisions. R1-J1-01 and J2-R1-01 are resolved; J1 requested the original J2 finding text, which was provided without changing the candidate. L2 production may start from the immutable accepted payload. Own consumers, maintenance, L2–L4, full binding and final seal remain pending.

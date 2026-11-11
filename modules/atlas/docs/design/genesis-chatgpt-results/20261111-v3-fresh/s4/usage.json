@@ -27,16 +27,16 @@
     },
     {
       "stage": "WP-R1",
-      "status": "exact-stronger-test-and-corrected-source-pins;remoteCI-PASS;semantic-L1-and-control-review-open"
+      "status": "accepted-by-both;R1-J1-01-and-J2-R1-01-resolved;CI7102f2e-PASS"
     },
     {
       "stage": "WP-L1-BOUNDARY",
-      "status": "producing;required-before-L2",
+      "status": "v2-produced-and-accepted-by-both-persistent-judges",
       "purpose": "Read-only neighboring Session/Store/server boundary knowledge at baseline, not population expansion"
     },
     {
       "stage": "WP-L2",
-      "status": "reserved;requires-complete-L1-acceptance"
+      "status": "authorized-after-complete-seven-unit-L1;dispatch-being-frozen"
     },
     {
       "stage": "WP-L3",
@@ -137,6 +137,66 @@
       },
       "native_model_calls_issued_by_adapter": false,
       "native_tokens": "UNKNOWN"
+    },
+    {
+      "operation": "runtimeR2-correction-and-CI",
+      "producer": "/root/producer_l1a",
+      "mandatory_findings": [
+        "R1-J1-01",
+        "J2-R1-01"
+      ],
+      "code_commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+      "runs": [
+        {
+          "id": 43077167418,
+          "test_count": 220,
+          "mutations": 22,
+          "product_result": "PASS",
+          "overall": "FAIL",
+          "reason": "two committed raw logs violate agent-scratch"
+        },
+        {
+          "id": 43077975153,
+          "head": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "test_count": 220,
+          "mutations": 22,
+          "guards_exit": 0,
+          "overall": "PASS",
+          "large_file_warnings": 2
+        }
+      ],
+      "supersedes_interpretation": "The earlier run 673b90 passed its assertions but the combined main+independent interval did not prove main-read overlap. Original record retained; same-judge fix required."
+    },
+    {
+      "operation": "runtimeR2-artifact-download",
+      "visible_results": [
+        "HTTP503",
+        "fresh connector download successful;SHA verified"
+      ],
+      "native_tokens": "UNKNOWN"
+    },
+    {
+      "operation": "boundary-v2-review-transport",
+      "courier": "/root/producer_runtime",
+      "payload_sends": 8,
+      "criteria_sends": 2,
+      "close_sends": 2,
+      "message_ids": "UNKNOWN",
+      "judgments": "both PASS v2",
+      "original_v1_payload_retained": true
+    },
+    {
+      "operation": "maintenance-port-inspection",
+      "agent": "/root/producer_runtime",
+      "status": "in progress;read-only mechanics memo, not evaluated knowledge production or execution"
+    },
+    {
+      "operation": "runtimeR2-reassessment",
+      "request_sha256": "bf0166bef928e799dd688501628b7e4f3d714ac9edcf7fa19d9648a76459a0ec",
+      "j1_intermediate": "REQUEST_EVIDENCE for original J2 finding; provided exact original fragment",
+      "finding_fragment_sha256": "d51c0cec655401fb6e4752c1f23930599264f638c2a5189fb47f6cc4ae8592b3",
+      "final": "Both persistent judges PASS semantic L1 and named runtime controls",
+      "no_new_product_execution_for_evidence_request": true
     }
   ],
   "native_input_tokens": "UNKNOWN",
@@ -156,5 +216,6 @@
     "Fresh Atlas-only consumer with frozen cases and limits",
     "Domain-specific update/reuse proof and same final two judgments"
   ],
-  "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero."
+  "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero.",
+  "last_reconciled_utc": "2026-11-11T18:35:21.905205+00:00"
 }

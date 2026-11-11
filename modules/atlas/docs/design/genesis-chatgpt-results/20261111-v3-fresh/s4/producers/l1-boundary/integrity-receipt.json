@@ -1,0 +1,96 @@
+{
+  "schema": "genesis-static-package-integrity-v1",
+  "artifact_key": "S4:L1:host-boundaries",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "result": "pass",
+  "meaning": "Conferência determinística de bytes, referências e limites deste pacote; não é julgamento semântico, importação nativa ou teste de produto.",
+  "checks": {
+    "body_utf8_and_byte_limit": true,
+    "source_sha256_and_git_blob_37": true,
+    "same_path_file_input_37": true,
+    "payload_reference_hashes": true,
+    "input_count": 44,
+    "largest_input_bytes": 39006,
+    "no_refused_atlas_data_or_oversize_input": true,
+    "all_12_external_sources_read": true,
+    "body_locators_checked_within_inspected_ranges": 56,
+    "assigned_population_unchanged": 2220,
+    "protected_prior_bodies_and_coverage_unchanged": true,
+    "build_dependencies_empty": true,
+    "semantic_review_and_runtime_receipts_pending": true
+  },
+  "protected_prior_files": [
+    {
+      "path": "producers/l1a/body.md",
+      "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+    },
+    {
+      "path": "producers/l1b/atlas-engine.md",
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+    },
+    {
+      "path": "producers/l1b/atlas-host-genesis.md",
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "path": "producers/l1b/continuity-rag.md",
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    {
+      "path": "producers/l1b/coverage-governance.md",
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    },
+    {
+      "path": "producers/l1b/coverage.json",
+      "sha256": "9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759"
+    }
+  ],
+  "files": [
+    {
+      "path": "body.md",
+      "byte_length": 11955,
+      "sha256": "c282b8edc6383dc3af07ed43fbcb75318bde5b581868eefdf606f40e245f6ef6"
+    },
+    {
+      "path": "artifact.json",
+      "byte_length": 17463,
+      "sha256": "cb312e867b96458a7e2e1c2d89e2287b223d25f4d33cbf69ae957759470ed6c8"
+    },
+    {
+      "path": "recipe.json",
+      "byte_length": 5309,
+      "sha256": "b6aa3e05d44ef6a5a824de7421eedd120010fadbf03390cb82e04d0fa4e2ba78"
+    },
+    {
+      "path": "request.md",
+      "byte_length": 2831,
+      "sha256": "222d944f611edfe9627164437d8c4909898bd20ce315173fea4e9129037cbbc7"
+    },
+    {
+      "path": "response.md",
+      "byte_length": 4110,
+      "sha256": "1aa49ca659bd16f49cb68ef48270eac4626b9c59235e35dc8dd2fb3157dba5ee"
+    },
+    {
+      "path": "source-provenance.json",
+      "byte_length": 37056,
+      "sha256": "2269506b716862099388f71b2598467474245dcb4070e65d51f2511951a311d0"
+    },
+    {
+      "path": "inspection-register.json",
+      "byte_length": 7778,
+      "sha256": "375f93761e02e5d5d95e44aff8a0ca02599ddfd2629d8f6f06ec8d64c04dc822"
+    },
+    {
+      "path": "read_source.py",
+      "byte_length": 795,
+      "sha256": "1967dc30109585016ea38e97d6a391a8df1497bacc2ca0d6706efe0fadd7f227"
+    },
+    {
+      "path": "build_delivery.py",
+      "byte_length": 24042,
+      "sha256": "49bd3efeb3c6e9c58e5f92c6aaae0f90e6ca861350dbfa788348064ca7734298"
+    }
+  ],
+  "self_hash": "Não incluído para evitar autorreferência; calculável sobre os bytes deste recibo."
+}

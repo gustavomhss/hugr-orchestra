@@ -1,0 +1,18 @@
+export const node = makeLocationNode({
+  service: Service,
+  layer: Layer.effect(
+    Service,
+    Effect.gen(function* () {
+      const events = yield* EventV2.Service
+      const llm = yield* LLMClient.Service
+      const subagentModels = yield* SessionSubagentModels.Service
+      const config = yield* Config.Service
+      return Service.of({
+        ...make({ events, llm, subagentModels, config: yield* config.entries() }),
+        transform: (input) => Effect.succeed(input.messages),
+        afterStep: () => Effect.void,
+      })
+    }),
+  ),
+  deps: [EventV2.node, llmClient, SessionSubagentModels.node, Config.node],
+})

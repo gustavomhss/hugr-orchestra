@@ -1,0 +1,1 @@
+J2 concluiu independentemente o mesmo pacote e registrou J2-R1-01, com a mesma correção de timestamps próprios da leitura main. Nenhum finding adicional diferente. Sua mudança deve resolver ambos R1-J1-01 e J2-R1-01; mantenha o escopo mínimo já pedido.

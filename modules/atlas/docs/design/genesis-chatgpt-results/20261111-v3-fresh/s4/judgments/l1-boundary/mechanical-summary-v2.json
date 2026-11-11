@@ -1,0 +1,151 @@
+{
+  "mechanical_summary_only": true,
+  "source_provenance_v2": {
+    "path": "s4/producers/l1-boundary/source-provenance-v2.json",
+    "byte_length": 38309,
+    "sha256": "844642de83937264f6078c24d864ed301974b63ec4b5b633e0418ff399b7dc0d",
+    "schema": "genesis-static-source-provenance-v1",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "observed_head": null,
+    "population": {
+      "assigned_count": 2220,
+      "changed": false,
+      "external_read_only_references": 12,
+      "semantic_domain_files_used": 19,
+      "limit": "Não recenseia o host nem transforma referências externas em nova população atribuída. Não afirma compreensão de todos os ramos dos módulos."
+    },
+    "counts": {
+      "body_semantic_sources": 31,
+      "instruction_sources": 6,
+      "source_refs": 37,
+      "body_locators": 57
+    },
+    "capture_origins": [
+      {
+        "origin_path": "boundary-capture-receipt.json",
+        "sha256": "f814e8c99304ee3edd19bc56bde8283e2958752a3608f0eda7e560d14227c27d",
+        "byte_length": 3482,
+        "role": "Origem da captura dos 12 externos",
+        "native_file_input": false,
+        "reason": "Apenas proveniência da captura. Inputs são as fontes semânticas individuais e este registro compacto, não o recibo bruto."
+      },
+      {
+        "origin_path": "source-capture-receipt.json",
+        "sha256": "a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b",
+        "byte_length": 594072,
+        "role": "Origem da captura do domínio atribuído",
+        "native_file_input": false,
+        "reason": "Apenas proveniência da captura. Inputs são as fontes semânticas individuais e este registro compacto, não o recibo bruto."
+      }
+    ]
+  },
+  "primary_check_v1_preserved_not_relabelled": {
+    "file": {
+      "path": "s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/primary-check.json",
+      "byte_length": 477,
+      "sha256": "6eb495fb6f77a4cba58e7aff2bfc10dbf77846e7dc70639ec2faab95ee20273f"
+    },
+    "content": {
+      "schema": "s4-primary-source-check/v1",
+      "unit": "S4:L1:host-boundaries",
+      "body_bytes": 11955,
+      "body_sha256": "c282b8edc6383dc3af07ed43fbcb75318bde5b581868eefdf606f40e245f6ef6",
+      "artifact_sha256": "cb312e867b96458a7e2e1c2d89e2287b223d25f4d33cbf69ae957759470ed6c8",
+      "source_refs": 37,
+      "all_source_bytes_and_git_blobs_match": true,
+      "source_ref_file_input_correspondence": true,
+      "max_source_bytes": 39006,
+      "errors": [],
+      "population_scope_unchanged": 2220
+    }
+  },
+  "primary_check_v2": {
+    "file": {
+      "path": "s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/primary-check-v2.json",
+      "byte_length": 716,
+      "sha256": "c5993077be54c7a153e61a4318c97c1df21ae35a0778ee139af9b724bae959f6"
+    },
+    "content": {
+      "schema": "s4-primary-source-check/v2",
+      "unit": "S4:L1:host-boundaries",
+      "body_bytes": 11972,
+      "body_sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+      "artifact_sha256": "a972bc6f6558191ac06d9b7c307e57bb571bf385b04fe4d15352965ff9203051",
+      "source_refs_count": 37,
+      "source_refs_identical_to_v1_already_verified": true,
+      "input_count": 46,
+      "max_input_bytes": 39006,
+      "source_ref_file_input_correspondence": true,
+      "primary_body_review": "Read complete v1 and exact v2 diff; source C277-329 confirms default methods, identity transform, afterStep no effect; other substantive claims unchanged.",
+      "population_scope_unchanged": 2220,
+      "independent_judgments": "PENDING"
+    }
+  },
+  "integrity_receipt_v2": {
+    "file": {
+      "path": "s4/producers/l1-boundary/integrity-receipt-v2.json",
+      "byte_length": 3898,
+      "sha256": "4f5aa3c9a17cdb057ea93027609a4dee722792f2ef765043c094bb90539a8f04"
+    },
+    "schema": "genesis-static-package-integrity-v1",
+    "artifact_key": "S4:L1:host-boundaries",
+    "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+    "result": "pass",
+    "meaning": "Conferência de bytes, referências e preservação da v1; não é aprovação semântica, importador nativo ou teste de produto.",
+    "checks": {
+      "body_utf8_and_size": 11972,
+      "same_key_scope_layer_need": true,
+      "source_refs_unchanged": 37,
+      "source_sha256_and_git_blob_verified": 37,
+      "same_path_file_inputs": true,
+      "input_count": 46,
+      "largest_input_bytes": 39006,
+      "payload_hashes_verified": true,
+      "body_locators_within_inspected_ranges": 57,
+      "original_and_literal_correction_requests_bound": true,
+      "v1_files_unchanged": 10,
+      "population_unchanged": 2220,
+      "build_dependencies_empty": true,
+      "semantic_review_and_runtime_receipts_still_empty": true
+    }
+  },
+  "boundary_capture_receipt": {
+    "file": {
+      "path": "s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/boundary-capture-receipt.json",
+      "byte_length": 3482,
+      "sha256": "f814e8c99304ee3edd19bc56bde8283e2958752a3608f0eda7e560d14227c27d"
+    },
+    "source_count": 12
+  },
+  "literal_excerpt_manifest_v2": {
+    "path": "s4/review-packets/l1-boundary/excerpt-manifest-v2.json",
+    "byte_length": 14593,
+    "sha256": "e3d99773cf41e0b6861accd3adfa6865445b45f0ee58f90283d93a36028988b5"
+  },
+  "source_identity_location": "The complete artifact-v2.json in Part 1 preserves all source commit/path/Git blob/SHA-256 records; each literal excerpt names its capture and line range.",
+  "producer_v1_preservation": {
+    "body": {
+      "path": "s4/producers/l1-boundary/body.md",
+      "byte_length": 11955,
+      "sha256": "c282b8edc6383dc3af07ed43fbcb75318bde5b581868eefdf606f40e245f6ef6"
+    },
+    "artifact": {
+      "path": "s4/producers/l1-boundary/artifact.json",
+      "byte_length": 17463,
+      "sha256": "cb312e867b96458a7e2e1c2d89e2287b223d25f4d33cbf69ae957759470ed6c8"
+    }
+  },
+  "v1_dispatches": {
+    "part": 1,
+    "recipients": [
+      "/root/judge_j1",
+      "/root/judge_j2"
+    ],
+    "byte_length": 30167,
+    "sha256": "5386edc301113650a88c5271e17dfd4baa90f60cf837a140c428314c5e76a5a0",
+    "message_ids": "UNKNOWN",
+    "status": "Sent before the v2 request arrived; replacement declared, history preserved."
+  },
+  "execution_by_courier": "No local/remote tests, build, product imports or GitHub writes; only literal transport and byte/hash recording."
+}

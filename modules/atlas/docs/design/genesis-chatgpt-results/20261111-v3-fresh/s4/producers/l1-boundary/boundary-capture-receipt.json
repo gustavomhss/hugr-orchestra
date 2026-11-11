@@ -1,0 +1,86 @@
+[
+  {
+    "path": "packages/core/src/rag-studio/sql.ts",
+    "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+    "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+    "byte_length": 2519,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/protocol/src/groups/rag-studio.ts",
+    "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+    "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10",
+    "byte_length": 6080,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/schema/src/rag-studio.ts",
+    "git_blob_sha": "b553ee9dc72cbb7d87ff01eba7cb7608a5ab89df",
+    "sha256": "948d52ca2c846da8059bb297a8e564aa82e5cec5dc1edf97906eb010f71b9918",
+    "byte_length": 6596,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/core/package.json",
+    "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+    "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385",
+    "byte_length": 31912,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/core/src/session.ts",
+    "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+    "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+    "byte_length": 34126,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/core/src/session/compaction.ts",
+    "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+    "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+    "byte_length": 14270,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/core/src/session/runner/llm.ts",
+    "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+    "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+    "byte_length": 39006,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/core/src/session/runner/index.ts",
+    "git_blob_sha": "6da5d89f1fb9528d1d1bb53ac4a72d3aa3506845",
+    "sha256": "08188f1e93d6b49e27f1b02d227516f6b2cd61f8ebc2f831ab8e6903685af109",
+    "byte_length": 2428,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/server/src/handlers/rag-studio-session.ts",
+    "git_blob_sha": "42a0cb7a6250df1edc566fa0409dde0463f29639",
+    "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b",
+    "byte_length": 9807,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/server/src/handlers/rag-studio.ts",
+    "git_blob_sha": "b91a9e061bb8f818a34756ea7e26e9f27dace4a7",
+    "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e",
+    "byte_length": 4883,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/server/src/handlers/atlas.ts",
+    "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+    "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267",
+    "byte_length": 5875,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  {
+    "path": "packages/core/src/atlas.ts",
+    "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+    "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+    "byte_length": 16892,
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  }
+]

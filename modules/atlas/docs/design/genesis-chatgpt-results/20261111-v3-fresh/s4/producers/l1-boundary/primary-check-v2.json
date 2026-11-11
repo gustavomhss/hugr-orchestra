@@ -1,0 +1,15 @@
+{
+  "schema": "s4-primary-source-check/v2",
+  "unit": "S4:L1:host-boundaries",
+  "body_bytes": 11972,
+  "body_sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+  "artifact_sha256": "a972bc6f6558191ac06d9b7c307e57bb571bf385b04fe4d15352965ff9203051",
+  "source_refs_count": 37,
+  "source_refs_identical_to_v1_already_verified": true,
+  "input_count": 46,
+  "max_input_bytes": 39006,
+  "source_ref_file_input_correspondence": true,
+  "primary_body_review": "Read complete v1 and exact v2 diff; source C277-329 confirms default methods, identity transform, afterStep no effect; other substantive claims unchanged.",
+  "population_scope_unchanged": 2220,
+  "independent_judgments": "PENDING"
+}

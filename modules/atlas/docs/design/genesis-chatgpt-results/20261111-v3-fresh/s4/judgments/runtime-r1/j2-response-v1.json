@@ -1,0 +1,117 @@
+{
+  "agent_id": "/root/judge_j2",
+  "identity_role": "parallel-v3-fresh/S4/J2",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "verdict_semantic_L1": "FIX-FIRST",
+  "verdict_runtime_controls": "FIX-FIRST",
+  "identities": {
+    "key": "S4:L1:native-runtime-delta",
+    "body_bytes": 11980,
+    "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+    "metadata_v2_sha256": "6d5d60a4be902b4a831a136c7ca8c4d5b5edf520774349b0f5a10ce07a666394",
+    "code_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+    "test_sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387",
+    "run_id": 43070538154,
+    "job_id": 130696884358,
+    "transport_manifest": "fafd4f513f8d1f45e1d48e4f4fb7050e285cd1fc3c1e88ab9ba88c82de244cd1"
+  },
+  "receipt_status": "A parte 2, incluindo corpo e metadata-v2 integrais, está visível. Não solicito reposição.",
+  "criteria_semantic_L1": [
+    {
+      "ids": ["QS-1", "QS-5", "GO-I8"],
+      "verdict": "FIX-FIRST",
+      "reason": "O parágrafo NR1-04 afirma uma garantia de sobreposição que o intervalo medido não assegura para a leitura do manifesto em transição. Ver finding J2-R1-01."
+    },
+    {
+      "ids": ["QS-2", "QS-3", "CC-3"],
+      "verdict": "PASS",
+      "reason": "O corpo explica transformação, comandos, recusas, manutenção e responsabilidades com mecanismo mínimo baseado nas portas existentes."
+    },
+    {
+      "ids": ["GO-I2", "GO-I3"],
+      "verdict": "PASS",
+      "reason": "Código novo, baseline, versões intermediárias, correção dos pins e recibo final estão separados. O NOT_RUN do produtor não foi reescrito como execução posterior."
+    },
+    {
+      "ids": ["GO-I5", "GO-I7"],
+      "verdict": "PASS",
+      "reason": "Ausência/indisponibilidade, limites de observação, commit membership externo, autoridade nominal e fixtures sintéticas permanecem explícitos."
+    }
+  ],
+  "criteria_runtime_controls": [
+    {
+      "ids": ["AC-07", "QS-4", "QS-5", "GO-I4"],
+      "verdict": "FIX-FIRST",
+      "reason": "A exigência fixa de sobreposição efetiva precisa de um controle que meça a chamada principal, não o intervalo agregado de duas leituras. O resultado verde não elimina essa lacuna de discriminação."
+    },
+    {
+      "ids": ["AC-04", "AC-05", "AC-06", "CC-4", "CC-5"],
+      "verdict": "PASS",
+      "reason": "NR1-01/02/03 e os controles existentes reportados sustentam retomada sem nova autoria sintética, reuso, invalidação por inputs/receita, propagação por resultado completo e distinção entre dependência e navegação, dentro dos casos delimitados."
+    },
+    {
+      "ids": ["AC-09", "AC-10"],
+      "verdict": "PASS",
+      "reason": "Os controles preservam candidato, respostas, CAS histórico e scope independente. A reconciliação fornecida pelo principal mantém os 2220 paths, com zero ausentes e cinco alterações justificadas."
+    },
+    {
+      "ids": ["GO-I3", "GO-I5", "GO-I7"],
+      "verdict": "PASS",
+      "reason": "Pins e resultados por revisão são explícitos; drift e indisponibilidade não permitem fallback stale como corrente; autoridade de fixture não se converte em autoridade da campanha."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "case": 1,
+      "verdict": "PASS",
+      "evidence": "NR1-01: candidato persistido, CAS consultado após interrupção, projeção preservada e retomada por desserialização; callback sintético não repetido."
+    },
+    {
+      "case": 2,
+      "verdict": "PASS",
+      "evidence": "NR1-02: source drift seguido de falha produz ownership-input-changed; leitura histórica permanece explicitamente historical."
+    },
+    {
+      "case": 3,
+      "verdict": "FIX-FIRST",
+      "evidence": "concurrentReader.sample e a asserção temporal de NR1-04 medem conjuntamente main e independent. Não garantem sobreposição da chamada principal com a ativação."
+    },
+    {
+      "case": 4,
+      "verdict": "PASS",
+      "evidence": "NR1-02 recusa fonte antiga, approval incompatível e rollback pelo emit; não inventa proibição cronológica para candidato histórico ainda compatível."
+    },
+    {
+      "case": 5,
+      "verdict": "PASS",
+      "evidence": "NR1-03 recusa schema v0, scope inconsistente, approval antigo, troca de candidate_id e relocalização, preservando as projeções."
+    },
+    {
+      "case": 6,
+      "verdict": "PASS",
+      "evidence": "NR1-02/03/04 verificam scope independente; controles sidecar/G3 reportados cobrem predecessor legível e recusa de escrita quando nada é legível."
+    },
+    {
+      "case": "Controles existentes de cache/rebuild",
+      "verdict": "PASS",
+      "evidence": "Projeção final RB/UP/TC e os 22 mutantes rejeitados incluem zero chamadas em reuso, resultado completo, renovação de receipt, input/aresta omitidos, membership e varreduras de consistência."
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "J2-R1-01",
+      "criteria": ["AC-07", "QS-1", "QS-4", "QS-5", "GO-I4", "GO-I8"],
+      "location": "genesis-native-recovery.test.ts: concurrentReader.sample e NR1-04; native-runtime-delta.md: descrição de NR1-04",
+      "expected": "O controle deve exigir que uma invocação da leitura principal do manifesto em transição se sobreponha ao intervalo de ativação posterior à liberação da barreira.",
+      "observed": "started é capturado antes de main, mas finished somente depois de independent. A asserção usa esse intervalo agregado. main pode terminar antes da ativação, e o intervalo ainda intersectá-la por causa da leitura independente ou do espaço entre as duas chamadas. Os resultados completos antes/depois e a leitura durante o callback pausado não resolvem essa possibilidade.",
+      "correction": "Capture timestamps imediatamente em torno de runtime.ownership.read(query), separadamente da leitura independent, e exija a interseção desse intervalo principal com activation.start/end. Preserve as verificações de respostas completas, dos dois manifestos e do scope independente. Execute o controle corrigido na rota remota autorizada e forneça novo commit, hash e recibo. Atualize as referências da metadata preservando as versões anteriores; o corpo pode permanecer igual se a correção passar a sustentar sua afirmação."
+    }
+  ],
+  "limits": [
+    "O finding não contesta que o run informado passou 220 testes, 22 controles de mutação, guards e paridade dos gerados; contesta o que a asserção temporal consegue provar.",
+    "Interrupção por exceção não demonstra power-loss ou queda arbitrária do processo. Um Worker e um writer não demonstram concorrência universal.",
+    "Contagem do callback sintético não é telemetria de modelo ou de custo.",
+    "As verificações de integridade e execução foram fornecidas pelo principal/courier; este juiz não usou ferramentas.",
+    "Este parecer não emite runtime-import-binding, não avalia host-boundaries, não aprova consumidor, L2 ou conclusão S4."
+  ]
+}

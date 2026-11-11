@@ -1,0 +1,67 @@
+{
+  "schema": "s4-native-runtime-delta-recipe/v3",
+  "original_author": "/root/producer_runtime",
+  "test_correction_author": "/root/producer_l1a",
+  "metadata_reconciliation": "/root",
+  "previous_recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v2.json",
+    "sha256": "adda9e7901dfdc2752aa1beac0dff5e1cd81e4a1a44c686a07269fa4b3b5a54a"
+  },
+  "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+  "unchanged_body": true,
+  "public_criteria": [
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-5",
+    "CC-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "mandatory_findings": [
+    "R1-J1-01",
+    "J2-R1-01"
+  ],
+  "original_findings": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r1/j1-response-v1.json",
+      "sha256": "1ec2d002dae073899c1a3dd1090d875e270a5b4ad240b5a659ec7df82b448d41"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r1/j2-response-v1.json",
+      "sha256": "194815e3b9c4033a007f8372537e983de85946131921963acf0a38d9a00a0c37"
+    }
+  ],
+  "correction_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/runtime-r2/request.md",
+    "sha256": "b1ac96827f406f92416ed77c42eeb139abde2f87df3de41159480d6da3f9bd8c"
+  },
+  "correction_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/runtime-r2/response.md",
+    "sha256": "ef93ac4842f0d2324ac2e7769f9f418fb6c5b2e2f2740b0a1738e65e8a396f5d"
+  },
+  "diff_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/runtime-r2/change.diff",
+    "sha256": "8b87831783d2acdabf104a0fbc18218ddb933dddbb106e14a6637e93a069b51f"
+  },
+  "source_correction": {
+    "before": {
+      "commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "git_blob_sha": "0270eef6bd8f5b8c0a02ac6d08fda2a302bb3df3",
+      "sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387"
+    },
+    "after": {
+      "commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "git_blob_sha": "6afce21027c84af72c2e9e02bdda3142933c43a4",
+      "sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4"
+    }
+  },
+  "reason": "Timestamps immediately enclose the main ownership.read invocation; the post-barrier overlap assertion uses that pair alone. Three bounded test hunks changed; original versions and all other assertions preserved.",
+  "semantic_state": "Awaiting the same two persistent judges; no automatic acceptance.",
+  "runtime_state": "The new remote CI and campaign import binding remain separate evidence."
+}

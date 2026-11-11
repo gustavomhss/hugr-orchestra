@@ -1,0 +1,41 @@
+{
+  "agent_id": "/root/judge_j1",
+  "identity_role": "parallel-v3-fresh/S4/J1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "verdict": "REQUEST_EVIDENCE",
+  "target": {
+    "key": "S4:L1:native-runtime-delta",
+    "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+    "metadata_v3_sha256": "9d52d55e90b3e81a4ae8b0df78b43d45e855efaed2a29a13b889841fd47f8660",
+    "final_code_commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "recovery_test_sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4",
+    "run_id": 43077975153,
+    "receipt_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+  },
+  "finding_disposition": [
+    {
+      "id": "R1-J1-01",
+      "status": "RESOLVED",
+      "evidence": "Diff literal: mainStarted imediatamente antes de ownership.read(workerData.query), mainFinished imediatamente depois, ambos usados na asserção de sobreposição; NR1-04 corrigido passou no run final.",
+      "reason": "O intervalo agora delimita a chamada principal. A leitura independente e as operações entre chamadas não podem mais fornecer a sobreposição que faltava. A correção atende à ação específica solicitada, mantendo os controles old/new/HOLD e de scope independente."
+    },
+    {
+      "id": "J2-R1-01",
+      "status": "REQUEST_EVIDENCE",
+      "reason": "O identificador foi informado, mas o texto original desse finding não está no contexto recebido por J1. Não posso afirmar sua disposição completa presumindo que seu alcance seja idêntico ao meu.",
+      "requested_evidence": "Enviar somente o trecho original de J2-R1-01 contendo critério, localização, esperado, observado e correção exigida. Não é necessário reenviar corpos, código, diff ou recibos já apresentados."
+    }
+  ],
+  "assessment_so_far": {
+    "semantic_issue_from_J1": "A descrição de NR1-04 no corpo inalterado passa a ser sustentada pelo controle corrigido.",
+    "new_defects_identified": [],
+    "execution_evidence": "O run final é informado como SUCCESS, com 220 testes, 22 mutantes recusados, paridade de 18 gerados e guard exitCode 0. Os dois WARN de arquivos grandes e os runs anteriores que falharam permanecem explícitos."
+  },
+  "limits": [
+    "A solicitação restringe-se ao registro já existente de J2, necessário para a disposição explícita dos dois findings pedida pelo principal. Não acrescenta critério, teste ou juiz.",
+    "Os corpos e demais fontes anteriores necessários à revisão estão acessíveis neste contexto.",
+    "Ainda não emito o encerramento conjunto da reavaliação semântica e dos controles; a pendência acima não é uma alegação de novo defeito no código.",
+    "Não emito runtime-import-binding, aprovação de consumo ou conclusão S4.",
+    "Nenhuma ferramenta, delegação, edição ou execução foi realizada por este juiz."
+  ]
+}

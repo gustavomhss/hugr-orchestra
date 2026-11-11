@@ -1,0 +1,28 @@
+{
+  "unit": "S4:L1:native-runtime-delta",
+  "body_unchanged": true,
+  "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+  "metadata_v3_sha256": "9d52d55e90b3e81a4ae8b0df78b43d45e855efaed2a29a13b889841fd47f8660",
+  "source_correction": {
+    "before": {
+      "commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "git_blob_sha": "0270eef6bd8f5b8c0a02ac6d08fda2a302bb3df3",
+      "sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387"
+    },
+    "after": {
+      "commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "git_blob_sha": "6afce21027c84af72c2e9e02bdda3142933c43a4",
+      "sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4"
+    }
+  },
+  "other_source_refs_unchanged": true,
+  "source_refs": 20,
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v3.json",
+    "sha256": "39e8c03c32e1cd862836118cd3e51028e4c2ff88fbed5fb615c7032e8f24fb96"
+  },
+  "execution_status": "CI running at preparation; no PASS asserted",
+  "semantic_status": "FIX-FIRST awaiting reassessment"
+}

@@ -1,0 +1,643 @@
+WP-L1-BOUNDARY — PARTE 2/3 — TRANSPORTE LITERAL
+AGUARDAR FECHAMENTO DO PRINCIPAL. Produtor: /root/producer_l1a. Courier: /root/producer_runtime, sem autoria ou julgamento. R1 é outro pacote simultâneo, com outro courier; não misturar pareceres. Unidade: S4:L1:host-boundaries.
+
+Trechos extraídos literalmente dos intervalos abaixo; elisões são separadas por cabeçalhos. Identidades completas das fontes constam do artifact integral da Parte 1. Nenhum parecer é atribuído pelo courier.
+
+## Fonte literal: packages/core/src/session/runner/llm.ts
+Captura: s4/boundary-source/packages/core/src/session/runner/llm.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 231–272, inclusivas:
+```ts
+      // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
+      const engine = yield* engineOf(session)
+      const host = engine ? hosts.get(engine) : undefined
+      if (engine && !host)
+        return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
+      const model = host ? undefined : yield* models.resolve(session)
+      const modelRef = model ? SessionRunnerModel.reference(model) : (session.model ?? agent.info?.model)
+      const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
+      const context = entries.map((entry) => entry.message)
+      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
+      if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
+        Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
+      if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
+      const isLastStep = currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS)
+      if (!isLastStep) yield* mcp.ready()
+      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
+      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
+      const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
+      const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
+      const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
+      // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
+      const messages = model
+        ? yield* compaction.transform({
+            sessionID: session.id,
+            messages: [...toLLMMessages(context, model), ...(isLastStep ? [Message.assistant(MAX_STEPS_PROMPT)] : [])],
+            model,
+            tools: toolMaterialization?.definitions ?? [],
+          })
+        : []
+      const request = model && LLM.request({
+        model,
+        http: {
+          headers: SessionRunnerModel.sessionHeaders(model, session.id, session.parentID),
+        },
+        providerOptions: { openai: { promptCacheKey } },
+        system: systemText.map(SystemPart.make),
+        messages: [...messages],
+        tools: toolMaterialization?.definitions ?? [],
+        toolChoice: isLastStep ? "none" : undefined,
+      })
+      if (model && request && (yield* compaction.compactIfNeeded({ sessionID: session.id, entries, model, request })))
+        return yield* Effect.die(continueAfterCompaction(currentStep))
+```
+Linhas 358–383, inclusivas:
+```ts
+      // The Session's open todos, rendered for an engine that lost its context to its own compaction.
+      const memory: ExecutionHost.Turn["memory"] = {
+        recall: db
+          .select()
+          .from(TodoTable)
+          .where(eq(TodoTable.session_id, session.id))
+          .orderBy(asc(TodoTable.position))
+          .all()
+          .pipe(
+            Effect.orDie,
+            Effect.map((rows) => rows.filter((row) => row.status !== "completed" && row.status !== "cancelled")),
+            Effect.map((open) =>
+              open.length === 0
+                ? undefined
+                : ["# Orchestra working memory (after the engine's compaction)", "## Todos", ...open.map((row) => `- [${row.status}] ${row.content}`)].join("\n"),
+            ),
+          ),
+        archive: (input) =>
+          Effect.gen(function* () {
+            yield* events.publish(SessionEvent.Synthetic, {
+              sessionID: session.id,
+              messageID: SessionMessage.ID.create(),
+              timestamp: yield* DateTime.now,
+              text: `Engine compaction summary (${input.trigger}):\nNative owner: ${input.nativeSessionID}\n\n${input.summary}`,
+            })
+          }),
+```
+Linhas 427–448, inclusivas:
+```ts
+      const source = request
+        ? llm.stream(request)
+        : host && agent.info
+          ? host.stream({
+              session,
+              agent: agent.info,
+              model: modelRef,
+              system: systemText,
+              context: contextText,
+              history: context,
+              tools: toolMaterialization?.definitions ?? [],
+              execute,
+              authorize,
+              question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),
+              memory,
+              steers,
+              consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
+              notify,
+              todos: (list) => SessionTodo.write(db, events, { sessionID: session.id, todos: list }),
+              state: ExecutionHost.state(db, session.id, host.stateKey),
+            })
+          : Stream.die("SessionRunner: no provider for this turn")
+```
+Linhas 536–564, inclusivas:
+```ts
+          const stepSettlement = publisher.stepSettlement()
+          if (stepSettlement && !publisher.hasProviderError()) {
+            const endSnapshot = yield* snapshots.capture()
+            const files =
+              startSnapshot && endSnapshot
+                ? yield* snapshots
+                    .files({ from: startSnapshot, to: endSnapshot })
+                    .pipe(Effect.catch(() => Effect.succeed(undefined)))
+                : undefined
+            yield* withPublication(
+              events.publish(SessionEvent.Step.Ended, {
+                sessionID: session.id,
+                timestamp: yield* DateTime.now,
+                assistantMessageID: yield* publisher.startAssistant(),
+                finish: stepSettlement.finish,
+                // What the provider or host reported, else the model's price list over the settled tokens.
+                cost: stepSettlement.cost ?? (model ? SessionRunnerModel.cost(SessionRunnerModel.pricing(model), stepSettlement.tokens) : 0),
+                tokens: stepSettlement.tokens,
+                usageKnown: stepSettlement.usageKnown,
+                snapshot: endSnapshot,
+                files,
+              }),
+            )
+            yield* compaction.afterStep({
+              sessionID: session.id,
+              tokens: stepSettlement.tokens,
+              model: modelRef,
+              ...(stepSettlement.contextWindow === undefined ? {} : { contextWindow: stepSettlement.contextWindow }),
+            })
+```
+
+## Fonte literal: modules/continuity/src/v2/strategy.ts
+Captura: s4/source/modules/continuity/src/v2/strategy.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 122–150, inclusivas:
+```ts
+export function make(dependencies: Dependencies): SessionCompaction.Interface {
+  const core = SessionCompaction.make(dependencies)
+  if (!dependencies.state.settings.enabled)
+    return { ...core, transform: (input) => Effect.succeed(input.messages), afterStep: () => Effect.void }
+  const trigger = dependencies.state.settings.trigger
+
+  const load = Effect.fnUntraced(function* (sessionID: SessionV2.ID, session: Session) {
+    if (session.loaded) return
+    session.loaded = true
+    const stored = yield* ContinuityArchive.readMasks(sessionID).pipe(
+      Effect.catch((error) =>
+        Effect.logWarning("continuity masks unavailable", { sessionID, reason: error.reason }).pipe(Effect.as([])),
+      ),
+    )
+    for (const [call, reference] of stored) session.masks.set(call, reference)
+  })
+
+  // Archive every selected result before its mask exists: a mask always points at recoverable output.
+  const mask = Effect.fnUntraced(function* (
+    sessionID: SessionV2.ID,
+    session: Session,
+    messages: readonly Message[],
+    select: typeof ContinuityMaskingV2.candidates,
+  ) {
+    const found = select(messages, session.masks)
+    if (found.length === 0) return 0
+    const written = found.map((candidate) => ({ candidate, chunks: ContinuityMaskingV2.chunks(sessionID, candidate) }))
+    return yield* ContinuityArchive.publish(
+      sessionID,
+```
+Linhas 257–300, inclusivas:
+```ts
+    compact: Effect.fn("ContinuityStrategy.compact")(function* (input) {
+      const session = dependencies.state.session(input.sessionID)
+      if (yield* landed(session)) return true
+      if (yield* core.compact(input).pipe(Effect.flatMap(succeeded(session)))) return true
+      return yield* relieve(input, true)
+    }),
+    compactIfNeeded: Effect.fn("ContinuityStrategy.compactIfNeeded")(function* (input) {
+      const session = dependencies.state.session(input.sessionID)
+      session.last = input
+      if (yield* landed(session)) return true
+      if (session.requested) {
+        session.requested = false
+        if (yield* core.compact(input).pipe(Effect.flatMap(succeeded(session)))) return true
+        return yield* relieve(input, true)
+      }
+      if (yield* core.compactIfNeeded(input).pipe(Effect.flatMap(succeeded(session)))) return true
+      // True restarts the turn so the new masks apply; masks only grow, so this cannot repeat forever.
+      return yield* relieve(input, false)
+    }),
+    compactAfterOverflow: Effect.fn("ContinuityStrategy.compactAfterOverflow")(function* (input) {
+      const session = dependencies.state.session(input.sessionID)
+      if (yield* landed(session)) return true
+      if (yield* core.compactAfterOverflow(input).pipe(Effect.flatMap(succeeded(session)))) return true
+      return yield* relieve(input, true)
+    }),
+    transform: Effect.fn("ContinuityStrategy.transform")(function* (input) {
+      const session = dependencies.state.session(input.sessionID)
+      session.model = input.model
+      // The tool set already honours the agent's permissions (denied tools are not materialized), so a seat that
+      // cannot call context_recall keeps its full history instead of stubs it cannot expand.
+      if (!canRecall(input.tools)) return input.messages
+      yield* load(input.sessionID, session)
+      const limit = hardLimit(input.model)
+      const fits = () => estimate(ContinuityMaskingV2.apply(input.messages, session.masks)) < limit
+      if (!fits()) yield* mask(input.sessionID, session, input.messages, ContinuityMaskingV2.candidates)
+      if (!fits()) yield* mask(input.sessionID, session, input.messages, ContinuityMaskingV2.urgent)
+      return ContinuityMaskingV2.apply(input.messages, session.masks)
+    }),
+    afterStep: Effect.fn("ContinuityStrategy.afterStep")(function* (input) {
+      const session = dependencies.state.session(input.sessionID)
+      const context = session.model?.route.defaults.limits?.context
+      if (context === undefined || context <= 0 || !session.last || session.running) return
+      if (session.failures >= MAX_FAILURES || tokenCount(input.tokens) < context * trigger) return
+      yield* start(input.sessionID, session, session.last)
+```
+
+## Fonte literal: packages/server/src/handlers/rag-studio-session.ts
+Captura: s4/boundary-source/packages/server/src/handlers/rag-studio-session.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 18–134, inclusivas:
+```ts
+export function session<A>(db: Database.Interface["db"], run: (store: Store, locationId: string) => Promise<A>) {
+  return Effect.gen(function* () {
+    const location = yield* Location.Service
+    const locationId = location.directory
+    const sources = yield* db.select().from(RagSourceTable).where(eq(RagSourceTable.location_id, locationId)).all().pipe(Effect.orDie)
+    const chunks = yield* db.select().from(RagChunkTable).where(eq(RagChunkTable.location_id, locationId)).all().pipe(Effect.orDie)
+    const pipeline = yield* db
+      .select()
+      .from(RagPipelineTable)
+      .where(eq(RagPipelineTable.location_id, locationId))
+      .get()
+      .pipe(Effect.orDie)
+    const revisions = yield* db
+      .select()
+      .from(RagRevisionTable)
+      .where(eq(RagRevisionTable.location_id, locationId))
+      .all()
+      .pipe(Effect.orDie)
+    const revisionIds = revisions.map((row) => row.id)
+    const members = revisionIds.length
+      ? yield* db
+          .select()
+          .from(RagRevisionSourceTable)
+          .where(inArray(RagRevisionSourceTable.revision_id, revisionIds))
+          .all()
+          .pipe(Effect.orDie)
+      : []
+    const questions = revisionIds.length
+      ? yield* db.select().from(RagQuestionTable).where(inArray(RagQuestionTable.revision_id, revisionIds)).all().pipe(Effect.orDie)
+      : []
+    const questionIds = questions.map((row) => row.id)
+    const traces = questionIds.length
+      ? yield* db.select().from(RagTraceTable).where(inArray(RagTraceTable.question_id, questionIds)).all().pipe(Effect.orDie)
+      : []
+    const files = yield* Effect.promise(async () => {
+      const next: Record<string, string | { failed: "no_text_layer"; bytes: string }> = {}
+      for (const row of sources) {
+        const read = await extract(row.path)
+        if ("text" in read) next[row.path] = read.text
+        if ("failed" in read && read.failed === "no_text_layer") next[row.path] = read
+      }
+      return next
+    })
+    const store = memoryStore({
+      projectRoot: location.project.directory,
+      locationRoot: location.directory,
+      files,
+    })
+    if (pipeline?.blocked) store.fail(locationId)
+    if (pipeline) {
+      store.setPipeline(locationId, {
+        parser: pipeline.parser,
+        boundary: pipeline.boundary,
+        tokenizer: pipeline.tokenizer,
+        lexical: true,
+        embedding: false,
+        k: pipeline.k,
+      })
+    }
+    for (const row of sources) {
+      const read = files[row.path]
+      store.putSource({
+        id: row.id,
+        locationId: row.location_id,
+        path: row.path,
+        contentHash: row.content_hash,
+        status: status(row.status),
+        text: typeof read === "string" ? read : "",
+        reparsedHash: row.reparsed_hash,
+      })
+    }
+    for (const row of chunks) {
+      store.putChunk({
+        id: row.id,
+        sourceId: row.source_id,
+        start: row.start,
+        end: row.end,
+        text: row.text,
+        sourceHash: row.source_hash,
+      })
+      store.setChunkCut(row.id, row.boundary)
+    }
+    for (const row of revisions) {
+      store.putRevision({
+        id: row.id,
+        locationId: row.location_id,
+        snapshot: row.snapshot,
+        pipelineHash: row.pipeline_hash,
+        fill: row.fill === "failed" ? "failed" : "complete",
+        parser: row.parser,
+        boundary: row.boundary,
+        tokenizer: row.tokenizer,
+        k: row.k,
+        members: members
+          .filter((member) => member.revision_id === row.id)
+          .map((member) => ({ sourceId: member.source_id, contentHash: member.content_hash })),
+      })
+    }
+    for (const row of questions) {
+      store.putQuestion({
+        id: row.id,
+        revisionId: row.revision_id,
+        text: row.text,
+        span: { sourceId: row.span_source_id, start: row.span_start, end: row.span_end },
+      })
+    }
+    for (const row of traces) {
+      store.putTrace({
+        questionId: row.question_id,
+        hits: JSON.parse(row.hits) as string[],
+        dropped: JSON.parse(row.dropped) as string[],
+        k: row.k ?? undefined,
+      })
+    }
+    yield* Effect.promise(() => withStore(store, () => Promise.all(sources.map((row) => noteBytes(row.id)))))
+    const result = yield* Effect.promise(() => withStore(store, () => run(store, locationId)))
+    yield* save(db, store, locationId, revisionIds, questionIds)
+```
+Linhas 139–169, inclusivas:
+```ts
+function save(
+  db: Database.Interface["db"],
+  store: Store,
+  locationId: string,
+  previousRevisionIds: string[],
+  previousQuestionIds: string[],
+) {
+  return Effect.gen(function* () {
+    if (previousQuestionIds.length) {
+      yield* db.delete(RagTraceTable).where(inArray(RagTraceTable.question_id, previousQuestionIds)).run().pipe(Effect.orDie)
+    }
+    if (previousRevisionIds.length) {
+      yield* db.delete(RagQuestionTable).where(inArray(RagQuestionTable.revision_id, previousRevisionIds)).run().pipe(Effect.orDie)
+      yield* db
+        .delete(RagRevisionSourceTable)
+        .where(inArray(RagRevisionSourceTable.revision_id, previousRevisionIds))
+        .run()
+        .pipe(Effect.orDie)
+    }
+    yield* db.delete(RagRevisionTable).where(eq(RagRevisionTable.location_id, locationId)).run().pipe(Effect.orDie)
+    yield* db.delete(RagChunkTable).where(eq(RagChunkTable.location_id, locationId)).run().pipe(Effect.orDie)
+    yield* db.delete(RagSourceTable).where(eq(RagSourceTable.location_id, locationId)).run().pipe(Effect.orDie)
+    yield* db.delete(RagPipelineTable).where(eq(RagPipelineTable.location_id, locationId)).run().pipe(Effect.orDie)
+    const sources = store.sources().filter((row) => row.locationId === locationId)
+    if (sources.length) {
+      yield* db
+        .insert(RagSourceTable)
+        .values(
+          sources.map((row) => ({
+            id: row.id,
+            location_id: row.locationId,
+```
+Linhas 239–275, inclusivas:
+```ts
+    const revisionIds = new Set(revisions.map((row) => row.id))
+    const questions = store.questions().filter((row) => revisionIds.has(row.revisionId))
+    if (questions.length) {
+      yield* db
+        .insert(RagQuestionTable)
+        .values(
+          questions.map((row) => ({
+            id: row.id,
+            revision_id: row.revisionId,
+            text: row.text,
+            span_source_id: row.span.sourceId,
+            span_start: row.span.start,
+            span_end: row.span.end,
+          })),
+        )
+        .run()
+        .pipe(Effect.orDie)
+    }
+    const questionIds = new Set(questions.map((row) => row.id))
+    const traces = [...questionIds].flatMap((id) => {
+      const trace = store.trace(id)
+      return trace ? [trace] : []
+    })
+    if (traces.length) {
+      yield* db
+        .insert(RagTraceTable)
+        .values(
+          traces.map((row) => ({
+            question_id: row.questionId,
+            hits: JSON.stringify(row.hits),
+            dropped: JSON.stringify(row.dropped),
+            k: row.k ?? null,
+          })),
+        )
+        .run()
+        .pipe(Effect.orDie)
+    }
+```
+
+## Fonte literal: modules/rag-studio/src/context.ts
+Captura: s4/source/modules/rag-studio/src/context.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 150–183, inclusivas:
+```ts
+export function memoryStore(input: {
+  projectRoot: string
+  locationRoot?: string
+  allowExternal?: (locationId: string, file: string) => boolean
+  files?: Record<string, string | { failed: "no_text_layer"; bytes: string }>
+}): Store {
+  const files = new Map<string, string | { failed: "no_text_layer"; bytes: string }>(Object.entries(input.files ?? {}))
+  const sources = new Map<string, SourceRow>()
+  const chunks = new Map<string, Chunk>()
+  const cuts = new Map<string, string>()
+  const pipelines = new Map<string, Pipeline>()
+  const revisions = new Map<string, StoredRevision>()
+  const failed = new Set<string>()
+  const questions = new Map<string, QuestionRow>()
+  const traces = new Map<string, TraceRow>()
+  let seq = 0
+  const allowExternal = input.allowExternal ?? (() => false)
+  return {
+    projectRoot: input.projectRoot,
+    locationRoot: input.locationRoot,
+    atlasWrites: 0,
+    chats: 0,
+    embeddingCalls: 0,
+    fail(locationId) {
+      failed.add(locationId)
+    },
+    clear(locationId) {
+      failed.delete(locationId)
+    },
+    failed(locationId) {
+      return failed.has(locationId)
+    },
+    permission(locationId, file) {
+      return allowExternal(locationId, canonical(file)) ? "allow" : "deny"
+```
+Linhas 197–199, inclusivas:
+```ts
+    allocate(prefix) {
+      seq += 1
+      return `${prefix}_${seq}`
+```
+Linhas 228–243, inclusivas:
+```ts
+    revision(id) {
+      return revisions.get(id)
+    },
+    revisions: () => [...revisions.values()],
+    putRevision(row) {
+      revisions.set(row.id, row)
+    },
+    questions: () => [...questions.values()],
+    putQuestion(row) {
+      questions.set(row.id, row)
+    },
+    trace(questionId) {
+      return traces.get(questionId)
+    },
+    putTrace(row) {
+      traces.set(row.questionId, row)
+```
+
+## Fonte literal: modules/rag-studio/src/ask.ts
+Captura: s4/source/modules/rag-studio/src/ask.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 9–29, inclusivas:
+```ts
+export async function ask(revisionId: string, text: string): Promise<QuestionResult> {
+  const store = requireStore()
+  const revision = store.revision(revisionId)
+  if (!revision) throw new Error("rejected")
+  if (revision.fill === "failed" || store.failed(revision.locationId)) throw new Error("rejected")
+  const stale = store.chunks().some((chunk) => {
+    const source = store.sources().find((row) => row.id === chunk.sourceId)
+    if (!source || source.locationId !== revision.locationId) return false
+    return source.contentHash !== chunk.sourceHash
+  })
+  if (stale) throw new Error("rejected")
+  const boundary = revision.boundary ?? "document"
+  const k = revision.k ?? store.pipeline(revision.locationId).k
+  const matches = (await searchWords(revisionId, text)).filter((chunk) => store.chunkCut(chunk.id) === boundary)
+  const owners = store
+    .sources()
+    .filter((row) => row.locationId === revision.locationId && row.text.includes(text))
+    .sort((left, right) => left.path.localeCompare(right.path))
+  const cut = block(matches, k)
+  const found = diagnose({ owners, matches, kept: cut.kept, sentence: text })
+  record(revisionId, found.span ? matches.map((chunk) => chunk.id) : matches.map((chunk) => chunk.id), cut.dropped.map((chunk) => chunk.id), k)
+```
+
+## Fonte literal: modules/rag-studio/src/proof.ts
+Captura: s4/source/modules/rag-studio/src/proof.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 4–25, inclusivas:
+```ts
+export async function saveQuestion(revisionId: string, text: string, span: SpanRef): Promise<{ id: string }> {
+  const store = requireStore()
+  if (!store.revision(revisionId)) throw new Error("rejected")
+  const id = store.allocate("q")
+  store.putQuestion({ id, revisionId, text, span })
+  return { id }
+}
+
+export async function retrievalProof(questionId: string, revisionId: string): Promise<boolean> {
+  const store = requireStore()
+  const question = store.questions().find((row) => row.id === questionId)
+  if (!question) return false
+  if (question.revisionId !== revisionId) return false
+  const chunk = store
+    .chunks()
+    .find((item) => item.sourceId === question.span.sourceId && item.start === question.span.start && item.end === question.span.end)
+  if (!chunk) return false
+  const trace = store.trace(questionId)
+  if (!trace) return false
+  const revision = store.revision(revisionId)
+  if (trace.k !== undefined && revision?.k !== undefined && trace.k !== revision.k) throw new Error("rejected")
+  return promptChunkIds(trace).includes(chunk.id)
+```
+
+## Fonte literal: modules/rag-studio/src/trace.ts
+Captura: s4/source/modules/rag-studio/src/trace.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 3–6, inclusivas:
+```ts
+export function record(questionId: string, hits: string[], dropped: string[], k: number) {
+  if (hits.includes("not_recorded") || dropped.includes("not_recorded")) throw new Error("rejected")
+  requireStore().putTrace({ questionId, hits, dropped, k })
+}
+```
+
+## Fonte literal: modules/rag-studio/src/revision.ts
+Captura: s4/source/modules/rag-studio/src/revision.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 42–63, inclusivas:
+```ts
+export function openRevision(locationId: string): Promise<StoredRevision> {
+  const store = requireStore()
+  const pipeline = store.pipeline(locationId)
+  const members = store
+    .sources()
+    .filter((row) => row.locationId === locationId)
+    .map((row) => ({ sourceId: row.id, contentHash: row.contentHash }))
+    .sort((left, right) => (left.sourceId < right.sourceId ? -1 : left.sourceId > right.sourceId ? 1 : 0))
+  const revision: StoredRevision = {
+    id: store.allocate("rev"),
+    snapshot: digest(members.map((row) => `${row.sourceId}\t${row.contentHash}`).join("\n")),
+    pipelineHash: pipelineHash(pipeline),
+    fill: fillFor(locationId, members),
+    locationId,
+    members,
+    parser: pipeline.parser,
+    boundary: pipeline.boundary,
+    tokenizer: pipeline.tokenizer,
+    k: pipeline.k,
+  }
+  store.putRevision(revision)
+  return Promise.resolve(revision)
+```
+
+## Fonte literal: packages/server/src/handlers/rag-studio.ts
+Captura: s4/boundary-source/packages/server/src/handlers/rag-studio.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 55–63, inclusivas:
+```ts
+    .handle("ragStudio.admit", (ctx) =>
+      response(
+        call(db, async (store, id) => {
+          const read = await extract(ctx.payload.path)
+          if ("text" in read) store.writeFile(ctx.payload.path, read.text)
+          if ("failed" in read && read.failed === "no_text_layer") store.writeFile(ctx.payload.path, read)
+          return admit({ locationId: id, path: ctx.payload.path })
+        }),
+      ),
+```
+
+## Fonte literal: modules/rag-studio/src/extract.ts
+Captura: s4/source/modules/rag-studio/src/extract.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 3–16, inclusivas:
+```ts
+export async function extract(file: string): Promise<ReadBytes> {
+  const blob = Bun.file(file)
+  if (!(await blob.exists())) return { failed: "missing" }
+  if (!file.toLowerCase().endsWith(".pdf")) return { text: await blob.text() }
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  const loaded = await import("unpdf")
+  const pdf = await loaded.getDocumentProxy(bytes)
+  const extracted = await loaded.extractText(pdf, { mergePages: false })
+  const pages = Array.isArray(extracted.text) ? extracted.text : [extracted.text]
+  if (pages.length === 0 || pages.some((page) => page.trim().length === 0)) {
+    return { failed: "no_text_layer", bytes: "" }
+  }
+  return { text: pages.join("\n") }
+}
+```
+
+## Fonte literal: modules/rag-studio/src/admit.ts
+Captura: s4/source/modules/rag-studio/src/admit.ts. Pin: 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+Linhas 4–28, inclusivas:
+```ts
+export async function admit(input: {
+  locationId: string
+  path: string
+}): Promise<Source | { refused: "atlas" | "permission" }> {
+  const store = requireStore()
+  const placed = gate(store, input.locationId, input.path)
+  if ("refused" in placed) return placed
+  const read = await store.readBytes(placed.path)
+  if ("failed" in read && read.failed === "missing") throw new Error("rejected")
+  const bytes = "text" in read ? read.text : read.bytes
+  const hash = digest(bytes)
+  const text = "text" in read ? read.text : ""
+  const existing = store.sources().find((row) => row.locationId === input.locationId && row.path === placed.path)
+  // Same bytes keep the stored status, including read. Do not insert a second row.
+  if (existing && existing.contentHash === hash) return publicSource(existing)
+  const row = {
+    id: existing ? existing.id : `src_${digest(input.locationId + "\0" + placed.path).slice(0, 12)}`,
+    locationId: input.locationId,
+    path: placed.path,
+    contentHash: hash,
+    status: "not_yet_read" as const,
+    text,
+  }
+  store.putSource(row)
+  return publicSource(row)
+```
+
+AGUARDAR FECHAMENTO DO PRINCIPAL. R1 é outro pacote; não misturar pareceres.
