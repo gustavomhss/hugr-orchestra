@@ -59,6 +59,7 @@ test("explicit desktop and shell state homes cannot hide the default or an inacc
   const homes = cliStateHomes(ctx.state, [desktop, shell])
   expect(homes).toEqual([ctx.state, desktop, shell])
   expect(await cliServicesInactive(homes)).toBe(false)
+  expect(await cliServicesInactive([join(shell, "nested")])).toBe(false)
 })
 
 test("dead registrations allow cleanup of verified installs but preserve current, unrelated and symlink directories", async () => {
