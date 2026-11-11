@@ -1,0 +1,610 @@
+{
+  "schema": "genesis-reuse-compatibility-gaps/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "state": "BLOCKED_CURRENT_BINDING",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope_revision": null,
+  "inventory_ref": {
+    "commit": "2cd07208e7611429586c70eda87066b4330d9b94",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/reuse/reuse-candidates.json",
+    "sha256": "d2331e3f83955a7441293583b80bccfaef25d5b3c065294342abc0fdf3e3cf25"
+  },
+  "semantic_source_evidence": [
+    {
+      "commit": "2cd07208e7611429586c70eda87066b4330d9b94",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/reuse/semantic-source-compatibility.json",
+      "sha256": "a36f2c5d60100875f63b81bee126c2e7e0690580c937ebd036ef1e6cdceafff8"
+    },
+    {
+      "commit": "2cd07208e7611429586c70eda87066b4330d9b94",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/reuse/supplement-source-compatibility.json",
+      "sha256": "3ef770cf4742a38da0669cec68efac1f54b94ccf613971d029340ea20d08004e"
+    }
+  ],
+  "historical_bodies": [
+    {
+      "historical_layer": "L1",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "sha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "durable Session admission/default-runner promotion, frozen slice only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L1",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "sha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "durable Session admission/default-runner promotion, frozen slice only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L1",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+        "sha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "durable Session admission/default-runner promotion, frozen slice only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L1",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md",
+        "sha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "durable Session admission/default-runner promotion, frozen slice only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L2",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+        "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "sha256": "daeaaa9a061e121b1fa215dd764052ac94e412bd68200940c50358ceb5f0b541"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-acceptance.json",
+        "sha256": "be4abe2e2fa01952b2e913a3aeec974f7f5ee941e97e792e7cf6185c0e4b35b4"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "four components of durable Session admission/default-runner promotion only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L2",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+        "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "sha256": "daeaaa9a061e121b1fa215dd764052ac94e412bd68200940c50358ceb5f0b541"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-acceptance.json",
+        "sha256": "be4abe2e2fa01952b2e913a3aeec974f7f5ee941e97e792e7cf6185c0e4b35b4"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "four components of durable Session admission/default-runner promotion only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L2",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+        "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "sha256": "daeaaa9a061e121b1fa215dd764052ac94e412bd68200940c50358ceb5f0b541"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-acceptance.json",
+        "sha256": "be4abe2e2fa01952b2e913a3aeec974f7f5ee941e97e792e7cf6185c0e4b35b4"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "four components of durable Session admission/default-runner promotion only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L2",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+        "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "sha256": "daeaaa9a061e121b1fa215dd764052ac94e412bd68200940c50358ceb5f0b541"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-acceptance.json",
+        "sha256": "be4abe2e2fa01952b2e913a3aeec974f7f5ee941e97e792e7cf6185c0e4b35b4"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "four components of durable Session admission/default-runner promotion only",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L3",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+        "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "sha256": "a5db8da373917d37e30ae203ba7accbfb75d7eb86e7d6ff5d9c7d447d4cf8c25"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-acceptance.json",
+        "sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "default LLM runner Session-input integration research handoff; not production Atlas publication, held-out ownership acceptance, runtime execution proof or global AC-01..10",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L3",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+        "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "sha256": "a5db8da373917d37e30ae203ba7accbfb75d7eb86e7d6ff5d9c7d447d4cf8c25"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-acceptance.json",
+        "sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "default LLM runner Session-input integration research handoff; not production Atlas publication, held-out ownership acceptance, runtime execution proof or global AC-01..10",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L3",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+        "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "sha256": "a5db8da373917d37e30ae203ba7accbfb75d7eb86e7d6ff5d9c7d447d4cf8c25"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-acceptance.json",
+        "sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "default LLM runner Session-input integration research handoff; not production Atlas publication, held-out ownership acceptance, runtime execution proof or global AC-01..10",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L3",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+        "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "sha256": "a5db8da373917d37e30ae203ba7accbfb75d7eb86e7d6ff5d9c7d447d4cf8c25"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-acceptance.json",
+        "sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "default LLM runner Session-input integration research handoff; not production Atlas publication, held-out ownership acceptance, runtime execution proof or global AC-01..10",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-1.body.md",
+        "sha256": "81934f3761f25a91af54fb2ea614d76caa3aaa9be25c2570bde44190eb4b44cc"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-manifest-v2.json",
+        "sha256": "1d59c3310353c9eea7718c0f2c942bfdd8cc3dff3d5d97244320cc8415303c79"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-acceptance.json",
+        "sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "research ownership/maintenance artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-2.lead-erratum-v2.md",
+        "sha256": "c88792a23c71ab9285e8b6ed8aa042f8a618e35faa15b5e7a1bf2899c73b85f3"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-manifest-v2.json",
+        "sha256": "1d59c3310353c9eea7718c0f2c942bfdd8cc3dff3d5d97244320cc8415303c79"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-acceptance.json",
+        "sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "research ownership/maintenance artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-luna-1.body.md",
+        "sha256": "1bc995eda5f6dbc590d293629ec52ced8dec7db3b5a8e166e4916765de700d19"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-manifest-v2.json",
+        "sha256": "1d59c3310353c9eea7718c0f2c942bfdd8cc3dff3d5d97244320cc8415303c79"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-acceptance.json",
+        "sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "research ownership/maintenance artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-luna-2.lead-erratum-v2.md",
+        "sha256": "cadac626d91ac31ed52e4671352dfe83b5d64c42ef59e67f13f4a1aa98b6995b"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-manifest-v2.json",
+        "sha256": "1d59c3310353c9eea7718c0f2c942bfdd8cc3dff3d5d97244320cc8415303c79"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-acceptance.json",
+        "sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "research ownership/maintenance artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4-sol",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-ownership.body.md",
+        "sha256": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "bounded Session-input default-LLM-runner pilot: ownership, maintenance, normal operation/diagnosis and entry skills; NOT repository-wide ownership, installed skills, production Atlas readers/publication, runtime/consumer/held-out proof or global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4-sol",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-maintenance.body.md",
+        "sha256": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "bounded Session-input default-LLM-runner pilot: ownership, maintenance, normal operation/diagnosis and entry skills; NOT repository-wide ownership, installed skills, production Atlas readers/publication, runtime/consumer/held-out proof or global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4-sol",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational-remedy.body.md",
+        "sha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "bounded Session-input default-LLM-runner pilot: ownership, maintenance, normal operation/diagnosis and entry skills; NOT repository-wide ownership, installed skills, production Atlas readers/publication, runtime/consumer/held-out proof or global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    },
+    {
+      "historical_layer": "L4-sol",
+      "body_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-entry.body.md",
+        "sha256": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c"
+      },
+      "historical_manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e"
+      },
+      "historical_acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52"
+      },
+      "body_digest_matches": true,
+      "historical_scope": "bounded Session-input default-LLM-runner pilot: ownership, maintenance, normal operation/diagnosis and entry skills; NOT repository-wide ownership, installed skills, production Atlas readers/publication, runtime/consumer/held-out proof or global AC completion",
+      "current_scope_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_authority_compatibility": "UNKNOWN_PENDING_S1_FREEZE",
+      "current_recipe_compatibility": "UNKNOWN_PENDING_INTEGRATED_IMPLEMENTATION",
+      "current_contract_compatibility": "UNKNOWN_PENDING_S1_S5_CONTRACT",
+      "current_campaign_acceptance": "NOT_RUN",
+      "native_response_wrapper_created": false
+    }
+  ],
+  "operational_supplement_ref": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+    "sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db"
+  },
+  "operational_correction": {
+    "historical_candidate_id": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+    "manifest_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-correction-manifest-v1.json",
+      "sha256": "f7a9b43ee3950b01b036f7744a4bc541dd10a1a5b83d1fcdb4ec6cc4b2ae0584"
+    },
+    "manifest_sha256_matches_prefreeze": true,
+    "prefreeze_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prefreeze-v2.json",
+      "sha256": "8a56296d43a4a03c2cd0714b0c8688a06c648f7e34a6de3dafe502dfdc1ccdc2"
+    },
+    "binding_approvals_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/binding-approvals-v2.json",
+      "sha256": "e59d0c68c825cc74507be9e477c81939c5e71958806fd26676d5d0fac12ab973"
+    },
+    "both_exact_candidate_import_approvals": true,
+    "historical_isolated_publication_receipt_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-native-v1.json",
+      "sha256": "137fab6c7e048a7b2a245f602808d96e11fb2637c2360f1f33c61d75e3936c2e"
+    },
+    "artifacts": [
+      {
+        "key": "L3-supplement:operational-interface",
+        "reference": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-operational-supplement-v1.body.md",
+          "sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c"
+        },
+        "body_sha256_matches": true,
+        "supersedes_original_body_sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "authorship": "lead-source-correction-not-original-producer",
+        "disposition": "HISTORICAL_CORRECTED_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+      },
+      {
+        "key": "L4:operational",
+        "reference": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-L4-sol-operational-remedy.body.md",
+          "sha256": "c037f40903c1ea9fa6f827df1183da3c24a60c5b7677edd342a2e8bf20293b74"
+        },
+        "body_sha256_matches": true,
+        "supersedes_original_body_sha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+        "authorship": "lead-source-correction-not-original-producer",
+        "disposition": "HISTORICAL_CORRECTED_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+      }
+    ],
+    "limits": [
+      "Historical isolated publication is not an execution by S2",
+      "No consumer responses or reserved answers were read",
+      "Import mapping approval is not global acceptance or S5 judgment"
+    ]
+  },
+  "disposition": "Preserve all original bodies/decisions, select the compatible accepted variant under the frozen inventory, and obtain explicit current binding. Do not count L4 and L4-Sol alternatives as eight mandatory current artifacts.",
+  "implementation_limit": "Native importer proposal does not consume historical prose as an original native JSON response. S2 retains historical lane adaptation once current scope/authority/recipe/contract interfaces are known; missing historical original requests remain missing, never reconstructed."
+}

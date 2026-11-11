@@ -13,7 +13,7 @@
   "native_child_turns": 5,
   "distinct_native_child_agents": 3,
   "completed_child_turns": 5,
-  "root_state": "RUNNING",
+  "root_state": "COMPLETED_PREPARATION",
   "additional_packet_capacity": 0,
   "production_requests": 0,
   "binding_judgment_requests": 0,
@@ -24,5 +24,7 @@
   "billing": "UNKNOWN",
   "pre_forward_enforcement_proven": false,
   "ledger_file": "execution-ledger.jsonl",
-  "ledger_sha256": "267547253fcc2fafd0609c6b8a86006b70c7c19797213a912cf0763984f85c40"
+  "ledger_sha256": "16a4767ffa30e6874783c11a7809f1c348b99db59e0cbbc459ca4b9928e958e7",
+  "completed_packets": 6,
+  "recorded_at": "2026-11-11T14:30:02.907633+00:00"
 }

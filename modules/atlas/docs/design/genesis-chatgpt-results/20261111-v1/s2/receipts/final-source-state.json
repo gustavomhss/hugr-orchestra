@@ -1,0 +1,35 @@
+{
+  "schema": "genesis-source-state/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "checked_at": "2026-11-11T14:30:02.907633+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_head_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "2689c516d63488be37de678cc853dd4556fd5c13\n",
+      "stderr": ""
+    }
+  ],
+  "shared_source_modified": false,
+  "proposal_application": "NOT_APPLIED",
+  "tests": "NOT_RUN",
+  "materialization": "Sparse verified Atlas runtime; not a complete whole-repository checkout"
+}
