@@ -1,0 +1,117 @@
+{
+  "schema": "genesis-s1-final-checkpoint-observation/v1",
+  "campaign": "20261111-v1",
+  "recorded_at": "2026-11-11T15:34:47.327819+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "payload_commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+  "handoff_ref": {
+    "commit": "463621a7b23912264f98411c677e7e2af5219ebf",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+    "sha256": "a5741b38c9d4bcc1e1d5c139421d163cb5bffc74fe67bc1677c494ecae59389a"
+  },
+  "author_prerequisites": "COMPLETED_AND_PUBLISHED_READY_FOR_JUDGMENT",
+  "semantic_acceptance": "NOT_ACCEPTED",
+  "global_acceptance": "INDETERMINATE",
+  "s5_observation": {
+    "commit": "adfcbc639d31d2ae01f72e58d21f2657d5c6b63c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+    "sha256": "50b4ca77df66acaaf9dfbea900564e804ceb37701850c22dc81e3e4e95aa5c3f",
+    "sequence": 5,
+    "state": "BLOCKED",
+    "scope_revision": null,
+    "judgments": [],
+    "input_age": "S5 still cites S1 sequence 2 at 72ef14f. No acknowledgement or applicable decision for the new exact payload observed."
+  },
+  "feedback": {
+    "commit": "13289d8c4aa1bd82a128e171cbc042ba1827c76b",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/integration-feedback-004.json",
+    "sha256": "0dd80297cacf097e5fbd7ce977135efd34f32bc845561477ed547703ae4e6007",
+    "classification": "INTEGRATOR_PREPARATION_FEEDBACK_NOT_JUDGMENT"
+  },
+  "request_dispositions": [
+    {
+      "id": "S5-S1-01",
+      "state": "CORRECTED",
+      "evidence": "Exact protocol hash in S1 sequence 2 and later, original preserved."
+    },
+    {
+      "id": "S5-S1-02",
+      "state": "PREPARATION_CAPACITY_PUBLISHED_SUCCESSOR_PLAN_PROPOSED",
+      "evidence": "Active bootstrap-v3-original-reconciliation preserves S5 ten and S3 ten units, expands S1 to twenty after merging all original/resumed reservations; scope-v4 is a replacement-only proposal derived from the inventory."
+    },
+    {
+      "id": "S5-S1-04",
+      "state": "COMPLETE_ORIGINAL_PACKAGE_PUBLISHED",
+      "evidence": "The full scope, criteria, interface, authority limits, cases and allocation proposal are linked from S1 sequence 4 for both persistent judges."
+    }
+  ],
+  "accounting_reconciliation": {
+    "canonical_ledger_ref": {
+      "commit": "75da154ec54d1d3cc098e1b428b67e4c10cfe220",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl",
+      "sha256": "ecd8e90628c04e011299b41a116775b7d1c31d7d4d10d7e53f068bbb42648cc8"
+    },
+    "unique_known_logical_packets": 16,
+    "previous_s1_limit": 16,
+    "previous_uncommitted_capacity": 0,
+    "protected_correction_target": 2,
+    "current_s1_limit": 20,
+    "current_preparation_envelope": 52,
+    "active_allocation_ref": {
+      "commit": "bf76a2be592fa6a445b243b8652ee64ed2e498f6",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+      "sha256": "e583312a4bec3c8bbf51263089b433e91811b667f5a51a64c48f58f8155a0a5f"
+    },
+    "prospective_adjustment": "16 known reserved/committed + 2 protected correction + 2 bounded reconciliation packets. Earlier capacity gap remains in history, and no preparation was reclassified to hide it.",
+    "native_tokens": "UNKNOWN",
+    "native_billing": "UNKNOWN",
+    "native_physical_attempts": "UNKNOWN",
+    "quota_released": false,
+    "note": "Canonical ledger now includes all recovered original records and separate resumption records, deduplicated by stable IDs. Active future work must consume the new revision explicitly; this snapshot does not settle unknown physical use."
+  },
+  "remaining_blockers": [
+    {
+      "criteria": [
+        "AC-01",
+        "CC-1",
+        "AC-02",
+        "DOD-2"
+      ],
+      "operation": "S5 both persistent independent judgments of exact prerequisite package and separately frozen concrete oracles",
+      "next_action": "Consume S1 sequence 4 and its immutable packet; reserve under the applicable initial allocation, then dispatch both clean persistent contexts."
+    },
+    {
+      "criteria": [
+        "AC-08",
+        "CC-6",
+        "SC-4",
+        "DOD-5"
+      ],
+      "operation": "Real economic conformance, usage and unresolved-call settlement",
+      "next_action": "Keep native physical observations UNKNOWN. S5 integrates the concrete existing-seam patches and binds an actual authorized candidate CI run; do not substitute the coordination ledger for enforcement."
+    },
+    {
+      "criteria": [
+        "CC-1",
+        "AC-04",
+        "AC-05",
+        "AC-06"
+      ],
+      "operation": "Required capture/import/recipe bindings and full allocation reconciliation",
+      "next_action": "Canonical S1 resumption compares preserved original and resumed inputs; S2 resolves the 86 source capture blockers and required source/recipe closure without exclusion or gate relaxation."
+    }
+  ],
+  "discovery_queries_after_complete_publication": 3,
+  "automatic_background_work": false,
+  "end_condition": "All independent original S1 authoring, deterministic data checks, concrete proposals and durable publication are completed. Stop this original turn at the named external/canonical prerequisites; no future execution is promised.",
+  "complete_envelope_proposal": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/proposals/original-scope-allocation-v4.json",
+    "sha256": "f035170414305c0dbba26cda36525211c55419dab410f735380df7a58039d568",
+    "total_limit": 5007,
+    "status": "AUTHOR_FROZEN_SUCCESSOR_PROPOSAL_PENDING_CANONICAL_RECONCILIATION",
+    "commit": "10ea58a8274492c993b769329389a0d414e51f6e",
+    "timestamp_note": "The proposal preserves the initial authoring timestamp; its exact version publication time is the Git commit timestamp."
+  }
+}
