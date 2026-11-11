@@ -1,0 +1,152 @@
+{
+  "schema": "genesis-native-binding-approval/v1",
+  "purpose": "runtime-import-binding",
+  "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+  "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+  "reviewers": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "decisions": [
+    {
+      "reviewer": "/root/judge_j1",
+      "decision_id": "sha256:e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7",
+      "decision_id_kind": "response-sha256",
+      "purpose": "runtime-import-binding",
+      "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+      "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+      "verdict": "PASS",
+      "criteria": [
+        {
+          "id": "QS-1",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "CC-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I7",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I8",
+          "verdict": "PASS"
+        },
+        {
+          "id": "runtime-import-binding",
+          "verdict": "PASS"
+        }
+      ],
+      "entries": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+          "inputs": "8510fd1ae1a96c4c65c5edbeff66395e1ae49f612480cafece41806aa669c7de"
+        }
+      ],
+      "request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-close-v2.txt",
+        "sha256": "687a3a88b149d82ff65770f43908706a356ab0dd5df4e809af43a436ace8e3f7"
+      },
+      "response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+        "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+      }
+    },
+    {
+      "reviewer": "/root/judge_j2",
+      "decision_id": "sha256:436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076",
+      "decision_id_kind": "response-sha256",
+      "purpose": "runtime-import-binding",
+      "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+      "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+      "verdict": "PASS",
+      "criteria": [
+        {
+          "id": "QS-1",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "CC-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I7",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I8",
+          "verdict": "PASS"
+        },
+        {
+          "id": "runtime-import-binding",
+          "verdict": "PASS"
+        }
+      ],
+      "entries": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+          "inputs": "8510fd1ae1a96c4c65c5edbeff66395e1ae49f612480cafece41806aa669c7de"
+        }
+      ],
+      "request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-close-v2.txt",
+        "sha256": "687a3a88b149d82ff65770f43908706a356ab0dd5df4e809af43a436ace8e3f7"
+      },
+      "response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+        "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+      }
+    }
+  ]
+}

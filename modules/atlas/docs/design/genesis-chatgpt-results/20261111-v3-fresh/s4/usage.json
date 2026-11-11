@@ -19,15 +19,20 @@
     },
     {
       "stage": "WP-R0",
-      "status": "implemented-prepared-and-remote-tested;binding-open"
+      "status": "implemented;actual-prepare;two-new-binding-PASS;governed-publish-index-read-PROVEN-for-sample"
     },
     {
       "stage": "WP-L1B",
-      "status": "produced;metadata-correction;judging-packets-in-flight"
+      "status": "produced-metadata-v2-accepted-by-J1-and-J2"
     },
     {
       "stage": "WP-R1",
-      "status": "remote-control-authoring-in-flight"
+      "status": "exact-stronger-test-and-corrected-source-pins;remoteCI-PASS;semantic-L1-and-control-review-open"
+    },
+    {
+      "stage": "WP-L1-BOUNDARY",
+      "status": "producing;required-before-L2",
+      "purpose": "Read-only neighboring Session/Store/server boundary knowledge at baseline, not population expansion"
     },
     {
       "stage": "WP-L2",
@@ -77,6 +82,61 @@
     {
       "operation": "continuity_subproducer",
       "status": "interrupted after parent completed its accepted delivery of research input; no lost result silently redispatched"
+    },
+    {
+      "operation": "runtimeR1-remoteCI",
+      "runs": [
+        43069951327,
+        43070538154
+      ],
+      "status": "both-success;first uses weaker paused-barrier test;second uses final post-barrier overlap assertion;220 tests+22mutations+guards passed",
+      "source_mismatch_correction": "new exact test committed before second run, original receipts retained"
+    },
+    {
+      "operation": "runtimeR1-local-typecheck",
+      "results": [
+        {
+          "session": 45697,
+          "completion": "f5b70f",
+          "exit_code": 0
+        },
+        {
+          "session": 95208,
+          "completion": "8badb4",
+          "exit_code": 0
+        }
+      ],
+      "setup_failure": "first earlier command started before copy/dependencies finished; exit127 preserved in principal record, not a product test"
+    },
+    {
+      "operation": "review-transport",
+      "native_courier": "/root/review_courier",
+      "corrections": [
+        "L1B J2 part4 duplicate body passage replaced for both judges",
+        "R0 J2 part3 duplicate GO-I8 corrected for both judges",
+        "L1A original requests not exported: new literal full-body submission, no reconstructed history"
+      ],
+      "tokens": "UNKNOWN"
+    },
+    {
+      "operation": "actual-isolated-native-publication-and-read",
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "publish": {
+        "exit_code": 0,
+        "emitted": true
+      },
+      "index": {
+        "exit_code": 0,
+        "kind": "index"
+      },
+      "read": {
+        "exit_code": 0,
+        "kind": "ready",
+        "historical": false,
+        "body_bytes": 17959
+      },
+      "native_model_calls_issued_by_adapter": false,
+      "native_tokens": "UNKNOWN"
     }
   ],
   "native_input_tokens": "UNKNOWN",
@@ -89,10 +149,12 @@
   "historical_campaign_usage": "GLOBAL_UNRECONCILED_BY_ROOT;not_reset",
   "guarantee": "Finite visible native task queue and preserved outputs/decisions. No monetary cap, physical-attempt reservation enforcement or invisible retry telemetry claimed.",
   "pending_reservations": [
-    "two persistent judges per remaining layer/correction",
-    "native producer forL2/L3/L4",
-    "independent Atlas-only consumer",
-    "runtime binding and finaljudgments"
+    "Two same persistent judges for last two L1 units and R1 control evidence",
+    "One native producer each finite L2/L3/L4 wave after predecessor-layer acceptance",
+    "Same two judges each layer and corrections",
+    "Exact native runtime-binding and governed publication",
+    "Fresh Atlas-only consumer with frozen cases and limits",
+    "Domain-specific update/reuse proof and same final two judgments"
   ],
   "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero."
 }

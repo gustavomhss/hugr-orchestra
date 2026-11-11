@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/workspace/scratch/aff930d22ec7/s4/tools/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "publish",
+    "/workspace/scratch/aff930d22ec7/s4/candidate",
+    "/workspace/scratch/aff930d22ec7/s4/runtime-state/l1a-prepared-v1.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/binding-v1.json"
+  ],
+  "cwd": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas",
+  "environment_declarations": {
+    "ATLAS_ACTOR": "/root",
+    "ATLAS_RATIFY_TOKEN": "/root"
+  },
+  "start_utc": "2026-11-11T17:55:50.388889+00:00",
+  "duration_seconds": 0.795177641999544,
+  "exit_code": 0,
+  "stdout_sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "operation": "actual isolated native publication; not product test suite"
+}

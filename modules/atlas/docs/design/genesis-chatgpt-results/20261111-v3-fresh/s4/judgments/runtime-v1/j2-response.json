@@ -1,0 +1,134 @@
+{
+  "reviewer": "/root/judge_j2",
+  "reviewer_identity": "parallel-v3-fresh/S4/J2",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "runtime-import-binding",
+  "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+  "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+  "entries": [
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+      "inputs": "8510fd1ae1a96c4c65c5edbeff66395e1ae49f612480cafece41806aa669c7de"
+    }
+  ],
+  "verdict": "PASS",
+  "semantic_reconfirmation": {
+    "verdict": "PASS",
+    "key": "S4:L1:ownership-boundaries",
+    "body_byte_length": 17959,
+    "body_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+    "original_metadata_sha256": "ba9611f3cd228e6e320e05317150ffc128650f848082b829c4ae2f8c54fda2c0",
+    "reason": "Reconfirmo a semântica do corpo e dos metadados originais recebidos integralmente neste novo pedido canônico, usando também os trechos de fonte anteriormente fornecidos. O conteúdo continua fiel, útil e delimitado como evidência estática. Esta reconfirmação é uma decisão desta etapa; não reconstrói os pedidos iniciais não exportados nem transforma automaticamente os votos anteriores em binding."
+  },
+  "criteria": [
+    {
+      "id": "QS-1",
+      "verdict": "PASS",
+      "reason": "genesis-native.ts preserva os bytes do corpo em OwnershipBody e copia authority, validity, gaps e evidence para OwnershipResult. object-mapping-v1.json e measurements.json registram igualdade com o corpo julgado, com os campos semânticos e com as referências originais. O transporte bruto também permanece no CAS."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "reason": "genesis-native-runtime.md explica caminhos relativos, preparação, binding separado, autoridade externa, comandos, recusas e limites. O entrypoint diferencia erro, HOLD e resultado ordinário; a preparação não é apresentada como publicação."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "reason": "A adaptação usa o CAS, os tipos ownership, o observer, readOwnership, composeRuntime.check e atlas-emit existentes. Não cria uma segunda persistência de conhecimento, policy, ratificador ou votos; mantém o piloto histórico separado."
+    },
+    {
+      "id": "QS-5",
+      "verdict": "PASS",
+      "reason": "prepare-receipt-v1.json registra preparação real com exit_code 0 e arquivos identificados. O mapping fornece evidência da transformação efetiva. A evidência remota distingue testes sintéticos aprovados da falha geral dos guards, sem alegar publicação ou consumo reais."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "reason": "Código, documentação e recibos explicam finalidade, transformação, contratos, recusas e pontos de manutenção. As limitações de origem Git, autenticação local, observação, dependências externas e recuperação são explícitas."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "reason": "O pacote distingue inspeção estática, preparação executada, testes sintéticos, associação externa aos commits e operações ainda pendentes. observed_head=null e a classificação trusted diante de falha Git permanecem visíveis, sem alegação de checkout ou autenticação."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "reason": "O candidato vincula transporte, implementações, contrato, resultados e onze inputs observados. publishNativePackage refaz a preparação e exige identidade do candidato e igualdade do registro antes de aceitar binding. Fonte, protocolo e revisão de implementação não são confundidos."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "reason": "prepareNativePackage exige present e mantém erros distintos para absent e unavailable. Permanecem as recusas de caminhos, symlinks, arquivos observados acima de 256000 bytes e membership indisponível. Nenhuma dessas situações vira ausência presumida ou redução silenciosa de escopo."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "reason": "validateNativeBinding exige propósito próprio, dois reviewers distintos e correspondência exata de candidato, contrato, critérios, inputs e resultados. A identidade dos autores continua sendo responsabilidade declarada do operador, sem autenticação inventada. Publicação ainda atravessa policy, check e emit governados; este voto não fornece a autoridade do operador."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "reason": "O julgamento considera código, semântica reconfirmada, preparação real e correspondência dos objetos. Hashes, shapes e resultados sintéticos não são usados isoladamente para concluir suficiência, publicação ou consumo."
+    },
+    {
+      "id": "runtime-import-binding",
+      "verdict": "PASS",
+      "reason": "A transformação demonstrada liga o corpo e os metadados semânticos reconfirmados ao result exato, ao contrato corrigido e ao inputs_id informado. As onze versões vêm da execução do observer, não de SHA-256 transportado. Aprovo este binding específico para prosseguir pelas portas governadas, após o outro voto independente exigido; não afirmo que a publicação já ocorreu."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "case": "Traversal, symlinks, UTF-8, digest, comprimento e preservação literal",
+      "verdict": "PASS",
+      "evidence": "nativePath, readNativeFile e decodeNativeUtf8; comparação de comprimento/SHA-256 antes de nativeBody; casos correspondentes da suíte remota.",
+      "reason": "O corpo é validado e armazenado como bytes, sem normalização. A leitura verifica componentes do caminho e descritor, com limites explícitos."
+    },
+    {
+      "case": "Required keys, layers, needs, roots, fontes, observações e dependências",
+      "verdict": "PASS",
+      "evidence": "validateNativePackage, validateArtifact e prepareNativePackage.",
+      "reason": "Há validação de campos, unicidade, seleção, alcance, ordem/ciclos, correspondência source-ref/input, hashes de fonte e observações reais. Dependências externas são recusadas expressamente."
+    },
+    {
+      "case": "Dois juízes atuais e binding exato",
+      "verdict": "PASS",
+      "evidence": "validateNativeBinding e instruções de transcrição do operador; este novo pedido e esta decisão identificada.",
+      "reason": "O formato exige duas decisões distintas com todos os pares input/result e todos os critérios. A procedência dos reviewers não é inferida de nomes ou bytes: os votos devem ser os atuais dos agentes efetivos, transcritos fielmente pelo principal."
+    },
+    {
+      "case": "Tipos, CAS, observer, readers e publicação governada existentes",
+      "verdict": "PASS",
+      "evidence": "nativePut, prepareNativePackage e publishNativePackage.",
+      "reason": "A publicação passa pela leitura de todas as entradas, por composeRuntime.check e por atlas-emit. O adapter não cria policy nem converte semântica em ratificação."
+    },
+    {
+      "case": "Limites de .atlas, tamanho, cópia sem Git e dependências externas",
+      "verdict": "PASS",
+      "evidence": "genesis-native-format.ts, genesis-native-io.ts, candidato e genesis-native-runtime.md.",
+      "reason": "As recusas permanecem. observed_head=null e external-capture-evidence-required identificam honestamente a cópia reconstruída; a associação aos commits depende da captura externa fornecida."
+    },
+    {
+      "case": "Reuso de identidades, invalidação e navegação",
+      "verdict": "PASS",
+      "evidence": "Derivação CAS de result, id({inputs,dependencies}), reprepare em publishNativePackage e testes remotos correspondentes.",
+      "reason": "Entradas iguais preservam as identidades derivadas pertinentes; mudanças relevantes impedem reutilizar o binding do candidato. Navigation é copiada separadamente de dependencies."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "limits": [
+    "Este PASS aplica-se somente ao candidato, contrato, result e inputs_id identificados acima, com o código V1 fornecido.",
+    "Foi usada a reposição literal do contrato sem duplicação de GO-I8. A duplicação anterior era erro de transporte, não defeito do candidato.",
+    "Não usei ferramentas, não reexecutei hashes e não executei testes. As conferências de integridade e execução consideradas são as evidências fornecidas pelo principal e pelo courier.",
+    "O run remoto 43065851373 permanece FAILED: 216 testes passaram e os 22 controles de mutação rejeitaram seus mutantes, mas o guard geral falhou pelo log criado no checkout; três warnings de casts também permanecem registrados. Este parecer não é aceite final de CI.",
+    "Os controles de mutação abrangem mecanismos ownership existentes; não são todos controles específicos deste novo adapter.",
+    "A preparação real não estabelece publicação, leitura por consumidor ou execução de recuperação. Essas operações ainda exigem seus próprios resultados.",
+    "A origem dos reviewers e a autorização nominal do ator são verificadas pelo processo do operador; o baseline não autentica criptograficamente esses nomes.",
+    "A falha Git classificada como trusted é um limite conhecido do baseline, não prova de origem confiável ou de tracking.",
+    "O leitor e as portas governadas ainda podem recusar a tentativa autorizada. O outro voto independente continua necessário.",
+    "Os pedidos iniciais de L1A não exportados não foram reconstruídos. Este novo pedido canônico e esta resposta fornecem evidência própria desta etapa.",
+    "R1, L2 e conclusão de S4 não foram avaliados."
+  ]
+}

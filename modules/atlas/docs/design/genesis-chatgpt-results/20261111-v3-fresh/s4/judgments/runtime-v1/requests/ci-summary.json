@@ -1,0 +1,212 @@
+{
+  "schema": "review-courier-ci-projection/v1",
+  "source": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-runtime-results.json",
+    "bytes": 90753,
+    "sha256": "45176d36acd332d1ca3593102f100ba04039830d6412d4430e9bdca28ec20a33",
+    "lines": 1
+  },
+  "method": "Exact top-level reported counters plus deterministic counts of testResults/assertionResults; exact fullName/status/failureMessages for the genesis-native suite. No rerun.",
+  "reported": {
+    "numTotalTestSuites": 56,
+    "numPassedTestSuites": 56,
+    "numFailedTestSuites": 0,
+    "numPendingTestSuites": 0,
+    "numTotalTests": 216,
+    "numPassedTests": 216,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTodoTests": 0,
+    "snapshot": {
+      "added": 0,
+      "failure": false,
+      "filesAdded": 0,
+      "filesRemoved": 0,
+      "filesRemovedList": [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 0,
+      "unchecked": 0,
+      "uncheckedKeysByFile": [],
+      "unmatched": 0,
+      "updated": 0,
+      "didUpdate": false
+    },
+    "startTime": 1794417193790,
+    "success": true
+  },
+  "listed_test_result_records": 22,
+  "listed_assertions": 216,
+  "listed_assertion_status_counts": {
+    "passed": 216
+  },
+  "genesis_native_suite": [
+    {
+      "name": "/home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "status": "passed",
+      "message": "",
+      "assertionResults": [
+        {
+          "fullName": "Genesis native adapter validates CLI read selection, byte limits, allowed fields and the explicit historical flag",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter prepares exact bytes and actual kernel input versions without publishing or treating navigation as build",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: duplicate artifact",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: duplicate criterion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: string layer",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: unknown need",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: invalid validity",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: missing required",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: required unreachable",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: wrong root need",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: source without input",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: recipe without input",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: unfilled reference",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: source traversal",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: body traversal",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: cycle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: out of order",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: unsupported input",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: external dependency",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter rejects body lengths/hashes, source hashes/blob identities, reference drift and invalid UTF-8",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter requires two exact new binding decisions, all criteria and every input/result pair",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter preserves authority identity and keeps a blocked navigation artifact from being published",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses changed bytes and authority absence; real governed publication then supports real index/read",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ]
+    }
+  ],
+  "mutation_count": 22,
+  "mutation_exit_code_counts": {
+    "1": 22
+  },
+  "receipt_referenced_files": [
+    {
+      "path": "job-output.txt",
+      "bytes_observed": 101448,
+      "sha256_observed": "69e747376ccabb0842291cfe8c220fe0dfc842834338762593eff8832a2a5ff2",
+      "bytes_match": true,
+      "sha256_match": true
+    },
+    {
+      "path": "ownership-guards.json",
+      "bytes_observed": 121,
+      "sha256_observed": "c637f25134ae31292a3672af9572783b9ae12e4eb5c476f5732902198040b7f3",
+      "bytes_match": true,
+      "sha256_match": true
+    },
+    {
+      "path": "ownership-mutation-receipts.json",
+      "bytes_observed": 4506,
+      "sha256_observed": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536",
+      "bytes_match": true,
+      "sha256_match": true
+    },
+    {
+      "path": "ownership-runtime-results.json",
+      "bytes_observed": 90753,
+      "sha256_observed": "45176d36acd332d1ca3593102f100ba04039830d6412d4430e9bdca28ec20a33",
+      "bytes_match": true,
+      "sha256_match": true
+    }
+  ],
+  "limits": [
+    "The global run conclusion remains failure as recorded.",
+    "These test names and statuses are test evidence, not actual campaign binding/publication/read decisions.",
+    "The 101448-byte job output is measured but not included."
+  ]
+}

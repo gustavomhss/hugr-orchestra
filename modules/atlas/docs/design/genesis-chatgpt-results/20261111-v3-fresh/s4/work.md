@@ -47,3 +47,10 @@ The four L1B bodies and metadata-v2 were accepted by both persistent judges with
 Runtime candidate `673b90d82b8b888d5d0184d2e17dec6d5d1b05f1` passed GitHub Actions run `43070538154`: 220 tests, 22 mutation controls, typecheck, generation and repository guards (0 gate / 0 warn findings). The prior passed run at `9a2be7f` used the weaker paused-barrier test and is retained with that limit. Hash reconciliation caught the version difference; the stronger post-barrier overlap assertion has its own exact successful run. Native V1 preparation/binding remains frozen separately, and the release has not silently switched candidates.
 
 Two literal transport mistakes by the courier were recorded and corrected for both judges. The initial L1A review request transcript was not exported as a file; its original responses/body remain preserved, and a new canonical full-body submission is being sent for the current decision. No reconstructed old request will be represented as original.
+
+
+## First exact native path demonstrated
+
+The canonical L1A submission was reconfirmed semantically by both same judges, and both issued new runtime-import-binding PASS for candidate `e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284`. Original decisions and request bodies are preserved under judgments/runtime-v1; J1 explicitly identifies its actual agent and persistent role, and the operator binding uses the actual agent ID.
+
+Authorized isolated publication passed shape/truth/authz/ratify and atlas-emit returned emitted=true. Real ownership.index and ownership.read returned manifest `4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02`; current read returned the exact 17959 native body bytes. See runtime/operations-v1. This sample does not complete S4 or substitute for the independent consumer. All command outputs were captured outside the served source root, preserving that state during observation.

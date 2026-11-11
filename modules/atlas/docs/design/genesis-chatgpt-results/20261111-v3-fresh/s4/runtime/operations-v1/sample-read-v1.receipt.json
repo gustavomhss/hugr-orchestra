@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/workspace/scratch/aff930d22ec7/s4/tools/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "read",
+    "/workspace/scratch/aff930d22ec7/s4/candidate",
+    "/workspace/scratch/aff930d22ec7/s4/runtime-state/sample-read-query.json"
+  ],
+  "cwd": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas",
+  "start_utc": "2026-11-11T17:56:10.819493+00:00",
+  "duration_seconds": 0.17968989099972532,
+  "exit_code": 0,
+  "stdout_sha256": "3f1abcadc080e358677a0e37308006adf99563c1cc8e8726c23220737f159d01",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+}

@@ -1,0 +1,119 @@
+{
+  "schema": "review-courier-byte-measurements/v1",
+  "role": "Transport measurements only; no semantic or runtime-binding verdict.",
+  "method": "Python pathlib.read_bytes; json.loads for CAS objects; bytes(body[\"bytes\"]); hashlib.sha256; exact byte equality.",
+  "candidate": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/runtime-state/l1a-prepared-v1.json",
+    "bytes": 9467,
+    "sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22",
+    "lines": 211
+  },
+  "candidate_receipt_copy": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/l1a-prepared-v1.json",
+    "bytes": 9467,
+    "sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22",
+    "lines": 211
+  },
+  "candidate_copies_byte_equal": true,
+  "candidate_id_as_recorded": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+  "result_cas": {
+    "id_as_recorded": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate/.atlas/cas/8c/8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+    "bytes": 1707,
+    "sha256": "cf4a4361153f249495a9d5e7284e912974fd0873aea31cce722c67681f21b3b7",
+    "lines": 1
+  },
+  "body_cas": {
+    "id_as_recorded": "df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate/.atlas/cas/df/df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+    "bytes": 64979,
+    "sha256": "9b32d3e8512350608a14006b1c195f92b5d0bc2ba2fffda41cebb9d1d6b9fe60",
+    "lines": 1,
+    "kind": "ownership-body",
+    "version": 1
+  },
+  "decoded_body": {
+    "bytes": 17959,
+    "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+    "equals_original_reviewed_body": true,
+    "equals_native_package_body_file": true,
+    "matches_declared_byte_length": true,
+    "matches_declared_sha256": true
+  },
+  "original_reviewed_body": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l1a/body.md",
+    "bytes": 17959,
+    "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+    "lines": 105
+  },
+  "native_package_body_file": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/body.md",
+    "bytes": 17959,
+    "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+    "lines": 105
+  },
+  "semantic_field_equality": {
+    "authority": true,
+    "validity": true,
+    "gaps": true,
+    "evidence": true
+  },
+  "transport": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/native-package.json",
+    "bytes": 8886,
+    "sha256": "44e018b5327e742b96d92690916f79dcf8eff67dd18d17c8cfa3d644b3297312",
+    "lines": 176,
+    "declared_sha256_matches": true,
+    "cas_body": "ec5f88495c6626c6e563d7485b9b2f3cc263fca83200ad17c863866ea10e6b4f",
+    "cas_object": {
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate/.atlas/cas/ec/ec5f88495c6626c6e563d7485b9b2f3cc263fca83200ad17c863866ea10e6b4f",
+      "bytes": 30232,
+      "sha256": "c35dcc0a6eb85d04719a3fb427ad08cc620b2b71fe5e28fd677f7d9fa8efa62b",
+      "lines": 1
+    },
+    "decoded_bytes_equal_package_file": true
+  },
+  "implementation": [
+    {
+      "slot": "adapter",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "bytes": 12376,
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "lines": 171,
+      "equals_candidate_implementation_sha256": true
+    },
+    {
+      "slot": "format",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "bytes": 13377,
+      "sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "lines": 218,
+      "equals_candidate_implementation_sha256": true
+    },
+    {
+      "slot": "io",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "bytes": 4162,
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "lines": 88,
+      "equals_candidate_implementation_sha256": true
+    },
+    {
+      "slot": "binding",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "bytes": 5211,
+      "sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+      "lines": 75,
+      "equals_candidate_implementation_sha256": true
+    }
+  ],
+  "input_keys_count": 11,
+  "prepared_entry_inputs_count": 11,
+  "prepared_observation_count": 11,
+  "limits": [
+    "Kernel IDs are quoted from the existing candidate/CAS references, not recomputed by this courier.",
+    "No oracle body was opened. Oracle reference metadata inside authorized candidate and mapping records is retained unchanged.",
+    "Reviewed L1A body is not retransmitted; decoded CAS bytes were compared directly to the original reviewed file.",
+    "No preparation, product test, binding, publication, index or read was executed by this courier."
+  ]
+}

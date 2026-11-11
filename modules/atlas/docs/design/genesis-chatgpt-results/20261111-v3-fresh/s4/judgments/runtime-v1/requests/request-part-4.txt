@@ -1,0 +1,595 @@
+WP-R0 V1 — literal review transport only. Separate from L1B and from any R1 work.
+Execution: a2095d5a-1464-4c38-a222-6376974fc9c9. Candidate source is the existing s4/candidate V1 files.
+No verdict is requested by this courier. Hold this material for the principal's separate R0 closing request and oracle. No semantic judgment is automatically converted into runtime binding.
+The same saved part is sent to /root/judge_j1 and /root/judge_j2. File bodies below are integral unless explicitly labeled a deterministic projection.
+Part 4/4.
+The CI summary is explicitly a deterministic projection of the recorded test JSON. All other files in this part are integral. The overall CI failure remains visible.
+
+===== BEGIN LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json =====
+Source lines: 1-76; bytes: 2877; SHA256: c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3. The next 2877 UTF-8 bytes are the exact file.
+{
+  "schema": "s4-execution-receipt/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "operation": "native prepare bounded L1A",
+  "cwd": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas",
+  "argv": [
+    "/workspace/scratch/aff930d22ec7/s4/tools/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/aff930d22ec7/s4/candidate",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/native-package.json",
+    "/workspace/scratch/aff930d22ec7/s4/runtime-state/l1a-prepared-v1.json"
+  ],
+  "exit_code": 0,
+  "host_exec_chunk": "7594d3",
+  "output_ref": "runtime/l1a-prepared-v1.json",
+  "output_sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22",
+  "candidate_source_files": [
+    {
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "bytes": 3004
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "sha256": "d0997dd5d07cd178eedb912af64623456f01fcfc7b467fa5f8c324db7018e665",
+      "bytes": 15139
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "bytes": 13377
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+      "bytes": 5211
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "bytes": 12376
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "bytes": 4162
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26",
+      "bytes": 5567
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+      "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec",
+      "bytes": 10249
+    }
+  ],
+  "known_limits": [
+    "Real native producer artifact and semantic decisions; no binding/publish/read execution yet.",
+    "Reconstructed source copy, observed_head=null; no Git history or tracking claim.",
+    "Source/protocol association independently captured through GitHub connector."
+  ],
+  "attempts": [
+    {
+      "exit_code": 1,
+      "host_exec_chunk": "96ceb8",
+      "error": "Runtime-state output directory did not exist; fixed directory creation only."
+    },
+    {
+      "exit_code": 0,
+      "host_exec_chunk": "7594d3"
+    }
+  ]
+}
+
+===== END LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json =====
+
+===== BEGIN LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/typecheck-v1.json =====
+Source lines: 1-60; bytes: 2110; SHA256: c2ba11961d870bc2be74d8a584ab15866ce36952b5f553925e4e88b570b39833. The next 2110 UTF-8 bytes are the exact file.
+{
+  "schema": "s4-gate-receipt/v1",
+  "gate": "package typecheck",
+  "command": "bun typecheck --force",
+  "cwd": "modules/atlas",
+  "bun_version": "1.3.14",
+  "exit_code": 0,
+  "stdout": "$ tsc -b --force\n",
+  "stderr": "",
+  "start_chunk": "673cd0",
+  "completion_chunk": "c99f4a",
+  "host_session_id": 20508,
+  "source_files": [
+    {
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "bytes": 3004
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "sha256": "d0997dd5d07cd178eedb912af64623456f01fcfc7b467fa5f8c324db7018e665",
+      "bytes": 15139
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "bytes": 13377
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+      "bytes": 5211
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "bytes": 12376
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "bytes": 4162
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26",
+      "bytes": 5567
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+      "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec",
+      "bytes": 10249
+    }
+  ],
+  "product_tests_executed_locally": false,
+  "previous_failures": [
+    "Initial copied incremental build omitted new export; --force rebuilt it.",
+    "Test fixture get() required asHash(String(result.body)); producer corrected branded hash cast."
+  ]
+}
+
+===== END LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/typecheck-v1.json =====
+
+===== BEGIN LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json =====
+Source lines: 1-54; bytes: 1650; SHA256: ad3cd8613f88833c58061ae65399451d8763f5d085309ef85627ce6c55d3042c. The next 1650 UTF-8 bytes are the exact file.
+{
+  "schema": "s4-remote-gate/v1",
+  "run_id": 43065851373,
+  "job_id": 130680453252,
+  "head_sha": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "conclusion": "failure",
+  "results": {
+    "typecheck": "PASS",
+    "product_tests": {
+      "status": "PASS",
+      "passed": 216,
+      "failed": 0,
+      "pending": 0
+    },
+    "mutation_controls": {
+      "status": "PASS",
+      "count": 22
+    },
+    "boundary_generate": "PASS",
+    "repository_guards": {
+      "status": "FAILED",
+      "error": "Agent scratch guard detected workflow-generated ownership-guards.log inside checkout; 3 double-cast warnings."
+    }
+  },
+  "artifact_id": 13875162617,
+  "artifact_zip_sha256": "15ccdf9c52f6b562b0331f16947e4f9340635d78a10f58077fb2304543be9775",
+  "artifact_extraction_hash_verified": true,
+  "limits": [
+    "Synthetic test fixtures do not substitute actual native semantic/binding decisions or consumer results.",
+    "Overall run is failure until required guard correction is rerun."
+  ],
+  "files": [
+    {
+      "path": "job-output.txt",
+      "sha256": "69e747376ccabb0842291cfe8c220fe0dfc842834338762593eff8832a2a5ff2",
+      "bytes": 101448
+    },
+    {
+      "path": "ownership-guards.json",
+      "sha256": "c637f25134ae31292a3672af9572783b9ae12e4eb5c476f5732902198040b7f3",
+      "bytes": 121
+    },
+    {
+      "path": "ownership-mutation-receipts.json",
+      "sha256": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536",
+      "bytes": 4506
+    },
+    {
+      "path": "ownership-runtime-results.json",
+      "sha256": "45176d36acd332d1ca3593102f100ba04039830d6412d4430e9bdca28ec20a33",
+      "bytes": 90753
+    }
+  ]
+}
+
+===== END LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json =====
+
+===== BEGIN LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-guards.json =====
+Source lines: 1-1; bytes: 121; SHA256: c637f25134ae31292a3672af9572783b9ae12e4eb5c476f5732902198040b7f3. The next 121 UTF-8 bytes are the exact file.
+{"command":"bun run check:guards --base origin/dev","exitCode":1,"candidate":"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"}
+
+===== END LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-guards.json =====
+
+===== BEGIN LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-mutation-receipts.json =====
+Source lines: 1-156; bytes: 4506; SHA256: 18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536. The next 4506 UTF-8 bytes are the exact file.
+[
+  {
+    "probe": "update-affected-order",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-24 an unchanged prerequisite cannot delay lexicographic selection among affected artifacts"
+    ]
+  },
+  {
+    "probe": "update-input",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+    ]
+  },
+  {
+    "probe": "update-dependency",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+    ]
+  },
+  {
+    "probe": "update-frontier",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite"
+    ]
+  },
+  {
+    "probe": "update-unavailable",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist"
+    ]
+  },
+  {
+    "probe": "need-root",
+    "exitCode": 1,
+    "namedFailures": [
+      "ownership accepted closure reader RP-1 refuses a need root bound to an artifact declaring another need"
+    ]
+  },
+  {
+    "probe": "current-input",
+    "exitCode": 1,
+    "namedFailures": [
+      "ownership accepted closure reader IFIT-4 holds a changed required source, never falls back to a prior accepted body"
+    ]
+  },
+  {
+    "probe": "composed-ratify",
+    "exitCode": 1,
+    "namedFailures": [
+      "KNOW-18 \u2014 the fast path does not apply to a write the door derived as `promoted` IFIT-2 a composed ownership publication also requires ratification without inventing contention"
+    ]
+  },
+  {
+    "probe": "worker-ast",
+    "exitCode": 1,
+    "namedFailures": [
+      "S26 \u2014 the symbol arm is REACHED through the proposer pool, and arm FILE is untouched THE GUARD: every `::` site is visited and seeded when the run goes through worker threads"
+    ]
+  },
+  {
+    "probe": "observer-error-as-absent",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 host observer HO-04 read errors never become absence"
+    ]
+  },
+  {
+    "probe": "observer-members-index-only",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 host observer HO-08 unstaged deletion and eligible recreation change members"
+    ]
+  },
+  {
+    "probe": "observer-accept-partial-git",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 host observer HO-10 incomplete Git enumeration is unavailable"
+    ]
+  },
+  {
+    "probe": "rebuild-every-affected",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-08 equal result renews receipt and stops downstream calls"
+    ]
+  },
+  {
+    "probe": "rebuild-return-old-result",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure"
+    ]
+  },
+  {
+    "probe": "rebuild-body-only-stop",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-12 full result identity controls propagation"
+    ]
+  },
+  {
+    "probe": "rebuild-ignore-direct-child-change",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-10 parent equality cannot hide a direct child change"
+    ]
+  },
+  {
+    "probe": "rebuild-omit-input",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-14 an omitted declared input prevents successful rebuild"
+    ]
+  },
+  {
+    "probe": "rebuild-omit-required-edge",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-15 an omitted required edge prevents successful rebuild"
+    ]
+  },
+  {
+    "probe": "rebuild-accept-stale-review",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-13 rejected or unbound revalidation cannot renew a receipt"
+    ]
+  },
+  {
+    "probe": "rebuild-skip-preflight",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 concurrency TC-01 drift before first dispatch invalidates the plan"
+    ]
+  },
+  {
+    "probe": "rebuild-skip-final-sweep",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 concurrency TC-03 drift in a reused artifact fails the final sweep"
+    ]
+  },
+  {
+    "probe": "rebuild-read-live-path",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 concurrency TC-05 ABA cannot change the bytes consumed by the recipe"
+    ]
+  }
+]
+
+===== END LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-mutation-receipts.json =====
+
+===== BEGIN LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/ci-summary.json =====
+Source lines: 1-212; bytes: 7486; SHA256: b1f6a320a827e74e766fec8148fa60b2370a8b7aeb55d1e8d86068fbb23567d2. The next 7486 UTF-8 bytes are the exact file.
+{
+  "schema": "review-courier-ci-projection/v1",
+  "source": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-runtime-results.json",
+    "bytes": 90753,
+    "sha256": "45176d36acd332d1ca3593102f100ba04039830d6412d4430e9bdca28ec20a33",
+    "lines": 1
+  },
+  "method": "Exact top-level reported counters plus deterministic counts of testResults/assertionResults; exact fullName/status/failureMessages for the genesis-native suite. No rerun.",
+  "reported": {
+    "numTotalTestSuites": 56,
+    "numPassedTestSuites": 56,
+    "numFailedTestSuites": 0,
+    "numPendingTestSuites": 0,
+    "numTotalTests": 216,
+    "numPassedTests": 216,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTodoTests": 0,
+    "snapshot": {
+      "added": 0,
+      "failure": false,
+      "filesAdded": 0,
+      "filesRemoved": 0,
+      "filesRemovedList": [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 0,
+      "unchecked": 0,
+      "uncheckedKeysByFile": [],
+      "unmatched": 0,
+      "updated": 0,
+      "didUpdate": false
+    },
+    "startTime": 1794417193790,
+    "success": true
+  },
+  "listed_test_result_records": 22,
+  "listed_assertions": 216,
+  "listed_assertion_status_counts": {
+    "passed": 216
+  },
+  "genesis_native_suite": [
+    {
+      "name": "/home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "status": "passed",
+      "message": "",
+      "assertionResults": [
+        {
+          "fullName": "Genesis native adapter validates CLI read selection, byte limits, allowed fields and the explicit historical flag",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter prepares exact bytes and actual kernel input versions without publishing or treating navigation as build",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: duplicate artifact",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: duplicate criterion",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: string layer",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: unknown need",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: invalid validity",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: missing required",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: required unreachable",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: wrong root need",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: source without input",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: recipe without input",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: unfilled reference",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: source traversal",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: body traversal",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: cycle",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: out of order",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: unsupported input",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses malformed transport: external dependency",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter rejects body lengths/hashes, source hashes/blob identities, reference drift and invalid UTF-8",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter requires two exact new binding decisions, all criteria and every input/result pair",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter preserves authority identity and keeps a blocked navigation artifact from being published",
+          "status": "passed",
+          "failureMessages": []
+        },
+        {
+          "fullName": "Genesis native adapter refuses changed bytes and authority absence; real governed publication then supports real index/read",
+          "status": "passed",
+          "failureMessages": []
+        }
+      ]
+    }
+  ],
+  "mutation_count": 22,
+  "mutation_exit_code_counts": {
+    "1": 22
+  },
+  "receipt_referenced_files": [
+    {
+      "path": "job-output.txt",
+      "bytes_observed": 101448,
+      "sha256_observed": "69e747376ccabb0842291cfe8c220fe0dfc842834338762593eff8832a2a5ff2",
+      "bytes_match": true,
+      "sha256_match": true
+    },
+    {
+      "path": "ownership-guards.json",
+      "bytes_observed": 121,
+      "sha256_observed": "c637f25134ae31292a3672af9572783b9ae12e4eb5c476f5732902198040b7f3",
+      "bytes_match": true,
+      "sha256_match": true
+    },
+    {
+      "path": "ownership-mutation-receipts.json",
+      "bytes_observed": 4506,
+      "sha256_observed": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536",
+      "bytes_match": true,
+      "sha256_match": true
+    },
+    {
+      "path": "ownership-runtime-results.json",
+      "bytes_observed": 90753,
+      "sha256_observed": "45176d36acd332d1ca3593102f100ba04039830d6412d4430e9bdca28ec20a33",
+      "bytes_match": true,
+      "sha256_match": true
+    }
+  ],
+  "limits": [
+    "The global run conclusion remains failure as recorded.",
+    "These test names and statuses are test evidence, not actual campaign binding/publication/read decisions.",
+    "The 101448-byte job output is measured but not included."
+  ]
+}
+
+===== END LITERAL FILE: /workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/ci-summary.json =====
