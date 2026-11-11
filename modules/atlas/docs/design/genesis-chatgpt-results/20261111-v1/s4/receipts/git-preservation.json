@@ -1,0 +1,1692 @@
+{
+  "schema": "genesis-s4-git-preservation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "evidence_revision": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+  "candidate_revision": null,
+  "recorded_at": "2026-11-11T14:29:39.418449+00:00",
+  "execution_kind": "GIT_PACKAGE_PRESERVATION_COMPARISON_NOT_PRODUCT_MIGRATION",
+  "proof_method": "GitHub compare result contains all changed paths (<300 files, not flagged too_large); root tree was built by immutable base-tree inheritance and only S4 subtree replacement. No protected path occurs in the complete changed set. All uploaded S4 blob IDs match locally computed Git hashes.",
+  "baseline_compare": {
+    "repository_full_name": "gustavomhss/hugr-orchestra",
+    "base": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "head": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+    "status": "ahead",
+    "ahead_by": 3,
+    "behind_by": 0,
+    "total_commits": 3,
+    "too_large": null,
+    "base_commit": {
+      "sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/commit/1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "merge_base_commit": {
+      "sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/commit/1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "files": [
+      {
+        "filename": ".orchestra/skills/execute-genesis/SKILL.md",
+        "status": "added",
+        "additions": 151,
+        "deletions": 0,
+        "changes": 151,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/agents/openai.yaml",
+        "status": "added",
+        "additions": 4,
+        "deletions": 0,
+        "changes": 4,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/campaign.md",
+        "status": "added",
+        "additions": 152,
+        "deletions": 0,
+        "changes": 152,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+        "status": "added",
+        "additions": 125,
+        "deletions": 0,
+        "changes": 125,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+        "status": "added",
+        "additions": 131,
+        "deletions": 0,
+        "changes": 131,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+        "status": "added",
+        "additions": 130,
+        "deletions": 0,
+        "changes": 130,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+        "status": "added",
+        "additions": 133,
+        "deletions": 0,
+        "changes": 133,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/fatia-5.md",
+        "status": "added",
+        "additions": 129,
+        "deletions": 0,
+        "changes": 129,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/handoffs.md",
+        "status": "added",
+        "additions": 199,
+        "deletions": 0,
+        "changes": 199,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/judging.md",
+        "status": "added",
+        "additions": 167,
+        "deletions": 0,
+        "changes": 167,
+        "previous_filename": null
+      },
+      {
+        "filename": ".orchestra/skills/execute-genesis/references/runtime.md",
+        "status": "added",
+        "additions": 189,
+        "deletions": 0,
+        "changes": 189,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/README.md",
+        "status": "added",
+        "additions": 38,
+        "deletions": 0,
+        "changes": 38,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/deliverables.json",
+        "status": "added",
+        "additions": 56,
+        "deletions": 0,
+        "changes": 56,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/entrypoints.json",
+        "status": "added",
+        "additions": 543,
+        "deletions": 0,
+        "changes": 543,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/host-cases.json",
+        "status": "added",
+        "additions": 253,
+        "deletions": 0,
+        "changes": 253,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/preparation-receipt.json",
+        "status": "added",
+        "additions": 32,
+        "deletions": 0,
+        "changes": 32,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/README.md",
+        "status": "added",
+        "additions": 70,
+        "deletions": 0,
+        "changes": 70,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/ownership-host-entrypoints.patch",
+        "status": "added",
+        "additions": 209,
+        "deletions": 0,
+        "changes": 209,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/ownership-host-entrypoints.test.ts",
+        "status": "added",
+        "additions": 206,
+        "deletions": 0,
+        "changes": 206,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/v2-atlas-membership.test.patch",
+        "status": "added",
+        "additions": 30,
+        "deletions": 0,
+        "changes": 30,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/request.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/response.md",
+        "status": "added",
+        "additions": 66,
+        "deletions": 0,
+        "changes": 66,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/source-identities.json",
+        "status": "added",
+        "additions": 525,
+        "deletions": 0,
+        "changes": 525,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/cases/host.json",
+        "status": "added",
+        "additions": 253,
+        "deletions": 0,
+        "changes": 253,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/cases/migration.json",
+        "status": "added",
+        "additions": 183,
+        "deletions": 0,
+        "changes": 183,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/cases/workflow-scope.json",
+        "status": "added",
+        "additions": 108,
+        "deletions": 0,
+        "changes": 108,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/branch-protection-observation.json",
+        "status": "added",
+        "additions": 88,
+        "deletions": 0,
+        "changes": 88,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/cases/workflow-scope.json",
+        "status": "added",
+        "additions": 108,
+        "deletions": 0,
+        "changes": 108,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/ci-gates-report.json",
+        "status": "added",
+        "additions": 406,
+        "deletions": 0,
+        "changes": 406,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/gate-commands.json",
+        "status": "added",
+        "additions": 126,
+        "deletions": 0,
+        "changes": 126,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/output-manifest.json",
+        "status": "added",
+        "additions": 60,
+        "deletions": 0,
+        "changes": 60,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/proposals/atlas-workflow-scope.patch",
+        "status": "added",
+        "additions": 20,
+        "deletions": 0,
+        "changes": 20,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/proposals/proposal.json",
+        "status": "added",
+        "additions": 25,
+        "deletions": 0,
+        "changes": 25,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/publish-allowlist.json",
+        "status": "added",
+        "additions": 142,
+        "deletions": 0,
+        "changes": 142,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-20.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-21.json",
+        "status": "added",
+        "additions": 24,
+        "deletions": 0,
+        "changes": 24,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-22.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-23.json",
+        "status": "added",
+        "additions": 19,
+        "deletions": 0,
+        "changes": 19,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-24.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-25.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-27-ruleset.json",
+        "status": "added",
+        "additions": 25,
+        "deletions": 0,
+        "changes": 25,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/capabilities.json",
+        "status": "added",
+        "additions": 43,
+        "deletions": 0,
+        "changes": 43,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/clock-markers.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/preparation.json",
+        "status": "added",
+        "additions": 47,
+        "deletions": 0,
+        "changes": 47,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/proposal-assignment.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/task-prompt.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/source-identity.json",
+        "status": "added",
+        "additions": 288,
+        "deletions": 0,
+        "changes": 288,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/correction-requests.json",
+        "status": "added",
+        "additions": 19,
+        "deletions": 0,
+        "changes": 19,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/criteria.json",
+        "status": "added",
+        "additions": 764,
+        "deletions": 0,
+        "changes": 764,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/entrypoints.json",
+        "status": "added",
+        "additions": 543,
+        "deletions": 0,
+        "changes": 543,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/execution-ledger.json",
+        "status": "added",
+        "additions": 51,
+        "deletions": 0,
+        "changes": 51,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "status": "added",
+        "additions": 114,
+        "deletions": 0,
+        "changes": 114,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/inspection-tools/inspect_historical_archive.py",
+        "status": "added",
+        "additions": 96,
+        "deletions": 0,
+        "changes": 96,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/migration-cases.json",
+        "status": "added",
+        "additions": 183,
+        "deletions": 0,
+        "changes": 183,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/migration.md",
+        "status": "added",
+        "additions": 70,
+        "deletions": 0,
+        "changes": 70,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/package-manifest.json",
+        "status": "added",
+        "additions": 442,
+        "deletions": 0,
+        "changes": 442,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/preparation-receipt.json",
+        "status": "added",
+        "additions": 139,
+        "deletions": 0,
+        "changes": 139,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/preparation-result.md",
+        "status": "added",
+        "additions": 25,
+        "deletions": 0,
+        "changes": 25,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/prompts/S4-PREP-PRESERVE-001.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/atlas-workflow-scope.patch",
+        "status": "added",
+        "additions": 20,
+        "deletions": 0,
+        "changes": 20,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/manifest.json",
+        "status": "added",
+        "additions": 62,
+        "deletions": 0,
+        "changes": 62,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.patch",
+        "status": "added",
+        "additions": 209,
+        "deletions": 0,
+        "changes": 209,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.test.ts",
+        "status": "added",
+        "additions": 206,
+        "deletions": 0,
+        "changes": 206,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/v2-atlas-membership.test.patch",
+        "status": "added",
+        "additions": 30,
+        "deletions": 0,
+        "changes": 30,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/protected-byte-verification.json",
+        "status": "added",
+        "additions": 1181,
+        "deletions": 0,
+        "changes": 1181,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/protected-inventory.json",
+        "status": "added",
+        "additions": 3241,
+        "deletions": 0,
+        "changes": 3241,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/bun-bootstrap.json",
+        "status": "added",
+        "additions": 23,
+        "deletions": 0,
+        "changes": 23,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/dependency-discovery.json",
+        "status": "added",
+        "additions": 456,
+        "deletions": 0,
+        "changes": 456,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/dependency-inputs.json",
+        "status": "added",
+        "additions": 51,
+        "deletions": 0,
+        "changes": 51,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/dependency-validation.json",
+        "status": "added",
+        "additions": 191,
+        "deletions": 0,
+        "changes": 191,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-archive-members.json",
+        "status": "added",
+        "additions": 4432,
+        "deletions": 0,
+        "changes": 4432,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-archive-receipt.json",
+        "status": "added",
+        "additions": 138,
+        "deletions": 0,
+        "changes": 138,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-artifact-metadata.json",
+        "status": "added",
+        "additions": 21,
+        "deletions": 0,
+        "changes": 21,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-original-cas.json",
+        "status": "added",
+        "additions": 2922,
+        "deletions": 0,
+        "changes": 2922,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-original-claims.json",
+        "status": "added",
+        "additions": 2450,
+        "deletions": 0,
+        "changes": 2450,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-original-responses.json",
+        "status": "added",
+        "additions": 1238,
+        "deletions": 0,
+        "changes": 1238,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-pr-observations.json",
+        "status": "added",
+        "additions": 41,
+        "deletions": 0,
+        "changes": 41,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-run-observation.json",
+        "status": "added",
+        "additions": 16,
+        "deletions": 0,
+        "changes": 16,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/local-source-preservation.json",
+        "status": "added",
+        "additions": 675,
+        "deletions": 0,
+        "changes": 675,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/preservation-delivery-manifest.json",
+        "status": "added",
+        "additions": 99,
+        "deletions": 0,
+        "changes": 99,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/protocol-and-normative-identities.json",
+        "status": "added",
+        "additions": 122,
+        "deletions": 0,
+        "changes": 122,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/static-verification.json",
+        "status": "added",
+        "additions": 186,
+        "deletions": 0,
+        "changes": 186,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/source-identities.json",
+        "status": "added",
+        "additions": 1284,
+        "deletions": 0,
+        "changes": 1284,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/verification.json",
+        "status": "added",
+        "additions": 118,
+        "deletions": 0,
+        "changes": 118,
+        "previous_filename": null
+      }
+    ]
+  },
+  "s4_own_compare": {
+    "repository_full_name": "gustavomhss/hugr-orchestra",
+    "base": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+    "head": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+    "status": "ahead",
+    "ahead_by": 1,
+    "behind_by": 0,
+    "total_commits": 1,
+    "too_large": null,
+    "base_commit": {
+      "sha": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/commit/2333f13d2a9de1336723865ae1552f8f5666a15c"
+    },
+    "merge_base_commit": {
+      "sha": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/commit/2333f13d2a9de1336723865ae1552f8f5666a15c"
+    },
+    "files": [
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/README.md",
+        "status": "added",
+        "additions": 38,
+        "deletions": 0,
+        "changes": 38,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/deliverables.json",
+        "status": "added",
+        "additions": 56,
+        "deletions": 0,
+        "changes": 56,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/entrypoints.json",
+        "status": "added",
+        "additions": 543,
+        "deletions": 0,
+        "changes": 543,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/host-cases.json",
+        "status": "added",
+        "additions": 253,
+        "deletions": 0,
+        "changes": 253,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/preparation-receipt.json",
+        "status": "added",
+        "additions": 32,
+        "deletions": 0,
+        "changes": 32,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/README.md",
+        "status": "added",
+        "additions": 70,
+        "deletions": 0,
+        "changes": 70,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/ownership-host-entrypoints.patch",
+        "status": "added",
+        "additions": 209,
+        "deletions": 0,
+        "changes": 209,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/ownership-host-entrypoints.test.ts",
+        "status": "added",
+        "additions": 206,
+        "deletions": 0,
+        "changes": 206,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/proposals/v2-atlas-membership.test.patch",
+        "status": "added",
+        "additions": 30,
+        "deletions": 0,
+        "changes": 30,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/request.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/response.md",
+        "status": "added",
+        "additions": 66,
+        "deletions": 0,
+        "changes": 66,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/agents/host-readers/source-identities.json",
+        "status": "added",
+        "additions": 525,
+        "deletions": 0,
+        "changes": 525,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/cases/host.json",
+        "status": "added",
+        "additions": 253,
+        "deletions": 0,
+        "changes": 253,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/cases/migration.json",
+        "status": "added",
+        "additions": 183,
+        "deletions": 0,
+        "changes": 183,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/cases/workflow-scope.json",
+        "status": "added",
+        "additions": 108,
+        "deletions": 0,
+        "changes": 108,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/branch-protection-observation.json",
+        "status": "added",
+        "additions": 88,
+        "deletions": 0,
+        "changes": 88,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/cases/workflow-scope.json",
+        "status": "added",
+        "additions": 108,
+        "deletions": 0,
+        "changes": 108,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/ci-gates-report.json",
+        "status": "added",
+        "additions": 406,
+        "deletions": 0,
+        "changes": 406,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/gate-commands.json",
+        "status": "added",
+        "additions": 126,
+        "deletions": 0,
+        "changes": 126,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/output-manifest.json",
+        "status": "added",
+        "additions": 60,
+        "deletions": 0,
+        "changes": 60,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/proposals/atlas-workflow-scope.patch",
+        "status": "added",
+        "additions": 20,
+        "deletions": 0,
+        "changes": 20,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/proposals/proposal.json",
+        "status": "added",
+        "additions": 25,
+        "deletions": 0,
+        "changes": 25,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/publish-allowlist.json",
+        "status": "added",
+        "additions": 142,
+        "deletions": 0,
+        "changes": 142,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-20.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-21.json",
+        "status": "added",
+        "additions": 24,
+        "deletions": 0,
+        "changes": 24,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-22.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-23.json",
+        "status": "added",
+        "additions": 19,
+        "deletions": 0,
+        "changes": 19,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-24.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-25.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/api-27-ruleset.json",
+        "status": "added",
+        "additions": 25,
+        "deletions": 0,
+        "changes": 25,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/raw/capabilities.json",
+        "status": "added",
+        "additions": 43,
+        "deletions": 0,
+        "changes": 43,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/clock-markers.json",
+        "status": "added",
+        "additions": 28,
+        "deletions": 0,
+        "changes": 28,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/preparation.json",
+        "status": "added",
+        "additions": 47,
+        "deletions": 0,
+        "changes": 47,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/proposal-assignment.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/receipts/task-prompt.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/ci/source-identity.json",
+        "status": "added",
+        "additions": 288,
+        "deletions": 0,
+        "changes": 288,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/correction-requests.json",
+        "status": "added",
+        "additions": 19,
+        "deletions": 0,
+        "changes": 19,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/criteria.json",
+        "status": "added",
+        "additions": 764,
+        "deletions": 0,
+        "changes": 764,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/entrypoints.json",
+        "status": "added",
+        "additions": 543,
+        "deletions": 0,
+        "changes": 543,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/execution-ledger.json",
+        "status": "added",
+        "additions": 51,
+        "deletions": 0,
+        "changes": 51,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/inspection-tools/inspect_historical_archive.py",
+        "status": "added",
+        "additions": 96,
+        "deletions": 0,
+        "changes": 96,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/migration-cases.json",
+        "status": "added",
+        "additions": 183,
+        "deletions": 0,
+        "changes": 183,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/migration.md",
+        "status": "added",
+        "additions": 70,
+        "deletions": 0,
+        "changes": 70,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/package-manifest.json",
+        "status": "added",
+        "additions": 442,
+        "deletions": 0,
+        "changes": 442,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/preparation-receipt.json",
+        "status": "added",
+        "additions": 139,
+        "deletions": 0,
+        "changes": 139,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/preparation-result.md",
+        "status": "added",
+        "additions": 25,
+        "deletions": 0,
+        "changes": 25,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/prompts/S4-PREP-PRESERVE-001.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/atlas-workflow-scope.patch",
+        "status": "added",
+        "additions": 20,
+        "deletions": 0,
+        "changes": 20,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/manifest.json",
+        "status": "added",
+        "additions": 62,
+        "deletions": 0,
+        "changes": 62,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.patch",
+        "status": "added",
+        "additions": 209,
+        "deletions": 0,
+        "changes": 209,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.test.ts",
+        "status": "added",
+        "additions": 206,
+        "deletions": 0,
+        "changes": 206,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/v2-atlas-membership.test.patch",
+        "status": "added",
+        "additions": 30,
+        "deletions": 0,
+        "changes": 30,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/protected-byte-verification.json",
+        "status": "added",
+        "additions": 1181,
+        "deletions": 0,
+        "changes": 1181,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/protected-inventory.json",
+        "status": "added",
+        "additions": 3241,
+        "deletions": 0,
+        "changes": 3241,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/bun-bootstrap.json",
+        "status": "added",
+        "additions": 23,
+        "deletions": 0,
+        "changes": 23,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/dependency-discovery.json",
+        "status": "added",
+        "additions": 456,
+        "deletions": 0,
+        "changes": 456,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/dependency-inputs.json",
+        "status": "added",
+        "additions": 51,
+        "deletions": 0,
+        "changes": 51,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/dependency-validation.json",
+        "status": "added",
+        "additions": 191,
+        "deletions": 0,
+        "changes": 191,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-archive-members.json",
+        "status": "added",
+        "additions": 4432,
+        "deletions": 0,
+        "changes": 4432,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-archive-receipt.json",
+        "status": "added",
+        "additions": 138,
+        "deletions": 0,
+        "changes": 138,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-artifact-metadata.json",
+        "status": "added",
+        "additions": 21,
+        "deletions": 0,
+        "changes": 21,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-original-cas.json",
+        "status": "added",
+        "additions": 2922,
+        "deletions": 0,
+        "changes": 2922,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-original-claims.json",
+        "status": "added",
+        "additions": 2450,
+        "deletions": 0,
+        "changes": 2450,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-original-responses.json",
+        "status": "added",
+        "additions": 1238,
+        "deletions": 0,
+        "changes": 1238,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-pr-observations.json",
+        "status": "added",
+        "additions": 41,
+        "deletions": 0,
+        "changes": 41,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/historical-run-observation.json",
+        "status": "added",
+        "additions": 16,
+        "deletions": 0,
+        "changes": 16,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/local-source-preservation.json",
+        "status": "added",
+        "additions": 675,
+        "deletions": 0,
+        "changes": 675,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/preservation-delivery-manifest.json",
+        "status": "added",
+        "additions": 99,
+        "deletions": 0,
+        "changes": 99,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/protocol-and-normative-identities.json",
+        "status": "added",
+        "additions": 122,
+        "deletions": 0,
+        "changes": 122,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/static-verification.json",
+        "status": "added",
+        "additions": 186,
+        "deletions": 0,
+        "changes": 186,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/source-identities.json",
+        "status": "added",
+        "additions": 1284,
+        "deletions": 0,
+        "changes": 1284,
+        "previous_filename": null
+      },
+      {
+        "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/verification.json",
+        "status": "added",
+        "additions": 118,
+        "deletions": 0,
+        "changes": 118,
+        "previous_filename": null
+      }
+    ]
+  },
+  "uploaded_files": {
+    "subtree": "9200d79d6607013ac7829848b5352f75ff7e6b1e",
+    "files_verified": 73,
+    "truncated": false,
+    "all_expected_git_blobs_match": true,
+    "files": [
+      {
+        "path": "README.md",
+        "sha": "39cbceef01e1cec2b70b4a7d61d44a6986ce5cd0",
+        "size": 5443
+      },
+      {
+        "path": "agents/host-readers/deliverables.json",
+        "sha": "4ac0dd410c78915a2bd4114b93f7956db14677a3",
+        "size": 1703
+      },
+      {
+        "path": "agents/host-readers/entrypoints.json",
+        "sha": "94e59435bf8be41964c0be234ebd3f9fb9a130bc",
+        "size": 22327
+      },
+      {
+        "path": "agents/host-readers/host-cases.json",
+        "sha": "686e9eb5b7e016dff2903a7ad3417fd1356f585c",
+        "size": 12158
+      },
+      {
+        "path": "agents/host-readers/preparation-receipt.json",
+        "sha": "054f091b9d816b4deaad4d15df54d6de7eb875ef",
+        "size": 1209
+      },
+      {
+        "path": "agents/host-readers/proposals/README.md",
+        "sha": "d618caa90b2b951c126ab5852d5f70726b354feb",
+        "size": 4218
+      },
+      {
+        "path": "agents/host-readers/proposals/ownership-host-entrypoints.patch",
+        "sha": "cb4db0e0c2dbfb9903d9f42b021b79267eaacf84",
+        "size": 12120
+      },
+      {
+        "path": "agents/host-readers/proposals/ownership-host-entrypoints.test.ts",
+        "sha": "e9fbb5d1b139f6e662ba2b1dbe953083b67a70d9",
+        "size": 11802
+      },
+      {
+        "path": "agents/host-readers/proposals/v2-atlas-membership.test.patch",
+        "sha": "f82c3031f3e8323a4c6aa011b75e742c3d5de46f",
+        "size": 1609
+      },
+      {
+        "path": "agents/host-readers/request.txt",
+        "sha": "a5251d7750d274e84120ae99216b7732db86b5fd",
+        "size": 1612
+      },
+      {
+        "path": "agents/host-readers/response.md",
+        "sha": "fab4db1c708b4ef8f631dbd305fb0e762e0d6a48",
+        "size": 4402
+      },
+      {
+        "path": "agents/host-readers/source-identities.json",
+        "sha": "b7a10205d571127416779aadcd7d53797b6c9813",
+        "size": 23827
+      },
+      {
+        "path": "cases/host.json",
+        "sha": "686e9eb5b7e016dff2903a7ad3417fd1356f585c",
+        "size": 12158
+      },
+      {
+        "path": "cases/migration.json",
+        "sha": "2d119c918e8189487aaf3510ab5f8473c77a7c76",
+        "size": 14466
+      },
+      {
+        "path": "cases/workflow-scope.json",
+        "sha": "4b7497f0b304b4bab564eda089cdfc467ed3e10e",
+        "size": 4296
+      },
+      {
+        "path": "ci/branch-protection-observation.json",
+        "sha": "8dd193fda3d1a998d60cc570db7ac68458410e4a",
+        "size": 3053
+      },
+      {
+        "path": "ci/cases/workflow-scope.json",
+        "sha": "4b7497f0b304b4bab564eda089cdfc467ed3e10e",
+        "size": 4296
+      },
+      {
+        "path": "ci/ci-gates-report.json",
+        "sha": "3fc016ae68ee422f6fcd0711d2b4b25b24882e81",
+        "size": 18045
+      },
+      {
+        "path": "ci/gate-commands.json",
+        "sha": "309ceecd5a95277972279604744f0d354f85b629",
+        "size": 4706
+      },
+      {
+        "path": "ci/output-manifest.json",
+        "sha": "58132dfecb4a539c730a7b57731ddfca9e1edc89",
+        "size": 1823
+      },
+      {
+        "path": "ci/proposals/atlas-workflow-scope.patch",
+        "sha": "e3cb40e9a3d6321c2d2ccad5880cdc4bbafaaa36",
+        "size": 1226
+      },
+      {
+        "path": "ci/proposals/proposal.json",
+        "sha": "77b18f780d3e31e7858e236248751678b130656d",
+        "size": 1511
+      },
+      {
+        "path": "ci/publish-allowlist.json",
+        "sha": "8debff5ee85a820a80875ccc7d048e7a217f2aa9",
+        "size": 4705
+      },
+      {
+        "path": "ci/raw/api-20.json",
+        "sha": "eacc61c88f804ae06606eab6e6ad7f7ba4588627",
+        "size": 12102
+      },
+      {
+        "path": "ci/raw/api-21.json",
+        "sha": "466269af23d885b0d5c3e53c47ce79fc91078f0f",
+        "size": 1012
+      },
+      {
+        "path": "ci/raw/api-22.json",
+        "sha": "4b63f27a89240133a31972f23fec86785142f4ed",
+        "size": 1915
+      },
+      {
+        "path": "ci/raw/api-23.json",
+        "sha": "90a5a4599cc0baf99d3d042c47af118a8120a084",
+        "size": 600
+      },
+      {
+        "path": "ci/raw/api-24.json",
+        "sha": "ae018997b050164be5d25a3060826e0ba9c31ed5",
+        "size": 110503
+      },
+      {
+        "path": "ci/raw/api-25.json",
+        "sha": "cc4e11315e83aa9b6c6b0a210c780ce0aae98a0d",
+        "size": 1141
+      },
+      {
+        "path": "ci/raw/api-27-ruleset.json",
+        "sha": "d0ea2848bc992b0b6d01e96e6668bb976b111611",
+        "size": 2185
+      },
+      {
+        "path": "ci/raw/capabilities.json",
+        "sha": "3f8f4c4884db4d3c2cdb44f1fc865aa19475fa38",
+        "size": 4693
+      },
+      {
+        "path": "ci/receipts/clock-markers.json",
+        "sha": "4827ae941fae17f660e54f7b01cc80b95c6e3ce2",
+        "size": 711
+      },
+      {
+        "path": "ci/receipts/preparation.json",
+        "sha": "034dc27bfbcfc5236797dc7160aa33db5aa18f0b",
+        "size": 1681
+      },
+      {
+        "path": "ci/receipts/proposal-assignment.txt",
+        "sha": "8e96b84cdb6a1d371978829c086b6e2b81eaccb4",
+        "size": 503
+      },
+      {
+        "path": "ci/receipts/task-prompt.txt",
+        "sha": "c419596d42fcacf269337c91bfa241dfccefd9a6",
+        "size": 1409
+      },
+      {
+        "path": "ci/source-identity.json",
+        "sha": "8414cd6ed9947da3a60618340f09867a2e8a8fc9",
+        "size": 14934
+      },
+      {
+        "path": "correction-requests.json",
+        "sha": "1f41341c93038e70ae0be43a4ac879193d16d59b",
+        "size": 771
+      },
+      {
+        "path": "criteria.json",
+        "sha": "9c1404e37ca955421385633b1fdeee2f92ba44a2",
+        "size": 37405
+      },
+      {
+        "path": "entrypoints.json",
+        "sha": "94e59435bf8be41964c0be234ebd3f9fb9a130bc",
+        "size": 22327
+      },
+      {
+        "path": "execution-ledger.json",
+        "sha": "6de30d2e54b7c30ff7ccd5278b503dfa4e155738",
+        "size": 1880
+      },
+      {
+        "path": "handoff.json",
+        "sha": "7ea8fc5f90177bd57ba448cf8bd6841477f9357e",
+        "size": 4056
+      },
+      {
+        "path": "inspection-tools/inspect_historical_archive.py",
+        "sha": "7f764c6ee7aaac13f5fb5a724e9726beee0159df",
+        "size": 11175
+      },
+      {
+        "path": "migration-cases.json",
+        "sha": "2d119c918e8189487aaf3510ab5f8473c77a7c76",
+        "size": 14466
+      },
+      {
+        "path": "migration.md",
+        "sha": "d8eed43905065b2641fb4cfdc421ab05e89ad0b3",
+        "size": 11362
+      },
+      {
+        "path": "package-manifest.json",
+        "sha": "31dafcf5291a5194d7222b3db2055cf466464dcc",
+        "size": 17282
+      },
+      {
+        "path": "preparation-receipt.json",
+        "sha": "1dd6305ed32bfab364987b3fffe2415238d696a1",
+        "size": 5328
+      },
+      {
+        "path": "preparation-result.md",
+        "sha": "d023f75165bf986eb082d30e4da1e59ca93b4b32",
+        "size": 3565
+      },
+      {
+        "path": "prompts/S4-PREP-PRESERVE-001.txt",
+        "sha": "1954d33c0a65425545c49b81e1434357eea6316e",
+        "size": 1575
+      },
+      {
+        "path": "proposals/atlas-workflow-scope.patch",
+        "sha": "e3cb40e9a3d6321c2d2ccad5880cdc4bbafaaa36",
+        "size": 1226
+      },
+      {
+        "path": "proposals/manifest.json",
+        "sha": "8b98e490dcfeee4cbb3572dbbb4b7d1cc45f97dc",
+        "size": 2670
+      },
+      {
+        "path": "proposals/ownership-host-entrypoints.patch",
+        "sha": "cb4db0e0c2dbfb9903d9f42b021b79267eaacf84",
+        "size": 12120
+      },
+      {
+        "path": "proposals/ownership-host-entrypoints.test.ts",
+        "sha": "e9fbb5d1b139f6e662ba2b1dbe953083b67a70d9",
+        "size": 11802
+      },
+      {
+        "path": "proposals/v2-atlas-membership.test.patch",
+        "sha": "f82c3031f3e8323a4c6aa011b75e742c3d5de46f",
+        "size": 1609
+      },
+      {
+        "path": "protected-byte-verification.json",
+        "sha": "18b98f7ed765d2d7342cad78a9c189526dd7287d",
+        "size": 66992
+      },
+      {
+        "path": "protected-inventory.json",
+        "sha": "a0a87aa104ea0494dc351932fa93fcb8fcd3ae98",
+        "size": 142744
+      },
+      {
+        "path": "receipts/bun-bootstrap.json",
+        "sha": "aec1d8c52612d99e45b260197c2906a21ad9187d",
+        "size": 1152
+      },
+      {
+        "path": "receipts/dependency-discovery.json",
+        "sha": "e44b427c4d2e48faa5b81ac17c342610dd6b6c9e",
+        "size": 40177
+      },
+      {
+        "path": "receipts/dependency-inputs.json",
+        "sha": "2c405f2ad31e1218a5dc26d491d062e1ba207a98",
+        "size": 21669
+      },
+      {
+        "path": "receipts/dependency-validation.json",
+        "sha": "747865d747310dfa96e92e9fa0760722134ca739",
+        "size": 8473
+      },
+      {
+        "path": "receipts/historical-archive-members.json",
+        "sha": "a368591db55474a11149765588cd31a1567dc263",
+        "size": 184056
+      },
+      {
+        "path": "receipts/historical-archive-receipt.json",
+        "sha": "489fb43ae7ca5ce20a90165862cd4641b8b19fa6",
+        "size": 5115
+      },
+      {
+        "path": "receipts/historical-artifact-metadata.json",
+        "sha": "a3a9b83b47f8f99c8c03589cf1785a00c426c112",
+        "size": 802
+      },
+      {
+        "path": "receipts/historical-original-cas.json",
+        "sha": "c230d838cabccd85438fc85f958c66e44e1e8cc5",
+        "size": 169774
+      },
+      {
+        "path": "receipts/historical-original-claims.json",
+        "sha": "a046496c55d62810346cfacb83b3d984609af221",
+        "size": 169937
+      },
+      {
+        "path": "receipts/historical-original-responses.json",
+        "sha": "447599db72662d5da91b472ef70d52d80f2880aa",
+        "size": 67571
+      },
+      {
+        "path": "receipts/historical-pr-observations.json",
+        "sha": "a8efa5e3d97c1c485b26b8d691f6e842cf8fb15d",
+        "size": 1260
+      },
+      {
+        "path": "receipts/historical-run-observation.json",
+        "sha": "a7c007a73232f3cc1761afdd957d4d89dc30627a",
+        "size": 590
+      },
+      {
+        "path": "receipts/local-source-preservation.json",
+        "sha": "97c924c45c6cbc009433450de483664373a4124e",
+        "size": 40441
+      },
+      {
+        "path": "receipts/preservation-delivery-manifest.json",
+        "sha": "3082aef80ec32af87d0672149571c97c1d956c4a",
+        "size": 3364
+      },
+      {
+        "path": "receipts/protocol-and-normative-identities.json",
+        "sha": "2fdfe21e3796564c4b449160c156fbf172a60f15",
+        "size": 4870
+      },
+      {
+        "path": "receipts/static-verification.json",
+        "sha": "c878c1c9b82500386418bab3471cfc6a4c3ad55e",
+        "size": 7610
+      },
+      {
+        "path": "source-identities.json",
+        "sha": "ed767c9f789bddbd39b51f70833ff28d80b2ef71",
+        "size": 85047
+      },
+      {
+        "path": "verification.json",
+        "sha": "cfbcfb01e7df4c1ad0cc6aa6465276a6aaed2b0d",
+        "size": 4948
+      }
+    ]
+  },
+  "protected_inventory_ref": {
+    "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/protected-inventory.json",
+    "sha256": "911c3ffd537c7ccfbca67673821547b7d282eeff6c15c56febadcc65ce2f8cfb"
+  },
+  "protected_objects_enumerated": 439,
+  "protected_objects_unchanged": 439,
+  "violations": [],
+  "protected_identity_digest": "ac1c7fd2ea69f246da9cbdf24a8ca7ee90b5c7b6495f2641b110f728127069ff",
+  "preservation_result": "VERIFIED_FOR_THE_439_ENUMERATED_GIT_OBJECTS",
+  "limits": [
+    "The 439-object preparation inventory is not the pending whole-Orchestra S1 denominator.",
+    "Only 88 named historical files were freshly byte-downloaded and SHA-256 checked; other preserved objects use unchanged Git identity evidence.",
+    "This compares documentation/proposal commits, not staging, activation or rollback of a runtime candidate.",
+    "No runtime test, actual old-producer refusal, CI run or independent judge approval follows from this receipt."
+  ]
+}
