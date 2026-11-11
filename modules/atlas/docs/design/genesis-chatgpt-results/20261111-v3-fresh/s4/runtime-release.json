@@ -1,11 +1,11 @@
 {
   "schema": "genesis-runtime-release/v1",
-  "release_id": "20261111-v3-fresh-s4-r2",
+  "release_id": "20261111-v3-fresh-s4-r3",
   "supersedes": {
-    "release_id": "20261111-v3-fresh-s4-r1",
-    "commit": "b42d14978c8b727310369920d4bfaf86145a2b80",
+    "release_id": "20261111-v3-fresh-s4-r2",
+    "commit": "dce90698713d997bf9072707b51e26448a9c54a2",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
-    "sha256": "47deabb52ee93e18de06c68c1c27a0ff810a4e779a5087581080e87d6756979f"
+    "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
   },
   "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
@@ -155,7 +155,8 @@
       ],
       "limits": [
         "Bounded one-artifact sample. Main S4 package remains incomplete."
-      ]
+      ],
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
     },
     "runtime_binding": {
       "state": "PROVEN",
@@ -179,7 +180,8 @@
       ],
       "limits": [
         "Two actual independent new decisions for this exact candidate only. Other roots, inputs, source directories or candidate revisions require their own bindings."
-      ]
+      ],
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
     },
     "governed_publication": {
       "state": "PROVEN",
@@ -203,7 +205,8 @@
       "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
       "limits": [
         "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
-      ]
+      ],
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
     },
     "index": {
       "state": "PROVEN",
@@ -227,7 +230,8 @@
       "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
       "limits": [
         "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
-      ]
+      ],
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
     },
     "read": {
       "state": "PROVEN",
@@ -251,27 +255,123 @@
       "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
       "limits": [
         "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
-      ]
+      ],
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
     },
     "cache_reuse": {
-      "state": "NOT_RUN",
-      "receipts": []
+      "state": "PROVEN",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "receipts": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ],
+      "cases": [
+        "Unchanged valid inputs/recipes reuse result with zero recipe callback; receipt-only update can stop downstream interpretation."
+      ],
+      "limits": [
+        "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+        "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+        "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+      ]
     },
     "affected_rebuild": {
-      "state": "NOT_RUN",
-      "receipts": []
+      "state": "PROVEN",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "receipts": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ],
+      "cases": [
+        "UP/RB/TC controls cover declared source/recipe/intention/membership impact, full-result propagation, independent preservation, capture consistency and required-edge validation; 22 named mutant controls rejected."
+      ],
+      "limits": [
+        "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+        "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+        "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+      ]
     },
     "failure_resume": {
-      "state": "NOT_RUN",
-      "receipts": []
+      "state": "PROVEN",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "receipts": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ],
+      "cases": [
+        "NR1-01 interruption after durable CAS and before activation keeps HOLD or valid old selection and resumes preserved candidate without repeated synthetic author callback.",
+        "NR1-02 source drift and failed activation yields current HOLD, with labelled historical inspection."
+      ],
+      "limits": [
+        "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+        "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+        "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+      ]
     },
     "rollback": {
-      "state": "NOT_RUN",
-      "receipts": []
+      "state": "PROVEN",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "receipts": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ],
+      "cases": [
+        "NR1-02 rejects incompatible source, approval and rollback; compatible historical candidates are not categorically forbidden by a nonexistent epoch fence."
+      ],
+      "limits": [
+        "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+        "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+        "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+      ]
     },
     "migration": {
-      "state": "NOT_RUN",
-      "receipts": []
+      "state": "PROVEN",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "receipts": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ],
+      "cases": [
+        "NR1-03 refuses obsolete format, scope inconsistency, incompatible old approvals, candidate ID substitution and relocation without replacing accepted scope; existing migrate-layout/G3 controls preserve history."
+      ],
+      "limits": [
+        "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+        "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+        "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+      ]
+    },
+    "coherent_read_concurrency": {
+      "state": "PROVEN",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "receipts": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ],
+      "cases": [
+        "Corrected NR1-04 uses a separate Worker and requires the main ownership.read interval itself to intersect post-barrier activation; ready responses match complete accepted old/new results, independent scope remains ready."
+      ],
+      "limits": [
+        "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+        "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+        "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+      ]
     }
   },
   "known_limits": [
@@ -281,10 +381,11 @@
     "Local source copy is reconstructed from verified connector captures, not a Git checkout; historical commit membership and Git trust are not inferred.",
     "Only source hashes listed in prepare receipt were executed. Workflow-only candidate delta e3a8ab8 enables the assigned branch gate without changing runtime code.",
     "Binding records are operator supplied and reference actual independent decisions; adapter does not authenticate reviewers or infer verdicts from prose.",
-    "Main S4 package currently has five accepted L1 artifacts and ten required artifacts still absent, including two added L1 units; L2-L4 and independent consumer remain open.",
     "V1 run43065851373 passed216 tests and22mutations but FAILED the aggregate guard because a workflow log was inside the checkout and had3 cast warnings. This release is capability-scoped, not an aggregate CI PASS.",
-    "Corrected code/control candidate673b90d82b8b888d5d0184d2e17dec6d5d1b05f1 passed run43070538154:220 tests,22mutations,guards0/0 and generated parity. Its evidence is separate; this release does not transfer V1 binding decisions to that revision.",
-    "Initial L1A judge requests were not exported. This release preserves a new canonical full-body submission and fresh semantic reconfirmation plus distinct binding decisions; original responses remain history and are not rewritten."
+    "Initial L1A judge requests were not exported. This release preserves a new canonical full-body submission and fresh semantic reconfirmation plus distinct binding decisions; original responses remain history and are not rewritten.",
+    "Seven required L1 units are accepted by both persistent judges at 8a041ca; L2 production is active. Full S4 package, independent consumer and own maintenance operation remain unfinished.",
+    "Earlier R1 concurrency finding R1-J1-01/J2-R1-01 was corrected, remotely executed and accepted by the same two judges. Historical failed and insufficient controls are preserved, not relabelled.",
+    "The root candidate_revision and existing native entrypoints still identify the demonstrated e3a8ab8 sample. Shared control evidence identifies 7102f2e per capability; this multi-candidate release does not transfer any native binding."
   ],
   "judge_refs": [
     {
@@ -296,6 +397,16 @@
       "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
       "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+    },
+    {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+      "sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5"
+    },
+    {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+      "sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440"
     }
   ],
   "gate_refs": [
@@ -329,9 +440,53 @@
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/receipt.json",
         "sha256": "32c72a14a9ad5753dac4b49ba9d847aef8ffd2c05224f15b0be3d09fea39ae20"
       },
-      "limit": "Separate code/control candidate; no transfer of V1 native binding."
+      "limit": "Historical passing assertions; superseded for concurrency because the combined two-read interval did not prove overlap of the main read. It does not support the new coherent_read_concurrency capability."
+    },
+    {
+      "gate": "atlas-pilot-corrected-main-read-control",
+      "state": "PROVEN",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "run_id": 43077975153,
+      "job_id": 130722742703,
+      "receipt": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+      },
+      "summary": "220 tests passed;22 named mutant controls rejected;18 generated outputs match;guards exit0,0 gate,2 acknowledged large-file warnings,0 errors"
     }
   ],
   "slice_status": "IN_PROGRESS",
-  "evidence_revision": "6e43247103ac36e5adb635f2fccde2e61480c56d"
+  "evidence_revision": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+  "published_scope": "Capability-scoped update: early native sample remains on e3a8ab8; new common controls are independently pinned to 7102f2e. Per-capability candidate_revision is authoritative; bindings never transfer between candidates.",
+  "common_controls_candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "common_controls_entrypoint": {
+    "execution_environment": "GitHub Actions only;AGENTS forbids local product tests",
+    "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "workflow": ".github/workflows/atlas-pilot.yml",
+    "cwd": "modules/atlas",
+    "executed_group_command": "npx --no-install vitest run packages/knowledge/test/ownership-read.test.ts packages/knowledge/test/ownership-update-plan.test.ts packages/knowledge/test/fastpath-promotion-origin.test.ts packages/adapter-io/test/ownership-publication.test.ts packages/adapter-io/test/genesis-native.test.ts packages/adapter-io/test/genesis-native-recovery.test.ts packages/adapter-io/test/g3-recovery.test.ts packages/adapter-io/test/sidecar.test.ts packages/adapter-io/test/identity-schema.test.ts packages/adapter-io/test/store-provenance.test.ts packages/adapter-io/test/read-provenance-refusal.test.ts packages/adapter-io/test/migrate-layout.test.ts packages/adapter-io/test/ownership-update.test.ts packages/adapter-io/test/ownership-input.test.ts packages/adapter-io/test/ownership-observe.test.ts packages/adapter-io/test/ownership-rebuild.test.ts packages/adapter-io/test/wp-10.a3-check.test.ts packages/adapter-io/test/governed-promote.test.ts packages/adapter-io/test/travel-by-reproof-compose.test.ts packages/adapter-io/test/propose-template.test.ts packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts packages/e2e-blackbox/test/s14-mine.blackbox.test.ts packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts --reporter=default --reporter=json --outputFile=ownership-runtime-results.json",
+    "other_executed_commands": [
+      {
+        "cwd": "modules/atlas",
+        "command": "bun typecheck --force"
+      },
+      {
+        "cwd": "modules/atlas/boundary",
+        "command": "bun run generate"
+      },
+      {
+        "cwd": ".",
+        "command": "bun run check:guards --base origin/dev"
+      }
+    ],
+    "run_id": 43077975153,
+    "job_id": 130722742703,
+    "mutation_command_definition": {
+      "commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "path": ".github/workflows/atlas-pilot.yml",
+      "section": "Probe the new guards against named failing controls"
+    }
+  },
+  "updated_utc": "2026-11-11T18:53:45.477459+00:00"
 }
