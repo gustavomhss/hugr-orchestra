@@ -1,151 +1,185 @@
 ---
 name: execute-genesis
-description: Executar o Genesis do Orchestra inteiro em cinco sessões ChatGPT, com subagentes nativos, produção cumulativa L1–L4, reutilização e rebuild, recuperação, integração e dois juízes independentes persistentes. Usar ao receber uma fatia desta campanha, retomar seus recibos ou integrar seu fechamento; distinguir trabalho produzido, executado, julgado e entregue.
+description: Executar o Genesis do Orchestra inteiro em cinco sessões paralelas por domínio, cada uma com produção cumulativa L1–L4, dois juízes nativos persistentes, correções e consumo; migrar o trabalho existente preservando evidências e integrar a união no final. Usar ao iniciar ou retomar uma das cinco fatias, julgar seus resultados ou fechar a campanha.
 ---
 
-# Executar Genesis em cinco sessões
+# Genesis em cinco domínios paralelos
 
-## Vincular o pedido
+## Contrato ativo: parallel-v2
 
-Trabalhar em `gustavomhss/hugr-orchestra`. Usar como baseline de investigação
-`1cde2ff7a71bcf7aecb5d030917b577165135d38`, da branch `genesis-economy-green`.
-Ler esta skill e suas referências no **commit do protocolo indicado no prompt**.
-Registrar separadamente baseline, commit do protocolo, HEAD de trabalho e candidato executado.
-Não chamar o HEAD de baseline depois de adicionar commits.
+Trabalhar em `gustavomhss/hugr-orchestra`, campanha lógica `20261111-v1`,
+`protocol_epoch: parallel-v2`, `results_epoch: 20261111-v2-parallel`.
+O baseline de investigação continua `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+Carregar esta skill no commit imutável do protocolo indicado no prompt.
+Separar fonte, protocolo, HEAD da branch, candidato executado e revisão de artefatos.
 
-Executar a campanha `20261111-v1`. O proprietário pediu em 11/11/2026:
+O proprietário pediu o Orchestra inteiro, cinco sessões aqui no ChatGPT, subagentes,
+juízes e correções. A divisão anterior por fases criou espera entre sessões. Este
+contrato a substitui por **cinco domínios verticais que começam imediatamente**.
+Substitui também a liberação inicial de S1, o julgamento local centralizado em S5 e
+as quotas de preparação que impediam produzir ou iniciar os dois juízes.
 
-- executar o trabalho pelas sessões ChatGPT e seus subagentes;
-- salvar esta skill no repositório e distribuir o trabalho em cinco sessões;
-- incluir juiz, correção, nova avaliação e integração completa;
-- cobrir explicitamente **o Orchestra inteiro**, escolha posterior ao piloto Session-input.
+A substituição muda coordenação, não evidência nem história. Não apaga alocações,
+tentativas, reservas, incertezas, resultados ou decisões anteriores. Não transforma
+uma preparação ou aprovação do piloto em aceitação do novo escopo.
 
-Aplicar essa expansão de alcance e nova topologia somente à campanha nova. Preservar os
-recibos e decisões históricos. Herdar a exigência de evidência dos contratos existentes;
-não herdar como indisponível uma capacidade que esta sessão realmente possui.
+## Carregar os contratos
 
-Esta é uma skill do repositório. Não exigir instalação no diretório pessoal de skills,
-execução do app Orchestra, contato com Maestro nem uma ferramenta MCP `atlas-mine`.
-Um prompt com o endereço Git da skill permite carregá-la por leitura explícita.
+Ler [campanha](references/campaign.md), [handoffs](references/handoffs.md),
+[julgamento](references/judging.md), [runtime](references/runtime.md) e sua fatia.
+Aplicar [orquestração](references/orchestration.md) e a
+[condição de encerramento](references/completion.md) em todas as sessões.
+Se já existe trabalho, ler também [migração](references/migration.md).
+A [partição exata](references/parallel-partition.json) define o proprietário de cada
+entrada Git; o [registro de critérios](references/criteria.json) atribui todos os 50 IDs.
 
-## Carregar o mínimo necessário
-
-Ler [campanha e cobertura](references/campaign.md), [handoffs](references/handoffs.md)
-e a fatia atribuída. Ler [runtime](references/runtime.md) antes de executar código ou
-afirmar produção real. A sessão 5 também lê [julgamento](references/judging.md).
-
-| Sessão | Trabalho | Contrato |
+| Sessão | Domínio de produção e julgamento | Contrato |
 | --- | --- | --- |
-| 1 | Inventário do repositório, critérios, preservação inicial e economia | [Fatia 1](references/fatia-1.md) |
-| 2 | Construção cumulativa, reutilização e atualização | [Fatia 2](references/fatia-2.md) |
-| 3 | Ativação coerente, recuperação e rollback | [Fatia 3](references/fatia-3.md) |
-| 4 | Host, Git/CI, preservação e migração | [Fatia 4](references/fatia-4.md) |
-| 5 | Integração, dois juízes, consumidores e fechamento | [Fatia 5](references/fatia-5.md) |
+| S1 | Core, sessões, modelos e contratos de API | [Fatia 1](references/fatia-1.md) |
+| S2 | Interfaces: desktop, web, app-shell, UI e TUI | [Fatia 2](references/fatia-2.md) |
+| S3 | Maestro, Relay, especialistas e integrações | [Fatia 3](references/fatia-3.md) |
+| S4 | Atlas, continuidade, RAG e Genesis | [Fatia 4](references/fatia-4.md) |
+| S5 | CLI, Omni, distribuição, infraestrutura e contratos transversais | [Fatia 5](references/fatia-5.md) |
 
-Consultar no baseline `AGENTS.md`, `.orchestra/skills/atlas-{usage,maintenance,ownership}/SKILL.md`
-e os documentos normativos indicados em `references/campaign.md` conforme o trabalho.
-Não carregar todo o histórico em cada agente. Cada afirmação depende da fonte realmente lida.
+ROOT, na conversa original, assume a integração final por decisão explícita do dono.
+S5 produz e entrega seu domínio, como as demais. Nenhuma sessão aprova o início de
+outra. Os nomes dos cinco braços do `atlas mine` legado não definem esta divisão.
 
-## Inicializar cada sessão
+Ler `AGENTS.md`, as instruções mais específicas dos arquivos envolvidos, as skills
+`atlas-usage`, `atlas-maintenance`, `atlas-ownership` e as fontes normativas apontadas
+pela campanha. Preservar axiomas, invariantes, qualidade, aceitação e DoD dessas fontes.
+As restrições históricas de piloto/topologia não revogam a autorização atual do dono.
 
-1. Identificar sua fatia; assumir somente as escritas dela. Criar ou retomar sua branch
-   `genesis-chatgpt-sN` a partir do commit do protocolo. Se a branch existir, ler o handoff
-   e seu HEAD antes de continuar; nunca resetar ou sobrescrever outro trabalho.
-2. Registrar capacidades observadas: leitura/escrita GitHub, execução no sandbox,
-   disponibilidade do código, dependências, leitores Atlas e slots de subagentes.
-   Ausência de `gh` autenticado não prova ausência do conector. Não iniciar `gh auth login`,
-   procurar credenciais, preencher `GH_TOKEN` nem presumir acesso à máquina do proprietário.
-3. Usar os subagentes nativos realmente disponíveis. Na sessão que originou este pacote
-   há quatro agentes simultâneos incluindo o principal; nas demais, verificar o limite.
-   Distribuir 10–20 unidades de trabalho em ondas quando útil, sem prometer 20 simultâneos.
-   Reservar na sessão 5 dois slots para os juízes persistentes.
-4. Persistir um primeiro handoff com capacidades, tarefas independentes e dependências
-   ainda ausentes. A falta de uma dependência bloqueia seus consumidores, não todo trabalho útil.
-5. Executar descoberta e preparação independente. Só alterar interfaces compartilhadas
-   depois do contrato de propriedade de arquivos e da integração serial descritos nas referências.
+## Iniciar ou continuar sem perder trabalho
 
-Usar o conector para GitHub quando disponível. Usar terminal do sandbox para comandos
-necessários e autorizados; o subprocesso não recebe automaticamente os poderes do conector.
-Não exigir workflow para produção nativa. Respeitar separadamente a política de CI/testes
-do repositório; uma execução no sandbox não recebe um run ID fictício de GitHub Actions.
+1. Manter seu número e branch `genesis-chatgpt-sN`. Se existe, reler HEAD, handoff e
+   ledger atuais antes de escrever. Não resetar, substituir, apagar ou repetir trabalho
+   só porque a sessão recebeu um protocolo novo. Se é uma sessão nova, criar a branch
+   a partir do commit do protocolo. Usar lease de HEAD nas atualizações remotas.
+2. Registrar a migração, quando aplicável, no novo namespace
+   `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/sN/`.
+   Referenciar evidências antigas por commit/caminho/hash e decidir seu reúso exato.
+3. Conferir capacidades reais: GitHub, execução isolada, código, dependências, leitores
+   e slots. Usar o conector disponível; ausência de `gh` não é ausência de GitHub.
+   Não iniciar login, extrair credenciais nem supor acesso à máquina do dono.
+4. Resolver os caminhos do seu domínio pela partição já congelada. Ela cobre as
+   14.442 entradas do baseline. Cada sessão refina suas próprias necessidades e
+   artefatos; não espera um inventário semântico global de S1.
+5. Planejar um lote finito que comporte produção, os dois juízes, correções e consumo.
+   Registrar os limites lógicos localmente com continuidade econômica da campanha.
+   Não esperar outra sessão aprovar ou redistribuir quotas de preparação.
+6. Executar todos os lotes produtivos da própria fatia. Registrar o que ocorreu e
+   continuar até a checklist integral ou um impedimento material demonstrado. Não encerrar somente com
+   plano, fila, mapas de propostas ou um handoff que repete o bloqueio antigo.
 
-## Produzir pelo caminho verdadeiro
+Cada sessão principal é a **orquestradora responsável por entregar toda a fatia**.
+Decompor trabalho em tarefas verificáveis e delegar a subagentes produtores reais;
+recolher os resultados, conferir evidências, despachar os dois juízes independentes,
+encaminhar correções e reavaliar. Delegar não transfere a responsabilidade de fechar
+a fila. Aguardar agentes em andamento e continuar autonomamente sem pedir
+confirmação para etapas já autorizadas. Checkpoints não são respostas finais.
 
-1. Congelar o inventário finito de **todos os domínios e fluxos necessários** do Orchestra.
-   Classificar a árvore inteira; explicar exclusões e representar dependências externas.
-   O piloto Session-input é uma entrada reutilizável, nunca o denominador do repositório inteiro.
-2. Vincular necessidades a artefatos, fontes, dependências de build, casos e critérios.
-   Registrar fonte observada, intenção autorizada, interpretação e lacuna separadamente.
-3. Reutilizar outputs previamente aceitos somente após comparar corpo, autoridade,
-   fonte, receita e contrato. Produzir os gaps pelo adapter/receita que realmente executa.
-   Persistir o pedido visível, a resposta visível original e os recibos necessários.
-   Não pedir nem publicar raciocínio privado dos agentes.
-4. Construir cumulativamente: base verificável → entendimento local → entendimento
-   integrado → ownership/manutenção operacional. Cada artefato exigido precisa servir
-   uma necessidade. Não exigir quatro documentos por arquivo só por simetria.
-5. Consolidar a camada finita completa e enviar a mesma versão à sessão 5. Avançar
-   a camada seguinte somente com o manifesto anterior aceito e dependências completas.
-   Dividir a revisão em lotes rastreados quando necessário, mantendo cobertura integral.
-6. Exercitar produtor, cache, seleção de afetados, rebuild, leitor, publicação isolada,
-   recuperação e gates pelos pontos de entrada reais. Fixture, comentário ou teste lido
-   não substitui execução. Um índice vazio, orçamento esgotado ou ausência de erro não fecha cobertura.
+## Executar cada domínio de ponta a ponta
 
-`modules/atlas/scripts/ownership-pilot.ts` é específico do piloto. Sua generalização é
-trabalho da fatia 2, com integração da 5; não afirmar que já aceita qualquer domínio.
-O `atlas mine` legado e seus cinco nomes de braço não são as cinco fatias desta skill.
-Não reiniciar a fila histórica aposentada para preencher o novo registro de aceite.
+1. Classificar todos os caminhos atribuídos e congelar necessidades, fontes,
+   artefatos obrigatórios, lacunas, casos e critérios. Gerados/terceiros/binários podem
+   remeter a geradores e fronteiras justificadas; não desaparecem da contabilidade.
+2. Construir uma base verificável a partir das fontes realmente lidas. Separar
+   comportamento observado, intenção autorizada, interpretação e lacuna. Preparar
+   o oracle independente e reter suas respostas fora dos produtores.
+3. Reutilizar apenas conhecimento compatível em corpo, autoridade, fonte, receita,
+   dependências e contrato. Produzir as partes faltantes com subagentes nativos reais,
+   guardando pedidos, respostas visíveis e identidades. Não publicar raciocínio privado.
+4. Construir cumulativamente L1 → L2 → L3 → L4 no **escopo finito do próprio domínio**.
+   Cada camada completa e exigida recebe revisão do par local antes de sustentar a
+   seguinte. Lotes menores são possíveis; uma aprovação parcial não libera itens
+   que dependem do restante. Não exigir quatro documentos ou quatro chamadas por arquivo.
+5. Ler qualquer fonte de outro domínio no mesmo pin quando necessária para uma
+   fronteira. Registrar essa dependência; não aguardar um artefato irmão só para
+   descobrir código já disponível. Conhecimento externo não revisado não vira
+   automaticamente um resultado aceito. Lacuna crítica retém apenas seus dependentes.
+6. Executar consumidores e os controles aplicáveis pelos pontos de entrada reais.
+   Se o importer, reader ou CI ainda falta, continuar produção e revisão semântica
+   independentes, deixando importação, consumo Atlas e gates no estado correto.
+   A revisão de um documento não prova AC-04 nem leitura governada.
+7. Fechar cada critério com evidência e decisão, corrigir defeitos concretos e
+   reapresentar o delta aos mesmos juízes. Não criar refinamento opcional interminável.
 
-## Julgar e corrigir
+S4 é o proprietário do trabalho mínimo necessário para generalizar o adapter/importer
+Atlas e aproveitar as propostas anteriores de produção, rebuild, recuperação e host.
+O `ownership-pilot.ts` existente não é um importer genérico. S4 pode implementar seu
+candidato isolado sem aguardar liberação de outra conversa; ROOT valida a união final. Outras fatias
+podem executar com esse candidato exato quando disponível, preservando o pin usado.
 
-Centralizar o juízo vinculante na sessão 5. Usar dois subagentes persistentes, um com
-ênfase em fidelidade/autoridade e outro em completude/utilidade; ambos verificam todos
-os critérios obrigatórios aplicáveis à versão recebida. Seguir `references/judging.md`.
+Mudanças de produto estritamente necessárias ao Genesis seguem o proprietário do
+caminho, as instruções locais e a disciplina de candidato isolado. Alterações de
+contratos compartilhados vão ao proprietário com proposta concreta. O mapa de
+extração não autoriza reescrever indiscriminadamente módulos ou o store servido.
 
-Manter revisão técnica de autoria separada de aceite independente. Registrar `PASS`,
-`FIX-FIRST`, `HOLD` ou `REQUEST_EVIDENCE` com identidade exata, critério e evidência.
-Corrigir defeitos concretos dentro do escopo/envelope vigente, preservar o original e
-reavaliar o delta nos mesmos dois juízes. Reutilizar decisões inalteradas apenas com
-bindings verificáveis. Não criar terceiro juiz para desempatar ou substituir um veto.
+## Dois juízes em cada sessão
 
-Persistir decisões e entregas por Git: uma conversa não pode chamar o `agent_id` da outra.
-Autoria e juízo em contextos distintos dão separação de papéis; não demonstram diversidade
-de fornecedor/modelo quando todos herdam a mesma família.
+Usar um par local com identidades `parallel-v2/SN/J1` e `parallel-v2/SN/J2`, em contextos
+independentes de autoria, criados com `fork_turns: none`. Ambos avaliam todos os critérios
+obrigatórios pertinentes sobre a mesma versão exata. Manter os IDs na sessão para
+revisões de deltas; não recriar juízes por tarefa nem buscar um terceiro voto.
 
-## Controlar execução e custo
+Com quatro slots, usar principal + um produtor + dois juízes. Dimensionar outras
+unidades em ondas. O kit define dez papéis de juiz nas cinco conversas; a concorrência
+efetiva depende do host de cada uma. Não prometer 10–20 subagentes simultâneos aqui.
+Contextos independentes não provam diversidade de modelo/fornecedor.
 
-Usar o envelope comum da fatia 1 antes de distribuir trabalho substantivo. Contabilizar
-pedidos lógicos de produção, juízo, consumidor e correção; reservar também o trabalho
-pendente. Preparação necessária para congelar o envelope é registrada desde o início.
-Repartir quotas exclusivas por sessão para evitar cinco escritores concorrentes no orçamento.
+ROOT cria um par independente próprio `integration/J1` e `integration/J2` para
+o pacote final, sem autoria do material avaliado. Cinco aceites locais não são aceite global.
+Transportar evidência por Git; IDs de agentes pertencem à conversa que os criou.
 
-Registrar tokens, tentativas físicas e cobrança como `unknown` quando o host não os
-expuser. Slots, sites, bytes e chamadas não são dólares. Não chamar APIs pagas externas,
-Grok/Claude/OpenRouter ou trocar modelo silenciosamente. A autorização atual é para
-trabalho nativo nestas sessões; qualquer capacidade econômica não demonstrada permanece
-um limite explícito de AC-08, sem impedir trabalho independente que esteja autorizado.
+## Economia e dependências verdadeiras
 
-Não repetir uma requisição de resultado incerto. Procurar primeiro o recibo e o trabalho
-durável. Uma correção tem identidade nova e vínculo com sua origem. Interromper refinamento
-opcional assim que o critério estiver satisfeito; congelar novo limite antes de exceder o envelope.
+Antes de cada lote, registrar tarefas, máximo de despachos lógicos, paralelismo e
+reserva para juízes/correções/consumidores. Consolidar os ledgers locais por identidade
+na integração. Revisões de plano são finitas, explícitas e prospectivas; preservar
+uso e reservas v1, incluindo tentativas `UNCERTAIN` ou em andamento.
 
-## Integrar, entregar e retomar
+As quotas pequenas de bootstrap eram coordenação desta skill e são substituídas
+pelos planos locais. Não exigem nova autorização de S1. Isso não concede chamadas
+pagas externas nem apaga a exigência econômica do produto. Tokens, tentativas
+físicas, cobrança e garantias não expostos pelo host continuam `UNKNOWN`; limites
+de tarefas não demonstram admissão financeira AC-08 ou custo zero.
 
-Persistir resultados em
-`modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/sN/`.
-Cada sessão escreve somente sua branch e seu prefixo; a 5 consolida os commits exatos,
-resolve propostas de arquivos compartilhados e mantém o manifesto integrado.
+Investigar uma resposta incerta antes de repetir. Não cancelar atividade de outra
+conversa, reaproveitar um ID conflitante ou zerar o orçamento ao trocar de epoch.
+Usar apenas capacidades nativas autorizadas; não chamar provedores pagos externos
+nem mudar modelo silenciosamente.
 
-O registro de campanha é coordenação, não um segundo armazenamento de conhecimento.
-Conhecimento servido continua pelas portas e manifestos governados do Atlas. Testar
-publicação e recuperação em store isolado; ativação de produção exige alvo e autoridade próprios.
+Produção nativa não exige workflow. Os testes do produto continuam sujeitos ao
+`AGENTS.md`: GitHub Actions, salvo autorização explícita do dono para execução local.
+Não contornar a guarda de testes. Build, leitura, produção e inspeção isolados não
+recebem um run de CI inventado. Falta de dispatch bloqueia o gate específico,
+não toda a descoberta, produção ou revisão que já pode ocorrer.
 
-Prosseguir autonomamente em correções reversíveis do escopo autorizado. Concluir com
-evidências de cada AC, CC, SC e DoD, consumo real e ambos os juízes da mesma versão.
-Separar `READY_FOR_JUDGMENT`, `ACCEPTED_SCOPED`, `GLOBAL_REVIEW_READY`, aceite do dono,
-landing e ativação. Não criar PR, fazer merge, force-push, instalar em produção ou limpar
-recursos alheios como efeito colateral de receber uma fatia.
+## Persistir e integrar
 
-Se faltar uma capacidade ou autorização concreta, preservar o que foi feito e registrar
-`BLOCKED` com a operação exata, evidência do impedimento, critério afetado e menor próximo
-passo. Não chamar isso de conclusão. Entregar commit, caminhos, resultados reais,
-juízos disponíveis e lacunas, sem substituir execução por um plano ou mapa documental.
+Escrever evidências somente na própria branch e namespace. Stores experimentais
+também são isolados por sessão/candidato. Não editar namespaces de outros nem
+publicar um sidecar documental como conhecimento servido pelo Atlas.
+
+Ao finalizar sua fatia, publicar o handoff imutável e selado conforme o contrato:
+fontes, artefatos, decisões dos dois juízes, consumidores, gates, economia, gaps e
+interfaces. ROOT seleciona commits exatos, verifica união/cobertura/conflitos e
+executa casos transversais e gates finais. Revalidar as dependências afetadas por
+qualquer mudança do candidato, sem invalidar trabalho independente por conveniência.
+
+Relatar separadamente produção nativa, aceite semântico, importação, leitura real,
+controles mecânicos, integração, aceite do proprietário e landing. `GLOBAL_REVIEW_READY`
+não é `DONE`, ativação nem aceite humano. Não criar PR/merge, force-push, publicação
+em produção ou exclusão histórica como efeito colateral deste protocolo.
+
+Se um item depende de capacidade ausente, persistir `HOLD`/`BLOCKED` com operação,
+evidência, critérios e menor próximo passo; continuar itens independentes. Nenhuma
+sessão fica esperando sua vez por causa da divisão do trabalho.
+
+Antes de terminar, aplicar a auditoria de [completion.md](references/completion.md):
+todas as obrigações locais devem estar entregues, verificadas e persistidas, com
+os dois juízes e sem correção obrigatória aberta. Continuar enquanto houver tarefa
+executável. Uma barreira externa comprovada é `INCOMPLETE_BLOCKED`, jamais entrega
+completa. Só a integração da união, seu julgamento global e o aceite humano ficam
+com ROOT, conforme [integration.md](references/integration.md).

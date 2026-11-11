@@ -1,133 +1,99 @@
-# Fatia 4 — host, Git/CI, preservação e migração
+# Fatia 4 — Atlas, conhecimento, continuidade, RAG e Genesis
 
 ## Sumário
 
-[Missão](#missão-e-identidade) · [Fontes](#fontes-concretas) · [Execução](#execução) ·
-[Recusas](#lista-finita-de-recusas-a-cobrir) · [Saídas](#saídas) · [Critérios](#critérios-locais).
-Aplicar também [campanha](campaign.md), [juízo](judging.md), [runtime](runtime.md) e [handoffs](handoffs.md).
+[Identidade](#identidade-e-início-independente) · [Domínio](#domínio-e-fronteiras) · [Runtime](#adapter-importer-e-recuperação) · [Execução](#execução-completa) · [Critérios](#critérios-e-provas) · [Entrega](#saídas-e-encerramento).
+Aplicar [campanha](campaign.md), [juízo](judging.md), [runtime](runtime.md), [handoffs](handoffs.md) e [partição](parallel-partition.json).
 
-## Missão e identidade
+## Identidade e início independente
 
-Executar G4 no **Orchestra inteiro**, verificando integração real, controle de validade e preservação.
-Cobrir AC-09 e AC-10 sem tratar a leitura de um gate como prova de sua execução ou enforcement.
-Manter a compatibilidade entre código, conhecimento, fontes, leitores e superfícies geradas.
+- Repositório: `gustavomhss/hugr-orchestra`; fatia `S4`.
+- `campaign`: `20261111-v1`; `protocol_epoch`: `parallel-v2`.
+- `results_epoch`: `20261111-v2-parallel`; branch preservada: `genesis-chatgpt-s4`.
+- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; registrar o commit real do kit.
+- Saídas: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s4/`.
+- Registrar fonte, HEAD efetivo, candidato, protocolo e hashes distintos conforme `handoffs.md`.
+- `integration_owner`: `root` (conversa original); branch integradora reservada: `genesis-chatgpt-final`.
+- Integração reservada a ROOT: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/integration/`.
 
-- Repositório: `gustavomhss/hugr-orchestra`.
-- Fonte inicial: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
-- Branch exclusiva: `genesis-chatgpt-s4`.
-- Evidência durável: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/`.
-- Cada execução fixa `source_revision`, `candidate_revision`, `protocol_revision` e handoffs S1/S2/S3.
+Começar inventário, L1–L4, juízo e correções próprios sem esperar S1, S5 nem outro domínio.
+S4 também implementa a capacidade Atlas diretamente necessária ao Genesis; essa atividade não suspende a produção nativa.
+As outras fatias podem produzir e julgar enquanto o binding/importer estiver pendente, sem alegar publicação fictícia.
 
-## Fontes concretas
+## Domínio e fronteiras
 
-Ler `AGENTS.md` e, sob `modules/atlas/docs/design/`, `genesis-ownership-plan.md`,
-`genesis-global-completion-plan.md`, `genesis-campaign-reconciliation.md` e `genesis-landing-plan.md`.
-Ler `.orchestra/skills/atlas-{usage,maintenance,ownership}/SKILL.md` para o caminho operacional existente.
+Aplicar o resolvedor de `parallel-partition.json`; conferir **2.220 entradas** atribuídas a S4.
+Hash de caminhos: `0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d`.
+Incluir `modules/atlas`, `modules/continuity`, `modules/rag-studio`, `.atlas/`, `script/atlas-genesis/`,
+`script/atlas-baseline.mjs`, `specs/atlas-ui/` e docs/skills/workflows Atlas exatos atribuídos no manifesto.
+Cobrir conhecimento, captura, autoridade, CAS/receipts, reader/index, rebuild, recuperação e fronteiras RAG/continuidade.
+Classificar documentação histórica, harnesses, fixtures e código interno sem confundi-los com aceites atuais.
+Ler quaisquer fontes do baseline de outros domínios para contrato/caller, sem esperar resultados de outra sessão.
 
-Inspecionar os entry points reais:
+Ler `AGENTS.md`, skills `atlas-usage`, `atlas-maintenance`, `atlas-ownership` e os contratos normativos de `campaign.md`.
+Inspecionar `modules/atlas/scripts/ownership-pilot.ts`, os tipos existentes e os seams reais de input/rebuild/read/recovery.
+O piloto Session-input tem população, receitas e reviewers históricos próprios; não generalizá-lo trocando IDs ou labels.
 
-- `modules/maestro/coordination/src/v2/atlas-source.ts` e `tools/atlas.ts`.
-- `modules/atlas/packages/adapter-io/src/ownership-input.ts`, `ownership-access.ts` e `ownership-attachment.ts`.
-- `modules/atlas/packages/tools/src/handler.ts`.
-- `modules/atlas/packages/knowledge/src/ownership/read.ts`.
-- `modules/atlas/harness/gates/own-snapshot-guard.mjs`.
-- `.github/workflows/atlas-guard.yml`, `atlas-worklist.yml` e `test.yml`.
-- `modules/atlas/packages/adapter-io/test/ownership-input.test.ts` e `ownership-publication.test.ts`.
-- `modules/atlas/packages/knowledge/test/ownership-read.test.ts`.
+## Escrita e retomada
 
-Resolver outros callers pelo grafo/imports observado; a lista acima é ponto de partida, não prova de cobertura total.
+Inspecionar as branches preservadas e localizar por commit/path/blob os patches e recibos v1 de S2, S3 e S4.
+Reconciliar producer/importer/rebuild de S2, recuperação/publicação de S3 e host/migração de S4 antes de implementar.
+Reutilizar objetos compatíveis; aplicar somente deltas necessários no candidato S4, sem cherry-pick amplo não inspecionado.
+Preservar autoria, versões e tentativas incertas; não apagar história, zerar uso ou reenviar pedido sem resolver sua identidade.
+Escrever resultados novos em `s4/`; mudanças de produto limitam-se ao mínimo necessário ao Genesis sob ownership S4.
+Implementar em candidato isolado sem esperar liberação global ROOT; contratos de outros donos exigem proposta/coordenação.
+Não editar policies, permissões ou reviewers históricos para contornar uma recusa nem ativar produção automaticamente.
 
-## Escrita e integração
+## Adapter, importer e recuperação
 
-S4 possui os cenários de integração, inventário protegido, plano de migração e recibos no prefixo `s4/`.
-Escrever propostas em `s4/proposals/` quando precisar alterar host, guard, política, workflow ou entry point compartilhado.
-S5 aplica tais mudanças serialmente, incluindo tipos/exports e saídas de geradores; S4 verifica o commit devolvido.
-Não alterar configurações de proteção de branch para obter verde, não enfraquecer guards e não ativar produção.
-Não editar manualmente outputs gerados nem reserializar corpos históricos com identidade protegida.
-Não atualizar PRs herdados ou fechar recursos fora do ownership explicitamente registrado.
+Implementar/reutilizar o adapter genérico de respostas nativas nos tipos e portas existentes, conforme `runtime.md`.
+Preservar bytes originais, fontes, autoridade, receita, dependências, reviews reais, receipts e identidade de resultado.
+Aceitar múltiplos scopes/domínios pelo contrato governado; não criar store, autoridade ou leitor paralelo para research.
+Distinguir staging, validação, publicação autorizada e readback; só a observação da porta real comprova cada passagem.
+Rebuild deve capturar inputs, selecionar afetados, consumir predecessores e gerar candidato verificável até o estágio permitido.
+Exercitar cache sem nova interpretação, edit/add/remove/intent-doc/recipe e preservação de independentes quando autorizado.
+Recuperação deve preservar concorrência, journal, interrupção, retomada, HOLD, rollback e compatibilidade observáveis.
+Reader/index devem respeitar projeção, trust, limite, versão e recusas reais; acesso direto a arquivo não substitui o reader.
+Quando execução depender de CI, preparar evidência e gates sem testes locais não autorizados; declarar `not_run` até observar.
+Entregar o adapter/candidato por commit e contrato; nenhuma descrição ou fixture fixa prova que ele já executou semanticamente.
 
-## Entradas e barreiras
+## Execução completa
 
-O inventário completo e a classificação de autoridade vêm de S1.
-Os artefatos/receitas vêm de S2; os limites de coerência, recuperação e rollback vêm de S3.
-Antes dos handoffs, mapear callers e preparar fixtures; não declarar a integração nova observada.
-Executar contra o conjunto compatível de commits que S5 materializou e identificou, não contra uma mistura de branches.
-Caso uma dependência mude, invalidar as provas afetadas; conservar evidência antiga ligada ao candidato antigo.
+1. Confirmar capacidades, fonte, materialização e ledger; congelar população S4 sem depender de inventário S1.
+2. Mapear necessidades → artefatos → fontes → casos → critérios, incluindo internos Atlas e consumidores RAG/continuity.
+3. Separar artefatos de conhecimento sobre Atlas da implementação do adapter; ambos têm autoria e evidência próprias.
+4. Produzir L1 atribuído com originais e lacunas; verificar cobertura e entregar aos dois juízes persistentes locais.
+5. Corrigir achados e liberar L2 apenas após dois PASS no predecessor obrigatório do escopo.
+6. Repetir para L2 componentes, L3 fluxos e L4 manutenção/ownership, mantendo todos os intermediários necessários.
+7. Usar os mesmos J1 fidelidade/autoridade e J2 completude/utilidade nas revisões, sem autoria, terceiro voto ou PASS fabricado.
+8. Congelar oracle separado para mudanças de contrato, corrupção/autoridade, impacto, recuperação e pergunta fora do escopo.
+9. Executar consumidores Atlas-only quando o caminho estiver disponível e autorizado; registrar índices, leituras e limites.
+10. Provar uso direto de intermediários e aprofundamento; qualquer falha de isolamento/readback conserva a obrigação aberta.
+11. Corrigir o conjunto afetado e reavaliar bindings; não reexecutar irmãos aceitos nem atribuir o juízo ao integrador.
+12. Disponibilizar conhecimento, código candidato e provas por commits independentes, permitindo o trabalho dos demais domínios.
 
-## Execução
+## Critérios e provas
 
-1. Enumerar os objetos protegidos da campanha: fontes, respostas, claims, julgamentos, manifests e derivados declarados.
-   Calcular a identidade dos bytes efetivamente acessados; referência indisponível vira lacuna de preservação.
-2. Mapear, para todo domínio/fluxo de S1, o caller que fornece a entrada atual e o reader que devolve conhecimento.
-   Distinguir ausência de wiring, caminho presente, teste existente e execução efetivamente observada.
-3. Congelar controles válidos e inválidos no entry point pretendido, mantendo pelo menos um escopo independente válido.
-   Congelar resultado esperado antes da correção e sem copiar o algoritmo do gate para formar o oracle.
-4. Exercitar `changed declared input` e `new input under registered scope`, incluindo adições e remoções.
-   A assinatura da fonte consultada deve corresponder ao que o host realmente usa.
-5. Exercitar `missing artifact`, `broken index reference`, `incompatible dependency version` e `invalid generation`.
-   Guardar o veredito real que nomeia a recusa; citação de código sem execução permanece indeterminada.
-6. Corromper uma unidade local e observar o HOLD da closure afetada junto da leitura do escopo independente.
-   Corromper o manifesto compartilhado e observar o conjunto de readers que realmente dependem dele.
-7. Verificar que produtor antigo não consegue publicar acidentalmente no novo escopo aceito.
-   Identificar fonte e contrato de versão por evidência; não inventar ordem semântica entre SHAs.
-8. Exercitar migração isolada e rollback compatível preservando o estado aceito anterior.
-   A existência de uma cópia antiga não prova que o rollback é válido contra a fonte atual.
-9. Gerar fronteiras/snapshots pelos geradores corretos e verificar resultado no candidato integrado.
-   Um patch gerado deve conservar recibo do gerador, fonte, comando/runner e conteúdo resultante.
-10. Inspecionar o escopo dos workflows e se os paths/entry points novos entram nos gates pretendidos.
-    Reportar separadamente a configuração observada de branch protection e o resultado de execução do gate.
-11. Executar a verificação permitida pelo repositório, com SHA e identificador reais quando houver CI.
-    O conector poder ler Actions não significa poder dispará-lo; registrar capacidade ausente sem inventar run.
-12. Comparar de novo o inventário protegido e registrar diferenças esperadas versus violações.
-    Entregar a S5 os resultados, planos operacionais, patches integrados e restrições remanescentes.
+Inventariar AC-01..10, CC-1..7, SC-1..5 e DOD-1..7 para S4 e suas responsabilidades transversais de runtime.
+Aplicar GO-A1..7, GO-I1..8 e QS-1..6 com evidência por linha, sem aprovação por inventário ou schema válido.
+AC-01/CC-1 requerem cobertura S4; AC-02/03 e SC-1/2 requerem consumidores reais e intermediários alcançáveis.
+AC-04/05/06, CC-2..4 e SC-3 exigem producer/importer, recusas, reuse e rebuild reais em candidatos identificados.
+AC-07/09/10, CC-5/7 e SC-5 exigem recuperação, caller/trust, migração, recusa do produtor antigo e preservação.
+AC-08/CC-6/SC-4 exigem ledger completo e limites honestos do host; medidas ausentes permanecem `UNKNOWN`.
+DOD-1..7 dependem também de CI, integração e autoridade quando aplicáveis; recibo preparado não comprova execução.
+Não executar testes locais sem autorização explícita; manter gates reais pendentes sem paralisar produção/julgamento próprio.
+Dois juízes aceitam a versão exata de cada camada e candidato aplicável; green mecânico não substitui aceite semântico.
 
-## Lista finita de recusas a cobrir
+## Saídas e encerramento
 
-Manter uma linha por caso, pelo entry point e pelo resultado, sem agrupar tudo como “stale rejeitado”:
+ROOT cria seu próprio par `integration/J1` e `integration/J2`; os dois juízes locais não assumem a integração final.
 
-- changed declared input;
-- new input under registered scope;
-- missing artifact;
-- broken index reference;
-- incompatible dependency version;
-- invalid generation;
-- independent scope remains readable;
-- shared manifest corruption;
-- branch-protection enforcement, com seu tipo de evidência explicitado.
+- `inventory.json`, `needs.json`, `acceptance-map.json`, `layers/`, `recipes/`, `manifests/`: população e L1–L4 de S4.
+- `adapter-contract.md`, `proposals/`, `evidence/`: código/candidato, conformance, importer, readback, rebuild e recovery reais.
+- `reuse-ledger.json`: origem exata de cada patch v1 S2/S3/S4, equivalência, aplicação, descarte justificado e deltas.
+- `judge-roster.json`, `judgments/`, `corrections/`, `consumer-cases/`: autoria separada, duas decisões e consumo observado.
+- `execution-ledger.jsonl`, `criteria.json`, `handoff.json`: uso, incertezas, gates e bindings conforme `handoffs.md`.
 
-Reutilizar provas anteriores apenas depois de verificar bindings do caso, fonte, caminho e oracle.
-Não chamar proteção de branch “testada” só por ter lido a configuração; capacidade limitada fica declarada.
-
-## Saídas
-
-- `entrypoints.json`: domínio/fluxo → host/gate/reader → controles e resultado observado.
-- `protected-inventory.json`: objetos preservados, identidades e comparação antes/depois.
-- `cases/`: entradas, recusas, controles válidos e evidência real de isolamento/compartilhamento.
-- `migration.md`: preparação, compatibilidade, rollback, alvo e limites de ativação.
-- `verification.json`: gates, source SHA, runner/run reais, escopo e verificações não executadas.
-- `criteria.json`: critérios atribuídos, vereditos e evidências no formato comum.
-- `handoff.json`: esquema `genesis-session-handoff/v1`, campanha `20261111-v1` e referências `{commit,path,sha256}`.
-
-Usar revisões/dependências conforme `handoffs.md`, sem autorreferência ao commit que contém o handoff.
-
-## Critérios locais
-
-**Axiomas:** GO-A4/5/6/7; consistência através do host e preservação com os mecanismos existentes.
-**Invariantes:** GO-I1/3/5/7/8; fontes exatas, recusas efetivas e autoridade sem mistura de gerações.
-**AC próprios:** AC-09/10; compartilhar observações de coerência com S3 sem duplicar suas execuções válidas.
-**CC:** CC-5/7 exigem integração, compatibilidade, gerados, guias e disposição explícita de obrigações antigas.
-**SC:** SC-5 exige rejeição observada dos estados nomeados e preservação de escopos válidos.
-**QS:** QS-1/3/4/5/6; fidelidade, generated-code discipline e controles nos pontos de entrada reais.
-
-**DoD local:** toda recusa atribuída possui resultado verificável ou blocker explícito, nunca cobertura por citação.
-Os objetos protegidos conservam seus bytes; migração/rollback têm regras e provas compatíveis com a fonte.
-A cobertura de CI e a proteção de branch estão reportadas como observadas, sem inferências de enforcement universal.
-O pacote exato está disponível aos dois juízes de S5 e ao integrador.
-
-## Estado e correção
-
-Usar `READY_FOR_JUDGMENT` para o pacote completo e `BLOCKED` para lacunas de execução/autoridade/capacidade.
-Corrigir achados específicos e renovar apenas os controles afetados pelo delta integrado.
-Não considerar ausência de acesso a CI uma autorização para executar testes proibidos localmente.
-Não tocar produção, PRs ou recursos herdados para completar um checklist; a decisão de entrega continua explícita.
-Terminar com commit/URL, entry points cobertos, resultados de gates, preservação e pendências precisas.
+Não declarar o repositório publicado, recoverable ou concluído apenas porque os arquivos e adapter foram preparados.
+Preservar produtos nativos julgados enquanto uma passagem runtime/CI/autoridade estiver aberta e nomear seu próximo passo.
+Entregar a ROOT candidato reutilizável, contratos, provas efetivas e limites explícitos; nenhum handoff reinicia as outras fatias.

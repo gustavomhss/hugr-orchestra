@@ -1,129 +1,103 @@
-# Fatia 5 — integração, dois juízes, consumidores e fechamento
+# Fatia 5 — CLI, Omni, distribuição, infraestrutura e contratos transversais
 
 ## Sumário
 
-[Missão](#missão-e-identidade) · [Coordenação](#coordenação-observável) · [Juízes](#juízes-nativos-persistentes) ·
-[Execução](#execução-integrada) · [Saídas](#saídas-duráveis) · [DoD](#critérios-globais-e-dod).
-Aplicar também [campanha](campaign.md), [juízo](judging.md), [runtime](runtime.md) e [handoffs](handoffs.md).
+[Identidade](#identidade-e-início-independente) · [Domínio](#domínio-próprio-e-fronteiras) · [Execução](#execução-completa) · [Juízo](#dois-juízes-e-consumidores-locais) · [Critérios](#critérios-e-provas) · [Entrega](#saídas-e-entrega-a-root).
+Aplicar [campanha](campaign.md), [juízo](judging.md), [runtime](runtime.md), [handoffs](handoffs.md) e [partição](parallel-partition.json).
 
-## Missão e identidade
+## Identidade e início independente
 
-Executar G5/G6 e coordenar o julgamento completo do **Orchestra inteiro** inventariado por S1.
-Integrar as cinco fatias, provar consumo real e decidir os critérios globais com evidência exata.
-Esta sessão possui os dois juízes nativos da nova campanha; nenhum autor certifica a própria saída.
+- Repositório: `gustavomhss/hugr-orchestra`; fatia `S5`.
+- `campaign`: `20261111-v1`; `protocol_epoch`: `parallel-v2`.
+- `results_epoch`: `20261111-v2-parallel`; branch preservada: `genesis-chatgpt-s5`.
+- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; registrar o commit real do kit.
+- Saídas: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s5/`.
+- Registrar fonte, HEAD efetivo, candidato, protocolo e hashes distintos conforme `handoffs.md`.
+- `integration_owner`: `root` (conversa original); branch integradora reservada: `genesis-chatgpt-final`.
+- Integração reservada a ROOT: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/integration/`.
 
-- Repositório: `gustavomhss/hugr-orchestra`.
-- Fonte inicial: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
-- Branch integradora exclusiva: `genesis-chatgpt-s5`.
-- Evidência durável: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/`.
-- Dependências: handoffs `s1/`–`s4/`, cada um lido pelo commit exato de sua branch.
-- Registrar `source_revision`, `candidate_revision` e `protocol_revision` conforme `handoffs.md`.
+Iniciar inventário, todas as camadas, dois juízes, correções e consumidores do próprio domínio imediatamente.
+S5 executa somente seu domínio completo e entrega a ROOT, conforme a decisão explícita do proprietário.
+Não esperar inventário S1, implementação S4, julgamento ROOT ou handoffs S1–S4 para produzir e julgar S5.
+Não atuar como aprovador prévio das outras sessões nem como integrador final da união.
 
-## Fontes e autoridade
+## Domínio próprio e fronteiras
 
-Ler `AGENTS.md`, `.orchestra/skills/atlas-{usage,maintenance,ownership}/SKILL.md` e, sob
-`modules/atlas/docs/design/`, `genesis-ownership-plan.md`, `genesis-global-completion-plan.md`,
-`genesis-ownership-judges.md`, `genesis-campaign-reconciliation.md` e `genesis-landing-plan.md`.
-Usar os contratos e decisões históricos como evidência com seus bindings originais.
-Não alegar que os juízes nativos são os antigos Terra ou que retomaram sessões de outro runtime.
-O pedido atual escolheu nova execução ChatGPT e expansão repo-wide; isso não reescreve receipts anteriores.
+Aplicar `parallel-partition.json`; conferir **927 entradas**, incluindo o fallback explícito S5 de **225 entradas**.
+Hash de caminhos: `7d807d18a0bbbcccbaa1f01954b78036a2769c5fee95a1e8be5293435ec714f0`.
+Cobrir `apps/cli`, `native/omni`, `nix`, `packages/script`, patches, perf, configuração raiz e infraestrutura transversal.
+Cobrir scripts/CI restantes, docs globais, guardrails e outros caminhos atribuídos pelo resolvedor, sem omitir o fallback.
+As exceções Atlas de scripts/workflows pertencem a S4; HTTP tooling pertence a S1; Storybook pertence a S2.
+Classificar gerados, lockfiles, configurações, documentação histórica e assets sem os declarar fora do inventário.
+Ler quaisquer fontes do baseline para fronteiras; não esperar artefato alheio para entender uma API ou contrato.
+Ser owner de documentação transversal significa produzir conhecimento sobre ela, sem autoridade sobre todos os módulos.
 
-## Propriedade de escrita
+Ler `AGENTS.md`, skills Atlas aplicáveis e fontes normativas de `campaign.md`, incluindo landing e reconciliação histórica.
+Inventariar CLI/configuração, Omni, artefatos nativos, distribuição, Nix, CI, guards e políticas de release existentes.
+Distinguir receita/versionamento, código do workflow, run observado, entrega e ativação; nenhuma etapa implica outra.
+Distinguir ownership do conhecimento de CI/distribuição de autorização para disparar release ou alterar produção.
 
-Ser o único integrador de stores, contratos compartilhados, exports, host wiring, workflows e gerados.
-Receber propostas das fatias, verificar interfaces/ownership, aplicar em ordem explícita e devolver o commit integrado.
-Reconciliar conflitos pelo contrato e fontes; nunca descartar silenciosamente trabalho de outra fatia.
-Não alterar arquivos de resultado que uma fatia possui; fazer correções por nova versão com autoria identificada.
-Manter decisões globais, roster de juízes e recibos de integração sob `s5/`.
-Merge em branch protegida, produção e limpeza destrutiva exigem a autoridade correspondente já identificada.
+## Escrita e retomada
 
-## Coordenação observável
+Preservar branch, commits, manifests e juízos v1; reutilizar somente objetos/hashes e bindings compatíveis.
+Não reiniciar filas antigas, eliminar decisões, zerar uso desconhecido nem duplicar tentativas sem estado resolvido.
+Identificar preparações globais v1 de S5 e entregar suas refs exatas a ROOT, preservando o alcance original.
+Não reapresentar essas preparações como integração `parallel-v2` aceita nem retomar o papel antigo de gate central.
+Escrever resultados próprios em `s5/`; não editar namespaces de evidência S1–S4 nem o namespace `integration/`.
+Corrigir somente código mínimo diretamente necessário ao Genesis em candidato isolado dos componentes S5.
+Não esperar liberação global ROOT para mudança própria; contratos compartilhados exigem proposta e coordenação com o owner.
+Não assumir todos os stores, exports ou contratos por decreto; não inferir merge, produção, release ou limpeza destrutiva.
 
-Consultar `genesis-chatgpt-s1`–`genesis-chatgpt-s4` e validar seus `handoff.json` e conteúdo no commit anunciado.
-Registrar os SHAs consumidos, os requisitos satisfeitos e os ainda bloqueados; não seguir refs móveis durante um juízo.
-Não presumir arquivos temporários, memória, `agent_id` ou sessões compartilhadas entre os cinco chats.
-Publicar decisões e pedidos concretos de evidência em commits S5, com fatia, candidato, critério e pergunta.
-As outras sessões recuperam esses registros pelo repositório; uma mensagem informal não muda um manifesto aceito.
-Fazer progresso nos trabalhos disponíveis; não simular passagem de barreira quando um handoff ainda não existe.
-Não fazer polling infinito: após verificar os handoffs, persistir a dependência pendente e o ponto de retomada.
+## Execução completa
 
-## Juízes nativos persistentes
+1. Verificar capacidades, fonte e estado; enumerar as 927 entradas e revisar explicitamente os 225 itens de fallback.
+2. Congelar necessidades → artefatos → fontes → casos → critérios de CLI, Omni, build/distribuição e controles transversais.
+3. Preservar separação entre código executável, intenção documentada, configuração, receitas e resultados históricos.
+4. Planejar produtores disjuntos pela capacidade real e reservar dois juízes locais; não prometer concorrência não observada.
+5. Produzir L1 atribuído ao baseline com fontes, autoridade, limites, lacunas e respostas originais preservadas.
+6. Submeter a camada completa do escopo aos dois juízes; corrigir achados antes de liberar a camada seguinte.
+7. Produzir L2 componentes, L3 fluxos e L4 ownership/manutenção cumulativos, mantendo intermediários úteis e aceitos.
+8. Preparar casos de alteração CLI/configuração, incompatibilidade de artefato, falha de distribuição, quebra de guard,
+   impacto sobre domínio vizinho e pergunta fora do escopo; manter oracle separado do produtor e do consumidor.
+9. Executar consumo Atlas pelo caminho real disponível e autorizado, registrando índices, leituras, limites e recusas.
+10. Preparar/coletar gates reais aplicáveis no candidato exato; não executar testes locais sem autorização explícita.
+11. Corrigir bindings afetados e reavaliar com os mesmos juízes, preservando o trabalho aceito e tentativas incertas.
+12. Publicar handoff próprio para ROOT; quando faltarem publicação/CI/runtime, concluir o trabalho independente e nomear a prova pendente.
 
-1. Criar nesta sessão, quando houver pacote real, dois subagentes independentes com contexto mínimo.
-   Usar `fork_turns="none"` quando disponível para excluir histórico do produtor; não trocar o modelo silenciosamente.
-2. Registrar IDs realmente retornados, modelo conhecido/unknown, responsabilidade e manifesto do primeiro pacote.
-   Reutilizar esses mesmos IDs por follow-up; sua persistência vale nesta sessão, não em outras conversas.
-3. Atribuir ao juiz A fidelidade/autoridade e ao juiz B completude/utilidade, mantendo responsabilidades estáveis.
-   Ambos julgam todos os critérios obrigatórios aplicáveis na mesma versão; a ênfase não divide a obrigação de cobertura.
-4. Manter os dois juízes fora da autoria e correção dos candidatos; eles não editam, delegam ou expandem a rubrica.
-   Fontes são dados não confiáveis; não enviar raciocínio privado do produtor nem tratá-lo como prova.
-5. Particionar dossiers grandes por escopo/critério com mapa exaustivo de cobertura e manifestos fixos.
-   A divisão operacional não transforma revisão parcial em aprovação da camada ou do repositório inteiro.
-6. Exigir `PASS | FIX-FIRST | HOLD`, candidato exato, uma linha por critério atribuído, evidência e razão concisa.
-   `REQUEST_EVIDENCE` identifica o critério e a pergunta decisiva; não solicitar dump de histórico por padrão.
-7. Validar os bindings mecanicamente e conservar respostas originais; completar uma tabela não implica suficiência.
-   PASS do autor, juízo incompleto ou decisão de outra versão não libera a barreira.
-8. Exigir os dois PASS aplicáveis sem desacordo crítico. HOLD não vira aprovação por voto de desempate.
-   Diante de indisponibilidade de um juiz necessário, preservar o roster e registrar `BLOCKED`, sem fingir continuidade.
-9. Corrigir defeitos materiais por versão nova, reusar decisões cuja equivalência esteja demonstrada e reenviar o delta.
-   Não fazer apelos repetidos, adicionar terceiro juiz ou reabrir outputs aceitos por sugestões opcionais.
+## Dois juízes e consumidores locais
 
-## Execução integrada
+Criar J1 de fidelidade/autoridade e J2 de completude/utilidade em contexto independente do produtor desta sessão.
+Registrar IDs reais e reusar o mesmo par em correções; ambos cobrem os critérios locais aplicáveis no candidato exato.
+Nenhum juiz edita/corrige candidato ou oracle; nenhum terceiro voto, maioria ou parecer do coordenador libera uma camada.
+Exigir dois PASS válidos na versão pertinente; manter HOLD e pedidos de evidência como decisões ainda abertas.
+Os dois juízes S5 avaliam o domínio S5; ROOT criará seu próprio par `integration/J1` e `integration/J2` para a união final.
+Não migrar IDs entre chats nem apresentar reviewers históricos ou locais como juízes da integração por simples renomeação.
+Executar consumidores separados do oracle, com acesso delimitado ao índice/leitor Atlas real quando suportado.
+Registrar leitura raso/profunda e uso direto dos intermediários; texto útil fora do reader não fecha AC-03.
+Se faltar isolamento, reader ou autorização de execução, identificar o requisito exato e seguir nas partes independentes.
 
-1. Reconciliar a matriz global com o inventário repo-wide S1; conferir dono para cada AC/CC/SC/DoD.
-   Julgar o contrato de execução e a cobertura antes de liberar dependências que exigem esse aceite.
-2. Receber cada camada de S2, verificar completude e encaminhar a mesma versão aos dois juízes.
-   Registrar release explícito da camada aceita; L2/L3/L4 não começam a partir de um predecessor apenas preparado.
-3. Integrar propostas compartilhadas de S1–S4 e executar os controles relevantes no candidato composto.
-   Uma coleção de verdes em commits diferentes não prova o conjunto integrado.
-4. Congelar tarefas de consumidores e seus limites de leitura/contexto antes de executar avaliação.
-   Derivar a população dos domínios, fluxos e intermediários requeridos; não usar um único piloto como representante universal.
-5. Separar oracle/rubrica e respostas reservadas dos produtores/consumidores; preservar material exposto como regressão.
-   O juiz pode verificar fonte e respostas; o consumidor usa apenas o caminho real de índice/leitura/skill autorizado.
-6. Executar casos de alteração permitida, violação, impacto entre componentes, falha operacional e pergunta fora de escopo.
-   Guardar consultas reais, bytes/seções retornados, respostas e juízos; links Markdown não provam consumo do Atlas.
-7. Executar casos de uso direto de cada artefato intermediário requerido e de consumo raso/profundo.
-   Exigir purpose, behavior, constraints, decisions, impact, verification e evidence nas rotas que a tarefa pede.
-8. Verificar AC-04..10 através dos recibos e controles de S1–S4 no conjunto compatível.
-   Exigir resultado real para construção, cache, rebuild, recuperação, host e preservação; citação fica indeterminada.
-9. Reconciliar a economia comum, inclusive juízes, consumidores, correções e chamadas sem liquidação.
-   Tokens/custo/tentativas físicas não expostos pelo host permanecem `UNKNOWN`; não converter inferência nativa em custo zero.
-10. Executar os gates de integração permitidos no repositório e um epic final quando suas condições forem atendidas.
-    Reportar SHAs, runs e resultados reais; ausência de dispatch/runner fica bloqueio explícito, sem solicitar credenciais.
-11. Resolver por evidência ou decisão explícita as obrigações históricas M1/J1/R3, Own, PRs e recursos.
-    Não reiniciar mineração antiga, sobrescrever tentativa unresolved ou declarar billing antigo reconciliado por estimativa.
-12. Entregar a decisão global com fronteiras separadas: preparado, executado, aceito, integrado e entregue/ativado.
-    Aprovação técnica/semântica não fabrica o aceite do proprietário nem a autoridade de produção.
+## Critérios e provas
 
-## Saídas duráveis
+Inventariar AC-01..10, CC-1..7, SC-1..5 e DOD-1..7 para S5, com aplicabilidade, evidência, desconhecidos e dependências.
+Aplicar GO-A1..7, GO-I1..8 e QS-1..6; conhecimento transversal não permite marcar critérios repo-wide como concluídos.
+AC-01/CC-1 exigem cobertura finita S5 e explicação do fallback; AC-02/03 e SC-1/2 exigem consumidores reais e úteis.
+AC-04..06/CC-2..4/SC-3 exigem construção, rejeição, reuse e atualização observados onde aplicáveis ao domínio.
+AC-07/09/10, CC-5/7 e SC-5 exigem consistência, recuperação, callers e preservação/migração relevantes e comprovados.
+AC-08/CC-6/SC-4 requerem ledger próprio, incluindo juízes e correções; métricas ausentes permanecem `UNKNOWN`.
+DOD-1..7 requerem decisões locais explícitas e vínculos com gates/autoridade; aprovação técnica não fabrica aceite humano.
+Um workflow existente, YAML válido ou log antigo não comprova CI verde do candidato corrente.
+Registrar gates não executados como pendência precisa, sem paralisar produção e julgamento independentes.
 
-- `campaign-manifest.json`: manifesto comum, de autoria exclusiva S5, com população, fases, dependências e decisões.
-- `integration-manifest.json`: fonte integrada, kit, handoffs, arquivos e digests do candidato exato.
-- `judge-roster.json` e `judgments/`: IDs reais, responsabilidades, pacotes e decisões originais por versão.
-- `releases/`: decisões de barreira por contrato, camada e escopo, com cobertura completa.
-- `consumer-cases/`: tarefas públicas, controles de isolamento, leituras, respostas e decisões; preservar separação do oracle.
-- `global-acceptance.json`: todas as linhas AC/CC/SC/DoD, evidência decididora, veredito e limitação.
-- `historical-dispositions.md`: preservação, unresolved, obrigações herdadas, entrega e recursos próprios.
-- `criteria.json`: matriz de resultados atribuídos e integração dos critérios globais, no formato comum.
-- `handoff.json`: esquema `genesis-session-handoff/v1`, campanha `20261111-v1` e referências `{commit,path,sha256}`.
+## Saídas e entrega a ROOT
 
-Aplicar `handoffs.md`, sem SHA autorreferente; `ACCEPTED_SCOPED` e `GLOBAL_REVIEW_READY` são decisões com bindings.
+- `inventory.json`, `needs.json`, `acceptance-map.json`: população S5, fallback, fronteiras e necessidades locais.
+- `layers/`, `recipes/`, `manifests/`: L1–L4, fontes, corpos, receipts e dependências de cada candidato.
+- `judge-roster.json`, `judgments/`, `corrections/`: dois juízes locais, decisões por versão e resolução dos defeitos.
+- `consumer-cases/`, `evidence/`, `criteria.json`: consultas, provas executadas, gates e obrigações ainda abertas.
+- `reuse-ledger.json`, `execution-ledger.jsonl`, `proposals/`: continuidade v1, uso, tentativas incertas e deltas necessários.
+- `integration-inputs.json`: refs verificáveis das preparações globais v1 úteis a ROOT, sem declarar nova aceitação global.
+- `handoff.json`: estado e bindings conforme `handoffs.md`, distinguindo produzido, julgado e efetivamente executado.
 
-## Critérios globais e DoD
-
-**Axiomas/invariantes:** GO-A1..7 e GO-I1..8, aplicados à população repo-wide congelada.
-**AC próprios:** AC-02/03; integrar e decidir AC-01..10 sem retirar obrigações entre fatias.
-**CC:** verificar CC-1..7 individualmente, incluindo intermediários úteis, manutenção, recuperação e preservação.
-**SC:** verificar SC-1..5 com consumidores reais, limites congelados, reuso, economia honesta e consistência.
-**QS:** QS-1..6; juízo independente, contexto suficiente, escopo fixo e mecanismos mínimos.
-**DoD:** DOD-1..7 exigem decisões explícitas; unrun, unknown e ausência de autoridade permanecem nomeados.
-O repositório inteiro não recebe PASS por amostragem, contagem de claims, árvore completa ou sucesso do piloto.
-
-## Correções e término
-
-`READY_FOR_JUDGMENT` indica pacote pronto para decisão, nunca aceite presumido.
-`BLOCKED` conserva o que foi realizado e nomeia fonte/capacidade/garantia/autoridade faltante.
-O ciclo completo corrige defeitos demonstrados e revalida seus efeitos; não inclui polimento infinito ou busca de voto favorável.
-Após cada correção, enumerar os critérios fechados, os ainda abertos e o trabalho finito restante.
-Se não houver caminho suportado para uma obrigação, entregar a evidência e a próxima decisão necessária sem anunciar conclusão.
-Encerrar com commits/URLs verificáveis, juízos, cobertura repo-wide, execução integrada e o estado real da entrega.
+Entregar commits/paths/hashes a ROOT e encerrar o domínio no alcance demonstrado; não esperar o fim de S1–S4.
+ROOT compõe a união na branch/prefixo reservados e julga com seu par independente; S5 responde a correções de seu owner scope.
+Informar cobertura, camadas julgadas, consumidores, incertezas e próximo passo concreto de cada obrigação restante.

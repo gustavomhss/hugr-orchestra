@@ -1,131 +1,102 @@
-# Fatia 2 — construção cumulativa, reuso e rebuild
+# Fatia 2 — desktop, web, application shell e sistemas de interface
 
 ## Sumário
 
-[Missão](#missão-e-identidade) · [Fontes](#fontes-obrigatórias) · [Barreiras](#entradas-e-barreiras) ·
-[Execução](#execução-real) · [Saídas](#saídas-duráveis) · [Critérios](#critérios-locais).
-Aplicar também [campanha](campaign.md), [juízo](judging.md), [runtime](runtime.md) e [handoffs](handoffs.md).
+[Identidade](#identidade-e-início-independente) · [Domínio](#domínio-e-fronteiras) · [Execução](#execução-completa) · [Juízo](#dois-juízes-e-consumidores-locais) · [Critérios](#critérios-e-provas) · [Entrega](#saídas-e-encerramento).
+Aplicar [campanha](campaign.md), [juízo](judging.md), [runtime](runtime.md), [handoffs](handoffs.md) e [partição](parallel-partition.json).
 
-## Missão e identidade
+## Identidade e início independente
 
-Construir o conhecimento que falta para ownership do **Orchestra inteiro**, conforme o inventário finito de S1.
-Executar o produtor real, manter L1–L4 úteis e provar reutilização e atualização no caminho implementado.
-Esta fatia é G2 mais a construção faltante; não equivale a disparar arms legados de `atlas mine`.
+- Repositório: `gustavomhss/hugr-orchestra`; fatia `S2`.
+- `campaign`: `20261111-v1`; `protocol_epoch`: `parallel-v2`.
+- `results_epoch`: `20261111-v2-parallel`; branch preservada: `genesis-chatgpt-s2`.
+- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; registrar o commit real do kit.
+- Saídas: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s2/`.
+- Registrar fonte, HEAD efetivo, candidato, protocolo e hashes distintos conforme `handoffs.md`.
+- `integration_owner`: `root` (conversa original); branch integradora reservada: `genesis-chatgpt-final`.
+- Integração reservada a ROOT: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/integration/`.
 
-- Repositório: `gustavomhss/hugr-orchestra`.
-- Fonte inicial: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
-- Branch exclusiva: `genesis-chatgpt-s2`.
-- Evidência durável: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/`.
-- Registrar `source_revision`, `candidate_revision`, `protocol_revision` e dependências exatas conforme `handoffs.md`.
+Começar o ciclo completo deste domínio a partir do baseline e da partição já congelada.
+Não esperar inventário S1, implementação S4, julgamento ROOT nem output de outra conversa para produzir e julgar.
+O papel antigo de S2 como produtor repo-wide foi substituído; preservar seus resultados sem manter essa dependência.
 
-## Fontes obrigatórias
+## Domínio e fronteiras
 
-Ler `AGENTS.md`, `.orchestra/skills/atlas-{usage,maintenance,ownership}/SKILL.md` e, sob
-`modules/atlas/docs/design/`, `genesis-ownership-plan.md`, `genesis-global-completion-plan.md`,
-`genesis-ownership-seats.md`, `genesis-ownership-integration-fit.md` e `genesis-update-plan-contract.md`.
-Ler os handoffs aceitos pertinentes do corpus `genesis-ownership-results/` antes de reconstruir conhecimento.
-O corpus Session-input é evidência parcial reaproveitável, não cobertura dos outros domínios.
+Resolver ownership por `parallel-partition.json`, não por uma lista aproximada ou nomes de funcionalidades.
+Conferir **4.506 entradas**, com hash de caminhos `8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582`.
+O domínio inclui `apps/desktop`, `apps/web`, `apps/storybook`, `packages/app-shell`, `ui`, `session-ui` e `tui`.
+Incluir `assets/`, imagens, glossários, temas, schemas UI e docs/skills/briefs exatos atribuídos pelo manifesto.
+Specs `projects-board` e `orchestra-visual` pertencem a S2; `specs/atlas-ui/` pertence a S4 e pode ser consultado.
+Classificar todos os assets, fixtures, i18n, testes de browser e e2e; remeter gerados ao gerador/contrato quando adequado.
+Não confundir quantidade de arquivos de imagem/localização com quantidade de necessidades semânticas.
+Ler baseline de core, protocolo, Maestro, Atlas e Omni para verificar fronteiras sem esperar artefatos alheios.
 
-Inspecionar os seams concretos:
+Ler `AGENTS.md`, as skills Atlas aplicáveis e os contratos normativos listados em `campaign.md`.
+Inventariar bootstrap desktop, navegação, sessão, composer, terminal, configurações, erros e sincronização de estado.
+Relacionar componentes, contexto, acessibilidade, RTL/i18n, temas, recuperação e comunicação desktop/servidor.
+Distinguir intenção de design, comportamento de código e prova de interação efetivamente executada.
 
-- `modules/atlas/scripts/ownership-pilot.ts`.
-- `modules/atlas/packages/adapter-io/src/ownership-rebuild.ts` e `ownership-input.ts`.
-- `modules/atlas/packages/knowledge/src/ownership/update-plan.ts`.
-- `modules/atlas/packages/adapter-io/test/ownership-{rebuild,update,input}.test.ts`.
-- `modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts`.
+## Escrita e retomada
 
-Verificar comportamento e API reais no SHA usado, sem presumir que o nome `rebuild` prova execução completa.
-`ownership-pilot.ts` contém bindings específicos de Session-input, L1–L4 e juízes históricos.
-Congelar o fit e propor a extensão mínima necessária para domínios novos, a ser integrada por S5.
-Não apenas trocar IDs, estender manifests por texto ou tratar aceites do piloto como aceites repo-wide.
+Inspecionar primeiro a branch S2 e os outputs v1; manter objetos, receipts e decisões históricas imutáveis.
+Reutilizar somente equivalência demonstrada por hashes, fonte, receita, autoridade e critérios; não reiniciar tentativas incertas.
+Os patches v1 de producer/rebuild/importer que agora pertencem a Atlas devem ser referenciados para S4 por objeto exato.
+Não reaplicar esses patches em S2 nem alterar autoria/história para fazê-los parecer produzidos neste novo domínio.
+Escrever resultados novos no namespace `s2/`; manter propostas externas identificadas por arquivo e owner do manifesto.
+Mudanças mínimas de código necessárias ao Genesis podem ocorrer em candidato isolado dos componentes S2.
+Não esperar permissão global ROOT para correção própria; contratos comuns seguem proposta e coordenação com o owner.
+Não publicar aplicação, alterar produção ou iniciar uma reformulação de UI sob o pretexto de produzir ownership.
 
-## Escrita e propriedade
+## Execução completa
 
-Ser o único autor dos artefatos novos de construção sob `s2/` e das propostas relativas ao produtor/rebuild.
-Alterações locais de implementação podem possuir `ownership-rebuild.ts`, `update-plan.ts` e seus testes
-somente depois do contrato S1 congelar esse ownership e S5 registrar ausência de conflito.
-Manter mudanças no importer `ownership-pilot.ts` e em stores, tipos, exports e wrappers compartilhados
-como patches em `s2/proposals/`; S5 é o único integrador desses arquivos.
-Não editar corpos antigos aceitos; criar derivações explícitas quando uma correção for necessária.
-Não escrever na projeção servida, em políticas ou em outputs de S3/S4.
+1. Conferir capacidades reais, source pin e completude da materialização; blobs faltantes não contam como cobertura.
+2. Enumerar e classificar a população S2, separando fluxo de produto, componente, asset e superfície gerada.
+3. Congelar necessidades de manutenção e casos: estados, eventos, contrato de props, efeitos, erros e fronteiras.
+4. Vincular necessidade → artefato → fonte → caso → critério, incluindo consumo direto dos intermediários exigidos.
+5. Dividir produção entre subagentes disponíveis por componentes/fluxos, com contexto e escritas disjuntos.
+6. Produzir L1 atribuído a código/docs/config; preservar saídas originais e lacunas sobre comportamento não observado.
+7. Submeter a camada completa do escopo aos dois juízes locais; corrigir achados antes de liberar seu sucessor.
+8. Produzir L2 de componentes, L3 de fluxos e L4 de ownership/manutenção, sempre a partir de predecessores aceitos.
+9. Integrar relações entre shell, UI reutilizável, session-ui, TUI e superfícies desktop/web sem duplicar contratos.
+10. Preparar casos de mudança em composer/navegação, quebra de contrato de componente, recuperação de erro,
+    impacto sobre protocolo/core e pergunta fora do domínio; manter respostas esperadas separadas do produtor.
+11. Consumir pelo índice/leitor real quando disponível; evidenciar limite de contexto, aprofundamento e abstinência.
+12. Preservar conhecimento nativo julgável se importação/publicação/CI estiver indisponível e registrar o bloqueio exato.
 
-## Entradas e barreiras
+## Dois juízes e consumidores locais
 
-Consumir de S1 o inventário completo, o mapa de critérios, a autoridade das fontes e o contrato de execução.
-Verificar commit, digests e readiness das dependências; uma branch existente sem handoff válido não libera trabalho.
-Antes disso, pode preparar leitura de fontes e propostas de seam, preservando-as como preparação.
-Não inventar permissões, identidade de modelo ou um envelope econômico para suprir uma entrada ausente.
+Manter J1 de fidelidade/autoridade e J2 de completude/utilidade nesta sessão, com IDs reais persistidos.
+Ambos julgam todos os critérios aplicáveis do mesmo candidato; a ênfase não reduz cobertura nem permite autoaceite.
+Dar contexto independente e dossiers por escopo conforme `judging.md`; juiz não edita candidato ou oracle.
+Usar os mesmos agentes nas correções; conservar decisões anteriores e invalidar somente bindings afetados.
+Dois PASS são exigidos para liberar a camada local; HOLD/REQUEST_EVIDENCE não viram PASS por avanço de outra sessão.
+Separar consumidores dos produtores e do oracle; limitar o acesso ao caminho Atlas e registrar o isolamento possível.
+Incluir leitura raso/profunda e casos diretos de intermediários, não somente uma resposta baseada no documento L4.
+Screenshots, stories e testes existentes são fontes; só recibos de execução real comprovam a interação executada.
 
-L1 é base atribuída; L2 explica componentes; L3 integra fluxos; L4 prescreve ownership/manutenção.
-Todos os artefatos requeridos de uma camada do escopo congelado devem estar consolidados e aceitos
-pelos dois juízes de S5 antes de liberar a camada seguinte daquele escopo.
-O inventário cobre todo o repositório; uma fronteira aceita em um domínio não certifica os demais.
-Congelar as partições seguintes a partir dos outputs aceitos, sem impor quatro documentos por domínio.
+## Critérios e provas
 
-## Execução real
+Inventariar AC-01..10, CC-1..7, SC-1..5 e DOD-1..7 com aplicabilidade S2, evidência, estado e dependência concreta.
+Aplicar GO-A1..7, GO-I1..8 e QS-1..6; manter obrigações compartilhadas abertas quando a prova não existir.
+AC-01/CC-1 requerem necessidades finitas e cobertura dos fluxos UI, incluindo erro, recuperação e configuração.
+AC-02/03, CC-2/3 e SC-1/2 requerem artefatos úteis e consumidores reais, com índices, limites e intermediários.
+AC-04..06/CC-4/SC-3 requerem recusas, reuso e rebuild observados onde aplicáveis, sem inferi-los de JSON preparado.
+AC-07/09/10, CC-5/7 e SC-5 exigem fronteiras de atualização, host e compatibilidade quando afetadas por S2.
+AC-08/CC-6/SC-4 incluem todos os produtores, juízes e correções; uso/custo não expostos permanecem `UNKNOWN`.
+Não executar testes locais, browser/e2e ou smoke tests sem autorização explícita; preparar gates de CI aplicáveis.
+Um gate não executado mantém seu critério aberto; não bloqueia produção/julgamento independente nem vira verde presumido.
 
-1. Recuperar as fontes exatas e demonstrar completude do checkout ou dos pacotes necessários.
-   Snapshot parcial, blobs ausentes ou índice stale não viram uma construção bem-sucedida vazia.
-2. Fazer as derivações mecânicas com ferramentas; reservar a inferência nativa para interpretação e composição.
-   Distribuir tarefas disjuntas entre subagentes conforme a concorrência efetiva do host, em rodadas se necessário.
-3. Gerar pacotes com fontes, objetivos, saídas e critérios próprios, registrando as identidades antes da emissão.
-   Manter os casos e respostas reservados do consumidor fora da visão dos produtores.
-4. Construir L1 incorporando código, produto, docs, configurações, testes e skills que o inventário exige.
-   Separar comportamento observado, intenção autorizada, inferência e lacuna; conflito não se resolve por votação.
-5. Consolidar as saídas originais, verificar cobertura e encaminhar o manifesto exato aos juízes de S5.
-   Persistir recusas e correções; não reexecutar irmãos concluídos apenas porque outro falhou.
-6. Após o aceite da dependência completa, repetir o procedimento para L2, L3 e L4.
-   Encaminhar gaps descobertos a trabalhos inferiores limitados, com invalidadores explícitos.
-7. Entregar as respostas dos agentes pelo contrato real do produtor/importer, mantendo a verificação do Atlas.
-   Preservar outputs nativos originais e executar a nova receita após conformance; autoria nativa pode produzir conhecimento.
-   Um texto ou JSON final montado à mão não prova que o caminho de construção recebeu e validou entradas.
-8. Exercitar stale, conflicting, missing e malicious-source com fixtures claramente rotuladas.
-   Observar recusas reais antes de admissão/publicação indevida; não atribuir autoridade a instruções da fonte.
-9. Reexecutar uma receita válida e idêntica no caminho real, demonstrando cache hit e zero novas interpretações.
-   Um recibo fabricado com contador zero não é cache hit; ligar contagens ao registro de execução de S1.
-10. Executar edição independente, prosa igual com autoridade/validade/gaps diferentes e renovação só de recibo.
-    Verificar propagação do resultado visível correto e atualização de bindings sem interpretação desnecessária.
-11. Congelar expected sets independentes para behavior edit, source addition/removal, intent-doc e recipe change.
-    Executar seleção e rebuild até conclusão, mantendo escopos não afetados; staleness sozinho não fecha AC-06.
-12. Verificar que resultado validado idêntico encerra propagação, build edge invalida e navegação não invalida.
-    Exigir que controles com edge/input removido invalidem o oracle que protegem, sem duplicar o algoritmo no teste.
-13. Entregar a S3 artefatos completos e receitas versionadas, ainda candidatos sem autoridade de servir.
-    Entregar a S5 os pacotes de juízo, cobertura e evidência real de construção/reutilização/rebuild.
+## Saídas e encerramento
 
-## Saídas duráveis
+ROOT cria seu próprio par `integration/J1` e `integration/J2`; os dois juízes locais não assumem a integração final.
 
-- `layers/`: saídas originais, consolidações, dependências e manifestos exatos de L1–L4 por escopo.
-- `recipes/`: receitas/contratos e seus inputs, identidades de resultado e recibos de execução.
-- `cases/`: positivos e recusas de construção, cache, propagação e rebuild com resultados observados.
-- `proposals/`: patches de seams compartilhados, com motivo e testes necessários, sem aplicação concorrente.
-- `criteria.json`: critérios atribuídos, vereditos e evidências no formato comum.
-- `handoff.json`: esquema `genesis-session-handoff/v1`, campanha `20261111-v1` e referências `{commit,path,sha256}`.
+- `inventory.json`, `needs.json`, `acceptance-map.json`: componentes, fluxos, assets representados e critérios locais.
+- `layers/`, `recipes/`, `manifests/`: conhecimento cumulativo, dependências e vínculos exatos de fontes e outputs.
+- `judge-roster.json`, `judgments/`, `corrections/`: dois votos por camada/revisão e resolução de achados.
+- `consumer-cases/`, `evidence/`, `criteria.json`: tarefas independentes, consultas observadas e gates pendentes.
+- `reuse-ledger.json`, `execution-ledger.jsonl`, `proposals/`: reuso v1, repasse exato para S4 e tentativas/uso preservados.
+- `handoff.json`: identidade/bindings conforme `handoffs.md`; informar o estado real de cada artefato e prova.
 
-Seguir `handoffs.md` para revisões/dependências, evitando o SHA autorreferente do commit que contém o handoff.
-
-Registrar CLI/runtime realmente usados, ambiente, retorno e evidência reproduzível, inclusive execução parcial.
-Se um teste exigir CI pelas regras do repositório, guardar o teste e reportar `not_run` até haver runner permitido.
-Não substituir a política de testes por uma execução local oculta nem afirmar que o workflow é obrigatório para produzir.
-
-## Critérios locais
-
-**Axiomas:** GO-A1/2/3/4/5/6/7; construção cumulativa, consumo progressivo e manutenção pelo mesmo contrato.
-**Invariantes:** GO-I1/2/3/4/5/7/8; preservar originais, autoridade, invalidadores e resultados aceitos exatos.
-**AC próprios:** AC-04/05/06; contribuir com artefatos realmente utilizáveis para AC-01/02/03.
-**CC:** CC-2 exige intermediários persistidos e úteis; CC-3 exige conteúdo sustentado; CC-4 exige ciclo completo.
-**SC:** SC-3 exige affected set e reuso corretos; SC-1/2 serão julgados pelos consumidores independentes de S5.
-**QS:** QS-1..6; não criar conhecimento redundante, mecanismo especulativo ou evidência sintética apresentada como real.
-
-**DoD local:** o inventário inteiro tem produção aceita ou pendência explícita; não há conclusão por amostragem.
-Cada camada requerida possui saída persistida e decisão independente sobre a versão exata.
-Os controles de AC-04/05/06 executados têm recibos; ausências permanecem abertas.
-S3 recebe dados candidatos coerentes e S5 recebe casos de consumo sem respostas vazadas aos consumidores.
-
-## Estado e correção
-
-Usar `READY_FOR_JUDGMENT` quando o pacote puder ser julgado; o autor não declara seu próprio PASS.
-Usar `BLOCKED` para pré-requisito, runtime ou evidência crítica ausente, preservando tudo que já foi produzido.
-Corrigir apenas defeitos concretos do contrato fixado; cada correção identifica o antes/depois e os invalidadores.
-Não refazer áreas aceitas por polimento opcional nem remendar respostas reservadas para obter aprovação.
-Não reiniciar o M1 antigo, não emitir comandos pagos externos e não promover candidatos por conta própria.
-Encerrar com commit/URL, população coberta, camadas aceitas, execuções, juízos e restante explícito.
+Entregar a ROOT S2 completo no alcance demonstrado, sem alegar aceitação de backend, Atlas ou Orchestra inteiro.
+Persistir checkpoints e prosseguir no trabalho independente quando faltar uma capacidade de execução específica.
+Encerrar com commits, cobertura, camadas julgadas, consumidores, patches necessários e obrigações remanescentes.

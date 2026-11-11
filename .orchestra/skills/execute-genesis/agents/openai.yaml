@@ -1,4 +1,4 @@
 interface:
-  display_name: "Genesis em cinco sessões"
-  short_description: "Genesis completo em cinco sessões e dois juízes"
-  default_prompt: "Use $execute-genesis para executar minha fatia do Genesis com evidências e julgamento independente."
+  display_name: "Genesis: cinco orquestradoras"
+  short_description: "Cinco domínios paralelos, subagentes e juízes locais"
+  default_prompt: "Use $execute-genesis para orquestrar minha fatia inteira do Genesis, delegar a subagentes, julgar, corrigir e entregar tudo; a integração final fica com a conversa original."
