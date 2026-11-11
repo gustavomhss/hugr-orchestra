@@ -22,6 +22,7 @@ export async function cliServicesInactive(stateHomes: readonly string[]) {
     stateHomes.map(async (home) => {
       const file = join(home, "orchestra", "server.json")
       try {
+        if (!(await stateDirectorySafe(home)) || !(await stateDirectorySafe(dirname(file)))) return false
         const stat = await lstat(file)
         if (!stat.isFile() || stat.isSymbolicLink()) return false
         const value: unknown = JSON.parse(await readFile(file, "utf8"))
@@ -46,6 +47,16 @@ export async function cliServicesInactive(stateHomes: readonly string[]) {
     }),
   )
   return inactive.length > 0 && inactive.every(Boolean)
+}
+
+async function stateDirectorySafe(directory: string): Promise<boolean> {
+  try {
+    const stat = await lstat(directory)
+    return stat.isDirectory() && !stat.isSymbolicLink()
+  } catch (error) {
+    const parent = dirname(directory)
+    return (error as NodeJS.ErrnoException).code === "ENOENT" && parent !== directory && stateDirectorySafe(parent)
+  }
 }
 
 // Optional cleanup never prevents starting the verified CLI. An active or uncertain old daemon retains its files.
