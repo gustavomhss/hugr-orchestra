@@ -1,0 +1,2233 @@
+[
+  {
+    "path": "AGENTS.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+    "byte_length": 16501,
+    "line_count": 223,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "repository.constraints"
+    ],
+    "read_ranges": [
+      [
+        1,
+        223
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 4,
+        "topic": "Generated client and architecture constraints"
+      },
+      {
+        "start_line": 146,
+        "end_line": 166,
+        "topic": "Runtime versus repository-only material; tests only on CI"
+      },
+      {
+        "start_line": 168,
+        "end_line": 180,
+        "topic": "Process spawning and CI cadence"
+      },
+      {
+        "start_line": 194,
+        "end_line": 205,
+        "topic": "Guardrail and typecheck entry"
+      }
+    ]
+  },
+  {
+    "path": "docs/guides/rag-studio.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "acc567aeab0397965cc7ef048a666ffd07631b830ad44cb2b7ec2974a0713cfa",
+    "byte_length": 1014,
+    "line_count": 15,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        15
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 15,
+        "topic": "User-facing product, diagnostic, maintenance and exclusion promises"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/ACCEPTANCE.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "4d1e01abb25b8b0ddbab0c5cda9384aae0b470d8fb06637ec7b11ee1e0a05315",
+    "byte_length": 14425,
+    "line_count": 89,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        89
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 5,
+        "topic": "Historical red/not built label"
+      },
+      {
+        "start_line": 9,
+        "end_line": 29,
+        "topic": "Admission, parse, revision, search and embedding-off requirements"
+      },
+      {
+        "start_line": 30,
+        "end_line": 52,
+        "topic": "Trace, lights, prompt and proof requirements"
+      },
+      {
+        "start_line": 53,
+        "end_line": 79,
+        "topic": "Separated passes, failure, membership and preservation requirements"
+      },
+      {
+        "start_line": 80,
+        "end_line": 89,
+        "topic": "Owner-judged UI criteria, not automatically green"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/CONTRACT.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "c88ddcb1a00d27e6a29b92afb20b428b7dca29350eea7312fd6aa2eb67d4f52e",
+    "byte_length": 3519,
+    "line_count": 99,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        99
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 5,
+        "topic": "Contract hash authority and historical hashes"
+      },
+      {
+        "start_line": 10,
+        "end_line": 65,
+        "topic": "Frozen data shapes"
+      },
+      {
+        "start_line": 70,
+        "end_line": 99,
+        "topic": "Frozen operations and product exclusions"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/DESIGN.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "38e058e302732aa65daaa31a20f2e0723b10278cba7a7907951d67a99c21bead",
+    "byte_length": 14019,
+    "line_count": 148,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        148
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 5,
+        "topic": "Product design authority, not authorization"
+      },
+      {
+        "start_line": 24,
+        "end_line": 57,
+        "topic": "Admitted corpus, diagnostic purpose and revision/span concepts"
+      },
+      {
+        "start_line": 79,
+        "end_line": 107,
+        "topic": "Revision-bound proof and explicit maintenance intentions"
+      },
+      {
+        "start_line": 109,
+        "end_line": 148,
+        "topic": "Exclusions, Location/trust boundary, embedding-off decision and explicit research unknowns"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/REQUIREMENTS.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "566eb3d7935b139b4422e569aa3494d87311d4b4b0b67f4018545ae467094a45",
+    "byte_length": 3544,
+    "line_count": 69,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        69
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 5,
+        "topic": "Acceptance-led requirements and stale contract hash"
+      },
+      {
+        "start_line": 7,
+        "end_line": 59,
+        "topic": "Admission, lifecycle, search, proof and isolation groups"
+      },
+      {
+        "start_line": 61,
+        "end_line": 69,
+        "topic": "Human screen judgments and coverage discipline"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/SPEC.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "58d6ee79e20bcc10bdc8d312571dcd48b1aef49594a6302ff9983448e22fdadc",
+    "byte_length": 7162,
+    "line_count": 103,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        103
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 34,
+        "topic": "Historical status, architecture ownership and frozen representation"
+      },
+      {
+        "start_line": 36,
+        "end_line": 77,
+        "topic": "Tables, Location scope, operation semantics and explicit passes"
+      },
+      {
+        "start_line": 79,
+        "end_line": 103,
+        "topic": "Lights, owner-facing screen obligations and exclusions"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/TASKS.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "c1828a9f03485973f0aa6499b32af4d011ad0822406a5700d982d9422fa9b4e2",
+    "byte_length": 179,
+    "line_count": 3,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        3
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "topic": "Explicitly superseded by work-packages"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/WAVE.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "0534955e3f32bf588eaa6fc1a8085e8e263967af367dccc2db56e23013b15577",
+    "byte_length": 3025,
+    "line_count": 49,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        49
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 22,
+        "topic": "Historical plan/status and superseded contract hash"
+      },
+      {
+        "start_line": 24,
+        "end_line": 49,
+        "topic": "Engine/UI ownership matrix and declared checks"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/seam.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "39344c27b92590058e976c97794e589ca4897232179e21ec1cd6bcbf70e712d0",
+    "byte_length": 3724,
+    "line_count": 149,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        149
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 149,
+        "topic": "Generated type/function stub matching fb61d451; not production implementation"
+      }
+    ]
+  },
+  {
+    "path": "docs/specs/rag-studio/work-packages.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "76cfc21a34cc785ab0b41c9f00bcce71f5226de87957e1ccdf0860fbf148ba0e",
+    "byte_length": 2690,
+    "line_count": 51,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.contract_docs"
+    ],
+    "read_ranges": [
+      [
+        1,
+        51
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 7,
+        "topic": "Mixed contract hashes and lead-owned integration files"
+      },
+      {
+        "start_line": 11,
+        "end_line": 39,
+        "topic": "File-to-acceptance ownership"
+      },
+      {
+        "start_line": 41,
+        "end_line": 51,
+        "topic": "Historical sequence and exclusions"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/boundary/package.json",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb",
+    "byte_length": 1773,
+    "line_count": 63,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        63
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 31,
+        "end_line": 34,
+        "topic": "Context public entry points"
+      },
+      {
+        "start_line": 44,
+        "end_line": 48,
+        "topic": "Generation/check scripts"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/boundary/script/build.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c",
+    "byte_length": 4743,
+    "line_count": 85,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        85
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 20,
+        "end_line": 21,
+        "topic": "Context entry maps to adapter-io/src/context-log.ts"
+      },
+      {
+        "start_line": 29,
+        "end_line": 47,
+        "topic": "Nested source resolution and generated bundling"
+      },
+      {
+        "start_line": 65,
+        "end_line": 81,
+        "topic": "Declaration generation and exact generated-byte check implementation"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/boundary/src/generated/context.d.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+    "byte_length": 2463,
+    "line_count": 72,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        72
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 46,
+        "topic": "Generated reference/event/archive/read shapes"
+      },
+      {
+        "start_line": 47,
+        "end_line": 70,
+        "topic": "Generated scrub/export/read public signatures"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/boundary/src/generated/context.js",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+    "byte_length": 22119,
+    "line_count": 3,
+    "inspection": "selected_symbol_snippets_not_full_file",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        1
+      ],
+      [
+        3,
+        3
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 1,
+        "topic": "Selected scrub function snippet only; minified line not fully read"
+      },
+      {
+        "start_line": 3,
+        "end_line": 3,
+        "topic": "Selected context scrub/export/read and export-list snippets only"
+      }
+    ],
+    "range_coverage": "Only recorded character spans were inspected; listed minified lines are not whole-line reads.",
+    "read_character_ranges": [
+      {
+        "start_character": 16646,
+        "end_character_exclusive": 17026,
+        "unit": "Unicode code points",
+        "symbol_marker": "function scrub(buffer)"
+      },
+      {
+        "start_character": 18354,
+        "end_character_exclusive": 18554,
+        "unit": "Unicode code points",
+        "symbol_marker": "function scrubText(text)"
+      },
+      {
+        "start_character": 18450,
+        "end_character_exclusive": 20000,
+        "unit": "Unicode code points",
+        "symbol_marker": "function exportContext("
+      },
+      {
+        "start_character": 20749,
+        "end_character_exclusive": 21579,
+        "unit": "Unicode code points",
+        "symbol_marker": "function readContextChunk("
+      },
+      {
+        "start_character": 22053,
+        "end_character_exclusive": 22115,
+        "unit": "Unicode code points",
+        "symbol_marker": "export{scrubText"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/context-log.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "b1960b9f9230f8bf44a594a37e64900ded64ad0accf94ce9f4cd63d4d736cc9c",
+    "byte_length": 8798,
+    "line_count": 202,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        202
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 17,
+        "topic": "Continuity archive transport and caller visibility responsibility"
+      },
+      {
+        "start_line": 55,
+        "end_line": 115,
+        "topic": "Scrub bridge, export hash checks, event deltas and commit-gated blobs"
+      },
+      {
+        "start_line": 118,
+        "end_line": 170,
+        "topic": "Session/event filtering, deterministic fold and seat-wide hash/byte verified read"
+      },
+      {
+        "start_line": 174,
+        "end_line": 202,
+        "topic": "Read-error collapse and event shape validation"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/durable-log.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "8eddcd47971e4d5e717f03d2753edd45f0feba9400dd922e51e737162b7f34b5",
+    "byte_length": 12078,
+    "line_count": 201,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        201
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 20,
+        "end_line": 45,
+        "topic": "Declared append/filesystem/travel bounds"
+      },
+      {
+        "start_line": 105,
+        "end_line": 167,
+        "topic": "Content-keyed line parse, rejection counts, unreadable distinction and append"
+      },
+      {
+        "start_line": 174,
+        "end_line": 201,
+        "topic": "Read aggregation and unreadable directory representation"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/layout.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "686c591c2a19c391d35cea5857dc773dfa57c4cc3ce6509f3a02f2ec9fa99d72",
+    "byte_length": 4753,
+    "line_count": 77,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        77
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 52,
+        "end_line": 77,
+        "topic": "Context logs, hash-sharded blobs and encoded path segments"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "f513da7f05ac4b65805aa200b8d0963b389faeb5769a91c73b95d58ea50d9e31",
+    "byte_length": 2419,
+    "line_count": 48,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        48
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 17,
+        "end_line": 31,
+        "topic": "GitHub status/private flag decision with 404-private exception"
+      },
+      {
+        "start_line": 33,
+        "end_line": 47,
+        "topic": "Recognized remote forms and origin resolution"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/packages/persist/src/scrub-scan.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "ba3db37c8924196e5f128c4fe53c5df24fb0e0bdd6e4ca6f6bdf3dd6ce1d4a5c",
+    "byte_length": 10152,
+    "line_count": 202,
+    "inspection": "selected_ranges_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        32,
+        92
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 32,
+        "end_line": 91,
+        "topic": "Whole-buffer matching via declared shapes and replacement preserving unmatched bytes"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/packages/persist/src/scrub-shapes.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "bcd776dceda68d391a8d98902fa628cbbc3b706bf2e692042b4d0aed8c0a047f",
+    "byte_length": 20447,
+    "line_count": 326,
+    "inspection": "selected_ranges_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        74,
+        142
+      ],
+      [
+        255,
+        261
+      ],
+      [
+        295,
+        326
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 75,
+        "end_line": 142,
+        "topic": "Exactly four declared credential families and suffix over-redaction"
+      },
+      {
+        "start_line": 255,
+        "end_line": 261,
+        "topic": "Shape set derived from family declaration"
+      },
+      {
+        "start_line": 295,
+        "end_line": 326,
+        "topic": "Explicitly excluded JWT, PEM private key and AWS secret-key shapes"
+      }
+    ]
+  },
+  {
+    "path": "modules/atlas/packages/persist/src/scrub.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "7b0546b71d861c65d205610be53a921ef37a3b0eff592b5c525efc577994de7b",
+    "byte_length": 13393,
+    "line_count": 209,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.atlas_boundary"
+    ],
+    "read_ranges": [
+      [
+        1,
+        209
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 60,
+        "topic": "Declared reachability, seam scope and four-family limitation"
+      },
+      {
+        "start_line": 73,
+        "end_line": 109,
+        "topic": "Byte-preserving whole-buffer scan used by context scrubText"
+      },
+      {
+        "start_line": 131,
+        "end_line": 209,
+        "topic": "Streaming carry library surface, not called by context scrubText"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/README.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "b1d1b9e3ddd3c7e4f521ed1fcfe88865b9030da4f7c32c3a2d94f1f333774ba2",
+    "byte_length": 2182,
+    "line_count": 46,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.entry"
+    ],
+    "read_ranges": [
+      [
+        1,
+        46
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 25,
+        "topic": "Purpose, exports, consumer and persistence claim"
+      },
+      {
+        "start_line": 29,
+        "end_line": 45,
+        "topic": "Commands and canonical ownership"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/bunfig.toml",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "174c7f2ecfee93036a37ef65e0b440033c024ee413d8eb7668d124fdc717c5be",
+    "byte_length": 125,
+    "line_count": 3,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.entry"
+    ],
+    "read_ranges": [
+      [
+        1,
+        3
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "topic": "CI test guard and isolated test preload"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/package.json",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "f81d4c7950311726334b06e1726d97da3b92749bcbcb3a94748fd023c626efbe",
+    "byte_length": 800,
+    "line_count": 30,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.entry"
+    ],
+    "read_ranges": [
+      [
+        1,
+        30
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 8,
+        "end_line": 23,
+        "topic": "Exports, scripts and dependency boundary"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/archive-search.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "8d85fe6fda2c47a243307f25d279120bf473d81393194864d8fd5d94f2b610f8",
+    "byte_length": 3009,
+    "line_count": 70,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.recall"
+    ],
+    "read_ranges": [
+      [
+        1,
+        70
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 48,
+        "topic": "AND term matching, normalized tokens and ranking/tie-break contracts"
+      },
+      {
+        "start_line": 51,
+        "end_line": 67,
+        "topic": "Minimum term window calculation"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/masking-rules.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2",
+    "byte_length": 4423,
+    "line_count": 66,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.masking"
+    ],
+    "read_ranges": [
+      [
+        1,
+        66
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 7,
+        "end_line": 20,
+        "topic": "Protected tools, tail/error limits, identifying arguments and media budget"
+      },
+      {
+        "start_line": 22,
+        "end_line": 66,
+        "topic": "Context-sensitive media estimation and stub signature"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/v2/alias.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "b687eba96722bcfddb01d381865d82c477e960a6564691a823f1c7488990bde3",
+    "byte_length": 1994,
+    "line_count": 49,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.recall"
+    ],
+    "read_ranges": [
+      [
+        1,
+        49
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 49,
+        "topic": "Stable full-history aliases and human question answers"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/v2/archive.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e",
+    "byte_length": 10672,
+    "line_count": 253,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.archive"
+    ],
+    "read_ranges": [
+      [
+        1,
+        253
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 11,
+        "end_line": 49,
+        "topic": "Disk layout, identities, schema versions and legacy mask compatibility"
+      },
+      {
+        "start_line": 53,
+        "end_line": 116,
+        "topic": "Fencing, scrub-before-hash splitting and indexed publication"
+      },
+      {
+        "start_line": 123,
+        "end_line": 178,
+        "topic": "Local/committed lookup, export and mask persistence"
+      },
+      {
+        "start_line": 200,
+        "end_line": 253,
+        "topic": "Metadata/content validation, atomic file writes and error mapping"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/v2/index.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "8389f6d19d977e4403d2acc9c5e74c37b56ea3eb405bc03ae0a48751a6a53430",
+    "byte_length": 682,
+    "line_count": 17,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.entry"
+    ],
+    "read_ranges": [
+      [
+        1,
+        17
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 17,
+        "topic": "Host contribution replacing SessionCompaction and registering tools"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/v2/masking.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "661fede4e33ded28f660993632f6b99cde26b5678cb0eb6079c989e14692acc3",
+    "byte_length": 6580,
+    "line_count": 140,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.masking"
+    ],
+    "read_ranges": [
+      [
+        1,
+        140
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 22,
+        "end_line": 81,
+        "topic": "Tail/urgent candidates, request-only substitution and error heads"
+      },
+      {
+        "start_line": 83,
+        "end_line": 111,
+        "topic": "Archived call/output rendering and attachment naming"
+      },
+      {
+        "start_line": 124,
+        "end_line": 138,
+        "topic": "Provider-executed/protected exclusions and positive savings"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/v2/strategy.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121",
+    "byte_length": 14666,
+    "line_count": 324,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.compaction"
+    ],
+    "read_ranges": [
+      [
+        1,
+        324
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 14,
+        "end_line": 106,
+        "topic": "Settings, thresholds, usage, Location-scoped state"
+      },
+      {
+        "start_line": 122,
+        "end_line": 180,
+        "topic": "Core fallback, mask restoration and publish-before-mask relief"
+      },
+      {
+        "start_line": 183,
+        "end_line": 254,
+        "topic": "Summary race rejection, lifetime and failure circuit"
+      },
+      {
+        "start_line": 256,
+        "end_line": 324,
+        "topic": "Compaction hooks, transformation and service dependencies"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/src/v2/tools.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "86e9f6677a2e3fa088cefeb85150e7b98befbd5a781a83da57a906985af086df",
+    "byte_length": 16928,
+    "line_count": 349,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.recall"
+    ],
+    "read_ranges": [
+      [
+        1,
+        349
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 22,
+        "end_line": 75,
+        "topic": "Recall input modes, byte/offset budgets and historical-data instruction"
+      },
+      {
+        "start_line": 77,
+        "end_line": 152,
+        "topic": "Location/session/agent identity, permissions and tool registration"
+      },
+      {
+        "start_line": 154,
+        "end_line": 245,
+        "topic": "JSON lookup, inline media omission and literal history search"
+      },
+      {
+        "start_line": 248,
+        "end_line": 349,
+        "topic": "Archive fallback, failure response mapping, local list/search and paging"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/test/fixture.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "75193b498db8e5b76a92c807f5bea3eb284d8735c06264d8a6e3f23d5f544b6e",
+    "byte_length": 4798,
+    "line_count": 116,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        116
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 16,
+        "end_line": 39,
+        "topic": "Fake model, recall tool, scoped execution and config fixtures"
+      },
+      {
+        "start_line": 41,
+        "end_line": 98,
+        "topic": "Session seeding and controllable summary client"
+      },
+      {
+        "start_line": 100,
+        "end_line": 116,
+        "topic": "Permission assertion fixture always allows"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/test/preload.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "ca32aadd5be7dde4307a11098e242a0b687d9344cc6c82b16e2f24e6ed4483b8",
+    "byte_length": 374,
+    "line_count": 8,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        8
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 8,
+        "topic": "Isolated memory DB, temporary data home, disabled model fetch"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/test/v2-maintenance.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "779520c5718f4db703b845d509be3c57bcf42c1a5e9b17b3ffe2ae6e3e1e6dd7",
+    "byte_length": 7463,
+    "line_count": 169,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        169
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 34,
+        "end_line": 81,
+        "topic": "Core/projector fixture with controlled summary lifetime"
+      },
+      {
+        "start_line": 83,
+        "end_line": 144,
+        "topic": "Trigger, concurrency, stale result and failure circuit cases"
+      },
+      {
+        "start_line": 147,
+        "end_line": 168,
+        "topic": "Manual compaction and overflow fallback cases"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/test/v2-strategy.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "294bcfcc0129ad05a7dbc6d72cae7c42fd58664d0f055bf510525e7555b9e3c9",
+    "byte_length": 8366,
+    "line_count": 177,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        177
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 50,
+        "end_line": 61,
+        "topic": "Declared thresholds and usage checks"
+      },
+      {
+        "start_line": 65,
+        "end_line": 157,
+        "topic": "Declared archive restoration, recall requirement, small/disabled behavior"
+      },
+      {
+        "start_line": 161,
+        "end_line": 175,
+        "topic": "Error heads and urgent masking"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/test/v2-tools.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "6fefe07d8706cefd75e62223d8df668c512009c02fa00e4a7de8d6d36f03c3f3",
+    "byte_length": 9870,
+    "line_count": 224,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        224
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 32,
+        "end_line": 48,
+        "topic": "Tool registry with substituted permission/config/Location dependencies"
+      },
+      {
+        "start_line": 109,
+        "end_line": 150,
+        "topic": "Permission, full-history lookup, aliases and history search cases"
+      },
+      {
+        "start_line": 154,
+        "end_line": 193,
+        "topic": "Archive queries, committed predecessor and credential-shape scrub cases"
+      },
+      {
+        "start_line": 195,
+        "end_line": 220,
+        "topic": "Mode exclusivity and manual/disabled compaction cases"
+      }
+    ]
+  },
+  {
+    "path": "modules/continuity/tsconfig.json",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "3df4325e492f669f48b2329b1f4a4d508afcde9db17807217bc4ac35b99524cf",
+    "byte_length": 280,
+    "line_count": 9,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "continuity.entry"
+    ],
+    "read_ranges": [
+      [
+        1,
+        9
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 8,
+        "topic": "Compiler base, libraries and included source/test files"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/README.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "216bbf5ec6ebb921fb56bbe6b348f26a78655f735c4aa0600c9033971c9f863d",
+    "byte_length": 2270,
+    "line_count": 48,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.entry_store"
+    ],
+    "read_ranges": [
+      [
+        1,
+        48
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 35,
+        "topic": "Purpose, ownership, stale entry claim, SQLite boundary and contract"
+      },
+      {
+        "start_line": 39,
+        "end_line": 47,
+        "topic": "Module ownership and dependency layer"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/bunfig.toml",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b",
+    "byte_length": 104,
+    "line_count": 3,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.entry_store"
+    ],
+    "read_ranges": [
+      [
+        1,
+        3
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "topic": "CI-only test guard"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/package.json",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "07b99e3ef5b6d04707491e14185797902d0c1f6e34c773b2ca2d5fc52458d0f7",
+    "byte_length": 525,
+    "line_count": 24,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.entry_store"
+    ],
+    "read_ranges": [
+      [
+        1,
+        24
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 8,
+        "end_line": 18,
+        "topic": "Actual barrel and extractor exports; hashing/PDF dependencies"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/admit.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "1ea61a8352cc98d7fb6c2d51b6d20f1e59d7b99e37a06b453a8f1f5265661b06",
+    "byte_length": 1518,
+    "line_count": 38,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.admission"
+    ],
+    "read_ranges": [
+      [
+        1,
+        38
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 4,
+        "end_line": 28,
+        "topic": "Permission gate, read/hash, stable id and idempotent status"
+      },
+      {
+        "start_line": 31,
+        "end_line": 38,
+        "topic": "Location-filtered sorted inventory"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/ask.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7",
+    "byte_length": 1872,
+    "line_count": 41,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.retrieval_diagnosis"
+    ],
+    "read_ranges": [
+      [
+        1,
+        41
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 9,
+        "end_line": 22,
+        "topic": "Revision/live-stale rejection and boundary filtering"
+      },
+      {
+        "start_line": 23,
+        "end_line": 40,
+        "topic": "Owner selection, cut, diagnosis and revision-keyed trace"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/compare.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825",
+    "byte_length": 2337,
+    "line_count": 51,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.revision_proof"
+    ],
+    "read_ranges": [
+      [
+        1,
+        51
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 31,
+        "topic": "Snapshot/proof-set equality, exactly one field and all Store questions"
+      },
+      {
+        "start_line": 34,
+        "end_line": 50,
+        "topic": "Current-text/cut span resolution"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/context.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "f6d07d8da485a0e8119ec982b9a39b1ddfcf908673888c74f48ad69120fd17b6",
+    "byte_length": 7467,
+    "line_count": 256,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.entry_store",
+      "rag.admission"
+    ],
+    "read_ranges": [
+      [
+        1,
+        256
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 55,
+        "topic": "Frozen contract, BLAKE3, lexical path gates and defaults"
+      },
+      {
+        "start_line": 57,
+        "end_line": 123,
+        "topic": "Store row identities and adapter operations"
+      },
+      {
+        "start_line": 125,
+        "end_line": 148,
+        "topic": "Required async Store context, prompt IDs and current-text span resolution"
+      },
+      {
+        "start_line": 150,
+        "end_line": 245,
+        "topic": "Map-based implementation and no-op activity counters"
+      },
+      {
+        "start_line": 248,
+        "end_line": 256,
+        "topic": "Public source projection"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/embed-off.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "4b1ee32e29cd713ecf13ef7905a770f045530b05ba7f7bdcc1fbb1e9ed3715ba",
+    "byte_length": 132,
+    "line_count": 3,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.embedding_off"
+    ],
+    "read_ranges": [
+      [
+        1,
+        3
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "topic": "Embedding always refused"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/extract.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "b45b137f1a23432385312a6f5132a0622e68a31a83652c4a3efb69043f98a8d8",
+    "byte_length": 750,
+    "line_count": 16,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle"
+    ],
+    "read_ranges": [
+      [
+        1,
+        16
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 16,
+        "topic": "Bun text/PDF extraction, blank-page failure and extracted-text return"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/fill.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "9345360a0d1f1e8f15de6bd3dd8d7b860ce448c6d52e637b8e514b9fe96bdadf",
+    "byte_length": 51,
+    "line_count": 1,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.revision_proof"
+    ],
+    "read_ranges": [
+      [
+        1,
+        1
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 1,
+        "topic": "Only re-exports revision fill/open functions"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/guard.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "c1276e7628a49457ff8fb4343a6ae2c6d7bbf75e3082a2f9c50a9e3fc9f7660a",
+    "byte_length": 230,
+    "line_count": 6,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle"
+    ],
+    "read_ranges": [
+      [
+        1,
+        6
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 6,
+        "topic": "Multi/zero-pass refusal; singleton throws"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/index.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "703788df0a8690f4adc75ec4543cf0849d0a187687ed47fc60c7a1cec552066a",
+    "byte_length": 689,
+    "line_count": 15,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.entry_store"
+    ],
+    "read_ranges": [
+      [
+        1,
+        15
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 15,
+        "topic": "Public production surface including Store and memoryStore"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/isolate.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "59e1862ae536f0ffe19cc0354d5df87b9d098ef57d34753852d208ae16094a27",
+    "byte_length": 72,
+    "line_count": 2,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle"
+    ],
+    "read_ranges": [
+      [
+        1,
+        2
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 2,
+        "topic": "Only re-exports reparse and rechunk"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/lights.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "6b17d707c5f89f9510bd43f50d5b85dd4a4eac929769d208ca98feb5f6530b01",
+    "byte_length": 1324,
+    "line_count": 30,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.retrieval_diagnosis"
+    ],
+    "read_ranges": [
+      [
+        1,
+        30
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 4,
+        "end_line": 30,
+        "topic": "Four lights, unread/failed status, and chosen source span"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/orphan.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "3f42247b482a9802ca6e3b0c1dfab2d7cd8266bb8a15bc23eaa3a18df31bd563",
+    "byte_length": 488,
+    "line_count": 15,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle"
+    ],
+    "read_ranges": [
+      [
+        1,
+        15
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 4,
+        "end_line": 15,
+        "topic": "Separate source deletion and global-Store orphan chunk removal"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/parse.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "dce01779f55bf89d58999ec3089c50f0205cdc3629668f9c7553dc9228237109",
+    "byte_length": 1332,
+    "line_count": 50,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle"
+    ],
+    "read_ranges": [
+      [
+        1,
+        50
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 4,
+        "end_line": 25,
+        "topic": "Source lookup and no-text-layer failure/chunk deletion"
+      },
+      {
+        "start_line": 27,
+        "end_line": 49,
+        "topic": "Successful read, reparse marker and one full-document chunk"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/passes.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "1537a96d6089a1ba52e5fc1584b9222536ea0a103efa887e82f689cd4d8ec589",
+    "byte_length": 685,
+    "line_count": 17,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle",
+      "rag.embedding_off"
+    ],
+    "read_ranges": [
+      [
+        1,
+        17
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 7,
+        "end_line": 17,
+        "topic": "Single-pass dispatch and redo-numbers not_applicable"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/prompt.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "f2da0aa3b213596d59872fb75ade9c7abc517666f48e17d74665ed55ad5b73ad",
+    "byte_length": 380,
+    "line_count": 13,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.retrieval_diagnosis"
+    ],
+    "read_ranges": [
+      [
+        1,
+        13
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 12,
+        "topic": "K cut, exact concatenated text and optional retrieval condition"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/proof.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622",
+    "byte_length": 1464,
+    "line_count": 33,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.revision_proof"
+    ],
+    "read_ranges": [
+      [
+        1,
+        33
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 4,
+        "end_line": 9,
+        "topic": "Question saved against existing revision"
+      },
+      {
+        "start_line": 12,
+        "end_line": 25,
+        "topic": "Exact span/revision/trace/K/inclusion retrieval proof"
+      },
+      {
+        "start_line": 28,
+        "end_line": 33,
+        "topic": "Citation sentence containment using current resolved chunk"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/rechunk.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "63fac5e3c275b44df9b30625340a5b0d2bc3df30cf874f7109fb953a4313cb66",
+    "byte_length": 1578,
+    "line_count": 48,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle"
+    ],
+    "read_ranges": [
+      [
+        1,
+        48
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 15,
+        "topic": "Line versus whole-document cuts with UTF-16 offsets"
+      },
+      {
+        "start_line": 18,
+        "end_line": 43,
+        "topic": "Reparse prerequisite, source-specific replacement and cut metadata"
+      },
+      {
+        "start_line": 46,
+        "end_line": 48,
+        "topic": "Helper delegates to rechunk and returns supplied boundary"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/refuse.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "83b916b365f524a462166b94f2fa9676b750e833b898fbe5f196fa07b2da1b94",
+    "byte_length": 33,
+    "line_count": 1,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.admission"
+    ],
+    "read_ranges": [
+      [
+        1,
+        1
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 1,
+        "topic": "Re-export of path gate"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/reparse.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "3b378c3cad88e9916449cd99672be4259a5926fe6c8c2b197f39bffba709a6cc",
+    "byte_length": 1275,
+    "line_count": 38,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.extraction_lifecycle"
+    ],
+    "read_ranges": [
+      [
+        1,
+        38
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 4,
+        "end_line": 15,
+        "topic": "Explicit changed-byte observation resets eligibility"
+      },
+      {
+        "start_line": 17,
+        "end_line": 38,
+        "topic": "Reparse updates source only; failure flag and source status"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/report.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "4e9f7605c1cd4edd7796c823d4ff514323fb2cf336979fbd8bdbf3d2749a4291",
+    "byte_length": 1043,
+    "line_count": 34,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.retrieval_diagnosis"
+    ],
+    "read_ranges": [
+      [
+        1,
+        34
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 33,
+        "topic": "Four reasons and output shaping, null spans, required lists"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/revision.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0",
+    "byte_length": 2701,
+    "line_count": 79,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.revision_proof"
+    ],
+    "read_ranges": [
+      [
+        1,
+        79
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 28,
+        "topic": "Pipeline changes and revision lookup; no runtime field validation"
+      },
+      {
+        "start_line": 31,
+        "end_line": 64,
+        "topic": "Pipeline hash and sorted source snapshot creation"
+      },
+      {
+        "start_line": 66,
+        "end_line": 78,
+        "topic": "Fill checks against current chunks/source membership"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/search.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "d0021c6ef9f5747ea9f61664cfa2f0c0ad8a77373582b0195393b9bbfe395843",
+    "byte_length": 984,
+    "line_count": 26,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.retrieval_diagnosis"
+    ],
+    "read_ranges": [
+      [
+        1,
+        26
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 4,
+        "end_line": 25,
+        "topic": "Current source/chunk filtering by revision Location; substring and ordering"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/span.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "55db2c7eccc86b5440e7a6098e9779beeff82b3197b69dbb49fa67c9685ec464",
+    "byte_length": 168,
+    "line_count": 3,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.revision_proof"
+    ],
+    "read_ranges": [
+      [
+        1,
+        3
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "topic": "Chunk text replacement always refused"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/trace.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33",
+    "byte_length": 296,
+    "line_count": 6,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.retrieval_diagnosis",
+      "rag.revision_proof"
+    ],
+    "read_ranges": [
+      [
+        1,
+        6
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 6,
+        "topic": "Trace key and forbidden not_recorded sentinel"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/src/types.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "41ea9e2320a64556efcf799fabaebc8f7efd9e9e13d7b7942a7ae1c7567e9a9a",
+    "byte_length": 1429,
+    "line_count": 70,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.entry_store",
+      "rag.revision_proof"
+    ],
+    "read_ranges": [
+      [
+        1,
+        70
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 36,
+        "topic": "Source chunks, statuses, lights, passes and pipeline contracts"
+      },
+      {
+        "start_line": 38,
+        "end_line": 70,
+        "topic": "Question result, revision, source and span contracts"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/test/acceptance.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "03538a53af035fdf50a3100a86a2f8ef5370db0c93b05e6d002866350618a719",
+    "byte_length": 13315,
+    "line_count": 290,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        290
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 23,
+        "end_line": 45,
+        "topic": "Memory-store fixture and lexical canonical-path refusal"
+      },
+      {
+        "start_line": 48,
+        "end_line": 124,
+        "topic": "Question, prompt and four-light cases"
+      },
+      {
+        "start_line": 126,
+        "end_line": 158,
+        "topic": "Revision/pipeline identity and embedding-off cases"
+      },
+      {
+        "start_line": 161,
+        "end_line": 243,
+        "topic": "Explicit passes, source removal and boundary comparison"
+      },
+      {
+        "start_line": 245,
+        "end_line": 288,
+        "topic": "Manually seeded proof/K, multi-pass refusal and fill cases"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/test/admit.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "577b96ffc7aaba6ef4c323f2357fbf9e5ef6426fc9928e73af56a0a2c0a46de7",
+    "byte_length": 4998,
+    "line_count": 126,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        126
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 8,
+        "end_line": 23,
+        "topic": "No admission and lexical project refusal"
+      },
+      {
+        "start_line": 25,
+        "end_line": 91,
+        "topic": "Stable identity, changed text and repeated admission"
+      },
+      {
+        "start_line": 93,
+        "end_line": 126,
+        "topic": "External permission callback cases"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/test/parse.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "b1565329f132f7944737efae026a98b33251f40abdd5e5eecd750397be2151e8",
+    "byte_length": 2945,
+    "line_count": 74,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        74
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 16,
+        "topic": "Synthetic Store/readBytes fixture"
+      },
+      {
+        "start_line": 19,
+        "end_line": 74,
+        "topic": "Read statuses, synthetic PDF failure and exact spans"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/test/proof.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "3a764006d0b4acd5d12cfd3f1d9d7a8ab9099fe5a4f7c88f93f6a867b1029196",
+    "byte_length": 5147,
+    "line_count": 140,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        140
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 27,
+        "topic": "Question storage requires revision but not chunk"
+      },
+      {
+        "start_line": 29,
+        "end_line": 73,
+        "topic": "Manually seeded trace proof cases"
+      },
+      {
+        "start_line": 75,
+        "end_line": 140,
+        "topic": "Containment and shifted-coordinate negative cases"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/test/search.test.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "9b6b154e61d52b5bce4961ca84bfd4e66e86d4a7c9f300d52c713e2657e05d59",
+    "byte_length": 10881,
+    "line_count": 395,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.verification"
+    ],
+    "read_ranges": [
+      [
+        1,
+        395
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 5,
+        "end_line": 75,
+        "topic": "Current word matching, order and unchanged store"
+      },
+      {
+        "start_line": 77,
+        "end_line": 218,
+        "topic": "Unread/failed/stale/foreign/orphan filtering"
+      },
+      {
+        "start_line": 220,
+        "end_line": 319,
+        "topic": "Empty corpus, path order and case sensitivity"
+      },
+      {
+        "start_line": 321,
+        "end_line": 395,
+        "topic": "Stale mixed source and missing revision id"
+      }
+    ]
+  },
+  {
+    "path": "modules/rag-studio/tsconfig.json",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "1fb3d2fe10bab2362d08c04d09f81781241943438eb96267d923d18f0bc08621",
+    "byte_length": 236,
+    "line_count": 9,
+    "inspection": "full_file_static_read",
+    "module_groups": [
+      "rag.entry_store"
+    ],
+    "read_ranges": [
+      [
+        1,
+        9
+      ]
+    ],
+    "important_ranges": [
+      {
+        "start_line": 3,
+        "end_line": 8,
+        "topic": "Compiler base and source/test membership"
+      }
+    ]
+  }
+]

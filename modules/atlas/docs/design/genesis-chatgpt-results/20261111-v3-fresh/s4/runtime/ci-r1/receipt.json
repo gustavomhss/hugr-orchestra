@@ -1,0 +1,21 @@
+{
+  "schema": "s4-github-actions-receipt/v1",
+  "candidate_revision": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+  "run_id": 43069951327,
+  "job_id": 130694812993,
+  "artifact_id": 13877282133,
+  "artifact_sha256": "c2150e15355c0d862f5e9eff000b3401b691a42c5bc72bd34481ce0d5d534d79",
+  "conclusion": "success",
+  "total_tests": 220,
+  "passed_tests": 220,
+  "failed_tests": 0,
+  "mutation_controls": 22,
+  "guards": {
+    "exitCode": 0,
+    "gate_findings": 0,
+    "warning_findings": 0
+  },
+  "generated_parity": "all18 outputs byte-equal to committed generated files",
+  "test_file_sha256": "b05120dc30b0d294c6bf10998ae53204b8cafece480ddbe0b8c5349762e54fb3",
+  "limit": "This run predates the stronger post-barrier overlap assertion; it proves reads while publication is paused, not the stronger timing property. Commit 673b90d82b8b888d5d0184d2e17dec6d5d1b05f1 is a distinct follow-up execution."
+}

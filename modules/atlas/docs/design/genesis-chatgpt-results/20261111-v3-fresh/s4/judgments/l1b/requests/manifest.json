@@ -1,0 +1,638 @@
+{
+  "schema": "s4-l1b-review-transport/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "recipients": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "parts": [
+    {
+      "number": 1,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/l1b/request-part-1.txt",
+      "byte_length": 33255,
+      "sha256": "43097ff0c3d49e61abcab7f68de66c1a634e0d9cd1e7c30ed1b1e81ad942f4b5",
+      "body_path": "/workspace/scratch/aff930d22ec7/s4/producers/l1b/atlas-engine.md",
+      "body_byte_length": 17987,
+      "body_sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e",
+      "source_excerpts": [
+        {
+          "path": "modules/atlas/packages/kernel/src/canonical.ts",
+          "lines": [
+            35,
+            96
+          ],
+          "file_sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+          "excerpt_sha256": "8007e309e268dc9ef1f7c66f85b061df14019ffcf59a30aeb6c20d7e2806dbf3",
+          "excerpt_byte_length": 3859
+        },
+        {
+          "path": "modules/atlas/packages/kernel/src/canonical.ts",
+          "lines": [
+            104,
+            115
+          ],
+          "file_sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+          "excerpt_sha256": "e91237defc83c7706ec4ee3434e48abe89a2f8fb91449ecb9f14b113526fe286",
+          "excerpt_byte_length": 435
+        },
+        {
+          "path": "modules/atlas/packages/grounding/src/gate.ts",
+          "lines": [
+            68,
+            77
+          ],
+          "file_sha256": "248dd37330af32de5352636a119f9b868cd63b168f231de88d997f196e8ffaa9",
+          "excerpt_sha256": "5efc563877ce63bcad0d31841960991ab3737ce2018131546eb911277108f45c",
+          "excerpt_byte_length": 611
+        },
+        {
+          "path": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+          "lines": [
+            74,
+            77
+          ],
+          "file_sha256": "44a7eb3ef16839138356f6f3a448752f55bca5050d9ce8b42a705420cf6423c1",
+          "excerpt_sha256": "6f215118d8cf378566c2e58ba4e503e49ba9b6f9fd124e0f2fbc5d1027baf08f",
+          "excerpt_byte_length": 220
+        },
+        {
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "lines": [
+            36,
+            69
+          ],
+          "file_sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+          "excerpt_sha256": "e80a37682060c7beb5a0405600b6a05770f6863e2c1afb294aacefe2353d934e",
+          "excerpt_byte_length": 2154
+        },
+        {
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "lines": [
+            83,
+            95
+          ],
+          "file_sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+          "excerpt_sha256": "70f64d28539682f91a156d50acd395b26cc8c5d7042d3dc23fe2bb159fba30f1",
+          "excerpt_byte_length": 484
+        },
+        {
+          "path": "modules/atlas/packages/index/src/depgraph.ts",
+          "lines": [
+            46,
+            94
+          ],
+          "file_sha256": "1fdfc8ababd686e47fe70cf028e1f7b9950d080c014825e046bc4eb10e49fb45",
+          "excerpt_sha256": "74033cd036c8e793c89482d04a154e23c673d12eac363064b4b33f82eee9249e",
+          "excerpt_byte_length": 1950
+        },
+        {
+          "path": "modules/atlas/packages/memory/src/inject.ts",
+          "lines": [
+            85,
+            96
+          ],
+          "file_sha256": "1e79629a5837e8eee26f9efb1c49cdcffdc2af2fd80b215809885a8749b01c18",
+          "excerpt_sha256": "53b48e27c99ab071b7e544e50c115cb7cb277687928ae5f75a0cde69e5ec9567",
+          "excerpt_byte_length": 667
+        },
+        {
+          "path": "modules/atlas/packages/memory/src/inject.ts",
+          "lines": [
+            115,
+            141
+          ],
+          "file_sha256": "1e79629a5837e8eee26f9efb1c49cdcffdc2af2fd80b215809885a8749b01c18",
+          "excerpt_sha256": "e7e577fa6ca74a175852ca425fc36dc2e2fb8400568f9868cccf61d7d481a267",
+          "excerpt_byte_length": 907
+        },
+        {
+          "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+          "lines": [
+            194,
+            213
+          ],
+          "file_sha256": "0e462c37c74813979e46237ac7ecf8ee5c2260f73c554c5c30400964fc2c69b4",
+          "excerpt_sha256": "ce6a1f58d8ff6e1043dd214f976db1cdd72ce553b34c90dba6ec3e0406c1b258",
+          "excerpt_byte_length": 1505
+        },
+        {
+          "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+          "lines": [
+            225,
+            236
+          ],
+          "file_sha256": "0e462c37c74813979e46237ac7ecf8ee5c2260f73c554c5c30400964fc2c69b4",
+          "excerpt_sha256": "bdca230febd85b9002ac0dc0eb511d479ef61622e0d72f09faf81bc125044975",
+          "excerpt_byte_length": 1117
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/l1b/request-part-2.txt",
+      "byte_length": 35917,
+      "sha256": "ad86c67152c9b069b39a760d6277948810392c622752282bf3b793207722442f",
+      "body_path": "/workspace/scratch/aff930d22ec7/s4/producers/l1b/atlas-host-genesis.md",
+      "body_byte_length": 17595,
+      "body_sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d",
+      "source_excerpts": [
+        {
+          "path": "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+          "lines": [
+            94,
+            104
+          ],
+          "file_sha256": "2641a60a83e8fba0a0e8e92efcd6c33eaf8cd6670fc28f954096f475f8bc2fbe",
+          "excerpt_sha256": "a3d3ad8245d59870accfcd489e7be75d90f5761605af0c1ea79ecd99ea50ec66",
+          "excerpt_byte_length": 621
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+          "lines": [
+            127,
+            155
+          ],
+          "file_sha256": "2641a60a83e8fba0a0e8e92efcd6c33eaf8cd6670fc28f954096f475f8bc2fbe",
+          "excerpt_sha256": "ff114f4e30b916d962f26b4fdb11bf5cd1dafa8c71005fc662a0f5dfc976e2ed",
+          "excerpt_byte_length": 1291
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+          "lines": [
+            74,
+            105
+          ],
+          "file_sha256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "excerpt_sha256": "367798e056dd91f7370b48ffdbdbf99b01b0067540a5495299c5acf88bf9a44c",
+          "excerpt_byte_length": 2244
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+          "lines": [
+            18,
+            48
+          ],
+          "file_sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+          "excerpt_sha256": "3e43691d07b182d7eec08b4e7b494b9b78e14e16bcbfeea6ab0aba11bc0c8105",
+          "excerpt_byte_length": 1836
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "lines": [
+            134,
+            170
+          ],
+          "file_sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+          "excerpt_sha256": "22b6ee04c02c0de791826708c4410b470253066450ab6011f94beb9896ada848",
+          "excerpt_byte_length": 1790
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+          "lines": [
+            354,
+            378
+          ],
+          "file_sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+          "excerpt_sha256": "9c2a8cc77da8b53c46279eca17d20216ef8016c96ccb252795e6bd5e50ee583a",
+          "excerpt_byte_length": 2000
+        },
+        {
+          "path": "modules/atlas/packages/genesis/src/extract.ts",
+          "lines": [
+            168,
+            216
+          ],
+          "file_sha256": "4cfd8f06e0603a82bed4e9886f7efee685dd463ed09d53e6ee1deeda36bbaf3e",
+          "excerpt_sha256": "b030abb41eb712f695c811fd159d4a2e682e73b9f37cbb99b5b45b89573c6f59",
+          "excerpt_byte_length": 2250
+        },
+        {
+          "path": "modules/atlas/packages/tools/src/handler.ts",
+          "lines": [
+            35,
+            62
+          ],
+          "file_sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc",
+          "excerpt_sha256": "3d571e2f03d47e60b1741401a3d1f29d4c5358f050f150823b17832ddd864d83",
+          "excerpt_byte_length": 1879
+        },
+        {
+          "path": "modules/atlas/boundary/script/build.ts",
+          "lines": [
+            11,
+            28
+          ],
+          "file_sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c",
+          "excerpt_sha256": "24a0b5d078ac2a537fc85f574461f4fe10aa07b070b8602b93c300e0b2b1a6cd",
+          "excerpt_byte_length": 1301
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "lines": [
+            21,
+            33
+          ],
+          "file_sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+          "excerpt_sha256": "f9ab83ad80367d2e785de021d5fae20512235dc568a20297256eeacd6aaecf44",
+          "excerpt_byte_length": 633
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "lines": [
+            171,
+            190
+          ],
+          "file_sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+          "excerpt_sha256": "2ac0e0ed7bd4a12af080622032a86d132f2a43b0fcbe1288ef5306d85d268b3a",
+          "excerpt_byte_length": 1072
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/l1b/request-part-3.txt",
+      "byte_length": 34319,
+      "sha256": "d79f4aa252b8356d41a6bb3942b81a13bb5225375f7711b5e92d503330eb0ccc",
+      "body_path": "/workspace/scratch/aff930d22ec7/s4/producers/l1b/continuity-rag.md",
+      "body_byte_length": 17429,
+      "body_sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38",
+      "source_excerpts": [
+        {
+          "path": "modules/continuity/src/v2/strategy.ts",
+          "lines": [
+            20,
+            44
+          ],
+          "file_sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121",
+          "excerpt_sha256": "b3c2b88f0e33831939cdf5662332ad95f4e5cbb96edaa2e7896a15f2248b2795",
+          "excerpt_byte_length": 1074
+        },
+        {
+          "path": "modules/continuity/src/v2/strategy.ts",
+          "lines": [
+            82,
+            94
+          ],
+          "file_sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121",
+          "excerpt_sha256": "75a3fa9fb222b5611de0cb87436b1f4145768c9b7720429ba3811aba86fd6d72",
+          "excerpt_byte_length": 426
+        },
+        {
+          "path": "modules/continuity/src/v2/strategy.ts",
+          "lines": [
+            183,
+            202
+          ],
+          "file_sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121",
+          "excerpt_sha256": "42ec51f393759aecb8a8ca6e3053fdbee7bbdada1659cc62231b5798676dbccb",
+          "excerpt_byte_length": 736
+        },
+        {
+          "path": "modules/continuity/src/v2/archive.ts",
+          "lines": [
+            139,
+            154
+          ],
+          "file_sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e",
+          "excerpt_sha256": "b5e35694241f967d6d329720d5fdf37c96975251e7f197bccb98c48d7131e574",
+          "excerpt_byte_length": 750
+        },
+        {
+          "path": "modules/continuity/src/v2/archive.ts",
+          "lines": [
+            184,
+            215
+          ],
+          "file_sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e",
+          "excerpt_sha256": "a4b50b89f53f8b7048142a32afab9c16923c08ffecc4ced149da72f202b307da",
+          "excerpt_byte_length": 1257
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/context-log.ts",
+          "lines": [
+            55,
+            98
+          ],
+          "file_sha256": "b1960b9f9230f8bf44a594a37e64900ded64ad0accf94ce9f4cd63d4d736cc9c",
+          "excerpt_sha256": "1d0016ff92ce5b095fc6924b0797dc779c6116d232be5a9d85e3e3e71eae023e",
+          "excerpt_byte_length": 2063
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+          "lines": [
+            17,
+            47
+          ],
+          "file_sha256": "f513da7f05ac4b65805aa200b8d0963b389faeb5769a91c73b95d58ea50d9e31",
+          "excerpt_sha256": "27493c870d8681bfd1cad0498b7b49ef9c3702881462059e5932e379e1879fba",
+          "excerpt_byte_length": 1476
+        },
+        {
+          "path": "modules/rag-studio/src/search.ts",
+          "lines": [
+            1,
+            25
+          ],
+          "file_sha256": "d0021c6ef9f5747ea9f61664cfa2f0c0ad8a77373582b0195393b9bbfe395843",
+          "excerpt_sha256": "ddbafaa2dc1d8855a8a9c502c555964661041aebe4c2c75d79b38d2697383f8f",
+          "excerpt_byte_length": 982
+        },
+        {
+          "path": "modules/rag-studio/src/ask.ts",
+          "lines": [
+            9,
+            40
+          ],
+          "file_sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7",
+          "excerpt_sha256": "ad64c65b17533500b9276600b9adee67787e56179a1c8a7fa2b4ba5aefa025ce",
+          "excerpt_byte_length": 1608
+        },
+        {
+          "path": "modules/rag-studio/src/proof.ts",
+          "lines": [
+            4,
+            33
+          ],
+          "file_sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622",
+          "excerpt_sha256": "a56a1730f11c80a5bb194a43bbcdf4a31f3298176a8941b8f86b5a71b0c63594",
+          "excerpt_byte_length": 1359
+        },
+        {
+          "path": "modules/rag-studio/src/trace.ts",
+          "lines": [
+            1,
+            6
+          ],
+          "file_sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33",
+          "excerpt_sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33",
+          "excerpt_byte_length": 296
+        },
+        {
+          "path": "modules/rag-studio/test/proof.test.ts",
+          "lines": [
+            57,
+            71
+          ],
+          "file_sha256": "3a764006d0b4acd5d12cfd3f1d9d7a8ab9099fe5a4f7c88f93f6a867b1029196",
+          "excerpt_sha256": "0237a31fc0784c94ed5c152a0fbf9cd538a9557c2ad22880b6bd62760f0b9fb1",
+          "excerpt_byte_length": 1138
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/context-log.ts",
+          "lines": [
+            99,
+            115
+          ],
+          "file_sha256": "b1960b9f9230f8bf44a594a37e64900ded64ad0accf94ce9f4cd63d4d736cc9c",
+          "excerpt_sha256": "6cacf33058e271812e8dc72ebd9aa0f336bb37c6654e2b527fc249ec6287b907",
+          "excerpt_byte_length": 495
+        },
+        {
+          "path": "modules/continuity/src/v2/strategy.ts",
+          "lines": [
+            14,
+            19
+          ],
+          "file_sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121",
+          "excerpt_sha256": "5b714b1023910df46386f360005391a656482ee58bfcc19eea1b50aafc82a0ed",
+          "excerpt_byte_length": 353
+        },
+        {
+          "path": "modules/continuity/src/v2/archive.ts",
+          "lines": [
+            53,
+            80
+          ],
+          "file_sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e",
+          "excerpt_sha256": "bb2b90b848db08b5815dca9f27ee52a323329ab715aedc24d84306797cb63ab9",
+          "excerpt_byte_length": 1320
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/l1b/request-part-4.txt",
+      "byte_length": 35785,
+      "sha256": "bcb7637e9b173b9cd5b2e5115f1b42db9b1528910d571abffd93832dc6677330",
+      "body_path": "/workspace/scratch/aff930d22ec7/s4/producers/l1b/coverage-governance.md",
+      "body_byte_length": 17988,
+      "body_sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381",
+      "source_excerpts": [
+        {
+          "path": "script/atlas-genesis/checkpoint-continuation-policy.mjs",
+          "lines": [
+            4,
+            22
+          ],
+          "file_sha256": "0aecf95170acd5daaf86ff94a1eb21651e7d2bcc9f6e528725b82daa223375b6",
+          "excerpt_sha256": "6a14e00a38f2c67518da186c0d92334609650180e26eade24ac120fb4c565e55",
+          "excerpt_byte_length": 1885
+        },
+        {
+          "path": "script/atlas-genesis/judge.mjs",
+          "lines": [
+            24,
+            40
+          ],
+          "file_sha256": "3390b2ecf00d1cfb4f78337c4f41d53892d4d0caf0c11b1bead0b6f2dcc0e577",
+          "excerpt_sha256": "b788542a01541c82577576ab71c45ad60b3f8e85f69d3d0b6d7ae3a14d23f0f6",
+          "excerpt_byte_length": 1035
+        },
+        {
+          "path": ".github/workflows/atlas-genesis.yml",
+          "lines": [
+            1323,
+            1338
+          ],
+          "file_sha256": "92e55662c5c89c1536ab0b15e088b0234e28c96da3fb254359b1ef04f2f8cb85",
+          "excerpt_sha256": "b9dc86897cb7ba7ca2eec80f78d60a046a1a0cefd0d58c3232391128e6bb8ae9",
+          "excerpt_byte_length": 1036
+        },
+        {
+          "path": ".github/workflows/atlas-genesis.yml",
+          "lines": [
+            1396,
+            1410
+          ],
+          "file_sha256": "92e55662c5c89c1536ab0b15e088b0234e28c96da3fb254359b1ef04f2f8cb85",
+          "excerpt_sha256": "eb313cc981671552241e36dae315d17d2659b5c4c5e8b09542bf5b5ca534082a",
+          "excerpt_byte_length": 745
+        },
+        {
+          "path": ".github/workflows/atlas-genesis.yml",
+          "lines": [
+            1552,
+            1568
+          ],
+          "file_sha256": "92e55662c5c89c1536ab0b15e088b0234e28c96da3fb254359b1ef04f2f8cb85",
+          "excerpt_sha256": "9e521b846e85b0ef5c8ae3e734cc4366f9f742ca7b202a92f4c6e3bc8ba4e880",
+          "excerpt_byte_length": 585
+        },
+        {
+          "path": "specs/atlas-ui/mock/README.md",
+          "lines": [
+            1,
+            31
+          ],
+          "file_sha256": "0fd2333efe409ce83e4907a54257c7907ce6e7224710c2c378395e075856b29b",
+          "excerpt_sha256": "8e0c961f0731ea5bfa3ea892c3356f5bef42aae7d71239e4fa9c30a891286845",
+          "excerpt_byte_length": 2722
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/l1b/request-part-5.txt",
+      "byte_length": 28845,
+      "sha256": "8409e9922543c47ae5c500ed7f8e04793032d4110e546b19c5befa628cdbacd8",
+      "body_path": "/workspace/scratch/aff930d22ec7/s4/producers/l1b/observation-plan.md",
+      "body_byte_length": 16817,
+      "body_sha256": "5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b",
+      "source_excerpts": []
+    }
+  ],
+  "delivery": [
+    {
+      "part": 1,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-1.txt",
+      "byte_length": 33255,
+      "sha256": "43097ff0c3d49e61abcab7f68de66c1a634e0d9cd1e7c30ed1b1e81ad942f4b5"
+    },
+    {
+      "part": 1,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-1.txt",
+      "byte_length": 33255,
+      "sha256": "43097ff0c3d49e61abcab7f68de66c1a634e0d9cd1e7c30ed1b1e81ad942f4b5"
+    },
+    {
+      "part": 2,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-2.txt",
+      "byte_length": 35917,
+      "sha256": "ad86c67152c9b069b39a760d6277948810392c622752282bf3b793207722442f"
+    },
+    {
+      "part": 2,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-2.txt",
+      "byte_length": 35917,
+      "sha256": "ad86c67152c9b069b39a760d6277948810392c622752282bf3b793207722442f"
+    },
+    {
+      "part": 3,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-3.txt",
+      "byte_length": 34319,
+      "sha256": "d79f4aa252b8356d41a6bb3942b81a13bb5225375f7711b5e92d503330eb0ccc"
+    },
+    {
+      "part": 3,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-3.txt",
+      "byte_length": 34319,
+      "sha256": "d79f4aa252b8356d41a6bb3942b81a13bb5225375f7711b5e92d503330eb0ccc"
+    },
+    {
+      "part": 4,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-4.txt",
+      "byte_length": 35785,
+      "sha256": "bcb7637e9b173b9cd5b2e5115f1b42db9b1528910d571abffd93832dc6677330",
+      "saved_before_send": true,
+      "transport_error": null
+    },
+    {
+      "part": 4,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-4-j2-transmitted-error.txt",
+      "byte_length": 36571,
+      "sha256": "30a06e1687e2e8df3730a393c067b5f5d7aff4891546210aa311624e1b8f24d7",
+      "saved_before_send": false,
+      "transport_error": "One heading and first paragraph duplicated; actual divergent payload reconstructed and preserved after detection; literal body replacement follows for both judges."
+    },
+    {
+      "part": "4-body-replacement",
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-4-body-replacement.txt",
+      "byte_length": 18488,
+      "sha256": "4f82a7b324b1281bbb46b0aa560802865d46eccfda660ae4762e2796a7ff45b2",
+      "saved_before_send": true
+    },
+    {
+      "part": "4-body-replacement",
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-4-body-replacement.txt",
+      "byte_length": 18488,
+      "sha256": "4f82a7b324b1281bbb46b0aa560802865d46eccfda660ae4762e2796a7ff45b2",
+      "saved_before_send": true
+    },
+    {
+      "part": 5,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-5.txt",
+      "byte_length": 28845,
+      "sha256": "8409e9922543c47ae5c500ed7f8e04793032d4110e546b19c5befa628cdbacd8",
+      "saved_before_send": true
+    },
+    {
+      "part": 5,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_file": "request-part-5.txt",
+      "byte_length": 28845,
+      "sha256": "8409e9922543c47ae5c500ed7f8e04793032d4110e546b19c5befa628cdbacd8",
+      "saved_before_send": true
+    }
+  ],
+  "supplements": [
+    {
+      "name": "part4-body-replacement",
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/l1b/request-part-4-body-replacement.txt",
+      "byte_length": 18488,
+      "sha256": "4f82a7b324b1281bbb46b0aa560802865d46eccfda660ae4762e2796a7ff45b2",
+      "body_sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    }
+  ],
+  "status": "five_parts_and_literal_part4_body_replacement_delivered_to_both",
+  "review_verdict": "NOT_ISSUED_BY_COURIER",
+  "transport_identity_limit": "Collaboration returned no message IDs or echoed payload bytes; message IDs UNKNOWN. One detected transcription duplication for J2 part4 is preserved with a literal body replacement sent to both."
+}

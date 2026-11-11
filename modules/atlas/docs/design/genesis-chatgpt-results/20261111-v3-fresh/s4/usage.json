@@ -1,0 +1,98 @@
+{
+  "schema": "s4-native-usage/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "status": "IN_PROGRESS",
+  "host_conversation_id": "UNKNOWN",
+  "role_ids": {
+    "principal": "/root",
+    "producer_l1": "/root/producer_l1a",
+    "producer_runtime": "/root/producer_runtime",
+    "judge_j1": "/root/judge_j1",
+    "judge_j2": "/root/judge_j2",
+    "review_packet_courier": "/root/review_courier",
+    "continuity_subproducer": "/root/producer_l1a/continuity_research"
+  },
+  "stages": [
+    {
+      "stage": "WP-L1A",
+      "status": "produced-and-two-semantic-PASS"
+    },
+    {
+      "stage": "WP-R0",
+      "status": "implemented-prepared-and-remote-tested;binding-open"
+    },
+    {
+      "stage": "WP-L1B",
+      "status": "produced;metadata-correction;judging-packets-in-flight"
+    },
+    {
+      "stage": "WP-R1",
+      "status": "remote-control-authoring-in-flight"
+    },
+    {
+      "stage": "WP-L2",
+      "status": "reserved;requires-complete-L1-acceptance"
+    },
+    {
+      "stage": "WP-L3",
+      "status": "reserved;requires-complete-L2-acceptance"
+    },
+    {
+      "stage": "WP-L4",
+      "status": "reserved;requires-complete-L3-acceptance"
+    },
+    {
+      "stage": "consumers",
+      "status": "reserved-fresh-context;requires-governed-reader"
+    },
+    {
+      "stage": "final-two-judge-review",
+      "status": "reserved;same-persistent-IDs"
+    }
+  ],
+  "observable_attempts": [
+    {
+      "operation": "candidate typecheck",
+      "results": [
+        "initial incremental export issue",
+        "branded-hash cast failure",
+        "final force build PASS"
+      ]
+    },
+    {
+      "operation": "native prepare",
+      "results": [
+        "missing output directory error",
+        "successful actual candidate"
+      ]
+    },
+    {
+      "operation": "remoteCI",
+      "runs": [
+        43065851373,
+        43066241607
+      ],
+      "status": "first216tests+22mutationsPASS,overallguardfailure;secondsame-codeattemptobservedfailure,detailsnotyetinspected"
+    },
+    {
+      "operation": "continuity_subproducer",
+      "status": "interrupted after parent completed its accepted delivery of research input; no lost result silently redispatched"
+    }
+  ],
+  "native_input_tokens": "UNKNOWN",
+  "native_output_tokens": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "provider_internal_retries": "UNKNOWN",
+  "model_diversity": "NOT_CLAIMED",
+  "external_paid_model_calls_issued": false,
+  "historical_campaign_usage": "GLOBAL_UNRECONCILED_BY_ROOT;not_reset",
+  "guarantee": "Finite visible native task queue and preserved outputs/decisions. No monetary cap, physical-attempt reservation enforcement or invisible retry telemetry claimed.",
+  "pending_reservations": [
+    "two persistent judges per remaining layer/correction",
+    "native producer forL2/L3/L4",
+    "independent Atlas-only consumer",
+    "runtime binding and finaljudgments"
+  ],
+  "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero."
+}

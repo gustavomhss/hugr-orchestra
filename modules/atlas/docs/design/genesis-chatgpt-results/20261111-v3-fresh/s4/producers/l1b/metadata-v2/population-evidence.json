@@ -1,0 +1,378 @@
+{
+  "schema": "s4-l1b-static-population-evidence/v2",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_repository": "gustavomhss/hugr-orchestra",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "evidence_kind": "compact static derivative of frozen captured population; this snapshot is the new observable payload input",
+  "native_versions": "Not computed here. The runtime must observe this snapshot file itself. Origin SHA-256/Git blobs are historical provenance, never runtime versions.",
+  "origin_records": {
+    "inventory": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/inventory.json",
+      "sha256": "3a24c33385bb1f302bf7136707461935378ce541f3fe15a0ff3a64c4be9c6877",
+      "byte_length": 711587,
+      "role": "historical capture provenance, not a native file input"
+    },
+    "source_capture_receipt": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/source-capture-receipt.json",
+      "sha256": "a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b",
+      "byte_length": 594072,
+      "role": "historical capture provenance, not a native file input"
+    },
+    "coverage_v1": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json",
+      "sha256": "9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759",
+      "byte_length": 1729414,
+      "role": "immutable complete population register; not a native file input because it exceeds the observer limit"
+    }
+  },
+  "population": {
+    "count": 2220,
+    "unique_paths": 2220,
+    "same_path_set_in_inventory_capture_and_coverage": true,
+    "path_set_sha256": "0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d",
+    "path_set_encoding": "UTF-8 sorted repository paths, each terminated by LF",
+    "raw_source_identity_check": "All 2220 captured byte lengths, SHA-256 values and Git blob identities were rechecked for this static derivative; this is not a native observer or product execution.",
+    "git_mode_counts": {
+      "100644": 2210,
+      "100755": 10
+    },
+    "primary_body_counts": {
+      "S4:L1:atlas-engine": 318,
+      "S4:L1:atlas-host-genesis": 658,
+      "S4:L1:continuity-rag": 63,
+      "S4:L1:coverage-governance": 1181
+    },
+    "counts": {
+      "classification": {
+        "build-or-policy-config": 46,
+        "ci-workflow": 6,
+        "contributor-skill": 18,
+        "dependency-lock": 1,
+        "design-contract": 1,
+        "design-data": 2,
+        "design-document": 433,
+        "executable-component": 383,
+        "generated-ownership-artifact": 3,
+        "generated-runtime-bundle": 18,
+        "generated-ui-data": 2,
+        "generator-script": 2,
+        "historical-consultation": 2,
+        "historical-evaluation-data": 8,
+        "historical-evidence": 368,
+        "historical-probe-data": 20,
+        "historical-prompt": 13,
+        "license": 2,
+        "operational-script": 55,
+        "package-documentation": 21,
+        "prompt-template": 20,
+        "repository-event-data": 3,
+        "repository-placeholder": 1,
+        "test-fixture": 25,
+        "test-harness": 7,
+        "test-probe": 33,
+        "test-source": 687,
+        "ui-prototype": 14,
+        "validation-support": 12,
+        "validation-tool": 14
+      },
+      "semantic_group": {
+        "continuity": 19,
+        "engine.contracts": 11,
+        "engine.grounding": 25,
+        "engine.index": 51,
+        "engine.kernel": 32,
+        "engine.knowledge": 100,
+        "engine.memory": 27,
+        "engine.persist": 46,
+        "engine.retrieval": 26,
+        "governance.baseline-automation": 1,
+        "governance.contributor-scripts": 10,
+        "governance.contributor-skills": 20,
+        "governance.docs.adr": 23,
+        "governance.docs.design": 75,
+        "governance.docs.explanation": 6,
+        "governance.docs.governance": 1,
+        "governance.docs.how-to": 5,
+        "governance.docs.method": 17,
+        "governance.docs.reference": 57,
+        "governance.docs.requirements": 85,
+        "governance.docs.roadmap": 5,
+        "governance.docs.root": 15,
+        "governance.docs.spec": 3,
+        "governance.harness": 118,
+        "governance.historical-prompts": 13,
+        "governance.historical-results": 368,
+        "governance.integration-guidance": 3,
+        "governance.integration-tests": 77,
+        "governance.legacy-genesis-automation": 92,
+        "governance.repository-data": 3,
+        "governance.ui-design": 143,
+        "governance.ui-prototype": 19,
+        "governance.workflows": 7,
+        "governance.workspace": 15,
+        "host.adapter-io": 349,
+        "host.boundary": 28,
+        "host.cli": 160,
+        "host.genesis": 64,
+        "host.mcp-server": 15,
+        "host.tools": 42,
+        "rag-studio": 44
+      },
+      "depth": {
+        "generator-and-integrity": 21,
+        "group-context-and-integrity": 355,
+        "origin-and-integrity": 487,
+        "preserved-by-origin": 411,
+        "source-excerpts-inspected": 158,
+        "structure-and-integrity": 3,
+        "support-role-and-integrity": 43,
+        "test-role-and-integrity": 742
+      }
+    }
+  },
+  "observer_limited_population": [
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".atlas/members/orch/memory/logbook.jsonl",
+        "git_blob_sha": "06c5367191e1152715e6712393e54e48439a932a",
+        "sha256": "dba1dbc2dbd3232efed9e217b3f6e42d4718a08702778429aecc5de638a0364f",
+        "byte_length": 1908
+      },
+      "classification": "repository-event-data",
+      "semantic_group": "governance.repository-data",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "refused-path-segment"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".atlas/project/board.jsonl",
+        "git_blob_sha": "f9a3f49ca801090e16c871b99383797679e2640b",
+        "sha256": "419ad67ce04d007da30d4e52b09b8ad3a8eeffce8027a337127ed0dbd0547525",
+        "byte_length": 57364
+      },
+      "classification": "repository-event-data",
+      "semantic_group": "governance.repository-data",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "refused-path-segment"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".atlas/project/orientation.jsonl",
+        "git_blob_sha": "3396235bb7e04fad7a72fecfbd3b4cce5379695e",
+        "sha256": "342608b17792d34508639a92f4b9b886bd56bc209f921d20d50cff51d5d9648d",
+        "byte_length": 2592
+      },
+      "classification": "repository-event-data",
+      "semantic_group": "governance.repository-data",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "refused-path-segment"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/boundary/src/generated/mine.js",
+        "git_blob_sha": "e3d5fed3e80881e6389c4de426b0f16df76ed6f3",
+        "sha256": "87707db70979008f08222290e6033636d8a50b3b6694919855cf303e31f17e00",
+        "byte_length": 397146
+      },
+      "classification": "generated-runtime-bundle",
+      "semantic_group": "host.boundary",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "exceeds-256000-byte-file-observer-limit"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/boundary/src/generated/surface.js",
+        "git_blob_sha": "5d0e2cf23486ff6d12e1d828dee8aaf647ac33be",
+        "sha256": "136a027512018f35d863df34b19d5bb6d916b6547bbd6d2eb43a79d774730420",
+        "byte_length": 557017
+      },
+      "classification": "generated-runtime-bundle",
+      "semantic_group": "host.boundary",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "exceeds-256000-byte-file-observer-limit"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-a/.atlas/index.scip",
+        "git_blob_sha": "fb0440a117f6f0fb456bae516d3c39ab3f2da20e",
+        "sha256": "1edaa480eb73f448eac96def39e9e17e8158982606a1a336b6724ce0a10a90e9",
+        "byte_length": 1936
+      },
+      "classification": "test-fixture",
+      "semantic_group": "governance.harness",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "refused-path-segment"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-b/.atlas/index.scip",
+        "git_blob_sha": "44f83d3715b186998a077fff51f3ec88e8ca7641",
+        "sha256": "a3a1a006741194e9dfe71ff36a233cdfe1ee061d872bbce21f84019bb06b9e78",
+        "byte_length": 2011
+      },
+      "classification": "test-fixture",
+      "semantic_group": "governance.harness",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "refused-path-segment"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "specs/atlas-ui/mock/data-real.js",
+        "git_blob_sha": "80c2198b2eed5e25567cb99c7a102cab17265ab6",
+        "sha256": "e5b8fc12b21ed5751f1dca15c562bc8c2dc183be4c9cb2e779b8206d8bf710a1",
+        "byte_length": 2302009
+      },
+      "classification": "generated-ui-data",
+      "semantic_group": "governance.ui-prototype",
+      "native_origin_observation": "unavailable under current file observer; not an input key in v2",
+      "limits": [
+        "exceeds-256000-byte-file-observer-limit"
+      ],
+      "disposition": "preserved unchanged in coverage.json; exact-origin static evidence only"
+    }
+  ],
+  "historical_atlas_log_envelopes": [
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".atlas/members/orch/memory/logbook.jsonl",
+        "git_blob_sha": "06c5367191e1152715e6712393e54e48439a932a",
+        "sha256": "dba1dbc2dbd3232efed9e217b3f6e42d4718a08702778429aecc5de638a0364f",
+        "byte_length": 1908
+      },
+      "record_count": 4,
+      "envelope_key_sets": [
+        {
+          "keys": [
+            "contentHash",
+            "fresh",
+            "id",
+            "payload",
+            "seq",
+            "supersedes"
+          ],
+          "count": 4
+        }
+      ],
+      "payload_contents_included": false,
+      "claim_supported": "Only the historical record count and envelope structure stated in coverage-governance.md.",
+      "not_supported": "Current session state, authorship authentication, current ownership/publication, or current native observability of the origin."
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".atlas/project/board.jsonl",
+        "git_blob_sha": "f9a3f49ca801090e16c871b99383797679e2640b",
+        "sha256": "419ad67ce04d007da30d4e52b09b8ad3a8eeffce8027a337127ed0dbd0547525",
+        "byte_length": 57364
+      },
+      "record_count": 96,
+      "envelope_key_sets": [
+        {
+          "keys": [
+            "contentHash",
+            "fresh",
+            "id",
+            "nodeKey",
+            "payload",
+            "seq",
+            "supersedes"
+          ],
+          "count": 96
+        }
+      ],
+      "payload_contents_included": false,
+      "claim_supported": "Only the historical record count and envelope structure stated in coverage-governance.md.",
+      "not_supported": "Current session state, authorship authentication, current ownership/publication, or current native observability of the origin."
+    },
+    {
+      "origin": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".atlas/project/orientation.jsonl",
+        "git_blob_sha": "3396235bb7e04fad7a72fecfbd3b4cce5379695e",
+        "sha256": "342608b17792d34508639a92f4b9b886bd56bc209f921d20d50cff51d5d9648d",
+        "byte_length": 2592
+      },
+      "record_count": 9,
+      "envelope_key_sets": [
+        {
+          "keys": [
+            "contentHash",
+            "fresh",
+            "id",
+            "nodeKey",
+            "payload",
+            "seq",
+            "supersedes"
+          ],
+          "count": 9
+        }
+      ],
+      "payload_contents_included": false,
+      "claim_supported": "Only the historical record count and envelope structure stated in coverage-governance.md.",
+      "not_supported": "Current session state, authorship authentication, current ownership/publication, or current native observability of the origin."
+    }
+  ],
+  "duplicate_adr0016_paths": [
+    "modules/atlas/docs/adr/ADR-0016-negation-completeness-is-target-relative-escape-and-dynload.md",
+    "modules/atlas/docs/adr/ADR-0016-the-proposer-emits-a-typed-candidate-with-a-machine-checkable-predicate.md"
+  ],
+  "frozen_body_binding": [
+    {
+      "path": "producers/l1b/atlas-engine.md",
+      "byte_length": 17987,
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+    },
+    {
+      "path": "producers/l1b/atlas-host-genesis.md",
+      "byte_length": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "path": "producers/l1b/continuity-rag.md",
+      "byte_length": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    {
+      "path": "producers/l1b/coverage-governance.md",
+      "byte_length": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    }
+  ],
+  "limitations": [
+    "The snapshot preserves historical evidence from the fixed capture. Reading it does not observe the eight refused origins.",
+    "The complete 2220-row register remains unchanged; it is not replaced by a shorter population.",
+    "Generated bundle/source parity and UI dataset currency are unverified; no generation or product test was run.",
+    "Freshness of this snapshot plus selected source files is not freshness of every preserved historical/generated file or of the entire domain.",
+    "A changed source revision, assignment/membership, classification recipe or claimed historical envelope requires a fresh capture/derivation and new review; native prepare alone does not refresh the static population."
+  ]
+}

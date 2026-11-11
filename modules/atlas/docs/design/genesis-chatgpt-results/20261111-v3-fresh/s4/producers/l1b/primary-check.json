@@ -1,0 +1,32 @@
+{
+  "artifacts_sha256": "6a1e451387b25dfec778f326bbdcd61fbbc95e90e819cfba7ce70da43493a058",
+  "body_check": [
+    {
+      "key": "S4:L1:atlas-engine",
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e",
+      "bytes": 17987,
+      "matches": true
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d",
+      "bytes": 17595,
+      "matches": true
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38",
+      "bytes": 17429,
+      "matches": true
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381",
+      "bytes": 17988,
+      "matches": true
+    }
+  ],
+  "input_mapping_errors": [],
+  "source_ref_errors": [],
+  "max_input_bytes": 177641
+}

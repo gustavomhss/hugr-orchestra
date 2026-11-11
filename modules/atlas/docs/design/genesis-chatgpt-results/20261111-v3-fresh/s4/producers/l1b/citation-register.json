@@ -1,0 +1,2330 @@
+{
+  "atlas-engine.md": [
+    {
+      "path": "modules/atlas/packages/contracts/src/index.ts",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/status.ts",
+      "ranges": [
+        [
+          6,
+          11
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/tier.ts",
+      "ranges": [
+        [
+          3,
+          6
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          4,
+          18
+        ],
+        [
+          51,
+          56
+        ],
+        [
+          194,
+          236
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/canonical.ts",
+      "ranges": [
+        [
+          104,
+          115
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/drift.ts",
+      "ranges": [
+        [
+          60,
+          65
+        ],
+        [
+          108,
+          115
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/freshness.ts",
+      "ranges": [
+        [
+          77,
+          119
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+      "ranges": [
+        [
+          74,
+          77
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "ranges": [
+        [
+          36,
+          95
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/index.ts",
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/status.ts",
+      "ranges": [
+        [
+          6,
+          11
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/tier.ts",
+      "ranges": [
+        [
+          3,
+          6
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/canonical.ts",
+      "ranges": [
+        [
+          35,
+          96
+        ],
+        [
+          104,
+          115
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/encoder.ts",
+      "ranges": [
+        [
+          7,
+          10
+        ],
+        [
+          30,
+          34
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/store.ts",
+      "ranges": [
+        [
+          25,
+          47
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/log.ts",
+      "ranges": [
+        [
+          42,
+          68
+        ],
+        [
+          82,
+          93
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/fold.ts",
+      "ranges": [
+        [
+          66,
+          82
+        ],
+        [
+          102,
+          122
+        ],
+        [
+          177,
+          183
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/memory-store.ts",
+      "ranges": [
+        [
+          50,
+          70
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+      "ranges": [
+        [
+          65,
+          83
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/source.ts",
+      "ranges": [
+        [
+          58,
+          91
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/reconstruct.ts",
+      "ranges": [
+        [
+          70,
+          104
+        ],
+        [
+          122,
+          150
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          214,
+          236
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/transcript-store.ts",
+      "ranges": [
+        [
+          61,
+          97
+        ],
+        [
+          108,
+          115
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/scrub.ts",
+      "ranges": [
+        [
+          9,
+          19
+        ],
+        [
+          56,
+          60
+        ],
+        [
+          182,
+          198
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          232,
+          236
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/index/src/build.ts",
+      "ranges": [
+        [
+          183,
+          186
+        ],
+        [
+          222,
+          244
+        ],
+        [
+          267,
+          293
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/index/src/depgraph.ts",
+      "ranges": [
+        [
+          46,
+          94
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/index/src/coverage.ts",
+      "ranges": [
+        [
+          39,
+          58
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/drift.ts",
+      "ranges": [
+        [
+          60,
+          65
+        ],
+        [
+          82,
+          84
+        ],
+        [
+          98,
+          115
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/freshness.ts",
+      "ranges": [
+        [
+          77,
+          119
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/gate.ts",
+      "ranges": [
+        [
+          68,
+          77
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+      "ranges": [
+        [
+          74,
+          77
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/emit.ts",
+      "ranges": [
+        [
+          67,
+          70
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/authz.ts",
+      "ranges": [
+        [
+          1,
+          37
+        ],
+        [
+          58,
+          60
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          122,
+          127
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+      "ranges": [
+        [
+          98,
+          111
+        ],
+        [
+          133,
+          147
+        ],
+        [
+          182,
+          214
+        ],
+        [
+          339,
+          378
+        ],
+        [
+          404,
+          411
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+      "ranges": [
+        [
+          94,
+          107
+        ],
+        [
+          118,
+          119
+        ],
+        [
+          129,
+          145
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "ranges": [
+        [
+          13,
+          76
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "ranges": [
+        [
+          16,
+          16
+        ],
+        [
+          23,
+          95
+        ],
+        [
+          133,
+          150
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "ranges": [
+        [
+          99,
+          130
+        ],
+        [
+          133,
+          179
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "ranges": [
+        [
+          18,
+          48
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "ranges": [
+        [
+          31,
+          90
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/pack.ts",
+      "ranges": [
+        [
+          124,
+          180
+        ],
+        [
+          225,
+          252
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/drop.ts",
+      "ranges": [
+        [
+          133,
+          174
+        ],
+        [
+          198,
+          201
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          194,
+          213
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own.ts",
+      "ranges": [
+        [
+          210,
+          260
+        ],
+        [
+          320,
+          343
+        ],
+        [
+          359,
+          370
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          194,
+          200
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "ranges": [
+        [
+          95,
+          157
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own-artifact.ts",
+      "ranges": [
+        [
+          263,
+          274
+        ],
+        [
+          343,
+          390
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+      "ranges": [
+        [
+          192,
+          262
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/offatlas.ts",
+      "ranges": [
+        [
+          59,
+          81
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/kinds.ts",
+      "ranges": [
+        [
+          78,
+          82
+        ],
+        [
+          110,
+          118
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/inject.ts",
+      "ranges": [
+        [
+          85,
+          96
+        ],
+        [
+          115,
+          141
+        ],
+        [
+          181,
+          186
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/rules.ts",
+      "ranges": [
+        [
+          134,
+          136
+        ],
+        [
+          159,
+          184
+        ],
+        [
+          272,
+          307
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/awareness.ts",
+      "ranges": [
+        [
+          244,
+          277
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/orient.ts",
+      "ranges": [
+        [
+          164,
+          193
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/portable.ts",
+      "ranges": [
+        [
+          117,
+          128
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/memory-store.ts",
+      "ranges": [
+        [
+          45,
+          70
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/orientation-store.ts",
+      "ranges": [
+        [
+          59,
+          76
+        ]
+      ]
+    }
+  ],
+  "atlas-host-genesis.md": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "ranges": [
+        [
+          128,
+          174
+        ],
+        [
+          233,
+          282
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/bin.ts",
+      "ranges": [
+        [
+          16,
+          44
+        ],
+        [
+          52,
+          127
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "ranges": [
+        [
+          128,
+          174
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+      "ranges": [
+        [
+          94,
+          107
+        ],
+        [
+          129,
+          145
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+      "ranges": [
+        [
+          55,
+          105
+        ],
+        [
+          236,
+          271
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/authz.ts",
+      "ranges": [
+        [
+          58,
+          60
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+      "ranges": [
+        [
+          94,
+          104
+        ],
+        [
+          127,
+          155
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+      "ranges": [
+        [
+          1,
+          32
+        ],
+        [
+          140,
+          158
+        ],
+        [
+          183,
+          203
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "ranges": [
+        [
+          233,
+          282
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "ranges": [
+        [
+          121,
+          148
+        ],
+        [
+          180,
+          229
+        ],
+        [
+          240,
+          287
+        ],
+        [
+          301,
+          325
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "ranges": [
+        [
+          169,
+          214
+        ],
+        [
+          246,
+          308
+        ],
+        [
+          354,
+          378
+        ],
+        [
+          395,
+          402
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          122,
+          127
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+      "ranges": [
+        [
+          49,
+          83
+        ],
+        [
+          91,
+          120
+        ]
+      ]
+    },
+    {
+      "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+      "ranges": [
+        [
+          40,
+          45
+        ],
+        [
+          66,
+          70
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+      "ranges": [
+        [
+          41,
+          105
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "ranges": [
+        [
+          233,
+          282
+        ]
+      ]
+    },
+    {
+      "path": ".orchestra/skills/atlas-usage/SKILL.md",
+      "ranges": [
+        [
+          28,
+          32
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/memory-store.ts",
+      "ranges": [
+        [
+          45,
+          70
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/orientation-store.ts",
+      "ranges": [
+        [
+          59,
+          76
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "ranges": [
+        [
+          18,
+          48
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "ranges": [
+        [
+          16,
+          16
+        ],
+        [
+          36,
+          95
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "ranges": [
+        [
+          21,
+          190
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "ranges": [
+        [
+          1,
+          300
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "ranges": [
+        [
+          1,
+          158
+        ]
+      ]
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "ranges": [
+        [
+          16,
+          39
+        ],
+        [
+          105,
+          149
+        ]
+      ]
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "ranges": [
+        [
+          30,
+          65
+        ],
+        [
+          74,
+          127
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/handler.ts",
+      "ranges": [
+        [
+          35,
+          62
+        ],
+        [
+          101,
+          112
+        ],
+        [
+          390,
+          428
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/cli.ts",
+      "ranges": [
+        [
+          300,
+          343
+        ],
+        [
+          575,
+          615
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/src/server.ts",
+      "ranges": [
+        [
+          44,
+          55
+        ],
+        [
+          262,
+          316
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/README.md",
+      "ranges": [
+        [
+          6,
+          17
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+      "ranges": [
+        [
+          48,
+          105
+        ],
+        [
+          124,
+          147
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/bands.ts",
+      "ranges": [
+        [
+          36,
+          56
+        ],
+        [
+          85,
+          107
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/extract.ts",
+      "ranges": [
+        [
+          25,
+          26
+        ],
+        [
+          168,
+          216
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/admit-harness.ts",
+      "ranges": [
+        [
+          132,
+          163
+        ],
+        [
+          216,
+          239
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/run-controller.ts",
+      "ranges": [
+        [
+          246,
+          365
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/seed.ts",
+      "ranges": [
+        [
+          82,
+          119
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-staging.ts",
+      "ranges": [
+        [
+          15,
+          46
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+      "ranges": [
+        [
+          50,
+          71
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/model-config.ts",
+      "ranges": [
+        [
+          96,
+          201
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-proposer.ts",
+      "ranges": [
+        [
+          43,
+          67
+        ],
+        [
+          90,
+          109
+        ]
+      ]
+    },
+    {
+      "path": ".github/workflows/atlas-genesis.yml",
+      "ranges": [
+        [
+          1107,
+          1115
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/boundary/package.json",
+      "ranges": [
+        [
+          1,
+          63
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/boundary/script/build.ts",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/boundary/script/build.ts",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/archive.ts",
+      "ranges": [
+        [
+          7,
+          13
+        ]
+      ]
+    }
+  ],
+  "continuity-rag.md": [
+    {
+      "path": "modules/continuity/package.json",
+      "ranges": [
+        [
+          8,
+          23
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/index.ts",
+      "ranges": [
+        [
+          3,
+          17
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/strategy.ts",
+      "ranges": [
+        [
+          108,
+          125
+        ],
+        [
+          202,
+          225
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/strategy.ts",
+      "ranges": [
+        [
+          14,
+          106
+        ],
+        [
+          122,
+          125
+        ],
+        [
+          183,
+          303
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/tools.ts",
+      "ranges": [
+        [
+          131,
+          140
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/masking.ts",
+      "ranges": [
+        [
+          22,
+          104
+        ],
+        [
+          124,
+          138
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/masking-rules.ts",
+      "ranges": [
+        [
+          7,
+          54
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/strategy.ts",
+      "ranges": [
+        [
+          128,
+          180
+        ],
+        [
+          282,
+          293
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/README.md",
+      "ranges": [
+        [
+          23,
+          25
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/archive.ts",
+      "ranges": [
+        [
+          7,
+          49
+        ],
+        [
+          53,
+          116
+        ],
+        [
+          123,
+          178
+        ],
+        [
+          184,
+          253
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/boundary/script/build.ts",
+      "ranges": [
+        [
+          20,
+          21
+        ],
+        [
+          29,
+          47
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/context-log.ts",
+      "ranges": [
+        [
+          55,
+          115
+        ],
+        [
+          149,
+          187
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/scrub-shapes.ts",
+      "ranges": [
+        [
+          75,
+          142
+        ],
+        [
+          295,
+          326
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+      "ranges": [
+        [
+          17,
+          47
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/archive.ts",
+      "ranges": [
+        [
+          139,
+          154
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/strategy.ts",
+      "ranges": [
+        [
+          82,
+          94
+        ],
+        [
+          128,
+          137
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/tools.ts",
+      "ranges": [
+        [
+          22,
+          68
+        ],
+        [
+          77,
+          120
+        ],
+        [
+          154,
+          219
+        ],
+        [
+          248,
+          340
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/alias.ts",
+      "ranges": [
+        [
+          5,
+          49
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/archive-search.ts",
+      "ranges": [
+        [
+          5,
+          48
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/src/v2/tools.ts",
+      "ranges": [
+        [
+          60,
+          67
+        ],
+        [
+          168,
+          172
+        ],
+        [
+          248,
+          286
+        ],
+        [
+          339,
+          340
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/CONTRACT.md",
+      "ranges": [
+        [
+          73,
+          99
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/package.json",
+      "ranges": [
+        [
+          8,
+          18
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/index.ts",
+      "ranges": [
+        [
+          1,
+          15
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/context.ts",
+      "ranges": [
+        [
+          90,
+          135
+        ],
+        [
+          150,
+          245
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/README.md",
+      "ranges": [
+        [
+          7,
+          26
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/context.ts",
+      "ranges": [
+        [
+          13,
+          44
+        ],
+        [
+          182,
+          195
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/admit.ts",
+      "ranges": [
+        [
+          4,
+          38
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/SPEC.md",
+      "ranges": [
+        [
+          58,
+          59
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/extract.ts",
+      "ranges": [
+        [
+          3,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/parse.ts",
+      "ranges": [
+        [
+          4,
+          49
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/rechunk.ts",
+      "ranges": [
+        [
+          5,
+          43
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/span.ts",
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/revision.ts",
+      "ranges": [
+        [
+          31,
+          60
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/SPEC.md",
+      "ranges": [
+        [
+          25,
+          30
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/context.ts",
+      "ranges": [
+        [
+          46,
+          55
+        ],
+        [
+          76,
+          88
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/revision.ts",
+      "ranges": [
+        [
+          5,
+          78
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/search.ts",
+      "ranges": [
+        [
+          4,
+          25
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/ask.ts",
+      "ranges": [
+        [
+          9,
+          40
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/lights.ts",
+      "ranges": [
+        [
+          4,
+          30
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/prompt.ts",
+      "ranges": [
+        [
+          3,
+          12
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/report.ts",
+      "ranges": [
+        [
+          3,
+          33
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/proof.ts",
+      "ranges": [
+        [
+          4,
+          33
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/context.ts",
+      "ranges": [
+        [
+          137,
+          148
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/ask.ts",
+      "ranges": [
+        [
+          29,
+          29
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/trace.ts",
+      "ranges": [
+        [
+          3,
+          6
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/proof.ts",
+      "ranges": [
+        [
+          12,
+          25
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/compare.ts",
+      "ranges": [
+        [
+          5,
+          50
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/test/acceptance.test.ts",
+      "ranges": [
+        [
+          245,
+          266
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/test/proof.test.ts",
+      "ranges": [
+        [
+          57,
+          71
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/reparse.ts",
+      "ranges": [
+        [
+          4,
+          38
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/rechunk.ts",
+      "ranges": [
+        [
+          18,
+          43
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/orphan.ts",
+      "ranges": [
+        [
+          4,
+          15
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/passes.ts",
+      "ranges": [
+        [
+          7,
+          17
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/guard.ts",
+      "ranges": [
+        [
+          3,
+          6
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/embed-off.ts",
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/src/context.ts",
+      "ranges": [
+        [
+          92,
+          123
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/test/v2-strategy.test.ts",
+      "ranges": [
+        [
+          65,
+          157
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/test/v2-maintenance.test.ts",
+      "ranges": [
+        [
+          83,
+          168
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/test/v2-tools.test.ts",
+      "ranges": [
+        [
+          154,
+          193
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/test/acceptance.test.ts",
+      "ranges": [
+        [
+          23,
+          34
+        ],
+        [
+          245,
+          266
+        ]
+      ]
+    },
+    {
+      "path": "modules/rag-studio/test/parse.test.ts",
+      "ranges": [
+        [
+          39,
+          54
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/CONTRACT.md",
+      "ranges": [
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/WAVE.md",
+      "ranges": [
+        [
+          3,
+          20
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/REQUIREMENTS.md",
+      "ranges": [
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/work-packages.md",
+      "ranges": [
+        [
+          3,
+          7
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/SPEC.md",
+      "ranges": [
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/ACCEPTANCE.md",
+      "ranges": [
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/DESIGN.md",
+      "ranges": [
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "modules/continuity/README.md",
+      "ranges": [
+        [
+          10,
+          13
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/SPEC.md",
+      "ranges": [
+        [
+          15,
+          21
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          93,
+          99
+        ]
+      ]
+    },
+    {
+      "path": "docs/specs/rag-studio/ACCEPTANCE.md",
+      "ranges": [
+        [
+          80,
+          89
+        ]
+      ]
+    },
+    {
+      "path": "docs/guides/rag-studio.md",
+      "ranges": [
+        [
+          5,
+          15
+        ]
+      ]
+    }
+  ],
+  "coverage-governance.md": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "ranges": [
+        [
+          21,
+          190
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/README.md",
+      "ranges": [
+        [
+          3,
+          23
+        ],
+        [
+          31,
+          59
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/.github/workflows/ci.yml",
+      "ranges": [
+        [
+          39,
+          54
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+      "ranges": [
+        [
+          4,
+          56
+        ],
+        [
+          117,
+          136
+        ],
+        [
+          194,
+          236
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/harness/README.md",
+      "ranges": [
+        [
+          9,
+          14
+        ],
+        [
+          25,
+          29
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/.github/workflows/ci.yml",
+      "ranges": [
+        [
+          1,
+          34
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/index-reuse.mjs",
+      "ranges": [
+        [
+          15,
+          100
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-baseline.mjs",
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/checkpoint.mjs",
+      "ranges": [
+        [
+          19,
+          64
+        ],
+        [
+          67,
+          163
+        ],
+        [
+          230,
+          246
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/checkpoint-continuation-policy.mjs",
+      "ranges": [
+        [
+          4,
+          48
+        ],
+        [
+          51,
+          70
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/judge.mjs",
+      "ranges": [
+        [
+          24,
+          40
+        ],
+        [
+          103,
+          145
+        ],
+        [
+          194,
+          212
+        ]
+      ]
+    },
+    {
+      "path": ".github/workflows/atlas-genesis.yml",
+      "ranges": [
+        [
+          1323,
+          1338
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/realdata-evaluate.mjs",
+      "ranges": [
+        [
+          35,
+          72
+        ],
+        [
+          86,
+          135
+        ],
+        [
+          185,
+          238
+        ]
+      ]
+    },
+    {
+      "path": ".github/workflows/atlas-genesis.yml",
+      "ranges": [
+        [
+          13,
+          27
+        ],
+        [
+          1396,
+          1410
+        ],
+        [
+          1455,
+          1480
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/publish-plan.mjs",
+      "ranges": [
+        [
+          79,
+          145
+        ]
+      ]
+    },
+    {
+      "path": ".github/workflows/atlas-genesis.yml",
+      "ranges": [
+        [
+          1,
+          11
+        ],
+        [
+          1495,
+          1529
+        ],
+        [
+          1552,
+          1568
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/publish-plan.mjs",
+      "ranges": [
+        [
+          120,
+          145
+        ],
+        [
+          193,
+          208
+        ]
+      ]
+    },
+    {
+      "path": "script/atlas-genesis/secret-scan.mjs",
+      "ranges": [
+        [
+          11,
+          50
+        ],
+        [
+          54,
+          69
+        ]
+      ]
+    },
+    {
+      "path": ".github/workflows/atlas-pilot.yml",
+      "ranges": [
+        [
+          1,
+          38
+        ],
+        [
+          146,
+          164
+        ]
+      ]
+    },
+    {
+      "path": ".github/workflows/atlas-guard.yml",
+      "ranges": [
+        [
+          1,
+          7
+        ],
+        [
+          65,
+          79
+        ]
+      ]
+    },
+    {
+      "path": ".github/workflows/atlas-worklist.yml",
+      "ranges": [
+        [
+          1,
+          10
+        ],
+        [
+          44,
+          71
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/.github/workflows/release.yml",
+      "ranges": [
+        [
+          1,
+          44
+        ]
+      ]
+    },
+    {
+      "path": "specs/atlas-ui/mock/README.md",
+      "ranges": [
+        [
+          1,
+          31
+        ],
+        [
+          59,
+          71
+        ]
+      ]
+    },
+    {
+      "path": "specs/atlas-ui/mock/extract.py",
+      "ranges": [
+        [
+          1,
+          104
+        ]
+      ]
+    },
+    {
+      "path": "specs/atlas-ui/mock/README.md",
+      "ranges": [
+        [
+          12,
+          31
+        ],
+        [
+          64,
+          70
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/boundary/script/build.ts",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+      "ranges": [
+        [
+          192,
+          262
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+      "ranges": [
+        [
+          3,
+          25
+        ],
+        [
+          50,
+          71
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/adr/ADR-0011-the-model-is-an-operator-supplied-command.md",
+      "ranges": [
+        [
+          3,
+          19
+        ],
+        [
+          28,
+          48
+        ]
+      ]
+    },
+    {
+      "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+      "ranges": [
+        [
+          31,
+          45
+        ],
+        [
+          58,
+          70
+        ]
+      ]
+    },
+    {
+      "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+      "ranges": [
+        [
+          125,
+          141
+        ]
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/governance/policy-lock.md",
+      "ranges": [
+        [
+          10,
+          58
+        ]
+      ]
+    }
+  ]
+}

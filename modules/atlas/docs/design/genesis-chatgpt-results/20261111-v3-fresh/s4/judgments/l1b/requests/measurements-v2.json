@@ -1,0 +1,71 @@
+{
+  "protocol_identity_note": "Hash checks use producers/l1a/protocol-source exact captures; s4/protocol reading copies have an added newline and were not used for source identity.",
+  "schema": "s4-l1b-courier-metadata-v2-measurements/v1",
+  "artifacts_v2_sha256": "6a1e451387b25dfec778f326bbdcd61fbbc95e90e819cfba7ce70da43493a058",
+  "artifacts_v2_byte_length": 93445,
+  "coverage_v1_sha256": "9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759",
+  "coverage_v1_count": 2220,
+  "artifacts": [
+    {
+      "key": "S4:L1:atlas-engine",
+      "input_count": 59,
+      "source_ref_count": 50,
+      "verified_source_ref_bytes_and_same_input_path": 50,
+      "max_declared_input_bytes": 177641,
+      "all_inputs_at_most_256000_bytes": true,
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "body_sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e",
+      "body_byte_length": 17987,
+      "build_dependencies": []
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "input_count": 54,
+      "source_ref_count": 45,
+      "verified_source_ref_bytes_and_same_input_path": 45,
+      "max_declared_input_bytes": 177641,
+      "all_inputs_at_most_256000_bytes": true,
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "body_sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d",
+      "body_byte_length": 17595,
+      "build_dependencies": []
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "input_count": 71,
+      "source_ref_count": 62,
+      "verified_source_ref_bytes_and_same_input_path": 62,
+      "max_declared_input_bytes": 177641,
+      "all_inputs_at_most_256000_bytes": true,
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "body_sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38",
+      "body_byte_length": 17429,
+      "build_dependencies": []
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "input_count": 41,
+      "source_ref_count": 32,
+      "verified_source_ref_bytes_and_same_input_path": 32,
+      "max_declared_input_bytes": 177641,
+      "all_inputs_at_most_256000_bytes": true,
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "body_sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381",
+      "body_byte_length": 17988,
+      "build_dependencies": []
+    }
+  ],
+  "limitation": "Static reads of captured origins and payload files only; no same-path runtime materialization, observer invocation, binding or publication was performed by this courier."
+}

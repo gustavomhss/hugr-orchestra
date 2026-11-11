@@ -38,3 +38,12 @@ Finite initial wave: one Atlas L1 producer and one runtime producer, followed by
 ## Runtime candidate progress
 
 The eight runtime files and scoped workflow gate are ready for a candidate commit. Real L1A native sample prepared as candidate e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284. Runtime binding, publication and reads remain open. Main native-package.json retains twelve missing required artifacts. All 2220 assigned paths are captured, with exact source hashes; L1B classification/knowledge remains in production.
+
+
+## L1B accepted; runtime R1 verified
+
+The four L1B bodies and metadata-v2 were accepted by both persistent judges without mandatory findings. The original v1 metadata and full 2220-path coverage are preserved. L1 now explicitly requires two additional bounded units: external host boundaries and the new native-runtime delta; no L2 work is released before their acceptance.
+
+Runtime candidate `673b90d82b8b888d5d0184d2e17dec6d5d1b05f1` passed GitHub Actions run `43070538154`: 220 tests, 22 mutation controls, typecheck, generation and repository guards (0 gate / 0 warn findings). The prior passed run at `9a2be7f` used the weaker paused-barrier test and is retained with that limit. Hash reconciliation caught the version difference; the stronger post-barrier overlap assertion has its own exact successful run. Native V1 preparation/binding remains frozen separately, and the release has not silently switched candidates.
+
+Two literal transport mistakes by the courier were recorded and corrected for both judges. The initial L1A review request transcript was not exported as a file; its original responses/body remain preserved, and a new canonical full-body submission is being sent for the current decision. No reconstructed old request will be represented as original.

@@ -1,0 +1,62 @@
+{
+  "schema": "s4-native-runtime-delta-recipe/v2",
+  "producer": "/root/producer_runtime",
+  "original_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-request.md",
+    "sha256": "89ecb99272363b0ec6c23b5ae945e477afbfcb66992775055ccdf9888d0d0035"
+  },
+  "original_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-response.md",
+    "sha256": "fb969863825b5e8e31f8e369516e78aafee5b7273505586e271ba21f71c47ad4"
+  },
+  "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+  "public_criteria": [
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-5",
+    "CC-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "reserved_oracle_identities": {
+    "WP-R0": "82fb83f85025e3fafeb02359914ebd758efdce27f5deddfa83f53867baeac8cb",
+    "WP-R1": "d7ae8f97f8b78926b545ac4def549ecf44a9f68f626efa8b0b6f0250ca1cead4"
+  },
+  "metadata_corrections": [
+    {
+      "before": {
+        "commit": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "git_blob_sha": "0270eef6bd8f5b8c0a02ac6d08fda2a302bb3df3",
+        "sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387"
+      },
+      "after": {
+        "commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "git_blob_sha": "0270eef6bd8f5b8c0a02ac6d08fda2a302bb3df3",
+        "sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387"
+      }
+    },
+    {
+      "before": {
+        "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+        "git_blob_sha": "2ae90e461dfe3f431e1706c65e35d41768b34e25",
+        "sha256": "ea76e98f776fa755f42596c22ac96feb3da385fd6c3ebafd3e189ac279c23398"
+      },
+      "after": {
+        "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+        "git_blob_sha": "18eee085d4afc46e0c2179a5cc60a1e8f90b5127",
+        "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec"
+      }
+    }
+  ],
+  "reason": "Bind the actual committed source bytes. The original producer draft is preserved; its recovery test and documentation pins did not match the committed versions. Body bytes remain unchanged.",
+  "semantic_state": "awaiting same two actual independent judges; no automatic acceptance",
+  "runtime_state": "binding/publication/read remain separate"
+}
