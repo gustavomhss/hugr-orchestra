@@ -1,7 +1,6 @@
-import { A } from "@solidjs/router"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { Icon } from "@orchestra/ui/icon"
-import { createEffect, createMemo, For, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
@@ -68,13 +67,30 @@ export default function Inbox(props: ChapterPageProps) {
     waiting: shown(store.items, "waiting", store.source, store.query, store.kind).length,
     all: shown(store.items, "all", store.source, store.query, store.kind).length,
   }))
-  const location = () => ({ directory: props.directory })
+  // The inbox belongs to the installation, not the project selected in the sidebar.
+  const [installDirectory, setInstallDirectory] = createSignal("")
+  const directory = () => (preview ? props.directory : installDirectory())
+  const location = () => ({ directory: directory() })
   const refresh = () => setStore("revision", (value) => value + 1)
 
   createEffect(() => {
-    const directory = props.directory
+    if (preview) return
+    const controller = new AbortController()
+    onCleanup(() => controller.abort())
+    void sdk()
+      .orchestra.location.paths({ signal: controller.signal })
+      .then((result) => {
+        if (!controller.signal.aborted) setInstallDirectory(result.home)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setStore({ failed: true, loading: false })
+      })
+  })
+
+  createEffect(() => {
+    const current = directory()
     store.revision
-    if (!directory && !preview) return
+    if (!current && !preview) return
     const controller = new AbortController()
     onCleanup(() => controller.abort())
     setStore({ loading: true, failed: false })
@@ -84,7 +100,7 @@ export default function Inbox(props: ChapterPageProps) {
         if (!controller.signal.aborted) setStore({ items, loading: false })
         return
       }
-      const result = await api().list({ location: { directory } }, { signal: controller.signal })
+      const result = await api().list({ location: { directory: current } }, { signal: controller.signal })
       if (!controller.signal.aborted) setStore({ items: result.data, loading: false })
     })().catch(() => !controller.signal.aborted && setStore({ loading: false, failed: true }))
   })
@@ -153,12 +169,12 @@ export default function Inbox(props: ChapterPageProps) {
               class="inbox-icon-button"
               aria-label={t("orchestra.inbox.sources")}
               title={t("orchestra.inbox.sources")}
-              disabled={!props.directory && !preview}
+              disabled={!directory() && !preview}
               onClick={() =>
                 dialog.show(() => (
                   <InboxConnections
                     api={api()}
-                    directory={props.directory}
+                    directory={directory()}
                     connected={refresh}
                     preview={preview}
                     local={["localhost", "127.0.0.1", "[::1]"].includes(new URL(props.server.http.url).hostname)}
@@ -182,15 +198,11 @@ export default function Inbox(props: ChapterPageProps) {
         }
       >
         <Show
-          when={props.directory || preview}
+          when={directory() || preview}
           fallback={
             <div class="inbox-empty">
               <InboxMark />
-              <h2>{t("orchestra.inbox.noProject")}</h2>
-              <p>{t("orchestra.inbox.noProjectBody")}</p>
-              <A class="inbox-button outlined" href="/">
-                {t("orchestra.inbox.chooseProject")}
-              </A>
+              <h2>{t(store.failed ? "orchestra.inbox.failed" : "orchestra.inbox.loading")}</h2>
             </div>
           }
         >
@@ -433,7 +445,7 @@ export default function Inbox(props: ChapterPageProps) {
                   store={store}
                   setStore={setStore}
                   api={api()}
-                  directory={props.directory}
+                  directory={directory()}
                   quick={preferences.quick}
                   primary={preferences.primary}
                   act={act}

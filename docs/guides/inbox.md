@@ -1,7 +1,7 @@
 # Inbox
 
 Open **Inbox** in the main navigation. It is separate from Flight Engineer and does not need a meeting running.
-Choose a project first: its items live in the local database.
+It does not follow the open project. Items live in this installation's local database.
 
 ## Find your next move
 

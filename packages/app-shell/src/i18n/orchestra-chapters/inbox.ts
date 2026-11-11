@@ -110,10 +110,6 @@ export const INBOX_COPY = {
   "orchestra.inbox.noMatches": "No matching items",
   "orchestra.inbox.noMatchesBody": "Try another search or source.",
   "orchestra.inbox.clearFilters": "Clear filters",
-  "orchestra.inbox.noProject": "Choose a project for your inbox",
-  "orchestra.inbox.noProjectBody":
-    "Messages stay in its local database, alongside the people and commitments you already know.",
-  "orchestra.inbox.chooseProject": "Choose project",
   "orchestra.inbox.select": "Choose what to take care of",
   "orchestra.inbox.selectBody": "Select an item to read the message and decide your next move.",
   "orchestra.inbox.back": "Back to inbox",
@@ -421,10 +417,6 @@ export const INBOX_COPY_BR: Record<keyof typeof INBOX_COPY, string> = {
   "orchestra.inbox.noMatches": "Nenhum item encontrado",
   "orchestra.inbox.noMatchesBody": "Tente outra pesquisa ou fonte.",
   "orchestra.inbox.clearFilters": "Limpar filtros",
-  "orchestra.inbox.noProject": "Escolha um projeto para sua caixa de entrada",
-  "orchestra.inbox.noProjectBody":
-    "As mensagens ficam no banco de dados local, junto das pessoas e dos compromissos que você já conhece.",
-  "orchestra.inbox.chooseProject": "Escolher projeto",
   "orchestra.inbox.select": "Escolha do que cuidar",
   "orchestra.inbox.selectBody": "Selecione um item para ler a mensagem e decidir seu próximo passo.",
   "orchestra.inbox.back": "Voltar à caixa de entrada",
