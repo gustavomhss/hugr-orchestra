@@ -1,0 +1,102 @@
+name: Genesis S5 runtime prepare probe
+
+on:
+  push:
+    branches:
+      - genesis-fresh-s5-runtime-probe
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genesis-s5-runtime-probe
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare exact blocked S5 package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout S4 runtime candidate
+        uses: actions/checkout@v4
+        with:
+          ref: e3a8ab8cf56dbff1ee91272df51ffa398d882aa1
+          path: runtime
+          fetch-depth: 1
+
+      - name: Checkout sealed S5 payload
+        uses: actions/checkout@v4
+        with:
+          ref: a7bd6daff3bf254c002d8540657fa52ae34d3b21
+          path: source
+          fetch-depth: 1
+
+      - name: Set up Bun 1.3.14
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Install and prepare with captured evidence
+        id: probe
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$GITHUB_WORKSPACE/output"
+
+          bun --version > "$GITHUB_WORKSPACE/output/bun-version.txt" 2>&1
+          git -C "$GITHUB_WORKSPACE/runtime" rev-parse HEAD > "$GITHUB_WORKSPACE/output/runtime-head.txt"
+          git -C "$GITHUB_WORKSPACE/source" rev-parse HEAD > "$GITHUB_WORKSPACE/output/source-head.txt"
+          cp "$GITHUB_WORKSPACE/source/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json" "$GITHUB_WORKSPACE/output/native-package.input.json"
+          cp "$GITHUB_WORKSPACE/source/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/bodies/s5-cli-omni-platform-l1-l4.md" "$GITHUB_WORKSPACE/output/body.input.md"
+
+          (
+            cd "$GITHUB_WORKSPACE/runtime/modules/atlas"
+            bun install --ignore-scripts
+          ) > "$GITHUB_WORKSPACE/output/install.stdout.log" 2> "$GITHUB_WORKSPACE/output/install.stderr.log"
+          install_status=$?
+
+          prepare_status=125
+          if [ "$install_status" -eq 0 ]; then
+            (
+              cd "$GITHUB_WORKSPACE/runtime/modules/atlas"
+              bun scripts/genesis-native.ts prepare \
+                "$GITHUB_WORKSPACE/source" \
+                modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json \
+                "$GITHUB_WORKSPACE/output/s5-prepared.json"
+            ) > "$GITHUB_WORKSPACE/output/prepare.stdout.log" 2> "$GITHUB_WORKSPACE/output/prepare.stderr.log"
+            prepare_status=$?
+          else
+            printf 'prepare skipped because dependency installation exited %s\n' "$install_status" > "$GITHUB_WORKSPACE/output/prepare.stderr.log"
+            : > "$GITHUB_WORKSPACE/output/prepare.stdout.log"
+          fi
+
+          if [ -f "$GITHUB_WORKSPACE/output/s5-prepared.json" ]; then
+            sha256sum "$GITHUB_WORKSPACE/output/s5-prepared.json" > "$GITHUB_WORKSPACE/output/s5-prepared.sha256"
+            wc -c < "$GITHUB_WORKSPACE/output/s5-prepared.json" > "$GITHUB_WORKSPACE/output/s5-prepared.bytes"
+          fi
+
+          printf '{"install_exit_code":%s,"prepare_exit_code":%s,"runtime_revision":"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1","source_artifact_revision":"a7bd6daff3bf254c002d8540657fa52ae34d3b21","publication_attempted":false}\n' \
+            "$install_status" "$prepare_status" > "$GITHUB_WORKSPACE/output/probe-status.json"
+
+          printf 'install_exit_code=%s\n' "$install_status" >> "$GITHUB_OUTPUT"
+          printf 'prepare_exit_code=%s\n' "$prepare_status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload immutable probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-s5-runtime-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: output/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce preparation result
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.probe.outputs.install_exit_code }}" = "0"
+          test "${{ steps.probe.outputs.prepare_exit_code }}" = "0"
+          test -s output/s5-prepared.json
