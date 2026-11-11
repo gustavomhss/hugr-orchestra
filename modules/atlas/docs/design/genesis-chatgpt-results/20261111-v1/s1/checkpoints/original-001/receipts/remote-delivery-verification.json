@@ -1,0 +1,31 @@
+{
+  "schema": "genesis-remote-delivery-verification/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "payload_commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+  "payload_tree": "adb970ca44feaf02913cda581143fffa34c8df75",
+  "expected_files": 101,
+  "observed_files": 101,
+  "truncated": false,
+  "mismatches": [],
+  "unexpected_files": [],
+  "verification": "All physical Git blob SHAs, modes and sizes match the local SHA256-bound upload manifest. The local decoder separately verified every original archive member byte.",
+  "diff": {
+    "base": "014183ffaa383348577b47e2aff4fc474928badc",
+    "head": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "commits": 1,
+    "files": 101,
+    "all_added": true,
+    "outside_checkpoint": []
+  },
+  "reference_update": {
+    "force": false,
+    "expected_head": "014183ffaa383348577b47e2aff4fc474928badc",
+    "success": true
+  },
+  "limits": [
+    "No product tests or governed publication performed.",
+    "No independent S5 decisions on this exact scope observed at publication.",
+    "Concurrent canonical S1 work remains preserved; this checkpoint does not replace its ledger or active allocation."
+  ]
+}
