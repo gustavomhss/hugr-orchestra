@@ -103,10 +103,35 @@
       "id": "E11",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "746595ea8167ca2c15c3279b33c947956e2ed9f9"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113336734",
+          "result": "0 pass, 4 fail; shared budget and mutable prior result reproduced"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113860311",
+          "snapshot_sha": "8ad52fd02ebd03f56abb08e8d95436d2e6a66a54",
+          "result": "49 pass, 0 fail across isolation and public contract tests"
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck",
+          "cwd": "packages/codemode",
+          "result": "pass after explicit suspend result annotation"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected code and hosted results"
+        }
+      ]
     },
     {
       "id": "E12",
@@ -175,10 +200,17 @@
       "id": "H2",
       "severity": "P1",
       "owner": "security",
-      "status": "regression_in_progress",
+      "status": "already_fixed_verified",
       "runtime_reproduced": false,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "revalidation",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113389706",
+          "snapshot_sha": "926d207c3679a30607348ab3fcede37fcaf3a082",
+          "result": "3 pass; actual HTML/SVG response sandbox CSP+nosniff and bytes intact; no browser execution attempted"
+        }
+      ]
     },
     {
       "id": "H3",
@@ -292,10 +324,17 @@
       "id": "L1",
       "severity": "P1",
       "owner": "lead",
-      "status": "planned_unverified",
+      "status": "original_scenario_fixed_residual_planned",
       "runtime_reproduced": false,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "revalidation",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114062388",
+          "snapshot_sha": "184d086ff93f7f4f31b05cb57fe306a5ef16785a",
+          "result": "6 pass, 0 fail, real coordinator; dev already stops held descendants and discards wakes; creation after enumeration remains separate unverified residual"
+        }
+      ]
     },
     {
       "id": "L2",
@@ -391,10 +430,37 @@
       "id": "M1",
       "severity": "P2",
       "owner": "desktop",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "030b850667"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112720389"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113803154",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
     },
     {
       "id": "M2",
@@ -418,10 +484,37 @@
       "id": "M4",
       "severity": "P3",
       "owner": "desktop",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "030b850667"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112720389"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113803154",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
     },
     {
       "id": "M5",
@@ -454,10 +547,37 @@
       "id": "M8",
       "severity": "P2",
       "owner": "desktop",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "56883d625b"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112544616"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114219529",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
     },
     {
       "id": "M9",
@@ -490,10 +610,37 @@
       "id": "M12",
       "severity": "P2",
       "owner": "desktop",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "c8c487f829"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112458714"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113319685",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
     },
     {
       "id": "M13",
@@ -508,19 +655,73 @@
       "id": "M14",
       "severity": "P2",
       "owner": "desktop",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "c8c487f829"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112458714"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113319685",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
     },
     {
       "id": "M15",
       "severity": "P2",
       "owner": "desktop",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "6420fa2d34"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113135887"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113633807",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
     },
     {
       "id": "N1",
@@ -593,6 +794,89 @@
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
+    }
+  ],
+  "verified_workflow_runs": [
+    {
+      "run": 43113860311,
+      "result": {
+        "conclusion": "success",
+        "headSha": "8ad52fd02ebd03f56abb08e8d95436d2e6a66a54",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113860311"
+      }
+    },
+    {
+      "run": 43114062388,
+      "result": {
+        "conclusion": "success",
+        "headSha": "184d086ff93f7f4f31b05cb57fe306a5ef16785a",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114062388"
+      }
+    },
+    {
+      "run": 43113803154,
+      "result": {
+        "conclusion": "success",
+        "headSha": "7ed2e7b20f71316383cebdcf414785dc9cdf26f6",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113803154"
+      }
+    },
+    {
+      "run": 43114219529,
+      "result": {
+        "conclusion": "success",
+        "headSha": "c3e41dbdd19fd9b4201eb062eaf5e25d6c77b01c",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114219529"
+      }
+    },
+    {
+      "run": 43113633807,
+      "result": {
+        "conclusion": "success",
+        "headSha": "c24e9fff53667b70b3d2b6d3d55242dc27a6a35c",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113633807"
+      }
+    },
+    {
+      "run": 43113741903,
+      "result": {
+        "conclusion": "success",
+        "headSha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903"
+      }
+    },
+    {
+      "run": 43114109157,
+      "result": {
+        "conclusion": "success",
+        "headSha": "c616276fa79bcc4fd39ad1533d2169211716d6d6",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114109157"
+      }
+    },
+    {
+      "run": 43113389706,
+      "result": {
+        "conclusion": "success",
+        "headSha": "926d207c3679a30607348ab3fcede37fcaf3a082",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113389706"
+      }
+    },
+    {
+      "run": 43113793857,
+      "result": {
+        "conclusion": "success",
+        "headSha": "d8ad9cdd105aacc409329771601746161a3c3e2b",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113793857"
+      }
     }
   ]
 }

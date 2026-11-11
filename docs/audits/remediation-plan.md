@@ -126,3 +126,9 @@ Resolver agente efetivo do owner pela mesma Location usada no runtime, incluindo
 ## Gate único de integração
 
 Uma única branch/PR agrega commits revisáveis e evidência por ID. Cada unidade tem hosted testes change-scoped e typecheck local; ao final, suite/epic uma vez e benchmark de produção comparável. Guardrail, boundaries, spawn imports e regeneração devem passar no SHA final aplicável. Não publicar release, não fazer merge sem aprovação do owner e não usar labels de bypass. As disposições e SHAs serão registradas em remediation-status.json conforme cada entrega.
+
+## Contrato executável C6/E11 — congelado antes do patch
+
+O lead revalidou executeWithLimits no dev: ToolRuntime e logs são alocados na construção do Effect. A correção envolve toda alocação por execução em Effect.suspend e publica cópias da lista de toolCalls em todos os resultados (success, parse/host failure e timeout). Validação síncrona de opções públicas permanece no construtor. Sem nova API, dependência, scope ou consumer produtivo atribuído.
+
+Regressão nova execution-isolation.test.ts usa ferramentas reais descritas por Schema: mesmo Effect via execute e make().execute duas vezes com orçamento1 e logs isolados; execução ilimitada posterior preserva JSON do primeiro resultado; duas execuções concorrentes encontram barreira com budgets próprios. Empty-code, interruption, timeout e host failure continuam cobertos por codemode.test.ts existente, incluído no gate green. Crítica independente solicitada ao agente Sol de modelos antes do patch.

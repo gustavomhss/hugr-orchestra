@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "before": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43109842284",
+    "base": "74bfb2f4474e3c8a2657af6730edbfd90504816c",
+    "tests_passed": 6,
+    "records_available_in_test_ci_output": [
+      {
+        "runID": "2026-11-11T22-14-07-478Z-3684",
+        "name": "benchmarks v2 session tab switching with and without the review pane",
+        "status": "passed",
+        "retry": 0,
+        "repeatEachIndex": 2,
+        "measurements": [
+          {
+            "pane": "closed",
+            "temperature": "cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 183.5,
+              "max": 244.3
+            },
+            "firstCorrectObservedMs": {
+              "median": 183.5,
+              "max": 244.3
+            },
+            "stableObservedMs": {
+              "median": 230.6,
+              "max": 281.1
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 4
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "pane": "closed",
+            "temperature": "hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 99.5,
+              "max": 114.8
+            },
+            "firstCorrectObservedMs": {
+              "median": 99.5,
+              "max": 114.8
+            },
+            "stableObservedMs": {
+              "median": 165.7,
+              "max": 177.4
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "pane": "open",
+            "temperature": "cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 164.6,
+              "max": 189.5
+            },
+            "firstCorrectObservedMs": {
+              "median": 164.6,
+              "max": 189.5
+            },
+            "stableObservedMs": {
+              "median": 310,
+              "max": 317.2
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "pane": "open",
+            "temperature": "hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 107.2,
+              "max": 123.6
+            },
+            "firstCorrectObservedMs": {
+              "median": 107.2,
+              "max": 123.6
+            },
+            "stableObservedMs": {
+              "median": 157,
+              "max": 171.5
+            },
+            "blankSamples": {
+              "median": 1,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "after": null
+}
