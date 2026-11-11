@@ -67,7 +67,7 @@ export default function NewSessionPage() {
         ),
         workspace.ready.promise,
       ]),
-    (promise) => promise,
+    (promise) => promise.then(() => true),
   )
 
   return (
