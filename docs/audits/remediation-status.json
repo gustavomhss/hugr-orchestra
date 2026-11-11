@@ -192,7 +192,7 @@
       "severity": "P1",
       "owner": "security",
       "status": "regression_in_progress",
-      "runtime_reproduced": false,
+      "runtime_reproduced": true,
       "commits": [],
       "evidence": []
     },
@@ -202,7 +202,9 @@
       "owner": "security",
       "status": "already_fixed_verified",
       "runtime_reproduced": false,
-      "commits": [],
+      "commits": [
+        "d8b4663b8b"
+      ],
       "evidence": [
         {
           "kind": "revalidation",
@@ -216,10 +218,41 @@
       "id": "H3",
       "severity": "P2",
       "owner": "security",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "165c590f5a"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113800370"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
     },
     {
       "id": "H4",
@@ -270,10 +303,41 @@
       "id": "H9",
       "severity": "P2",
       "owner": "security",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "2d66cffbb2"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112717706"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
     },
     {
       "id": "H10",
@@ -288,17 +352,48 @@
       "id": "H11",
       "severity": "P1",
       "owner": "security",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "210aca7e70"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113193398"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
     },
     {
       "id": "H12",
       "severity": "P1",
       "owner": "security",
       "status": "regression_in_progress",
-      "runtime_reproduced": false,
+      "runtime_reproduced": true,
       "commits": [],
       "evidence": []
     },
@@ -306,10 +401,42 @@
       "id": "H13",
       "severity": "P1",
       "owner": "security",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "210aca7e70",
+        "041848de86"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114935845"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115612435",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
     },
     {
       "id": "H14",
@@ -467,7 +594,7 @@
       "severity": "P2",
       "owner": "desktop",
       "status": "regression_in_progress",
-      "runtime_reproduced": false,
+      "runtime_reproduced": true,
       "commits": [],
       "evidence": []
     },
@@ -476,7 +603,7 @@
       "severity": "P2",
       "owner": "desktop",
       "status": "regression_in_progress",
-      "runtime_reproduced": false,
+      "runtime_reproduced": true,
       "commits": [],
       "evidence": []
     },
@@ -886,5 +1013,128 @@
   },
   "integration_dev": "ca3f2e60937e5a154df8a4505b03605d2da1e729",
   "integration_sync_commit": "78b8e1a46b",
-  "recovery": "Server restart: preserved worktrees and hosted runs; final local checkers restarted with durable log and exit receipts when old pipes lost status."
+  "recovery": "Server restart: preserved worktrees and hosted runs; final local checkers restarted with durable log and exit receipts when old pipes lost status.",
+  "cold_blob_checks": [
+    {
+      "owner": "security",
+      "run": 43113741903,
+      "snapshot_sha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+      "conclusion": "success",
+      "path": "packages/core/src/config/markdown.ts",
+      "snapshot_blob": "1fa31942137ef5313aa54dc74d882886de442723",
+      "local_blob": "1fa31942137ef5313aa54dc74d882886de442723",
+      "exact": true
+    },
+    {
+      "owner": "security",
+      "run": 43113741903,
+      "snapshot_sha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+      "conclusion": "success",
+      "path": "packages/core/src/tool-safety.ts",
+      "snapshot_blob": "45b09f27b9b52132c4336a1d4d1d203727eec836",
+      "local_blob": "45b09f27b9b52132c4336a1d4d1d203727eec836",
+      "exact": true
+    },
+    {
+      "owner": "security",
+      "run": 43115612435,
+      "snapshot_sha": "d80428e735ac16be052acd91d8b25b8afc558337",
+      "conclusion": "success",
+      "path": "packages/core/src/instruction-context.ts",
+      "snapshot_blob": "fae9453dde2388f4a065ed4c550ec877fa3bb0fc",
+      "local_blob": "fae9453dde2388f4a065ed4c550ec877fa3bb0fc",
+      "exact": true
+    },
+    {
+      "owner": "security",
+      "run": 43113741903,
+      "snapshot_sha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+      "conclusion": "success",
+      "path": "packages/core/src/mcp/project-config.ts",
+      "snapshot_blob": "e326fb8109baaa9f6ae8012f8129a9ab9a0f8ac8",
+      "local_blob": "e326fb8109baaa9f6ae8012f8129a9ab9a0f8ac8",
+      "exact": true
+    },
+    {
+      "owner": "clients",
+      "run": 43117768085,
+      "snapshot_sha": "9f9b01ade237dca3793446d5532df09c76069694",
+      "conclusion": "success",
+      "path": "apps/cli/src/turn.ts",
+      "snapshot_blob": "550ee68550061b4511521790ced82a6195b25f9a",
+      "local_blob": "550ee68550061b4511521790ced82a6195b25f9a",
+      "exact": true
+    },
+    {
+      "owner": "clients",
+      "run": 43114934467,
+      "snapshot_sha": "b3d4154f5a7fc5a5b3d9e2b01204eceace044036",
+      "conclusion": "success",
+      "path": "apps/cli/src/commands/handlers/import.ts",
+      "snapshot_blob": "fe3f8cef6de01ca7b5627918c7786caa8af5b4d6",
+      "local_blob": "fe3f8cef6de01ca7b5627918c7786caa8af5b4d6",
+      "exact": true
+    },
+    {
+      "owner": "clients",
+      "run": 43113793857,
+      "snapshot_sha": "d8ad9cdd105aacc409329771601746161a3c3e2b",
+      "conclusion": "success",
+      "path": "tooling/httpapi-codegen/src/effect-headers.ts",
+      "snapshot_blob": "041bf78d5dd744f8396bec77b679cd8a70b874da",
+      "local_blob": "cd6db4e5b5128fe0464830b4e971b79d0cdaca5d",
+      "exact": false,
+      "equivalence": "Only ternary line formatting differs; lead fetched full source and inspected diff; runtime expression identical."
+    },
+    {
+      "owner": "ui",
+      "run": 43116667193,
+      "snapshot_sha": "c16e5e77ca8024a1deceda7eba7d48815baaf58a",
+      "conclusion": "success",
+      "path": "packages/app-shell/src/pages/new-session/new-session-workspace-controller.ts",
+      "snapshot_blob": "a5b2b89daf1cefdecefa22163fd78bafda1ea9a3",
+      "local_blob": "a5b2b89daf1cefdecefa22163fd78bafda1ea9a3",
+      "exact": true
+    },
+    {
+      "owner": "ui",
+      "run": 43116667193,
+      "snapshot_sha": "c16e5e77ca8024a1deceda7eba7d48815baaf58a",
+      "conclusion": "success",
+      "path": "packages/app-shell/src/context/file/load-queue.ts",
+      "snapshot_blob": "4b00d1419272821b9396de798f6a475629622797",
+      "local_blob": "4b00d1419272821b9396de798f6a475629622797",
+      "exact": true
+    },
+    {
+      "owner": "ui",
+      "run": 43117735906,
+      "snapshot_sha": "8af492be4bcc00af1760f8076164584c660bcdf3",
+      "conclusion": "success",
+      "path": "packages/tui/src/context/sync.tsx",
+      "snapshot_blob": "0362c01ea5c9bc02a75bd08fa5ff0d64fd197cc7",
+      "local_blob": "0362c01ea5c9bc02a75bd08fa5ff0d64fd197cc7",
+      "exact": true
+    }
+  ],
+  "benchmark_before_current_dev": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117649677",
+    "tests_passed": 6,
+    "integration_commit": "78b8e1a46b"
+  },
+  "supplemental_candidates": [
+    {
+      "id": "G3-candidate",
+      "status": "runtime_fixture_only",
+      "title": "Imported emitter omits required empty Struct payload",
+      "scope": "Public generator fixture; productive endpoint not established",
+      "severity": "unclassified",
+      "evidence": {
+        "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112615865",
+        "snapshot_sha": "ea0afd36197790ecf053baa6b7fb70f696aeddee",
+        "case": "optional-payload.test.ts empty (imported)"
+      },
+      "disposition": "Recorded separately from original 65; no silent G1 scope expansion."
+    }
+  ]
 }

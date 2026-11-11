@@ -116,5 +116,500 @@
       }
     ]
   },
-  "after": null
+  "after": null,
+  "before_current_dev": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117649677",
+    "integration_commit": "78b8e1a46b",
+    "dev": "ca3f2e60937e5a154df8a4505b03605d2da1e729",
+    "tests_passed": 6,
+    "records": [
+      {
+        "runID": "2026-11-11T23-11-02-143Z-3675",
+        "name": "benchmarks cold and hot session tab switching",
+        "status": "passed",
+        "retry": 0,
+        "repeatEachIndex": 0,
+        "measurements": [
+          {
+            "dimension": "cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 189.7,
+              "max": 200.5
+            },
+            "firstCorrectObservedMs": {
+              "median": 189.7,
+              "max": 200.5
+            },
+            "stableObservedMs": {
+              "median": 256.5,
+              "max": 265.8
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 3
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 95,
+              "max": 112.8
+            },
+            "firstCorrectObservedMs": {
+              "median": 95,
+              "max": 112.8
+            },
+            "stableObservedMs": {
+              "median": 166.3,
+              "max": 188.2
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          }
+        ]
+      },
+      {
+        "runID": "2026-11-11T23-11-02-143Z-3675",
+        "name": "benchmarks v2 session tab switching with and without the review pane",
+        "status": "passed",
+        "retry": 0,
+        "repeatEachIndex": 0,
+        "measurements": [
+          {
+            "dimension": "closed/cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 165,
+              "max": 176.4
+            },
+            "firstCorrectObservedMs": {
+              "median": 165,
+              "max": 176.4
+            },
+            "stableObservedMs": {
+              "median": 208.7,
+              "max": 232.3
+            },
+            "blankSamples": {
+              "median": 1,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "closed/hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 90.6,
+              "max": 104.6
+            },
+            "firstCorrectObservedMs": {
+              "median": 90.6,
+              "max": 104.6
+            },
+            "stableObservedMs": {
+              "median": 154,
+              "max": 164.2
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "open/cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 158.7,
+              "max": 162.5
+            },
+            "firstCorrectObservedMs": {
+              "median": 158.7,
+              "max": 162.5
+            },
+            "stableObservedMs": {
+              "median": 266.5,
+              "max": 281
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 3
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "open/hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 102.1,
+              "max": 112
+            },
+            "firstCorrectObservedMs": {
+              "median": 102.1,
+              "max": 112
+            },
+            "stableObservedMs": {
+              "median": 154.4,
+              "max": 178.8
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          }
+        ]
+      },
+      {
+        "runID": "2026-11-11T23-11-02-143Z-3675",
+        "name": "benchmarks cold and hot session tab switching",
+        "status": "passed",
+        "retry": 0,
+        "repeatEachIndex": 1,
+        "measurements": [
+          {
+            "dimension": "cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 166.8,
+              "max": 185.6
+            },
+            "firstCorrectObservedMs": {
+              "median": 166.8,
+              "max": 185.6
+            },
+            "stableObservedMs": {
+              "median": 226.1,
+              "max": 280.3
+            },
+            "blankSamples": {
+              "median": 1,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 88.5,
+              "max": 92.8
+            },
+            "firstCorrectObservedMs": {
+              "median": 88.5,
+              "max": 92.8
+            },
+            "stableObservedMs": {
+              "median": 171.3,
+              "max": 214.4
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          }
+        ]
+      },
+      {
+        "runID": "2026-11-11T23-11-02-143Z-3675",
+        "name": "benchmarks v2 session tab switching with and without the review pane",
+        "status": "passed",
+        "retry": 0,
+        "repeatEachIndex": 1,
+        "measurements": [
+          {
+            "dimension": "closed/cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 157.9,
+              "max": 180.1
+            },
+            "firstCorrectObservedMs": {
+              "median": 157.9,
+              "max": 180.1
+            },
+            "stableObservedMs": {
+              "median": 223.3,
+              "max": 275.3
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 3
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "closed/hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 86.8,
+              "max": 99.7
+            },
+            "firstCorrectObservedMs": {
+              "median": 86.8,
+              "max": 99.7
+            },
+            "stableObservedMs": {
+              "median": 156,
+              "max": 182.9
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "open/cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 148.9,
+              "max": 166.9
+            },
+            "firstCorrectObservedMs": {
+              "median": 148.9,
+              "max": 166.9
+            },
+            "stableObservedMs": {
+              "median": 272.1,
+              "max": 290.8
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "open/hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 108,
+              "max": 123.6
+            },
+            "firstCorrectObservedMs": {
+              "median": 108,
+              "max": 123.6
+            },
+            "stableObservedMs": {
+              "median": 148.3,
+              "max": 179.9
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          }
+        ]
+      },
+      {
+        "runID": "2026-11-11T23-11-02-143Z-3675",
+        "name": "benchmarks cold and hot session tab switching",
+        "status": "passed",
+        "retry": 0,
+        "repeatEachIndex": 2,
+        "measurements": [
+          {
+            "dimension": "cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 166.6,
+              "max": 178
+            },
+            "firstCorrectObservedMs": {
+              "median": 166.6,
+              "max": 178
+            },
+            "stableObservedMs": {
+              "median": 228.3,
+              "max": 231.4
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 76.7,
+              "max": 96.5
+            },
+            "firstCorrectObservedMs": {
+              "median": 76.7,
+              "max": 96.5
+            },
+            "stableObservedMs": {
+              "median": 155.3,
+              "max": 164.4
+            },
+            "blankSamples": {
+              "median": 1,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          }
+        ]
+      },
+      {
+        "runID": "2026-11-11T23-11-02-143Z-3675",
+        "name": "benchmarks v2 session tab switching with and without the review pane",
+        "status": "passed",
+        "retry": 0,
+        "repeatEachIndex": 2,
+        "measurements": [
+          {
+            "dimension": "closed/cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 158.9,
+              "max": 174
+            },
+            "firstCorrectObservedMs": {
+              "median": 158.9,
+              "max": 174
+            },
+            "stableObservedMs": {
+              "median": 218.3,
+              "max": 245.9
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 3
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "closed/hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 91.5,
+              "max": 96.2
+            },
+            "firstCorrectObservedMs": {
+              "median": 91.5,
+              "max": 96.2
+            },
+            "stableObservedMs": {
+              "median": 151.2,
+              "max": 165.1
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "open/cold",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 155.5,
+              "max": 165.4
+            },
+            "firstCorrectObservedMs": {
+              "median": 155.5,
+              "max": 165.4
+            },
+            "stableObservedMs": {
+              "median": 269.4,
+              "max": 288.2
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          },
+          {
+            "dimension": "open/hot",
+            "samples": 5,
+            "firstDestinationObservedMs": {
+              "median": 109.3,
+              "max": 114
+            },
+            "firstCorrectObservedMs": {
+              "median": 109.3,
+              "max": 114
+            },
+            "stableObservedMs": {
+              "median": 159,
+              "max": 180.2
+            },
+            "blankSamples": {
+              "median": 2,
+              "max": 2
+            },
+            "wrongDestinationSamples": {
+              "median": 0,
+              "max": 0
+            }
+          }
+        ]
+      }
+    ],
+    "purpose": "Updated after incoming dev UI changes, before audit UI commits; compare after against this baseline."
+  }
 }
