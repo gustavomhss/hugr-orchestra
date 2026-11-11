@@ -1,0 +1,2610 @@
+{
+  "schema": "genesis-runtime-scope-fit/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "state": "PROPOSAL_NEEDS_S1_S5_BINDING",
+  "scope_revision": {
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8"
+  },
+  "runtime_scope_proposal": "orchestra",
+  "preserve_inventory_domain_and_flow_labels": true,
+  "artifact_ids_unchanged": true,
+  "entries": [
+    {
+      "key": "core-atlas/source-facts",
+      "inventory_scope": "core-atlas",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-atlas/local-contract",
+      "inventory_scope": "core-atlas",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-atlas/source-facts",
+        "platform.atlas-runtime.L1",
+        "platform.atlas-knowledge.L1",
+        "platform.atlas-boundary.L1",
+        "core-project/source-facts",
+        "core-process/source-facts"
+      ]
+    },
+    {
+      "key": "core-atlas/maintenance",
+      "inventory_scope": "core-atlas",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-atlas/local-contract",
+        "flow-context-lifecycle/integration",
+        "flow-workflow-to-board/integration",
+        "F-platform-atlas-ownership/integration"
+      ]
+    },
+    {
+      "key": "core-session/source-facts",
+      "inventory_scope": "core-session",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-session/local-contract",
+      "inventory_scope": "core-session",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-session/source-facts",
+        "core-event/source-facts",
+        "core-database/source-facts",
+        "core-location/source-facts",
+        "core-agent/source-facts",
+        "core-tool/source-facts",
+        "core-provider/source-facts",
+        "core-system-context/source-facts"
+      ]
+    },
+    {
+      "key": "core-session/maintenance",
+      "inventory_scope": "core-session",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-session/local-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-tool-to-process/integration",
+        "flow-model-route/integration",
+        "flow-context-lifecycle/integration",
+        "flow-project-placement/integration",
+        "flow-workflow-to-board/integration",
+        "flow-scheduled-run/integration",
+        "flow-live-meeting/integration",
+        "flow-persistent-data-upgrade/integration",
+        "F-platform-claude-governance/integration"
+      ]
+    },
+    {
+      "key": "core-agent/source-facts",
+      "inventory_scope": "core-agent",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-agent/local-contract",
+      "inventory_scope": "core-agent",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-agent/source-facts",
+        "package-schema/source-facts",
+        "core-permission/source-facts",
+        "platform.maestro.L1",
+        "platform.maestro-arsenal.L1"
+      ]
+    },
+    {
+      "key": "core-agent/maintenance",
+      "inventory_scope": "core-agent",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-agent/local-contract",
+        "flow-scheduled-run/integration"
+      ]
+    },
+    {
+      "key": "core-system-context/source-facts",
+      "inventory_scope": "core-system-context",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-system-context/local-contract",
+      "inventory_scope": "core-system-context",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-system-context/source-facts",
+        "core-session/source-facts",
+        "core-instruction/source-facts"
+      ]
+    },
+    {
+      "key": "core-system-context/maintenance",
+      "inventory_scope": "core-system-context",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-system-context/local-contract",
+        "flow-context-lifecycle/integration"
+      ]
+    },
+    {
+      "key": "core-tool/source-facts",
+      "inventory_scope": "core-tool",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-tool/local-contract",
+      "inventory_scope": "core-tool",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-tool/source-facts",
+        "core-location/source-facts",
+        "core-permission/source-facts",
+        "core-tool-safety/source-facts",
+        "package-llm/source-facts",
+        "core-instruction/source-facts"
+      ]
+    },
+    {
+      "key": "core-tool/maintenance",
+      "inventory_scope": "core-tool",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-tool/local-contract",
+        "flow-tool-to-process/integration",
+        "flow-context-lifecycle/integration",
+        "flow-capability-execution/integration",
+        "flow-workflow-to-board/integration",
+        "F-platform-native-skills/integration"
+      ]
+    },
+    {
+      "key": "core-tool-safety/source-facts",
+      "inventory_scope": "core-tool-safety",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-tool-safety/local-contract",
+      "inventory_scope": "core-tool-safety",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-tool-safety/source-facts",
+        "core-process/source-facts",
+        "core-permission/source-facts",
+        "core-config/source-facts",
+        "platform.relay-native.L1",
+        "platform.relay-standalone.L1"
+      ]
+    },
+    {
+      "key": "core-tool-safety/maintenance",
+      "inventory_scope": "core-tool-safety",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-tool-safety/local-contract",
+        "flow-tool-to-process/integration"
+      ]
+    },
+    {
+      "key": "core-relay/source-facts",
+      "inventory_scope": "core-relay",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-relay/local-contract",
+      "inventory_scope": "core-relay",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-relay/source-facts",
+        "platform.relay-native.L1",
+        "platform.relay-standalone.L1",
+        "core-session/source-facts",
+        "core-tool-safety/source-facts"
+      ]
+    },
+    {
+      "key": "core-relay/maintenance",
+      "inventory_scope": "core-relay",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-relay/local-contract",
+        "flow-workflow-to-board/integration",
+        "F-platform-relay-parity/integration"
+      ]
+    },
+    {
+      "key": "core-config/source-facts",
+      "inventory_scope": "core-config",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-config/local-contract",
+      "inventory_scope": "core-config",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-config/source-facts",
+        "core-instruction/source-facts",
+        "core-plugin-host/source-facts",
+        "core-tool/source-facts",
+        "core-identity/source-facts"
+      ]
+    },
+    {
+      "key": "core-config/maintenance",
+      "inventory_scope": "core-config",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-config/local-contract",
+        "flow-model-route/integration",
+        "flow-project-placement/integration"
+      ]
+    },
+    {
+      "key": "core-permission/source-facts",
+      "inventory_scope": "core-permission",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-permission/local-contract",
+      "inventory_scope": "core-permission",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-permission/source-facts",
+        "core-session/source-facts",
+        "core-agent/source-facts",
+        "core-tool-safety/source-facts"
+      ]
+    },
+    {
+      "key": "core-permission/maintenance",
+      "inventory_scope": "core-permission",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-permission/local-contract",
+        "flow-tool-to-process/integration",
+        "flow-capability-execution/integration"
+      ]
+    },
+    {
+      "key": "core-location/source-facts",
+      "inventory_scope": "core-location",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-location/local-contract",
+      "inventory_scope": "core-location",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-location/source-facts",
+        "core-project/source-facts",
+        "core-session/source-facts",
+        "core-runtime/source-facts"
+      ]
+    },
+    {
+      "key": "core-location/maintenance",
+      "inventory_scope": "core-location",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-location/local-contract",
+        "flow-project-placement/integration"
+      ]
+    },
+    {
+      "key": "core-project/source-facts",
+      "inventory_scope": "core-project",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-project/local-contract",
+      "inventory_scope": "core-project",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-project/source-facts",
+        "core-location/source-facts",
+        "core-database/source-facts",
+        "core-process/source-facts",
+        "core-identity/source-facts"
+      ]
+    },
+    {
+      "key": "core-project/maintenance",
+      "inventory_scope": "core-project",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-project/local-contract",
+        "flow-project-placement/integration",
+        "flow-persistent-data-upgrade/integration"
+      ]
+    },
+    {
+      "key": "core-database/source-facts",
+      "inventory_scope": "core-database",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-database/local-contract",
+      "inventory_scope": "core-database",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-database/source-facts",
+        "package-effect-drizzle-sqlite/source-facts",
+        "core-runtime/source-facts"
+      ]
+    },
+    {
+      "key": "core-database/maintenance",
+      "inventory_scope": "core-database",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-database/local-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-project-placement/integration",
+        "flow-desktop-startup/integration",
+        "flow-scheduled-run/integration",
+        "flow-persistent-data-upgrade/integration"
+      ]
+    },
+    {
+      "key": "core-event/source-facts",
+      "inventory_scope": "core-event",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-event/local-contract",
+      "inventory_scope": "core-event",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-event/source-facts",
+        "core-database/source-facts",
+        "package-schema/source-facts",
+        "core-session/source-facts"
+      ]
+    },
+    {
+      "key": "core-event/maintenance",
+      "inventory_scope": "core-event",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-event/local-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-persistent-data-upgrade/integration"
+      ]
+    },
+    {
+      "key": "core-runtime/source-facts",
+      "inventory_scope": "core-runtime",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-runtime/local-contract",
+      "inventory_scope": "core-runtime",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-runtime/source-facts",
+        "core-location/source-facts",
+        "core-process/source-facts",
+        "core-config/source-facts"
+      ]
+    },
+    {
+      "key": "core-runtime/maintenance",
+      "inventory_scope": "core-runtime",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-runtime/local-contract",
+        "flow-desktop-startup/integration"
+      ]
+    },
+    {
+      "key": "core-process/source-facts",
+      "inventory_scope": "core-process",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-process/local-contract",
+      "inventory_scope": "core-process",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-process/source-facts",
+        "platform.omni-core.L1",
+        "platform.omni-bindings.L1",
+        "core-tool-safety/source-facts",
+        "core-runtime/source-facts"
+      ]
+    },
+    {
+      "key": "core-process/maintenance",
+      "inventory_scope": "core-process",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-process/local-contract",
+        "flow-tool-to-process/integration",
+        "F-platform-desktop-native/integration",
+        "F-platform-resource-diagnostics/integration"
+      ]
+    },
+    {
+      "key": "core-provider/source-facts",
+      "inventory_scope": "core-provider",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-provider/local-contract",
+      "inventory_scope": "core-provider",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-provider/source-facts",
+        "package-llm/source-facts",
+        "core-config/source-facts",
+        "core-identity/source-facts",
+        "core-session/source-facts"
+      ]
+    },
+    {
+      "key": "core-provider/maintenance",
+      "inventory_scope": "core-provider",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-provider/local-contract",
+        "flow-model-route/integration"
+      ]
+    },
+    {
+      "key": "core-plugin-host/source-facts",
+      "inventory_scope": "core-plugin-host",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-plugin-host/local-contract",
+      "inventory_scope": "core-plugin-host",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-plugin-host/source-facts",
+        "package-plugin/source-facts",
+        "core-config/source-facts",
+        "core-identity/source-facts",
+        "core-instruction/source-facts",
+        "core-tool/source-facts"
+      ]
+    },
+    {
+      "key": "core-plugin-host/maintenance",
+      "inventory_scope": "core-plugin-host",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-plugin-host/local-contract"
+      ]
+    },
+    {
+      "key": "core-identity/source-facts",
+      "inventory_scope": "core-identity",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-identity/local-contract",
+      "inventory_scope": "core-identity",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-identity/source-facts",
+        "core-database/source-facts",
+        "core-config/source-facts",
+        "core-provider/source-facts"
+      ]
+    },
+    {
+      "key": "core-identity/maintenance",
+      "inventory_scope": "core-identity",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-identity/local-contract",
+        "flow-model-route/integration",
+        "flow-capability-execution/integration",
+        "flow-workflow-to-board/integration",
+        "flow-live-meeting/integration",
+        "flow-persistent-data-upgrade/integration"
+      ]
+    },
+    {
+      "key": "core-instruction/source-facts",
+      "inventory_scope": "core-instruction",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-instruction/local-contract",
+      "inventory_scope": "core-instruction",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-instruction/source-facts",
+        "core-system-context/source-facts",
+        "core-config/source-facts",
+        "core-permission/source-facts",
+        "core-agent/source-facts"
+      ]
+    },
+    {
+      "key": "core-instruction/maintenance",
+      "inventory_scope": "core-instruction",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-instruction/local-contract",
+        "flow-context-lifecycle/integration"
+      ]
+    },
+    {
+      "key": "core-research/source-facts",
+      "inventory_scope": "core-research",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-research/local-contract",
+      "inventory_scope": "core-research",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-research/source-facts",
+        "core-atlas/source-facts",
+        "core-tool/source-facts",
+        "core-process/source-facts",
+        "platform.maestro.L1",
+        "platform.maestro-arsenal.L1"
+      ]
+    },
+    {
+      "key": "core-research/maintenance",
+      "inventory_scope": "core-research",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-research/local-contract"
+      ]
+    },
+    {
+      "key": "core-backend-toolkit/source-facts",
+      "inventory_scope": "core-backend-toolkit",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-backend-toolkit/local-contract",
+      "inventory_scope": "core-backend-toolkit",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-backend-toolkit/source-facts",
+        "core-process/source-facts",
+        "core-runtime/source-facts",
+        "core-instruction/source-facts"
+      ]
+    },
+    {
+      "key": "core-backend-toolkit/maintenance",
+      "inventory_scope": "core-backend-toolkit",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-backend-toolkit/local-contract",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "core-control-plane/source-facts",
+      "inventory_scope": "core-control-plane",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-control-plane/local-contract",
+      "inventory_scope": "core-control-plane",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-control-plane/source-facts",
+        "core-project/source-facts",
+        "core-location/source-facts",
+        "core-session/source-facts",
+        "core-event/source-facts"
+      ]
+    },
+    {
+      "key": "core-control-plane/maintenance",
+      "inventory_scope": "core-control-plane",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-control-plane/local-contract",
+        "flow-project-placement/integration"
+      ]
+    },
+    {
+      "key": "core-capability/source-facts",
+      "inventory_scope": "core-capability",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-capability/local-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts",
+        "core-tool/source-facts",
+        "core-permission/source-facts",
+        "core-identity/source-facts",
+        "core-process/source-facts",
+        "package-codemode/source-facts",
+        "platform.capability-assets.L1"
+      ]
+    },
+    {
+      "key": "core-capability/maintenance",
+      "inventory_scope": "core-capability",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-capability/artifact-contract",
+        "core-capability/catalog-contract",
+        "core-capability/channel-contract",
+        "core-capability/connection-contract",
+        "core-capability/document-contract",
+        "core-capability/job-contract",
+        "core-capability/local-contract",
+        "core-capability/mcp-contract",
+        "core-capability/media-contract",
+        "core-capability/operator-contract",
+        "core-capability/process-control-contract",
+        "core-capability/providers-contract",
+        "core-capability/schedule-contract",
+        "core-capability/service-contract",
+        "core-capability/sheet-contract",
+        "flow-capability-execution/integration",
+        "flow-scheduled-run/integration",
+        "flow-persistent-data-upgrade/integration"
+      ]
+    },
+    {
+      "key": "core-capability/artifact-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/catalog-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/channel-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/connection-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/document-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/job-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/mcp-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/media-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/operator-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/process-control-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/providers-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/schedule-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/service-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-capability/sheet-contract",
+      "inventory_scope": "core-capability",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-board/source-facts",
+      "inventory_scope": "core-board",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-board/local-contract",
+      "inventory_scope": "core-board",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-board/source-facts",
+        "platform.maestro.L1",
+        "platform.maestro-arsenal.L1",
+        "core-actions/source-facts",
+        "core-identity/source-facts",
+        "core-atlas/source-facts"
+      ]
+    },
+    {
+      "key": "core-board/maintenance",
+      "inventory_scope": "core-board",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-board/local-contract",
+        "flow-workflow-to-board/integration"
+      ]
+    },
+    {
+      "key": "core-rag-studio/source-facts",
+      "inventory_scope": "core-rag-studio",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-rag-studio/local-contract",
+      "inventory_scope": "core-rag-studio",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-rag-studio/source-facts",
+        "platform.rag-studio.L1",
+        "core-database/source-facts",
+        "core-location/source-facts"
+      ]
+    },
+    {
+      "key": "core-rag-studio/maintenance",
+      "inventory_scope": "core-rag-studio",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-rag-studio/local-contract",
+        "F-platform-rag-evidence/integration"
+      ]
+    },
+    {
+      "key": "core-scheduled-task/source-facts",
+      "inventory_scope": "core-scheduled-task",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-scheduled-task/local-contract",
+      "inventory_scope": "core-scheduled-task",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-scheduled-task/source-facts",
+        "core-session/source-facts",
+        "core-database/source-facts",
+        "core-capability/source-facts",
+        "core-agent/source-facts"
+      ]
+    },
+    {
+      "key": "core-scheduled-task/maintenance",
+      "inventory_scope": "core-scheduled-task",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-scheduled-task/local-contract",
+        "flow-scheduled-run/integration"
+      ]
+    },
+    {
+      "key": "core-actions/source-facts",
+      "inventory_scope": "core-actions",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-actions/local-contract",
+      "inventory_scope": "core-actions",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-actions/source-facts",
+        "core-identity/source-facts",
+        "core-project/source-facts",
+        "core-process/source-facts",
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "core-actions/maintenance",
+      "inventory_scope": "core-actions",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-actions/local-contract",
+        "flow-workflow-to-board/integration"
+      ]
+    },
+    {
+      "key": "core-util/source-facts",
+      "inventory_scope": "core-util",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-util/local-contract",
+      "inventory_scope": "core-util",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-util/source-facts",
+        "core-runtime/source-facts"
+      ]
+    },
+    {
+      "key": "core-util/maintenance",
+      "inventory_scope": "core-util",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-util/local-contract"
+      ]
+    },
+    {
+      "key": "package-schema/boundary-contract",
+      "inventory_scope": "package-schema",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-schema/source-facts",
+        "core-event/source-facts",
+        "package-protocol/source-facts"
+      ]
+    },
+    {
+      "key": "package-schema/source-facts",
+      "inventory_scope": "package-schema",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-schema/maintenance",
+      "inventory_scope": "package-schema",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-schema/boundary-contract",
+        "flow-source-to-sdk/integration"
+      ]
+    },
+    {
+      "key": "package-protocol/boundary-contract",
+      "inventory_scope": "package-protocol",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-protocol/source-facts",
+        "package-schema/source-facts",
+        "package-server/source-facts",
+        "package-client/source-facts"
+      ]
+    },
+    {
+      "key": "package-protocol/source-facts",
+      "inventory_scope": "package-protocol",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-protocol/maintenance",
+      "inventory_scope": "package-protocol",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-protocol/boundary-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-source-to-sdk/integration",
+        "F-platform-rag-evidence/integration"
+      ]
+    },
+    {
+      "key": "package-client/boundary-contract",
+      "inventory_scope": "package-client",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-client/source-facts",
+        "package-protocol/source-facts",
+        "package-schema/source-facts"
+      ]
+    },
+    {
+      "key": "package-client/source-facts",
+      "inventory_scope": "package-client",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-client/maintenance",
+      "inventory_scope": "package-client",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-client/boundary-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-source-to-sdk/integration",
+        "flow-capability-execution/integration",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "package-server/boundary-contract",
+      "inventory_scope": "package-server",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-server/source-facts",
+        "package-protocol/source-facts",
+        "core-location/source-facts",
+        "core-session/source-facts",
+        "core-permission/source-facts"
+      ]
+    },
+    {
+      "key": "package-server/source-facts",
+      "inventory_scope": "package-server",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-server/maintenance",
+      "inventory_scope": "package-server",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-server/boundary-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-source-to-sdk/integration",
+        "flow-capability-execution/integration",
+        "flow-scheduled-run/integration",
+        "F-platform-relay-parity/integration"
+      ]
+    },
+    {
+      "key": "package-sdk-next/boundary-contract",
+      "inventory_scope": "package-sdk-next",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-sdk-next/source-facts",
+        "package-client/source-facts",
+        "package-server/source-facts",
+        "core-session/source-facts",
+        "core-tool/source-facts"
+      ]
+    },
+    {
+      "key": "package-sdk-next/source-facts",
+      "inventory_scope": "package-sdk-next",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-sdk-next/maintenance",
+      "inventory_scope": "package-sdk-next",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-sdk-next/boundary-contract",
+        "flow-source-to-sdk/integration"
+      ]
+    },
+    {
+      "key": "package-llm/boundary-contract",
+      "inventory_scope": "package-llm",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-llm/source-facts",
+        "package-schema/source-facts",
+        "core-provider/source-facts",
+        "core-session/source-facts",
+        "core-economy/source-facts"
+      ]
+    },
+    {
+      "key": "package-llm/source-facts",
+      "inventory_scope": "package-llm",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-llm/maintenance",
+      "inventory_scope": "package-llm",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-llm/boundary-contract",
+        "flow-model-route/integration"
+      ]
+    },
+    {
+      "key": "package-plugin/boundary-contract",
+      "inventory_scope": "package-plugin",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-plugin/source-facts",
+        "core-plugin-host/source-facts",
+        "package-client/source-facts",
+        "package-protocol/source-facts"
+      ]
+    },
+    {
+      "key": "package-plugin/source-facts",
+      "inventory_scope": "package-plugin",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-plugin/maintenance",
+      "inventory_scope": "package-plugin",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-plugin/boundary-contract"
+      ]
+    },
+    {
+      "key": "package-codemode/boundary-contract",
+      "inventory_scope": "package-codemode",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-codemode/source-facts",
+        "core-capability/source-facts"
+      ]
+    },
+    {
+      "key": "package-codemode/source-facts",
+      "inventory_scope": "package-codemode",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-codemode/maintenance",
+      "inventory_scope": "package-codemode",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-codemode/boundary-contract"
+      ]
+    },
+    {
+      "key": "package-effect-drizzle-sqlite/boundary-contract",
+      "inventory_scope": "package-effect-drizzle-sqlite",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-effect-drizzle-sqlite/source-facts",
+        "core-database/source-facts"
+      ]
+    },
+    {
+      "key": "package-effect-drizzle-sqlite/source-facts",
+      "inventory_scope": "package-effect-drizzle-sqlite",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-effect-drizzle-sqlite/maintenance",
+      "inventory_scope": "package-effect-drizzle-sqlite",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-effect-drizzle-sqlite/boundary-contract",
+        "flow-persistent-data-upgrade/integration"
+      ]
+    },
+    {
+      "key": "package-effect-sqlite-node/boundary-contract",
+      "inventory_scope": "package-effect-sqlite-node",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-effect-sqlite-node/source-facts",
+        "core-database/source-facts"
+      ]
+    },
+    {
+      "key": "package-effect-sqlite-node/source-facts",
+      "inventory_scope": "package-effect-sqlite-node",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-script/boundary-contract",
+      "inventory_scope": "package-script",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-script/source-facts",
+        "app-cli/source-and-boundary",
+        "app-desktop/source-and-boundary",
+        "platform.omni-core.L1",
+        "platform.omni-bindings.L1"
+      ]
+    },
+    {
+      "key": "package-script/source-facts",
+      "inventory_scope": "package-script",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-script/maintenance",
+      "inventory_scope": "package-script",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-script/boundary-contract",
+        "flow-desktop-startup/integration",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "package-app-shell/boundary-contract",
+      "inventory_scope": "package-app-shell",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-app-shell/source-facts",
+        "package-client/source-facts",
+        "package-session-ui/source-facts",
+        "package-ui/source-facts",
+        "app-desktop/source-and-boundary",
+        "app-web/source-and-boundary"
+      ]
+    },
+    {
+      "key": "package-app-shell/source-facts",
+      "inventory_scope": "package-app-shell",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-app-shell/maintenance",
+      "inventory_scope": "package-app-shell",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-app-shell/boundary-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-source-to-sdk/integration",
+        "flow-capability-execution/integration",
+        "flow-workflow-to-board/integration",
+        "flow-scheduled-run/integration",
+        "flow-live-meeting/integration",
+        "flow-ui-state-and-language/integration",
+        "F-platform-rag-evidence/integration"
+      ]
+    },
+    {
+      "key": "package-session-ui/boundary-contract",
+      "inventory_scope": "package-session-ui",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-session-ui/source-facts",
+        "package-ui/source-facts",
+        "package-client/source-facts",
+        "core-session/source-facts"
+      ]
+    },
+    {
+      "key": "package-session-ui/source-facts",
+      "inventory_scope": "package-session-ui",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-session-ui/maintenance",
+      "inventory_scope": "package-session-ui",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-session-ui/boundary-contract",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-ui-state-and-language/integration"
+      ]
+    },
+    {
+      "key": "package-ui/boundary-contract",
+      "inventory_scope": "package-ui",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-ui/source-facts",
+        "package-session-ui/source-facts",
+        "package-app-shell/source-facts",
+        "app-storybook/source-and-boundary"
+      ]
+    },
+    {
+      "key": "package-ui/source-facts",
+      "inventory_scope": "package-ui",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-ui/maintenance",
+      "inventory_scope": "package-ui",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-ui/boundary-contract",
+        "flow-ui-state-and-language/integration",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "package-tui/boundary-contract",
+      "inventory_scope": "package-tui",
+      "layer": "L2",
+      "required_artifacts": [
+        "package-tui/source-facts",
+        "app-cli/source-and-boundary",
+        "package-client/source-facts",
+        "core-runtime/source-facts",
+        "package-plugin/source-facts"
+      ]
+    },
+    {
+      "key": "package-tui/source-facts",
+      "inventory_scope": "package-tui",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "package-tui/maintenance",
+      "inventory_scope": "package-tui",
+      "layer": "L4",
+      "required_artifacts": [
+        "package-tui/boundary-contract",
+        "flow-prompt-to-visible-turn/integration"
+      ]
+    },
+    {
+      "key": "app-cli/source-and-boundary",
+      "inventory_scope": "app-cli",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "app-cli/operator-guide",
+      "inventory_scope": "app-cli",
+      "layer": "L4",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-context-lifecycle/integration",
+        "flow-workflow-to-board/integration",
+        "flow-desktop-startup/integration",
+        "flow-maintenance-build-release/integration",
+        "F-platform-native-skills/integration",
+        "F-platform-claude-governance/integration"
+      ]
+    },
+    {
+      "key": "app-desktop/source-and-boundary",
+      "inventory_scope": "app-desktop",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "app-desktop/operator-guide",
+      "inventory_scope": "app-desktop",
+      "layer": "L4",
+      "required_artifacts": [
+        "app-desktop/source-and-boundary",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-desktop-startup/integration",
+        "flow-live-meeting/integration",
+        "flow-ui-state-and-language/integration",
+        "flow-maintenance-build-release/integration",
+        "F-platform-desktop-native/integration",
+        "F-platform-resource-diagnostics/integration"
+      ]
+    },
+    {
+      "key": "app-web/source-and-boundary",
+      "inventory_scope": "app-web",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "app-web/operator-guide",
+      "inventory_scope": "app-web",
+      "layer": "L4",
+      "required_artifacts": [
+        "app-web/source-and-boundary",
+        "flow-prompt-to-visible-turn/integration",
+        "flow-ui-state-and-language/integration",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "app-storybook/source-and-boundary",
+      "inventory_scope": "app-storybook",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "app-storybook/operator-guide",
+      "inventory_scope": "app-storybook",
+      "layer": "L4",
+      "required_artifacts": [
+        "app-storybook/source-and-boundary",
+        "flow-ui-state-and-language/integration"
+      ]
+    },
+    {
+      "key": "core-package/composition",
+      "inventory_scope": "core-package",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "core-economy/contract",
+      "inventory_scope": "core-economy",
+      "layer": "L2",
+      "required_artifacts": [
+        "core-economy/source-facts",
+        "package-llm/source-facts",
+        "core-database/source-facts"
+      ]
+    },
+    {
+      "key": "core-economy/operation",
+      "inventory_scope": "core-economy",
+      "layer": "L4",
+      "required_artifacts": [
+        "core-economy/contract",
+        "flow-model-route/integration"
+      ]
+    },
+    {
+      "key": "research-qualification-history/disposition",
+      "inventory_scope": "research-qualification-history",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "product-reference-corpus/authority-index",
+      "inventory_scope": "product-reference-corpus",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "json-configuration-schemas/provenance",
+      "inventory_scope": "json-configuration-schemas",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "json-configuration-schemas/maintenance",
+      "inventory_scope": "json-configuration-schemas",
+      "layer": "L4",
+      "required_artifacts": [
+        "json-configuration-schemas/provenance"
+      ]
+    },
+    {
+      "key": "platform.app-dock.L1",
+      "inventory_scope": "platform.app-dock",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.app-dock.L2",
+      "inventory_scope": "platform.app-dock",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.app-dock.L1",
+        "app-cli/source-and-boundary",
+        "app-desktop/source-and-boundary",
+        "core-permission/source-facts",
+        "core-session/source-facts"
+      ]
+    },
+    {
+      "key": "platform.app-dock.L4",
+      "inventory_scope": "platform.app-dock",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.app-dock.L2",
+        "F-platform-desktop-native/integration"
+      ]
+    },
+    {
+      "key": "platform.continuity.L1",
+      "inventory_scope": "platform.continuity",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.continuity.L2",
+      "inventory_scope": "platform.continuity",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.continuity.L1",
+        "core-session/source-facts",
+        "platform.atlas-boundary.L1",
+        "app-cli/source-and-boundary"
+      ]
+    },
+    {
+      "key": "platform.continuity.L4",
+      "inventory_scope": "platform.continuity",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.continuity.L2",
+        "flow-context-lifecycle/integration"
+      ]
+    },
+    {
+      "key": "platform.janitor.L1",
+      "inventory_scope": "platform.janitor",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.janitor.L2",
+      "inventory_scope": "platform.janitor",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.janitor.L1",
+        "app-desktop/source-and-boundary",
+        "core-process/source-facts"
+      ]
+    },
+    {
+      "key": "platform.janitor.L4",
+      "inventory_scope": "platform.janitor",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.janitor.L2",
+        "F-platform-resource-diagnostics/integration"
+      ]
+    },
+    {
+      "key": "platform.rag-studio.L1",
+      "inventory_scope": "platform.rag-studio",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.rag-studio.L2",
+      "inventory_scope": "platform.rag-studio",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.rag-studio.L1",
+        "core-rag-studio/source-facts",
+        "package-protocol/source-facts",
+        "package-schema/source-facts",
+        "package-app-shell/source-facts"
+      ]
+    },
+    {
+      "key": "platform.rag-studio.L4",
+      "inventory_scope": "platform.rag-studio",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.rag-studio.L2",
+        "F-platform-rag-evidence/integration"
+      ]
+    },
+    {
+      "key": "platform.capability-assets.L1",
+      "inventory_scope": "platform.capability-assets",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.capability-assets.L2",
+      "inventory_scope": "platform.capability-assets",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.capability-assets.L1",
+        "core-capability/source-facts",
+        "platform.maestro.L1"
+      ]
+    },
+    {
+      "key": "platform.capability-assets.L4",
+      "inventory_scope": "platform.capability-assets",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.capability-assets.L2",
+        "flow-capability-execution/integration"
+      ]
+    },
+    {
+      "key": "platform.maestro.L1",
+      "inventory_scope": "platform.maestro",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.maestro.L2",
+      "inventory_scope": "platform.maestro",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.maestro.L1",
+        "core-tool/source-facts",
+        "core-session/source-facts",
+        "core-board/source-facts",
+        "platform.relay-native.L1",
+        "app-cli/source-and-boundary"
+      ]
+    },
+    {
+      "key": "platform.maestro.L4",
+      "inventory_scope": "platform.maestro",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.maestro.L2",
+        "flow-context-lifecycle/integration",
+        "flow-capability-execution/integration",
+        "flow-workflow-to-board/integration",
+        "flow-live-meeting/integration",
+        "F-platform-native-skills/integration",
+        "F-platform-claude-governance/integration",
+        "F-platform-atlas-ownership/integration",
+        "F-platform-relay-parity/integration"
+      ]
+    },
+    {
+      "key": "platform.maestro-arsenal.L1",
+      "inventory_scope": "platform.maestro-arsenal",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.maestro-arsenal.L2",
+      "inventory_scope": "platform.maestro-arsenal",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.maestro-arsenal.L1",
+        "core-tool/source-facts",
+        "platform.maestro.L1",
+        "app-desktop/source-and-boundary"
+      ]
+    },
+    {
+      "key": "platform.maestro-arsenal.L4",
+      "inventory_scope": "platform.maestro-arsenal",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.maestro-arsenal.L2",
+        "flow-workflow-to-board/integration",
+        "flow-live-meeting/integration"
+      ]
+    },
+    {
+      "key": "platform.claude-engine.L1",
+      "inventory_scope": "platform.claude-engine",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.claude-engine.L2",
+      "inventory_scope": "platform.claude-engine",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.claude-engine.L1",
+        "core-session/source-facts",
+        "core-agent/source-facts",
+        "platform.maestro.L1",
+        "app-cli/source-and-boundary"
+      ]
+    },
+    {
+      "key": "platform.claude-engine.L4",
+      "inventory_scope": "platform.claude-engine",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.claude-engine.L2",
+        "flow-desktop-startup/integration",
+        "F-platform-claude-governance/integration"
+      ]
+    },
+    {
+      "key": "platform.specialist-assets.L1",
+      "inventory_scope": "platform.specialist-assets",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.specialist-assets.L2",
+      "inventory_scope": "platform.specialist-assets",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.specialist-assets.L1",
+        "core-tool/source-facts",
+        "core-package/composition",
+        "platform.maestro.L1",
+        "app-cli/source-and-boundary"
+      ]
+    },
+    {
+      "key": "platform.specialist-assets.L4",
+      "inventory_scope": "platform.specialist-assets",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.specialist-assets.L2",
+        "flow-capability-execution/integration",
+        "F-platform-native-skills/integration"
+      ]
+    },
+    {
+      "key": "platform.atlas-foundation.L1",
+      "inventory_scope": "platform.atlas-foundation",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.atlas-foundation.L2",
+      "inventory_scope": "platform.atlas-foundation",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.atlas-foundation.L1",
+        "platform.atlas-runtime.L1"
+      ]
+    },
+    {
+      "key": "platform.atlas-foundation.L4",
+      "inventory_scope": "platform.atlas-foundation",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.atlas-foundation.L2",
+        "F-platform-atlas-ownership/integration"
+      ]
+    },
+    {
+      "key": "platform.atlas-knowledge.L1",
+      "inventory_scope": "platform.atlas-knowledge",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.atlas-knowledge.L2",
+      "inventory_scope": "platform.atlas-knowledge",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.atlas-knowledge.L1",
+        "platform.atlas-runtime.L1"
+      ]
+    },
+    {
+      "key": "platform.atlas-knowledge.L4",
+      "inventory_scope": "platform.atlas-knowledge",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.atlas-knowledge.L2",
+        "flow-context-lifecycle/integration",
+        "F-platform-atlas-ownership/integration"
+      ]
+    },
+    {
+      "key": "platform.atlas-memory.L1",
+      "inventory_scope": "platform.atlas-memory",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.atlas-memory.L2",
+      "inventory_scope": "platform.atlas-memory",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.atlas-memory.L1",
+        "platform.atlas-runtime.L1",
+        "platform.maestro.L1",
+        "platform.retained-state-evidence.L1"
+      ]
+    },
+    {
+      "key": "platform.atlas-memory.L4",
+      "inventory_scope": "platform.atlas-memory",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.atlas-memory.L2",
+        "flow-context-lifecycle/integration"
+      ]
+    },
+    {
+      "key": "platform.atlas-runtime.L1",
+      "inventory_scope": "platform.atlas-runtime",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.atlas-runtime.L2",
+      "inventory_scope": "platform.atlas-runtime",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.atlas-runtime.L1",
+        "core-atlas/source-facts",
+        "platform.maestro.L1",
+        "package-app-shell/source-facts"
+      ]
+    },
+    {
+      "key": "platform.atlas-runtime.L4",
+      "inventory_scope": "platform.atlas-runtime",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.atlas-runtime.L2",
+        "flow-context-lifecycle/integration",
+        "flow-workflow-to-board/integration",
+        "F-platform-atlas-ownership/integration"
+      ]
+    },
+    {
+      "key": "platform.atlas-genesis.L1",
+      "inventory_scope": "platform.atlas-genesis",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.atlas-genesis.L2",
+      "inventory_scope": "platform.atlas-genesis",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.atlas-genesis.L1",
+        "platform.atlas-runtime.L1"
+      ]
+    },
+    {
+      "key": "platform.atlas-genesis.L4",
+      "inventory_scope": "platform.atlas-genesis",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.atlas-genesis.L2"
+      ]
+    },
+    {
+      "key": "platform.atlas-boundary.L1",
+      "inventory_scope": "platform.atlas-boundary",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.atlas-boundary.L2",
+      "inventory_scope": "platform.atlas-boundary",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.atlas-boundary.L1",
+        "core-atlas/source-facts",
+        "platform.continuity.L1",
+        "platform.maestro.L1"
+      ]
+    },
+    {
+      "key": "platform.atlas-boundary.L4",
+      "inventory_scope": "platform.atlas-boundary",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.atlas-boundary.L2",
+        "flow-context-lifecycle/integration",
+        "flow-maintenance-build-release/integration",
+        "F-platform-atlas-ownership/integration"
+      ]
+    },
+    {
+      "key": "platform.atlas-method-evidence.L1",
+      "inventory_scope": "platform.atlas-method-evidence",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.atlas-method-evidence.L2",
+      "inventory_scope": "platform.atlas-method-evidence",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.atlas-method-evidence.L1",
+        "platform.delivery-tooling.L1",
+        "platform.atlas-genesis.L1"
+      ]
+    },
+    {
+      "key": "platform.atlas-method-evidence.L4",
+      "inventory_scope": "platform.atlas-method-evidence",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.atlas-method-evidence.L2",
+        "F-platform-atlas-ownership/integration"
+      ]
+    },
+    {
+      "key": "platform.relay-native.L1",
+      "inventory_scope": "platform.relay-native",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.relay-native.L2",
+      "inventory_scope": "platform.relay-native",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.relay-native.L1",
+        "core-relay/source-facts",
+        "package-server/source-facts",
+        "package-schema/source-facts",
+        "platform.maestro.L1"
+      ]
+    },
+    {
+      "key": "platform.relay-native.L4",
+      "inventory_scope": "platform.relay-native",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.relay-native.L2",
+        "flow-workflow-to-board/integration",
+        "F-platform-claude-governance/integration",
+        "F-platform-relay-parity/integration"
+      ]
+    },
+    {
+      "key": "platform.relay-standalone.L1",
+      "inventory_scope": "platform.relay-standalone",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.relay-standalone.L2",
+      "inventory_scope": "platform.relay-standalone",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.relay-standalone.L1",
+        "platform.relay-native.L1",
+        "platform.relay-evidence.L1"
+      ]
+    },
+    {
+      "key": "platform.relay-standalone.L4",
+      "inventory_scope": "platform.relay-standalone",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.relay-standalone.L2",
+        "flow-workflow-to-board/integration",
+        "F-platform-relay-parity/integration"
+      ]
+    },
+    {
+      "key": "platform.relay-evidence.L1",
+      "inventory_scope": "platform.relay-evidence",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.relay-evidence.L2",
+      "inventory_scope": "platform.relay-evidence",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.relay-evidence.L1",
+        "platform.relay-native.L1",
+        "platform.relay-standalone.L1"
+      ]
+    },
+    {
+      "key": "platform.relay-evidence.L4",
+      "inventory_scope": "platform.relay-evidence",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.relay-evidence.L2",
+        "F-platform-relay-parity/integration"
+      ]
+    },
+    {
+      "key": "platform.omni-core.L1",
+      "inventory_scope": "platform.omni-core",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.omni-core.L2",
+      "inventory_scope": "platform.omni-core",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.omni-core.L1",
+        "core-process/source-facts",
+        "platform.delivery-tooling.L1"
+      ]
+    },
+    {
+      "key": "platform.omni-core.L4",
+      "inventory_scope": "platform.omni-core",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.omni-core.L2",
+        "flow-tool-to-process/integration",
+        "flow-desktop-startup/integration",
+        "F-platform-desktop-native/integration",
+        "F-platform-resource-diagnostics/integration"
+      ]
+    },
+    {
+      "key": "platform.omni-bindings.L1",
+      "inventory_scope": "platform.omni-bindings",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.omni-bindings.L2",
+      "inventory_scope": "platform.omni-bindings",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.omni-bindings.L1",
+        "core-process/source-facts",
+        "app-desktop/source-and-boundary",
+        "app-cli/source-and-boundary"
+      ]
+    },
+    {
+      "key": "platform.omni-bindings.L4",
+      "inventory_scope": "platform.omni-bindings",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.omni-bindings.L2",
+        "flow-tool-to-process/integration",
+        "flow-desktop-startup/integration",
+        "flow-maintenance-build-release/integration",
+        "F-platform-desktop-native/integration"
+      ]
+    },
+    {
+      "key": "platform.omni-qualification.L1",
+      "inventory_scope": "platform.omni-qualification",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.omni-qualification.L2",
+      "inventory_scope": "platform.omni-qualification",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.omni-qualification.L1",
+        "platform.delivery-tooling.L1"
+      ]
+    },
+    {
+      "key": "platform.omni-qualification.L4",
+      "inventory_scope": "platform.omni-qualification",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.omni-qualification.L2",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "platform.httpapi-codegen.L1",
+      "inventory_scope": "platform.httpapi-codegen",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.httpapi-codegen.L2",
+      "inventory_scope": "platform.httpapi-codegen",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.httpapi-codegen.L1",
+        "package-protocol/source-facts",
+        "package-server/source-facts",
+        "package-client/source-facts"
+      ]
+    },
+    {
+      "key": "platform.httpapi-codegen.L4",
+      "inventory_scope": "platform.httpapi-codegen",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.httpapi-codegen.L2",
+        "flow-source-to-sdk/integration"
+      ]
+    },
+    {
+      "key": "platform.http-recorder.L1",
+      "inventory_scope": "platform.http-recorder",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.http-recorder.L2",
+      "inventory_scope": "platform.http-recorder",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.http-recorder.L1",
+        "package-llm/source-facts",
+        "platform.delivery-tooling.L1"
+      ]
+    },
+    {
+      "key": "platform.http-recorder.L4",
+      "inventory_scope": "platform.http-recorder",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.http-recorder.L2",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "platform.guardrails.L1",
+      "inventory_scope": "platform.guardrails",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.guardrails.L2",
+      "inventory_scope": "platform.guardrails",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.guardrails.L1",
+        "core-project/source-facts",
+        "package-protocol/source-facts",
+        "platform.delivery-tooling.L1"
+      ]
+    },
+    {
+      "key": "platform.guardrails.L4",
+      "inventory_scope": "platform.guardrails",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.guardrails.L2",
+        "flow-source-to-sdk/integration",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "platform.delivery-tooling.L1",
+      "inventory_scope": "platform.delivery-tooling",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.delivery-tooling.L2",
+      "inventory_scope": "platform.delivery-tooling",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.delivery-tooling.L1",
+        "package-script/source-facts",
+        "app-cli/source-and-boundary",
+        "app-desktop/source-and-boundary",
+        "platform.httpapi-codegen.L1",
+        "platform.omni-bindings.L1",
+        "platform.omni-core.L1",
+        "platform.omni-qualification.L1"
+      ]
+    },
+    {
+      "key": "platform.delivery-tooling.L4",
+      "inventory_scope": "platform.delivery-tooling",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.delivery-tooling.L2",
+        "flow-source-to-sdk/integration",
+        "flow-maintenance-build-release/integration",
+        "F-platform-native-skills/integration",
+        "F-platform-desktop-native/integration",
+        "F-platform-resource-diagnostics/integration"
+      ]
+    },
+    {
+      "key": "platform.contributor-guidance.L1",
+      "inventory_scope": "platform.contributor-guidance",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.contributor-guidance.L2",
+      "inventory_scope": "platform.contributor-guidance",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.contributor-guidance.L1",
+        "root.repository-contracts/source-facts",
+        "platform.maestro.L1",
+        "core-config/source-facts",
+        "core-instruction/source-facts"
+      ]
+    },
+    {
+      "key": "platform.contributor-guidance.L4",
+      "inventory_scope": "platform.contributor-guidance",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.contributor-guidance.L2",
+        "F-platform-native-skills/integration"
+      ]
+    },
+    {
+      "key": "platform.retained-state-evidence.L1",
+      "inventory_scope": "platform.retained-state-evidence",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "platform.retained-state-evidence.L2",
+      "inventory_scope": "platform.retained-state-evidence",
+      "layer": "L2",
+      "required_artifacts": [
+        "platform.retained-state-evidence.L1",
+        "platform.atlas-runtime.L1",
+        "platform.delivery-tooling.L1"
+      ]
+    },
+    {
+      "key": "platform.retained-state-evidence.L4",
+      "inventory_scope": "platform.retained-state-evidence",
+      "layer": "L4",
+      "required_artifacts": [
+        "platform.retained-state-evidence.L2",
+        "flow-maintenance-build-release/integration"
+      ]
+    },
+    {
+      "key": "root.repository-contracts/source-facts",
+      "inventory_scope": "root.repository-contracts",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "root.repository-contracts/maintenance",
+      "inventory_scope": "root.repository-contracts",
+      "layer": "L4",
+      "required_artifacts": [
+        "root.repository-contracts/source-facts"
+      ]
+    },
+    {
+      "key": "root.build-dependencies/source-facts",
+      "inventory_scope": "root.build-dependencies",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "root.build-dependencies/maintenance",
+      "inventory_scope": "root.build-dependencies",
+      "layer": "L4",
+      "required_artifacts": [
+        "root.build-dependencies/source-facts"
+      ]
+    },
+    {
+      "key": "root.visual-docs/source-facts",
+      "inventory_scope": "root.visual-docs",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "root.visual-docs/maintenance",
+      "inventory_scope": "root.visual-docs",
+      "layer": "L4",
+      "required_artifacts": [
+        "root.visual-docs/source-facts"
+      ]
+    },
+    {
+      "key": "core-economy/source-facts",
+      "inventory_scope": "core-economy",
+      "layer": "L1",
+      "required_artifacts": []
+    },
+    {
+      "key": "flow-prompt-to-visible-turn/integration",
+      "inventory_scope": "flow-prompt-to-visible-turn",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "app-desktop/source-and-boundary",
+        "app-web/source-and-boundary",
+        "core-database/local-contract",
+        "core-event/local-contract",
+        "core-session/local-contract",
+        "package-app-shell/boundary-contract",
+        "package-client/boundary-contract",
+        "package-protocol/boundary-contract",
+        "package-server/boundary-contract",
+        "package-session-ui/boundary-contract",
+        "package-tui/boundary-contract"
+      ]
+    },
+    {
+      "key": "flow-tool-to-process/integration",
+      "inventory_scope": "flow-tool-to-process",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-permission/local-contract",
+        "core-process/local-contract",
+        "core-session/local-contract",
+        "core-tool/local-contract",
+        "core-tool-safety/local-contract",
+        "platform.omni-bindings.L2",
+        "platform.omni-core.L2"
+      ]
+    },
+    {
+      "key": "flow-model-route/integration",
+      "inventory_scope": "flow-model-route",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-config/local-contract",
+        "core-economy/contract",
+        "core-identity/local-contract",
+        "core-provider/local-contract",
+        "core-session/local-contract",
+        "package-llm/boundary-contract"
+      ]
+    },
+    {
+      "key": "flow-source-to-sdk/integration",
+      "inventory_scope": "flow-source-to-sdk",
+      "layer": "L3",
+      "required_artifacts": [
+        "package-app-shell/boundary-contract",
+        "package-client/boundary-contract",
+        "package-protocol/boundary-contract",
+        "package-schema/boundary-contract",
+        "package-sdk-next/boundary-contract",
+        "package-server/boundary-contract",
+        "platform.delivery-tooling.L2",
+        "platform.guardrails.L2",
+        "platform.httpapi-codegen.L2"
+      ]
+    },
+    {
+      "key": "flow-context-lifecycle/integration",
+      "inventory_scope": "flow-context-lifecycle",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "core-atlas/local-contract",
+        "core-instruction/local-contract",
+        "core-session/local-contract",
+        "core-system-context/local-contract",
+        "core-tool/local-contract",
+        "platform.atlas-boundary.L2",
+        "platform.atlas-knowledge.L2",
+        "platform.atlas-memory.L2",
+        "platform.atlas-runtime.L2",
+        "platform.continuity.L2",
+        "platform.maestro.L2"
+      ]
+    },
+    {
+      "key": "flow-project-placement/integration",
+      "inventory_scope": "flow-project-placement",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-config/local-contract",
+        "core-control-plane/local-contract",
+        "core-database/local-contract",
+        "core-location/local-contract",
+        "core-project/local-contract",
+        "core-session/local-contract"
+      ]
+    },
+    {
+      "key": "flow-capability-execution/integration",
+      "inventory_scope": "flow-capability-execution",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-capability/artifact-contract",
+        "core-capability/catalog-contract",
+        "core-capability/channel-contract",
+        "core-capability/connection-contract",
+        "core-capability/document-contract",
+        "core-capability/job-contract",
+        "core-capability/local-contract",
+        "core-capability/mcp-contract",
+        "core-capability/media-contract",
+        "core-capability/operator-contract",
+        "core-capability/process-control-contract",
+        "core-capability/providers-contract",
+        "core-capability/schedule-contract",
+        "core-capability/service-contract",
+        "core-capability/sheet-contract",
+        "core-identity/local-contract",
+        "core-permission/local-contract",
+        "core-tool/local-contract",
+        "package-app-shell/boundary-contract",
+        "package-client/boundary-contract",
+        "package-server/boundary-contract",
+        "platform.capability-assets.L2",
+        "platform.maestro.L2",
+        "platform.specialist-assets.L2"
+      ]
+    },
+    {
+      "key": "flow-workflow-to-board/integration",
+      "inventory_scope": "flow-workflow-to-board",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "core-actions/local-contract",
+        "core-atlas/local-contract",
+        "core-board/local-contract",
+        "core-identity/local-contract",
+        "core-relay/local-contract",
+        "core-session/local-contract",
+        "core-tool/local-contract",
+        "package-app-shell/boundary-contract",
+        "platform.atlas-runtime.L2",
+        "platform.maestro.L2",
+        "platform.maestro-arsenal.L2",
+        "platform.relay-native.L2",
+        "platform.relay-standalone.L2"
+      ]
+    },
+    {
+      "key": "flow-desktop-startup/integration",
+      "inventory_scope": "flow-desktop-startup",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "app-desktop/source-and-boundary",
+        "core-database/local-contract",
+        "core-runtime/local-contract",
+        "package-script/boundary-contract",
+        "platform.claude-engine.L2",
+        "platform.omni-bindings.L2",
+        "platform.omni-core.L2"
+      ]
+    },
+    {
+      "key": "flow-scheduled-run/integration",
+      "inventory_scope": "flow-scheduled-run",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-agent/local-contract",
+        "core-capability/artifact-contract",
+        "core-capability/catalog-contract",
+        "core-capability/channel-contract",
+        "core-capability/connection-contract",
+        "core-capability/document-contract",
+        "core-capability/job-contract",
+        "core-capability/local-contract",
+        "core-capability/mcp-contract",
+        "core-capability/media-contract",
+        "core-capability/operator-contract",
+        "core-capability/process-control-contract",
+        "core-capability/providers-contract",
+        "core-capability/schedule-contract",
+        "core-capability/service-contract",
+        "core-capability/sheet-contract",
+        "core-database/local-contract",
+        "core-scheduled-task/local-contract",
+        "core-session/local-contract",
+        "package-app-shell/boundary-contract",
+        "package-server/boundary-contract"
+      ]
+    },
+    {
+      "key": "flow-live-meeting/integration",
+      "inventory_scope": "flow-live-meeting",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-desktop/source-and-boundary",
+        "core-identity/local-contract",
+        "core-session/local-contract",
+        "package-app-shell/boundary-contract",
+        "platform.maestro.L2",
+        "platform.maestro-arsenal.L2"
+      ]
+    },
+    {
+      "key": "flow-persistent-data-upgrade/integration",
+      "inventory_scope": "flow-persistent-data-upgrade",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-capability/artifact-contract",
+        "core-capability/catalog-contract",
+        "core-capability/channel-contract",
+        "core-capability/connection-contract",
+        "core-capability/document-contract",
+        "core-capability/job-contract",
+        "core-capability/local-contract",
+        "core-capability/mcp-contract",
+        "core-capability/media-contract",
+        "core-capability/operator-contract",
+        "core-capability/process-control-contract",
+        "core-capability/providers-contract",
+        "core-capability/schedule-contract",
+        "core-capability/service-contract",
+        "core-capability/sheet-contract",
+        "core-database/local-contract",
+        "core-event/local-contract",
+        "core-identity/local-contract",
+        "core-project/local-contract",
+        "core-session/local-contract",
+        "package-effect-drizzle-sqlite/boundary-contract"
+      ]
+    },
+    {
+      "key": "flow-ui-state-and-language/integration",
+      "inventory_scope": "flow-ui-state-and-language",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-desktop/source-and-boundary",
+        "app-storybook/source-and-boundary",
+        "app-web/source-and-boundary",
+        "package-app-shell/boundary-contract",
+        "package-session-ui/boundary-contract",
+        "package-ui/boundary-contract"
+      ]
+    },
+    {
+      "key": "flow-maintenance-build-release/integration",
+      "inventory_scope": "flow-maintenance-build-release",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "app-desktop/source-and-boundary",
+        "app-web/source-and-boundary",
+        "core-backend-toolkit/local-contract",
+        "package-client/boundary-contract",
+        "package-script/boundary-contract",
+        "package-ui/boundary-contract",
+        "platform.atlas-boundary.L2",
+        "platform.delivery-tooling.L2",
+        "platform.guardrails.L2",
+        "platform.http-recorder.L2",
+        "platform.omni-bindings.L2",
+        "platform.omni-qualification.L2",
+        "platform.retained-state-evidence.L2"
+      ]
+    },
+    {
+      "key": "F-platform-native-skills/integration",
+      "inventory_scope": "F-platform-native-skills",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "core-tool/local-contract",
+        "platform.contributor-guidance.L2",
+        "platform.delivery-tooling.L2",
+        "platform.maestro.L2",
+        "platform.specialist-assets.L2"
+      ]
+    },
+    {
+      "key": "F-platform-claude-governance/integration",
+      "inventory_scope": "F-platform-claude-governance",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-cli/source-and-boundary",
+        "core-session/local-contract",
+        "platform.claude-engine.L2",
+        "platform.maestro.L2",
+        "platform.relay-native.L2"
+      ]
+    },
+    {
+      "key": "F-platform-atlas-ownership/integration",
+      "inventory_scope": "F-platform-atlas-ownership",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-atlas/local-contract",
+        "platform.atlas-boundary.L2",
+        "platform.atlas-foundation.L2",
+        "platform.atlas-knowledge.L2",
+        "platform.atlas-method-evidence.L2",
+        "platform.atlas-runtime.L2",
+        "platform.maestro.L2"
+      ]
+    },
+    {
+      "key": "F-platform-desktop-native/integration",
+      "inventory_scope": "F-platform-desktop-native",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-desktop/source-and-boundary",
+        "core-process/local-contract",
+        "platform.app-dock.L2",
+        "platform.delivery-tooling.L2",
+        "platform.omni-bindings.L2",
+        "platform.omni-core.L2"
+      ]
+    },
+    {
+      "key": "F-platform-rag-evidence/integration",
+      "inventory_scope": "F-platform-rag-evidence",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-rag-studio/local-contract",
+        "package-app-shell/boundary-contract",
+        "package-protocol/boundary-contract",
+        "platform.rag-studio.L2"
+      ]
+    },
+    {
+      "key": "F-platform-relay-parity/integration",
+      "inventory_scope": "F-platform-relay-parity",
+      "layer": "L3",
+      "required_artifacts": [
+        "core-relay/local-contract",
+        "package-server/boundary-contract",
+        "platform.maestro.L2",
+        "platform.relay-evidence.L2",
+        "platform.relay-native.L2",
+        "platform.relay-standalone.L2"
+      ]
+    },
+    {
+      "key": "F-platform-resource-diagnostics/integration",
+      "inventory_scope": "F-platform-resource-diagnostics",
+      "layer": "L3",
+      "required_artifacts": [
+        "app-desktop/source-and-boundary",
+        "core-process/local-contract",
+        "platform.delivery-tooling.L2",
+        "platform.janitor.L2",
+        "platform.omni-core.L2"
+      ]
+    }
+  ],
+  "cross_scope_edges": 603,
+  "need_and_root_routing": "Freeze exact index/read routing with S1/S5 before production; original needs and artifact IDs cannot disappear in a scope alias.",
+  "source_selectors": "Freeze domain membership selectors, deciding anchors and treatment of additions/removals before constructing executable recipes. Literal source-members directories must not accidentally include new campaign evidence/control outputs outside the pinned source population.",
+  "control_paths": "Immutable paths per accepted layer/revision; changing an old control path invalidates old receipts.",
+  "initial_receipt_requirements": [
+    "Native rebuild control must be obligatory for each artifact before initial production.",
+    "Bind semantic recipe, source-capture, binary Git, native bridge and rebuild implementations to the inputs that actually execute.",
+    "Current J1/J2 identities and epochs come from the S5 roster, never from a fixture or renamed historical review."
+  ],
+  "layer_barrier": "All required predecessor artifacts accepted by both S5 judges before a next-layer request.",
+  "production": "NOT_RUN",
+  "ownership": "S2 implements the concrete recipe mapping after S1/S5 freeze the scope/routing/authority bindings; this proposal is not an executable native plan."
+}
