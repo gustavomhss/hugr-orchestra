@@ -1,0 +1,41 @@
+[
+  {
+    "source": "principal message",
+    "target": "/root/judge1",
+    "acknowledged_parts": [
+      1,
+      2
+    ],
+    "text": "A principal recebeu diretamente de J1 os ACKs nativos de partes 1/6 e 2/6; isso confirma recepção, sem byte echo do host.",
+    "limitation": "No receiver byte echo. The part 2 report does not itself certify the corrected retransmission bytes."
+  },
+  {
+    "source": "principal message",
+    "target": "/root/judge2",
+    "acknowledged_parts": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "text": "J2 acusou recebimento até parte 5/6.",
+    "limitation": "Reported before actual part 6 send. Final part 6 ACK not yet forwarded to this transporter."
+  },
+  {
+    "source": "principal message",
+    "target": "/root/judge2",
+    "acknowledged_parts": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "text": "J2 concluiu PASS para os dez corpos C, suplemento completo: R1–R3 satisfeitos e R4 documental suficiente; nenhuma correção/evidência adicional obrigatória neste lote. Os N01–N06/X01 continuam bloqueando claims dependentes; sem liberação da camada inteira/runtime/CI/B. Recebi o texto nativo integral e arquivarei verbatim como output/judgments/l1-c-v1-supplement-j2.md. Feche seu transporte agora com esta informação atribuída à principal; não precisa esperar outro ACK ou duplicar pedidos.",
+    "attribution": "Principal reports complete native supplementary judgment; transporter did not review or independently validate that judgment.",
+    "limitation": "This is a principal-attributed receipt/completion report, not a host byte echo or cryptographic receiver receipt.",
+    "supersedes_pending_part6_ack_status": true
+  }
+]

@@ -1,0 +1,63 @@
+{
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "calls": [
+    {
+      "sequence": 1,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge1",
+      "attempt": 1,
+      "request_file": "judge1-attempt-01.request.txt",
+      "request_bytes": 32683,
+      "request_sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c",
+      "data_bytes": 32197,
+      "data_sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af",
+      "call_completed_to_visible_result": true,
+      "visible_result_file": "judge1-attempt-01.result.txt",
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_visible_argument_manually_compared_to_canonical": true,
+      "transcription_difference_detected": false,
+      "host_received_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN"
+    },
+    {
+      "sequence": 2,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge2",
+      "attempt": 1,
+      "request_file": "judge2-attempt-01.request.txt",
+      "request_bytes": 32683,
+      "request_sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c",
+      "data_bytes": 32197,
+      "data_sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af",
+      "call_completed_to_visible_result": true,
+      "visible_result_file": "judge2-attempt-01.result.txt",
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_visible_argument_manually_compared_to_canonical": true,
+      "transcription_difference_detected": false,
+      "host_received_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "principal_gate_file": "principal-j1-completion.txt"
+    }
+  ],
+  "gate_status": "Satisfied: J2 actual call followed the principal message confirming J1 completion.",
+  "comparison_limit": "Canonical file and DATA are mechanically hash-verified. Actual visible tool argument was manually compared to that literal; no programmatic host argument export or receiver-byte echo was exposed.",
+  "acknowledgments": [
+    {
+      "from": "/root",
+      "about_target": "/root/judge1",
+      "kind": "principal_reported_native_completion_and_slot_release",
+      "message_file": "principal-j1-completion.txt",
+      "message": "J1 encerrou a avaliação nativa de S1-NATIVE-NEGATIVE-v1. Pode agora enviar o mesmo DATA a /root/judge2; o slot de revisão está livre. Vou arquivar o parecer integral separadamente. Não use o resultado para alterar nada no request ou no pacote de J2.",
+      "receiver_byte_echo": "UNKNOWN"
+    }
+  ],
+  "transport_status": "Two actual followup_task calls completed; no further judgment archival wait required."
+}

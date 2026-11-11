@@ -1,0 +1,9 @@
+--- producers/b/bodies/session-contract.md
++++ revisions/b-l1-evidence-v1/corrected/session-contract.md
+@@ -19,5 +19,5 @@
+ The prompt handler forwards the request fields to `session.prompt`. It maps `PromptConflictError` and `PromptBlocked` to the declared 409 conflict shape. The protocol describes admission separately from execution, including optional resume. This source supports the API admission result and adapter mapping; it does not on its own prove transactional persistence, crash recovery, scheduling, or exactly-once execution inside Core.
+ 
+-Command admission resolves and renders a slash command, applies any resolved agent/model choices, combines attachments, and calls the prompt path. Missing command resolution maps to an invalid request; an MCP-backed command failure is logged and returned as an unknown server error. Explicit agent/model switching, rename, archive, and remove use their declared no-content responses. Archive is described as a visibility toggle without stopping execution. Recursive history removal and interruption on delete are declared responsibilities delegated to Core.
++Command admission resolves and renders a slash command, applies any resolved agent/model choices, combines attachments, and calls the prompt path. Missing command resolution maps to an invalid request; MCP-backed command failures map to `UnknownError`. The inspected mapping branch contains no logging call. Explicit agent/model switching, rename, archive, and remove use their declared no-content responses. Archive is described as a visibility toggle without stopping execution. Recursive history removal and interruption on delete are declared responsibilities delegated to Core.
+ 
+ ## Error and location behavior

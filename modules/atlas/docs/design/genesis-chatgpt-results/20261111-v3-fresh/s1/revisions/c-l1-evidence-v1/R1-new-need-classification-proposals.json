@@ -1,0 +1,373 @@
+{
+  "status": "New classification proposals, visibly separate from frozen values; originals remain unchanged.",
+  "frozen_status": "All ten original artifact validity values are supported; gap strings have no separate mandatory/owner/status typing. The original empty semantic_review_refs and runtime_receipt_refs are preserved.",
+  "gaps": [
+    {
+      "id": "A01.g0",
+      "artifact_key": "s1.runtime.llm_turns.l1",
+      "frozen_gap_pointer": "/artifacts/0/gaps/0",
+      "frozen_text": "No provider or product execution receipt.",
+      "new_proposed_classifications": [
+        "N03"
+      ]
+    },
+    {
+      "id": "A01.g1",
+      "artifact_key": "s1.runtime.llm_turns.l1",
+      "frozen_gap_pointer": "/artifacts/0/gaps/1",
+      "frozen_text": "Selected schema/reducer inspection does not certify every variant.",
+      "new_proposed_classifications": [
+        "N04"
+      ]
+    },
+    {
+      "id": "A01.g2",
+      "artifact_key": "s1.runtime.llm_turns.l1",
+      "frozen_gap_pointer": "/artifacts/0/gaps/2",
+      "frozen_text": "Session persistence, authorization and continuation require Core evidence.",
+      "new_proposed_classifications": [
+        "N01",
+        "N02"
+      ]
+    },
+    {
+      "id": "A02.g0",
+      "artifact_key": "s1.runtime.llm_providers.l1",
+      "frozen_gap_pointer": "/artifacts/1/gaps/0",
+      "frozen_text": "Remote compatibility and Core route admission are not established by facade source.",
+      "new_proposed_classifications": [
+        "N02",
+        "N03"
+      ]
+    },
+    {
+      "id": "A02.g1",
+      "artifact_key": "s1.runtime.llm_providers.l1",
+      "frozen_gap_pointer": "/artifacts/1/gaps/1",
+      "frozen_text": "Protocol and multimodal helpers were not exhaustively audited.",
+      "new_proposed_classifications": [
+        "N04"
+      ]
+    },
+    {
+      "id": "A03.g0",
+      "artifact_key": "s1.runtime.llm_recording.l1",
+      "frozen_gap_pointer": "/artifacts/2/gaps/0",
+      "frozen_text": "Thirty-nine assigned fixture/media sources are metadata-only in this unit.",
+      "new_proposed_classifications": [
+        "N06"
+      ]
+    },
+    {
+      "id": "A03.g1",
+      "artifact_key": "s1.runtime.llm_recording.l1",
+      "frozen_gap_pointer": "/artifacts/2/gaps/1",
+      "frozen_text": "No declared test or fixture replay was executed.",
+      "new_proposed_classifications": [
+        "N03"
+      ]
+    },
+    {
+      "id": "A03.g2",
+      "artifact_key": "s1.runtime.llm_recording.l1",
+      "frozen_gap_pointer": "/artifacts/2/gaps/2",
+      "frozen_text": "Large OpenAPI fixture exceeds documented observer file-size limit.",
+      "new_proposed_classifications": [
+        "N06"
+      ]
+    },
+    {
+      "id": "A04.g0",
+      "artifact_key": "s1.runtime.plugin.l1",
+      "frozen_gap_pointer": "/artifacts/3/gaps/0",
+      "frozen_text": "Host loader, ordering, cleanup, installation and permission implementation not established by package types.",
+      "new_proposed_classifications": [
+        "N01"
+      ]
+    },
+    {
+      "id": "A04.g1",
+      "artifact_key": "s1.runtime.plugin.l1",
+      "frozen_gap_pointer": "/artifacts/3/gaps/1",
+      "frozen_text": "Plan, current declarations and frozen compatibility types must remain distinct.",
+      "new_proposed_classifications": [
+        "X01"
+      ]
+    },
+    {
+      "id": "A05.g0",
+      "artifact_key": "s1.runtime.codemode.l1",
+      "frozen_gap_pointer": "/artifacts/4/gaps/0",
+      "frozen_text": "Selected interpreter paths and supporting structural scans do not establish full language conformance.",
+      "new_proposed_classifications": [
+        "N04"
+      ]
+    },
+    {
+      "id": "A05.g1",
+      "artifact_key": "s1.runtime.codemode.l1",
+      "frozen_gap_pointer": "/artifacts/4/gaps/1",
+      "frozen_text": "Host adapters and leaf-tool authorization remain external to this implementation proof.",
+      "new_proposed_classifications": [
+        "N01"
+      ]
+    },
+    {
+      "id": "A05.g2",
+      "artifact_key": "s1.runtime.codemode.l1",
+      "frozen_gap_pointer": "/artifacts/4/gaps/2",
+      "frozen_text": "Result-envelope bytes may exceed configured value/log payload budget.",
+      "new_proposed_classifications": [
+        "X01"
+      ]
+    },
+    {
+      "id": "A06.g0",
+      "artifact_key": "s1.runtime.codemode_openapi.l1",
+      "frozen_gap_pointer": "/artifacts/5/gaps/0",
+      "frozen_text": "Response-schema validation and adapter-enforced redirect policy are documented future work.",
+      "new_proposed_classifications": [
+        "X01"
+      ]
+    },
+    {
+      "id": "A06.g1",
+      "artifact_key": "s1.runtime.codemode_openapi.l1",
+      "frozen_gap_pointer": "/artifacts/5/gaps/1",
+      "frozen_text": "Large reference fixture remains unobserved; no network or test execution.",
+      "new_proposed_classifications": [
+        "N06",
+        "N03"
+      ]
+    },
+    {
+      "id": "A07.g0",
+      "artifact_key": "s1.runtime.effect_sqlite.l1",
+      "frozen_gap_pointer": "/artifacts/6/gaps/0",
+      "frozen_text": "Generic adapter source does not establish Core startup, backup, restoration or after-commit policies.",
+      "new_proposed_classifications": [
+        "N02"
+      ]
+    },
+    {
+      "id": "A07.g1",
+      "artifact_key": "s1.runtime.effect_sqlite.l1",
+      "frozen_gap_pointer": "/artifacts/6/gaps/1",
+      "frozen_text": "Query-builder parity and Node package consumer absence are not independently proved.",
+      "new_proposed_classifications": [
+        "N04",
+        "N02"
+      ]
+    },
+    {
+      "id": "A07.g2",
+      "artifact_key": "s1.runtime.effect_sqlite.l1",
+      "frozen_gap_pointer": "/artifacts/6/gaps/2",
+      "frozen_text": "Node executeStream is explicitly unimplemented.",
+      "new_proposed_classifications": [
+        "X01"
+      ]
+    },
+    {
+      "id": "A08.g0",
+      "artifact_key": "s1.runtime.http_recorder.l1",
+      "frozen_gap_pointer": "/artifacts/7/gaps/0",
+      "frozen_text": "No build, packed-consumer, replay or network execution receipt.",
+      "new_proposed_classifications": [
+        "N03"
+      ]
+    },
+    {
+      "id": "A08.g1",
+      "artifact_key": "s1.runtime.http_recorder.l1",
+      "frozen_gap_pointer": "/artifacts/7/gaps/1",
+      "frozen_text": "Recordings do not establish timing, backpressure, cancellation or bounded-memory fidelity.",
+      "new_proposed_classifications": [
+        "X01",
+        "N03"
+      ]
+    },
+    {
+      "id": "A08.g2",
+      "artifact_key": "s1.runtime.http_recorder.l1",
+      "frozen_gap_pointer": "/artifacts/7/gaps/2",
+      "frozen_text": "Internal WebSocket helper has different chronology from public socket replay.",
+      "new_proposed_classifications": [
+        "X01"
+      ]
+    },
+    {
+      "id": "A09.g0",
+      "artifact_key": "s1.runtime.guides_intent.l1",
+      "frozen_gap_pointer": "/artifacts/8/gaps/0",
+      "frozen_text": "Host implementation of guide claims was not read in this unit.",
+      "new_proposed_classifications": [
+        "N01"
+      ]
+    },
+    {
+      "id": "A09.g1",
+      "artifact_key": "s1.runtime.guides_intent.l1",
+      "frozen_gap_pointer": "/artifacts/8/gaps/1",
+      "frozen_text": "Config unknown-key behavior differs in documentary/schema surfaces and needs decoder evidence.",
+      "new_proposed_classifications": [
+        "N05"
+      ]
+    },
+    {
+      "id": "A10.g0",
+      "artifact_key": "s1.runtime.maintenance_intent.l1",
+      "frozen_gap_pointer": "/artifacts/9/gaps/0",
+      "frozen_text": "Historical acceptance commands and completed labels are not current execution evidence.",
+      "new_proposed_classifications": [
+        "N03"
+      ]
+    },
+    {
+      "id": "A10.g1",
+      "artifact_key": "s1.runtime.maintenance_intent.l1",
+      "frozen_gap_pointer": "/artifacts/9/gaps/1",
+      "frozen_text": "Generated schema publisher and Core migration implementation are outside this source subset.",
+      "new_proposed_classifications": [
+        "N05",
+        "N02"
+      ]
+    },
+    {
+      "id": "A10.g2",
+      "artifact_key": "s1.runtime.maintenance_intent.l1",
+      "frozen_gap_pointer": "/artifacts/9/gaps/2",
+      "frozen_text": "No L2–L4, semantic verdict or Atlas runtime object is produced here.",
+      "new_proposed_classifications": [
+        "X01",
+        "N03"
+      ]
+    }
+  ],
+  "proposals": [
+    {
+      "id": "N01",
+      "need": "ownership",
+      "knowledge_missing": "Host lifecycle and authority/policy implementation: loader ordering/disposal/install behavior, session continuation and tool selection, leaf-tool authorization, and guide-reported host rules.",
+      "owning_target": "Core/session, plugin-host and execution-host/policy owners; the concrete owning artifact is unresolved in this unit.",
+      "blocked_dependent_acceptance": "Any promotion of package declarations, maintenance pointers or guide statements into accepted host lifecycle, credential, permission, trust, or authorization behavior.",
+      "bounded_exclusion": "The original L1 records can describe their package declarations and attributed documentary intent without claiming those host implementations were inspected.",
+      "classification_status": "NEW PROPOSAL for principal review; not an original frozen typed need",
+      "proposed_validity_for_dependent_acceptance": "blocked",
+      "mandatory_condition": "Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.",
+      "frozen_gap_ids": [
+        "A01.g2",
+        "A04.g0",
+        "A05.g1",
+        "A09.g0"
+      ]
+    },
+    {
+      "id": "N02",
+      "need": "component",
+      "knowledge_missing": "Core route admission/adoption, application database startup/backup/restore/post-commit behavior, migration adoption, and a current consumer/import census where absence is asserted.",
+      "owning_target": "Core model-routing/database owners and repository consumer census; concrete owning artifact unresolved in this unit.",
+      "blocked_dependent_acceptance": "Accepted claims that the session core routes every facade, that a generic adapter proves Core database policy, or that the Node adapter has no current consumers.",
+      "bounded_exclusion": "Facade and generic-adapter mechanisms remain local source facts; the model guide and Node README remain documentary evidence about adoption.",
+      "classification_status": "NEW PROPOSAL for principal review; not an original frozen typed need",
+      "proposed_validity_for_dependent_acceptance": "blocked",
+      "mandatory_condition": "Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.",
+      "frozen_gap_ids": [
+        "A01.g2",
+        "A02.g0",
+        "A07.g0",
+        "A07.g1",
+        "A10.g1"
+      ]
+    },
+    {
+      "id": "N03",
+      "need": "evidence",
+      "knowledge_missing": "Actual authorized execution receipts for any claimed provider/tool/replay/build/migration/consumer behavior, and real Atlas/runtime receipts if later stages require them.",
+      "owning_target": "Authorized CI/runtime/provider/consumer operators and later-stage owners; no concrete execution owner or receipt is supplied by this unit.",
+      "blocked_dependent_acceptance": "Any runtime PASS, provider conformance, successful build/replay/migration or consumer/runtime qualification inferred from source, fixtures, script declarations, hashes or counts.",
+      "bounded_exclusion": "This evidence supplement and the original source-only L1 records do not require product execution to quote or inspect code. Such execution remains unperformed, and cannot be presumed.",
+      "classification_status": "NEW PROPOSAL for principal review; not an original frozen typed need",
+      "proposed_validity_for_dependent_acceptance": "blocked",
+      "mandatory_condition": "Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.",
+      "frozen_gap_ids": [
+        "A01.g0",
+        "A02.g0",
+        "A03.g1",
+        "A06.g1",
+        "A08.g0",
+        "A08.g1",
+        "A10.g0",
+        "A10.g2"
+      ]
+    },
+    {
+      "id": "N04",
+      "need": "component",
+      "knowledge_missing": "Uninspected interpreter/operator/stdlib, schema/reducer/protocol/multimodal and query-builder branches beyond the selected source boundaries.",
+      "owning_target": "CodeMode, LLM and generic Drizzle adapter maintainers; concrete branch-level follow-up owners unresolved in this unit.",
+      "blocked_dependent_acceptance": "Exhaustive language conformance, full isolation/security qualification, complete protocol/schema coverage, or full relational/query parity based on the selected or structural review.",
+      "bounded_exclusion": "Selected decisive implementation paths support only their stated bounded mechanisms. The frozen depth labels and group rationales are retained, including newly excerpted files whose earlier depth was structural.",
+      "classification_status": "NEW PROPOSAL for principal review; not an original frozen typed need",
+      "proposed_validity_for_dependent_acceptance": "blocked",
+      "mandatory_condition": "Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.",
+      "frozen_gap_ids": [
+        "A01.g1",
+        "A02.g1",
+        "A05.g0",
+        "A07.g1"
+      ]
+    },
+    {
+      "id": "N05",
+      "need": "maintenance",
+      "knowledge_missing": "The generated schema publisher/regeneration chain and actual runtime config decoder, including treatment of unknown extra keys.",
+      "owning_target": "Core config decoder and schema publisher owners; concrete owning artifact unresolved in this unit.",
+      "blocked_dependent_acceptance": "A runtime rejection/ignore guarantee, successful regeneration claim, or established defect conclusion inferred solely from the schema/guide discrepancy.",
+      "bounded_exclusion": "The schema bytes and the guide wording are both preserved as differently scoped sources. This supplement does not resolve their runtime relationship.",
+      "classification_status": "NEW PROPOSAL for principal review; not an original frozen typed need",
+      "proposed_validity_for_dependent_acceptance": "blocked",
+      "mandatory_condition": "Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.",
+      "frozen_gap_ids": [
+        "A09.g1",
+        "A10.g1"
+      ]
+    },
+    {
+      "id": "N06",
+      "need": "evidence",
+      "knowledge_missing": "Contents and semantics of all 39 metadata-only fixture/media entries; observation of the large OpenAPI specimen within an authorized observation path if needed.",
+      "owning_target": "Fixture/evidence owners; concrete capture/consumer owner unresolved in this unit.",
+      "blocked_dependent_acceptance": "Any claim that depends on the unread fixture/media bodies, any claim those files were observed/absent, or a replay/provider result inferred from their pinned metadata.",
+      "bounded_exclusion": "All 39 entries remain classification_only and not_read. The original bodies disclaim reliance on their contents; that is a bounded exclusion for these bodies, not discharge of a future required content observation.",
+      "classification_status": "NEW PROPOSAL for principal review; not an original frozen typed need",
+      "proposed_validity_for_dependent_acceptance": "blocked",
+      "mandatory_condition": "Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.",
+      "frozen_gap_ids": [
+        "A03.g0",
+        "A03.g2",
+        "A06.g1"
+      ]
+    },
+    {
+      "id": "X01",
+      "need": "component",
+      "knowledge_missing": "No missing fact is invented for an already stated limit or distinct authority surface. Future claims beyond it would need implementation/change evidence or an explicitly different contract.",
+      "owning_target": "Relevant package or later-layer owner; no new owning runtime artifact is created here.",
+      "blocked_dependent_acceptance": "Claims of implemented Node streaming, response-schema/redirect guarantees, all-envelope byte limits, identical public/internal socket chronology, current APIs inferred from plans/frozen compatibility types, or completed later layers.",
+      "bounded_exclusion": "These are explicit original limits, distinct contract surfaces or out-of-scope outputs. They are not silent unknowns and do not support the excluded capability.",
+      "classification_status": "NEW PROPOSAL for principal review; not an original frozen typed need",
+      "proposed_validity_for_dependent_acceptance": "blocked",
+      "mandatory_condition": "Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.",
+      "frozen_gap_ids": [
+        "A04.g1",
+        "A05.g2",
+        "A06.g0",
+        "A07.g2",
+        "A08.g1",
+        "A08.g2",
+        "A10.g2"
+      ]
+    }
+  ]
+}

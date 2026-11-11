@@ -1,0 +1,3098 @@
+{
+  "source_sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9",
+  "group_fields": [
+    "family",
+    "kind",
+    "depth",
+    "justification",
+    "read_status",
+    "need",
+    "artifact_key",
+    "disposition",
+    "semantic_acceptance",
+    "captured"
+  ],
+  "membership_count": 323,
+  "groups": [
+    {
+      "id": "G001",
+      "frozen_fields": {
+        "family": "maintenance-documents",
+        "kind": "instruction",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "maintenance",
+        "artifact_key": "s1.runtime.maintenance_intent.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": ".orchestra/skills/claude-code-maintenance/SKILL.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7f3c5b9525fbe1b7bd7a34f60e6f143a8f5505d7",
+          "git_byte_length": 5788
+        },
+        {
+          "path": ".orchestra/skills/claude-mode-maintenance/SKILL.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "398b0505f2cb06d475eb4fcbf4f90f7b571d8270",
+          "git_byte_length": 5880
+        },
+        {
+          "path": ".orchestra/skills/effect/SKILL.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16271c12b0043464ad4f4dea7da7ac61f0d29722",
+          "git_byte_length": 3120
+        },
+        {
+          "path": ".orchestra/skills/permissions-usage/SKILL.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c6b2bffe3c496da0fe2f8c4c161366403710016d",
+          "git_byte_length": 3290
+        }
+      ]
+    },
+    {
+      "id": "G002",
+      "frozen_fields": {
+        "family": "maintenance-documents",
+        "kind": "historical_plan",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "maintenance",
+        "artifact_key": "s1.runtime.maintenance_intent.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "docs/architecture/phase-plans/70-90-briefs/FAC-PLUGIN.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0184770b62c7e569adc4757bec75a168eb3da00b",
+          "git_byte_length": 4303
+        },
+        {
+          "path": "docs/architecture/phase-plans/70-90-briefs/RD-ACP.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0b8081937561a162bbeae6ceae3f30259c71dbad",
+          "git_byte_length": 4331
+        },
+        {
+          "path": "docs/architecture/phase-plans/70-90-briefs/RD-CLAUDE.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "49b8bdade6c270b5ba97a9f1857418dc58dbbb1f",
+          "git_byte_length": 4547
+        },
+        {
+          "path": "docs/architecture/phase-plans/70-90-briefs/RD-DATABASE.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b2e822a40d503999229f1ea4b0aea58e3fc5dfdb",
+          "git_byte_length": 4705
+        },
+        {
+          "path": "docs/architecture/phase-plans/70-90-briefs/RD-PLUGIN.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bd6861f7b1bc400fcf72c7126dd63c6a9e9327d4",
+          "git_byte_length": 4773
+        },
+        {
+          "path": "docs/architecture/phase-plans/70-90-briefs/RN-SQLITE.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3ac1fed6930a53f1cfbe29466f62d02fef0d9df8",
+          "git_byte_length": 4857
+        }
+      ]
+    },
+    {
+      "id": "G003",
+      "frozen_fields": {
+        "family": "guides",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "operational",
+        "artifact_key": "s1.runtime.guides_intent.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "docs/guides/claude-mode.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "77e0c8baca27404196d3c1536003321d8ea036df",
+          "git_byte_length": 2845
+        },
+        {
+          "path": "docs/guides/config-errors.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bf6413cf2175b7804616709506aec44b5e1f5c31",
+          "git_byte_length": 942
+        },
+        {
+          "path": "docs/guides/credentials.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9e6c450c0a51ac92c9adc5852db920b575f2150a",
+          "git_byte_length": 4001
+        },
+        {
+          "path": "docs/guides/database-backups.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a661c599a3519440fd8d990bf1d48d21d3885467",
+          "git_byte_length": 1645
+        },
+        {
+          "path": "docs/guides/hooks.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "175b3030591420b8321395c414f935d96ca9689e",
+          "git_byte_length": 3642
+        },
+        {
+          "path": "docs/guides/integrations.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2443f982a4b768e09d631fbfda2cbe9e8f487587",
+          "git_byte_length": 4264
+        },
+        {
+          "path": "docs/guides/limits.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1d3249ed885223d71292a90c8b50f3893302f95d",
+          "git_byte_length": 1311
+        },
+        {
+          "path": "docs/guides/mcp-and-cli-failures.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c918be0376df020b50a94ba12f2e47e2504737bf",
+          "git_byte_length": 2327
+        },
+        {
+          "path": "docs/guides/mcp-project-trust.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "da47586309cc0c24ca4b7427b358c3706b648a46",
+          "git_byte_length": 3852
+        },
+        {
+          "path": "docs/guides/models.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1acc49061d975b65c05cb2c194cd612b802914d8",
+          "git_byte_length": 3319
+        },
+        {
+          "path": "docs/guides/permissions.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4ece5d1d331da22ad5d67441e01f6ccef6717eb8",
+          "git_byte_length": 2203
+        },
+        {
+          "path": "docs/guides/plugins.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4a271a325f679e25a990e51f89ea0009d8c48131",
+          "git_byte_length": 2287
+        },
+        {
+          "path": "docs/guides/tools.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a0999eb640a65a12991e92c5cea72fd81624abd1",
+          "git_byte_length": 5887
+        }
+      ]
+    },
+    {
+      "id": "G004",
+      "frozen_fields": {
+        "family": "maintenance-documents",
+        "kind": "design_intent",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "maintenance",
+        "artifact_key": "s1.runtime.maintenance_intent.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "docs/specs/database/integrity-followups.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "23e4f2a883b42894f8cd2cfa929377acc246df16",
+          "git_byte_length": 8638
+        },
+        {
+          "path": "docs/specs/storage/effect-sqlite-package.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "782350ef3e0889351d99ec7ed740ee696aaa6476",
+          "git_byte_length": 7729
+        },
+        {
+          "path": "docs/specs/storage/remove-orchestra-db.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "85fdbfcf3d21d1d708be632dc4471fe145deadb5",
+          "git_byte_length": 11897
+        }
+      ]
+    },
+    {
+      "id": "G005",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "instruction",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/AGENTS.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "39864a43dc6f338208f7a01877b420499d69085c",
+          "git_byte_length": 3143
+        }
+      ]
+    },
+    {
+      "id": "G006",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d4b5f125c9364b18e6f63ee811422ac750bc9cbf",
+          "git_byte_length": 4091
+        }
+      ]
+    },
+    {
+      "id": "G007",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "build_configuration",
+        "depth": "configuration_read",
+        "justification": "Configuration bytes read to establish declared commands, exports/dependencies and execution guard only. No install/build/typecheck/test was run.",
+        "read_status": "captured_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/bunfig.toml",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+          "git_byte_length": 104
+        },
+        {
+          "path": "packages/codemode/package.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1e1facca4d10cd39a12772af5c454236774c9c52",
+          "git_byte_length": 625
+        },
+        {
+          "path": "packages/codemode/tsconfig.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fe5c4d217b2e0feaa3d3c9c5bd9223446561d1b2",
+          "git_byte_length": 167
+        }
+      ]
+    },
+    {
+      "id": "G008",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "design_intent",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/codemode.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "081623ed8e51efecd16883bb9270179b0ed2a28c",
+          "git_byte_length": 13244
+        }
+      ]
+    },
+    {
+      "id": "G009",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/src/codemode.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "14782d7c8aaed7b4647e64f6631459bdd4684a64",
+          "git_byte_length": 6658
+        },
+        {
+          "path": "packages/codemode/src/interpreter/model.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d95351451035ead43c7ad9876bd49654aa163626",
+          "git_byte_length": 5936
+        },
+        {
+          "path": "packages/codemode/src/interpreter/runtime.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+          "git_byte_length": 141124
+        },
+        {
+          "path": "packages/codemode/src/stdlib/json.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8a479d2c8c72b86298b402e9defee31659d1a93c",
+          "git_byte_length": 1596
+        },
+        {
+          "path": "packages/codemode/src/stdlib/promise.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d0b442ccf74f2230e0e8cbe060b0be86a120ce6a",
+          "git_byte_length": 293
+        },
+        {
+          "path": "packages/codemode/src/stdlib/value.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ab40dc07ddb5f41a8ad944e06c0ce34234e8b453",
+          "git_byte_length": 3383
+        },
+        {
+          "path": "packages/codemode/src/tool-error.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16460a019ae1e901a29ac4a3dda872d75acfcf0a",
+          "git_byte_length": 518
+        },
+        {
+          "path": "packages/codemode/src/tool-runtime.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f4ccc61d4c49a4f7572906559e5a4e2a11acdec9",
+          "git_byte_length": 33711
+        },
+        {
+          "path": "packages/codemode/src/tool.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6c6863f99dcf7e659a4e1a2b582095694404e39c",
+          "git_byte_length": 3980
+        },
+        {
+          "path": "packages/codemode/src/values.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4ca305d815ebf5cce00f396e79e657a88fcb26a0",
+          "git_byte_length": 1250
+        }
+      ]
+    },
+    {
+      "id": "G010",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "implementation",
+        "depth": "structural_scan",
+        "justification": "Captured declarations and opening structure; grouped support only, no independent semantic acceptance or exhaustive branch claim.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/src/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "92019825004b5455fe4ccdd8f168cb2051d70a57",
+          "git_byte_length": 177
+        },
+        {
+          "path": "packages/codemode/src/stdlib/collections.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f4760ff7061a7b93f495323abbf9b14027431b60",
+          "git_byte_length": 1269
+        },
+        {
+          "path": "packages/codemode/src/stdlib/console.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "798563128e560a501f44494c53a99f7e47b72696",
+          "git_byte_length": 210
+        },
+        {
+          "path": "packages/codemode/src/stdlib/date.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c492f58f94b1e7246b8d098b309c047024861dc2",
+          "git_byte_length": 2732
+        },
+        {
+          "path": "packages/codemode/src/stdlib/math.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cc8dd0670e969929366e3fe8f07b700cc5f219f7",
+          "git_byte_length": 1635
+        },
+        {
+          "path": "packages/codemode/src/stdlib/number.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "79710e1ad226672554233d09478cb84c9e706e6a",
+          "git_byte_length": 2488
+        },
+        {
+          "path": "packages/codemode/src/stdlib/object.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2beda0bf5cae137b0715b61c603de05c6320f287",
+          "git_byte_length": 3580
+        },
+        {
+          "path": "packages/codemode/src/stdlib/regexp.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "eac123bc16c981317f508815b63922a213c16076",
+          "git_byte_length": 2680
+        },
+        {
+          "path": "packages/codemode/src/stdlib/string.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3ac4372e363fe60ee9b68ad01780171f13d75fd5",
+          "git_byte_length": 1179
+        },
+        {
+          "path": "packages/codemode/src/stdlib/url.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "583d776d22ad434d7f41fe26c7f54461e0389425",
+          "git_byte_length": 2681
+        },
+        {
+          "path": "packages/codemode/src/tool-schema.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16213fa8eeb2d146350a368aeab13e7bf923a16a",
+          "git_byte_length": 13701
+        }
+      ]
+    },
+    {
+      "id": "G011",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode_openapi.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/src/openapi/TODO.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cbcfe81a68c8df2fa7aae622ddf2997e3ab29433",
+          "git_byte_length": 1213
+        }
+      ]
+    },
+    {
+      "id": "G012",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.codemode_openapi.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/src/openapi/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7f1770ef362792996f6026dced24ab4b570added",
+          "git_byte_length": 4425
+        },
+        {
+          "path": "packages/codemode/src/openapi/runtime.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+          "git_byte_length": 14768
+        },
+        {
+          "path": "packages/codemode/src/openapi/spec.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d",
+          "git_byte_length": 21473
+        },
+        {
+          "path": "packages/codemode/src/openapi/types.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cab772e701486b9a1af29dfe0798ce8bf77124ef",
+          "git_byte_length": 4305
+        }
+      ]
+    },
+    {
+      "id": "G013",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "test",
+        "depth": "declaration_scan",
+        "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+        "read_status": "captured_declarations_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/test/codemode.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "221b5e07dfe1f6be5239dbcd660050435516bca1",
+          "git_byte_length": 44670
+        },
+        {
+          "path": "packages/codemode/test/enumeration.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0de3dc3ea0ddd7e5b415159163c33e4306ecbca2",
+          "git_byte_length": 5914
+        },
+        {
+          "path": "packages/codemode/test/parity.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dfa85831837cf7a8cea70a57901b061d3fb6ad1e",
+          "git_byte_length": 18598
+        },
+        {
+          "path": "packages/codemode/test/promise.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "545d463abfac49288a138251f55cbd9eb01ed56a",
+          "git_byte_length": 15862
+        },
+        {
+          "path": "packages/codemode/test/signature.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "232c6dcb221d3193c2b6024d3454dcd2eec73120",
+          "git_byte_length": 16725
+        },
+        {
+          "path": "packages/codemode/test/stdlib.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f7831a060338939f3a1dc3b7f9186bfe58db145f",
+          "git_byte_length": 26951
+        }
+      ]
+    },
+    {
+      "id": "G014",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "fixture",
+        "depth": "json_structure",
+        "justification": "Decoded JSON root/envelope and interaction metadata inspected; sampled fixture data does not establish provider behavior or passing replay.",
+        "read_status": "captured_structure_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.codemode_openapi.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/test/fixtures/openapi-happy-path.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8052dd739113cd9001748c83832df2fab22d7a97",
+          "git_byte_length": 5066
+        }
+      ]
+    },
+    {
+      "id": "G015",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "fixture",
+        "depth": "git_metadata_only",
+        "justification": "Assigned fixture/media variant retained by pinned Git metadata. Representative fixture structures and decisive harness were inspected; this body is not semantic evidence and no conclusion depends on its contents. File exceeds the documented 256,000-byte Atlas observer ceiling; preserve unavailable/unobserved, never absent.",
+        "read_status": "not_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.codemode_openapi.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": false
+      },
+      "members": [
+        {
+          "path": "packages/codemode/test/fixtures/opencode-v2-openapi.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "934b22e389f4ae86039967dd8134d750780b025c",
+          "git_byte_length": 637024
+        }
+      ]
+    },
+    {
+      "id": "G016",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "test",
+        "depth": "declaration_scan",
+        "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+        "read_status": "captured_declarations_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.codemode_openapi.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/test/openapi.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2d74ef905e422a24e66749d697fc703674d597d6",
+          "git_byte_length": 37649
+        }
+      ]
+    },
+    {
+      "id": "G017",
+      "frozen_fields": {
+        "family": "codemode",
+        "kind": "test_support",
+        "depth": "declaration_scan",
+        "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+        "read_status": "captured_declarations_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.codemode.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/codemode/test/rejection.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1687c3e363bab431a4e9e9b0a12f901f9bec1c49",
+          "git_byte_length": 740
+        }
+      ]
+    },
+    {
+      "id": "G018",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "instruction",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/AGENTS.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f15d1a87a553327b6bd397cd39ac9fb0212a04a6",
+          "git_byte_length": 1473
+        }
+      ]
+    },
+    {
+      "id": "G019",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ba4516baec21d94e1fb3d63d3738a1d31bff0f2c",
+          "git_byte_length": 2545
+        }
+      ]
+    },
+    {
+      "id": "G020",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "build_configuration",
+        "depth": "configuration_read",
+        "justification": "Configuration bytes read to establish declared commands, exports/dependencies and execution guard only. No install/build/typecheck/test was run.",
+        "read_status": "captured_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/bunfig.toml",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+          "git_byte_length": 104
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/package.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6cb1e7d7c4f9eeb2978c7d6af0dc83a466e78727",
+          "git_byte_length": 791
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/tsconfig.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2bc480ffbb603a3144b086d1f2a6c128d111bf46",
+          "git_byte_length": 415
+        }
+      ]
+    },
+    {
+      "id": "G021",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "example_or_script",
+        "depth": "structural_scan",
+        "justification": "Support structure and selected relevant source inspected; examples are not consumer execution evidence and recording/build scripts were not run.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/examples/basic.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cf219a8bb5e95980fb72d2e1f5e422b93c8b982d",
+          "git_byte_length": 3357
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/examples/migrations/20240101000000_create_users/migration.sql",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f1aa81cb45407e77095bf1477affafb31526efe9",
+          "git_byte_length": 94
+        }
+      ]
+    },
+    {
+      "id": "G022",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f2ffc207d355b4227c39dbc831d7701786330256",
+          "git_byte_length": 3088
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1133e48b3a5295a0fd8d95c50e1d4772d08220f4",
+          "git_byte_length": 127
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/migrator.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6d0d15514373a98b149083ef04ef42e48ccbf10f",
+          "git_byte_length": 554
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e7b9d6b32cd835bdf54d70ba39e92a5839f26968",
+          "git_byte_length": 10799
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/raw.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "26e3a63d83c1c4390b89116db65d6e7995e3da22",
+          "git_byte_length": 1758
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/session.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "15a56f2ca7d9fe73a1fdaaa244d3430fb74cd965",
+          "git_byte_length": 17877
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/up-migrations/effect-sqlite.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3418752271ed4c1f550977e85d7ca2935625bd08",
+          "git_byte_length": 3570
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/up-migrations/sqlite.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2887c66bed735cd812d885953335d8f99c6dad2a",
+          "git_byte_length": 9062
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/up-migrations/utils.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cc71213ac401511e3bd9740be46776d8f24248bb",
+          "git_byte_length": 996
+        }
+      ]
+    },
+    {
+      "id": "G023",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "implementation",
+        "depth": "structural_scan",
+        "justification": "Captured declarations and opening structure; grouped support only, no independent semantic acceptance or exhaustive branch claim.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/src/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d6606b7d9fe153801a8ec42ce3a5d29d0ee6c8e5",
+          "git_byte_length": 227
+        }
+      ]
+    },
+    {
+      "id": "G024",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "vendored_adapter_support",
+        "depth": "structural_scan",
+        "justification": "Copied generic Drizzle adapter declarations and selected execution support inspected; primary driver/transaction/migration facts have direct implementation evidence. No full query parity claim.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/src/internal/drizzle-utils.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1998a08318cd5f2cd80a7b8d3e63b94b2bb039c9",
+          "git_byte_length": 5075
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/count.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c420d6fbb052940756945507b2141984eb23d0bd",
+          "git_byte_length": 2259
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/db.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ac4cc140ad0d80d397ff0712a525780a00f5a7d7",
+          "git_byte_length": 11343
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/delete.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "15e90d19746e6d713735acc3eb8c24d151c75c22",
+          "git_byte_length": 8965
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ab7aeb1ab60bf088b78989a9f9e03ef879e06c63",
+          "git_byte_length": 238
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/insert.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f85dc24475650b9c8a7056042342360598338baa",
+          "git_byte_length": 12707
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/query.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4676039e5504780f4a8456ce7c713df91ea9484e",
+          "git_byte_length": 6079
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/select.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0cfde54331dc556273476fd09eb9afba894d444a",
+          "git_byte_length": 9608
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/update.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "369e08e878ef8ebd25f3ca35ed88c9df7c8d2a08",
+          "git_byte_length": 13304
+        }
+      ]
+    },
+    {
+      "id": "G025",
+      "frozen_fields": {
+        "family": "effect-drizzle-sqlite",
+        "kind": "test",
+        "depth": "declaration_scan",
+        "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+        "read_status": "captured_declarations_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-drizzle-sqlite/test/sqlite.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5303ee069ac8c48c523abdcb98f4f9e9deed61df",
+          "git_byte_length": 6033
+        },
+        {
+          "path": "packages/effect-drizzle-sqlite/test/transaction-causes.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7873cdbac60f85059f1af8817bb30109b2f29984",
+          "git_byte_length": 15148
+        }
+      ]
+    },
+    {
+      "id": "G026",
+      "frozen_fields": {
+        "family": "effect-sqlite-node",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-sqlite-node/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5b1aa3d802989d35580a1f9fc970d9a3b3958892",
+          "git_byte_length": 1838
+        }
+      ]
+    },
+    {
+      "id": "G027",
+      "frozen_fields": {
+        "family": "effect-sqlite-node",
+        "kind": "build_configuration",
+        "depth": "configuration_read",
+        "justification": "Configuration bytes read to establish declared commands, exports/dependencies and execution guard only. No install/build/typecheck/test was run.",
+        "read_status": "captured_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-sqlite-node/package.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9d761d16b59bc62abaad776389c6fa02c18d72f9",
+          "git_byte_length": 473
+        },
+        {
+          "path": "packages/effect-sqlite-node/tsconfig.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2bc480ffbb603a3144b086d1f2a6c128d111bf46",
+          "git_byte_length": 415
+        }
+      ]
+    },
+    {
+      "id": "G028",
+      "frozen_fields": {
+        "family": "effect-sqlite-node",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.effect_sqlite.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/effect-sqlite-node/src/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fe8d67b91b7c8a9fc977eba61f14de94db22fabf",
+          "git_byte_length": 6530
+        }
+      ]
+    },
+    {
+      "id": "G029",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "instruction",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/AGENTS.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2be1821f84bbc5ddf1159d4d93279a1beb2944c",
+          "git_byte_length": 24295
+        }
+      ]
+    },
+    {
+      "id": "G030",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "design_intent",
+        "depth": "selected_document_sections",
+        "justification": "Status, proposed API and representative contract sections read. Draft/sketch is distinguished from current exported implementation.",
+        "read_status": "captured_selected_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/DESIGN.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ffecbe8fe85fff1c88d21c70bb447074cad9f683",
+          "git_byte_length": 33012
+        }
+      ]
+    },
+    {
+      "id": "G031",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2802692a2f1f079a4157ae8eee301a68e29e5e1",
+          "git_byte_length": 4258
+        }
+      ]
+    },
+    {
+      "id": "G032",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "build_configuration",
+        "depth": "configuration_read",
+        "justification": "Configuration bytes read to establish declared commands, exports/dependencies and execution guard only. No install/build/typecheck/test was run.",
+        "read_status": "captured_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/bunfig.toml",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+          "git_byte_length": 104
+        },
+        {
+          "path": "packages/llm/package.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "44778fe89942ba8a70dbd6b97c3da656e1e22ac0",
+          "git_byte_length": 2171
+        },
+        {
+          "path": "packages/llm/tsconfig.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2bc480ffbb603a3144b086d1f2a6c128d111bf46",
+          "git_byte_length": 415
+        }
+      ]
+    },
+    {
+      "id": "G033",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "documentation",
+        "depth": "selected_document_sections",
+        "justification": "Status, proposed API and representative contract sections read. Draft/sketch is distinguished from current exported implementation.",
+        "read_status": "captured_selected_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/example/call-sites.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a63a13f98679dfee882640876b700397e09f8c4f",
+          "git_byte_length": 21707
+        }
+      ]
+    },
+    {
+      "id": "G034",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "example_or_script",
+        "depth": "structural_scan",
+        "justification": "Support structure and selected relevant source inspected; examples are not consumer execution evidence and recording/build scripts were not run.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/example/tutorial.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1308b7c8b328adb9770ffed2f5d34e8a9b9e5ea8",
+          "git_byte_length": 9798
+        }
+      ]
+    },
+    {
+      "id": "G035",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "example_or_script",
+        "depth": "structural_scan",
+        "justification": "Support structure and selected relevant source inspected; examples are not consumer execution evidence and recording/build scripts were not run.",
+        "read_status": "captured_structural_scan",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/script/recording-cost-report.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5b08e72d5c7a231e31b27f1b6bbb3cbadae80d02",
+          "git_byte_length": 9226
+        },
+        {
+          "path": "packages/llm/script/setup-recording-env.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d32769b3cea56aec64feef93bc786150c82e8bfb",
+          "git_byte_length": 19314
+        }
+      ]
+    },
+    {
+      "id": "G036",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_providers.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/src/cache-policy.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "60f96dc69aaa84e7b7d62fca97b96dac9f674924",
+          "git_byte_length": 5659
+        },
+        {
+          "path": "packages/llm/src/protocols/anthropic-messages.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1c0dcd32a4332261a1361010f2f314cbda4fda54",
+          "git_byte_length": 33621
+        },
+        {
+          "path": "packages/llm/src/protocols/bedrock-converse.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c447a1a39d346a39dd29eab59e2f3413ab9f8850",
+          "git_byte_length": 24231
+        },
+        {
+          "path": "packages/llm/src/protocols/bedrock-event-stream.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d07d7de475993df317e4018b235b094ac9ec25d4",
+          "git_byte_length": 3805
+        },
+        {
+          "path": "packages/llm/src/protocols/gemini.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c4bb9476a49dd6f53d98f323063cb67794b45f16",
+          "git_byte_length": 18414
+        },
+        {
+          "path": "packages/llm/src/protocols/openai-chat.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9ac85b07b139f2a7a87f1a62d829a274b9cfd1ca",
+          "git_byte_length": 19639
+        },
+        {
+          "path": "packages/llm/src/protocols/openai-compatible-chat.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ce3f0a83d75a8dd646a9b7d588e9aa2dd6a61807",
+          "git_byte_length": 876
+        },
+        {
+          "path": "packages/llm/src/protocols/openai-responses.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503",
+          "git_byte_length": 39876
+        },
+        {
+          "path": "packages/llm/src/protocols/shared.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c14f52faccd472ae0f68f1a272a03d9e1310167c",
+          "git_byte_length": 14371
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/bedrock-auth.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "37cc451256d30e1c9b8872675fb0aabee01b40d0",
+          "git_byte_length": 2462
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/lifecycle.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "eb6c95dfbdabf0b92b697c2377d5329dbfb222d1",
+          "git_byte_length": 3164
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/response-format.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cd22f055848afe1b044533f81b917fec5aa98d4e",
+          "git_byte_length": 1023
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/tool-schema.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3a311eb34ce9ca72e0d801c58bb854161c3258e9",
+          "git_byte_length": 3059
+        },
+        {
+          "path": "packages/llm/src/providers/amazon-bedrock.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2f1791e0d620ab139e32158526e83229c464fa3f",
+          "git_byte_length": 1575
+        },
+        {
+          "path": "packages/llm/src/providers/anthropic.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0c9640af5ea65bda1c50f73e5f8fdf3b35922841",
+          "git_byte_length": 1251
+        },
+        {
+          "path": "packages/llm/src/providers/azure.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bfac2d1cad34a680b62b3047e440988e112cd483",
+          "git_byte_length": 3426
+        },
+        {
+          "path": "packages/llm/src/providers/cloudflare.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a006152e9829cfc63bcd9a9ea5e27a0b2892aa04",
+          "git_byte_length": 4407
+        },
+        {
+          "path": "packages/llm/src/providers/github-copilot.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1042f841456da4c6d2b3d687515b7641a791c72c",
+          "git_byte_length": 2515
+        },
+        {
+          "path": "packages/llm/src/providers/google.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c8a72c31f671fb0b82686c8e082d4456c8001604",
+          "git_byte_length": 1219
+        },
+        {
+          "path": "packages/llm/src/providers/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "774274cf2d4a7dac165793b273d470d61a748b63",
+          "git_byte_length": 487
+        },
+        {
+          "path": "packages/llm/src/providers/openai-compatible-profile.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "30770c9671cdc546c98c213cc24a2fe500f7574e",
+          "git_byte_length": 1062
+        },
+        {
+          "path": "packages/llm/src/providers/openai-compatible.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a79f65f6dfe070c292ffe40722cf9d6a021a4ea7",
+          "git_byte_length": 2071
+        },
+        {
+          "path": "packages/llm/src/providers/openai-options.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fb548dd79726bb7eca588882b02a72008a7bc4d1",
+          "git_byte_length": 3375
+        },
+        {
+          "path": "packages/llm/src/providers/openai.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "098cad84939bc46c5d15ea2ebcdc396feb1edfeb",
+          "git_byte_length": 2569
+        },
+        {
+          "path": "packages/llm/src/providers/openrouter.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "914d7c0a0badbef0a6898588c497ca8c422935b5",
+          "git_byte_length": 3110
+        },
+        {
+          "path": "packages/llm/src/providers/xai.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "321db97db1049166f21f5aedc650894fe6f7bcd1",
+          "git_byte_length": 1920
+        }
+      ]
+    },
+    {
+      "id": "G037",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "implementation",
+        "depth": "structural_scan",
+        "justification": "Captured declarations and opening structure; grouped support only, no independent semantic acceptance or exhaustive branch claim.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/src/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "735520ff77c2c8a106b5e5b27f7301f1907d46a8",
+          "git_byte_length": 963
+        },
+        {
+          "path": "packages/llm/src/schema/ids.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6d5b56aaab6b3fe2875bfa79c73305815eb939a4",
+          "git_byte_length": 1852
+        },
+        {
+          "path": "packages/llm/src/schema/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0c0fede8fa79366bd6b086551889e0aaea9e7e8d",
+          "git_byte_length": 125
+        },
+        {
+          "path": "packages/llm/src/schema/options.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fd4f8891921ca458ff6ffe9602e15f1732e6547a",
+          "git_byte_length": 11116
+        }
+      ]
+    },
+    {
+      "id": "G038",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_turns.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/src/llm.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e4781d8608b0185c500866aae20fda8335640550",
+          "git_byte_length": 6170
+        },
+        {
+          "path": "packages/llm/src/provider-error.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9900297908dc68c60fd3e47bef2d24229868e129",
+          "git_byte_length": 1937
+        },
+        {
+          "path": "packages/llm/src/provider.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c0406f3da02d611523142e39b4949118c1c8bd6d",
+          "git_byte_length": 1265
+        },
+        {
+          "path": "packages/llm/src/route/auth-options.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7e40aa12a2103369a1ee9f884fdef42e7ebb5b33",
+          "git_byte_length": 2041
+        },
+        {
+          "path": "packages/llm/src/route/auth.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "32871c04547e7b4cdb3fccc8adf1050f2fb6b110",
+          "git_byte_length": 5907
+        },
+        {
+          "path": "packages/llm/src/route/client.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5f064512f9ff1b449137778440eb0fd6b86c8131",
+          "git_byte_length": 16862
+        },
+        {
+          "path": "packages/llm/src/route/endpoint.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "accbe5324311a8d3e9105fbb6a2c03a7e206fabe",
+          "git_byte_length": 1895
+        },
+        {
+          "path": "packages/llm/src/route/executor.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+          "git_byte_length": 13933
+        },
+        {
+          "path": "packages/llm/src/route/framing.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ef4855817d081a5dea636f659c9ee6645ef31b73",
+          "git_byte_length": 1087
+        },
+        {
+          "path": "packages/llm/src/route/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48f4b7bc33929c464d37e87425bfe0ffb18a9b71",
+          "git_byte_length": 1029
+        },
+        {
+          "path": "packages/llm/src/route/protocol.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "acb1e78c67bb156c2cf83f89b436159476d1bcef",
+          "git_byte_length": 4053
+        },
+        {
+          "path": "packages/llm/src/route/transport/http.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "acc52c6ea173c28f92247b0fd31d58ea688df7e5",
+          "git_byte_length": 4991
+        },
+        {
+          "path": "packages/llm/src/route/transport/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fde9d6c4154aaff56c7f908d153f03a0a5a7617a",
+          "git_byte_length": 1176
+        },
+        {
+          "path": "packages/llm/src/route/transport/websocket.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "edb8aafa28922cbe1dda18c28367e0b3487297b7",
+          "git_byte_length": 9131
+        },
+        {
+          "path": "packages/llm/src/schema/errors.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "072e4e83892890ba48b25e45eb3cd2592afc9f86",
+          "git_byte_length": 6524
+        },
+        {
+          "path": "packages/llm/src/schema/events.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1831d4aeb424550bc4dc53b36dd914f626e83ccc",
+          "git_byte_length": 25228
+        },
+        {
+          "path": "packages/llm/src/schema/messages.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9a1176ed73044938155cd89df6e41c0d95daa2b6",
+          "git_byte_length": 11937
+        },
+        {
+          "path": "packages/llm/src/tool-runtime.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d69bbb9d478ca532a1481e8d7502c8e5c2b55dc6",
+          "git_byte_length": 2997
+        },
+        {
+          "path": "packages/llm/src/tool.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "11ed9854ca38a9ef648705d1091aaa35e1660da0",
+          "git_byte_length": 9667
+        },
+        {
+          "path": "packages/llm/src/utils/record.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a121fbde11a543fc674b2037fc051124492c1775",
+          "git_byte_length": 257
+        }
+      ]
+    },
+    {
+      "id": "G039",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "implementation",
+        "depth": "structural_scan",
+        "justification": "Captured declarations and opening structure; grouped support only, no independent semantic acceptance or exhaustive branch claim.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.llm_providers.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/src/protocols/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bd8c8d3d9d9be1fce7efdef1069a3dc5207e9f1e",
+          "git_byte_length": 310
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/bedrock-cache.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fab4d07b5c4a435b1bc21fefebb4e4868e6a000c",
+          "git_byte_length": 1604
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/bedrock-media.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6fda6c4fbb4351684565bbba1e097ab1ee25d498",
+          "git_byte_length": 3455
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/cache.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dd3e213e0eecf08c5f8fe0667ba2aeaec719f43d",
+          "git_byte_length": 696
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/gemini-tool-schema.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "efdbe3f6ec65cdfa82b0a2e2c02ca6ea5e810197",
+          "git_byte_length": 3647
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/openai-options.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "51e56ae21642fa4a717c11b15177fd2922f532b8",
+          "git_byte_length": 4193
+        },
+        {
+          "path": "packages/llm/src/protocols/utils/tool-stream.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8e07a64bfed843d2c0fcca5b6651de5ef09d23a7",
+          "git_byte_length": 7549
+        }
+      ]
+    },
+    {
+      "id": "G040",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "test",
+        "depth": "declaration_scan",
+        "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+        "read_status": "captured_declarations_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/test/adapter.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bbbb29f37af72acaa4abe23425f3fff147aab052",
+          "git_byte_length": 5358
+        },
+        {
+          "path": "packages/llm/test/auth-options.types.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "18f9508c3ca505a6ffc33e1cea08fd3a2f26f5a7",
+          "git_byte_length": 8381
+        },
+        {
+          "path": "packages/llm/test/auth.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1c7148dbbb4ebc28bc7a1d0318bcd040cfe259d3",
+          "git_byte_length": 3274
+        },
+        {
+          "path": "packages/llm/test/cache-policy.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a126d9502c5e497f240f5e53fa50a51d426479e6",
+          "git_byte_length": 9571
+        },
+        {
+          "path": "packages/llm/test/endpoint.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "504c9843c1be9ff33eaa5705ead4f7a29e6750e4",
+          "git_byte_length": 1734
+        },
+        {
+          "path": "packages/llm/test/executor.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "811f7a9ffe7b606a4f42fb34175d7f35325f8525",
+          "git_byte_length": 16322
+        },
+        {
+          "path": "packages/llm/test/exports.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2feb39c32b7879853390e3c769b2704608dc9202",
+          "git_byte_length": 3347
+        },
+        {
+          "path": "packages/llm/test/generate-object.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9606f58f9840bea744efb5106be3a901ae7768c4",
+          "git_byte_length": 6355
+        },
+        {
+          "path": "packages/llm/test/llm.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "64346a8bb030e28f41c66181a9477f654dc056d8",
+          "git_byte_length": 8346
+        },
+        {
+          "path": "packages/llm/test/openai-response-format.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6a4c4adb2ee2c4d906b376a3671d2de966b54ebd",
+          "git_byte_length": 14285
+        },
+        {
+          "path": "packages/llm/test/prepare.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6923c5a678ed4dbb0eb59b24bd96b6c480366aa7",
+          "git_byte_length": 6524
+        },
+        {
+          "path": "packages/llm/test/provider-error.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c4185969640a2b70ed50c75beae8f9c6358e3137",
+          "git_byte_length": 1309
+        },
+        {
+          "path": "packages/llm/test/provider.types.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f8b46e375394eda46143b1c01412a4a16e20b2e8",
+          "git_byte_length": 1251
+        },
+        {
+          "path": "packages/llm/test/provider/anthropic-messages-cache.recorded.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e98e042aaa2f946eb82f692ed03438815ac6171b",
+          "git_byte_length": 2156
+        },
+        {
+          "path": "packages/llm/test/provider/anthropic-messages.recorded.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9b552550add402f6028386da07b5ba06aaafcdb7",
+          "git_byte_length": 1748
+        },
+        {
+          "path": "packages/llm/test/provider/anthropic-messages.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "898931295849e3d7a91813b384b887ca0d8d8fd3",
+          "git_byte_length": 33489
+        },
+        {
+          "path": "packages/llm/test/provider/bedrock-converse-cache.recorded.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0c58e7af68fc71dd8f004e38e1e6535709008a5e",
+          "git_byte_length": 2308
+        },
+        {
+          "path": "packages/llm/test/provider/bedrock-converse.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "46657331a344c446e38147fe1433377c6266d4b2",
+          "git_byte_length": 26897
+        },
+        {
+          "path": "packages/llm/test/provider/cloudflare.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "acd63962946929acb37bafd60f69e7c2314a18e9",
+          "git_byte_length": 8789
+        },
+        {
+          "path": "packages/llm/test/provider/gemini-cache.recorded.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fdf16f047b207a1e6b94fa708c341bb0cdb3ff93",
+          "git_byte_length": 1985
+        },
+        {
+          "path": "packages/llm/test/provider/gemini.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1dc253c0ea88c7cf3ae1a17ad048d07be7fc2f2c",
+          "git_byte_length": 19573
+        },
+        {
+          "path": "packages/llm/test/provider/openai-chat.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2cc0429d2c9355b654ff2bd12571c89fd4c1cb0f",
+          "git_byte_length": 24328
+        },
+        {
+          "path": "packages/llm/test/provider/openai-compatible-chat.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "43ae283e9f7c2cfe38b3494e0bc8b13a207cb9b7",
+          "git_byte_length": 8200
+        },
+        {
+          "path": "packages/llm/test/provider/openai-responses-cache.recorded.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d17cf7a5ba8d9d1eabcd9093ec944dbc5ccd8040",
+          "git_byte_length": 1817
+        },
+        {
+          "path": "packages/llm/test/provider/openai-responses.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "33683f0903a5d538ab743395bf99eae55b873902",
+          "git_byte_length": 53781
+        },
+        {
+          "path": "packages/llm/test/provider/openrouter.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "86d1317b3e64f65f21cfc067828eb5133eebcbe5",
+          "git_byte_length": 1815
+        },
+        {
+          "path": "packages/llm/test/recorded-ledger.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9f6d2338a79c8fef97617d36494dfb3ffa76d6aa",
+          "git_byte_length": 1190
+        },
+        {
+          "path": "packages/llm/test/response.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5e48e5ef457504eb23f2b65fdc2a955dec1494ed",
+          "git_byte_length": 3949
+        },
+        {
+          "path": "packages/llm/test/route.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "681583bc9e475b173f33016689dccee6088186f4",
+          "git_byte_length": 1362
+        },
+        {
+          "path": "packages/llm/test/schema.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3c6628c2e511539b7b34236cddefcfadfc7bc2e5",
+          "git_byte_length": 3499
+        },
+        {
+          "path": "packages/llm/test/tool-runtime.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c03a18bd8aa271d33775cc033096e9e09be4cdee",
+          "git_byte_length": 31581
+        },
+        {
+          "path": "packages/llm/test/tool-schema-projection.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a9df815dafabcb2b5bbf41ab6dc02e329baaff0f",
+          "git_byte_length": 3899
+        },
+        {
+          "path": "packages/llm/test/tool-stream.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b005d2666c8fbf2b9801f2866468930213e9b4f5",
+          "git_byte_length": 3509
+        },
+        {
+          "path": "packages/llm/test/tool.types.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2bd33df545f9d3f5ec526b8a3dc48ea5f0258953",
+          "git_byte_length": 1550
+        }
+      ]
+    },
+    {
+      "id": "G041",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "test_support",
+        "depth": "declaration_scan",
+        "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+        "read_status": "captured_declarations_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/test/continuation-scenarios.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1bb1848b557eff88f816544e604a6a2759d4726b",
+          "git_byte_length": 3878
+        },
+        {
+          "path": "packages/llm/test/lib/effect.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "05cf017b2be59295d7e612f744141274951b3a1e",
+          "git_byte_length": 2225
+        },
+        {
+          "path": "packages/llm/test/lib/http.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f6c600555b9389d715d8142477a5400864084f6b",
+          "git_byte_length": 3951
+        },
+        {
+          "path": "packages/llm/test/lib/openai-chunks.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "77a7c919e1a174c983eab0331738d5e274758d59",
+          "git_byte_length": 827
+        },
+        {
+          "path": "packages/llm/test/lib/sse.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "80b275d296e8eb9cdac73a99a0c81afbba6dce81",
+          "git_byte_length": 804
+        },
+        {
+          "path": "packages/llm/test/lib/tool-runtime.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "28ebc47c712b3331ff30ff5a89449d49c7ce8621",
+          "git_byte_length": 5327
+        },
+        {
+          "path": "packages/llm/test/recorded-golden.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b310a8f1d6db617d8a151a208407592dcba1581a",
+          "git_byte_length": 3090
+        },
+        {
+          "path": "packages/llm/test/recorded-scenarios.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cac348da659010055f9cf9ef3da2551a96a6e321",
+          "git_byte_length": 19888
+        }
+      ]
+    },
+    {
+      "id": "G042",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "media_asset",
+        "depth": "git_metadata_only",
+        "justification": "Assigned fixture/media variant retained by pinned Git metadata. Representative fixture structures and decisive harness were inspected; this body is not semantic evidence and no conclusion depends on its contents.",
+        "read_status": "not_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": false
+      },
+      "members": [
+        {
+          "path": "packages/llm/test/fixtures/media/restroom.png",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "52ed88afb0f06e915ede727b751fa5ea0d98ceb8",
+          "git_byte_length": 14496
+        }
+      ]
+    },
+    {
+      "id": "G043",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "fixture",
+        "depth": "git_metadata_only",
+        "justification": "Assigned fixture/media variant retained by pinned Git metadata. Representative fixture structures and decisive harness were inspected; this body is not semantic evidence and no conclusion depends on its contents.",
+        "read_status": "not_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": false
+      },
+      "members": [
+        {
+          "path": "packages/llm/test/fixtures/recordings/anthropic-messages-cache/writes-then-reads-cache-control-on-identical-second-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8cf2be05c14ed6d86f3a72b77fa432af986aad10",
+          "git_byte_length": 53425
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/anthropic-messages/accepts-malformed-assistant-tool-order-with-default-patch.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7730485cb4d68d8d31eb5ddde417b1f59c723775",
+          "git_byte_length": 3000
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/anthropic-messages/anthropic-opus-4-7-image-tool-result.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b1ba048d7a3bde6771180eba2194d0929dec4835",
+          "git_byte_length": 22691
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/anthropic-messages/claude-opus-4-7-drives-a-tool-loop.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "316f4308fc1d82c915c4714bee301331e563291d",
+          "git_byte_length": 6021
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/anthropic-messages/rejects-malformed-assistant-tool-order-without-patch.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cd0990cec5cf0e035ec54d876c0d56ea2ac4cb36",
+          "git_byte_length": 1720
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/anthropic-messages/streams-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ef8f69c21d3f151de01008fbc9dead331ca90732",
+          "git_byte_length": 3081
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/bedrock-converse/drives-a-tool-loop.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "26eca01609a1175bf7bf1cca2b30603d901ca874",
+          "git_byte_length": 16694
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/bedrock-converse/streams-a-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4f22ce22da80929b2199169b5e8de068fd3c7bb2",
+          "git_byte_length": 2986
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/cloudflare-ai-gateway/cloudflare-ai-gateway-workers-ai-gpt-oss-20b-tools-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "981c14f03edfa55958a93b7b046cec763609366c",
+          "git_byte_length": 8424
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/cloudflare-ai-gateway/cloudflare-ai-gateway-workers-ai-llama-3-1-8b-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6a8eff09d9773d410528fa45058f1ccabf64efe2",
+          "git_byte_length": 2228
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/cloudflare-workers-ai/cloudflare-workers-ai-gpt-oss-20b-tools-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fa22f1ddb9e5b873720927f9c3db34cc4cd18e6e",
+          "git_byte_length": 8379
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/cloudflare-workers-ai/cloudflare-workers-ai-llama-3-1-8b-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "52cc25f86b325bf441be2b491ca6fdbd7b07e3db",
+          "git_byte_length": 2193
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/gemini-cache/reports-cachedcontenttokencount-on-identical-second-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "209aadfc1a43cdf5dcc9fbacccacb3d7e492a7e3",
+          "git_byte_length": 51039
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/gemini/gemini-2-5-flash-image.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8ab0cc2f1c9e0626881d958de6c4892074ca3b79",
+          "git_byte_length": 21068
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/gemini/streams-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a526910f0dafd841260f307bcd8ce2e9f832835e",
+          "git_byte_length": 2204
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-chat/continues-after-tool-result.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7c02a93f0b4eab502467d6d59bcfda752967328b",
+          "git_byte_length": 7853
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-chat/drives-a-tool-loop-end-to-end.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fdc5fa7916b017e630e2df62a1435e6b84dd2b1c",
+          "git_byte_length": 12819
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-chat/streams-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fef4d8cd14a2cb66c2e04224fc2cb4eb306de92c",
+          "git_byte_length": 4922
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/deepseek-streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a71b1121cb01f5037f1facce3276dceec15d5a44",
+          "git_byte_length": 2462
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/groq-llama-3-3-70b-drives-a-tool-loop.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "403260b88b2e7b3004402d9294fb668fca5bc9f6",
+          "git_byte_length": 10631
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/groq-streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "561dbfda0629e7c8640428ebbf4e0a75d221acf1",
+          "git_byte_length": 3138
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/groq-streams-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "70e9a765d281af7ba78a5f3e5d5cf7497e5a2b4f",
+          "git_byte_length": 3382
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-claude-opus-4-7-drives-a-tool-loop.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e67d280678c394760987e46d027393c628773126",
+          "git_byte_length": 9199
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-gpt-4o-mini-drives-a-tool-loop.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7883285e581abd2d2e0e52fb08096ffb38e5ace4",
+          "git_byte_length": 13146
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-gpt-5-5-drives-a-tool-loop.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e1cbab70faac0358ae359b2892ea9d81dcd4c6a6",
+          "git_byte_length": 10506
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1a95146931ee7862f5c33a9f92bce969cb4789db",
+          "git_byte_length": 2871
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-streams-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "36d0ad99c56b69db67dc259e523b8fb72f03aaf9",
+          "git_byte_length": 5588
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/togetherai-streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "640565b14faa903bc1958029a26f953bcb8a930d",
+          "git_byte_length": 2157
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/togetherai-streams-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6c1d9c1a7fc46fdcbc27ecb52de6ac562ad2ce23",
+          "git_byte_length": 3087
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-responses-cache/reports-cached-tokens-on-identical-second-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2110a6a99ba0892d40f816f6ffea451b09ab2f5c",
+          "git_byte_length": 61781
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-responses/gpt-5-5-drives-a-tool-loop.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9d441205fde9b9df3d5bee0325de4950d709f35c",
+          "git_byte_length": 17838
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-responses/gpt-5-5-streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "92c7b7e0f1a0d6d9f884e4513a68368e107b51d7",
+          "git_byte_length": 7063
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-responses/gpt-5-5-streams-tool-call.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8aa5dedaaf77139a9b6ef8c1270b089acc6c214f",
+          "git_byte_length": 7932
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-responses/openai-responses-gpt-5-5-image-tool-result.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4f65f43b5766c6d5a635893be6e9eed261a83067",
+          "git_byte_length": 28582
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-responses/openai-responses-gpt-5-5-reasoning-continuation.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "47670c81272d237ef249909998fbc39c23415411",
+          "git_byte_length": 21882
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-responses/openai-responses-gpt-5-5-reasoning.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "107192d951e92acbf5ecc5f3f3b5cd1202436f42",
+          "git_byte_length": 10517
+        }
+      ]
+    },
+    {
+      "id": "G044",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "fixture",
+        "depth": "json_structure",
+        "justification": "Decoded JSON root/envelope and interaction metadata inspected; sampled fixture data does not establish provider behavior or passing replay.",
+        "read_status": "captured_structure_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/test/fixtures/recordings/anthropic-messages/streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e80a0dac34b534235fb1a4bb50d4f86d6981b3e4",
+          "git_byte_length": 2281
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/bedrock-converse/streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7eaacec02baf306b53931004fd55d33a4956cb80",
+          "git_byte_length": 2431
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/gemini/streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7f0e6b390e48ad0d2123e380745bbce0d617e9b9",
+          "git_byte_length": 1319
+        },
+        {
+          "path": "packages/llm/test/fixtures/recordings/openai-chat/streams-text.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c86a29a462bdfb9d3c4e88affedcbbe7558e59cc",
+          "git_byte_length": 2991
+        }
+      ]
+    },
+    {
+      "id": "G045",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "test",
+        "depth": "decisive_harness_read",
+        "justification": "Harness mode, filtering, explicit gaps and refusal decisions read. No tests were executed and scenario declarations are not outcomes.",
+        "read_status": "captured_semantic_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/test/provider/golden.recorded.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ef67c866d8d8de8c900ccc05998ab33c6932a8e9",
+          "git_byte_length": 7844
+        }
+      ]
+    },
+    {
+      "id": "G046",
+      "frozen_fields": {
+        "family": "llm",
+        "kind": "test_support",
+        "depth": "decisive_harness_read",
+        "justification": "Harness mode, filtering, explicit gaps and refusal decisions read. No tests were executed and scenario declarations are not outcomes.",
+        "read_status": "captured_semantic_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.llm_recording.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/llm/test/recorded-runner.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "49d44f554628b887d14f8a4141f8b53ce19f3a64",
+          "git_byte_length": 3837
+        },
+        {
+          "path": "packages/llm/test/recorded-test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c06292953cb00467ebac1ca461817c6f946725bc",
+          "git_byte_length": 3891
+        },
+        {
+          "path": "packages/llm/test/recorded-utils.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1c135ee695029626a5f06329c652231d7840481d",
+          "git_byte_length": 4552
+        },
+        {
+          "path": "packages/llm/test/recorded-websocket.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7da0ae3ba35f97eae8303b2662300d760acf9fd3",
+          "git_byte_length": 1063
+        }
+      ]
+    },
+    {
+      "id": "G047",
+      "frozen_fields": {
+        "family": "plugin",
+        "kind": "license_or_support",
+        "depth": "structural_scan",
+        "justification": "Captured support bytes retained; no runtime semantic claim rests on this support file.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.plugin.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/plugin/.gitignore",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1521c8b7652b1eec8ed4fe50877aae880c758ee3",
+          "git_byte_length": 5
+        }
+      ]
+    },
+    {
+      "id": "G048",
+      "frozen_fields": {
+        "family": "plugin",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.plugin.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/plugin/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9ad221cdb96752e2fdcdfd08f13828eb74f599dc",
+          "git_byte_length": 3665
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dd1405edfdc822d72925f7c847f6c723d91a1f71",
+          "git_byte_length": 2846
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4cf9a0cf7ec0763e95c27b8b4921a8fa70976b62",
+          "git_byte_length": 2476
+        }
+      ]
+    },
+    {
+      "id": "G049",
+      "frozen_fields": {
+        "family": "plugin",
+        "kind": "build_configuration",
+        "depth": "configuration_read",
+        "justification": "Configuration bytes read to establish declared commands, exports/dependencies and execution guard only. No install/build/typecheck/test was run.",
+        "read_status": "captured_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.plugin.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/plugin/bunfig.toml",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6a7a84a36a8a7ca8625c92217cf090743d8a42d2",
+          "git_byte_length": 48
+        },
+        {
+          "path": "packages/plugin/package.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3f696f1b3b6543ba659ca95b6c4880eccf04a3dc",
+          "git_byte_length": 1521
+        },
+        {
+          "path": "packages/plugin/tsconfig.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "553713f7d4a0282a527c91819be964fbfb722ebe",
+          "git_byte_length": 332
+        }
+      ]
+    },
+    {
+      "id": "G050",
+      "frozen_fields": {
+        "family": "plugin",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.plugin.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/plugin/src/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "539ebc5a3859fca106d9fb44f5805fa5bbffa6a0",
+          "git_byte_length": 478
+        },
+        {
+          "path": "packages/plugin/src/tool.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cdf9a933f496db2a00907a4f388220715aec0097",
+          "git_byte_length": 2257
+        },
+        {
+          "path": "packages/plugin/src/tui.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "df0eec88398ab435191810dc5e651b746561c512",
+          "git_byte_length": 17715
+        },
+        {
+          "path": "packages/plugin/src/types.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fdfd06a7bf4d09491e6cc35acc85c7709ddf56d3",
+          "git_byte_length": 2242
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/agent.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0f76db12f9e0bfd9da0beea1927682fdb35a8165",
+          "git_byte_length": 460
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/aisdk.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f293507a337d27b14c0b6e1498adcdf8df2ae1d7",
+          "git_byte_length": 456
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/catalog.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4eea01ba9e7d47f140e5fa5b4a1b9e51d8472727",
+          "git_byte_length": 1032
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/command.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a15230826142967b4b85e021d4e49b21d84f97e0",
+          "git_byte_length": 424
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/context.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9089334ee3bb2d0f909877acea0f85d145577930",
+          "git_byte_length": 877
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/event.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a0b46926ae9dfd5594a846fc3d70180d56aa5eb2",
+          "git_byte_length": 297
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/filesystem.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "260c7b376f12301a88013dffc73d92c15d3263de",
+          "git_byte_length": 609
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f13614a54da5afdebd278dabe3dc5fc670fc6265",
+          "git_byte_length": 129
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/integration.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6ac4e0eda899374123c20038c2cda348314e6a18",
+          "git_byte_length": 2113
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/location.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bc546a3b175d073be54d295ad47d295e6425910b",
+          "git_byte_length": 116
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/npm.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4cb96c32d172a53108771d1e5488ac365116b9f3",
+          "git_byte_length": 195
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/path.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f9045cc32d0f694547eb36daf1bb593c7b0e111a",
+          "git_byte_length": 174
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/plugin.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "54224fa83185a104aca4ff4519c0515d14bb56cd",
+          "git_byte_length": 465
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/reference.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "72bc76e46f76134c25163c849d6d88fe3fc9924b",
+          "git_byte_length": 418
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/registration.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dfe5626397645e9fbefd793d9f6b4a48974a36c0",
+          "git_byte_length": 379
+        },
+        {
+          "path": "packages/plugin/src/v2/effect/skill.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "54c77dd48b953efc09552da2b2c9bf083a169367",
+          "git_byte_length": 256
+        },
+        {
+          "path": "packages/plugin/src/v2/mutable.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "29fc5c080286f47ca1f894bfe9d6144a70b4a83c",
+          "git_byte_length": 162
+        },
+        {
+          "path": "packages/plugin/src/v2/options.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2b210f943b2e7dbf758fada327b926a57ed788aa",
+          "git_byte_length": 58
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/agent.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bec589146ae2d30be3913758b7ec28d424d9ac49",
+          "git_byte_length": 189
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/aisdk.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f293507a337d27b14c0b6e1498adcdf8df2ae1d7",
+          "git_byte_length": 456
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/catalog.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "70842e94b71fb698c9dec52425d5f8dfe1482c9d",
+          "git_byte_length": 245
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/command.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cdc5f8268a1ea1feb9ee4c4dee935a532dadc161",
+          "git_byte_length": 199
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/context.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9089334ee3bb2d0f909877acea0f85d145577930",
+          "git_byte_length": 877
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "82879556573ba8ff57b814ece2a3ba602a008b6a",
+          "git_byte_length": 739
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/integration.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "53d95c91b5588c17d67bea364c4d08b83ad85749",
+          "git_byte_length": 578
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/plugin.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ab59fb95fc947aef073e9a0fc5b4b1afd3fc119d",
+          "git_byte_length": 362
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/reference.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f4b7f8b8393d2b97f9fcee0cdd4bb807942c80c4",
+          "git_byte_length": 209
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/registration.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5e0ae7f480a3c21b1ee0ca36395f1e007558ba3f",
+          "git_byte_length": 287
+        },
+        {
+          "path": "packages/plugin/src/v2/promise/skill.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2efc35f818a79e239e7155926ad2f25b907523d0",
+          "git_byte_length": 189
+        },
+        {
+          "path": "packages/plugin/src/v2/types.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "558eb3a6d8e53133befd573695e7876f2d165f77",
+          "git_byte_length": 2263
+        },
+        {
+          "path": "packages/plugin/src/wire.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a049bf4b1cd294a9da15b0735d178e40faa0fe94",
+          "git_byte_length": 11823
+        }
+      ]
+    },
+    {
+      "id": "G051",
+      "frozen_fields": {
+        "family": "plugin",
+        "kind": "design_intent",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.plugin.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "packages/plugin/src/v2/effect/PLAN.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "889e8d056b5bdedaeec259c9f5976783c54ad789",
+          "git_byte_length": 15895
+        }
+      ]
+    },
+    {
+      "id": "G052",
+      "frozen_fields": {
+        "family": "maintenance-documents",
+        "kind": "configuration_schema",
+        "depth": "structured_schema_read",
+        "justification": "Parsed schema root, definition/property membership, required fields and additionalProperties policy; generated/publisher/runtime relationship remains unverified.",
+        "read_status": "captured_selected_read",
+        "need": "maintenance",
+        "artifact_key": "s1.runtime.maintenance_intent.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "schema/config.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+          "git_byte_length": 30801
+        }
+      ]
+    },
+    {
+      "id": "G053",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "license_or_support",
+        "depth": "structural_scan",
+        "justification": "Captured support bytes retained; no runtime semantic claim rests on this support file.",
+        "read_status": "captured_structural_scan",
+        "need": "component",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/LICENSE",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6439474beed8e0271df9862eff97ffd70ec2464c",
+          "git_byte_length": 1065
+        }
+      ]
+    },
+    {
+      "id": "G054",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "documentation",
+        "depth": "document_read",
+        "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/README.md",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1fe7d52fbc4154b211945f4935809532db9dff88",
+          "git_byte_length": 9397
+        }
+      ]
+    },
+    {
+      "id": "G055",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "build_configuration",
+        "depth": "configuration_read",
+        "justification": "Configuration bytes read to establish declared commands, exports/dependencies and execution guard only. No install/build/typecheck/test was run.",
+        "read_status": "captured_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/bunfig.toml",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+          "git_byte_length": 104
+        },
+        {
+          "path": "tooling/http-recorder/package.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cbee51daaf63a3bf771afb7e0d3ec23acb24e015",
+          "git_byte_length": 1536
+        },
+        {
+          "path": "tooling/http-recorder/tsconfig.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "32abb2c0d1969d0167facb402c5aad4f2a88fc71",
+          "git_byte_length": 598
+        }
+      ]
+    },
+    {
+      "id": "G056",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "example_or_script",
+        "depth": "script_read",
+        "justification": "Build/pack/consumer-verification source read, including removal of internal export; no script execution or successful package claim.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/script/build.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3f66abd5dca1bc0e307b869c6005447a3ee789aa",
+          "git_byte_length": 670
+        },
+        {
+          "path": "tooling/http-recorder/script/pack.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "746d7aaebd8af9117eebed109689d6751b87f1a4",
+          "git_byte_length": 1224
+        },
+        {
+          "path": "tooling/http-recorder/script/verify-package.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "903ca4e993a3ea0d9e2198d28e6e45daad0fa988",
+          "git_byte_length": 2894
+        }
+      ]
+    },
+    {
+      "id": "G057",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "implementation",
+        "depth": "decisive_implementation_read",
+        "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+        "read_status": "captured_semantic_read",
+        "need": "component",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "bounded_evidence",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/src/cassette.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cefc3fbc703db1f8e4dceb1cf9249f900dadd08a",
+          "git_byte_length": 7700
+        },
+        {
+          "path": "tooling/http-recorder/src/effect.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "583dee8ca12230382d0835bc564096b1c874bfe1",
+          "git_byte_length": 1043
+        },
+        {
+          "path": "tooling/http-recorder/src/index.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "eac4b75b4bba70f021246c8cc5646683e3a84953",
+          "git_byte_length": 849
+        },
+        {
+          "path": "tooling/http-recorder/src/internal-effect.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6b886311a99548188be8ab4086dc30be49bf6846",
+          "git_byte_length": 7163
+        },
+        {
+          "path": "tooling/http-recorder/src/internal.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7faecf0db062e6625c19407b9139d0dc2ad8e878",
+          "git_byte_length": 659
+        },
+        {
+          "path": "tooling/http-recorder/src/matching.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "731aa8b57ac2f066d57d43d1067ac02d6d20fd93",
+          "git_byte_length": 4561
+        },
+        {
+          "path": "tooling/http-recorder/src/recorder.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c58afde4633ce7c77939650dce276b8710fe6955",
+          "git_byte_length": 2336
+        },
+        {
+          "path": "tooling/http-recorder/src/redaction.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b84996adecb921b8edceddce49364e42b592f9ba",
+          "git_byte_length": 4112
+        },
+        {
+          "path": "tooling/http-recorder/src/redactor.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "582c647702abcaf1496e6da634d699482d78bc3e",
+          "git_byte_length": 4779
+        },
+        {
+          "path": "tooling/http-recorder/src/schema.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a9e673780437193396150a3dcf9787fd5c1d68cf",
+          "git_byte_length": 2610
+        },
+        {
+          "path": "tooling/http-recorder/src/socket.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7486db4aa29bc88bd48eaa17890286670cb575d",
+          "git_byte_length": 13051
+        },
+        {
+          "path": "tooling/http-recorder/src/types.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1ee011420585c52507c5793c77d37732e4ca51a9",
+          "git_byte_length": 3894
+        },
+        {
+          "path": "tooling/http-recorder/src/websocket.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "869cd3bf90e0df8140eb2e708e0728d197415311",
+          "git_byte_length": 6965
+        }
+      ]
+    },
+    {
+      "id": "G058",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "fixture",
+        "depth": "json_structure",
+        "justification": "Decoded JSON root/envelope and interaction metadata inspected; sampled fixture data does not establish provider behavior or passing replay.",
+        "read_status": "captured_structure_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/test/fixtures/recordings/record-replay/multi-step.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9953b860cd94b25cc52c4456237abf61d5d1cf79",
+          "git_byte_length": 872
+        }
+      ]
+    },
+    {
+      "id": "G059",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "fixture",
+        "depth": "git_metadata_only",
+        "justification": "Assigned fixture/media variant retained by pinned Git metadata. Representative fixture structures and decisive harness were inspected; this body is not semantic evidence and no conclusion depends on its contents.",
+        "read_status": "not_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": false
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/test/fixtures/recordings/record-replay/retry.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "873e5a16c0565ca96e8668c25587ab7329513684",
+          "git_byte_length": 890
+        }
+      ]
+    },
+    {
+      "id": "G060",
+      "frozen_fields": {
+        "family": "http-recorder",
+        "kind": "test",
+        "depth": "declaration_scan",
+        "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+        "read_status": "captured_declarations_read",
+        "need": "evidence",
+        "artifact_key": "s1.runtime.http_recorder.l1",
+        "disposition": "classification_only",
+        "semantic_acceptance": "not_asserted",
+        "captured": true
+      },
+      "members": [
+        {
+          "path": "tooling/http-recorder/test/record-replay.test.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "45c10abb868422af26fdae1a19f87bd4378ad6ae",
+          "git_byte_length": 33027
+        }
+      ]
+    }
+  ],
+  "justifications": [
+    {
+      "id": "J01",
+      "justification": "Document content read as attributed intent/instructions; implementation and historical claims are not automatically accepted runtime facts.",
+      "entry_count": 40,
+      "depths": {
+        "document_read": 40
+      }
+    },
+    {
+      "id": "J02",
+      "justification": "Configuration bytes read to establish declared commands, exports/dependencies and execution guard only. No install/build/typecheck/test was run.",
+      "entry_count": 17,
+      "depths": {
+        "configuration_read": 17
+      }
+    },
+    {
+      "id": "J03",
+      "justification": "Implementation read at decisive contract, execution or refusal boundaries supporting its L1 body. Selected large-file paths and type contracts do not certify every branch or host behavior.",
+      "entry_count": 118,
+      "depths": {
+        "decisive_implementation_read": 118
+      }
+    },
+    {
+      "id": "J04",
+      "justification": "Captured declarations and opening structure; grouped support only, no independent semantic acceptance or exhaustive branch claim.",
+      "entry_count": 23,
+      "depths": {
+        "structural_scan": 23
+      }
+    },
+    {
+      "id": "J05",
+      "justification": "All declaration matches preserved in test-declarations.json; inspected bounded declaration samples. Test bodies are not accepted semantic or runtime proof.",
+      "entry_count": 53,
+      "depths": {
+        "declaration_scan": 53
+      }
+    },
+    {
+      "id": "J06",
+      "justification": "Decoded JSON root/envelope and interaction metadata inspected; sampled fixture data does not establish provider behavior or passing replay.",
+      "entry_count": 6,
+      "depths": {
+        "json_structure": 6
+      }
+    },
+    {
+      "id": "J07",
+      "justification": "Assigned fixture/media variant retained by pinned Git metadata. Representative fixture structures and decisive harness were inspected; this body is not semantic evidence and no conclusion depends on its contents. File exceeds the documented 256,000-byte Atlas observer ceiling; preserve unavailable/unobserved, never absent.",
+      "entry_count": 1,
+      "depths": {
+        "git_metadata_only": 1
+      }
+    },
+    {
+      "id": "J08",
+      "justification": "Support structure and selected relevant source inspected; examples are not consumer execution evidence and recording/build scripts were not run.",
+      "entry_count": 5,
+      "depths": {
+        "structural_scan": 5
+      }
+    },
+    {
+      "id": "J09",
+      "justification": "Copied generic Drizzle adapter declarations and selected execution support inspected; primary driver/transaction/migration facts have direct implementation evidence. No full query parity claim.",
+      "entry_count": 9,
+      "depths": {
+        "structural_scan": 9
+      }
+    },
+    {
+      "id": "J10",
+      "justification": "Status, proposed API and representative contract sections read. Draft/sketch is distinguished from current exported implementation.",
+      "entry_count": 2,
+      "depths": {
+        "selected_document_sections": 2
+      }
+    },
+    {
+      "id": "J11",
+      "justification": "Assigned fixture/media variant retained by pinned Git metadata. Representative fixture structures and decisive harness were inspected; this body is not semantic evidence and no conclusion depends on its contents.",
+      "entry_count": 38,
+      "depths": {
+        "git_metadata_only": 38
+      }
+    },
+    {
+      "id": "J12",
+      "justification": "Harness mode, filtering, explicit gaps and refusal decisions read. No tests were executed and scenario declarations are not outcomes.",
+      "entry_count": 5,
+      "depths": {
+        "decisive_harness_read": 5
+      }
+    },
+    {
+      "id": "J13",
+      "justification": "Captured support bytes retained; no runtime semantic claim rests on this support file.",
+      "entry_count": 2,
+      "depths": {
+        "structural_scan": 2
+      }
+    },
+    {
+      "id": "J14",
+      "justification": "Parsed schema root, definition/property membership, required fields and additionalProperties policy; generated/publisher/runtime relationship remains unverified.",
+      "entry_count": 1,
+      "depths": {
+        "structured_schema_read": 1
+      }
+    },
+    {
+      "id": "J15",
+      "justification": "Build/pack/consumer-verification source read, including removal of internal export; no script execution or successful package claim.",
+      "entry_count": 3,
+      "depths": {
+        "script_read": 3
+      }
+    }
+  ]
+}

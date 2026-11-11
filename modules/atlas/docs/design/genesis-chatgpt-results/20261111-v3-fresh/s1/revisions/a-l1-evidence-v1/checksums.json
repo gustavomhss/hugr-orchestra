@@ -1,0 +1,82 @@
+{
+  "schema": "genesis-evidence-revision-checksums/v1",
+  "revision": "a-l1-evidence-v1",
+  "files": [
+    {
+      "path": "build_excerpts.py",
+      "sha256": "4f62d22b6bf684433bb64691c756db836f6c4e549a44276a91597c75796f304e",
+      "byte_length": 25139
+    },
+    {
+      "path": "build_projection.py",
+      "sha256": "5bb34bab110c003350948f76239c08a743fdcf173ffb3aa7745c4880a6c53127",
+      "byte_length": 34465
+    },
+    {
+      "path": "coverage-needs-projection.json",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "byte_length": 726892
+    },
+    {
+      "path": "coverage-needs-projection.md",
+      "sha256": "ef88933d09278c75669906cd45cbe43df5aa205ee7dea71ca64a6fafce609658",
+      "byte_length": 89146
+    },
+    {
+      "path": "deterministic-source-observations.json",
+      "sha256": "7c63f19aa32bda7e8f62be01dcc18690a3444687b436fc1def8eaf4fd81279a2",
+      "byte_length": 622
+    },
+    {
+      "path": "needs-and-blockers.json",
+      "sha256": "6e6b424cbe58b1a324dd0b47efb9b5a4bc118f83d62693df85107f3081922e76",
+      "byte_length": 30815
+    },
+    {
+      "path": "original-freeze-before.json",
+      "sha256": "e8407bff4b982d95c1edb1a24413966c583d32689d198fa517d5da4afde5d1e8",
+      "byte_length": 26726
+    },
+    {
+      "path": "request-steering.txt",
+      "sha256": "5ee73afd2c05590be0a9c7a16b60cd0ea4f544ff14504e2d88cfcacab33a7fbf",
+      "byte_length": 613
+    },
+    {
+      "path": "request.txt",
+      "sha256": "aca45a020b1d64f632610db8898562df81bb616b3411ee869ec4e13847f5277a",
+      "byte_length": 990
+    },
+    {
+      "path": "response.md",
+      "sha256": "602f44b190fa3523eb47363c91bf4bf400f9bb2cb12f2f6801b68695b3a09de6",
+      "byte_length": 6382
+    },
+    {
+      "path": "revision-manifest.json",
+      "sha256": "3eb6aae5f96e87911afcd373c8abaca48b8a4389232d849c6aabf1c460a9b9a4",
+      "byte_length": 4030
+    },
+    {
+      "path": "seal_revision.py",
+      "sha256": "023f62f82e28336c783129b5333933ab5868bcfdf2f9f2633b12eee199c0e4e2",
+      "byte_length": 8350
+    },
+    {
+      "path": "supplement-evidence.md",
+      "sha256": "967b10123d15afe63d83a9e5f1189d0b8044b79609ed7548691c6397592be7c9",
+      "byte_length": 190745
+    },
+    {
+      "path": "supplement-excerpt-map.json",
+      "sha256": "e6916f979540bc619ba82ff07d7d093673aade1d81d90278006b3a48cc2ec48c",
+      "byte_length": 112526
+    },
+    {
+      "path": "verification.json",
+      "sha256": "2b0e0f61ac94db950ea81f88fde4aa036b0afb4cf844db1f7e43bf4901b3d085",
+      "byte_length": 1906
+    }
+  ],
+  "self_hash_excluded": true
+}

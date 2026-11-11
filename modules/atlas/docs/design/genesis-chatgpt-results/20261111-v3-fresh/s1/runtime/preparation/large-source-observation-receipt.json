@@ -1,0 +1,42 @@
+{
+  "schema": "genesis-runtime-input-observation/v1",
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/observe-required-large-source.ts",
+    "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/oversize-observation-v1"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1",
+  "start": "2026-11-11T18:11:06.749418+00:00",
+  "end": "2026-11-11T18:11:06.813818+00:00",
+  "exit_code": 0,
+  "release_id": "20261111-v3-fresh-s4-r1",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source": {
+    "path": "packages/client/src/generated/types.ts",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "fca4633666a639d550065312a13e48c6ce221d12",
+    "sha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f",
+    "byte_length": 462732
+  },
+  "required_by": [
+    "s1.api.client-projection",
+    "s1.api.codegen",
+    "s1.api.surface-disposition"
+  ],
+  "stdout_sha256": "6c78fb52b8ee415bc9a7e018803ced03af8df45c1ec6fcc12092786a60926121",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "operation": "Direct calls to released observeOwnershipInput and unchanged importer readNativeFile, not an alternate observer or source truncation",
+  "product_test_suite": "NOT_RUN",
+  "whole_package_prepare": "NOT_RUN",
+  "observed_result": {
+    "operation": "observe required source using unchanged release functions",
+    "path": "packages/client/src/generated/types.ts",
+    "observation": {
+      "kind": "unavailable"
+    },
+    "importerRead": {
+      "kind": "error",
+      "error": "native-file-limit: packages/client/src/generated/types.ts"
+    }
+  }
+}

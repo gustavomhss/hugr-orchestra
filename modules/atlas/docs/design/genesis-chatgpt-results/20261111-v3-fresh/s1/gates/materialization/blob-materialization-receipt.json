@@ -1,0 +1,18 @@
+{
+  "schema": "verified-git-blob-materialization/v1",
+  "git": {
+    "head": "dd8d3effd86476f8ffde4c45f1843ca448144280",
+    "origin_dev": "4b737f69fea55c139d462e955c92efc181b8ded6",
+    "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+    "worktree_status": ""
+  },
+  "verified_connector_blobs": 783,
+  "blob_bytes": 9835279,
+  "materialized_head_files": 1552,
+  "sparse_absent_files": 13034,
+  "unmaterialized_symlinks": [],
+  "guard_files_missing": [],
+  "recorded_at": "2026-11-11T17:51:52.590678+00:00",
+  "guard_result": "NOT_RUN",
+  "note": "Exact source commits/trees/blobs; explicit sparse worktree and shallow history. No fabricated commit identity."
+}

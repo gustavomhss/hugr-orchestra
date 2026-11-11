@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-principal-evidence-verification/v1",
+  "batch": "S1-L1-C-v1",
+  "supplement": "c-l1-evidence-v1",
+  "mechanical_status": "PASS",
+  "supplement_sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7",
+  "supplement_bytes": 203995,
+  "additional_spans_verified": 104,
+  "restored_complete_groups": 6,
+  "coverage_membership_verified": 323,
+  "body_versions_unchanged": 10,
+  "original_review_package_sha256": "df1ac005133bc4b89577a581ea9053bd7a5231cf98b7b99c4a67db58921ed670",
+  "current_package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "package_change": "Only B session-contract body/provenance corrected; all C artifact bodies and source identities remain unchanged",
+  "semantic_status": "REQUEST_EVIDENCE pending re-evaluation by same judges"
+}

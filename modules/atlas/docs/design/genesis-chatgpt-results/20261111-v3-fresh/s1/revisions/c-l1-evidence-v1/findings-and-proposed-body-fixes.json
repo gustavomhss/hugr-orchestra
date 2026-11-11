@@ -1,0 +1,7 @@
+{
+  "scope": "Only requested evidence supplementation; not a judge decision or full implementation audit.",
+  "established_body_contradictions_in_requested_spans": [],
+  "proposed_body_fixes": [],
+  "retained_unresolved_issue": "The config guide/schema relationship remains unresolved and is shown on both sides; no runtime defect or resolution is asserted.",
+  "new_typing_notice": "The frozen packet contains gap strings rather than a separate typed future-need ledger. Proposed typing is explicitly new in R1-new-need-classification-proposals.json."
+}

@@ -1,0 +1,1 @@
+Recebi o veredicto nativo integral de J1: FIX-FIRST (B1 precisão do limite de reason; B2 trechos estreitos; B3 triagem semântica dos 190 handwritten surface-only). A última entrega a J2 será confirmada pelo retorno nativo; não duplique por truncamento. Feche o recibo B e conclua este transporte, pois o slot de produtor será usado pelo autor B para corrigir. Não inicie A.

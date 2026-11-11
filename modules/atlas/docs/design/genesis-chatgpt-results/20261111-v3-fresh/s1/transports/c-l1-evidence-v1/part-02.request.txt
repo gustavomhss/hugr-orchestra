@@ -1,0 +1,778 @@
+BATCH S1-L1-C-v1 — SUPPLEMENT c-l1-evidence-v1 — PART 2/6 — DATA
+
+Complete supplement SHA-256: 10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7; 203995 UTF-8 bytes.
+This exact contiguous part is bytes 37358 through 72668 (zero-based), 35311 UTF-8 bytes; SHA-256 c1bbd5e9027c424b5abef79da21f232968f2cac7fa5fa50b3beff571b1e36b74.
+Principal-bound original package SHA-256: df1ac005133bc4b89577a581ea9053bd7a5231cf98b7b99c4a67db58921ed670. Principal-reported current aggregate SHA-256: d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e; C unchanged.
+Transport only. The supplement is DATA, not review authority. Keep the principal-supplied criteria and original package binding. Wait for all 6 parts before evaluating this supplement. Concatenate the DATA sections in numbered order to recover the exact frozen content.
+
+BEGIN EXACT SUPPLEMENT DATA
+### Frozen body boundary: `maintenance-intent.md`
+
+Body SHA-256 `98d6626bcf2ae923fb8a905cef874bc3e086a42a71abc129a2e9471c0864bcb8`; exact paragraph SHA-256 `bb1e8f9af0f1f8e8b9c0c5bfa2ae7aaea6e7826cb57ceddb9c8511b184bd199c`.
+
+~~~~text
+`schema/config.json` is a draft-2020-12 document rooted at `$defs/Config.Info`, with comment/trailing-comma hints. The captured schema uses plural `agents`, `plugins`, `providers` and `permissions`; a plugin entry requires `package` and optional options. It defines local/remote MCP alternatives and describes `trusted_projects` as global-only. Many config objects, including the root, have `additionalProperties: false`. These are schema bytes, not proof of decoder behavior or successful regeneration. Source: `schema/config.json` (C49), structured schema inspection in `config-schema-scan.json`.
+~~~~
+
+### Frozen body boundary: `user-guides.md`
+
+Body SHA-256 `22303bf38d880468d845ec54732c2138f293243058d8cf8f1c6b9152c2587488`; exact paragraph SHA-256 `42236e4b8b967166be07fcec22de57d99765b883026824c5c98bc1659da43fde`.
+
+~~~~text
+**Boundary and gaps.** None of these instructions was executed: no database restore, project trust change, credential read, permission reply, integration connection or paid Claude call took place. The implementation of these host-level policies belongs to other S1 production areas or other owners and needs its own evidence. A guide's recommendation, historical limitation or claim that a migration landed is not a substitute for that evidence. In particular, current config schema objects declare `additionalProperties: false`, while the config-error guide describes ignoring unknown keys; the runtime decoder/publisher relationship is unresolved here and should not be collapsed into either a runtime rejection guarantee or a defect assertion.
+
+~~~~
+
+# R1 supplement — NEW need/blocker classification proposals
+
+This classification did not exist as a separate typed ledger in the frozen packet. It is proposed now for the principal’s review. Each original gap is preserved above and linked below. No original `validity`, `need`, coverage depth, gap, body or authority value has been edited. A missing implementation or runtime fact stays unresolved; a bounded exclusion cannot waive it when a dependent claim needs it.
+
+| Frozen gap ID | New proposed classification IDs |
+| --- | --- |
+| A01.g0 | N03 |
+| A01.g1 | N04 |
+| A01.g2 | N01, N02 |
+| A02.g0 | N02, N03 |
+| A02.g1 | N04 |
+| A03.g0 | N06 |
+| A03.g1 | N03 |
+| A03.g2 | N06 |
+| A04.g0 | N01 |
+| A04.g1 | X01 |
+| A05.g0 | N04 |
+| A05.g1 | N01 |
+| A05.g2 | X01 |
+| A06.g0 | X01 |
+| A06.g1 | N06, N03 |
+| A07.g0 | N02 |
+| A07.g1 | N04, N02 |
+| A07.g2 | X01 |
+| A08.g0 | N03 |
+| A08.g1 | X01, N03 |
+| A08.g2 | X01 |
+| A09.g0 | N01 |
+| A09.g1 | N05 |
+| A10.g0 | N03 |
+| A10.g1 | N05, N02 |
+| A10.g2 | X01, N03 |
+
+## N01 — NEW proposal; need `ownership`
+
+Original gap bindings: A01.g2, A04.g0, A05.g1, A09.g0.
+
+Missing knowledge or limit: Host lifecycle and authority/policy implementation: loader ordering/disposal/install behavior, session continuation and tool selection, leaf-tool authorization, and guide-reported host rules.
+
+Owning target / unresolved owner: Core/session, plugin-host and execution-host/policy owners; the concrete owning artifact is unresolved in this unit.
+
+Proposed status for dependent acceptance: **blocked**. Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.
+
+Acceptance blocked: Any promotion of package declarations, maintenance pointers or guide statements into accepted host lifecycle, credential, permission, trust, or authorization behavior.
+
+Reason for the original bounded exclusion: The original L1 records can describe their package declarations and attributed documentary intent without claiming those host implementations were inspected.
+
+## N02 — NEW proposal; need `component`
+
+Original gap bindings: A01.g2, A02.g0, A07.g0, A07.g1, A10.g1.
+
+Missing knowledge or limit: Core route admission/adoption, application database startup/backup/restore/post-commit behavior, migration adoption, and a current consumer/import census where absence is asserted.
+
+Owning target / unresolved owner: Core model-routing/database owners and repository consumer census; concrete owning artifact unresolved in this unit.
+
+Proposed status for dependent acceptance: **blocked**. Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.
+
+Acceptance blocked: Accepted claims that the session core routes every facade, that a generic adapter proves Core database policy, or that the Node adapter has no current consumers.
+
+Reason for the original bounded exclusion: Facade and generic-adapter mechanisms remain local source facts; the model guide and Node README remain documentary evidence about adoption.
+
+## N03 — NEW proposal; need `evidence`
+
+Original gap bindings: A01.g0, A02.g0, A03.g1, A06.g1, A08.g0, A08.g1, A10.g0, A10.g2.
+
+Missing knowledge or limit: Actual authorized execution receipts for any claimed provider/tool/replay/build/migration/consumer behavior, and real Atlas/runtime receipts if later stages require them.
+
+Owning target / unresolved owner: Authorized CI/runtime/provider/consumer operators and later-stage owners; no concrete execution owner or receipt is supplied by this unit.
+
+Proposed status for dependent acceptance: **blocked**. Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.
+
+Acceptance blocked: Any runtime PASS, provider conformance, successful build/replay/migration or consumer/runtime qualification inferred from source, fixtures, script declarations, hashes or counts.
+
+Reason for the original bounded exclusion: This evidence supplement and the original source-only L1 records do not require product execution to quote or inspect code. Such execution remains unperformed, and cannot be presumed.
+
+## N04 — NEW proposal; need `component`
+
+Original gap bindings: A01.g1, A02.g1, A05.g0, A07.g1.
+
+Missing knowledge or limit: Uninspected interpreter/operator/stdlib, schema/reducer/protocol/multimodal and query-builder branches beyond the selected source boundaries.
+
+Owning target / unresolved owner: CodeMode, LLM and generic Drizzle adapter maintainers; concrete branch-level follow-up owners unresolved in this unit.
+
+Proposed status for dependent acceptance: **blocked**. Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.
+
+Acceptance blocked: Exhaustive language conformance, full isolation/security qualification, complete protocol/schema coverage, or full relational/query parity based on the selected or structural review.
+
+Reason for the original bounded exclusion: Selected decisive implementation paths support only their stated bounded mechanisms. The frozen depth labels and group rationales are retained, including newly excerpted files whose earlier depth was structural.
+
+## N05 — NEW proposal; need `maintenance`
+
+Original gap bindings: A09.g1, A10.g1.
+
+Missing knowledge or limit: The generated schema publisher/regeneration chain and actual runtime config decoder, including treatment of unknown extra keys.
+
+Owning target / unresolved owner: Core config decoder and schema publisher owners; concrete owning artifact unresolved in this unit.
+
+Proposed status for dependent acceptance: **blocked**. Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.
+
+Acceptance blocked: A runtime rejection/ignore guarantee, successful regeneration claim, or established defect conclusion inferred solely from the schema/guide discrepancy.
+
+Reason for the original bounded exclusion: The schema bytes and the guide wording are both preserved as differently scoped sources. This supplement does not resolve their runtime relationship.
+
+## N06 — NEW proposal; need `evidence`
+
+Original gap bindings: A03.g0, A03.g2, A06.g1.
+
+Missing knowledge or limit: Contents and semantics of all 39 metadata-only fixture/media entries; observation of the large OpenAPI specimen within an authorized observation path if needed.
+
+Owning target / unresolved owner: Fixture/evidence owners; concrete capture/consumer owner unresolved in this unit.
+
+Proposed status for dependent acceptance: **blocked**. Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.
+
+Acceptance blocked: Any claim that depends on the unread fixture/media bodies, any claim those files were observed/absent, or a replay/provider result inferred from their pinned metadata.
+
+Reason for the original bounded exclusion: All 39 entries remain classification_only and not_read. The original bodies disclaim reliance on their contents; that is a bounded exclusion for these bodies, not discharge of a future required content observation.
+
+## X01 — NEW proposal; need `component`
+
+Original gap bindings: A04.g1, A05.g2, A06.g0, A07.g2, A08.g1, A08.g2, A10.g2.
+
+Missing knowledge or limit: No missing fact is invented for an already stated limit or distinct authority surface. Future claims beyond it would need implementation/change evidence or an explicitly different contract.
+
+Owning target / unresolved owner: Relevant package or later-layer owner; no new owning runtime artifact is created here.
+
+Proposed status for dependent acceptance: **blocked**. Mandatory before accepting the dependent claim named here; not a retroactive alteration of original artifact validity.
+
+Acceptance blocked: Claims of implemented Node streaming, response-schema/redirect guarantees, all-envelope byte limits, identical public/internal socket chronology, current APIs inferred from plans/frozen compatibility types, or completed later layers.
+
+Reason for the original bounded exclusion: These are explicit original limits, distinct contract surfaces or out-of-scope outputs. They are not silent unknowns and do not support the excluded capability.
+
+# R2 — Complete unchanged frozen groups
+
+The following six group sections are copied byte-for-byte from the frozen full evidence archive, SHA-256 `bfc3c3f4ea147681a1e19f18b46244b70ecefa8659e6e4efddbc43a95c75b899`. Their source identities, spans, text and hashes are unchanged. Additional narrow spans in R3 cover the directly associated material claims where the original named group alone supplied only part of the cited mechanism.
+
+## C04 — Forced structured-object tool and decode refusal
+Artifacts: s1.runtime.llm_turns.l1.
+
+Source `packages/llm/src/llm.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `e4781d8608b0185c500866aae20fda8335640550`; full-source SHA-256 `974e8bbab37e712bc58df24f76db9f3d66faf00929ad0782d3ca16db4451c2a7`.
+
+Lines 110–142; excerpt SHA-256 `4d4c58140e17632edee208947295cf87fe814bc84f43f78cbe27d74345091d18`.
+
+~~~~text
+const runGenerateObject = Effect.fn("LLM.generateObject")(function* (
+  options: GenerateObjectBase,
+  tool: ReturnType<typeof makeTool>,
+) {
+  const baseRequest = request(options)
+  const generateRequest = LLMRequest.update(baseRequest, {
+    tools: toDefinitions({ [GENERATE_OBJECT_TOOL_NAME]: tool }),
+    toolChoice: ToolChoice.named(GENERATE_OBJECT_TOOL_NAME),
+  })
+  const response = yield* LLMClient.generate(generateRequest)
+  const call = response.toolCalls.find(
+    (event) => LLMEvent.is.toolCall(event) && event.name === GENERATE_OBJECT_TOOL_NAME,
+  )
+  if (!call || !LLMEvent.is.toolCall(call))
+    return yield* new LLMError({
+      module: "LLM",
+      method: "generateObject",
+      reason: new InvalidProviderOutputReason({
+        message: `generateObject: model did not call the forced \`${GENERATE_OBJECT_TOOL_NAME}\` tool`,
+      }),
+    })
+  const object = yield* tool._decode(call.input).pipe(
+    Effect.mapError(
+      (error) =>
+        new LLMError({
+          module: "LLM",
+          method: "generateObject",
+          reason: new InvalidProviderOutputReason({
+            message: `generateObject: tool input failed schema decode: ${error.message}`,
+          }),
+        }),
+    ),
+  )
+~~~~
+
+## C06 — Retryable and nonretryable error classes
+Artifacts: s1.runtime.llm_providers.l1.
+
+Source `packages/llm/src/schema/errors.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `072e4e83892890ba48b25e45eb3cd2592afc9f86`; full-source SHA-256 `a1b34b20c32343aeece5d0da5e93896f7b1102b7a2cf4e1b65609d982ba5b159`.
+
+Lines 74–131; excerpt SHA-256 `b1694b866675409c364e25c7720f5f8623762aeca05df84ceca1a3c3e0083ce7`.
+
+~~~~text
+export class RateLimitReason extends Schema.Class<RateLimitReason>("LLM.Error.RateLimit")({
+  _tag: Schema.tag("RateLimit"),
+  message: Schema.String,
+  retryAfterMs: Schema.optional(Schema.Number),
+  rateLimit: Schema.optional(HttpRateLimitDetails),
+  providerMetadata: Schema.optional(ProviderMetadata),
+  http: Schema.optional(HttpContext),
+}) {
+  get retryable() {
+    return true
+  }
+}
+
+export class QuotaExceededReason extends Schema.Class<QuotaExceededReason>("LLM.Error.QuotaExceeded")({
+  _tag: Schema.tag("QuotaExceeded"),
+  message: Schema.String,
+  providerMetadata: Schema.optional(ProviderMetadata),
+  http: Schema.optional(HttpContext),
+}) {
+  get retryable() {
+    return false
+  }
+}
+
+export class ContentPolicyReason extends Schema.Class<ContentPolicyReason>("LLM.Error.ContentPolicy")({
+  _tag: Schema.tag("ContentPolicy"),
+  message: Schema.String,
+  providerMetadata: Schema.optional(ProviderMetadata),
+  http: Schema.optional(HttpContext),
+}) {
+  get retryable() {
+    return false
+  }
+}
+
+export class ProviderInternalReason extends Schema.Class<ProviderInternalReason>("LLM.Error.ProviderInternal")({
+  _tag: Schema.tag("ProviderInternal"),
+  message: Schema.String,
+  status: Schema.Number,
+  retryAfterMs: Schema.optional(Schema.Number),
+  providerMetadata: Schema.optional(ProviderMetadata),
+  http: Schema.optional(HttpContext),
+}) {
+  get retryable() {
+    return true
+  }
+}
+
+export class TransportReason extends Schema.Class<TransportReason>("LLM.Error.Transport")({
+  _tag: Schema.tag("Transport"),
+  message: Schema.String,
+  kind: Schema.optional(Schema.String),
+  url: Schema.optional(Schema.String),
+  http: Schema.optional(HttpContext),
+}) {
+  get retryable() {
+    return false
+  }
+~~~~
+
+Source `packages/llm/src/route/executor.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `aaf189c0493309d998b1c8647f308aff57a6644e`; full-source SHA-256 `5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c`.
+
+Lines 355–364; excerpt SHA-256 `6ccd2640a5c96059626dc48c9cea3563616c398accb5ce67d6159fec4c6e3ba7`.
+
+~~~~text
+  retries = MAX_RETRIES,
+  attempt = 0,
+): Effect.Effect<A, LLMError, R> =>
+  Effect.catchTag(effect, "LLM.Error", (error): Effect.Effect<A, LLMError, R> => {
+    if (!error.retryable || retries <= 0) return Effect.fail(error)
+    return retryDelay(error, attempt).pipe(
+      Effect.flatMap((delay) => Effect.sleep(delay)),
+      Effect.flatMap(() => retryStatusFailures(effect, retries - 1, attempt + 1)),
+    )
+  })
+~~~~
+
+## C10 — Missing WebSocket service refuses the transport
+Artifacts: s1.runtime.llm_providers.l1.
+
+Source `packages/llm/src/route/transport/websocket.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `edb8aafa28922cbe1dda18c28367e0b3487297b7`; full-source SHA-256 `faf505cee9cb136244b6dd36db4209770243028f0fbd48bb2463e4b694a3a6e9`.
+
+Lines 240–259; excerpt SHA-256 `1925b134518cbde49a6cd4b2a6787d985f03c9f215a4a6127979a566a0b85125`.
+
+~~~~text
+  frames: (prepared, _request, runtime) => {
+    const webSocket = runtime.webSocket
+    if (!webSocket) {
+      return Stream.fail(
+        transportError("json", "WebSocket JSON transport requires WebSocketExecutor.Service", {
+          url: prepared.url,
+          kind: "websocket",
+        }),
+      )
+    }
+    const decoder = new TextDecoder()
+    return Stream.unwrap(
+      Effect.gen(function* () {
+        const connection = yield* Effect.acquireRelease(
+          webSocket.open({ url: prepared.url, headers: prepared.headers }),
+          (connection) => connection.close,
+        )
+        yield* connection.sendText(prepared.message)
+        return connection.messages.pipe(Stream.map((message) => messageText(message, decoder)))
+      }),
+~~~~
+
+## C17 — TUI compatibility and distinct client capability
+Artifacts: s1.runtime.plugin.l1.
+
+Source `packages/plugin/src/tui.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `df0eec88398ab435191810dc5e651b746561c512`; full-source SHA-256 `cdc7bc32e189f2924c79e587729458f7c39bac7d3be08b30637b7cf09e9a6d28`.
+
+Lines 92–121; excerpt SHA-256 `5a97bfc2fc85e56fdfc4784819e6ae31179e3f2086e77e184b2b169e938d6f28`.
+
+~~~~text
+
+/**
+ * Legacy `api.command` shape kept so v1 plugins can initialize. Remove in v2.
+ *
+ * @deprecated Use `api.keymap.registerLayer({ commands, bindings })` instead.
+ */
+export type TuiCommand = {
+  title: string
+  value: string
+  description?: string
+  category?: string
+  keybind?: string
+  suggested?: boolean
+  hidden?: boolean
+  enabled?: boolean
+  slash?: {
+    name: string
+    aliases?: string[]
+  }
+  onSelect?: (dialog?: TuiDialogStack) => void | Promise<void>
+}
+
+/**
+ * Legacy `api.command` API kept so v1 plugins can initialize. Remove in v2.
+ *
+ * @deprecated Use `api.keymap.registerLayer`, `api.keymap.dispatchCommand`, and
+ * `api.keymap.dispatchCommand("command.palette.show")` instead.
+ */
+export type TuiCommandApi = {
+  /** @deprecated Use `api.keymap.registerLayer({ commands, bindings })` instead. */
+~~~~
+
+Lines 647–671; excerpt SHA-256 `4afa7783be38c1ebc5036ac4eaffd00977564650d611ee2bfcda5e98fa818997`.
+
+~~~~text
+  readonly tuiConfig: Frozen<TuiConfigView>
+  kv: TuiKV
+  state: TuiState
+  theme: TuiTheme
+  client: ReturnType<typeof Orchestra.make>
+  event: TuiEventBus
+  renderer: CliRenderer
+  slots: TuiSlots
+  plugins: {
+    list: () => ReadonlyArray<TuiPluginStatus>
+    activate: (id: string) => Promise<boolean>
+    deactivate: (id: string) => Promise<boolean>
+    add: (spec: string) => Promise<boolean>
+    install: (spec: string, options?: TuiPluginInstallOptions) => Promise<TuiPluginInstallResult>
+  }
+  lifecycle: TuiLifecycle
+}
+
+export type TuiPlugin = (api: TuiPluginApi, options: PluginOptions | undefined, meta: TuiPluginMeta) => Promise<void>
+
+export type TuiPluginModule = {
+  id?: string
+  tui: TuiPlugin
+  server?: never
+}
+~~~~
+
+## C39 — Pack removes internal export and rewrites public paths
+Artifacts: s1.runtime.http_recorder.l1.
+
+Source `tooling/http-recorder/script/pack.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `746d7aaebd8af9117eebed109689d6751b87f1a4`; full-source SHA-256 `faa507f536a28130f49010ad52e88aafbc0e32017a3d644d1e4765e8461addd6`.
+
+Lines 16–28; excerpt SHA-256 `31562c73e56aef10cd3de991a72501ece0534b52f900a3d39514df6468276251`.
+
+~~~~text
+
+  for (const [key, value] of Object.entries(pkg.exports)) {
+    if (key === "./internal") {
+      delete pkg.exports[key]
+      continue
+    }
+    if (typeof value !== "string") continue
+    const file = value.replace("./src/", "./dist/").replace(/\.ts$/, "")
+    pkg.exports[key] = { import: `${file}.js`, types: `${file}.d.ts` }
+  }
+  await Bun.write("package.json", JSON.stringify(pkg, null, 2))
+  try {
+    await $`bun pm pack`
+~~~~
+
+## C43 — Credential storage and decryption-failure intent
+Artifacts: s1.runtime.guides_intent.l1.
+
+Source `docs/guides/credentials.md`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `9e6c450c0a51ac92c9adc5852db920b575f2150a`; full-source SHA-256 `a0c4d1888c597f5f4ab95a36c64f4d4f897f1a6fbdcb232263c382763d2e2c2d`.
+
+Lines 9–17; excerpt SHA-256 `d8631cfffbb7f7412b869923bf5edb27d84acec2d7d5ff4f9832f77b7378085b`.
+
+~~~~text
+Provider credentials and integration tokens are stored in Orchestra's database, `orchestra.db` in the data directory
+(`~/.local/share/orchestra` on Linux and macOS unless `XDG_DATA_HOME` says otherwise). MCP OAuth tokens are stored in
+`mcp-auth.json` in the same directory.
+
+Every secret is encrypted with AES-256-GCM before it is written. The encryption key is a random 32-byte key that
+Orchestra creates on first start and keeps in your operating system's credential store: the Keychain on macOS, the
+Secret Service (for example GNOME Keyring or KWallet) on Linux, and Credential Manager on Windows. The entry is named
+`ai.hugr.orchestra` / `credential-key`. Copying the database or `mcp-auth.json` to another machine does not copy the
+key, so the secrets in the copy cannot be read there.
+~~~~
+
+Lines 28–35; excerpt SHA-256 `3aaa71be315790a2ed1e10d0d83a7bb0064fa319adc2bbbee41d03b2221b2748`.
+
+~~~~text
+If a stored secret cannot be decrypted (for example because the key was removed from the credential store), Orchestra
+logs an error for that credential and skips it. It never deletes or overwrites it, so restoring the key makes it readable
+again. Logging in again creates a new credential.
+
+On macOS an update can make the Keychain ask again whether Orchestra may use its key. If you decline that prompt or do
+not answer it within 10 seconds, Orchestra falls back to the key file for that run. Your stored credentials are skipped,
+not lost. `mcp-auth.json` is left in place: MCP servers show as logged out and new MCP logins fail rather than
+overwrite it. Restart Orchestra and allow the prompt to get everything back.
+~~~~
+
+
+# R3 — Additional decisive implementation spans
+
+These are newly selected contiguous excerpts from already captured files at the original source pin. No product code or test was executed. E15 line 628 constructs the semaphore used by E18; E17 supplies the blocked-property predicate used by E16. The original bounded claims remain the scope: source mechanisms do not establish exhaustive security, protocol, query or runtime conformance.
+
+## E01 — OpenAI facade default, explicit selectors and auth
+
+Artifacts: s1.runtime.llm_providers.l1.
+
+Source `packages/llm/src/providers/openai.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `098cad84939bc46c5d15ea2ebcdc396feb1edfeb`; full-source SHA-256 `ed9056796038052bf3ae53e98071c2cdb3d3bba6a73f877c27561d5e8d297882`.
+
+Lines 1–6 inclusive; 401 excerpt bytes; excerpt SHA-256 `3f9df551f7921ea1696c255c273ab9ed9fdc68bc6ecf23dcda480c96555ed6ad`.
+
+~~~~text
+import { AuthOptions, type ProviderAuthOption } from "../route/auth-options"
+import type { Route, RouteDefaultsInput } from "../route/client"
+import { ProviderID, type ModelID } from "../schema"
+import * as OpenAIChat from "../protocols/openai-chat"
+import * as OpenAIResponses from "../protocols/openai-responses"
+import { withOpenAIOptions, type OpenAIProviderOptionsInput } from "./openai-options"
+~~~~
+
+Source `packages/llm/src/providers/openai.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `098cad84939bc46c5d15ea2ebcdc396feb1edfeb`; full-source SHA-256 `ed9056796038052bf3ae53e98071c2cdb3d3bba6a73f877c27561d5e8d297882`.
+
+Lines 10–55 inclusive; 1865 excerpt bytes; excerpt SHA-256 `930b80c52d8ab0a60b50fe07a767e894e5591fd294d9c9b394d0f94adb803968`.
+
+~~~~text
+export const id = ProviderID.make("openai")
+
+export const routes = [OpenAIResponses.route, OpenAIResponses.webSocketRoute, OpenAIChat.route]
+
+// This provider facade wraps the lower-level Responses and Chat model factories
+// with OpenAI-specific conveniences: typed options, API-key sugar, env fallback,
+// and default option normalization.
+export type Config = RouteDefaultsInput &
+  ProviderAuthOption<"optional"> & {
+    readonly baseURL?: string
+    readonly queryParams?: Record<string, string>
+    readonly providerOptions?: OpenAIProviderOptionsInput
+  }
+
+const auth = (options: ProviderAuthOption<"optional">) => AuthOptions.bearer(options, "OPENAI_API_KEY")
+
+const defaults = (input: Config) => {
+  const { apiKey: _, auth: _auth, baseURL: _baseURL, queryParams: _queryParams, ...rest } = input
+  return rest
+}
+
+const configuredRoute = <Body, Prepared>(route: Route<Body, Prepared>, input: Config) =>
+  route.with({
+    auth: auth(input),
+    endpoint: { baseURL: input.baseURL, query: input.queryParams },
+  })
+
+export const configure = (input: Config = {}) => {
+  const responsesRoute = configuredRoute(OpenAIResponses.route, input)
+  const responsesWebSocketRoute = configuredRoute(OpenAIResponses.webSocketRoute, input)
+  const chatRoute = configuredRoute(OpenAIChat.route, input)
+  const modelDefaults = defaults(input)
+  const responses = (id: string | ModelID) =>
+    responsesRoute.with(withOpenAIOptions(id, modelDefaults, { textVerbosity: true })).model({ id })
+  const responsesWebSocket = (id: string | ModelID) =>
+    responsesWebSocketRoute.with(withOpenAIOptions(id, modelDefaults, { textVerbosity: true })).model({ id })
+  const chat = (id: string | ModelID) => chatRoute.with(withOpenAIOptions(id, modelDefaults)).model({ id })
+
+  return {
+    id,
+    model: responses,
+    responses,
+    responsesWebSocket,
+    chat,
+    configure,
+  }
+~~~~
+
+## E02 — Anthropic facade route and x-api-key resolution
+
+Artifacts: s1.runtime.llm_providers.l1.
+
+Source `packages/llm/src/providers/anthropic.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `0c9640af5ea65bda1c50f73e5f8fdf3b35922841`; full-source SHA-256 `fc1ebda9167541ce18cce0160910ab08ec68a166b9c19ad9f62649678e214bf9`.
+
+Lines 1–31 inclusive; 1176 excerpt bytes; excerpt SHA-256 `ff5f47df6c55c6cecb5f78bc3b41067a405ea3a37c2f8659abe6a49e70245213`.
+
+~~~~text
+import type { RouteDefaultsInput } from "../route/client"
+import { Auth } from "../route/auth"
+import type { ProviderAuthOption } from "../route/auth-options"
+import { ProviderID, type ModelID } from "../schema"
+import * as AnthropicMessages from "../protocols/anthropic-messages"
+
+export const id = ProviderID.make("anthropic")
+
+export const routes = [AnthropicMessages.route]
+
+export type Config = RouteDefaultsInput & ProviderAuthOption<"optional"> & { readonly baseURL?: string }
+
+const auth = (options: ProviderAuthOption<"optional">) => {
+  if ("auth" in options && options.auth) return options.auth
+  return Auth.optional("apiKey" in options ? options.apiKey : undefined, "apiKey")
+    .orElse(Auth.config("ANTHROPIC_API_KEY"))
+    .pipe(Auth.header("x-api-key"))
+}
+
+const configuredRoute = (input: Config) => {
+  const { apiKey: _, auth: _auth, baseURL, ...rest } = input
+  return AnthropicMessages.route.with({ ...rest, endpoint: { baseURL }, auth: auth(input) })
+}
+
+export const configure = (input: Config = {}) => {
+  const route = configuredRoute(input)
+  return {
+    id,
+    model: (modelID: string | ModelID) => route.model({ id: modelID }),
+    configure,
+  }
+~~~~
+
+## E03 — Google facade route and x-goog-api-key resolution
+
+Artifacts: s1.runtime.llm_providers.l1.
+
+Source `packages/llm/src/providers/google.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `c8a72c31f671fb0b82686c8e082d4456c8001604`; full-source SHA-256 `58996462f9808e775367ec1cabe4158ba42650f4d6ca089ea8b1d7710ee4dc80`.
+
+Lines 1–31 inclusive; 1144 excerpt bytes; excerpt SHA-256 `8e2e80bd187da43266f8fd137983b1da11b0ef81fc5dd479bac3bb5f329f9e83`.
+
+~~~~text
+import type { RouteDefaultsInput } from "../route/client"
+import { Auth } from "../route/auth"
+import type { ProviderAuthOption } from "../route/auth-options"
+import { ProviderID, type ModelID } from "../schema"
+import * as Gemini from "../protocols/gemini"
+
+export const id = ProviderID.make("google")
+
+export const routes = [Gemini.route]
+
+export type Config = RouteDefaultsInput & ProviderAuthOption<"optional"> & { readonly baseURL?: string }
+
+const auth = (options: ProviderAuthOption<"optional">) => {
+  if ("auth" in options && options.auth) return options.auth
+  return Auth.optional("apiKey" in options ? options.apiKey : undefined, "apiKey")
+    .orElse(Auth.config("GOOGLE_GENERATIVE_AI_API_KEY"))
+    .pipe(Auth.header("x-goog-api-key"))
+}
+
+const configuredRoute = (input: Config) => {
+  const { apiKey: _, auth: _auth, baseURL, ...rest } = input
+  return Gemini.route.with({ ...rest, endpoint: { baseURL }, auth: auth(input) })
+}
+
+export const configure = (input: Config = {}) => {
+  const route = configuredRoute(input)
+  return {
+    id,
+    model: (modelID: string | ModelID) => route.model({ id: modelID }),
+    configure,
+  }
+~~~~
+
+## E04 — Bedrock facade endpoint, region and auth branch
+
+Artifacts: s1.runtime.llm_providers.l1.
+
+Source `packages/llm/src/providers/amazon-bedrock.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `2f1791e0d620ab139e32158526e83229c464fa3f`; full-source SHA-256 `4902ee16f21cafa4f49f55acdce728b1db166ab55adb17dbfecf686b79c081a8`.
+
+Lines 1–7 inclusive; 338 excerpt bytes; excerpt SHA-256 `2adcb72531883596844049af01692b85ce3ac796d5a3ad99b58f2ec0af645f22`.
+
+~~~~text
+import type { RouteDefaultsInput } from "../route/client"
+import { Auth } from "../route/auth"
+import { ProviderID, type ModelID } from "../schema"
+import * as BedrockConverse from "../protocols/bedrock-converse"
+import type { BedrockCredentials } from "../protocols/bedrock-converse"
+
+export const id = ProviderID.make("amazon-bedrock")
+~~~~
+
+Source `packages/llm/src/providers/amazon-bedrock.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `2f1791e0d620ab139e32158526e83229c464fa3f`; full-source SHA-256 `4902ee16f21cafa4f49f55acdce728b1db166ab55adb17dbfecf686b79c081a8`.
+
+Lines 18–39 inclusive; 764 excerpt bytes; excerpt SHA-256 `2cce9433f240ab2f031f92c89261d1e83d27d725770b5373d4abbbeb7f3e769b`.
+
+~~~~text
+export const routes = [BedrockConverse.route]
+
+const bedrockBaseURL = (region: string) => `https://bedrock-runtime.${region}.amazonaws.com`
+
+const configuredRoute = (input: Config) => {
+  const { apiKey, credentials, region, baseURL, ...rest } = input
+  const resolvedRegion = region ?? credentials?.region ?? "us-east-1"
+  return BedrockConverse.route.with({
+    ...rest,
+    provider: id,
+    endpoint: { baseURL: baseURL ?? bedrockBaseURL(resolvedRegion) },
+    auth: apiKey === undefined ? BedrockConverse.sigV4Auth(credentials) : Auth.bearer(apiKey),
+  })
+}
+
+export const configure = (input: Config = {}) => {
+  const route = configuredRoute(input)
+  return {
+    id,
+    model: (modelID: string | ModelID) => route.model({ id: modelID }),
+    configure,
+  }
+~~~~
+
+Source `packages/llm/src/protocols/bedrock-converse.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `c447a1a39d346a39dd29eab59e2f3413ab9f8850`; full-source SHA-256 `cecbf39d8ec9a0d0837a9eb8e1f9a9966d16fc2c3d284c9e82806f8f0a5989df`.
+
+Lines 672–672 inclusive; 43 excerpt bytes; excerpt SHA-256 `070cb03c7d458298bb889f40c20aa58a78dfefdf9bf03e88834e0aaf85174818`.
+
+~~~~text
+export const sigV4Auth = BedrockAuth.sigV4
+~~~~
+
+## E05 — Azure required URL alternatives, query/auth and model default
+
+Artifacts: s1.runtime.llm_providers.l1.
+
+Source `packages/llm/src/providers/azure.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `bfac2d1cad34a680b62b3047e440988e112cd483`; full-source SHA-256 `8bf8f96445a42749ad8a856710ad27403afa186f644e554b7b7dc3fb4cae4961`.
+
+Lines 1–46 inclusive; 1579 excerpt bytes; excerpt SHA-256 `b28a79ddd09944b027275931e1d7f54212b8bf283d4ada8ac04ab355064671ed`.
+
+~~~~text
+import { Auth } from "../route/auth"
+import { type AtLeastOne, type ProviderAuthOption } from "../route/auth-options"
+import type { Route as RouteDef, RouteDefaultsInput } from "../route/client"
+import { ProviderID, type ModelID } from "../schema"
+import * as OpenAIChat from "../protocols/openai-chat"
+import * as OpenAIResponses from "../protocols/openai-responses"
+import { withOpenAIOptions, type OpenAIProviderOptionsInput } from "./openai-options"
+
+export const id = ProviderID.make("azure")
+const routeAuth = Auth.remove("authorization")
+
+// Azure needs the customer's resource URL; supply either `resourceName`
+// (helper builds the URL) or `baseURL` directly.
+type AzureURL = AtLeastOne<{ readonly resourceName: string; readonly baseURL: string }>
+
+export type ModelOptions = AzureURL &
+  RouteDefaultsInput &
+  ProviderAuthOption<"optional"> & {
+    readonly apiVersion?: string
+    readonly queryParams?: Record<string, string>
+    readonly useCompletionUrls?: boolean
+    readonly providerOptions?: OpenAIProviderOptionsInput
+  }
+export type Config = ModelOptions
+
+const resourceBaseURL = (resourceName: string) => `https://${resourceName.trim()}.openai.azure.com/openai/v1`
+
+const responsesRoute = OpenAIResponses.route.with({
+  id: "azure-openai-responses",
+  provider: id,
+  auth: routeAuth,
+  endpoint: {
+    query: { "api-version": "v1" },
+  },
+})
+
+const chatRoute = OpenAIChat.route.with({
+  id: "azure-openai-chat",
+  provider: id,
+  auth: routeAuth,
+  endpoint: {
+    query: { "api-version": "v1" },
+  },
+})
+
+export const routes = [responsesRoute, chatRoute]
+~~~~
+
+Source `packages/llm/src/providers/azure.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `bfac2d1cad34a680b62b3047e440988e112cd483`; full-source SHA-256 `8bf8f96445a42749ad8a856710ad27403afa186f644e554b7b7dc3fb4cae4961`.
+
+Lines 65–104 inclusive; 1437 excerpt bytes; excerpt SHA-256 `af76e4b6170de372e0555e1113be24aac1703dae99b1161e670d5afb1c671788`.
+
+~~~~text
+const auth = (input: Config) => {
+  if ("auth" in input && input.auth) return input.auth
+  return Auth.remove("authorization").andThen(
+    Auth.optional("apiKey" in input ? input.apiKey : undefined, "apiKey")
+      .orElse(Auth.config("AZURE_OPENAI_API_KEY"))
+      .pipe(Auth.header("api-key")),
+  )
+}
+
+const configuredRoute = <Body, Prepared>(route: RouteDef<Body, Prepared>, input: Config) =>
+  route.with({
+    auth: auth(input),
+    endpoint: {
+      // AtLeastOne guarantees at least one is set; baseURL wins if both are.
+      baseURL: input.baseURL ?? resourceBaseURL(input.resourceName!),
+      query: {
+        ...(input.apiVersion ? { "api-version": input.apiVersion } : {}),
+        ...input.queryParams,
+      },
+    },
+  })
+
+export const configure = (input: Config) => {
+  const configuredResponsesRoute = configuredRoute(responsesRoute, input)
+  const configuredChatRoute = configuredRoute(chatRoute, input)
+  const modelDefaults = defaults(input)
+
+  const responses = (modelID: string | ModelID) =>
+    configuredResponsesRoute.with(withOpenAIOptions(modelID, modelDefaults)).model({ id: modelID })
+
+  const chat = (modelID: string | ModelID) =>
+    configuredChatRoute.with(withOpenAIOptions(modelID, modelDefaults)).model({ id: modelID })
+
+  return {
+    id,
+    model: (modelID: string | ModelID) => (input.useCompletionUrls === true ? chat(modelID) : responses(modelID)),
+    responses,
+    chat,
+    configure,
+  }
+~~~~
+
+Source `packages/llm/src/route/auth-options.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `7e40aa12a2103369a1ee9f884fdef42e7ebb5b33`; full-source SHA-256 `623b152e96a7833de5c5ddf0b297461de2ad8990b6aa5e082c4b5376b05522d6`.
+
+Lines 33–40 inclusive; 306 excerpt bytes; excerpt SHA-256 `adb8563942cceb96980f585471bd241640b557e358d93514721f72a0f5969dd0`.
+
+~~~~text
+/**
+ * Require at least one of the keys in `T`. Use for option shapes where any
+ * subset of fields is acceptable but at least one must be present (e.g. Azure
+ * accepts `resourceName` or `baseURL`).
+ */
+export type AtLeastOne<T> = {
+  [K in keyof T]: Required<Pick<T, K>> & Partial<Omit<T, K>>
+}[keyof T]
+~~~~
+
+
+END EXACT SUPPLEMENT DATA

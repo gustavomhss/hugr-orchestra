@@ -1,0 +1,17 @@
+{
+  "schema": "genesis-s1-persistence-receipt/v1",
+  "kind": "L1 production snapshot, not semantic release",
+  "branch": "genesis-fresh-s1",
+  "prior_head": "96c2b5d9d8da9bed454bf35f53f1789e748821cc",
+  "commit": "dd8d3effd86476f8ffde4c45f1843ca448144280",
+  "tree": "f229bd53fc02f0d7ad1e7476cdc936ce68fa76bb",
+  "readback_head": "dd8d3effd86476f8ffde4c45f1843ca448144280",
+  "verification": {
+    "tree": "f229bd53fc02f0d7ad1e7476cdc936ce68fa76bb",
+    "s1_subtree": "82c22cad1105f9b575d5f4105c1f899382ff0ce2",
+    "verified_files": 109,
+    "mismatches": [],
+    "mechanism": "Git blob identities matched for every frozen payload file"
+  },
+  "force": false
+}

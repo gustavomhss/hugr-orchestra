@@ -1,0 +1,72 @@
+{
+  "schema": "genesis-producer-correction/v1",
+  "task": "S1-L1-B",
+  "key": "s1.api.session-contract",
+  "scope": "orchestra.s1",
+  "layer": 1,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "status": "produced-unjudged",
+  "base_dossier": {
+    "path": "output/producers/b/review-dossier.md",
+    "sha256": "6c0face0fd44960dbc7bae233ec90607956af5a6a8b40fc50a8fc2a82dc5ce86",
+    "byte_length": 117510
+  },
+  "base_fragment": {
+    "path": "producers/b/artifacts.json",
+    "sha256": "1d018091d48893b69d390db03c01d39d785ce58c1a52230471308a1bfacab98b",
+    "byte_length": 202277
+  },
+  "original_body": {
+    "path": "bodies/session-contract.md",
+    "encoding": "utf-8",
+    "byte_length": 5130,
+    "sha256": "f0b4af4b966886be0858cc9ab27c8ec1f481ef8093018a567d8e08b071c52db5"
+  },
+  "corrected_body": {
+    "path": "revisions/b-l1-evidence-v1/corrected/session-contract.md",
+    "encoding": "utf-8",
+    "byte_length": 5155,
+    "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+  },
+  "fragment_metadata_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/fragment-metadata.json",
+    "sha256": "1fb8f99e0374ac2559011d877eecc77920d335f601387627d65ee8514295021d",
+    "byte_length": 202307
+  },
+  "diff_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/session-contract.diff",
+    "sha256": "64ac8e480700d842cd59eac7bf753574062b412c8f9260cead913e152100d404",
+    "byte_length": 1733
+  },
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/correction-request.txt",
+    "sha256": "61a4dfb00bc21a6632071b8de3726a4912b60dab112bb906a1e55c594f095ca7",
+    "byte_length": 788
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/response.md",
+    "sha256": "e2868ad91f78cf798745515643e0d6454c51be590da372a05fe13cd1c9e2d881",
+    "byte_length": 1866
+  },
+  "evidence_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/source-supplement.md",
+    "sha256": "2c528931021792ef1545d666442535918fdc4bcb3e87437a11ad76c82d64be5c",
+    "byte_length": 65191
+  },
+  "source_ref": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "packages/server/src/handlers/session.ts",
+    "git_blob_sha": "1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb",
+    "sha256": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+    "lines": [
+      267,
+      273
+    ]
+  },
+  "only_fragment_field_changed": "artifacts[key=s1.api.session-contract].body",
+  "other_eight_artifact_objects_unchanged": true,
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": [],
+  "binding_note": "This copied producer fragment retains original relative body paths and original provenance refs except corrected body identity. Principal remaps existing paths and binds the correction receipt when assembling the new shared candidate."
+}

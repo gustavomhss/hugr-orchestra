@@ -1,0 +1,101 @@
+{
+  "schema": "genesis-revision-checks/v1",
+  "status": "PASS",
+  "scope": "deterministic transport and exact authorized correction; no semantic acceptance",
+  "counts": {
+    "assigned_entries": 472,
+    "families": 52,
+    "lossless_groups": 68,
+    "required_keys": 9,
+    "source_supplement_files": 38,
+    "source_supplement_spans": 69,
+    "source_supplement_lines": 1108,
+    "changed_original_files": 0,
+    "new_body_versions": 1,
+    "other_unchanged_bodies": 8
+  },
+  "checks": [
+    "Base dossier matches principal SHA-256",
+    "Original producer fragment matches frozen SHA-256",
+    "All nine original body byte sequences occur in dossier",
+    "Lossless grouping reconstructs all 472 original coverage records",
+    "Every mandatory key retained; no future artifact key invented",
+    "Every supplemental span matches original source bytes and pin/blob/SHA-256",
+    "Supplemental line spans have zero overlap with compact excerpt line sets",
+    "Corrected body equals exactly one authorized sentence substitution",
+    "Only the target body object differs in copied fragment metadata",
+    "Eight other artifact objects unchanged",
+    "All original producer files and dossier unchanged before/after",
+    "No product execution or judge dispatch"
+  ],
+  "file_hashes": {
+    "request.txt": {
+      "sha256": "74a3e3e104b7598706075892e161ec9348fff3210fd0bfa75dc628223b19ec91",
+      "byte_length": 913
+    },
+    "correction-request.txt": {
+      "sha256": "61a4dfb00bc21a6632071b8de3726a4912b60dab112bb906a1e55c594f095ca7",
+      "byte_length": 788
+    },
+    "prepare.py": {
+      "sha256": "c315060e32297839d8f84c4eaa2e7fd9d2b67f29930b81837f01bc35fe132d91",
+      "byte_length": 35169
+    },
+    "coverage-projection.json": {
+      "sha256": "759b758d4d82a5dfd5d11b8e8ec40bc65c55893c32c645f8fb29224712017f6b",
+      "byte_length": 348519
+    },
+    "coverage-projection.md": {
+      "sha256": "c07e08f228b5d10953a2b009c2a7fdade2430e92bd70f7bc07623d8743e58d81",
+      "byte_length": 23010
+    },
+    "source-supplement.md": {
+      "sha256": "2c528931021792ef1545d666442535918fdc4bcb3e87437a11ad76c82d64be5c",
+      "byte_length": 65191
+    },
+    "source-supplement-index.json": {
+      "sha256": "27452cd90023a9faaac0181f4a81782dc9861dc2ddac9c6620025184eb19c899",
+      "byte_length": 33937
+    },
+    "frozen-originals-manifest.json": {
+      "sha256": "046f74f577d5c97a5355e51fb2f98e3243eae2442b9bd599b06e38145130e0b2",
+      "byte_length": 54348
+    },
+    "corrected/session-contract.md": {
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "byte_length": 5155
+    },
+    "corrected/session-contract.diff": {
+      "sha256": "64ac8e480700d842cd59eac7bf753574062b412c8f9260cead913e152100d404",
+      "byte_length": 1733
+    },
+    "corrected/fragment-metadata.json": {
+      "sha256": "1fb8f99e0374ac2559011d877eecc77920d335f601387627d65ee8514295021d",
+      "byte_length": 202307
+    },
+    "corrected/response.md": {
+      "sha256": "e2868ad91f78cf798745515643e0d6454c51be590da372a05fe13cd1c9e2d881",
+      "byte_length": 1866
+    },
+    "corrected/correction-receipt.json": {
+      "sha256": "e229a5e30ce03792db1ab4b15d806e822af2f87a67451dbe50b8e00d201e1763",
+      "byte_length": 3287
+    }
+  },
+  "original_body": {
+    "sha256": "f0b4af4b966886be0858cc9ab27c8ec1f481ef8093018a567d8e08b071c52db5",
+    "byte_length": 5130
+  },
+  "corrected_body": {
+    "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+    "byte_length": 5155
+  },
+  "limits": [
+    "No CC-1 PASS or judge verdict claimed",
+    "Future L2-L4 key inventory not supplied by frozen B fragment; principal must fix the relevant work before claiming complete S1",
+    "190 surface and 183 inventory-only entries remain at the original depth",
+    "Oversized generated input remains unresolved for runtime binding",
+    "Original dossier includes superseded logging sentence and must be paired with the one-body correction for review",
+    "No oracle access, remote reads/writes, product tests or judge messages in this revision"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "run",
+    "build"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:08:37.698073+00:00",
+  "end": "2026-11-11T18:08:40.906112+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "purpose": "Declared dependency packaging shim and runtime dist prerequisite; not a full checkout CI/typecheck qualification",
+  "product_tests": "NOT_RUN"
+}

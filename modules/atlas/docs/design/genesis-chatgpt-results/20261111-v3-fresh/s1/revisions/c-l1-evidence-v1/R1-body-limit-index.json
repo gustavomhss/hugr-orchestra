@@ -1,0 +1,44 @@
+[
+  {
+    "path": "producers/c/bodies/http-recorder.md",
+    "body_sha256": "4857371404625869016238e6ac23fbf7aad5ab0c7538f64df2ebfe91f1935fe7",
+    "byte_start": 1356,
+    "byte_length": 569,
+    "sha256": "0401cbed59a7615380f05f77af879d0efdd9a1853f41c746c5683051e5b7cdfb"
+  },
+  {
+    "path": "producers/c/bodies/codemode-interpreter.md",
+    "body_sha256": "be8899d897dec584e7e74c597483dff9417dd1511e00e757e86a05378248487f",
+    "byte_start": 2893,
+    "byte_length": 587,
+    "sha256": "baf20ea2fb32de14fbf5826407c316b3e3cb1fbab2cce14904fef1848336aa9d"
+  },
+  {
+    "path": "producers/c/bodies/sqlite-adapters.md",
+    "body_sha256": "b1dc22165fbdcee0a5811dc983548ac26f1189adc311e9855cfc22763b7d9597",
+    "byte_start": 3223,
+    "byte_length": 335,
+    "sha256": "a43ca0fb46ed8c90a6dbc352d830d533028724725a7f73ff6ea40a8c39cb763a"
+  },
+  {
+    "path": "producers/c/bodies/plugin-contracts.md",
+    "body_sha256": "9c3110e3b15b35e85285cab7f9440b6711110aaac8a1ca936c7ca86263c1e382",
+    "byte_start": 2802,
+    "byte_length": 590,
+    "sha256": "a38075e2bcfce97a67e5655effd3548a6a0fbd418582d5cba26d1043112e167a"
+  },
+  {
+    "path": "producers/c/bodies/maintenance-intent.md",
+    "body_sha256": "98d6626bcf2ae923fb8a905cef874bc3e086a42a71abc129a2e9471c0864bcb8",
+    "byte_start": 2353,
+    "byte_length": 598,
+    "sha256": "bb1e8f9af0f1f8e8b9c0c5bfa2ae7aaea6e7826cb57ceddb9c8511b184bd199c"
+  },
+  {
+    "path": "producers/c/bodies/user-guides.md",
+    "body_sha256": "22303bf38d880468d845ec54732c2138f293243058d8cf8f1c6b9152c2587488",
+    "byte_start": 2615,
+    "byte_length": 747,
+    "sha256": "42236e4b8b967166be07fcec22de57d99765b883026824c5c98bc1659da43fde"
+  }
+]

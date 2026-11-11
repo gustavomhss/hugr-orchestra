@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "node",
+    "scripts/fix-scip-types.mjs"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:08:37.616745+00:00",
+  "end": "2026-11-11T18:08:37.697050+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "9ce7ef0c8339d106f3259c824a6e88c0bb408b11e790b226a18b79bb888eb3a5",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "purpose": "Declared dependency packaging shim and runtime dist prerequisite; not a full checkout CI/typecheck qualification",
+  "product_tests": "NOT_RUN"
+}

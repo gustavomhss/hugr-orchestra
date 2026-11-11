@@ -1,0 +1,14 @@
+{
+  "kind": "transport_verification_only",
+  "package_sha256": "df1ac005133bc4b89577a581ea9053bd7a5231cf98b7b99c4a67db58921ed670",
+  "artifacts": 36,
+  "checks": 4468,
+  "errors": [],
+  "status": "PASS",
+  "does_not_prove": [
+    "semantic sufficiency",
+    "Atlas import or publication",
+    "ownership.index/read",
+    "product tests or CI"
+  ]
+}

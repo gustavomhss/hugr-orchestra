@@ -1,0 +1,17 @@
+{
+  "schema": "genesis-deterministic-source-observations/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "observations": [
+    {
+      "path": "packages/core/package.json",
+      "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385",
+      "json_selector": "$.exports",
+      "number_of_keys": 437,
+      "has_bare_dot_export": false,
+      "wildcard_keys": [],
+      "method": "Python json.loads of unchanged captured bytes; no package code/build/test execution."
+    }
+  ],
+  "semantic_acceptance": false
+}

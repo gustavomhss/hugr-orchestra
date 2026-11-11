@@ -1,0 +1,135 @@
+{
+  "batch": "S1-L1-B-v2",
+  "directory": "/workspace/scratch/2b46fb541868/genesis-s1/transports/b-l1-v2",
+  "scope": "Delivery files only; manifest excludes its own recursive identity.",
+  "targets": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "dossier_bytes": 208309,
+  "dossier_sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def",
+  "actual_call_count": 12,
+  "file_count_excluding_manifest": 24,
+  "files": [
+    {
+      "path": "delivery-results.json",
+      "bytes": 10656,
+      "sha256": "6af4881ea59c55a922c0e650181ef0836611dccc9985ba97de1c7eb7f0735463"
+    },
+    {
+      "path": "dossier.md",
+      "bytes": 208309,
+      "sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def"
+    },
+    {
+      "path": "freeze.json",
+      "bytes": 2055,
+      "sha256": "c98c05d0a4a6c5413f49b9a3251896c0e76925a9a849d5478e4e17023742fbf9"
+    },
+    {
+      "path": "part-01.raw.md",
+      "bytes": 34631,
+      "sha256": "edec3c05d2012d75cca24ab55e7151c5a4b3ff038be8f11b1779a130804c046f"
+    },
+    {
+      "path": "part-01.request.txt",
+      "bytes": 35843,
+      "sha256": "d809f0a4fe7a1c192115521ce165c069ac87a6868daadb800a75bc308ce020e1"
+    },
+    {
+      "path": "part-02.raw.md",
+      "bytes": 34642,
+      "sha256": "b7620316065e69e37a5ee091f411a2d3db7274faeb366ecaaa026bea75893652"
+    },
+    {
+      "path": "part-02.request.txt",
+      "bytes": 35858,
+      "sha256": "ad9bf96781519737b64b2aa914e2a7edb8aff7a607a21aa3c75f3ad8220c311a"
+    },
+    {
+      "path": "part-03.raw.md",
+      "bytes": 35273,
+      "sha256": "354d6c47cce787664d07bda39bc0cc756464ddc7c5533093302a1f86c155ce81"
+    },
+    {
+      "path": "part-03.request.txt",
+      "bytes": 36490,
+      "sha256": "908f387fcf4cc2543f21cdff137b27ab3411020dbf3461b6b7b679464978d4ce"
+    },
+    {
+      "path": "part-04.raw.md",
+      "bytes": 34482,
+      "sha256": "ace8e872cf782ab7487ea92e084ea2e5a8d68feabf3ce8c468f1b6477d9947e0"
+    },
+    {
+      "path": "part-04.request.txt",
+      "bytes": 35700,
+      "sha256": "62b8ebe0d6d8bc95c71aae173896b624c1e887e6605c3910996e5ab4ce1dbb04"
+    },
+    {
+      "path": "part-05.raw.md",
+      "bytes": 34551,
+      "sha256": "41dd19ace3360b008a8b0babd6f1a4254f3f39261385f671248d5b293ab3353f"
+    },
+    {
+      "path": "part-05.request.txt",
+      "bytes": 35769,
+      "sha256": "e3dbd0739468f3171ac07846b3d05c087643d7a0e444ba470e6e884686aafd29"
+    },
+    {
+      "path": "part-06.raw.md",
+      "bytes": 34730,
+      "sha256": "711e1c2c9eae583db40731dea52adb35ad78092bd91b4aea6da1fb1fc5c98c92"
+    },
+    {
+      "path": "part-06.request.txt",
+      "bytes": 35948,
+      "sha256": "a8becb3b412276a02c1bf9d356b375f98aa90c7fd42fec8eb673ac2e8dfe92ed"
+    },
+    {
+      "path": "principal-completion-report.txt",
+      "bytes": 380,
+      "sha256": "169ca2cbf79d741f4c9bd8bee1e90c7b8cd5fb7dfee99eeaebb5ab6993a0372e"
+    },
+    {
+      "path": "request-steering.txt",
+      "bytes": 338,
+      "sha256": "0c1a2b2dbdcb024d3a35e83bbb0d6b4cfa067021c38990b367439eae3a0a94da"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 2444,
+      "sha256": "cecc8010e3fa6b8318460aaa8e48a4d487bfc4dff6de5494f7bf5db9ee2d3fa1"
+    },
+    {
+      "path": "status-notification-result.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "status-notification.txt",
+      "bytes": 406,
+      "sha256": "4d93746b1054fabe00a0bd78fb8bfd12bd1785b9d4709797abb3a6f617dbc12c"
+    },
+    {
+      "path": "transport-plan.json",
+      "bytes": 3196,
+      "sha256": "575679945645eca0f6eef54379f65b856fc21349aae05a5dfba76a0421306c82"
+    },
+    {
+      "path": "transport-receipt.json",
+      "bytes": 8964,
+      "sha256": "247da6bf1b1813618d0915c335bb91df9512e436bcee3cbb858d936a717c2045"
+    },
+    {
+      "path": "transport-receipt.md",
+      "bytes": 3831,
+      "sha256": "5ad983c20b2910c7f389045a24a110bf310b8bfdd96bb309acf336d2e0f4f6f6"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 2919,
+      "sha256": "cfad05c3fba5b4d979e19155a417aefbc06b964ef3210a9ceff12d01a3517f54"
+    }
+  ]
+}

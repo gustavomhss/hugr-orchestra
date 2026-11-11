@@ -1,0 +1,223 @@
+{
+  "batch": "S1-L1-B-v2",
+  "role": "faithful internal packet transport only",
+  "transporter": "/root/producer_c",
+  "closed_at_utc": "2026-11-11T17:58:54.059531+00:00",
+  "status": "All twelve authorized followup_task calls completed to a visible result; local byte verification passed. Final J2 part 6 result visibility is truncated. No additional DATA transmission was made because truncation alone does not establish delivery failure.",
+  "source_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "aggregate_package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "frozen_dossier": {
+    "source_path": "/workspace/scratch/2b46fb541868/genesis-s1/output/review-packets/l1-b-v2-dossier.md",
+    "bytes": 208309,
+    "sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def"
+  },
+  "frozen_receipt": {
+    "source_path": "/workspace/scratch/2b46fb541868/genesis-s1/output/receipts/l1-b-v2-freeze.json",
+    "sha256": "c98c05d0a4a6c5413f49b9a3251896c0e76925a9a849d5478e4e17023742fbf9"
+  },
+  "total_actual_calls": 12,
+  "raw_data_bytes_per_target": 208309,
+  "raw_data_bytes_both_targets": 416618,
+  "request_bytes_per_target": 215608,
+  "request_bytes_both_targets": 431216,
+  "retransmissions": 0,
+  "known_transcription_errors": [],
+  "targets": [
+    {
+      "target": "/root/judge1",
+      "actual_calls_completed_to_visible_result": 6,
+      "parts_sent": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "raw_data_bytes_in_requests": 208309,
+      "request_message_bytes": 215608,
+      "request_files": [
+        "part-01.request.txt",
+        "part-02.request.txt",
+        "part-03.request.txt",
+        "part-04.request.txt",
+        "part-05.request.txt",
+        "part-06.request.txt"
+      ],
+      "explicit_errors_observed": 0,
+      "visible_results_truncated": 0,
+      "native_acknowledgments_available_to_transporter": [],
+      "receiver_byte_echo_exposed": false,
+      "principal_reported_native_completion": true,
+      "principal_report_path": "principal-completion-report.txt"
+    },
+    {
+      "target": "/root/judge2",
+      "actual_calls_completed_to_visible_result": 6,
+      "parts_sent": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "raw_data_bytes_in_requests": 208309,
+      "request_message_bytes": 215608,
+      "request_files": [
+        "part-01.request.txt",
+        "part-02.request.txt",
+        "part-03.request.txt",
+        "part-04.request.txt",
+        "part-05.request.txt",
+        "part-06.request.txt"
+      ],
+      "explicit_errors_observed": 0,
+      "visible_results_truncated": 1,
+      "native_acknowledgments_available_to_transporter": [],
+      "receiver_byte_echo_exposed": false,
+      "principal_reported_native_completion": false
+    }
+  ],
+  "request_reuse": "The same six exact saved message literals were used for both canonical targets; destination is the separate tool target argument.",
+  "call_order": "part 1 J1, part 1 J2, part 2 J1, part 2 J2, part 3 J1, part 3 J2, part 4 J1, part 4 J2, part 5 J1, part 5 J2, part 6 J1, part 6 J2",
+  "local_verification": "UTF-8 validity, contiguous offsets, per-file lengths and SHA256, extraction of the exact DATA from each saved request, concatenation to all 208309 frozen bytes, unchanged source dossier and freeze receipt, and all twelve target/part bindings verified mechanically.",
+  "actual_message_comparison": "Actual visible tool message arguments were manually compared with the displayed saved canonical request. No difference was detected. Local file checks do not independently prove host-received bytes.",
+  "visible_results": "Calls 1 through 11 exposed empty results and no explicit error. Call 12 (/root/judge2, part 6) exposed only: Output exceeded the available model context and was truncated. This is recorded as output truncation, not an explicit delivery failure or byte acknowledgment.",
+  "native_acknowledgments": [],
+  "native_acknowledgment_status": "No B native acknowledgment was directly available to this transporter. At closure the principal reported receiving the complete native J1 verdict and instructed closure. Final J2 native return remained pending in that report; no duplicate was sent.",
+  "observability_limits": [
+    "No receiver byte echo or received-content hash was exposed.",
+    "No host request ID or receipt ID was exposed.",
+    "No token or cost accounting was exposed.",
+    "The final truncated visible result does not establish whether any hidden return detail existed.",
+    "The transporter supplies no semantic judgment or release decision."
+  ],
+  "status_notification": {
+    "tool": "collaboration.send_message",
+    "target": "/root",
+    "request": {
+      "path": "status-notification.txt",
+      "bytes": 406,
+      "sha256": "4d93746b1054fabe00a0bd78fb8bfd12bd1785b9d4709797abb3a6f617dbc12c"
+    },
+    "visible_result": {
+      "path": "status-notification-result.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "evidence_files": [
+    {
+      "path": "request.txt",
+      "bytes": 2444,
+      "sha256": "cecc8010e3fa6b8318460aaa8e48a4d487bfc4dff6de5494f7bf5db9ee2d3fa1"
+    },
+    {
+      "path": "request-steering.txt",
+      "bytes": 338,
+      "sha256": "0c1a2b2dbdcb024d3a35e83bbb0d6b4cfa067021c38990b367439eae3a0a94da"
+    },
+    {
+      "path": "transport-plan.json",
+      "bytes": 3196,
+      "sha256": "575679945645eca0f6eef54379f65b856fc21349aae05a5dfba76a0421306c82"
+    },
+    {
+      "path": "delivery-results.json",
+      "bytes": 10656,
+      "sha256": "6af4881ea59c55a922c0e650181ef0836611dccc9985ba97de1c7eb7f0735463"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 2919,
+      "sha256": "cfad05c3fba5b4d979e19155a417aefbc06b964ef3210a9ceff12d01a3517f54"
+    }
+  ],
+  "parts": [
+    {
+      "part": 1,
+      "total": 6,
+      "byte_start": 0,
+      "byte_end_exclusive": 34631,
+      "raw_path": "part-01.raw.md",
+      "raw_bytes": 34631,
+      "raw_sha256": "edec3c05d2012d75cca24ab55e7151c5a4b3ff038be8f11b1779a130804c046f",
+      "request_path": "part-01.request.txt",
+      "request_bytes": 35843,
+      "request_sha256": "d809f0a4fe7a1c192115521ce165c069ac87a6868daadb800a75bc308ce020e1"
+    },
+    {
+      "part": 2,
+      "total": 6,
+      "byte_start": 34631,
+      "byte_end_exclusive": 69273,
+      "raw_path": "part-02.raw.md",
+      "raw_bytes": 34642,
+      "raw_sha256": "b7620316065e69e37a5ee091f411a2d3db7274faeb366ecaaa026bea75893652",
+      "request_path": "part-02.request.txt",
+      "request_bytes": 35858,
+      "request_sha256": "ad9bf96781519737b64b2aa914e2a7edb8aff7a607a21aa3c75f3ad8220c311a"
+    },
+    {
+      "part": 3,
+      "total": 6,
+      "byte_start": 69273,
+      "byte_end_exclusive": 104546,
+      "raw_path": "part-03.raw.md",
+      "raw_bytes": 35273,
+      "raw_sha256": "354d6c47cce787664d07bda39bc0cc756464ddc7c5533093302a1f86c155ce81",
+      "request_path": "part-03.request.txt",
+      "request_bytes": 36490,
+      "request_sha256": "908f387fcf4cc2543f21cdff137b27ab3411020dbf3461b6b7b679464978d4ce"
+    },
+    {
+      "part": 4,
+      "total": 6,
+      "byte_start": 104546,
+      "byte_end_exclusive": 139028,
+      "raw_path": "part-04.raw.md",
+      "raw_bytes": 34482,
+      "raw_sha256": "ace8e872cf782ab7487ea92e084ea2e5a8d68feabf3ce8c468f1b6477d9947e0",
+      "request_path": "part-04.request.txt",
+      "request_bytes": 35700,
+      "request_sha256": "62b8ebe0d6d8bc95c71aae173896b624c1e887e6605c3910996e5ab4ce1dbb04"
+    },
+    {
+      "part": 5,
+      "total": 6,
+      "byte_start": 139028,
+      "byte_end_exclusive": 173579,
+      "raw_path": "part-05.raw.md",
+      "raw_bytes": 34551,
+      "raw_sha256": "41dd19ace3360b008a8b0babd6f1a4254f3f39261385f671248d5b293ab3353f",
+      "request_path": "part-05.request.txt",
+      "request_bytes": 35769,
+      "request_sha256": "e3dbd0739468f3171ac07846b3d05c087643d7a0e444ba470e6e884686aafd29"
+    },
+    {
+      "part": 6,
+      "total": 6,
+      "byte_start": 173579,
+      "byte_end_exclusive": 208309,
+      "raw_path": "part-06.raw.md",
+      "raw_bytes": 34730,
+      "raw_sha256": "711e1c2c9eae583db40731dea52adb35ad78092bd91b4aea6da1fb1fc5c98c92",
+      "request_path": "part-06.request.txt",
+      "request_bytes": 35948,
+      "request_sha256": "a8becb3b412276a02c1bf9d356b375f98aa90c7fd42fec8eb673ac2e8dfe92ed"
+    }
+  ],
+  "principal_attributed_completion_report": {
+    "from": "/root",
+    "about_target": "/root/judge1",
+    "exact_message": {
+      "path": "principal-completion-report.txt",
+      "bytes": 380,
+      "sha256": "169ca2cbf79d741f4c9bd8bee1e90c7b8cd5fb7dfee99eeaebb5ab6993a0372e"
+    },
+    "reported_native_verdict": "FIX-FIRST",
+    "evidence_kind": "Principal reported receiving the complete native J1 verdict; this transporter did not receive or inspect its full text.",
+    "transporter_judgment": null
+  }
+}

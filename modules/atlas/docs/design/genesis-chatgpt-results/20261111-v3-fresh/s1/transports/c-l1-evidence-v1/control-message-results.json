@@ -1,0 +1,22 @@
+[
+  {
+    "tool": "collaboration.send_message",
+    "target": "/root/judge1",
+    "request_path": "judge1-part02-correction-control.request.txt",
+    "request_bytes": 479,
+    "request_sha256": "e07793f0becdb65640d02086df0bbb6fa3e4e02f73630029e842405111b52651",
+    "visible_tool_result": "",
+    "call_completed_to_visible_result": true,
+    "not_supplement_data_delivery": true
+  },
+  {
+    "tool": "collaboration.send_message",
+    "target": "/root",
+    "request_path": "principal-final-delivery-status.request.txt",
+    "request_bytes": 476,
+    "request_sha256": "504c3bf825b856a24ad09a26a042c7f3712b08fee96b0700d0b91906c84a534c",
+    "visible_tool_result": "",
+    "call_completed_to_visible_result": true,
+    "not_supplement_data_delivery": true
+  }
+]

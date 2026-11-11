@@ -2031,12 +2031,13 @@
         "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
         "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
       },
-      "validity": "supported",
+      "validity": "blocked",
       "gaps": [
         "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
         "No local product tests, generation, builds, or runtime operations were executed.",
         "Most non-session domain schema modules received literal surface indexing only.",
-        "V2 annotations/brands remain despite unversioned naming intent."
+        "V2 annotations/brands remain despite unversioned naming intent.",
+        "Mandatory unresolved L1 review finding in B-v2: B3: domain-level purpose and contract need disposition. The original body is preserved; corrected production and the same two judges must resolve it."
       ],
       "evidence": [
         {
@@ -2091,6 +2092,14 @@
         {
           "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/coverage.json",
           "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+          "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+          "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
         }
       ],
       "validity_basis": "Supported only for bounded source observations; no semantic acceptance or runtime import is implied.",
@@ -2308,10 +2317,10 @@
       "layer": 1,
       "need": "flow",
       "body": {
-        "path": "producers/b/bodies/session-contract.md",
+        "path": "revisions/b-l1-evidence-v1/corrected/session-contract.md",
         "encoding": "utf-8",
-        "byte_length": 5130,
-        "sha256": "f0b4af4b966886be0858cc9ab27c8ec1f481ef8093018a567d8e08b071c52db5"
+        "byte_length": 5155,
+        "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
       },
       "authority": {
         "scope": "orchestra.s1",
@@ -2319,11 +2328,12 @@
         "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
         "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
       },
-      "validity": "supported",
+      "validity": "blocked",
       "gaps": [
         "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
         "No local product tests, generation, builds, or runtime operations were executed.",
-        "Core persistence, scheduling, execution and recovery internals are delegated boundaries, not independently proven here."
+        "Core persistence, scheduling, execution and recovery internals are delegated boundaries, not independently proven here.",
+        "Mandatory unresolved L1 review finding in B-v2: B2: exact active/history/cross-session evidence. The original body is preserved; corrected production and the same two judges must resolve it."
       ],
       "evidence": [
         {
@@ -2363,6 +2373,18 @@
         {
           "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/coverage.json",
           "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/correction-receipt.json",
+          "sha256": "e229a5e30ce03792db1ab4b15d806e822af2f87a67451dbe50b8e00d201e1763"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+          "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+          "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
         }
       ],
       "validity_basis": "Supported only for bounded source observations; no semantic acceptance or runtime import is implied.",
@@ -2380,7 +2402,9 @@
         "file:packages/server/src/middleware/session-location.ts",
         "members:packages/protocol/src/groups",
         "members:packages/server/src/handlers",
-        "members:packages/server/src/middleware"
+        "members:packages/server/src/middleware",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/requests/l1-b-correction-v2.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/recipe.json"
       ],
       "source_refs": [
         {
@@ -2421,8 +2445,8 @@
         }
       ],
       "recipe_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/request.txt",
-        "sha256": "09f7b2ad2a7807e069b6719305adfeb24cc5a313b6baa09c39a5c9e597964c86"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/recipe.json",
+        "sha256": "b0b23da1a2b6c81d2d315d67f007af2bfb8d8dc3e8b24f3dbf886d589d2e21f5"
       },
       "recipe_supplement_refs": [
         {
@@ -2466,12 +2490,14 @@
         }
       ],
       "producer_request_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/request.txt",
-        "sha256": "09f7b2ad2a7807e069b6719305adfeb24cc5a313b6baa09c39a5c9e597964c86"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/correction-request.txt",
+        "sha256": "61a4dfb00bc21a6632071b8de3726a4912b60dab112bb906a1e55c594f095ca7",
+        "byte_length": 788
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/response.md",
-        "sha256": "51bf309577b0aa2d1b770110f3e59d68e954ec89d43678bc676ec9a8882d10a8"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/response.md",
+        "sha256": "e2868ad91f78cf798745515643e0d6454c51be590da372a05fe13cd1c9e2d881",
+        "byte_length": 1866
       },
       "semantic_review_refs": [],
       "runtime_receipt_refs": []
@@ -2494,11 +2520,12 @@
         "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
         "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
       },
-      "validity": "supported",
+      "validity": "blocked",
       "gaps": [
         "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
         "No local product tests, generation, builds, or runtime operations were executed.",
-        "No runtime authorization, location, provider or socket checks; PTY output queue is unbounded in source."
+        "No runtime authorization, location, provider or socket checks; PTY output queue is unbounded in source.",
+        "Mandatory unresolved L1 review finding in B-v2: B1: diagnostic prefix budget versus appended marker. The original body is preserved; corrected production and the same two judges must resolve it."
       ],
       "evidence": [
         {
@@ -2550,6 +2577,14 @@
         {
           "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/coverage.json",
           "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+          "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+          "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
         }
       ],
       "validity_basis": "Supported only for bounded source observations; no semantic acceptance or runtime import is implied.",
@@ -2814,11 +2849,12 @@
         "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
         "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
       },
-      "validity": "supported",
+      "validity": "blocked",
       "gaps": [
         "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
         "No local product tests, generation, builds, or runtime operations were executed.",
-        "No replay/overflow/network experiment; global live readiness is not durable replay or automatic reconnect."
+        "No replay/overflow/network experiment; global live readiness is not durable replay or automatic reconnect.",
+        "Mandatory unresolved L1 review finding in B-v2: B2: production cache and SSE finalization evidence. The original body is preserved; corrected production and the same two judges must resolve it."
       ],
       "evidence": [
         {
@@ -2857,6 +2893,14 @@
         {
           "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/coverage.json",
           "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+          "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+          "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
         }
       ],
       "validity_basis": "Supported only for bounded source observations; no semantic acceptance or runtime import is implied.",
@@ -3002,13 +3046,14 @@
         "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
         "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
       },
-      "validity": "supported",
+      "validity": "blocked",
       "gaps": [
         "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
         "No local product tests, generation, builds, or runtime operations were executed.",
         "Generated freshness unverified; most generated modules are inventory-only.",
         "generated/types.ts is 462732 bytes; current runtime observer refuses inputs above 256000 bytes, so its binding remains unresolved.",
-        "README raw-file omission conflicts with generated fs.read; handwritten upload route lacks a corresponding declaration in the inspected Actions transfer group/handler."
+        "README raw-file omission conflicts with generated fs.read; handwritten upload route lacks a corresponding declaration in the inspected Actions transfer group/handler.",
+        "Mandatory unresolved L1 review finding in B-v2: B2: binary reader and SSE branches. The original body is preserved; corrected production and the same two judges must resolve it."
       ],
       "evidence": [
         {
@@ -3062,6 +3107,14 @@
         {
           "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/coverage.json",
           "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+          "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+          "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
         }
       ],
       "validity_basis": "Supported only for bounded source observations; no semantic acceptance or runtime import is implied.",
@@ -3570,11 +3623,12 @@
         "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
         "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
       },
-      "validity": "supported",
+      "validity": "blocked",
       "gaps": [
         "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
         "No local product tests, generation, builds, or runtime operations were executed.",
-        "Embedded tests were read but not run; Core lifecycle/recovery and all concurrency isolation remain unproven."
+        "Embedded tests were read but not run; Core lifecycle/recovery and all concurrency isolation remain unproven.",
+        "Mandatory unresolved L1 review finding in B-v2: B3: SDK tool domain need disposition. The original body is preserved; corrected production and the same two judges must resolve it."
       ],
       "evidence": [
         {
@@ -3607,6 +3661,14 @@
         {
           "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/coverage.json",
           "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+          "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+          "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
         }
       ],
       "validity_basis": "Supported only for bounded source observations; no semantic acceptance or runtime import is implied.",
@@ -3765,12 +3827,13 @@
         "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
         "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
       },
-      "validity": "supported",
+      "validity": "blocked",
       "gaps": [
         "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
         "No local product tests, generation, builds, or runtime operations were executed.",
         "183 assigned entries are inventory-only; 190 captured source modules have literal surface depth, not full semantic reading.",
-        "Required oversized generated input retained; no unavailable runtime observation is relabeled absent or supplied with a fabricated version."
+        "Required oversized generated input retained; no unavailable runtime observation is relabeled absent or supplied with a fabricated version.",
+        "Mandatory unresolved L1 review finding in B-v2: B3: 190 handwritten domain need dispositions. The original body is preserved; corrected production and the same two judges must resolve it."
       ],
       "evidence": [
         {
@@ -3793,6 +3856,14 @@
         {
           "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/coverage.json",
           "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+          "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+          "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
         }
       ],
       "validity_basis": "Supported only for bounded source observations; no semantic acceptance or runtime import is implied.",
@@ -9016,6 +9087,7 @@
     "Atlas runtime release queried at S4 head 107d447976cde80600996ef19ddf618cfc907a72: file absent. No import/index/read/rebuild/CI result asserted.",
     "Source observation limit 256000 bytes affects oversized declared source; preserve binding gaps in runtime-needs.json.",
     "Native tokens, physical attempts, billing UNKNOWN. Same inherited model; independent contexts do not prove model diversity.",
-    "Raw producer evidence reports describe production-time state; acceptance will be separately linked, never retrospectively claimed."
+    "Raw producer evidence reports describe production-time state; acceptance will be separately linked, never retrospectively claimed.",
+    "Seven B-v2 artifacts are explicitly blocked by actual mandatory review findings; their original declared supported metadata is retained in snapshots/native-package-l1-bv2.json. No new bodies or semantic approvals are manufactured by this principal hold update."
   ]
 }

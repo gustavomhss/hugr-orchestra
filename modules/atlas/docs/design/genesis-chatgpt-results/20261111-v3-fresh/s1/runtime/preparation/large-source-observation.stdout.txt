@@ -1,0 +1,1 @@
+{"operation":"observe required source using unchanged release functions","path":"packages/client/src/generated/types.ts","observation":{"kind":"unavailable"},"importerRead":{"kind":"error","error":"native-file-limit: packages/client/src/generated/types.ts"}}

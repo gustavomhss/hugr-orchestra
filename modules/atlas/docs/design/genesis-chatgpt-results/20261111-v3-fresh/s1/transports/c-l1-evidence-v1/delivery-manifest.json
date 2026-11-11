@@ -1,0 +1,149 @@
+{
+  "batch": "S1-L1-C-v1",
+  "supplement": "c-l1-evidence-v1",
+  "directory": "/workspace/scratch/2b46fb541868/genesis-s1/transports/c-l1-evidence-v1",
+  "file_count_excluding_this_manifest": 28,
+  "files": [
+    {
+      "path": "acknowledgment-reports.json",
+      "bytes": 1721,
+      "sha256": "5cb842cb76e80d177fe5d0fe6141932b1fa9f3fee2d0b4ef11bb9b0ce9c7aba9"
+    },
+    {
+      "path": "control-message-results.json",
+      "bytes": 761,
+      "sha256": "54d2af0e5800f8f535685484e1889ba9346159f5e3d78e63fa03b12b272dfb4a"
+    },
+    {
+      "path": "delivery-results-judge1.json",
+      "bytes": 5733,
+      "sha256": "c5b7dd8a53dbec815009eec6ce14c2c4f80b10f6007230e378ffb065b0e5717b"
+    },
+    {
+      "path": "delivery-results-judge2-main.json",
+      "bytes": 4492,
+      "sha256": "5ab5b67ac38fc6b8414a7bd93a13cd78cf646a8e1ce250fe5f062715cabfba20"
+    },
+    {
+      "path": "delivery-results-judge2.json",
+      "bytes": 562,
+      "sha256": "3d7871b7bdb0a56c97ed7468effc470715988ef6e2f28cbf92b960a0e78abb5d"
+    },
+    {
+      "path": "delivery-results.json",
+      "bytes": 13319,
+      "sha256": "3815701fb7068660edc2e963dfe71922764647cd7cb80c90c4241ff70671c77e"
+    },
+    {
+      "path": "judge1-part02-attempt01.request.txt",
+      "bytes": 36217,
+      "sha256": "05293b7e0cea24599cdc6ddc379cd9b38e6e6a36a1e637fd691702652bed9ba1"
+    },
+    {
+      "path": "judge1-part02-correction-control.request.txt",
+      "bytes": 479,
+      "sha256": "e07793f0becdb65640d02086df0bbb6fa3e4e02f73630029e842405111b52651"
+    },
+    {
+      "path": "part-01.raw.md",
+      "bytes": 37358,
+      "sha256": "3c4b91528a25f9dbc3e150e435bc233b171104822c6424159818d6a19c251215"
+    },
+    {
+      "path": "part-01.request.txt",
+      "bytes": 38263,
+      "sha256": "9ecdbc1c253df59538e982c3f13da6c816426d11dca0950fcc308a004df043e3"
+    },
+    {
+      "path": "part-02.raw.md",
+      "bytes": 35311,
+      "sha256": "c1bbd5e9027c424b5abef79da21f232968f2cac7fa5fa50b3beff571b1e36b74"
+    },
+    {
+      "path": "part-02.request.txt",
+      "bytes": 36220,
+      "sha256": "45fd78861cf6dc25203891f9c93a0b7c76a23c6688b212b8d6fd910c0b3e3791"
+    },
+    {
+      "path": "part-03.raw.md",
+      "bytes": 31502,
+      "sha256": "7077aaee2076af70672246329085a7b7db91a99f70e1aa7f24df5eae2b768c45"
+    },
+    {
+      "path": "part-03.request.txt",
+      "bytes": 32412,
+      "sha256": "bd0f2f2596a90d582f63ab70c1122e21b4d025534e171dcb5f17c286ca0534e3"
+    },
+    {
+      "path": "part-04.raw.md",
+      "bytes": 36779,
+      "sha256": "c693e4328250f86c9b68714d2e9b184c922c1445ef7bfac2c82898e688110175"
+    },
+    {
+      "path": "part-04.request.txt",
+      "bytes": 37690,
+      "sha256": "5286101266a808dc07d1fa87851b72f3ee58776ba89840ffa6b797791dd00fe8"
+    },
+    {
+      "path": "part-05.raw.md",
+      "bytes": 37639,
+      "sha256": "61c9a5483a9e926ed9fce2a2c50a104b1ab2dbc732f059d720f82aacf57c4f30"
+    },
+    {
+      "path": "part-05.request.txt",
+      "bytes": 38550,
+      "sha256": "842ec2b5d05a6bb117c7c5ef8ffad60db62208a51c17f88940ec7575f36b6e43"
+    },
+    {
+      "path": "part-06.raw.md",
+      "bytes": 25406,
+      "sha256": "2ea4945a6d0a584c9f6883ea21e0fcbac5e20f6c01140add4c449720666c2168"
+    },
+    {
+      "path": "part-06.request.txt",
+      "bytes": 26317,
+      "sha256": "0ef236931e7fc26514426ac5587603ad88e4a0e0d3f5b3d587cf05e58ae5feec"
+    },
+    {
+      "path": "principal-final-delivery-status.request.txt",
+      "bytes": 476,
+      "sha256": "504c3bf825b856a24ad09a26a042c7f3712b08fee96b0700d0b91906c84a534c"
+    },
+    {
+      "path": "request-steering.txt",
+      "bytes": 2174,
+      "sha256": "f9d0827bb3b410bea9ad8092159c93f9536245dc94e5153407c43eaa274da4f1"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 1408,
+      "sha256": "da2fabb4837e06057dcb1715c5dd616be03cdd3187e2827fd19287ac9ebacd93"
+    },
+    {
+      "path": "supplement.md",
+      "bytes": 203995,
+      "sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7"
+    },
+    {
+      "path": "transport-plan.json",
+      "bytes": 3130,
+      "sha256": "49d745fe21b79e3a5d56bfcd75ee5af77be2d6e22267626fcda56f4fc9ab9a5c"
+    },
+    {
+      "path": "transport-receipt.json",
+      "bytes": 6936,
+      "sha256": "94b11c13959b106ad1c3cd49e5a309ab14fb34ea1048c852ab707c340495cb8b"
+    },
+    {
+      "path": "transport-receipt.md",
+      "bytes": 2690,
+      "sha256": "7185b7f6b7abbb7be361c6608af633f02cdb30c3bef6e539e5351b2e8767f51b"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 678,
+      "sha256": "70c3e587fa537d577ee44ae9f8aec41bbbb3e782a30e88a2c838f8d59c78e268"
+    }
+  ],
+  "note": "Hashes certify preserved local transport records. Native APIs exposed no receiver byte echo or host receipt ID."
+}

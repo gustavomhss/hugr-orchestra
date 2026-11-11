@@ -1,0 +1,29 @@
+{
+  "schema": "genesis-native-recipe-correction/v1",
+  "unit": "S1-L1-B-v2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "criteria": [
+    "QS-1",
+    "QS-4",
+    "CC-3",
+    "GO-I1",
+    "GO-I2"
+  ],
+  "base_recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/request.txt",
+    "sha256": "09f7b2ad2a7807e069b6719305adfeb24cc5a313b6baa09c39a5c9e597964c86"
+  },
+  "correction_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/requests/l1-b-correction-v2.txt",
+    "sha256": "61a4dfb00bc21a6632071b8de3726a4912b60dab112bb906a1e55c594f095ca7"
+  },
+  "correction_receipt_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/correction-receipt.json",
+    "sha256": "e229a5e30ce03792db1ab4b15d806e822af2f87a67451dbe50b8e00d201e1763"
+  },
+  "change": "Remove unsupported logging assertion from MCP error mapping; all other body bytes unchanged.",
+  "oracle_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/oracles/l1.json",
+    "sha256": "01689e1afd57acd85eb0fbdb967e8853821e38a5a21c52994882eeb68d07d42f"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/isolated-c-v1",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1.json",
+    "/workspace/scratch/2b46fb541868/genesis-s1/output/runtime/preparation/prepared-c-r1-attempt2.json"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:09:50.140729+00:00",
+  "end": "2026-11-11T18:09:52.343159+00:00",
+  "exit_code": 0,
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "release_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+  "verified_runtime_source_files_unchanged": 394,
+  "selected_package_sha256": "2914df578948c2c4ba3569c6b720c32510b1c10022f604ced527b2c62f7441a5",
+  "stdout_sha256": "98de46bd92a364e307f9444ff28abe651b69d84f947449c613913ee9702132e1",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "product_tests": "NOT_RUN",
+  "scope": "ten accepted C bodies only; no whole-layer acceptance, binding or publication",
+  "previous_attempt": "prepare-c-r1-attempt1-receipt.json failed on missing built workspace export before candidate creation; dependency/build issue resolved",
+  "prepared_path": "runtime/preparation/prepared-c-r1-attempt2.json",
+  "prepared_sha256": "13f1dc152b0f17c40fe76e7f8a3d1d8981ac27984defa658e13b7345f4098bde",
+  "prepared_bytes": 164274,
+  "candidate_id": "ca224a755747514a31d966e15418562dc7e38de4ef6790dc75764bb49c999375",
+  "observed_head": null,
+  "entries": 10,
+  "observations": 293,
+  "implementation": {
+    "adapter": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+    "format": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+    "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+    "binding": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19"
+  },
+  "state": "PROVEN_PREPARATION_ONLY"
+}

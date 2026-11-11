@@ -1,0 +1,78 @@
+{
+  "batch": "S1-L1-B-v2",
+  "verified_at_utc": "2026-11-11T17:58:25.386621+00:00",
+  "frozen_dossier": {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/output/review-packets/l1-b-v2-dossier.md",
+    "bytes": 208309,
+    "sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def"
+  },
+  "frozen_receipt": {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/output/receipts/l1-b-v2-freeze.json",
+    "bytes": 2055,
+    "sha256": "c98c05d0a4a6c5413f49b9a3251896c0e76925a9a849d5478e4e17023742fbf9"
+  },
+  "local_copies_match_frozen_inputs": true,
+  "reconstructed_bytes": 208309,
+  "reconstructed_sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def",
+  "reconstruction_matches_frozen_dossier": true,
+  "parts": [
+    {
+      "part": 1,
+      "raw_utf8_valid": true,
+      "request_utf8_valid": true,
+      "raw_hash_and_bytes_match_plan": true,
+      "request_hash_and_bytes_match_plan": true,
+      "raw_is_exact_frozen_slice": true,
+      "request_data_is_exact_raw_part": true
+    },
+    {
+      "part": 2,
+      "raw_utf8_valid": true,
+      "request_utf8_valid": true,
+      "raw_hash_and_bytes_match_plan": true,
+      "request_hash_and_bytes_match_plan": true,
+      "raw_is_exact_frozen_slice": true,
+      "request_data_is_exact_raw_part": true
+    },
+    {
+      "part": 3,
+      "raw_utf8_valid": true,
+      "request_utf8_valid": true,
+      "raw_hash_and_bytes_match_plan": true,
+      "request_hash_and_bytes_match_plan": true,
+      "raw_is_exact_frozen_slice": true,
+      "request_data_is_exact_raw_part": true
+    },
+    {
+      "part": 4,
+      "raw_utf8_valid": true,
+      "request_utf8_valid": true,
+      "raw_hash_and_bytes_match_plan": true,
+      "request_hash_and_bytes_match_plan": true,
+      "raw_is_exact_frozen_slice": true,
+      "request_data_is_exact_raw_part": true
+    },
+    {
+      "part": 5,
+      "raw_utf8_valid": true,
+      "request_utf8_valid": true,
+      "raw_hash_and_bytes_match_plan": true,
+      "request_hash_and_bytes_match_plan": true,
+      "raw_is_exact_frozen_slice": true,
+      "request_data_is_exact_raw_part": true
+    },
+    {
+      "part": 6,
+      "raw_utf8_valid": true,
+      "request_utf8_valid": true,
+      "raw_hash_and_bytes_match_plan": true,
+      "request_hash_and_bytes_match_plan": true,
+      "raw_is_exact_frozen_slice": true,
+      "request_data_is_exact_raw_part": true
+    }
+  ],
+  "actual_call_records": 12,
+  "expected_target_part_pairs_match": true,
+  "actual_message_transcription_comparison": "Manual comparison recorded from the actual visible tool arguments; no differences detected. The checks above mechanically verify saved files only. No programmatic export or host echo of received message bytes was exposed.",
+  "native_result_limit": "Eleven visible followup_task results were empty; the final J2 part 6 result was truncated. Neither is a byte-level receiver receipt."
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/isolated-c-v1",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1.json",
+    "/workspace/scratch/2b46fb541868/genesis-s1/output/runtime/preparation/prepared-c-r1-attempt1.json"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:07:47.078752+00:00",
+  "end": "2026-11-11T18:07:47.197213+00:00",
+  "exit_code": 1,
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "release_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+  "selected_package_sha256": "2914df578948c2c4ba3569c6b720c32510b1c10022f604ced527b2c62f7441a5",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "96408db9efe93eae8bb016169b268c1280c9aeaffcd27d71f06d383c21ee3606",
+  "product_tests": "NOT_RUN",
+  "scope": "ten accepted C bodies; no whole-layer acceptance, binding or publication",
+  "state": "FAILED",
+  "error": "error: Cannot find module '@atlas/knowledge' from '/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas/scripts/genesis-native.ts'\n\nBun v1.3.14 (Linux x64)\n"
+}

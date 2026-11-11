@@ -40,10 +40,22 @@
       "s1.api.codegen",
       "s1.api.surface-disposition"
     ],
-    "state": "STATIC_COMPATIBILITY_BLOCKER; actual prepare refusal not yet executed",
-    "required_resolution": "S4 supplies a justified compatible observation mechanism, reviewed and executed, that binds the complete required source bytes. Preserve source refs and population; do not drop or truncate input to pass."
+    "state": "OBSERVED_UNAVAILABLE: released observer returns unavailable and importer read throws native-file-limit",
+    "required_resolution": "S4 supplies a justified compatible observation mechanism, reviewed and executed, that binds the complete required source bytes. Preserve source refs and population; do not drop or truncate input to pass.",
+    "receipt": "runtime/preparation/large-source-observation-receipt.json"
   },
   "no_bar_reduction": "Original bodies, source refs, provenance, gaps and semantic decisions are preserved. Metadata transformation needs exact runtime binding review. No approval, reader or CI success is inferred.",
   "product_code_changes": "NONE by S1",
-  "runtime_execution": "NOT_RUN"
+  "runtime_execution": {
+    "C_selected_prepare": "runtime/preparation/prepare-c-r1-v2-receipt.json",
+    "required_large_source": "runtime/preparation/large-source-observation-receipt.json",
+    "full_package": "NOT_RUN",
+    "binding": "NOT_RUN",
+    "publication": "NOT_RUN",
+    "index_read": "NOT_RUN",
+    "previous_prepares_retained": [
+      "runtime/preparation/prepare-c-r1-attempt1-receipt.json",
+      "runtime/preparation/prepare-c-r1-attempt2-receipt.json"
+    ]
+  }
 }

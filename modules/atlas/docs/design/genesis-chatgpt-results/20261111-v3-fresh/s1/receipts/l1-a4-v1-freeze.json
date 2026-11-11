@@ -1,0 +1,94 @@
+{
+  "batch": "S1-L1-A4-v1",
+  "packet": {
+    "path": "review-packets/l1-a4-v1-dossier.md",
+    "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+    "byte_length": 155061
+  },
+  "bodies": [
+    {
+      "key": "s1.core.runtime",
+      "sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534",
+      "byte_length": 5451
+    },
+    {
+      "key": "s1.core.economy",
+      "sha256": "0413cc550f9037ababcc8cbb706cee3a19c55b35480396b381f0f6c4272096f4",
+      "byte_length": 2825
+    },
+    {
+      "key": "s1.core.boundaries",
+      "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+      "byte_length": 3905
+    },
+    {
+      "key": "s1.core.entry",
+      "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+      "byte_length": 7312
+    }
+  ],
+  "membership_count": 283,
+  "coverage_groups": 41,
+  "family_names": [
+    "architecture-history",
+    "atlas",
+    "control-plane",
+    "documentation",
+    "economy",
+    "package",
+    "process",
+    "project",
+    "rag-studio",
+    "relay",
+    "runtime",
+    "tool",
+    "util",
+    "validation-support"
+  ],
+  "original_excerpt_ids": [
+    "C060",
+    "C061",
+    "C062",
+    "C063",
+    "C064",
+    "C065",
+    "C071",
+    "C072",
+    "C073",
+    "C074",
+    "C075",
+    "C076",
+    "C077",
+    "C078",
+    "C079",
+    "C080",
+    "C081",
+    "C082",
+    "C083"
+  ],
+  "supplement_excerpt_ids": [
+    "AEX015",
+    "AEX046",
+    "AEX076",
+    "AEX077",
+    "AEX078",
+    "AEX079",
+    "AEX080",
+    "AEX081",
+    "AEX082",
+    "AEX083",
+    "AEX084",
+    "AEX085",
+    "AEX086",
+    "AEX087",
+    "AEX090",
+    "AEX091",
+    "AEX092",
+    "AEX093",
+    "AEX094",
+    "AEX095",
+    "AEX096"
+  ],
+  "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "semantic_status": "NOT_REVIEWED"
+}

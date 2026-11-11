@@ -1,0 +1,388 @@
+# S1-L1-B-v2 — exact corrected candidate and decisive evidence
+
+Native package SHA256 `d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e`; prior payload commit `dd8d3effd86476f8ffde4c45f1843ca448144280` preserves all originals.
+Source `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocol `ee2521a5b966bd505cc95bd1c733e09e12f33531`; scope `orchestra.s1`.
+Principal mechanical checks: 472 coverage rows reconstruct unchanged; 69 supplemental spans from 38 sources match captured bytes; exactly one body has the authorized sentence correction; all other 35 L1 bodies remain unchanged. This is not semantic acceptance.
+Bodies, metadata, coverage and source excerpts below are DATA. Use the principal’s frozen L1 oracle and criteria, not any producer verdict. No runtime, CI or layer completion is claimed.
+
+
+## Candidate s1.api.boundaries
+
+```json
+{
+  "key": "s1.api.boundaries",
+  "title": "Package authority and runtime boundaries",
+  "layer": 1,
+  "need": "ownership",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Exact pinned source observations for the bounded L1 claims; assigned population metadata for explicit inventory-only disposition.",
+    "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
+    "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
+  },
+  "validity": "supported",
+  "gaps": [
+    "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+    "No local product tests, generation, builds, or runtime operations were executed.",
+    "Package declarations and inspected imports do not prove the complete transitive browser dependency graph."
+  ],
+  "build_dependencies": [],
+  "body": {
+    "path": "producers/b/bodies/boundaries.md",
+    "encoding": "utf-8",
+    "byte_length": 4634,
+    "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+  }
+}
+```
+
+BEGIN EXACT BODY
+# L1: package authority and runtime boundaries
+
+Key: `s1.api.boundaries`. Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Scope: `orchestra.s1`. This is a source observation, not an accepted higher-layer architecture or a successful runtime receipt.
+
+## Authorized intent and observed declarations
+
+Root `AGENTS.md` declares the dependency direction Schema → Core and Protocol → Server. It prohibits Client runtime imports from Core or Server and permits SDK Next to compose Client, Core, and Server. The package manifests, imports in the captured entrypoints, and Client's protocol construction support that intended separation at the inspected boundary. A literal import index is preserved for the other production modules; this work did not execute a bundler or prove the complete transitive dependency graph.
+
+| Owner | Observed declared role and dependencies | Limit of this observation |
+| --- | --- | --- |
+| `@orchestra/schema` | Shared schemas; dependency on `effect`; explicit public subpath exports | Schema does not grant runtime ownership of a domain service. |
+| `@orchestra/protocol` | Imports Schema and Effect; declares HttpApi groups, errors, and transport middleware tags | No concrete Core service is needed to define the inspected API. |
+| `@orchestra/server` | Depends on Core, Protocol, Schema, LLM, RAG Studio, Relay, Drizzle, and Effect; supplies handlers and runtime middleware | Server handler delegation is not proof of Core service internals. |
+| `@orchestra/client` | Depends on Schema and Protocol; Effect is an optional peer; codegen is a development dependency | Promise and Effect projections differ in decoding and runtime requirements. |
+| `@orchestra/sdk-next` | Depends on Client, Core, Protocol, Schema, Server, and Effect | Its embedded transport still executes application services and authorization. |
+| `@orchestra/httpapi-codegen` | Generic generator depending on Effect and Prettier | Product naming and omission policy are supplied by the Client build. |
+
+`packages/protocol/src/api.ts` exposes `makeDefaultApi` with caller-supplied location middleware identities. `packages/client/src/contract.ts` constructs `ClientApi` with Client-local middleware tags. `packages/server/src/api.ts` constructs the server API with the actual `LocationMiddleware` and `SessionLocationMiddleware`. These files provide a concrete seam: Protocol declares the schema contract; the server chooses Core-backed services; Client can reflect the same API shape without importing those services.
+
+Root and Schema `AGENTS.md` are maintenance authorities. Schema's guide requires browser-safe shared DTOs, canonical schema identity rather than redeclaration, domain-owned runtime effects, readonly public data, and direct event subpath entrypoints. It prefers unversioned public names. The pin still contains annotations such as `SessionV2.Info` and `ModelV2.Info` and a `ModelV2.ID` brand. The guide is intent, while those identifiers are the observed source. This packet does not silently report that normalization as complete.
+
+The four `docs/architecture/phase-plans/70-90-briefs/` cards in the assigned population are historical planning evidence. Their earlier baseline references and expected counts are not treated as current code facts or instructions. Current package manifests and source take precedence for the observations above.
+
+## Host composition boundary
+
+The additionally captured `packages/core/src/host.ts` is a narrow cross-boundary authority. `Host.merge` rejects duplicate contribution IDs and global/location node names, rejects replacement of reserved runtime nodes, and rejects shadowing built-in location services. Reserved names include SessionExecution, SessionV2, LocationServiceMap, ScheduledTask, and daemon. This supports the stated composition guard; it does not establish distributed execution, worker recovery, or the implementation of every service contributed by a host.
+
+## Evidence and gaps
+
+Exact authorities: `AGENTS.md`; `packages/schema/AGENTS.md`; all six package manifests; Protocol `src/api.ts`; Client `src/contract.ts`; Server `src/api.ts`; SDK `src/orchestra.ts`; Core `src/host.ts`. Review excerpts are indexed under this key in `review-evidence.md`; exact bytes and identities are in `source-manifest.json`.
+
+No import-boundary test, typecheck, build, bundler, or runtime observation was executed. The captured import-boundary and client-contract identity tests state intended verification, not a passing result. Other producers own deeper Core runtime observations. L2–L4 synthesis must wait for the two-judge acceptance required by the campaign.
+END EXACT BODY
+
+
+## Candidate s1.api.schema-contracts
+
+```json
+{
+  "key": "s1.api.schema-contracts",
+  "title": "Shared DTO and event schema contracts",
+  "layer": 1,
+  "need": "component",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Exact pinned source observations for the bounded L1 claims; assigned population metadata for explicit inventory-only disposition.",
+    "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
+    "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
+  },
+  "validity": "supported",
+  "gaps": [
+    "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+    "No local product tests, generation, builds, or runtime operations were executed.",
+    "Most non-session domain schema modules received literal surface indexing only.",
+    "V2 annotations/brands remain despite unversioned naming intent."
+  ],
+  "build_dependencies": [],
+  "body": {
+    "path": "producers/b/bodies/schema-contracts.md",
+    "encoding": "utf-8",
+    "byte_length": 4868,
+    "sha256": "1a8dce30625d8d8641a48f8594736b1da4bbb6bd23c13562bd332fd5990cd8cb"
+  }
+}
+```
+
+BEGIN EXACT BODY
+# L1: shared DTO and event schema contracts
+
+Key: `s1.api.schema-contracts`. Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Observations concern the inspected definitions and their encoded/decoded shapes.
+
+## Primitive and location contracts
+
+`packages/schema/src/schema.ts` defines branded `AbsolutePath` and `RelativePath` strings. Branding alone does not validate an absolute path, enforce a root, or authorize file access. `DateTimeUtcFromMillis` decodes finite epoch-millisecond numbers to Effect UTC DateTime values and encodes them back to milliseconds. The `optional` helper uses optional keys and filters undefined on encoding; callers must distinguish a missing property from a supplied value according to the actual schema.
+
+`SessionID` accepts strings starting with `ses`; its constructor emits `ses_` plus a descending identifier. This is looser than a claim that every accepted session ID must have the exact `ses_` prefix. Message and event IDs have their own `msg_` and `evt_` prefix checks. Schema constraints, rather than naming intuition, are the authority.
+
+`Location.Ref` contains directory and an optional workspace ID. `Location.Info` contains location/project context. `Location.response(A)` wraps data together with location. This matters to generation: `{location, data}` is retained as an envelope, while the generator can unwrap an exact single-field `{data: A}` response.
+
+## Session and message records
+
+`Session.Info` carries session identity and parentage, project/location, agent/model and subagent policy, cost/token information, created/updated/archived times, title, subpath, and revert state. Its current annotation is `SessionV2.Info`. `Prompt` and `PromptInput.Prompt` are separate contracts: the canonical prompt includes richer file metadata, while the prompt admission input has its own attachment shape. They must not be collapsed by name alone.
+
+`SessionInput.Admitted` contains the admitted sequence, message and session IDs, canonical prompt, optional prompt context, delivery, creation time, and optional promoted sequence. The delivery union is `steer | queue`. The DTO represents admission; it is not a guarantee that a model turn completed.
+
+`SessionMessage.Message` is a tagged union covering agent/model switches, user, synthetic, system, shell, assistant, and compaction messages. Assistant content includes text, reasoning, and tool parts. Tool states include pending, running, completed, and error, with optional provider-execution facts. These declarations describe representable records; they do not prove that a provider or tool was invoked in this session.
+
+## Event identity and persistence distinctions
+
+`Event.define` constructs an envelope with `id`, `type`, `data`, optional metadata, optional location, and optional durable aggregate ID, sequence, and version. `Event.inventory` freezes its definition inventory. The separate `Event.latest` selects the latest durable version for each type and rejects ambiguous duplicate latest definitions; `Event.durable` rejects duplicate durable `type.version` keys.
+
+The Session event module separates durable facts from live deltas. Text, reasoning, tool-input, and compaction deltas belong to the complete session event definitions but not to `DurableDefinitions`. Their corresponding completed records carry final values. Step ended/failed definitions use durable version 2; many other session facts remain version 1. `Step.Ended.usageKnown` is optional to preserve historical absence as unknown, rather than interpreting absence as zero usage.
+
+`event-manifest.ts` has distinct server-public, complete public, and durable inventories. The durable manifest also includes domains beyond Session, including Maestro, Relay Hook, and Research. “Public event” therefore does not mean “persisted event,” and the global live event contract must not be substituted for a session replay contract. No event counts are asserted from test expectations as measured runtime facts.
+
+## Evidence and limits
+
+Full reads: `schema.ts`, `session-id.ts`, `session.ts`, `prompt.ts`, `prompt-input.ts`, `session-input.ts`, `session-delivery.ts`, `session-message.ts`, `event.ts`, `session-event.ts`, `session-status-event.ts`, `event-manifest.ts`, `durable-event-manifest.ts`, `location.ts`, and `model.ts`. Exact representative excerpts appear in `review-evidence.md`. The remaining Schema production modules are captured and literally indexed, with their internal semantics left unclaimed in `coverage.json`.
+
+The compatibility, contract-hygiene, and event-manifest tests were read as source only. This packet does not assert that every current schema meets every guide rule, that all historical rows decode, or that schema generation/tests passed. Legacy persistence migration and domain-service behavior require the relevant Core sources and later accepted work.
+END EXACT BODY
+
+
+## Candidate s1.api.session-contract
+
+```json
+{
+  "key": "s1.api.session-contract",
+  "title": "Session HTTP admission and pages",
+  "layer": 1,
+  "need": "flow",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Exact pinned source observations for the bounded L1 claims; assigned population metadata for explicit inventory-only disposition.",
+    "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
+    "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
+  },
+  "validity": "supported",
+  "gaps": [
+    "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+    "No local product tests, generation, builds, or runtime operations were executed.",
+    "Core persistence, scheduling, execution and recovery internals are delegated boundaries, not independently proven here."
+  ],
+  "build_dependencies": [],
+  "body": {
+    "path": "revisions/b-l1-evidence-v1/corrected/session-contract.md",
+    "encoding": "utf-8",
+    "byte_length": 5155,
+    "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+  }
+}
+```
+
+BEGIN EXACT BODY
+# L1: session HTTP admission, pages, and handler delegation
+
+Key: `s1.api.session-contract`. Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. The sources are Protocol declarations and Server adapters. Descriptions of Core work below are attributed to the declared contract or direct delegation, not an independently executed Core lifecycle.
+
+## Declared request and response boundary
+
+| Operation | Observed contract |
+| --- | --- |
+| `POST /api/session` | Optional ID, agent, model, and location; returns `{data: Session.Info}`. The handler supplies current working directory when the request omits location. |
+| `GET /api/session` | Filterable session page with `{data, cursor: {previous, next}}`; handler defaults limit to 50. Cursor state preserves filters and an anchor while the current request supplies its page limit. |
+| `GET /api/session/active` | Reports process-local foreground drains, as session IDs mapped to `{type: "running"}`. It is not declared as a fleet-wide scheduler view. |
+| `POST /api/session/:sessionID/prompt` | Takes optional message ID, `PromptInput.Prompt`, optional delivery, and optional resume; returns `{data: SessionInput.Admitted}`. |
+| `GET /api/session/:sessionID/history` | Exclusive nonnegative `after` sequence and limit 1–100, default 50; returns durable events with `hasMore`. |
+| `GET /api/session/:sessionID/event` | Durable session SSE after an optional exclusive sequence. Its replayable content differs from global live events. |
+| `POST /api/session/:sessionID/interrupt` | No-content response; delegates interruption. The HTTP session-location check can return 404 before Core's idle-session behavior is reached. |
+| `GET /api/session/:sessionID/message` | Separate message pagination with limit 1–200, default 50, default descending order, opaque cursors, and previous/next links. Cursor plus explicit order is rejected. |
+| `GET /api/session/:sessionID/message/:messageID` | `{data: Message}`; missing or cross-session message returns `MessageNotFoundError`. |
+
+The prompt handler forwards the request fields to `session.prompt`. It maps `PromptConflictError` and `PromptBlocked` to the declared 409 conflict shape. The protocol describes admission separately from execution, including optional resume. This source supports the API admission result and adapter mapping; it does not on its own prove transactional persistence, crash recovery, scheduling, or exactly-once execution inside Core.
+
+Command admission resolves and renders a slash command, applies any resolved agent/model choices, combines attachments, and calls the prompt path. Missing command resolution maps to an invalid request; MCP-backed command failures map to `UnknownError`. The inspected mapping branch contains no logging call. Explicit agent/model switching, rename, archive, and remove use their declared no-content responses. Archive is described as a visibility toggle without stopping execution. Recursive history removal and interruption on delete are declared responsibilities delegated to Core.
+
+## Error and location behavior
+
+`SessionLocationMiddleware` decodes the session ID, loads the stored directory/workspace from the session table, fails with `SessionNotFoundError` when absent, and provides the location service map from that stored identity. It does not use a caller's arbitrary location selection to redirect an existing session. The general location middleware remains appropriate for non-session-scoped operations.
+
+The context adapter maps message-decode failures to a logged generic `UnknownError` with a reference. Compact maps a busy session to conflict and a run failure to an unknown error. Subagent-policy handling maps storage/invalid-chain/model-denial categories to service-unavailable responses. These are specific mappings in the inspected handler, not a blanket statement that every Core error becomes the same HTTP status.
+
+Session history is a finite page with an exclusive sequence cursor. The source does not establish a stable snapshot across later page requests. The live session route passes its stream through `Stream.orDie`; a failure after stream establishment is not thereby converted to a normal JSON HTTP error. The streaming body documents this separately.
+
+## Broader session surface and gaps
+
+The source also declares fork/move, shell, skill/synthetic input, tool-less generation, todo, wait, diff/revert, background work, and process operations. The full session group and handler were read, and the literal route index preserves their names. This L1 body intentionally does not turn every delegated service into an end-to-end behavioral guarantee. Message assembly, database transactions, model admission policy, move ownership, background execution, and recovery need their domain owners' evidence.
+
+Primary evidence: `packages/protocol/src/groups/session.ts`, `groups/message.ts`, Server `handlers/session.ts`, `handlers/message.ts`, `middleware/session-location.ts`, and Schema session/input/message definitions. `review-evidence.md` contains the decisive exact excerpts. No server was started and no session, provider, database, or HTTP exercise was executed.
+END EXACT BODY
+
+
+## Candidate s1.api.server-edge
+
+```json
+{
+  "key": "s1.api.server-edge",
+  "title": "Server errors, authorization and location",
+  "layer": 1,
+  "need": "operational",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Exact pinned source observations for the bounded L1 claims; assigned population metadata for explicit inventory-only disposition.",
+    "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
+    "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
+  },
+  "validity": "supported",
+  "gaps": [
+    "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+    "No local product tests, generation, builds, or runtime operations were executed.",
+    "No runtime authorization, location, provider or socket checks; PTY output queue is unbounded in source."
+  ],
+  "build_dependencies": [],
+  "body": {
+    "path": "producers/b/bodies/server-edge.md",
+    "encoding": "utf-8",
+    "byte_length": 5106,
+    "sha256": "f4b99d7a6bafb6a6aa672eeb5a63aa7621a14e65cfe863fe0f9d9eb36e0981de"
+  }
+}
+```
+
+BEGIN EXACT BODY
+# L1: server errors, authorization, and location selection
+
+Key: `s1.api.server-edge`. Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Error declarations and composition
+
+`packages/protocol/src/errors.ts` declares tagged errors with HTTP annotations: invalid request/cursor 400; unauthorized 401; forbidden 403; conflict 409; service unavailable 503; unknown error 500; and domain-specific not-found errors at 404, including provider, session, message, permission, question, PTY, and MCP server. Optional details such as invalid-request kind/field, conflict resource, service name, and unknown-error reference remain part of their individual schemas.
+
+Protocol's `makeDefaultApi` assembles groups and accepts middleware keys supplied by its caller. Server installs real location services. General authorization and schema-error middleware are applied at API composition; the source comments and placement explicitly put authentication before caller-selected location. Capability groups add capability authorization before location work. The API does not apply identical location selection to every group: global/project/config/trust/board and session-scoped routes have deliberately different composition.
+
+The schema-error adapter logs a reason truncated to 1,024 characters and returns an `InvalidRequestError` with kind. It does not expose an unbounded raw parser diagnostic. A defect outside the typed error mapping is not proven to receive this treatment.
+
+## Authentication paths
+
+`ServerAuth` reads an optional server password and a username defaulting to `orchestra`. General authorization passes through when no nonempty password is configured. With a password, it validates Basic credentials. Query credentials are considered only for the explicitly recognized global event, session event, and PTY connect paths. Ordinary API calls use headers.
+
+Two recognized ticket URL forms bypass the general Basic gate so their handlers can validate the ticket: PTY connect tickets and capability content tickets. The URL shape is not itself authorization. PTY ticket issuance requires the special ticket-request header, an allowed origin, and an existing PTY. Connection consumes a ticket bound to the PTY and location context, or fails; the raw upgrade handler owns that path. Capability content verifies its ticket, enters the minted request authority, and reauthorizes through artifact management so revocation still matters. An invalid ticket receives an unauthorized empty response; unavailable artifacts map separately.
+
+Capability authorization has its own authority model. When Basic authentication is required it validates the configured operator credentials. Otherwise it requires a 43-character bearer token. Caller-supplied identity fields do not grant authority. The middleware validates the idempotency header shape, enters a request context with an authority and request ID, maps authentication-required/revoked failures to 401 and other capability refusals to 403, and preserves unrelated causes. This body describes adapter behavior, not a security audit of the full capability store or token implementation.
+
+The server principal uses operating-system account identity with a local fallback; a Basic username does not create independent per-person accounts. SDK embedding explicitly supplies no Basic password, but still uses capability authority as described in the SDK body.
+
+## Location and service boundary
+
+General location selection reads `location[directory]`, otherwise uses current working directory, and reads workspace from the query or `x-orchestra-workspace`. Missing directories map to invalid request with `location_not_found`; typed failed boots map to `location_unavailable`; defects remain defects. Existing cached services can still be supplied. Session middleware instead loads the directory/workspace stored for the session and fails 404 when the session is absent.
+
+Model and provider handlers obtain availability from the host catalog. The inspected model handler combines available catalog models with additional enabled models while avoiding duplicate IDs, and selects the preferred/default model or null. Provider account/sign-in endpoints are typed operations; their presence does not imply that a credential was obtained or an external request succeeded here.
+
+## Evidence and explicit limits
+
+Full reads cover Protocol `api.ts`, `errors.ts`, the three middleware tag modules, relevant PTY/capability declarations, Server `auth.ts`, `principal.ts`, `location.ts`, `routes.ts`, the four middleware implementations, and PTY/capability/model/provider handlers. Exact excerpts are in `review-evidence.md` and the source manifest binds the entire bytes.
+
+No authentication request, origin check, provider operation, file read, socket upgrade, or runtime test was performed. The PTY handler explicitly uses an unbounded outgoing queue and retains a shutdown-tracking TODO; slow-reader memory growth is a real source-level limit, not a measured failure in this run. Other domain handlers are indexed rather than silently granted full semantic acceptance.
+END EXACT BODY
+
+
+## Candidate s1.api.stream-contract
+
+```json
+{
+  "key": "s1.api.stream-contract",
+  "title": "Live SSE and durable session streams",
+  "layer": 1,
+  "need": "flow",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Exact pinned source observations for the bounded L1 claims; assigned population metadata for explicit inventory-only disposition.",
+    "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
+    "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
+  },
+  "validity": "supported",
+  "gaps": [
+    "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+    "No local product tests, generation, builds, or runtime operations were executed.",
+    "No replay/overflow/network experiment; global live readiness is not durable replay or automatic reconnect."
+  ],
+  "build_dependencies": [],
+  "body": {
+    "path": "producers/b/bodies/stream-contract.md",
+    "encoding": "utf-8",
+    "byte_length": 3824,
+    "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8"
+  }
+}
+```
+
+BEGIN EXACT BODY
+# L1: global live SSE and durable session streams
+
+Key: `s1.api.stream-contract`. Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Two event contracts
+
+| Boundary | Source-supported behavior | Limit |
+| --- | --- | --- |
+| Global `GET /api/event` | Public server event schema; live subscription, connected readiness frame, heartbeat comments | No replay cursor or reconnect guarantee is established. |
+| Session `GET /api/session/:sessionID/event` | Durable session event schema after an exclusive sequence | Live-only deltas are absent from the durable inventory. Core implements the actual replay/live bridge. |
+| Session history | Finite durable page plus `hasMore` | It is not the global live feed and does not promise a cross-page snapshot. |
+
+`packages/server/src/handlers/event.ts` creates a per-handler WeakMap frame cache keyed by event payload object. A repeated payload object is encoded once and the cached frame is shared across subscribers. Frames use event `message` and no SSE event ID. The function is an observed implementation mechanism; no performance measurement was taken.
+
+`eventStream` obtains `EventV2.allBounded(events, 4096)` before producing `server.connected`, so a consumer observing readiness has already acquired its live subscription. The stream concatenates the connected frame and live events, merges 15-second heartbeat comments, and halts the merge when the primary side ends. The response sets `text/event-stream`, `no-cache, no-transform`, `X-Accel-Buffering: no`, and `X-Content-Type-Options: nosniff`. Capacity 4,096 is a declared subscription bound, not a proof that slow subscribers can never lose data or that a remote proxy honors these headers.
+
+The session handler delegates `session.events(sessionID, after)` and uses `Stream.orDie`. A pre-stream missing session can be returned through middleware as 404; a stream defect after response establishment is not converted into a later JSON response. The schema manifests explicitly distinguish all session events from durable session events. Clients resuming durable work must use aggregate sequence semantics, not assume that global message frames supply resumable SSE IDs.
+
+## Client consumption boundary
+
+The generated Promise client returns a lazy async iterable: opening/reading the stream happens during iteration. It checks the SSE content type and response body, decodes chunks, joins multi-line data, normalizes CRLF, parses JSON data, and cancels/releases the reader in `finally`. It limits its buffered string to 1,048,576 characters. That is a character-length guard, not a stated byte or event-count bound. No automatic reconnect/resume loop is implemented by this inspected transport.
+
+The Effect projection uses the imported HttpApi contract and exposes Effect streams with decoded schema values. Its generated mapping converts recognized HTTP, schema, and SSE retry transport failures into `ClientError`, while preserving unrelated typed errors. The Promise reader validates JSON syntax but does not run the complete schema decoder over each successful event.
+
+## Evidence and gaps
+
+Exact primary files: Schema `event.ts`, `session-event.ts`, `event-manifest.ts`; Protocol `groups/event.ts`, `groups/session.ts`; Server `handlers/event.ts`, `handlers/session.ts`; Client generated Promise stream runtime and generated Effect methods. The generator's imported Effect adapter is also captured.
+
+The server event-stream test was read: it uses a stand-in event bus with the actual stream helper to exercise readiness, a burst, and encoding reuse. It was not run. Client stream tests likewise provide intended assertions, not observed results. Queue-overflow behavior and replay continuity inside Core, network disconnects, proxies, and deployed clients remain outside this artifact's demonstrated behavior.
+END EXACT BODY
+
+
+## Candidate s1.api.client-projection
+
+```json
+{
+  "key": "s1.api.client-projection",
+  "title": "Client projections and raw transfer boundary",
+  "layer": 1,
+  "need": "component",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Exact pinned source observations for the bounded L1 claims; assigned population metadata for explicit inventory-only disposition.",
+    "authorized_intent": "Root and Schema AGENTS guidance and attributed README/architecture descriptions are intent; current source declarations and implementation are observed separately.",
+    "observation_limit": "Preserved source bytes and literal/excerpt inspection do not establish execution, judge acceptance, or runtime binding."
+  },
+  "validity": "supported",
+  "gaps": [
+    "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+    "No local product tests, generation, builds, or runtime operations were executed.",
+    "Generated freshness unverified; most generated modules are inventory-only.",
+    "generated/types.ts is 462732 bytes; current runtime observer refuses inputs above 256000 bytes, so its binding remains unresolved.",
+    "README raw-file omission conflicts with generated fs.read; handwritten upload route lacks a corresponding declaration in the inspected Actions transfer group/handler."
+  ],
+  "build_dependencies": [],
+  "body": {
+    "path": "producers/b/bodies/client-projection.md",
+    "encoding": "utf-8",
+    "byte_length": 5193,
+    "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+  }
+}
+```
+
+BEGIN EXACT BODY
+# L1: Client projections and raw transfer boundary
+
+Key: `s1.api.client-projection`. Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Shared contract, different value models
+
+The Client package constructs `ClientApi` from Protocol with local location middleware tags and matching error declarations. Product group/endpoint names and omissions live in `src/contract.ts`; generated output is not the authoring authority. The public Promise entrypoint exports generated clients and the handwritten transfer extension. The Effect entrypoint uses the generated imported-contract adapter. Schema/Protocol types are allowed at this boundary; Core/Server runtime imports are prohibited by root maintenance authority.
+
+The Promise projection returns encoded wire values. For example, timestamps are epoch numbers. Its `wire.ts` exposes the encoded durable-session event view. The imported Effect projection runs the actual API schema codecs, returning decoded Effect values such as DateTime. These projections must not be described as interchangeable merely because their method groups match.
+
+The build explicitly omits six names: `pty.connect`, `pty.connectToken`, `actions.transfer.read`, `actions.transfer.upload`, `capability.artifact.content`, and `capability.content.read`. This is policy input, not proof that every omitted name is present in the current reflected API. Current Actions transfer Protocol/Server sources expose info and download; the handwritten upload extension targets an upload route without a corresponding declaration in that inspected group/handler. Its server support is unproved here.
+
+The README says raw file reads are omitted, but `fs.read` is absent from the actual omission set. Protocol declares it as Uint8Array, and generated `files.read` is emitted with `binary: true`. The current generated source therefore supports a binary file-read method; documentation and implementation disagree at this pin. No source was edited to reconcile the disagreement.
+

@@ -1,0 +1,3 @@
+error: Cannot find module '@atlas/knowledge' from '/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas/scripts/genesis-native.ts'
+
+Bun v1.3.14 (Linux x64)

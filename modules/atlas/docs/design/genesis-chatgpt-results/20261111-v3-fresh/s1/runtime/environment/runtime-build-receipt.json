@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "run",
+    "build"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:08:13.732918+00:00",
+  "end": "2026-11-11T18:08:18.948744+00:00",
+  "exit_code": 2,
+  "stdout_sha256": "b8c919168a9a7890c7d72657492056a485e64050f244b71da79ccd91701ffa36",
+  "stderr_sha256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "purpose": "Build dist entrypoints for runtime use from the verified 394-file source materialization; not full-checkout CI or product tests",
+  "product_tests": "NOT_RUN"
+}

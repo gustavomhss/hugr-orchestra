@@ -1,0 +1,398 @@
+{
+  "schema": "genesis-principal-a-review-partition/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "original_files_verified": 151,
+  "original_bodies_unchanged": 17,
+  "coverage_rows_roundtripped": 1441,
+  "source_blobs_verified": 58,
+  "exact_supplement_spans_verified": 96,
+  "packets": [
+    {
+      "batch": "S1-L1-A1-v1",
+      "packet": {
+        "path": "review-packets/l1-a1-v1-dossier.md",
+        "sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188",
+        "byte_length": 138935
+      },
+      "bodies": [
+        {
+          "key": "s1.core.session-admission",
+          "sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+          "byte_length": 4261
+        },
+        {
+          "key": "s1.core.session-execution",
+          "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+          "byte_length": 4574
+        },
+        {
+          "key": "s1.core.persistence",
+          "sha256": "2a9d564fbc6ce848129eb4611b47ecb27c873cc41cdb9a4e34c2f1f043587741",
+          "byte_length": 4833
+        },
+        {
+          "key": "s1.core.context",
+          "sha256": "205b44488e2b6349a55480d3becf2e59806c185bec90d43af283e11b3933b1fd",
+          "byte_length": 5541
+        }
+      ],
+      "membership_count": 197,
+      "coverage_groups": 30,
+      "family_names": [
+        "database",
+        "event",
+        "session",
+        "system-context"
+      ],
+      "original_excerpt_ids": [
+        "C001",
+        "C002",
+        "C003",
+        "C004",
+        "C005",
+        "C006",
+        "C007",
+        "C008",
+        "C009",
+        "C010",
+        "C011",
+        "C012",
+        "C013",
+        "C014",
+        "C015",
+        "C016",
+        "C017",
+        "C018",
+        "C019"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX001",
+        "AEX002",
+        "AEX003",
+        "AEX004",
+        "AEX005",
+        "AEX006",
+        "AEX007",
+        "AEX008",
+        "AEX009",
+        "AEX010",
+        "AEX011",
+        "AEX012",
+        "AEX013",
+        "AEX014",
+        "AEX015",
+        "AEX016",
+        "AEX017",
+        "AEX018",
+        "AEX019",
+        "AEX020",
+        "AEX021",
+        "AEX022",
+        "AEX023",
+        "AEX024",
+        "AEX025",
+        "AEX026",
+        "AEX027",
+        "AEX096"
+      ],
+      "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+      "semantic_status": "NOT_REVIEWED"
+    },
+    {
+      "batch": "S1-L1-A2-v1",
+      "packet": {
+        "path": "review-packets/l1-a2-v1-dossier.md",
+        "sha256": "f61c1c3acf34da20b9b78d0a809e5aa23044d5e0f50c983a5f41715d563d77bf",
+        "byte_length": 181548
+      },
+      "bodies": [
+        {
+          "key": "s1.core.tools",
+          "sha256": "ed668009ad400bf61adee3f1d497c59f91c9932b1730642816659ddbf2978e23",
+          "byte_length": 5285
+        },
+        {
+          "key": "s1.core.security",
+          "sha256": "dd6e7372b2c26c8c05435db8a55dfa05cd42813a9f105f48dc8b5d702bacbbcf",
+          "byte_length": 7043
+        },
+        {
+          "key": "s1.core.capability",
+          "sha256": "a5d40d013b3976a612a53acb7999ea498c32c71bff5f7acb276f1ddc3be95e7a",
+          "byte_length": 4469
+        },
+        {
+          "key": "s1.core.extensions",
+          "sha256": "1adfea6dc88bb969fb2c9232c82b81ae917e8112a9d0993273733450891984d4",
+          "byte_length": 4994
+        }
+      ],
+      "membership_count": 424,
+      "coverage_groups": 49,
+      "family_names": [
+        "agent",
+        "capability",
+        "identity",
+        "instruction",
+        "permission",
+        "plugin-host",
+        "tool",
+        "tool-safety"
+      ],
+      "original_excerpt_ids": [
+        "C020",
+        "C021",
+        "C022",
+        "C023",
+        "C024",
+        "C025",
+        "C026",
+        "C027",
+        "C028",
+        "C029",
+        "C030",
+        "C031",
+        "C039",
+        "C040",
+        "C041",
+        "C042",
+        "C043",
+        "C044",
+        "C045",
+        "C046",
+        "C047",
+        "C048"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX009",
+        "AEX028",
+        "AEX029",
+        "AEX030",
+        "AEX031",
+        "AEX032",
+        "AEX033",
+        "AEX034",
+        "AEX035",
+        "AEX036",
+        "AEX037",
+        "AEX038",
+        "AEX039",
+        "AEX040",
+        "AEX041",
+        "AEX042",
+        "AEX043",
+        "AEX044",
+        "AEX045",
+        "AEX046",
+        "AEX055",
+        "AEX056",
+        "AEX057",
+        "AEX058",
+        "AEX059",
+        "AEX060",
+        "AEX061",
+        "AEX062",
+        "AEX063",
+        "AEX064",
+        "AEX065",
+        "AEX066"
+      ],
+      "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+      "semantic_status": "NOT_REVIEWED"
+    },
+    {
+      "batch": "S1-L1-A3-v1",
+      "packet": {
+        "path": "review-packets/l1-a3-v1-dossier.md",
+        "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+        "byte_length": 177076
+      },
+      "bodies": [
+        {
+          "key": "s1.core.configuration",
+          "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1",
+          "byte_length": 4414
+        },
+        {
+          "key": "s1.core.project",
+          "sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43",
+          "byte_length": 4569
+        },
+        {
+          "key": "s1.core.automation",
+          "sha256": "83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88",
+          "byte_length": 4377
+        },
+        {
+          "key": "s1.core.research",
+          "sha256": "76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202",
+          "byte_length": 3942
+        },
+        {
+          "key": "s1.core.models",
+          "sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe",
+          "byte_length": 3987
+        }
+      ],
+      "membership_count": 537,
+      "coverage_groups": 44,
+      "family_names": [
+        "actions",
+        "backend-toolkit",
+        "board",
+        "config",
+        "location",
+        "project",
+        "provider",
+        "research",
+        "scheduled-task",
+        "session"
+      ],
+      "original_excerpt_ids": [
+        "C032",
+        "C033",
+        "C034",
+        "C035",
+        "C036",
+        "C037",
+        "C038",
+        "C049",
+        "C050",
+        "C051",
+        "C052",
+        "C053",
+        "C054",
+        "C055",
+        "C056",
+        "C057",
+        "C058",
+        "C059",
+        "C066",
+        "C067",
+        "C068",
+        "C069",
+        "C070"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX047",
+        "AEX048",
+        "AEX049",
+        "AEX050",
+        "AEX051",
+        "AEX052",
+        "AEX053",
+        "AEX054",
+        "AEX067",
+        "AEX068",
+        "AEX069",
+        "AEX070",
+        "AEX071",
+        "AEX072",
+        "AEX073",
+        "AEX074",
+        "AEX075",
+        "AEX088",
+        "AEX089",
+        "AEX095"
+      ],
+      "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+      "semantic_status": "NOT_REVIEWED"
+    },
+    {
+      "batch": "S1-L1-A4-v1",
+      "packet": {
+        "path": "review-packets/l1-a4-v1-dossier.md",
+        "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+        "byte_length": 155061
+      },
+      "bodies": [
+        {
+          "key": "s1.core.runtime",
+          "sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534",
+          "byte_length": 5451
+        },
+        {
+          "key": "s1.core.economy",
+          "sha256": "0413cc550f9037ababcc8cbb706cee3a19c55b35480396b381f0f6c4272096f4",
+          "byte_length": 2825
+        },
+        {
+          "key": "s1.core.boundaries",
+          "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+          "byte_length": 3905
+        },
+        {
+          "key": "s1.core.entry",
+          "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+          "byte_length": 7312
+        }
+      ],
+      "membership_count": 283,
+      "coverage_groups": 41,
+      "family_names": [
+        "architecture-history",
+        "atlas",
+        "control-plane",
+        "documentation",
+        "economy",
+        "package",
+        "process",
+        "project",
+        "rag-studio",
+        "relay",
+        "runtime",
+        "tool",
+        "util",
+        "validation-support"
+      ],
+      "original_excerpt_ids": [
+        "C060",
+        "C061",
+        "C062",
+        "C063",
+        "C064",
+        "C065",
+        "C071",
+        "C072",
+        "C073",
+        "C074",
+        "C075",
+        "C076",
+        "C077",
+        "C078",
+        "C079",
+        "C080",
+        "C081",
+        "C082",
+        "C083"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX015",
+        "AEX046",
+        "AEX076",
+        "AEX077",
+        "AEX078",
+        "AEX079",
+        "AEX080",
+        "AEX081",
+        "AEX082",
+        "AEX083",
+        "AEX084",
+        "AEX085",
+        "AEX086",
+        "AEX087",
+        "AEX090",
+        "AEX091",
+        "AEX092",
+        "AEX093",
+        "AEX094",
+        "AEX095",
+        "AEX096"
+      ],
+      "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+      "semantic_status": "NOT_REVIEWED"
+    }
+  ],
+  "semantic_status": "NOT_REVIEWED"
+}

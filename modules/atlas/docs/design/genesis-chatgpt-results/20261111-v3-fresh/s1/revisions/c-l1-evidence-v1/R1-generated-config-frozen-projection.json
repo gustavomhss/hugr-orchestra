@@ -1,0 +1,44 @@
+{
+  "source": "schema/config.json",
+  "root": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$ref": "#/$defs/Config.Info",
+    "allowComments": true,
+    "allowTrailingCommas": true
+  },
+  "definitions": {
+    "Config.Info": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "$schema",
+        "shell",
+        "model",
+        "default_agent",
+        "permissions",
+        "agents",
+        "snapshots",
+        "watcher",
+        "formatter",
+        "lsp",
+        "attachments",
+        "tool_output",
+        "mcp",
+        "trusted_projects",
+        "compaction",
+        "continuity",
+        "skills",
+        "commands",
+        "instructions",
+        "references",
+        "plugins",
+        "experimental",
+        "relay",
+        "research",
+        "maestro",
+        "providers"
+      ]
+    }
+  }
+}

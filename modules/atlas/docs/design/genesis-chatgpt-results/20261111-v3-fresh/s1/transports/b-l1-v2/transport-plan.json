@@ -1,0 +1,89 @@
+{
+  "batch": "S1-L1-B-v2",
+  "targets": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "source_path": "/workspace/scratch/2b46fb541868/genesis-s1/output/review-packets/l1-b-v2-dossier.md",
+  "source_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "dossier_bytes": 208309,
+  "dossier_sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def",
+  "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "source_freeze_sha256": "c98c05d0a4a6c5413f49b9a3251896c0e76925a9a849d5478e4e17023742fbf9",
+  "parts": [
+    {
+      "part": 1,
+      "total": 6,
+      "byte_start": 0,
+      "byte_end_exclusive": 34631,
+      "raw_path": "part-01.raw.md",
+      "raw_bytes": 34631,
+      "raw_sha256": "edec3c05d2012d75cca24ab55e7151c5a4b3ff038be8f11b1779a130804c046f",
+      "request_path": "part-01.request.txt",
+      "request_bytes": 35843,
+      "request_sha256": "d809f0a4fe7a1c192115521ce165c069ac87a6868daadb800a75bc308ce020e1"
+    },
+    {
+      "part": 2,
+      "total": 6,
+      "byte_start": 34631,
+      "byte_end_exclusive": 69273,
+      "raw_path": "part-02.raw.md",
+      "raw_bytes": 34642,
+      "raw_sha256": "b7620316065e69e37a5ee091f411a2d3db7274faeb366ecaaa026bea75893652",
+      "request_path": "part-02.request.txt",
+      "request_bytes": 35858,
+      "request_sha256": "ad9bf96781519737b64b2aa914e2a7edb8aff7a607a21aa3c75f3ad8220c311a"
+    },
+    {
+      "part": 3,
+      "total": 6,
+      "byte_start": 69273,
+      "byte_end_exclusive": 104546,
+      "raw_path": "part-03.raw.md",
+      "raw_bytes": 35273,
+      "raw_sha256": "354d6c47cce787664d07bda39bc0cc756464ddc7c5533093302a1f86c155ce81",
+      "request_path": "part-03.request.txt",
+      "request_bytes": 36490,
+      "request_sha256": "908f387fcf4cc2543f21cdff137b27ab3411020dbf3461b6b7b679464978d4ce"
+    },
+    {
+      "part": 4,
+      "total": 6,
+      "byte_start": 104546,
+      "byte_end_exclusive": 139028,
+      "raw_path": "part-04.raw.md",
+      "raw_bytes": 34482,
+      "raw_sha256": "ace8e872cf782ab7487ea92e084ea2e5a8d68feabf3ce8c468f1b6477d9947e0",
+      "request_path": "part-04.request.txt",
+      "request_bytes": 35700,
+      "request_sha256": "62b8ebe0d6d8bc95c71aae173896b624c1e887e6605c3910996e5ab4ce1dbb04"
+    },
+    {
+      "part": 5,
+      "total": 6,
+      "byte_start": 139028,
+      "byte_end_exclusive": 173579,
+      "raw_path": "part-05.raw.md",
+      "raw_bytes": 34551,
+      "raw_sha256": "41dd19ace3360b008a8b0babd6f1a4254f3f39261385f671248d5b293ab3353f",
+      "request_path": "part-05.request.txt",
+      "request_bytes": 35769,
+      "request_sha256": "e3dbd0739468f3171ac07846b3d05c087643d7a0e444ba470e6e884686aafd29"
+    },
+    {
+      "part": 6,
+      "total": 6,
+      "byte_start": 173579,
+      "byte_end_exclusive": 208309,
+      "raw_path": "part-06.raw.md",
+      "raw_bytes": 34730,
+      "raw_sha256": "711e1c2c9eae583db40731dea52adb35ad78092bd91b4aea6da1fb1fc5c98c92",
+      "request_path": "part-06.request.txt",
+      "request_bytes": 35948,
+      "request_sha256": "a8becb3b412276a02c1bf9d356b375f98aa90c7fd42fec8eb673ac2e8dfe92ed"
+    }
+  ],
+  "raw_total_per_target": 208309,
+  "request_total_per_target": 215608
+}

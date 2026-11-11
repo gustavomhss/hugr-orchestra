@@ -1,0 +1,15 @@
+{
+  "schema": "verified-git-materialization/v1",
+  "commit": "dd8d3effd86476f8ffde4c45f1843ca448144280",
+  "tree": "f229bd53fc02f0d7ad1e7476cdc936ce68fa76bb",
+  "common_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "tree_objects_verified": 2272,
+  "head_entries": 14586,
+  "common_entries": 13892,
+  "blobs_reused_from_captures": 791,
+  "worktree_files_materialized": 816,
+  "sparse_missing_worktree_files": 13770,
+  "diff_paths": 770,
+  "additional_diff_blobs_needed": 693,
+  "note": "Exact Git objects matched API identities; sparse worktree is explicit. No product test or guard result is asserted."
+}

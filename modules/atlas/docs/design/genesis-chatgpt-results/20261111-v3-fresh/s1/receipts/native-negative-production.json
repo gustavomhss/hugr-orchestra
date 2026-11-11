@@ -1,0 +1,27 @@
+{
+  "schema": "genesis-principal-control-verification/v1",
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "producer": "/root/producer_controls",
+  "mechanical_status": "PASS",
+  "source_of_outputs": "real native producer task",
+  "files": [
+    {
+      "path": "request.txt",
+      "sha256": "a279adc7e71beacc9d33153fbefd7ccdff72a1200dce13affb3d7ea7d8be8fda",
+      "bytes": 1880
+    },
+    {
+      "path": "response.md",
+      "sha256": "03535e963b70ab3d5984d891981d03dcd645ac6d23bcb15ff53f6784c458c345",
+      "bytes": 15583
+    },
+    {
+      "path": "dispositions.json",
+      "sha256": "4aaa0281da54e5aea5bc6179b4ba741f2f07b3d351eb96fda6f5d46b15978af2",
+      "bytes": 12369
+    }
+  ],
+  "oracle_sha256": "bcaeea762d7ef7c51d3593a9b2b4a3555946e5aa885854fc31a9f9436f398a2d",
+  "semantic_status": "NOT_REVIEWED",
+  "runtime_refusal_proven": false
+}

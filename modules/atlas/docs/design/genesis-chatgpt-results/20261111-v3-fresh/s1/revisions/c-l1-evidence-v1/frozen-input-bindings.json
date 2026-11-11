@@ -1,0 +1,56 @@
+[
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/c/artifacts.json",
+    "bytes": 160933,
+    "sha256": "d91c3605542369e8b196daccbf25571f9dfd31d8b6ee1522c78178f2f91be27a",
+    "frozen_output_identical": true
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/c/coverage.json",
+    "bytes": 247474,
+    "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9",
+    "frozen_output_identical": true
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/c/source-manifest.json",
+    "bytes": 139976,
+    "sha256": "940524583809e3166c269d3dd9e4cc5a27c55c75c7cabc14c9cb08adafcc84cc",
+    "frozen_output_identical": true
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/c/review-evidence.md",
+    "bytes": 99191,
+    "sha256": "bfc3c3f4ea147681a1e19f18b46244b70ecefa8659e6e4efddbc43a95c75b899",
+    "frozen_output_identical": true
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/c/review-evidence-index.json",
+    "bytes": 42912,
+    "sha256": "5e79a9ad30bc3df62f4b06175a92b432953864bd964278de42fb3d5c43317379",
+    "frozen_output_identical": true
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/c/review-dossier.md",
+    "bytes": 78163,
+    "sha256": "9f44b927d8b5dd277ffe188197575d133afb910c53430a5c05630f78b526e83f",
+    "frozen_output_identical": true
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/c/config-schema-scan.json",
+    "bytes": 10008,
+    "sha256": "a2d9e465aa59f4d04d1db240b95edcc6e4111fed6aaf23532eecd223176578d8",
+    "frozen_output_identical": true
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/output/judgments/l1-c-v1-j1.md",
+    "bytes": 14114,
+    "sha256": "e928bc4d57f3c9bbe20e74a24d55e7744ab227ad13a3bb7b56231b8934767fc0",
+    "role": "authorized original evidence request"
+  },
+  {
+    "path": "/workspace/scratch/2b46fb541868/genesis-s1/output/judgments/l1-c-v1-j2.md",
+    "bytes": 9627,
+    "sha256": "cfc4a93d90efe60920db3269c1f1776d5bad61d09d7f20c2d4f50f15c2e6013a",
+    "role": "authorized original evidence request"
+  }
+]

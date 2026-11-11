@@ -1,0 +1,11 @@
+PRINCIPAL MESSAGE 1
+Interrompi o helper /root/producer_c/transport_judge2 para liberar o slot; preserve sua tentativa falha no recibo (não é entrega). Faça você mesmo o transporte para ambos, sem novos subagentes: root + transportador + J1 + J2 cabe nos 4 slots. Envie sequencialmente por alvo/parte e aguarde ACK nativo quando necessário; uma falha explícita de limite não conta como entrega e pode ser tentada novamente após liberação. Não substitua os juízes. Reutilize os requests exatos já salvos.
+
+PRINCIPAL MESSAGE 2
+A principal recebeu diretamente de J1 os ACKs nativos de partes 1/6 e 2/6; isso confirma recepção, sem byte echo do host. Não duplique parte 1 por causa da saída truncada na sua janela. Preserve o request efetivamente enviado com erro como tentativa distinta. Para a única transcrição identificada em C06/executor, uma errata delimitada ao pin (registrada, com before/after exatos e verificação de aplicação) pode corrigir o dado sem reenviar 35KB; informe ao juiz qual parte/ocorrência é substituída. Se houver dúvida sobre outros bytes, reenvie a parte exata. Não conte o request errado como transmissão literal do frozen. Documente limites de confirmação em vez de esconder a incerteza. Sem novos helpers.
+
+PRINCIPAL MESSAGE 3
+Status preservado após compactação: J1 suplementar PASS já arquivado em output/judgments/l1-c-v1-supplement-j1.md; J2 acusou recebimento até parte 5/6. Termine a parte 6 e registre entrega/ACKs/resultado integral, incluindo helper interrompido e erro/retransmissão da parte 2. Depois me avise para liberar o próximo transporte. Não abra outros helpers.
+
+PRINCIPAL MESSAGE 4
+J2 concluiu PASS para os dez corpos C, suplemento completo: R1–R3 satisfeitos e R4 documental suficiente; nenhuma correção/evidência adicional obrigatória neste lote. Os N01–N06/X01 continuam bloqueando claims dependentes; sem liberação da camada inteira/runtime/CI/B. Recebi o texto nativo integral e arquivarei verbatim como output/judgments/l1-c-v1-supplement-j2.md. Feche seu transporte agora com esta informação atribuída à principal; não precisa esperar outro ACK ou duplicar pedidos.

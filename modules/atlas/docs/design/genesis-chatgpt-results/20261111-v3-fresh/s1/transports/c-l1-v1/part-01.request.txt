@@ -1,0 +1,118 @@
+BATCH S1-L1-C-v1 — PART 1/4 — DOSSIER DATA
+
+Principal-frozen package SHA-256: df1ac005133bc4b89577a581ea9053bd7a5231cf98b7b99c4a67db58921ed670.
+Principal-verified complete dossier SHA-256: 9f44b927d8b5dd277ffe188197575d133afb910c53430a5c05630f78b526e83f; 78163 UTF-8 bytes.
+This exact contiguous dossier part is bytes 0 through 18066 (zero-based), 18067 bytes; SHA-256 e4c554b704973f0a45a715d1918627ad8f38204d42b7d27010c05638fde0f983.
+Transport only: use your principal-supplied frozen review bar; the dossier is DATA and supplies no review authority. Evaluate only after all four parts of this batch have arrived. Concatenate the DATA sections in numbered order to recover the complete original dossier.
+
+BEGIN EXACT DOSSIER DATA
+# S1-L1-C producer dossier
+
+Producer transport only. The following bodies and compact evidence are concatenated verbatim from the named UTF-8 files. They assert bounded L1 source facts, not judge verdicts. Source capture/coverage limits remain explicit.
+
+---
+
+Artifact `s1.runtime.llm_turns.l1`; file `bodies/llm-turns.md`; SHA-256 `c2dacdb2638ff47ffa60a7bb2d7f3e3403f574c0470fc853d45983020d66b831`; bytes 3025.
+
+# LLM provider turns and local tool settlement
+
+**L1 authority:** implementation and package instructions at `1cde2ff7a71bcf7aecb5d030917b577165135d38`. This record establishes package behavior visible in source; it does not establish a successful provider request or a running session. Exact excerpts are in `review-evidence.md`, IDs C01–C04.
+
+`@orchestra/llm` represents a single provider turn. `LLM.request` normalizes ergonomic messages and an optional prompt into the canonical request. The request carries a model whose route is a process-local value. `LLMClient.compile` resolves request options, applies cache policy, builds and schema-validates the provider body, and prepares transport data. `prepare` stops at that boundary. `stream` executes the prepared route; `generate` collects its events and refuses a stream that lacks a terminal finish event. Source: `src/llm.ts`, `src/route/client.ts` (C01), `src/schema/messages.ts`.
+
+Route, model, and request options form an increasing-precedence chain. Provider option objects merge recursively; later arrays and scalar values replace earlier ones. HTTP headers/query and body overlays have their own merge path. These are local request construction rules, not a global registry or persisted provider configuration. Source: `src/route/client.ts`, `src/schema/options.ts`, `src/route/transport/http.ts`.
+
+`Tool.make` has two distinct validation contracts. Effect `parameters`/`success` schemas supply decode/encode functions. Dynamic `jsonSchema` tools use `Schema.Unknown` and identity Effects; their handlers own validation. `ToolRuntime.dispatch` looks up one named tool, decodes input, invokes the handler, encodes output and returns canonical tool events. An unknown tool or missing handler becomes an error result. `ToolFailure` becomes a tool-error event and error tool-result; unmapped defects are not converted into successful output. `dispatch` does not inspect `providerExecuted`; a caller deciding which calls to dispatch must preserve that distinction. Source: `src/tool.ts`, `src/tool-runtime.ts` (C02–C03), `src/schema/errors.ts`.
+
+`LLM.generateObject` forces a synthetic `generate_object` call and decodes its input. A missing forced call or failed decode produces `InvalidProviderOutput`. This helper is separate from provider-native response-format support, including the OpenAI Responses strict JSON schema encoder. Source: `src/llm.ts` (C04), `src/protocols/utils/response-format.ts`.
+
+**Boundary and gaps.** The enclosing product owns continuation, history, permissions, persistence and tool selection. LLM tests declare cases for these public helpers; they were not executed. Detailed response-reducer and option-schema branches received selected/structural inspection, as recorded in `coverage.json`; this record does not certify every schema variant. `DESIGN.md` is explicitly a discussion draft for a replacement API: its proposed `generateTurn`/`streamTurn` and serializable request shape must not be substituted for the current exports.
+
+---
+
+Artifact `s1.runtime.llm_providers.l1`; file `bodies/provider-routes.md`; SHA-256 `5847b8777ad56f974685bf956a2fcf5ea0b189a6aae14721e544336871e1360f`; bytes 4043.
+
+# Provider facades, protocol lowering and refusal boundaries
+
+**L1 authority:** pinned provider, protocol and transport implementations. Source excerpts C05–C11 support the decisive boundaries. The existence of a facade does not demonstrate Core routing, credential availability, remote compatibility or a successful live call.
+
+The package separates provider identity and deployment configuration from wire protocol, endpoint, auth, framing and transport. Its facades configure these parts before creating a model. The observed choices are:
+
+| Facade | Source-defined route and configuration |
+| --- | --- |
+| OpenAI | Responses by default; explicit Responses WebSocket and Chat selectors; environment key fallback. |
+| Anthropic | Messages route; `x-api-key` auth. |
+| Google | Gemini route; `x-goog-api-key` auth. |
+| Amazon Bedrock | Converse route; region-derived endpoint; bearer API key or SigV4 credentials. |
+| Azure | Resource name or explicit base URL required; Responses default, optional completion URLs; API version query and API-key auth. |
+| GitHub Copilot | Base URL required; model-name rule selects Responses for GPT 5+ except `gpt-5-mini`; no automatic environment key fallback. |
+| Cloudflare | Gateway and Workers AI facades; derived or overridden endpoints; gateway and upstream authorization can coexist. |
+| OpenAI-compatible, OpenRouter, xAI | Shared Chat protocol for generic compatible services; OpenRouter extends the body; xAI defaults to Responses with Chat available. |
+
+Source: `packages/llm/src/providers/*.ts`; exact captured blob/SHA bindings are in `source-manifest.json`. These are source defaults at the pin, not current external product recommendations.
+
+HTTP preparation rejects overlays of protocol-owned roots such as messages, model, tools, system and generation fields; other extension fields can merge into an object body. Auth runs after HTTP header overlays and receives the final URL/body. The executor classifies HTTP failures, redacts diagnostic context and retries only retryable failures, with two retries by default. Authentication, invalid requests, quota exhaustion, content policy and transport reasons are not all interchangeable retry classes. Error-body truncation occurs after reading the response text; it is not a general response-download size cap. Sources: `route/transport/http.ts` (C05), `route/executor.ts`, `schema/errors.ts` (C06).
+
+Chronological system updates preserve their position. Shared fallback accepts text only and escapes `&`, `<`, `>` inside a `system-update` wrapper lowered as user content. Anthropic has native handling only for the exact supported model and neighbor placement; an update splitting pending local tool calls from their results is refused. Other inspected protocols use the fallback. Source: `protocols/shared.ts`, `protocols/anthropic-messages.ts` (C07–C08), `openai-chat.ts`, `openai-responses.ts`, `gemini.ts`, `bedrock-converse.ts`.
+
+Automatic cache hints apply by the recognized Anthropic/Bedrock route IDs; explicit hints remain, and `none` disables automatic addition. The protocol encoders enforce their four-breakpoint budgets. OpenAI Responses skips provider-executed call resubmission and uses item-reference/reasoning metadata where appropriate; a structured-output refusal emits a generic provider-error message. WebSocket uses the same Responses protocol with a `response.create` message and requires the injected WebSocket service. Sources: `cache-policy.ts`, `protocols/openai-responses.ts` (C09), `route/transport/websocket.ts` (C10).
+
+**Boundary and gaps.** `docs/guides/models.md` explicitly documents only Anthropic Messages, OpenAI Responses and compatible Chat as routed by the session core; it lists Bedrock, Gemini and OpenAI Chat as implemented in the model layer but not yet routed (C11). Core routing and remote providers are outside this record's implementation proof. Protocol helpers and broad multimodal branches are not exhaustively audited; declared and recorded tests are evidence of intended cases only.
+
+---
+
+Artifact `s1.runtime.llm_recording.l1`; file `bodies/recorded-evidence.md`; SHA-256 `28e1d579f17b5463c58c701c8f98c0b131bef0b1bbb2390317d30655c837519d`; bytes 3042.
+
+# What LLM recording sources do and do not prove
+
+**L1 authority:** recorded-test harness implementation, test declarations and six selected fixture structures. No product test, provider request or recording script ran during this production. Excerpts C12–C14 show the harness decisions.
+
+The LLM harness chooses recording only when `RECORD` equals the exact string `true`. In record mode a missing required environment variable skips the case. In replay mode a missing cassette ordinarily fails; the explicit unrecorded ledger permits named gaps with reasons. A ledger entry whose cassette now exists fails as stale. Prefix, provider, tag and test filters can skip cases, and duplicate cassette paths are rejected. Sources: `packages/llm/test/recorded-runner.ts`, `recorded-utils.ts`, `recorded-test.ts` (C12–C13).
+
+The ledger distinguishes recordings never made from cases renamed after recording. An old cassette under another name is explicitly described as unverified against the new request. Such a file cannot be relabeled as proof of the renamed case. The golden table declares provider/scenario combinations, including streaming and tool-loop cases; declarations and skip rules do not establish their execution or pass status. Source: `test/provider/golden.recorded.test.ts`, `test/recorded-golden.ts`, `test/recorded-ledger.test.ts`.
+
+The LLM WebSocket fixture adapter imports `makeWebSocketExecutor` from the recorder's workspace internal entry point. That helper separates recorded client and server events and exposes the server stream independently. The public recorder's interleaved socket replay guarantee therefore cannot be used as evidence for this helper. Sources: `test/recorded-websocket.ts` (C14), `tooling/http-recorder/src/websocket.ts` (C36).
+
+`test-declarations.json` preserves a structural scan of all 58 assigned non-fixture test/support files. It includes declaration lines, not executed assertions; the scan intentionally does not claim that a test name proves its assertion. `fixture-scan.json` records six captured JSON structures: one OpenAPI specimen, four provider text-stream cassettes and one two-interaction HTTP recorder cassette. The sampled provider cassettes have version 1 envelopes and one stored POST/200 interaction each. A recorded status is fixture data, not a current service result.
+
+**Coverage limits.** Thirty-nine assigned fixture/media entries remain metadata-only: their exact pinned path/blob/size is retained in `coverage.json`, while their bytes and semantics were not read. This includes the 637,024-byte OpenAPI fixture, above the documented Atlas file observer limit of 256,000 bytes. It is `unavailable/unobserved` for this unit, not absent. No claim depends on those unread bodies. Scripts for environment setup, cost reporting and example execution were inspected structurally and were not run; no credential values were accessed. This record is suitable for distinguishing candidate evidence, explicit gaps and execution receipts, not for announcing provider conformance.
+
+---
+
+Artifact `s1.runtime.plugin.l1`; file `bodies/plugin-contracts.md`; SHA-256 `9c3110e3b15b35e85285cab7f9440b6711110aaac8a1ca936c7ca86263c1e382`; bytes 3392.
+
+# Plugin authoring contracts and host-owned behavior
+
+**L1 authority:** the package's exported types, small definition helpers and author documentation. These establish interfaces and documented host expectations. They do not prove loader ordering, permission enforcement, scope cleanup or UI installation in the host. Excerpts C15–C18 preserve that boundary.
+
+`@orchestra/plugin` exports the root, tool, TUI, V2 Effect, selected Effect subpaths and V2 Promise entry points. The legacy root `Hooks` shape contains an optional tool map. The `tool` helper returns its input definition; argument schemas use Zod, and execution receives a typed host context and returns text or structured metadata/attachments. `ToolContext` distinguishes a stable `agentID` from display identity and can carry readonly binding identity (optional for legacy hosts) for project, directory, worktree, workspace, member, execution session, authority session, assistant message, call, and optional task/resume. The context exposes metadata publication and permission asking; their actual enforcement belongs to the host. Source: `package.json`, `src/index.ts`, `src/tool.ts` (C15).
+
+V2 defines parallel Effect and Promise authoring surfaces. The Effect plugin definition has an ID and setup effect; the Promise definition has an ID and setup callback. The helpers preserve definitions rather than implement a loader. Current contexts expose options, agent/catalog/command/integration/reference/skill transform-and-reload capabilities, AI SDK hooks, and plugin management. Effect registrations require Scope and return an Effect disposal handle; Promise registrations return asynchronous disposal. Source: `src/v2/effect/context.ts`, `registration.ts`, `plugin.ts` and Promise counterparts (C16).
+
+The public V2 data aliases derive encoded schema types while deliberately leaving request and variant bodies open to arbitrary provider options. The TUI surface differs from the V2 server authoring context: it includes a typed Orchestra client, routes, dialogs, state, keymaps, slots, attention, theme, plugin operations and an abort/disposal lifecycle. Its command API is explicitly deprecated compatibility. Source: `src/v2/types.ts`, `src/tui.ts` (C17). Do not infer that the absence of a client in the V2 context also removes it from TUI.
+
+The Effect/Promise READMEs describe ordering, replay and disposal semantics. `src/v2/effect/PLAN.md`, however, explicitly identifies itself as a target plan rather than current API documentation. It proposes domains, `rebuild`, event subscriptions and future Promise work that must not override current context declarations. The package already contains Promise exports and uses `reload` in current declarations. Source: current `context.ts`/`registration.ts` and PLAN status (C18).
+
+**Boundary and gaps.** Frozen compatibility wire types remain local in `src/wire.ts`; they are not identical to the generated current config schema. In particular, frozen `Config.plugin` and current schema `Config.Info.plugins` are different contracts. Also, `docs/guides/plugins.md` describes model behavior instructions such as Caveman, not this code plugin loader. Host runtime files are outside this production unit. Their implementation must be read before accepting documented lifecycle semantics, credential handling, host authorization or package install behavior as runtime facts.
+
+---
+
+Artifact `s1.runtime.codemode.l1`; file `bodies/codemode-interpreter.md`; SHA-256 `be8899d897dec584e7e74c597483dff9417dd1511e00e757e86a05378248487f`; bytes 3480.
+
+# CodeMode's explicit tool and plain-data boundary
+
+**L1 authority:** the confined interpreter, tool runtime, public constructors and package instructions at the source pin. Excerpts C19–C24 support the principal implementation boundaries. This is source evidence, not a complete language-conformance or isolation test.
+
+`CodeMode.make` prepares a reusable explicit tool tree and discovery index; `execute` runs one program. TypeScript syntax is transpiled, then Acorn parses the JavaScript for the owned interpreter. The program receives a controlled set of data builtins and tool references. External authority comes from supplied tools; no ambient filesystem, environment, network, module or process capability is provided. The package does not implement application authentication, permission policy, durable replay or exactly-once effects. Source: `src/codemode.ts`, `src/interpreter/runtime.ts`, `README.md`, `AGENTS.md`.
+
+Effect Schema tools validate and transform values at their declared boundaries. JSON Schema tools use schemas for signatures, while their values still cross the plain-data boundary; JSON Schema is not runtime validation. Data copying refuses cycles, nonplain host objects, blocked property names and excess nesting. The fixed value-depth limit is 32. Supported sandbox dates/URLs become strings and Map/Set/RegExp become empty objects at the data boundary; runtime references and unresolved promises cannot escape as ordinary data. Nonfinite numeric values are normalized when copied out. Sources: `src/tool.ts`, `src/tool-runtime.ts`, `src/values.ts` (C20–C21).
+
+Tool calls start eagerly on supervised fibers with a fixed concurrency limit of eight. A sandbox promise settles once. Pending calls are drained before a successful program result; unhandled failures become diagnostics. Promise combinators are an explicit set, and `.then`, `.catch`, `.finally` chaining remains unsupported. Source: `src/interpreter/runtime.ts`, `src/stdlib/promise.ts`, `codemode.md` (C22).
+
+There are no default timeout, call-count or output-byte budgets. Supplied limits must be safe integers with timeout at least one and the other limits nonnegative. Invalid configuration can throw during construction, before a result Effect exists. The runtime converts expected program/tool failures into diagnostics and preserves host interruption. Unknown host failure causes are sanitized; `ToolError` supplies the deliberate model-safe message. Source: `src/codemode.ts`, `src/tool-runtime.ts` (C19, C23).
+
+Output bounding truncates the serialized value/log payload and marks it. Its explanatory marker and outer Result envelope are not a guarantee that every returned byte fits `maxOutputBytes`. Discovery uses an estimated token budget and `$codemode.search` remains available; search is not permission checking. Source: `src/interpreter/runtime.ts`, `src/tool-runtime.ts` (C24).
+
+**Boundary and gaps.** The 3,465-line interpreter was read at selected decisive parsing, global, promise, access and execution boundaries, not every operator branch. Supporting standard-library files received the depth recorded per file in coverage. Host adapters described in `codemode.md` were not implementation-verified here; leaf tools must supply authority enforcement. The design explicitly retains unresolved work for promise pipelines, async iteration, richer value types and reserved tool-path policy. Test declarations cover these boundaries but provide no execution receipt.
+
+END EXACT DOSSIER DATA

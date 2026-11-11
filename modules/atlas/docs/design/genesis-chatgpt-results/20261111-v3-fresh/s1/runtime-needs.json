@@ -58,7 +58,8 @@
     "index": "NOT_RUN",
     "read": "NOT_RUN",
     "binding": "NOT_RUN",
-    "S1_execution": "NOT_RUN; exact runtime materialization in progress"
+    "S1_execution": "PROVEN_PREPARATION_ONLY: ten accepted C bodies plus complete reviewed supplement; 294 observations; actual candidate 1670bc712e472b9f449d277da324b17fa8fb951cbc62c2bc07fa8718e89c063f; no binding/publication/read",
+    "S1_receipt": "runtime/preparation/prepare-c-r1-v2-receipt.json"
   },
   "s1_native_input_limit": {
     "path": "packages/client/src/generated/types.ts",
@@ -70,8 +71,9 @@
       "s1.api.codegen",
       "s1.api.surface-disposition"
     ],
-    "state": "STATIC_COMPATIBILITY_BLOCKER; actual prepare refusal not yet executed",
-    "required_resolution": "S4 supplies a justified compatible observation mechanism, reviewed and executed, that binds the complete required source bytes. Preserve source refs and population; do not drop or truncate input to pass."
+    "state": "OBSERVED_UNAVAILABLE: released observer returns unavailable and importer read throws native-file-limit",
+    "required_resolution": "S4 supplies a justified compatible observation mechanism, reviewed and executed, that binds the complete required source bytes. Preserve source refs and population; do not drop or truncate input to pass.",
+    "receipt": "runtime/preparation/large-source-observation-receipt.json"
   },
-  "updated_at": "2026-11-11T17:58:25.035714+00:00"
+  "updated_at": "2026-11-11T18:18:14.601744+00:00"
 }

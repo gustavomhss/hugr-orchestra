@@ -1,0 +1,102 @@
+{
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "directory": "/workspace/scratch/2b46fb541868/genesis-s1/transports/native-negative-v1",
+  "targets": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "file_count_excluding_manifest": 18,
+  "files": [
+    {
+      "path": "canonical-request.txt",
+      "bytes": 32683,
+      "sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c"
+    },
+    {
+      "path": "delivery-results.json",
+      "bytes": 2858,
+      "sha256": "42cd3a1fb0574cd62e34f91a7045a7150e868d7d90130964d47bd7ee4af4afa2"
+    },
+    {
+      "path": "dossier.raw.md",
+      "bytes": 32197,
+      "sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af"
+    },
+    {
+      "path": "freeze.json",
+      "bytes": 1077,
+      "sha256": "4c4df5334a0678dc323d71c4c15e672cdfed8dd529f89a2c1f6063345efac9db"
+    },
+    {
+      "path": "judge1-attempt-01.request.txt",
+      "bytes": 32683,
+      "sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c"
+    },
+    {
+      "path": "judge1-attempt-01.result.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "judge2-attempt-01.request.txt",
+      "bytes": 32683,
+      "sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c"
+    },
+    {
+      "path": "judge2-attempt-01.result.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "principal-j1-completion.txt",
+      "bytes": 254,
+      "sha256": "c4526a855f984415af985b082c99557140c40910f4eb9571f8a21f44fd01a184"
+    },
+    {
+      "path": "principal-notification-complete.result.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "principal-notification-complete.txt",
+      "bytes": 406,
+      "sha256": "e6d24a88529bd7935459a7f345b7476de6b176ae27801d87263483bf6b71aba5"
+    },
+    {
+      "path": "principal-notification-j1.result.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "principal-notification-j1.txt",
+      "bytes": 447,
+      "sha256": "1fe7c9473523c6280ad8a1f79d25c8f1489fae43e556ba2e92937d18c2d76d64"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 1690,
+      "sha256": "51ad354f54fd676a80c102e83c7f682f7a09a1c40660beb1ecd428d21792d134"
+    },
+    {
+      "path": "transport-plan.json",
+      "bytes": 859,
+      "sha256": "4a97f5522f5a08d441c5ae940c8818a32c87cb49b37b1313045dfd6a0b71f785"
+    },
+    {
+      "path": "transport-receipt.json",
+      "bytes": 4538,
+      "sha256": "6ed3b9ac783c627dfcb98e44dbf66caffe0310176825317fcc0fad990e33bc9b"
+    },
+    {
+      "path": "transport-receipt.md",
+      "bytes": 1749,
+      "sha256": "156548bfa13debb448029dcf3eea0831c124aa16871e2400449224ae9920b799"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 933,
+      "sha256": "0a82690ed2f46a7058b485aba3c03c7a0bef7c998cc0b112db1de997c3a58d79"
+    }
+  ],
+  "note": "Manifest excludes its own recursive identity."
+}

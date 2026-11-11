@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "npm",
+    "ci",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "--cache",
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/npm-cache"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:06:21.187838+00:00",
+  "end": "2026-11-11T18:06:30.468615+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "2b2e96917762314e5a9abb02002435ba1fe68ab7c162155763a2c5069f0a15a9",
+  "stderr_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "lockfile_sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f",
+  "product_tests": "NOT_RUN"
+}

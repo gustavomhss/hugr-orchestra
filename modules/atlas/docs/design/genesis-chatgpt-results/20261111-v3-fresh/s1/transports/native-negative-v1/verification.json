@@ -1,0 +1,24 @@
+{
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "dossier": {
+    "path": "dossier.raw.md",
+    "bytes": 32197,
+    "sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af"
+  },
+  "freeze": {
+    "path": "freeze.json",
+    "bytes": 1077,
+    "sha256": "4c4df5334a0678dc323d71c4c15e672cdfed8dd529f89a2c1f6063345efac9db"
+  },
+  "canonical_request": {
+    "path": "canonical-request.txt",
+    "bytes": 32683,
+    "sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c"
+  },
+  "saved_target_requests_byte_identical": true,
+  "saved_request_DATA_byte_identical_to_frozen_dossier": true,
+  "both_frozen_inputs_unchanged_at_close": true,
+  "UTF8_valid": true,
+  "actual_visible_transcription_comparison": "Manual comparison with displayed canonical request; no differences detected for either actual tool argument. No host export of argument bytes was exposed.",
+  "no_host_received_byte_certificate": true
+}

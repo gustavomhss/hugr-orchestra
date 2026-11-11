@@ -1,0 +1,178 @@
+{
+  "batch": "S1-L1-C-v1",
+  "supplement": "c-l1-evidence-v1",
+  "role": "faithful_internal_transport_only",
+  "transporter": "/root/producer_c",
+  "source_path": "/workspace/scratch/2b46fb541868/genesis-s1/revisions/c-l1-evidence-v1/supplement.md",
+  "supplement_bytes": 203995,
+  "supplement_sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7",
+  "original_package_sha256": "df1ac005133bc4b89577a581ea9053bd7a5231cf98b7b99c4a67db58921ed670",
+  "principal_reported_aggregate_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "source_and_frozen_producer_content_modified": false,
+  "per_target": [
+    {
+      "target": "/root/judge1",
+      "actual_followup_attempts": 7,
+      "canonical_part_sends": 6,
+      "canonical_part_numbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "canonical_raw_data_bytes": 203995,
+      "canonical_request_bytes": 209452,
+      "all_attempt_request_bytes": 245669,
+      "receiver_byte_count_echo": null,
+      "receiver_hash_echo": null,
+      "host_receipt_id": null
+    },
+    {
+      "target": "/root/judge2",
+      "actual_followup_attempts": 7,
+      "canonical_part_sends": 6,
+      "canonical_part_numbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "canonical_raw_data_bytes": 203995,
+      "canonical_request_bytes": 209452,
+      "all_attempt_request_bytes": 247715,
+      "receiver_byte_count_echo": null,
+      "receiver_hash_echo": null,
+      "host_receipt_id": null
+    }
+  ],
+  "counts": {
+    "actual_followup_attempts": 14,
+    "main_transporter_attempts": 13,
+    "helper_attempts": 1,
+    "canonical_part_sends": 12,
+    "failed_helper_attempts": 1,
+    "superseded_transcription_attempts": 1,
+    "canonical_raw_bytes_all_targets": 407990,
+    "canonical_request_bytes_all_targets": 418904,
+    "all_attempt_request_bytes": 493384
+  },
+  "parts": [
+    {
+      "part": 1,
+      "total": 6,
+      "byte_start": 0,
+      "byte_end_exclusive": 37358,
+      "raw_path": "part-01.raw.md",
+      "raw_bytes": 37358,
+      "raw_sha256": "3c4b91528a25f9dbc3e150e435bc233b171104822c6424159818d6a19c251215",
+      "request_path": "part-01.request.txt",
+      "request_bytes": 38263,
+      "request_sha256": "9ecdbc1c253df59538e982c3f13da6c816426d11dca0950fcc308a004df043e3"
+    },
+    {
+      "part": 2,
+      "total": 6,
+      "byte_start": 37358,
+      "byte_end_exclusive": 72669,
+      "raw_path": "part-02.raw.md",
+      "raw_bytes": 35311,
+      "raw_sha256": "c1bbd5e9027c424b5abef79da21f232968f2cac7fa5fa50b3beff571b1e36b74",
+      "request_path": "part-02.request.txt",
+      "request_bytes": 36220,
+      "request_sha256": "45fd78861cf6dc25203891f9c93a0b7c76a23c6688b212b8d6fd910c0b3e3791"
+    },
+    {
+      "part": 3,
+      "total": 6,
+      "byte_start": 72669,
+      "byte_end_exclusive": 104171,
+      "raw_path": "part-03.raw.md",
+      "raw_bytes": 31502,
+      "raw_sha256": "7077aaee2076af70672246329085a7b7db91a99f70e1aa7f24df5eae2b768c45",
+      "request_path": "part-03.request.txt",
+      "request_bytes": 32412,
+      "request_sha256": "bd0f2f2596a90d582f63ab70c1122e21b4d025534e171dcb5f17c286ca0534e3"
+    },
+    {
+      "part": 4,
+      "total": 6,
+      "byte_start": 104171,
+      "byte_end_exclusive": 140950,
+      "raw_path": "part-04.raw.md",
+      "raw_bytes": 36779,
+      "raw_sha256": "c693e4328250f86c9b68714d2e9b184c922c1445ef7bfac2c82898e688110175",
+      "request_path": "part-04.request.txt",
+      "request_bytes": 37690,
+      "request_sha256": "5286101266a808dc07d1fa87851b72f3ee58776ba89840ffa6b797791dd00fe8"
+    },
+    {
+      "part": 5,
+      "total": 6,
+      "byte_start": 140950,
+      "byte_end_exclusive": 178589,
+      "raw_path": "part-05.raw.md",
+      "raw_bytes": 37639,
+      "raw_sha256": "61c9a5483a9e926ed9fce2a2c50a104b1ab2dbc732f059d720f82aacf57c4f30",
+      "request_path": "part-05.request.txt",
+      "request_bytes": 38550,
+      "request_sha256": "842ec2b5d05a6bb117c7c5ef8ffad60db62208a51c17f88940ec7575f36b6e43"
+    },
+    {
+      "part": 6,
+      "total": 6,
+      "byte_start": 178589,
+      "byte_end_exclusive": 203995,
+      "raw_path": "part-06.raw.md",
+      "raw_bytes": 25406,
+      "raw_sha256": "2ea4945a6d0a584c9f6883ea21e0fcbac5e20f6c01140add4c449720666c2168",
+      "request_path": "part-06.request.txt",
+      "request_bytes": 26317,
+      "request_sha256": "0ef236931e7fc26514426ac5587603ad88e4a0e0d3f5b3d587cf05e58ae5feec"
+    }
+  ],
+  "observed_events": [
+    {
+      "target": "/root/judge2",
+      "transporter": "/root/producer_c/transport_judge2",
+      "part": 1,
+      "visible_result": "collab tool failed: agent thread limit reached",
+      "counted_as_delivery": false,
+      "resolution": "Principal interrupted helper; main transporter made the subsequent actual full canonical call."
+    },
+    {
+      "target": "/root/judge1",
+      "part": 1,
+      "visible_result": "Output exceeded the available model context and was truncated",
+      "resolution": "Principal explicitly reported native ACK. No duplicate part 1 send was made."
+    },
+    {
+      "target": "/root/judge1",
+      "part": 2,
+      "attempt": 1,
+      "actual_request_path": "judge1-part02-attempt01.request.txt",
+      "actual_request_bytes": 36217,
+      "actual_request_sha256": "05293b7e0cea24599cdc6ddc379cd9b38e6e6a36a1e637fd691702652bed9ba1",
+      "counted_as_canonical_delivery": false,
+      "before": "1cde2ff7a71bcf7aecb5d030917b577165d38",
+      "after": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "location": "C06 executor source header",
+      "resolution": "Whole exact canonical part 2 was actually retransmitted; correction control was sent and preserved."
+    }
+  ],
+  "acknowledgment_reports": "acknowledgment-reports.json",
+  "delivery_results": "delivery-results.json",
+  "verification": "verification.json",
+  "request_hashes_are": "SHA256 of locally preserved literal request text, not host byte echoes",
+  "confirmation_limit": "All expected native followup calls returned. Except for part 1 to judge1, whose visible result was truncated and whose ACK was reported by principal, canonical calls had empty visible results and no explicit error. These observations do not expose host receipt IDs or certify receiver byte hashes. Native ACK reports are separately attributed.",
+  "semantic_review_performed": false,
+  "oracles_accessed": false,
+  "product_execution_performed": false,
+  "remote_github_write_performed": false,
+  "final_transport_status": "All six canonical parts sent to both existing judges; principal reports the complete native supplementary judgment from judge2 and instructs closing transport without another ACK.",
+  "final_completion_report_attribution": "/root principal message preserved in acknowledgment-reports.json; no independent semantic judgment by transporter",
+  "additional_data_sends_after_final_principal_report": 0
+}

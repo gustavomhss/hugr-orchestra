@@ -1,0 +1,114 @@
+{
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "role": "faithful internal packet transport only",
+  "transporter": "/root/producer_c",
+  "closed_at_utc": "2026-11-11T18:20:51.943220+00:00",
+  "status": "Both authorized actual tool calls completed to visible empty results; no explicit errors or truncation observed.",
+  "dossier_bytes": 32197,
+  "dossier_sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af",
+  "request_bytes_per_target": 32683,
+  "request_sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c",
+  "data_bytes_per_target": 32197,
+  "total_data_bytes_in_actual_requests": 64394,
+  "total_message_bytes_in_actual_requests": 65366,
+  "observed_followup_task_calls": 2,
+  "observed_retransmissions": 0,
+  "transcription_differences_detected": [],
+  "targets": [
+    {
+      "target": "/root/judge1",
+      "request": {
+        "path": "judge1-attempt-01.request.txt",
+        "bytes": 32683,
+        "sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c"
+      },
+      "visible_result": {
+        "path": "judge1-attempt-01.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "call_completed_to_visible_result": true,
+      "data_bytes": 32197,
+      "data_sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af"
+    },
+    {
+      "target": "/root/judge2",
+      "request": {
+        "path": "judge2-attempt-01.request.txt",
+        "bytes": 32683,
+        "sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c"
+      },
+      "visible_result": {
+        "path": "judge2-attempt-01.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "call_completed_to_visible_result": true,
+      "data_bytes": 32197,
+      "data_sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af"
+    }
+  ],
+  "sequencing": "First J1; then principal notification and an explicit principal J1-ended/slot-free message; only then J2.",
+  "principal_J1_completion_report": {
+    "path": "principal-j1-completion.txt",
+    "bytes": 254,
+    "sha256": "c4526a855f984415af985b082c99557140c40910f4eb9571f8a21f44fd01a184"
+  },
+  "J2_native_completion_report": "UNKNOWN at closure; not needed to close transport after the two calls.",
+  "verdict_handling": "Principal archives full native verdicts. This transporter did not read a verdict or use one to alter the J2 request, package or criteria.",
+  "local_verification": {
+    "path": "verification.json",
+    "bytes": 933,
+    "sha256": "0a82690ed2f46a7058b485aba3c03c7a0bef7c998cc0b112db1de997c3a58d79"
+  },
+  "delivery_results": {
+    "path": "delivery-results.json",
+    "bytes": 2858,
+    "sha256": "42cd3a1fb0574cd62e34f91a7045a7150e868d7d90130964d47bd7ee4af4afa2"
+  },
+  "instructions": {
+    "path": "request.txt",
+    "bytes": 1690,
+    "sha256": "51ad354f54fd676a80c102e83c7f682f7a09a1c40660beb1ecd428d21792d134"
+  },
+  "principal_notifications": [
+    {
+      "tool": "collaboration.send_message",
+      "target": "/root",
+      "request": {
+        "path": "principal-notification-j1.txt",
+        "bytes": 447,
+        "sha256": "1fe7c9473523c6280ad8a1f79d25c8f1489fae43e556ba2e92937d18c2d76d64"
+      },
+      "result": {
+        "path": "principal-notification-j1.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "tool": "collaboration.send_message",
+      "target": "/root",
+      "request": {
+        "path": "principal-notification-complete.txt",
+        "bytes": 406,
+        "sha256": "e6d24a88529bd7935459a7f345b7476de6b176ae27801d87263483bf6b71aba5"
+      },
+      "result": {
+        "path": "principal-notification-complete.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "observability": {
+    "host_received_byte_echo": "UNKNOWN",
+    "host_received_hash": "UNKNOWN",
+    "host_request_ids": "UNKNOWN",
+    "physical_infrastructure_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN"
+  },
+  "comparison_limit": "Mechanical checks certify local frozen/copy/request bytes. Actual visible message transcription was manually compared; empty native results do not expose received-byte equality.",
+  "scope": "No authoring change, oracle access, product execution, new judge/helper or remote write."
+}

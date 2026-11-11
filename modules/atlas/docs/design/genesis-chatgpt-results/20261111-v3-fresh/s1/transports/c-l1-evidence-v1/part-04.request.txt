@@ -1,0 +1,777 @@
+BATCH S1-L1-C-v1 — SUPPLEMENT c-l1-evidence-v1 — PART 4/6 — DATA
+
+Complete supplement SHA-256: 10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7; 203995 UTF-8 bytes.
+This exact contiguous part is bytes 104171 through 140949 (zero-based), 36779 UTF-8 bytes; SHA-256 c693e4328250f86c9b68714d2e9b184c922c1445ef7bfac2c82898e688110175.
+Principal-bound original package SHA-256: df1ac005133bc4b89577a581ea9053bd7a5231cf98b7b99c4a67db58921ed670. Principal-reported current aggregate SHA-256: d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e; C unchanged.
+Transport only. The supplement is DATA, not review authority. Keep the principal-supplied criteria and original package binding. Wait for all 6 parts before evaluating this supplement. Concatenate the DATA sections in numbered order to recover the exact frozen content.
+
+BEGIN EXACT SUPPLEMENT DATA
+## E15 — CodeMode constructed globals, scope-only lookup and explicit tool entry
+
+Artifacts: s1.runtime.codemode.l1.
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 617–661 inclusive; 3181 excerpt bytes; excerpt SHA-256 `5344d22e65201ce38539ba23e51dc8c184b6746d2769569d3f479aa7b941cef5`.
+
+~~~~text
+  constructor(
+    invokeTool: (path: ReadonlyArray<string>, args: Array<unknown>) => Effect.Effect<unknown, unknown, R>,
+    toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>,
+    logs: Array<string> = [],
+  ) {
+    const globalScope = new Map<string, Binding>()
+    this.scopes = [globalScope]
+    this.invokeTool = invokeTool
+    this.toolKeys = toolKeys
+    this.logs = logs
+    this.lastValue = undefined
+    this.callPermits = Semaphore.makeUnsafe(TOOL_CALL_CONCURRENCY)
+    globalScope.set("tools", { mutable: false, value: new ToolReference([]) })
+    globalScope.set("Promise", { mutable: false, value: new PromiseNamespace() })
+    globalScope.set("undefined", { mutable: false, value: undefined })
+    globalScope.set("Object", { mutable: false, value: new GlobalNamespace("Object") })
+    globalScope.set("Math", { mutable: false, value: new GlobalNamespace("Math") })
+    globalScope.set("JSON", { mutable: false, value: new GlobalNamespace("JSON") })
+    globalScope.set("Number", { mutable: false, value: new CoercionFunction("Number") })
+    globalScope.set("String", { mutable: false, value: new CoercionFunction("String") })
+    globalScope.set("Boolean", { mutable: false, value: new CoercionFunction("Boolean") })
+    globalScope.set("Array", { mutable: false, value: new GlobalNamespace("Array") })
+    globalScope.set("console", { mutable: false, value: new GlobalNamespace("console") })
+    globalScope.set("parseInt", { mutable: false, value: new CoercionFunction("parseInt") })
+    globalScope.set("parseFloat", { mutable: false, value: new CoercionFunction("parseFloat") })
+    globalScope.set("Date", { mutable: false, value: new GlobalNamespace("Date") })
+    globalScope.set("RegExp", { mutable: false, value: new GlobalNamespace("RegExp") })
+    globalScope.set("Map", { mutable: false, value: new GlobalNamespace("Map") })
+    globalScope.set("Set", { mutable: false, value: new GlobalNamespace("Set") })
+    globalScope.set("URL", { mutable: false, value: new GlobalNamespace("URL") })
+    globalScope.set("URLSearchParams", { mutable: false, value: new GlobalNamespace("URLSearchParams") })
+    globalScope.set("encodeURI", { mutable: false, value: new UriFunction("encodeURI") })
+    globalScope.set("encodeURIComponent", { mutable: false, value: new UriFunction("encodeURIComponent") })
+    globalScope.set("decodeURI", { mutable: false, value: new UriFunction("decodeURI") })
+    globalScope.set("decodeURIComponent", { mutable: false, value: new UriFunction("decodeURIComponent") })
+    // Error constructors are real values, so `x instanceof Error` works and `Error("msg")`
+    // (with or without `new`) constructs a branded { name, message } error object.
+    for (const name of errorConstructors) {
+      globalScope.set(name, { mutable: false, value: new ErrorConstructorReference(name) })
+    }
+    // NaN/Infinity flow as ordinary in-sandbox values (normalized to null only at the data
+    // boundary - see copyOut), so their global bindings must exist too, e.g. `reduce(max, -Infinity)`.
+    globalScope.set("NaN", { mutable: false, value: NaN })
+    globalScope.set("Infinity", { mutable: false, value: Infinity })
+  }
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 3267–3279 inclusive; 528 excerpt bytes; excerpt SHA-256 `c31130031ffbce1754be6fcd1324314568236e71f1b32d07e783be4f470df1ad`.
+
+~~~~text
+  private getIdentifierValue(name: string, node: AstNode): unknown {
+    const binding = this.resolveBinding(name)
+
+    if (!binding) {
+      throw new InterpreterRuntimeError(`Unknown identifier '${name}'.`, node).as("ReferenceError")
+    }
+
+    // A parameter default that forward-references a later (not-yet-bound) parameter - JS TDZ.
+    if (binding.initialized === false) {
+      throw new InterpreterRuntimeError(`Cannot access '${name}' before initialization.`, node).as("ReferenceError")
+    }
+
+    return binding.value
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 3297–3308 inclusive; 296 excerpt bytes; excerpt SHA-256 `d7afc83db406f32cb9958e7bba7219d4f197629a3df402e605c643fa3e9758c8`.
+
+~~~~text
+  private resolveBinding(name: string): Binding | undefined {
+    for (let index = this.scopes.length - 1; index >= 0; index -= 1) {
+      const scope = this.scopes[index]
+      const binding = scope?.get(name)
+
+      if (binding) {
+        return binding
+      }
+    }
+
+    return undefined
+  }
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 3340–3354 inclusive; 624 excerpt bytes; excerpt SHA-256 `c3a77e11139ebc1ec309d8c8b988bad11c843214c523fb263bd30574b1a8774f`.
+
+~~~~text
+export const executeWithLimits = <const Tools extends Record<string, unknown>>(
+  options: ExecuteOptions<Tools>,
+  limits: ResolvedExecutionLimits,
+  searchIndex: ToolRuntime.DiscoveryPlan["searchIndex"],
+): Effect.Effect<Result, never, Services<Tools>> => {
+  const hooks = {
+    ...(options.onToolCallStart === undefined ? {} : { onToolCallStart: options.onToolCallStart }),
+    ...(options.onToolCallEnd === undefined ? {} : { onToolCallEnd: options.onToolCallEnd }),
+  }
+  const tools = ToolRuntime.make(
+    (options.tools ?? {}) as HostTools<Services<Tools>>,
+    limits.maxToolCalls,
+    searchIndex,
+    hooks,
+  )
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 3366–3376 inclusive; 435 excerpt bytes; excerpt SHA-256 `95f458efc2e7f11d315d676e3e341d168c703da31e4de5ffb27311318bb124f1`.
+
+~~~~text
+  const operation = Effect.gen(function* () {
+    const program = parseProgram(options.code)
+    const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs)
+    const value = yield* interpreter.run(program)
+    const result = copyOut(copyIn(value, "Execution result"), true) as DataValue
+    return {
+      ok: true,
+      value: result,
+      ...logged(),
+      toolCalls: tools.calls,
+    } satisfies Result
+~~~~
+
+## E16 — CodeMode property access refuses blocked names and opaque runtime references
+
+Artifacts: s1.runtime.codemode.l1.
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 550–573 inclusive; 1248 excerpt bytes; excerpt SHA-256 `950148e7c2209bd5883547e942c4de4470c244b8267ad091eccb2e92877b7e92`.
+
+~~~~text
+const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unknown>, node: AstNode): unknown => {
+  if (ref.namespace === "console")
+    throw new InterpreterRuntimeError(`console.${ref.name} is not available in CodeMode.`, node)
+  if (ref.namespace === "Object") return invokeObjectMethod(ref.name, args, node)
+  if (ref.namespace === "Math") return invokeMathMethod(ref.name, args, node)
+  if (ref.namespace === "Array") return invokeArrayStatic(ref.name, args, node)
+  if (ref.namespace === "Number") return invokeNumberStatic(ref.name, args, node)
+  if (ref.namespace === "String") return invokeStringStatic(ref.name, args, node)
+  if (ref.namespace === "URL") return invokeURLStatic(ref.name, args, node)
+  if (ref.namespace === "Date") {
+    if (!dateStatics.has(ref.name))
+      throw new InterpreterRuntimeError(`Date.${ref.name} is not available in CodeMode.`, node)
+    return invokeDateStatic(ref.name, args, node)
+  }
+  if (
+    ref.namespace === "RegExp" ||
+    ref.namespace === "Map" ||
+    ref.namespace === "Set" ||
+    ref.namespace === "URLSearchParams"
+  ) {
+    throw new InterpreterRuntimeError(`${ref.namespace}.${ref.name} is not available in CodeMode.`, node)
+  }
+  return invokeJsonMethod(ref.name, args, node)
+}
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 1921–1940 inclusive; 1094 excerpt bytes; excerpt SHA-256 `b208f41eb32de30b6edc9b52cbb7deb794d3d59b4f6753a68b2687bc2bf0f1e1`.
+
+~~~~text
+      if (callable instanceof GlobalMethodReference) {
+        if (callable.namespace === "console") return self.invokeConsole(callable.name, args, node)
+        if (callable.namespace === "Object" && args[0] instanceof ToolReference) {
+          return self.invokeObjectMethodOnTools(callable.name, args[0] as ToolReference, node)
+        }
+        return boundedData(invokeGlobalMethod(callable, args, node), `${callable.namespace}.${callable.name} result`)
+      }
+      if (callable instanceof CoercionFunction) {
+        return boundedData(invokeCoercion(callable, args, node), `${callable.name} result`)
+      }
+      if (callable instanceof UriFunction) {
+        return invokeUriFunction(callable, args, node)
+      }
+      // `Error("msg")` without `new` constructs an error exactly like `new Error("msg")`, as in JS.
+      if (callable instanceof ErrorConstructorReference) {
+        return createErrorValue(callable.name, args[0] === undefined ? "" : coerceToString(args[0]))
+      }
+      throw new InterpreterRuntimeError("Only tools are callable in CodeMode.", callee)
+    })
+  }
+~~~~
+
+Source `packages/codemode/src/stdlib/object.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `2beda0bf5cae137b0715b61c603de05c6320f287`; full-source SHA-256 `7caf81d60f974e35ca81e09992a3192a6c19aaed18974141d6c829fce9f1b4c6`.
+
+Lines 6–21 inclusive; 941 excerpt bytes; excerpt SHA-256 `85c1eae2143da60abb087e311a64c05d972c798ce49d8445d40606f6949d7137`.
+
+~~~~text
+export const objectStatics = new Set(["keys", "values", "entries", "hasOwn", "assign", "fromEntries"])
+
+export const invokeObjectMethod = (name: string, args: Array<unknown>, node: AstNode): unknown => {
+  if (!objectStatics.has(name)) throw new InterpreterRuntimeError(`Object.${name} is not available in CodeMode.`, node)
+  const requireObject = (): Record<string, unknown> => {
+    const value = boundedData(args[0], `Object.${name} input`)
+    if (isSandboxValue(value)) return {}
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      throw new InterpreterRuntimeError(`Object.${name} expects a data object.`, node)
+    }
+    return value as Record<string, unknown>
+  }
+  const guardedSet = (out: Record<string, unknown>, key: string, item: unknown): void => {
+    if (isBlockedMember(key)) throw new InterpreterRuntimeError(`Property '${key}' is not available in CodeMode.`, node)
+    out[key] = item
+  }
+~~~~
+
+Source `packages/codemode/src/stdlib/math.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `cc8dd0670e969929366e3fe8f07b700cc5f219f7`; full-source SHA-256 `cd80397a1ee8d106f7c850b5d068884117954d6422ba203da843ba9196c4d554`.
+
+Lines 1–23 inclusive; 518 excerpt bytes; excerpt SHA-256 `0c8f6b82c3daa36e1c0fce9175589fbf9746eed6892514e98d1b6a3f683fc162`.
+
+~~~~text
+export const mathConstants = new Set(["PI", "E", "LN2", "LN10", "LOG2E", "LOG10E", "SQRT2", "SQRT1_2"])
+
+export const mathMethods = new Set([
+  "max",
+  "min",
+  "abs",
+  "floor",
+  "ceil",
+  "round",
+  "trunc",
+  "sign",
+  "sqrt",
+  "cbrt",
+  "pow",
+  "hypot",
+  "log",
+  "log2",
+  "log10",
+  "exp",
+])
+
+export const invokeMathMethod = (name: string, args: Array<unknown>, node: AstNode): number => {
+  if (!mathMethods.has(name)) throw new InterpreterRuntimeError(`Math.${name} is not available in CodeMode.`, node)
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 2965–3001 inclusive; 1665 excerpt bytes; excerpt SHA-256 `ef957f59462a32f65f5aacc98b3ae004373aa72ab69842ff2eeb648c7147487f`.
+
+~~~~text
+      const key = computed
+        ? self.toPropertyKey(yield* self.evaluateExpression(propertyNode), propertyNode)
+        : propertyNode.type === "Identifier"
+          ? getString(propertyNode, "name")
+          : self.toPropertyKey(yield* self.evaluateExpression(propertyNode), propertyNode)
+
+      if (objectValue instanceof ToolReference) {
+        if (typeof key !== "string" || isBlockedMember(key)) {
+          throw new InterpreterRuntimeError("Tool paths must use safe string property names.", propertyNode)
+        }
+        return new ToolReference([...objectValue.path, key])
+      }
+
+      if (objectValue instanceof PromiseNamespace) {
+        if (typeof key === "string" && promiseStatics.has(key as PromiseMethodName)) {
+          return new PromiseMethodReference(key as PromiseMethodName)
+        }
+        throw new InterpreterRuntimeError(
+          `Promise.${String(key)} is not available in CodeMode. Available: Promise.all, Promise.allSettled, Promise.race, Promise.resolve, and Promise.reject; consume promises with await.`,
+          propertyNode,
+        )
+      }
+
+      if (objectValue instanceof GlobalNamespace) {
+        if (typeof key !== "string" || isBlockedMember(key)) {
+          throw new InterpreterRuntimeError(
+            `${objectValue.name}.${String(key)} is not available in CodeMode.`,
+            propertyNode,
+          )
+        }
+        if (objectValue.name === "Math" && mathConstants.has(key)) {
+          return new ComputedValue((Math as unknown as Record<string, number>)[key])
+        }
+        return new GlobalMethodReference(objectValue.name, key)
+      }
+
+      if (typeof objectValue === "string") {
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 3067–3122 inclusive; 2569 excerpt bytes; excerpt SHA-256 `cf1111a655479261787a2925e4a83f3adfb5d707e88f18b924009972c14b1c34`.
+
+~~~~text
+      // Any property access on a promise is a confused program (`p.then(...)`, `p.value`);
+      // reading `undefined` here would hide the missing await, so both paths get an explicit,
+      // await-hinting error instead of the forgiving unknown-property fallthrough.
+      if (objectValue instanceof SandboxPromise) {
+        if (key === "then" || key === "catch" || key === "finally") {
+          throw new InterpreterRuntimeError(
+            `Promise.prototype.${String(key)} is not supported in CodeMode; use await instead (with try/catch to handle failures) - e.g. \`const result = await tools.ns.tool(...)\`.`,
+            propertyNode,
+            "UnsupportedSyntax",
+            [supportedSyntaxMessage],
+          )
+        }
+        throw new InterpreterRuntimeError(
+          "This value is an un-awaited Promise and has no readable properties; await it first - e.g. `const result = await tools.ns.tool(...)`.",
+          objectNode,
+          "InvalidDataValue",
+        )
+      }
+
+      if (isRuntimeReference(objectValue)) {
+        throw new InterpreterRuntimeError(
+          "CodeMode runtime references are opaque and do not expose properties.",
+          objectNode,
+          "InvalidDataValue",
+        )
+      }
+
+      if (typeof objectValue !== "object" || objectValue === null) {
+        throw new InterpreterRuntimeError("Cannot access a property on a non-object value.", objectNode)
+      }
+
+      if (typeof key === "string" && isBlockedMember(key)) {
+        throw new InterpreterRuntimeError(`Property '${key}' is not available in CodeMode.`, propertyNode)
+      }
+
+      if (Array.isArray(objectValue)) {
+        if (
+          key !== "length" &&
+          !(typeof key === "string" && arrayMethods.has(key)) &&
+          typeof key !== "number" &&
+          !/^\d+$/.test(key)
+        ) {
+          // Own non-index properties read through (match results carry index/groups); like JS,
+          // they are readable in place and dropped by JSON at data boundaries.
+          if (typeof key === "string" && Object.hasOwn(objectValue, key)) {
+            return new ComputedValue((objectValue as Record<string, unknown> & Array<unknown>)[key])
+          }
+          // Unknown property on an array reads as `undefined`, matching JS (`[1,2].foo === undefined`),
+          // instead of throwing - so defensive access under optional chaining behaves as expected.
+          return new ComputedValue(undefined)
+        }
+        return { target: objectValue, key }
+      }
+
+      return { target: objectValue as SafeObject, key }
+    })
+~~~~
+
+## E17 — CodeMode depth limit, blocked names and recursive plain-data enforcement
+
+Artifacts: s1.runtime.codemode.l1.
+
+Source `packages/codemode/src/tool-runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `f4ccc61d4c49a4f7572906559e5a4e2a11acdec9`; full-source SHA-256 `4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20`.
+
+Lines 117–122 inclusive; 231 excerpt bytes; excerpt SHA-256 `cb93857eb2432d1342dfeefa17a9968408ece1fd040a48be66e098171a1ce431`.
+
+~~~~text
+/**
+ * Maximum nesting depth for values crossing a data boundary. Fixed (not a configurable
+ * limit) purely because it produces a clearer diagnostic than a native stack-overflow
+ * RangeError would.
+ */
+const MAX_VALUE_DEPTH = 32
+~~~~
+
+Source `packages/codemode/src/tool-runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `f4ccc61d4c49a4f7572906559e5a4e2a11acdec9`; full-source SHA-256 `4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20`.
+
+Lines 152–183 inclusive; 1528 excerpt bytes; excerpt SHA-256 `e0e210054b035032c1275f49a9953eb217e4c9abf429d7f9efcedc36d956463d`.
+
+~~~~text
+const blockedMemberNames = new Set(["__proto__", "constructor", "prototype"])
+
+export const isBlockedMember = (name: string): boolean => blockedMemberNames.has(name)
+
+/**
+ * Validates and copies a value against the plain-data contract (depth, circularity, plain
+ * objects only, blocked properties, data-only leaves).
+ *
+ * Two modes share the walk:
+ * - **Boundary** (`preserveSandboxValues` false, the default): the host<->sandbox boundary -
+ *   final results, tool-call arguments, `JSON.stringify`. Sandbox value types serialize
+ *   exactly as JSON.stringify would: Date/URL -> strings, the remaining value types -> {}.
+ * - **Intra-sandbox checkpoint** (`preserveSandboxValues` true; see `boundedData` in
+ *   codemode.ts): standard-library value instances pass through untouched (treated as leaves,
+ *   contents not walked), so values flowing through `Object.*` helpers, coercion inputs, and
+ *   other in-sandbox checkpoints stay fully usable (`.getTime()`, `.has()`, ...).
+ *
+ * Both modes reject un-awaited promises with an await-hinting diagnostic.
+ */
+export const copyIn = (value: unknown, label: string, preserveSandboxValues = false): unknown =>
+  copyBounded(value, label, 0, new Set(), preserveSandboxValues)
+
+const copyBounded = (
+  value: unknown,
+  label: string,
+  depth: number,
+  seen: Set<object>,
+  preserveSandboxValues: boolean,
+): unknown => {
+  if (depth > MAX_VALUE_DEPTH) {
+    throw new ToolRuntimeError("InvalidDataValue", `${label} exceeds the maximum value depth of ${MAX_VALUE_DEPTH}.`)
+  }
+~~~~
+
+Source `packages/codemode/src/tool-runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `f4ccc61d4c49a4f7572906559e5a4e2a11acdec9`; full-source SHA-256 `4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20`.
+
+Lines 269–295 inclusive; 913 excerpt bytes; excerpt SHA-256 `5d290c91516895ad1523dc38fa397b6344f77bae722ff7d452b275aabd3e6795`.
+
+~~~~text
+  if (seen.has(value)) {
+    throw new ToolRuntimeError("InvalidDataValue", `${label} contains a circular value.`)
+  }
+
+  seen.add(value)
+
+  if (Array.isArray(value)) {
+    const copied = value.map((item) => copyBounded(item, label, depth + 1, seen, preserveSandboxValues))
+    seen.delete(value)
+    return copied
+  }
+
+  const prototype = Object.getPrototypeOf(value)
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new ToolRuntimeError("InvalidDataValue", `${label} must contain plain objects only.`)
+  }
+
+  const copied: SafeObject = Object.create(null) as SafeObject
+  for (const [key, item] of Object.entries(value)) {
+    if (isBlockedMember(key)) {
+      throw new ToolRuntimeError("InvalidDataValue", `${label} contains blocked property '${key}'.`)
+    }
+    copied[key] = copyBounded(item, label, depth + 1, seen, preserveSandboxValues)
+  }
+  seen.delete(value)
+  return copied
+}
+~~~~
+
+## E18 — Eight permits, eager supervised calls and pending-call drainage
+
+Artifacts: s1.runtime.codemode.l1.
+
+Source `packages/codemode/src/stdlib/promise.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `d0b442ccf74f2230e0e8cbe060b0be86a120ce6a`; full-source SHA-256 `ba9f90a9bb9c37feefbbc26b4cc28f259224a26fea193840162841d6fbe89609`.
+
+Lines 3–6 inclusive; 227 excerpt bytes; excerpt SHA-256 `443654c970a3e25a4b0f356fd4d5b5a8701eb5a73ae52ef2c0a79d18b7c66800`.
+
+~~~~text
+export const promiseStatics = new Set<PromiseMethodName>(["all", "allSettled", "race", "resolve", "reject"])
+
+/** Maximum number of eagerly forked tool calls that may run concurrently. */
+export const TOOL_CALL_CONCURRENCY = 8
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 70–70 inclusive; 77 excerpt bytes; excerpt SHA-256 `d99ee336f0b258d68b3c60402614f0293719238c4254d014d99b5dbe25a5c446`.
+
+~~~~text
+import { promiseStatics, TOOL_CALL_CONCURRENCY } from "../stdlib/promise.js"
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 610–615 inclusive; 474 excerpt bytes; excerpt SHA-256 `49547dd7965343ac4a96f1d21620f6c1e45c55db4c9ef1469d8893b1755e36a1`.
+
+~~~~text
+  // Caps how many eagerly forked tool calls run at once (the parallel-call concurrency cap).
+  private readonly callPermits: Semaphore.Semaphore
+  // Fiber-backed promises whose settlement no program construct has observed yet. Successful
+  // program completion drains these (like a runtime waiting on in-flight work at exit) and
+  // surfaces a never-awaited failure as an unhandled-rejection diagnostic.
+  private readonly pendingSettlements = new Set<SandboxPromise>()
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 690–749 inclusive; 2928 excerpt bytes; excerpt SHA-256 `cdaf0fd421ea870cd210608d8f085956ca9096608f9cb96ac4b8f6cc845f4d92`.
+
+~~~~text
+      if (!returned) value = self.lastValue
+
+      // The program body runs inside an implicit async function, so a returned promise
+      // resolves before crossing the data boundary - `return tools.ns.tool(...)` works
+      // without an explicit await, exactly as in JS.
+      if (value instanceof SandboxPromise) value = yield* self.settlePromise(value)
+      yield* self.drainPendingSettlements()
+      return value
+    }).pipe(Effect.ensuring(Effect.sync(() => self.popScope())))
+  }
+
+  // Awaits every fiber-backed promise the program abandoned (fire-and-forget tool calls), so
+  // their work completes before the execution ends - mirroring a JS runtime waiting on
+  // in-flight I/O at exit. A failure nobody could have handled becomes an unhandled-rejection
+  // diagnostic (interrupted calls, e.g. Promise.race losers, are ignored).
+  private drainPendingSettlements(): Effect.Effect<void, unknown, never> {
+    const self = this
+    return Effect.gen(function* () {
+      for (const promise of [...self.pendingSettlements]) {
+        const exit = yield* self.observePromise(promise)
+        if (Exit.isSuccess(exit) || Cause.hasInterruptsOnly(exit.cause)) continue
+        const failure = normalizeError(Cause.squash(exit.cause))
+        throw new InterpreterRuntimeError(
+          `Unhandled rejection from an un-awaited tool call: ${failure.message}`,
+          undefined,
+          failure.kind,
+          ["Await tool calls - `const result = await tools.ns.tool(...)` - so failures can be caught and handled."],
+        )
+      }
+    })
+  }
+
+  // Eagerly starts a tool call on a supervised child fiber (so the execution timeout and
+  // scope teardown interrupt it) gated by the concurrency semaphore, and wraps the fiber in a
+  // first-class promise value. `startImmediately` makes the runtime admit the call - charging
+  // the tool-call budget and firing onToolCallStart - at the call site, before any await.
+  private createToolCallPromise(
+    path: ReadonlyArray<string>,
+    args: Array<unknown>,
+  ): Effect.Effect<SandboxPromise, never, R> {
+    const self = this
+    return Effect.map(
+      Effect.forkChild(this.callPermits.withPermit(Effect.suspend(() => self.invokeTool(path, args))), {
+        startImmediately: true,
+      }),
+      (fiber) => {
+        const promise = new SandboxPromise(fiber)
+        self.pendingSettlements.add(promise)
+        return promise
+      },
+    )
+  }
+
+  // The promise's settlement as an Exit, marking it observed for unhandled-rejection tracking.
+  // Fiber settlement is idempotent, so observing the same promise repeatedly (await twice,
+  // Promise.all([p, p])) never re-runs the underlying call.
+  private observePromise(promise: SandboxPromise): Effect.Effect<Exit.Exit<unknown, unknown>> {
+    this.pendingSettlements.delete(promise)
+    return promise.fiber !== undefined ? Fiber.await(promise.fiber) : Effect.exit(promise.immediate ?? Effect.void)
+  }
+~~~~
+
+Source `packages/codemode/src/interpreter/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `093f577765100e95597919986f606010fd82066e`; full-source SHA-256 `7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053`.
+
+Lines 1895–1911 inclusive; 886 excerpt bytes; excerpt SHA-256 `16c902835e15bf0aa8c2d28c3e3682c9e13133ca2824dd88d846c16f7987d93d`.
+
+~~~~text
+  private evaluateCallExpression(node: AstNode): Effect.Effect<unknown, unknown, R> {
+    const callee = getNode(node, "callee")
+    const argNodes = getArray(node, "arguments")
+
+    const self = this
+    return Effect.gen(function* () {
+      const callable = yield* self.evaluateExpression(callee)
+      if (callable === OptionalShortCircuit) return OptionalShortCircuit
+      if ((callable === null || callable === undefined) && node.optional === true) return OptionalShortCircuit
+
+      const args = yield* self.evaluateCallArguments(argNodes)
+
+      if (callable instanceof ToolReference) {
+        if (callable.path.length === 0) throw new InterpreterRuntimeError("The tools root is not callable.", callee)
+        // An un-awaited tool call is a first-class promise value; the call itself starts now.
+        return yield* self.createToolCallPromise(callable.path, args)
+      }
+~~~~
+
+## E19 — OpenAPI request construction and validation precede auth; auth headers apply last
+
+Artifacts: s1.runtime.codemode_openapi.l1.
+
+Source `packages/codemode/src/openapi/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `2515621792b22f23fa52967362ecf69828e21ee4`; full-source SHA-256 `aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d`.
+
+Lines 11–30 inclusive; 768 excerpt bytes; excerpt SHA-256 `3c40f2812b41aa35112e1be5a244d7e0c3ee73176bd06e6e4246b5bba23bd8c0`.
+
+~~~~text
+export const invoke = (plan: Plan, input: unknown): Effect.Effect<unknown, unknown, HttpClient.HttpClient> =>
+  Effect.gen(function* () {
+    const value = isRecord(input) ? input : {}
+
+    let request = yield* buildRequest(plan, value)
+
+    const auth = yield* resolveAuth(plan)
+    for (const [name, item] of Object.entries(auth.query)) {
+      request = HttpClientRequest.setUrlParam(request, name, item)
+    }
+    request = HttpClientRequest.setHeaders(request, auth.headers)
+
+    const client = yield* HttpClient.HttpClient
+    const response = yield* client
+      .execute(request)
+      .pipe(
+        Effect.catch((cause) =>
+          Effect.fail(toolError(`${plan.operation.method} ${plan.operation.path} failed: transport error`, cause)),
+        ),
+      )
+~~~~
+
+Source `packages/codemode/src/openapi/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `2515621792b22f23fa52967362ecf69828e21ee4`; full-source SHA-256 `aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d`.
+
+Lines 54–114 inclusive; 2821 excerpt bytes; excerpt SHA-256 `85cc5156eface1cd1b98e7a3dba204226e23541ba8d59f38e8ad55a59eb0dafd`.
+
+~~~~text
+const buildRequest = (
+  plan: Plan,
+  input: Readonly<Record<string, unknown>>,
+): Effect.Effect<HttpClientRequest.HttpClientRequest, ToolError> =>
+  Effect.gen(function* () {
+    // Validate every model-controlled value before auth resolution, which may refresh tokens.
+    const url = buildUrl(plan, input)
+    if (url instanceof ToolError) return yield* Effect.fail(url)
+    const missing = plan.fields.find(
+      (field) => field.required && field.location !== "path" && own(input, field.inputName) === undefined,
+    )
+    if (missing !== undefined) {
+      const label = missing.location === "body" ? "body field" : `${missing.location} parameter`
+      return yield* Effect.fail(toolError(`Missing required ${label} '${missing.inputName}'.`))
+    }
+
+    let request = HttpClientRequest.make(plan.operation.method as HttpMethod.HttpMethod)(url)
+    for (const field of plan.fields) {
+      if (field.location !== "query") continue
+      const item = own(input, field.inputName)
+      if (item === undefined) continue
+      const serialized = serializeQuery(request, field, item)
+      if (serialized instanceof ToolError) return yield* Effect.fail(serialized)
+      request = serialized
+    }
+
+    // Host headers first, then declared header parameters.
+    request = HttpClientRequest.setHeaders(request, plan.headers)
+    for (const field of plan.fields) {
+      if (field.location !== "header") continue
+      const item = own(input, field.inputName)
+      if (item === undefined) continue
+      const serialized = serializeSimple(field, item, String)
+      if (serialized instanceof ToolError) return yield* Effect.fail(serialized)
+      request = HttpClientRequest.setHeader(request, field.name, serialized)
+    }
+
+    const setBody = (value: unknown, mediaType: string) =>
+      HttpClientRequest.bodyJson(request, value).pipe(
+        Effect.map((next) => HttpClientRequest.setHeader(next, "content-type", mediaType)),
+        Effect.mapError((cause) =>
+          toolError(`Invalid JSON body for ${plan.operation.method} ${plan.operation.path}.`, cause),
+        ),
+      )
+    if (plan.body?.mode === "value") {
+      const field = plan.fields.find((field) => field.location === "body")
+      const body = field === undefined ? undefined : own(input, field.inputName)
+      if (body !== undefined) request = yield* setBody(body, plan.body.mediaType)
+    }
+    if (plan.body?.mode === "object") {
+      const entries = plan.fields.flatMap((field) => {
+        if (field.location !== "body") return []
+        const item = own(input, field.inputName)
+        return item === undefined ? [] : [[field.name, item] as const]
+      })
+      if (plan.body.required || entries.length > 0) {
+        request = yield* setBody(Object.fromEntries(entries), plan.body.mediaType)
+      }
+    }
+    return request
+  })
+~~~~
+
+## E20 — OpenAPI security alternatives and conflicting credential carriers
+
+Artifacts: s1.runtime.codemode_openapi.l1.
+
+Source `packages/codemode/src/openapi/runtime.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `2515621792b22f23fa52967362ecf69828e21ee4`; full-source SHA-256 `aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d`.
+
+Lines 116–198 inclusive; 3464 excerpt bytes; excerpt SHA-256 `5782a890161d2fc274ac0d73e40f0ba47c708de9134b3b139d1bb1e7cf35b7ae`.
+
+~~~~text
+const resolveAuth = (plan: Plan): Effect.Effect<AppliedAuth, unknown> =>
+  Effect.gen(function* () {
+    const none: AppliedAuth = { headers: {}, query: {} }
+    if (plan.security.length === 0) return none
+
+    const unavailable: Array<string> = []
+    alternatives: for (const requirement of plan.security) {
+      const names = Object.keys(requirement)
+      if (names.length === 0) return none
+      const credentials: Array<readonly [string, SecurityScheme, Credential]> = []
+      for (const name of names) {
+        const scheme = own(plan.schemes, name)
+        if (scheme === undefined || plan.auth === undefined) {
+          unavailable.push(name)
+          continue alternatives
+        }
+        const credential = yield* plan.auth.resolve({
+          name,
+          definition: scheme,
+          scopes: requirement[name] ?? [],
+          operation: plan.operation,
+        })
+        if (credential === undefined) {
+          unavailable.push(name)
+          continue alternatives
+        }
+        credentials.push([name, scheme, credential])
+      }
+      const applied = applyCredentials(credentials)
+      return applied instanceof ToolError ? yield* Effect.fail(applied) : applied
+    }
+
+    return yield* Effect.fail(
+      toolError(
+        `${plan.operation.method} ${plan.operation.path} requires authentication; no credential available for: ${[...new Set(unavailable)].join(", ")}.`,
+      ),
+    )
+  })
+
+const applyCredentials = (
+  credentials: ReadonlyArray<readonly [string, SecurityScheme, Credential]>,
+): AppliedAuth | ToolError => {
+  const headers = new Map<string, string>()
+  const query = new Map<string, string>()
+  const add = (carrier: "header" | "query", name: string, value: string): ToolError | undefined => {
+    const target = carrier === "header" ? headers : query
+    if (target.has(name)) return toolError(`Authentication resolves multiple credentials for ${carrier} '${name}'.`)
+    target.set(name, value)
+  }
+  for (const [name, definition, credential] of credentials) {
+    if (credential.type === "bearer") {
+      const duplicate = add("header", "authorization", `Bearer ${credential.token}`)
+      if (duplicate !== undefined) return duplicate
+      continue
+    }
+    if (credential.type === "basic") {
+      // Buffer instead of btoa: btoa throws on non-Latin-1 credentials.
+      const duplicate = add(
+        "header",
+        "authorization",
+        `Basic ${Buffer.from(`${credential.username}:${credential.password}`, "utf8").toString("base64")}`,
+      )
+      if (duplicate !== undefined) return duplicate
+      continue
+    }
+    if (credential.type === "header") {
+      const duplicate = add("header", credential.name.toLowerCase(), credential.value)
+      if (duplicate !== undefined) return duplicate
+      continue
+    }
+    // apiKey: the carrier comes from the scheme declaration.
+    if (definition.type !== "apiKey") {
+      return toolError(
+        `Security scheme '${name}' is not an apiKey scheme; resolve a bearer, basic, or header credential for it.`,
+      )
+    }
+    if (definition.in === "cookie") return toolError(`Cookie authentication '${name}' is not supported.`)
+    const parameter = definition.in === "header" ? definition.name.toLowerCase() : definition.name
+    const duplicate = add(definition.in, parameter, credential.value)
+    if (duplicate !== undefined) return duplicate
+  }
+  return { headers: Object.fromEntries(headers), query: Object.fromEntries(query) }
+}
+~~~~
+
+
+END EXACT SUPPLEMENT DATA

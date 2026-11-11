@@ -1,0 +1,41 @@
+{
+  "schema": "genesis-evidence-revision-verification/v1",
+  "revision": "a-l1-evidence-v1",
+  "result": "PASS_EVIDENCE_BINDINGS_ONLY",
+  "revision_manifest": {
+    "path": "revision-manifest.json",
+    "sha256": "3eb6aae5f96e87911afcd373c8abaca48b8a4389232d849c6aabf1c460a9b9a4",
+    "byte_length": 4030
+  },
+  "checks": {
+    "original_files_unchanged": 151,
+    "original_bodies_unchanged": 17,
+    "original_artifacts_expected_sha256": "528eaae032b21708a9a55ef027bd7449b6e29d0c9881f26d84b16d58805a67e7",
+    "coverage_exact_roundtrip_entries": 1441,
+    "coverage_unique_paths": 1441,
+    "coverage_groups": 164,
+    "original_justifications_preserved": 109,
+    "family_records_exact": 33,
+    "artifact_records_exact": 17,
+    "needs_fields_exact": 17,
+    "source_files_reverified_git_blob_sha256_size": 58,
+    "source_bytes_reverified": 745095,
+    "exact_fenced_excerpts_compared_to_source_slices": 96,
+    "added_source_lines_relative_to_compact": 2355,
+    "frozen_bodies_bound_in_artifact_excerpt_map": 17,
+    "explicit_export_keys_parsed": 437
+  },
+  "limits": [
+    "Structural/evidence validation does not decide semantic sufficiency or accept the L1 layer.",
+    "The principal-provided base dossier hash is carried as supplied, not locally verified; the dossier and oracles were not read.",
+    "No product, provider, database, toolkit, sandbox, MCP, native, runtime, CI or consumer execution occurred.",
+    "Unread leaves, orientation-only historical read status, source/document conflicts and external implementation boundaries remain preserved.",
+    "No L2–L4 dependent artifact keys or build edges were invented; no dependent is released by this supplement."
+  ],
+  "product_tests": "NOT_RUN",
+  "runtime_checks": "NOT_RUN",
+  "remote_source_fetches_this_revision": 0,
+  "remote_writes": "NONE",
+  "semantic_review": "NOT_PERFORMED_BY_PRODUCER",
+  "judge_dispatch": "NOT_SENT"
+}

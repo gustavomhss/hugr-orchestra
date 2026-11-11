@@ -1,0 +1,1 @@
+J1 encerrou a avaliação nativa de S1-NATIVE-NEGATIVE-v1. Pode agora enviar o mesmo DATA a /root/judge2; o slot de revisão está livre. Vou arquivar o parecer integral separadamente. Não use o resultado para alterar nada no request ou no pacote de J2.

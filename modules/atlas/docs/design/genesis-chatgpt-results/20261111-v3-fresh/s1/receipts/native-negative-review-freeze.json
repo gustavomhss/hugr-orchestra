@@ -1,0 +1,36 @@
+{
+  "schema": "genesis-principal-review-freeze/v1",
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "packet": "review-packets/native-negative-v1-dossier.md",
+  "sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af",
+  "byte_length": 32197,
+  "inputs": [
+    {
+      "path": "fixtures/construction-inputs.json",
+      "sha256": "f1ca4a02fd35278eb70fac4074b0c10e250a88e82013b789b112a3641165a2e8",
+      "byte_length": 2173
+    },
+    {
+      "path": "fixtures/native-negative-source-packet.md",
+      "sha256": "9d4c950196ab5a596da8de80a466977ee4873a88441280eb28c4ac2cd269f86c",
+      "byte_length": 13593
+    },
+    {
+      "path": "producers/controls/response.md",
+      "sha256": "03535e963b70ab3d5984d891981d03dcd645ac6d23bcb15ff53f6784c458c345",
+      "byte_length": 15583
+    }
+  ],
+  "oracle_ref": {
+    "path": "oracles/native-negative-v1.json",
+    "sha256": "bcaeea762d7ef7c51d3593a9b2b4a3555946e5aa885854fc31a9f9436f398a2d"
+  },
+  "public_criteria": [
+    "AC-04-local-native",
+    "QS-1",
+    "QS-5",
+    "GO-I2",
+    "GO-I7"
+  ],
+  "reviews": "NOT_RUN"
+}

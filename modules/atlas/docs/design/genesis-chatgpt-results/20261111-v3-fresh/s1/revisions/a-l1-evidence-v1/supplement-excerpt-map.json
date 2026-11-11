@@ -1,0 +1,2727 @@
+{
+  "schema": "genesis-l1-evidence-supplement/v1",
+  "revision": "a-l1-evidence-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "authority": "Exact extra source spans from the producer’s already frozen captures. Captions/maps are evidence projection, not revised L1 bodies or semantic acceptance.",
+  "original_compact": {
+    "path": "review-evidence-compact.md",
+    "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676",
+    "byte_length": 64155
+  },
+  "document": {
+    "path": "supplement-evidence.md",
+    "sha256": "967b10123d15afe63d83a9e5f1189d0b8044b79609ed7548691c6397592be7c9",
+    "byte_length": 190745
+  },
+  "artifact_map": {
+    "s1.core.session-admission": {
+      "body": {
+        "path": "bodies/session-admission.md",
+        "encoding": "utf-8",
+        "byte_length": 4261,
+        "sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1"
+      },
+      "original_compact_excerpt_ids": [
+        "C001",
+        "C002"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX001",
+        "AEX002",
+        "AEX003",
+        "AEX004",
+        "AEX005",
+        "AEX006"
+      ]
+    },
+    "s1.core.session-execution": {
+      "body": {
+        "path": "bodies/session-execution.md",
+        "encoding": "utf-8",
+        "byte_length": 4574,
+        "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663"
+      },
+      "original_compact_excerpt_ids": [
+        "C003",
+        "C004",
+        "C005",
+        "C006",
+        "C007"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX007",
+        "AEX008",
+        "AEX009",
+        "AEX010",
+        "AEX011",
+        "AEX096"
+      ]
+    },
+    "s1.core.persistence": {
+      "body": {
+        "path": "bodies/persistence.md",
+        "encoding": "utf-8",
+        "byte_length": 4833,
+        "sha256": "2a9d564fbc6ce848129eb4611b47ecb27c873cc41cdb9a4e34c2f1f043587741"
+      },
+      "original_compact_excerpt_ids": [
+        "C008",
+        "C009",
+        "C010",
+        "C011",
+        "C012",
+        "C013"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX012",
+        "AEX013",
+        "AEX014",
+        "AEX015",
+        "AEX016",
+        "AEX017",
+        "AEX018",
+        "AEX019"
+      ]
+    },
+    "s1.core.context": {
+      "body": {
+        "path": "bodies/context.md",
+        "encoding": "utf-8",
+        "byte_length": 5541,
+        "sha256": "205b44488e2b6349a55480d3becf2e59806c185bec90d43af283e11b3933b1fd"
+      },
+      "original_compact_excerpt_ids": [
+        "C014",
+        "C015",
+        "C016",
+        "C017",
+        "C018",
+        "C019"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX009",
+        "AEX010",
+        "AEX020",
+        "AEX021",
+        "AEX022",
+        "AEX023",
+        "AEX024",
+        "AEX025",
+        "AEX026",
+        "AEX027",
+        "AEX096"
+      ]
+    },
+    "s1.core.tools": {
+      "body": {
+        "path": "bodies/tools.md",
+        "encoding": "utf-8",
+        "byte_length": 5285,
+        "sha256": "ed668009ad400bf61adee3f1d497c59f91c9932b1730642816659ddbf2978e23"
+      },
+      "original_compact_excerpt_ids": [
+        "C020",
+        "C021",
+        "C022",
+        "C023",
+        "C024"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX028",
+        "AEX029",
+        "AEX030",
+        "AEX031",
+        "AEX032",
+        "AEX033",
+        "AEX034",
+        "AEX035"
+      ]
+    },
+    "s1.core.security": {
+      "body": {
+        "path": "bodies/security.md",
+        "encoding": "utf-8",
+        "byte_length": 7043,
+        "sha256": "dd6e7372b2c26c8c05435db8a55dfa05cd42813a9f105f48dc8b5d702bacbbcf"
+      },
+      "original_compact_excerpt_ids": [
+        "C025",
+        "C026",
+        "C027",
+        "C028",
+        "C029",
+        "C030",
+        "C031"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX009",
+        "AEX036",
+        "AEX037",
+        "AEX038",
+        "AEX039",
+        "AEX040",
+        "AEX041",
+        "AEX042",
+        "AEX043",
+        "AEX044",
+        "AEX045",
+        "AEX046"
+      ]
+    },
+    "s1.core.configuration": {
+      "body": {
+        "path": "bodies/configuration.md",
+        "encoding": "utf-8",
+        "byte_length": 4414,
+        "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1"
+      },
+      "original_compact_excerpt_ids": [
+        "C032",
+        "C033",
+        "C034"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX047",
+        "AEX048",
+        "AEX049"
+      ]
+    },
+    "s1.core.project": {
+      "body": {
+        "path": "bodies/project.md",
+        "encoding": "utf-8",
+        "byte_length": 4569,
+        "sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43"
+      },
+      "original_compact_excerpt_ids": [
+        "C035",
+        "C036",
+        "C037",
+        "C038"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX050",
+        "AEX051",
+        "AEX052",
+        "AEX053",
+        "AEX054"
+      ]
+    },
+    "s1.core.extensions": {
+      "body": {
+        "path": "bodies/extensions.md",
+        "encoding": "utf-8",
+        "byte_length": 4994,
+        "sha256": "1adfea6dc88bb969fb2c9232c82b81ae917e8112a9d0993273733450891984d4"
+      },
+      "original_compact_excerpt_ids": [
+        "C039",
+        "C040",
+        "C041",
+        "C042",
+        "C043",
+        "C044"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX055",
+        "AEX056",
+        "AEX057",
+        "AEX058",
+        "AEX059",
+        "AEX060",
+        "AEX061"
+      ]
+    },
+    "s1.core.capability": {
+      "body": {
+        "path": "bodies/capability.md",
+        "encoding": "utf-8",
+        "byte_length": 4469,
+        "sha256": "a5d40d013b3976a612a53acb7999ea498c32c71bff5f7acb276f1ddc3be95e7a"
+      },
+      "original_compact_excerpt_ids": [
+        "C045",
+        "C046",
+        "C047",
+        "C048"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX062",
+        "AEX063",
+        "AEX064",
+        "AEX065",
+        "AEX066"
+      ]
+    },
+    "s1.core.automation": {
+      "body": {
+        "path": "bodies/automation.md",
+        "encoding": "utf-8",
+        "byte_length": 4377,
+        "sha256": "83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88"
+      },
+      "original_compact_excerpt_ids": [
+        "C049",
+        "C050",
+        "C051",
+        "C052",
+        "C053",
+        "C054"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX067",
+        "AEX068",
+        "AEX069",
+        "AEX070"
+      ]
+    },
+    "s1.core.research": {
+      "body": {
+        "path": "bodies/research.md",
+        "encoding": "utf-8",
+        "byte_length": 3942,
+        "sha256": "76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202"
+      },
+      "original_compact_excerpt_ids": [
+        "C055",
+        "C056",
+        "C057",
+        "C058",
+        "C059"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX071",
+        "AEX072",
+        "AEX073",
+        "AEX074",
+        "AEX075"
+      ]
+    },
+    "s1.core.runtime": {
+      "body": {
+        "path": "bodies/runtime.md",
+        "encoding": "utf-8",
+        "byte_length": 5451,
+        "sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534"
+      },
+      "original_compact_excerpt_ids": [
+        "C060",
+        "C061",
+        "C062",
+        "C063",
+        "C064",
+        "C065"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX076",
+        "AEX077",
+        "AEX078",
+        "AEX079",
+        "AEX080",
+        "AEX081",
+        "AEX082",
+        "AEX083",
+        "AEX084",
+        "AEX085",
+        "AEX086",
+        "AEX087"
+      ]
+    },
+    "s1.core.models": {
+      "body": {
+        "path": "bodies/models.md",
+        "encoding": "utf-8",
+        "byte_length": 3987,
+        "sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe"
+      },
+      "original_compact_excerpt_ids": [
+        "C066",
+        "C067",
+        "C068",
+        "C069",
+        "C070"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX088",
+        "AEX089",
+        "AEX095"
+      ]
+    },
+    "s1.core.economy": {
+      "body": {
+        "path": "bodies/economy.md",
+        "encoding": "utf-8",
+        "byte_length": 2825,
+        "sha256": "0413cc550f9037ababcc8cbb706cee3a19c55b35480396b381f0f6c4272096f4"
+      },
+      "original_compact_excerpt_ids": [
+        "C071",
+        "C072",
+        "C073",
+        "C074"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX090",
+        "AEX091",
+        "AEX092"
+      ]
+    },
+    "s1.core.boundaries": {
+      "body": {
+        "path": "bodies/boundaries.md",
+        "encoding": "utf-8",
+        "byte_length": 3905,
+        "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143"
+      },
+      "original_compact_excerpt_ids": [
+        "C075",
+        "C076",
+        "C077",
+        "C078",
+        "C079",
+        "C080",
+        "C081"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX093",
+        "AEX094"
+      ]
+    },
+    "s1.core.entry": {
+      "body": {
+        "path": "bodies/entry.md",
+        "encoding": "utf-8",
+        "byte_length": 7312,
+        "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c"
+      },
+      "original_compact_excerpt_ids": [
+        "C082",
+        "C083"
+      ],
+      "supplement_excerpt_ids": [
+        "AEX015",
+        "AEX046",
+        "AEX095",
+        "AEX096"
+      ]
+    }
+  },
+  "sources": [
+    {
+      "path": ".orchestra/skills/terminal-maintenance/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "610fa93e3ec385790509b0c7fd0181fd30adc727",
+      "sha256": "62265a02943d78fb6922b806888a9193dc1f7007d5dd1e6114a63438bea2d553",
+      "byte_length": 4040,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "742921238462659e1a5a314f2e0238102c6e9f3a",
+      "sha256": "e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324",
+      "byte_length": 7777,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/actions.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "byte_length": 12779,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/actions/operations.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "83c0b9e03b063bd59bc2d30317f7de85cbb99ee4",
+      "sha256": "f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4",
+      "byte_length": 12124,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5c8e61d202f8a79a5b967d5abc467a97b58f4a3",
+      "sha256": "d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a",
+      "byte_length": 15426,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/board/decision.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+      "sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43",
+      "byte_length": 5365,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/capability/invocation.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e2ddcb3e3f0da61b8d9d5fe8c7c74436b844e890",
+      "sha256": "6f7d95bbb07aa7d3e12c63d56dbf8458bde5b7053aaf51f97b078c41a2da53ae",
+      "byte_length": 5979,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/capability/mcp/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "95f3154aef1625eaac3cd8feb500504996eb074f",
+      "sha256": "f9b7b9df6645714b942f2adc46c9c1a727def9ea39a1f9e33782519bb14ca662",
+      "byte_length": 11760,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/capability/policy.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d75718a6ac8d6d3e36c5b791301a68a728be26b0",
+      "sha256": "9ae8ac1edc77785058071356c0927b1d8c1a019a2b6be5cdf564c3b0dad65022",
+      "byte_length": 8907,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/capability/tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1103ab0c8eb3d9d79cc5ff295cb267847eab629e",
+      "sha256": "7704b7d8c7742deece88da2fd87f6fb2064eb580659548d159565f10893d3b46",
+      "byte_length": 4027,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/config.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+      "sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6",
+      "byte_length": 20934,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/config/trust.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78",
+      "sha256": "f00fbbf4cb98646c376ff14662e4e43d16ad64b11b439d7abccffae7723569b9",
+      "byte_length": 4047,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/control-plane/move-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "49fe728d6956ca1555a763548e9458ea5f3938dc",
+      "sha256": "302fd923821d8f2d4124b8e4cca38485abe86c3f3c74e2f0b9bc420b56ec2518",
+      "byte_length": 5381,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/credential.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3161ca0d7f1e4c68a372acb97234eab80a9024b2",
+      "sha256": "d091c6c02c5ba51b930ac55cf8ca473d048f8b336e9dccf310e2c2f6f978b2e8",
+      "byte_length": 12749,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/credential/cipher.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "829dd497e04ee5729a6ab45cd5164bee9430a641",
+      "sha256": "599393f98c4a3dbc80ccaaf14bbdaee62417a557dc1425f77fd4781dc8e7edd7",
+      "byte_length": 6671,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/database/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "272a4d3d363f4871b5288d8fb879b9d9b9710d65",
+      "sha256": "5bd3a917366391323a94bec85ace411f4d8ce1ee098a4ea062bd2f75b1fcaf83",
+      "byte_length": 2209,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/database/migration.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b3d38c72425f3bae7f5730140070b251a8a4c8e7",
+      "sha256": "3586274f5aa72a80d5645f5caea718d3c9234f69c15ca8ddbfbb8c0b5f37186d",
+      "byte_length": 7247,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/economy/admission.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f",
+      "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "byte_length": 39716,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/effect/app-node.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e8112f921ad7a7dcefbf6985c24995df1855c96b",
+      "sha256": "84d50e650e7354f3fcbcdc39a005cce87d35aae6519cbf4995f1252062f5b2d2",
+      "byte_length": 450,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/event.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa7a39a0c039770d36523723e75c1f228e1142f0",
+      "sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+      "byte_length": 30184,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/format/format.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0198f9c0d4aa4a9e1452339ca5c3302611478aba",
+      "sha256": "1a9918459995534b16242fcdd18c576de735fdac63a87603e0ad3ca215b036fd",
+      "byte_length": 9832,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/instruction-context.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6ba99cade2574448b9a8008b544791581b22bb11",
+      "sha256": "1ad05d900edbf814b3ed68200eb5f452089a112de60cf8b8eae0d1553d0896e1",
+      "byte_length": 6643,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/integration.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d6d9a85e8c9b2737b1f09f95700c05663735e6e4",
+      "sha256": "d1952b88c361ed35ac1dd3b2f736b6aa9588bd7e82db37c1f88fb878f09f9796",
+      "byte_length": 23521,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/location-mutation.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5c80742365c78301f296d5fe87fd8844a1efc44c",
+      "sha256": "1eef86e372d56b4137ea0b6576b13f8eff655737d451e2446f87f97c8a02001a",
+      "byte_length": 6457,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/lsp/lsp.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7848ef568344421190171962367fe2836170d084",
+      "sha256": "e7500203a6b6dc05949917252e32d6e50a605b80d186f7b596c7a294654cb3f6",
+      "byte_length": 17577,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/mcp.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3d2203cb152ef733ca3b7d3231a302416a1f394b",
+      "sha256": "73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59",
+      "byte_length": 39585,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/observability/otlp.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4d403d30bded809a37d426a8c56361ca8d66ddf7",
+      "sha256": "4a76113bce60f765e3d431eb6c5c46e3d224d889da83a8cfd00143d1c52a3003",
+      "byte_length": 2545,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/omni.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "sha256": "b032344ff11c078ecdc062bd796a5ad75ccb046a319d674ab7faba659d84b3ab",
+      "byte_length": 8446,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/permission.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2e3d29d3f1ec1fe805d21af091029721c9fa738e",
+      "sha256": "19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6",
+      "byte_length": 14981,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/plugin.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5c3c232bfa46b3f8cfad106c2db4787d6c374818",
+      "sha256": "8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302",
+      "byte_length": 11007,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/process.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "sha256": "7bfd3adf7274bd90bfe4cf1d7fd3f4bb256f6914dbd74cea00127e33704a6875",
+      "byte_length": 12835,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/project.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bbedbbf34cbc5b431538db37993c0cc0830fa393",
+      "sha256": "a430e2c36fdf6544efcb36c6d13da86826083b41073a010d788e8629b9f89a63",
+      "byte_length": 9714,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/project/checkpoint.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+      "sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a",
+      "byte_length": 8309,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/pty.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "sha256": "03f62b4e17ac231291eb4c726d92415f63fa4b08eb66ced6d5c60cb9a3d0b4be",
+      "byte_length": 18798,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "byte_length": 2519,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095",
+      "sha256": "9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c",
+      "byte_length": 14147,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/research/ledger.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf",
+      "sha256": "67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839",
+      "byte_length": 9660,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/scheduled-task.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+      "sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+      "byte_length": 26123,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/scheduled-task/port.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c",
+      "sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+      "byte_length": 2092,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "byte_length": 34126,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/compaction.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+      "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+      "byte_length": 14270,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/execution/local.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+      "sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97",
+      "byte_length": 2471,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/history.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "60f31114138a8920e8e81a031815897568dba211",
+      "sha256": "1989745f9737d404950f166faf43df5890ccb13df6561eeae106032dc79ae79a",
+      "byte_length": 3749,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "byte_length": 13624,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/projector.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "sha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "byte_length": 19242,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "byte_length": 5893,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "byte_length": 39006,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/session/runner/model.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b",
+      "sha256": "25c8400ee9162fb798aafa3cf2c540b7364c097e669a7b361489e5cf1610db5f",
+      "byte_length": 14022,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/skill.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "dc8d8f67c6b658ce7716a2b17e0c9b2e517c6db0",
+      "sha256": "07c062a4f778a329572ba0217df3e72315c61bf5baa135414324af63dd28a18b",
+      "byte_length": 9172,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/state.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "116e268bb9edf045985e1598a4e1a3ed1d410872",
+      "sha256": "237de5f76069595f50c7e7049dc72fe295a6b0ecaa615d849ef5b67ecd9f4189",
+      "byte_length": 4662,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/system-context/registry.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9402523a4b03cb21465da1285e2488eb7d2c11bd",
+      "sha256": "27505e7f29016e62fc521c6d20a132003d1487c9e7099859cd7c1cab4ff1952e",
+      "byte_length": 2494,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/tool-output-store.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "605a99e72e0482a998e2521a26f025589f81da68",
+      "sha256": "179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8",
+      "byte_length": 9643,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/tool-safety-sandbox.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "61a252c15cc35fa534593413045a6f54a15b6665",
+      "sha256": "bbf5091b282f9fbeea862f3ebc3d9365a87a59fb414197eb6524268fbc32478a",
+      "byte_length": 44865,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/tool/agent-terminal.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d8cbde3d8436081eb9c3815bea334915e6efef0b",
+      "sha256": "a869ee14c21054a21d7f7adbe289588655f49d3c1cad7d21b6d4f22a30000fc4",
+      "byte_length": 4813,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/tool/bash.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b",
+      "sha256": "e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473",
+      "byte_length": 17377,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/tool/registry.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ab6a6dc2f8c993aec804ebdfc73d89885e8a1453",
+      "sha256": "276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085",
+      "byte_length": 17719,
+      "read_status": "semantically_read_targeted_ranges"
+    },
+    {
+      "path": "packages/core/src/tool/tool.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2ecde42373ef59b1bf2352e6272141a610feea16",
+      "sha256": "69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e",
+      "byte_length": 8883,
+      "read_status": "semantically_read_targeted_ranges"
+    }
+  ],
+  "excerpts": [
+    {
+      "artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "path": "packages/core/src/session.ts",
+      "start_line": 357,
+      "end_line": 364,
+      "claim_supported": "Existing Session identity wins before applying new creation fields.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "source_sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "source_byte_length": 34126,
+      "sha256": "545b68e4f4e81fdebcfa738e1083607ed3342bfdfa04430886fa4ae2663bb8fb",
+      "byte_length": 440,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 8,
+      "id": "AEX001"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "path": "packages/core/src/session.ts",
+      "start_line": 393,
+      "end_line": 414,
+      "claim_supported": "Concurrent creation adopts the recorded Session; post-create hooks cannot undo it.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "source_sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "source_byte_length": 34126,
+      "sha256": "fd501736789c987505cf539d6d0b2253dc655766a5a95b6f94be17e5168c3659",
+      "byte_length": 1104,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 22,
+      "id": "AEX002"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "path": "packages/core/src/session.ts",
+      "start_line": 304,
+      "end_line": 325,
+      "claim_supported": "Prompt hooks occur before admission; an already durable message skips re-asking and leaves retry reconciliation to admission.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "source_sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "source_byte_length": 34126,
+      "sha256": "0e976f3b322643b171e0988a9e6dd049175836bd52bf8f6a9236b9aefc49b6d5",
+      "byte_length": 1348,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 22,
+      "id": "AEX003"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "path": "packages/core/src/session/input.ts",
+      "start_line": 96,
+      "end_line": 158,
+      "claim_supported": "Historical prompt reconciliation needs the original durable Prompted event for delivery and verifies all projection identity before inserting a promoted inbox row.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "source_sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "source_byte_length": 13624,
+      "sha256": "29dc5faed3607388dc907b139a1c20e8f27a98792bcc2112beec5a7b101b847f",
+      "byte_length": 3136,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 63,
+      "id": "AEX004"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "path": "packages/core/src/session/input.ts",
+      "start_line": 348,
+      "end_line": 390,
+      "claim_supported": "Steers use the admission cutoff and sequence order; queue promotion takes one oldest pending row.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "source_sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "source_byte_length": 13624,
+      "sha256": "f564f6bda160c6849aa224f7b0799525b154c2ae1d0efb9720741b2b28b71a95",
+      "byte_length": 1271,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 43,
+      "id": "AEX005"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "path": "packages/core/src/session/projector.ts",
+      "start_line": 283,
+      "end_line": 310,
+      "claim_supported": "Prompted promotes and writes visible projection; PromptAdmitted only projects admission under the event machinery.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "source_sha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "source_byte_length": 19242,
+      "sha256": "8969842e430658f60b746267f931c44bcf9edcbbc3051031bd7939968eaa6610",
+      "byte_length": 1200,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 28,
+      "id": "AEX006"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-execution"
+      ],
+      "path": "packages/core/src/session/execution/local.ts",
+      "start_line": 14,
+      "end_line": 29,
+      "claim_supported": "The drain resolves the stored Session and routes through its concrete Location.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+      "source_sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97",
+      "source_byte_length": 2471,
+      "sha256": "463ff50d2ddcbd617ad3cb761f13ac765941dca5e0b2acb6672ae0bcb42316ad",
+      "byte_length": 897,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 16,
+      "id": "AEX007"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-execution"
+      ],
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "start_line": 136,
+      "end_line": 153,
+      "claim_supported": "Stop targets the exact process-local entry and clears pendingWake; it is not a durable cluster lease.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "source_sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "source_byte_length": 5893,
+      "sha256": "ee5da7fa4926e6f783028cc9cf5d4c3a64162aecbdfabf6ba2be146cd45a9ecd",
+      "byte_length": 634,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 18,
+      "id": "AEX008"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-execution",
+        "s1.core.security",
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start_line": 185,
+      "end_line": 215,
+      "claim_supported": "Stored placement and governance precede promotion; agent and Session rules are materialized; missing context is initialized before input visibility and new input resets the step allowance.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "source_sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "source_byte_length": 39006,
+      "sha256": "40a74fe87d62c5123691e911ff20e4b37e59b8e4d3d30ed7c6cfeeb3cee56802",
+      "byte_length": 1724,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 31,
+      "id": "AEX009"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-execution",
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start_line": 237,
+      "end_line": 270,
+      "claim_supported": "History follows baselineSeq; the final provider step advertises no tools; hosted engine history bypasses the Core provider compaction transform.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "source_sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "source_byte_length": 39006,
+      "sha256": "20b4596f1e6b2a622cceb5448be2e95c4c957eba7be06e6c7f722cc31af213d0",
+      "byte_length": 2273,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 34,
+      "id": "AEX010"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.session-execution"
+      ],
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start_line": 671,
+      "end_line": 682,
+      "claim_supported": "Interrupting a drain cancels all of that Session’s pending permission and question requests.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "source_sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "source_byte_length": 39006,
+      "sha256": "95796df62c475859629546adb71ab326f1a99a1e1041c82d9ccc8815eb5a3259",
+      "byte_length": 559,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 12,
+      "id": "AEX011"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "path": "packages/core/src/database/migration.ts",
+      "start_line": 21,
+      "end_line": 48,
+      "claim_supported": "An unknown nonempty database is refused; fresh schema initialization uses an immediate transaction with a second existence check.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b3d38c72425f3bae7f5730140070b251a8a4c8e7",
+      "source_sha256": "3586274f5aa72a80d5645f5caea718d3c9234f69c15ca8ddbfbb8c0b5f37186d",
+      "source_byte_length": 7247,
+      "sha256": "c1fb370d27ce41606007dde9a0bd656cfc4e11c4289c5d319cf387527d108d67",
+      "byte_length": 1407,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 28,
+      "id": "AEX012"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "path": "packages/core/src/database/migration.ts",
+      "start_line": 55,
+      "end_line": 94,
+      "claim_supported": "Unknown journal entries are refused; pending migrations first get VACUUM INTO backup and retention pruning.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b3d38c72425f3bae7f5730140070b251a8a4c8e7",
+      "source_sha256": "3586274f5aa72a80d5645f5caea718d3c9234f69c15ca8ddbfbb8c0b5f37186d",
+      "source_byte_length": 7247,
+      "sha256": "0241d309fced3f5c3de127746e7302969483361f4294f5123d86fac04893603d",
+      "byte_length": 1815,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 40,
+      "id": "AEX013"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "path": "packages/core/src/database/migration.ts",
+      "start_line": 150,
+      "end_line": 166,
+      "claim_supported": "Every pending migration rereads its identity inside an immediate write transaction before running and journaling it.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b3d38c72425f3bae7f5730140070b251a8a4c8e7",
+      "source_sha256": "3586274f5aa72a80d5645f5caea718d3c9234f69c15ca8ddbfbb8c0b5f37186d",
+      "source_byte_length": 7247,
+      "sha256": "af2ef65a37916294556a2247658bc65902e2bede039a0b847e29b5b7e217fe51",
+      "byte_length": 881,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 17,
+      "id": "AEX014"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence",
+        "s1.core.entry"
+      ],
+      "path": "packages/core/src/database/README.md",
+      "start_line": 7,
+      "end_line": 38,
+      "claim_supported": "Database path, ordered migration identity and generated schema maintenance are user-data/maintenance contracts; history cannot be discarded.",
+      "authority": "repository_normative_documentation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "272a4d3d363f4871b5288d8fb879b9d9b9710d65",
+      "source_sha256": "5bd3a917366391323a94bec85ace411f4d8ce1ee098a4ea062bd2f75b1fcaf83",
+      "source_byte_length": 2209,
+      "sha256": "db62b7d84b0e3928ee3804010a04e6276f17fce37d970474f545aedc071c4191",
+      "byte_length": 2079,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 32,
+      "id": "AEX015"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "path": "packages/core/src/event.ts",
+      "start_line": 319,
+      "end_line": 367,
+      "claim_supported": "Strict owner mismatch fails; exact replay identity is reconciled; conflicting replay and sequence gaps fail; ordinary foreign owner replay returns without applying.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa7a39a0c039770d36523723e75c1f228e1142f0",
+      "source_sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+      "source_byte_length": 30184,
+      "sha256": "1ab9dc1bbff1f5834e04ff170942f361ce9c4357c02bd38826efc0e2e5c8d863",
+      "byte_length": 2741,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 49,
+      "id": "AEX016"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "path": "packages/core/src/event.ts",
+      "start_line": 383,
+      "end_line": 425,
+      "claim_supported": "Projectors, optional commit hook, sequence and sealed event insertion execute before the same immediate transaction closes.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa7a39a0c039770d36523723e75c1f228e1142f0",
+      "source_sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+      "source_byte_length": 30184,
+      "sha256": "a50c7fba057d40929d3f447d3415f68062ec87d8755948ff7e078a42cf9fecb7",
+      "byte_length": 2358,
+      "overlapping_existing_compact_ids": [
+        "C010",
+        "C011"
+      ],
+      "new_line_count_relative_to_compact": 22,
+      "id": "AEX017"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "path": "packages/core/src/event.ts",
+      "start_line": 449,
+      "end_line": 455,
+      "claim_supported": "The implementation explicitly refuses combining persist:false with a commit hook.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa7a39a0c039770d36523723e75c1f228e1142f0",
+      "source_sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+      "source_byte_length": 30184,
+      "sha256": "ad25c69fef13db609caf4715cc41668d1835ba63cf23316e3c5ab57bc56e2397",
+      "byte_length": 268,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 7,
+      "id": "AEX018"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "path": "packages/core/src/event.ts",
+      "start_line": 681,
+      "end_line": 699,
+      "claim_supported": "The durable stream subscribes to wakes before reading history and advances from stored durable events.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa7a39a0c039770d36523723e75c1f228e1142f0",
+      "source_sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+      "source_byte_length": 30184,
+      "sha256": "58f5e77cb92bfa09ab33668b43a2c7920f519242421e1e2eb8d6caba622eb863",
+      "byte_length": 861,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 19,
+      "id": "AEX019"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/system-context/registry.ts",
+      "start_line": 38,
+      "end_line": 60,
+      "claim_supported": "Scoped registrations reject duplicate keys; load sorts keys and provides the current turn only to load effects.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9402523a4b03cb21465da1285e2488eb7d2c11bd",
+      "source_sha256": "27505e7f29016e62fc521c6d20a132003d1487c9e7099859cd7c1cab4ff1952e",
+      "source_byte_length": 2494,
+      "sha256": "ecac098645532cea0c8a548d72ff9d96d662279194d3110946c977d16c948d62",
+      "byte_length": 1058,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 23,
+      "id": "AEX020"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/instruction-context.ts",
+      "start_line": 70,
+      "end_line": 80,
+      "claim_supported": "Configured project instructions must resolve inside the project while global inputs have distinct authority.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6ba99cade2574448b9a8008b544791581b22bb11",
+      "source_sha256": "1ad05d900edbf814b3ed68200eb5f452089a112de60cf8b8eae0d1553d0896e1",
+      "source_byte_length": 6643,
+      "sha256": "274c7c9215b2aebc3861c5731466f564d3d12becc2340e5a14c63c0e182ba3f0",
+      "byte_length": 557,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 11,
+      "id": "AEX021"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/instruction-context.ts",
+      "start_line": 101,
+      "end_line": 119,
+      "claim_supported": "Escaped, missing discovered or missing configured instructions yield unavailable, not an empty/deleted context.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6ba99cade2574448b9a8008b544791581b22bb11",
+      "source_sha256": "1ad05d900edbf814b3ed68200eb5f452089a112de60cf8b8eae0d1553d0896e1",
+      "source_byte_length": 6643,
+      "sha256": "6ed6c770dcdc92fceae030443aba30d220dd080dfe04de6a05de80191f7f64e9",
+      "byte_length": 864,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 19,
+      "id": "AEX022"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/session/history.ts",
+      "start_line": 24,
+      "end_line": 52,
+      "claim_supported": "Model history is selected by compaction and baseline sequence predicates, rather than deleting prior transcript rows.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "60f31114138a8920e8e81a031815897568dba211",
+      "source_sha256": "1989745f9737d404950f166faf43df5890ccb13df6561eeae106032dc79ae79a",
+      "source_byte_length": 3749,
+      "sha256": "f19429a085d9a32956012f7d6fa7fb37f3648e6abea03f112e016d44b955cc34",
+      "byte_length": 898,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 29,
+      "id": "AEX023"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/session/history.ts",
+      "start_line": 82,
+      "end_line": 85,
+      "claim_supported": "loadAll explicitly retains compacted history.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "60f31114138a8920e8e81a031815897568dba211",
+      "source_sha256": "1989745f9737d404950f166faf43df5890ccb13df6561eeae106032dc79ae79a",
+      "source_byte_length": 3749,
+      "sha256": "9763c876f419c5da3ea49372375296ab0de4f33e99536e09f9549c95b91498ec",
+      "byte_length": 301,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 4,
+      "id": "AEX024"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/session/compaction.ts",
+      "start_line": 17,
+      "end_line": 20,
+      "claim_supported": "The exact default buffer, tail, tool-character and summary-output caps are constants.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+      "source_sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+      "source_byte_length": 14270,
+      "sha256": "7537bab717e0c477c077f7061f926e720bda8f5e982a92e60f2ba814c7191302",
+      "byte_length": 136,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 4,
+      "id": "AEX025"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/session/compaction.ts",
+      "start_line": 225,
+      "end_line": 242,
+      "claim_supported": "The compaction LLM request has no tools; provider errors and text are collected before the successful-summary branch already shown in C018.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+      "source_sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+      "source_byte_length": 14270,
+      "sha256": "14d823aa81b9a9faedff6cb11924df6dc1a22d59c1e39d687420f779a0aa7008",
+      "byte_length": 646,
+      "overlapping_existing_compact_ids": [
+        "C018"
+      ],
+      "new_line_count_relative_to_compact": 17,
+      "id": "AEX026"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "path": "packages/core/src/session/compaction.ts",
+      "start_line": 313,
+      "end_line": 326,
+      "claim_supported": "The composed default transform preserves messages and afterStep does nothing; alternate behavior requires replacement.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+      "source_sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+      "source_byte_length": 14270,
+      "sha256": "8564fd4c3c607f63464add5b4f7cec8f0d0f17aa7cbc92740dace1ffa37cb44c",
+      "byte_length": 539,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 14,
+      "id": "AEX027"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool/tool.ts",
+      "start_line": 102,
+      "end_line": 122,
+      "claim_supported": "Canonical Tool.make decodes input and encodes/validates output, mapping violations to ToolFailure.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2ecde42373ef59b1bf2352e6272141a610feea16",
+      "source_sha256": "69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e",
+      "source_byte_length": 8883,
+      "sha256": "380555d95b7ae4aa1f43c17dd1e3d97d50dcdcd172f5e10cab8509d8eca4387e",
+      "byte_length": 1071,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 21,
+      "id": "AEX028"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool/tool.ts",
+      "start_line": 156,
+      "end_line": 177,
+      "claim_supported": "Tool.dynamic passes input undecoded to its external owner; local JSON Schema decoding must not be inferred.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2ecde42373ef59b1bf2352e6272141a610feea16",
+      "source_sha256": "69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e",
+      "source_byte_length": 8883,
+      "sha256": "a3c4679c3514d44d563ddbc8a1dd38567f4d3b4bd5ee3a4ccc2f75aa50729be1",
+      "byte_length": 896,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 22,
+      "id": "AEX029"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool/registry.ts",
+      "start_line": 145,
+      "end_line": 173,
+      "claim_supported": "Safety inspection precedes contextual bounding; Lean projection is selected only when generic bounding has not already retained a full file.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ab6a6dc2f8c993aec804ebdfc73d89885e8a1453",
+      "source_sha256": "276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085",
+      "source_byte_length": 17719,
+      "sha256": "0901e6b8ed67a3034c6981bf0958916ed8ee2b375e1bad68f10c9ef83f99bdc8",
+      "byte_length": 1635,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 29,
+      "id": "AEX030"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool/registry.ts",
+      "start_line": 243,
+      "end_line": 274,
+      "claim_supported": "Scoped cleanup removes its own registrations, and latest local entries overlay process registrations during materialization.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ab6a6dc2f8c993aec804ebdfc73d89885e8a1453",
+      "source_sha256": "276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085",
+      "source_byte_length": 17719,
+      "sha256": "a06a94b6ef1b38598f48b9c325a65f0c13b2d57c50944b79c9b8664ef5a7bf91",
+      "byte_length": 1630,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 32,
+      "id": "AEX031"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool/registry.ts",
+      "start_line": 321,
+      "end_line": 334,
+      "claim_supported": "Registry composition depends on safety/output, not PermissionV2; ordinary action/resource authorization remains a leaf boundary.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ab6a6dc2f8c993aec804ebdfc73d89885e8a1453",
+      "source_sha256": "276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085",
+      "source_byte_length": 17719,
+      "sha256": "ea906471c29ba8d9454c854588d40127e924f466947419a325441a6b21f95891",
+      "byte_length": 646,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 14,
+      "id": "AEX032"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool-output-store.ts",
+      "start_line": 165,
+      "end_line": 200,
+      "claim_supported": "The generic bound limits contextual text but preserves structured output and media; managed paths remain observable.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "605a99e72e0482a998e2521a26f025589f81da68",
+      "source_sha256": "179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8",
+      "source_byte_length": 9643,
+      "sha256": "fd4f3b8d80a50b0ffa17b119cfdcb14d0f873db6e8f3bc2dd2b762c1543a9ed9",
+      "byte_length": 1374,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 36,
+      "id": "AEX033"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool-output-store.ts",
+      "start_line": 16,
+      "end_line": 19,
+      "claim_supported": "Default contextual limits and retained-output lifetime are fixed constants.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "605a99e72e0482a998e2521a26f025589f81da68",
+      "source_sha256": "179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8",
+      "source_byte_length": 9643,
+      "sha256": "d10720a05d25042b0f1f41c05ecdc646a0ca177c6ccc58abb767d63e212f0cc8",
+      "byte_length": 109,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 4,
+      "id": "AEX034"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.tools"
+      ],
+      "path": "packages/core/src/tool-output-store.ts",
+      "start_line": 203,
+      "end_line": 215,
+      "claim_supported": "Retention deletes only old tool_* files; capture/body state is not inferred from a model preview.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "605a99e72e0482a998e2521a26f025589f81da68",
+      "source_sha256": "179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8",
+      "source_byte_length": 9643,
+      "sha256": "3997df78515c887ddd9c50c542c8edc0ff10b38a0d475e050ed83dff1b14db94",
+      "byte_length": 716,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 13,
+      "id": "AEX035"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/permission.ts",
+      "start_line": 76,
+      "end_line": 85,
+      "claim_supported": "Rule evaluation is last-match with default ask.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2e3d29d3f1ec1fe805d21af091029721c9fa738e",
+      "source_sha256": "19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6",
+      "source_byte_length": 14981,
+      "sha256": "216c5fe263c3dafe28825e350af01962771cab5b94c2c0d2666360c6b48c3911",
+      "byte_length": 328,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 10,
+      "id": "AEX036"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/permission.ts",
+      "start_line": 140,
+      "end_line": 170,
+      "claim_supported": "Ordinary configured authorization resolves agent permissions, and configured deny precedes saved project allow; compare Session rules in the runner excerpt.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2e3d29d3f1ec1fe805d21af091029721c9fa738e",
+      "source_sha256": "19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6",
+      "source_byte_length": 14981,
+      "sha256": "f13c5dc4f2aa57b618ce0741c79c05b9a6bed23961e40415570768adaf648a07",
+      "byte_length": 1545,
+      "overlapping_existing_compact_ids": [
+        "C025"
+      ],
+      "new_line_count_relative_to_compact": 29,
+      "id": "AEX037"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/tool/bash.ts",
+      "start_line": 193,
+      "end_line": 217,
+      "claim_supported": "Bash permission precedes profile handling; read-only agents require confinement without fallback; confined background launches are refused.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b",
+      "source_sha256": "e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473",
+      "source_byte_length": 17377,
+      "sha256": "ca224d3de695daab052a1baf8ca3b9cddb40374c061036784a06171793c72f06",
+      "byte_length": 1391,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 25,
+      "id": "AEX038"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/tool/bash.ts",
+      "start_line": 233,
+      "end_line": 245,
+      "claim_supported": "Background launch preparation uses the same sandbox wrapper with its lifetime bound to the process.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b",
+      "source_sha256": "e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473",
+      "source_byte_length": 17377,
+      "sha256": "a912a5db0b6c45314424b6f18fe663b87a9a5df12cdee88f70d37b22bfd7d668",
+      "byte_length": 789,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 13,
+      "id": "AEX039"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/tool/bash.ts",
+      "start_line": 255,
+      "end_line": 267,
+      "claim_supported": "Foreground execution wraps before agent-terminal launch; this is the actual order needed to interpret the older unsandboxed claim.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b",
+      "source_sha256": "e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473",
+      "source_byte_length": 17377,
+      "sha256": "69e73d0d28d4e608c9b67c5ea24fcbd984e13128d076a6223a3e4155d8e413de",
+      "byte_length": 825,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 13,
+      "id": "AEX040"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/tool-safety-sandbox.ts",
+      "start_line": 24,
+      "end_line": 47,
+      "claim_supported": "Environment scrub is limited to tool children and recognized patterns; discovery alone does not establish confinement.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "61a252c15cc35fa534593413045a6f54a15b6665",
+      "source_sha256": "bbf5091b282f9fbeea862f3ebc3d9365a87a59fb414197eb6524268fbc32478a",
+      "source_byte_length": 44865,
+      "sha256": "9a7106a9a342184ee35c180abd873c30d9fb08dfc94d26488b6c7126a6e86d18",
+      "byte_length": 1396,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 24,
+      "id": "AEX041"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/tool/agent-terminal.ts",
+      "start_line": 36,
+      "end_line": 44,
+      "claim_supported": "Agent terminal is opt-in, excludes Windows/verbatim command paths and takes an already confined command.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d8cbde3d8436081eb9c3815bea334915e6efef0b",
+      "source_sha256": "a869ee14c21054a21d7f7adbe289588655f49d3c1cad7d21b6d4f22a30000fc4",
+      "source_byte_length": 4813,
+      "sha256": "db4250f446e1abe7840677cdbf1a1256ea0f54ac86d9a97558a65b30b4cb52b7",
+      "byte_length": 653,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 9,
+      "id": "AEX042"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/credential/cipher.ts",
+      "start_line": 27,
+      "end_line": 37,
+      "claim_supported": "Cipher implementation uses AES-256-GCM with a random 12-byte IV and auth tag.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "829dd497e04ee5729a6ab45cd5164bee9430a641",
+      "source_sha256": "599393f98c4a3dbc80ccaaf14bbdaee62417a557dc1425f77fd4781dc8e7edd7",
+      "source_byte_length": 6671,
+      "sha256": "2b32b9c003c4820d511b3f1b0defe5dc7af350482bf958e35c91231fc9c28a9c",
+      "byte_length": 587,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 11,
+      "id": "AEX043"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/credential/cipher.ts",
+      "start_line": 57,
+      "end_line": 75,
+      "claim_supported": "OS keychain is preferred; fallback to a data-directory key file is explicitly weaker.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "829dd497e04ee5729a6ab45cd5164bee9430a641",
+      "source_sha256": "599393f98c4a3dbc80ccaaf14bbdaee62417a557dc1425f77fd4781dc8e7edd7",
+      "source_byte_length": 6671,
+      "sha256": "f8cbeb99fd06e013efb47a865c17419a26f493c65d0aea1a80938ce8ea8c797c",
+      "byte_length": 855,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 19,
+      "id": "AEX044"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "path": "packages/core/src/credential.ts",
+      "start_line": 83,
+      "end_line": 117,
+      "claim_supported": "Memory inheritance is opt-in; legacy sealing failure preserves readability; undecodable rows are skipped and left untouched.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3161ca0d7f1e4c68a372acb97234eab80a9024b2",
+      "source_sha256": "d091c6c02c5ba51b930ac55cf8ca473d048f8b336e9dccf310e2c2f6f978b2e8",
+      "source_byte_length": 12749,
+      "sha256": "d74e28a7457cc84f7f8d8dcedb4ddb6c3e6d7156cf3b1c6190ede36093efa0ab",
+      "byte_length": 1524,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 35,
+      "id": "AEX045"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.security",
+        "s1.core.entry"
+      ],
+      "path": "AGENTS.md",
+      "start_line": 182,
+      "end_line": 192,
+      "claim_supported": "Current terminal instructions require the sandbox-before-PTY ordering and exact environment boundary.",
+      "authority": "repository_normative_documentation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "source_byte_length": 16501,
+      "sha256": "4f5b2378f8eb397a98a143b26af09bf856f0a06ad9204f8567ae8beda212ffab",
+      "byte_length": 1186,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 11,
+      "id": "AEX046"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "path": "packages/core/src/config.ts",
+      "start_line": 215,
+      "end_line": 245,
+      "claim_supported": "Project documents are discovered once at Location opening and general settings apply global, direct, then .orchestra precedence; C032 supplies reverse policy order/global refresh.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+      "source_sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6",
+      "source_byte_length": 20934,
+      "sha256": "17cf365dac0238a482a31562e9298afeab3817a590d428d65093eb16363b8fca",
+      "byte_length": 1548,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 31,
+      "id": "AEX047"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "path": "packages/core/src/config/trust.ts",
+      "start_line": 40,
+      "end_line": 56,
+      "claim_supported": "Approve is parent-aware; revoke removes only the folder’s own entry, preserving any trusted parent.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78",
+      "source_sha256": "f00fbbf4cb98646c376ff14662e4e43d16ad64b11b439d7abccffae7723569b9",
+      "source_byte_length": 4047,
+      "sha256": "d2eace66bb17b674247531829de1ab87fd8c3ec15d19057220330530c89f1895",
+      "byte_length": 996,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 17,
+      "id": "AEX048"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "path": "packages/core/src/config/trust.ts",
+      "start_line": 63,
+      "end_line": 81,
+      "claim_supported": "Approval canonicalizes an existing absolute folder and refuses filesystem root.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78",
+      "source_sha256": "f00fbbf4cb98646c376ff14662e4e43d16ad64b11b439d7abccffae7723569b9",
+      "source_byte_length": 4047,
+      "sha256": "c07cc5a986c629e4f7343b329fc5bfb380659d8e2b67f526766c01f64dc6a44f",
+      "byte_length": 997,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 19,
+      "id": "AEX049"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.project"
+      ],
+      "path": "packages/core/src/project.ts",
+      "start_line": 125,
+      "end_line": 148,
+      "claim_supported": "Repository identity chooses remote, cache, then root commit; no repository returns the global project at filesystem root.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bbedbbf34cbc5b431538db37993c0cc0830fa393",
+      "source_sha256": "a430e2c36fdf6544efcb36c6d13da86826083b41073a010d788e8629b9f89a63",
+      "source_byte_length": 9714,
+      "sha256": "2631a4eb2c67a3812a88e07225a2f208574ba961099f33362eaaa00b267f429f",
+      "byte_length": 1014,
+      "overlapping_existing_compact_ids": [
+        "C035"
+      ],
+      "new_line_count_relative_to_compact": 11,
+      "id": "AEX050"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.project"
+      ],
+      "path": "packages/core/src/location-mutation.ts",
+      "start_line": 90,
+      "end_line": 132,
+      "claim_supported": "Physical resolution follows existing ancestors and bounded dangling symlinks; path authority is not just lexical normalization.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5c80742365c78301f296d5fe87fd8844a1efc44c",
+      "source_sha256": "1eef86e372d56b4137ea0b6576b13f8eff655737d451e2446f87f97c8a02001a",
+      "source_byte_length": 6457,
+      "sha256": "29ab036acbbfb83b2956cc67a81d1bd69e62659858a2ee37b77a1d0d0aeeff35",
+      "byte_length": 1859,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 43,
+      "id": "AEX051"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.project"
+      ],
+      "path": "packages/core/src/project/checkpoint.ts",
+      "start_line": 99,
+      "end_line": 132,
+      "claim_supported": "Checkpoint identity, exact retry and retained owner are checked before requiring the current Session; retries survive source Session deletion.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+      "source_sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a",
+      "source_byte_length": 8309,
+      "sha256": "ca177da0a1ce0f23b4dad4e3c1e6ea04fcbc0507177e097ceb4ddc9cc62e6dbf",
+      "byte_length": 1696,
+      "overlapping_existing_compact_ids": [
+        "C037"
+      ],
+      "new_line_count_relative_to_compact": 22,
+      "id": "AEX052"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.project"
+      ],
+      "path": "packages/core/src/project/checkpoint.ts",
+      "start_line": 163,
+      "end_line": 185,
+      "claim_supported": "Reads bind project and digest; lists enforce the default and maximum page limits.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+      "source_sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a",
+      "source_byte_length": 8309,
+      "sha256": "9ed1983086f1c06748156d8a927d51a64e6f8c62fc66f9d8e1132b48c684d54f",
+      "byte_length": 1090,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 23,
+      "id": "AEX053"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.project"
+      ],
+      "path": "packages/core/src/session.ts",
+      "start_line": 537,
+      "end_line": 568,
+      "claim_supported": "Fork writes copied projections with new message IDs and negative sequence positions, rather than replaying original side effects.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "source_sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "source_byte_length": 34126,
+      "sha256": "6923b7b8546ba3289b82acdfc199241fb1bb9202ae96ddd67a9ae155201955f7",
+      "byte_length": 1188,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 32,
+      "id": "AEX054"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "path": "packages/core/src/state.ts",
+      "start_line": 63,
+      "end_line": 91,
+      "claim_supported": "State rebuilds from initial plus ordered transforms, finalizes before commit, and serializes rebuild/read with a semaphore.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "116e268bb9edf045985e1598a4e1a3ed1d410872",
+      "source_sha256": "237de5f76069595f50c7e7049dc72fe295a6b0ecaa615d849ef5b67ecd9f4189",
+      "source_byte_length": 4662,
+      "sha256": "bb8eee95e1b8be1ebfc1b768f1565cc3492f0f147da72b8ca9ef167d7567eec7",
+      "byte_length": 1155,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 29,
+      "id": "AEX055"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "path": "packages/core/src/plugin.ts",
+      "start_line": 115,
+      "end_line": 151,
+      "claim_supported": "Plugin activation uses a child scope, publishes only after materialization, and closes/replays after failure.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5c3c232bfa46b3f8cfad106c2db4787d6c374818",
+      "source_sha256": "8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302",
+      "source_byte_length": 11007,
+      "sha256": "a81d00696236d7272c0c9920bdeb0bf9173d85d9a58c7560d25490e2b7f75b63",
+      "byte_length": 1786,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 37,
+      "id": "AEX056"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "path": "packages/core/src/plugin.ts",
+      "start_line": 187,
+      "end_line": 207,
+      "claim_supported": "Boot retry is collected flush followed by per-plugin reinstall after failure; this is not outer-batch durable atomicity.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5c3c232bfa46b3f8cfad106c2db4787d6c374818",
+      "source_sha256": "8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302",
+      "source_byte_length": 11007,
+      "sha256": "26b5001b777fffbd379a0fdbb0a7ac676074fe66f09a6e6dedc03f885bb86c36",
+      "byte_length": 1184,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 21,
+      "id": "AEX057"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "path": "packages/core/src/mcp.ts",
+      "start_line": 235,
+      "end_line": 263,
+      "claim_supported": "Each ordinary MCP call asserts its namespaced permission and forwards cancellation and timeout to the SDK.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3d2203cb152ef733ca3b7d3231a302416a1f394b",
+      "source_sha256": "73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59",
+      "source_byte_length": 39585,
+      "sha256": "a96a12bface5460a64ba71b4f8fa58ab12d45c8f9eec707091d51a23721e679b",
+      "byte_length": 1667,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 29,
+      "id": "AEX058"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "path": "packages/core/src/mcp.ts",
+      "start_line": 283,
+      "end_line": 309,
+      "claim_supported": "Stale asynchronous connection/catalog results close their client before registration; connected follows successful tools registration.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3d2203cb152ef733ca3b7d3231a302416a1f394b",
+      "source_sha256": "73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59",
+      "source_byte_length": 39585,
+      "sha256": "7596c50ca4f5c6c1b197e640be2c61da9200dc0fca8e6877afd08a00d900b4a9",
+      "byte_length": 1253,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 27,
+      "id": "AEX059"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "path": "packages/core/src/skill.ts",
+      "start_line": 153,
+      "end_line": 172,
+      "claim_supported": "Generation invalidation prevents stale in-flight skill loading from refilling a new cache.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "dc8d8f67c6b658ce7716a2b17e0c9b2e517c6db0",
+      "source_sha256": "07c062a4f778a329572ba0217df3e72315c61bf5baa135414324af63dd28a18b",
+      "source_byte_length": 9172,
+      "sha256": "e40643e1c1479fe8d72d0d372730d699ba2c4fdb81dc94c10eec089136e6d2b8",
+      "byte_length": 983,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 20,
+      "id": "AEX060"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "path": "packages/core/src/integration.ts",
+      "start_line": 231,
+      "end_line": 238,
+      "claim_supported": "OAuth attempts are synchronized in-memory state owned by the Location layer; this map does not establish a durable resumable workflow.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d6d9a85e8c9b2737b1f09f95700c05663735e6e4",
+      "source_sha256": "d1952b88c361ed35ac1dd3b2f736b6aa9588bd7e82db37c1f88fb878f09f9796",
+      "source_byte_length": 23521,
+      "sha256": "2f145cb1b2e6a1da3e03631f4ca8b4524d65392196c697ca5876a3fd92046bea",
+      "byte_length": 341,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 8,
+      "id": "AEX061"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.capability"
+      ],
+      "path": "packages/core/src/capability/invocation.ts",
+      "start_line": 34,
+      "end_line": 50,
+      "claim_supported": "The issued-frame symbol is private and the host boundary expressly does not prove persisted Session/tool-part existence.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e2ddcb3e3f0da61b8d9d5fe8c7c74436b844e890",
+      "source_sha256": "6f7d95bbb07aa7d3e12c63d56dbf8458bde5b7053aaf51f97b078c41a2da53ae",
+      "source_byte_length": 5979,
+      "sha256": "a2ae78bd0dff991cf5b4361aaca7432b3a7bd56e284e6f130f3ebedb502b2b8f",
+      "byte_length": 664,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 17,
+      "id": "AEX062"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.capability"
+      ],
+      "path": "packages/core/src/capability/policy.ts",
+      "start_line": 35,
+      "end_line": 78,
+      "claim_supported": "Persisted validation rechecks placement, current root pending/running tool and the exact running child lineage.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d75718a6ac8d6d3e36c5b791301a68a728be26b0",
+      "source_sha256": "9ae8ac1edc77785058071356c0927b1d8c1a019a2b6be5cdf564c3b0dad65022",
+      "source_byte_length": 8907,
+      "sha256": "ed0cf6e1c4a25ec2b18050e5d5837504dc00fe09d64a29d3194f9e2fb828a196",
+      "byte_length": 2701,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 44,
+      "id": "AEX063"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.capability"
+      ],
+      "path": "packages/core/src/capability/tools.ts",
+      "start_line": 36,
+      "end_line": 68,
+      "claim_supported": "Leaf construction/registration is Location-owned and lazy vendor I/O stays first-use; a failed noninterrupt startup sweep is logged.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1103ab0c8eb3d9d79cc5ff295cb267847eab629e",
+      "source_sha256": "7704b7d8c7742deece88da2fd87f6fb2064eb580659548d159565f10893d3b46",
+      "source_byte_length": 4027,
+      "sha256": "1f073ebdbe1ec722b474dc85fea55007e56ef2d6ae722d8c121a7b2c605f442c",
+      "byte_length": 2436,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 33,
+      "id": "AEX064"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.capability"
+      ],
+      "path": "packages/core/src/scheduled-task/port.ts",
+      "start_line": 7,
+      "end_line": 26,
+      "claim_supported": "The host binds scheduler process state and an absent binding defects explicitly.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c",
+      "source_sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+      "source_byte_length": 2092,
+      "sha256": "3e4e3ec6645c53013117f41f8dcdf0041ce290b35a0d91c481b07edd5f70ea5c",
+      "byte_length": 1002,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 20,
+      "id": "AEX065"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.capability"
+      ],
+      "path": "packages/core/src/capability/mcp/README.md",
+      "start_line": 43,
+      "end_line": 70,
+      "claim_supported": "Transport catalog/session bounds are documented by the native MCP owner; this is normative intent, not a newly observed implementation run.",
+      "authority": "repository_normative_documentation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "95f3154aef1625eaac3cd8feb500504996eb074f",
+      "source_sha256": "f9b7b9df6645714b942f2adc46c9c1a727def9ea39a1f9e33782519bb14ca662",
+      "source_byte_length": 11760,
+      "sha256": "dad31b1ba08d4e1cef714ba7f71b284c5b63f5573f4dbbb87bccc912ea80a47b",
+      "byte_length": 1967,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 28,
+      "id": "AEX066"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.automation"
+      ],
+      "path": "packages/core/src/actions.ts",
+      "start_line": 49,
+      "end_line": 85,
+      "claim_supported": "Actions binding is obtained lazily on first operation and provider read adapters are explicit.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "source_sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "source_byte_length": 12779,
+      "sha256": "1da4f54a53d4aa9be81eef8aead409a461a262f0ecadc3467579c5df74eaf214",
+      "byte_length": 2211,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 37,
+      "id": "AEX067"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.automation"
+      ],
+      "path": "packages/core/src/actions/operations.ts",
+      "start_line": 60,
+      "end_line": 96,
+      "claim_supported": "Prepare strictly decodes intent, verifies binding revision, reconciles exact retry and refuses capacity/unknown-outcome overflow before insertion.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "83c0b9e03b063bd59bc2d30317f7de85cbb99ee4",
+      "source_sha256": "f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4",
+      "source_byte_length": 12124,
+      "sha256": "5b4852195e0aac76b1d9419ba682571f3cc21302168a01c8342ea2feb8eab4a5",
+      "byte_length": 2711,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 37,
+      "id": "AEX068"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.automation"
+      ],
+      "path": "packages/core/src/scheduled-task.ts",
+      "start_line": 272,
+      "end_line": 301,
+      "claim_supported": "Stale takeover checks exact prior ownership/claim and distinguishes admitted exact retry from void unadmitted dispatch.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+      "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+      "source_byte_length": 26123,
+      "sha256": "75232658d0ea0c69eed303e78e05e65b7a85943fe3d5de13c110f143f9c1242f",
+      "byte_length": 1593,
+      "overlapping_existing_compact_ids": [
+        "C053"
+      ],
+      "new_line_count_relative_to_compact": 24,
+      "id": "AEX069"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.automation"
+      ],
+      "path": "packages/core/src/board/decision.ts",
+      "start_line": 90,
+      "end_line": 128,
+      "claim_supported": "Changing a decision updates standing lineage, while recording an outcome logs a stated reason rather than independently verifying work.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+      "source_sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43",
+      "source_byte_length": 5365,
+      "sha256": "8acecc7a9f686e37e6a78c98fdcb6ffca32da830f4f6221ddb721978e4002a65",
+      "byte_length": 1817,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 39,
+      "id": "AEX070"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.research"
+      ],
+      "path": "packages/core/src/backend-toolkit/index.ts",
+      "start_line": 180,
+      "end_line": 198,
+      "claim_supported": "Dependency and host-floor checks precede acquisition; cross-target prefetch is not host execution.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5c8e61d202f8a79a5b967d5abc467a97b58f4a3",
+      "source_sha256": "d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a",
+      "source_byte_length": 15426,
+      "sha256": "f136d164ba697d4df434dc6ef26fe79012c6292f92f21bd201a0221954c0cff0",
+      "byte_length": 1457,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 19,
+      "id": "AEX071"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.research"
+      ],
+      "path": "packages/core/src/research-toolkit/index.ts",
+      "start_line": 52,
+      "end_line": 67,
+      "claim_supported": "Config can lower the owner byte caps, never raise them.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095",
+      "source_sha256": "9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c",
+      "source_byte_length": 14147,
+      "sha256": "8eea3de748bac0964e70c4971f3a78e6ed0119a8c28b58799ce3db7bfaf2af9c",
+      "byte_length": 688,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 16,
+      "id": "AEX072"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.research"
+      ],
+      "path": "packages/core/src/research-toolkit/index.ts",
+      "start_line": 281,
+      "end_line": 300,
+      "claim_supported": "Status record writes are best effort; a failed rename/write can lose status and is not evidence of a successful build.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095",
+      "source_sha256": "9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c",
+      "source_byte_length": 14147,
+      "sha256": "947c7770a0802af915f03dd0fe1db7cdb54e9538a601137209dc5ae59e051c10",
+      "byte_length": 987,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 20,
+      "id": "AEX073"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.research"
+      ],
+      "path": "packages/core/src/research/ledger.ts",
+      "start_line": 32,
+      "end_line": 51,
+      "claim_supported": "Research identity uses canonical object order, operation tuple and execution-scoped event ID.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf",
+      "source_sha256": "67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839",
+      "source_byte_length": 9660,
+      "sha256": "c5564eab1a9cda93c47064a3237bbce052337a7b0d950df6990e1c21ecebe651",
+      "byte_length": 990,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 20,
+      "id": "AEX074"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.research"
+      ],
+      "path": "packages/core/src/research/ledger.ts",
+      "start_line": 62,
+      "end_line": 84,
+      "claim_supported": "Retained research events are filtered/decoded and scope/receipt mismatches are refused.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf",
+      "source_sha256": "67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839",
+      "source_byte_length": 9660,
+      "sha256": "b2f146c726ed7837f75884bb5496219064da31d486f59876ba2a9c47ea20009b",
+      "byte_length": 1726,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 23,
+      "id": "AEX075"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/effect/app-node.ts",
+      "start_line": 1,
+      "end_line": 14,
+      "claim_supported": "Composition types allow Location to depend on global nodes and preserve the converse boundary.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e8112f921ad7a7dcefbf6985c24995df1855c96b",
+      "source_sha256": "84d50e650e7354f3fcbcdc39a005cce87d35aae6519cbf4995f1252062f5b2d2",
+      "source_byte_length": 450,
+      "sha256": "84d50e650e7354f3fcbcdc39a005cce87d35aae6519cbf4995f1252062f5b2d2",
+      "byte_length": 450,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 14,
+      "id": "AEX076"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/process.ts",
+      "start_line": 131,
+      "end_line": 173,
+      "claim_supported": "Collectors continue draining after byte caps; inspectors receive raw chunks; the process path receives optional RSS constraints.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "source_sha256": "7bfd3adf7274bd90bfe4cf1d7fd3f4bb256f6914dbd74cea00127e33704a6875",
+      "source_byte_length": 12835,
+      "sha256": "e521fb44a3e6ad676d35005554ad4dd2319566e22384ee196ec6e620b6568216",
+      "byte_length": 2021,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 43,
+      "id": "AEX077"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/process.ts",
+      "start_line": 258,
+      "end_line": 272,
+      "claim_supported": "Native collect is conditional on eligibility and other options route through the configured spawner; there is no universal captured-output bound.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "source_sha256": "7bfd3adf7274bd90bfe4cf1d7fd3f4bb256f6914dbd74cea00127e33704a6875",
+      "source_byte_length": 12835,
+      "sha256": "896bbfa4172a3ecbe149dd1fb2b39d2e2db59acdbc2975004782c7f2ad6a5734",
+      "byte_length": 759,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 15,
+      "id": "AEX078"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/omni.ts",
+      "start_line": 62,
+      "end_line": 84,
+      "claim_supported": "Explicit native addon/supervisor paths must form an existing pair and do not silently borrow mismatched candidates.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "source_sha256": "b032344ff11c078ecdc062bd796a5ad75ccb046a319d674ab7faba659d84b3ab",
+      "source_byte_length": 8446,
+      "sha256": "036d2b18227b40b84f2ce0bbd92585dd9883eb7b37ea27a0d9e97c146c83f708",
+      "byte_length": 1471,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 23,
+      "id": "AEX079"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/omni.ts",
+      "start_line": 139,
+      "end_line": 152,
+      "claim_supported": "The positive/strict control predicate is code, not an executed qualification result.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "source_sha256": "b032344ff11c078ecdc062bd796a5ad75ccb046a319d674ab7faba659d84b3ab",
+      "source_byte_length": 8446,
+      "sha256": "f53332d2fbb0bd0c66652fb72c13c0e418a9afd0d522438c2ac4cce728d9b384",
+      "byte_length": 1015,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 14,
+      "id": "AEX080"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/pty.ts",
+      "start_line": 23,
+      "end_line": 39,
+      "claim_supported": "PTY exited retention and finalization cap are explicit; each subscriber has a pending array distinct from the retained output ring.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "source_sha256": "03f62b4e17ac231291eb4c726d92415f63fa4b08eb66ced6d5c60cb9a3d0b4be",
+      "source_byte_length": 18798,
+      "sha256": "a58681ecc906ad3e8bb8e35a929b81bb5d4f8d683def1988df6863c0958c1f9a",
+      "byte_length": 773,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 17,
+      "id": "AEX081"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/pty.ts",
+      "start_line": 186,
+      "end_line": 197,
+      "claim_supported": "PTY finalization waits for pending stops only up to the configured cap.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "source_sha256": "03f62b4e17ac231291eb4c726d92415f63fa4b08eb66ced6d5c60cb9a3d0b4be",
+      "source_byte_length": 18798,
+      "sha256": "52946ec7dba2dbff2920b5ed03200a85aa88a4d4d42659199521ea4eca633e85",
+      "byte_length": 411,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 12,
+      "id": "AEX082"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/lsp/lsp.ts",
+      "start_line": 153,
+      "end_line": 159,
+      "claim_supported": "Project LSP commands are admitted through ConfigTrust.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7848ef568344421190171962367fe2836170d084",
+      "source_sha256": "e7500203a6b6dc05949917252e32d6e50a605b80d186f7b596c7a294654cb3f6",
+      "source_byte_length": 17577,
+      "sha256": "4c62a36835c2fce0c7de11e61f8cbb2f8fa60da9684473eea894437e1d844c9b",
+      "byte_length": 548,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 7,
+      "id": "AEX083"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/lsp/lsp.ts",
+      "start_line": 193,
+      "end_line": 198,
+      "claim_supported": "Workspace-code LSP commands take the confined branch; ordinary trusted commands have a distinct spawn path.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7848ef568344421190171962367fe2836170d084",
+      "source_sha256": "e7500203a6b6dc05949917252e32d6e50a605b80d186f7b596c7a294654cb3f6",
+      "source_byte_length": 17577,
+      "sha256": "fc03b46bfabb53d82047115a2886363eea72014cdd226240364951f5562e8b7c",
+      "byte_length": 525,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 6,
+      "id": "AEX084"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/format/format.ts",
+      "start_line": 97,
+      "end_line": 143,
+      "claim_supported": "Formatter workspace code is confined with explicit write targets and exact child environment.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0198f9c0d4aa4a9e1452339ca5c3302611478aba",
+      "source_sha256": "1a9918459995534b16242fcdd18c576de735fdac63a87603e0ad3ca215b036fd",
+      "source_byte_length": 9832,
+      "sha256": "485a92ff92910e48d2a1be58c9771c3d615a292dcfa3bf55a7ada6ebd440186a",
+      "byte_length": 2048,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 47,
+      "id": "AEX085"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": "packages/core/src/observability/otlp.ts",
+      "start_line": 50,
+      "end_line": 58,
+      "claim_supported": "Log/tracing startup is conditional on an endpoint, not a claim of observed exporter availability.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4d403d30bded809a37d426a8c56361ca8d66ddf7",
+      "source_sha256": "4a76113bce60f765e3d431eb6c5c46e3d224d889da83a8cfd00143d1c52a3003",
+      "source_byte_length": 2545,
+      "sha256": "6ab5c14df473adb422979b8f6f5f7c5606e9eb09dc40a4857595980cf6cc9ee4",
+      "byte_length": 358,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 9,
+      "id": "AEX086"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "path": ".orchestra/skills/terminal-maintenance/SKILL.md",
+      "start_line": 10,
+      "end_line": 29,
+      "claim_supported": "The maintenance source explicitly preserves unresolved WebSocket-client backpressure/memory limits.",
+      "authority": "repository_normative_documentation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "610fa93e3ec385790509b0c7fd0181fd30adc727",
+      "source_sha256": "62265a02943d78fb6922b806888a9193dc1f7007d5dd1e6114a63438bea2d553",
+      "source_byte_length": 4040,
+      "sha256": "a26ccc0f66e8b532949b6f6033beb5c013febfba3f38c42ee6934c9a5dbe142c",
+      "byte_length": 2381,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 20,
+      "id": "AEX087"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.models"
+      ],
+      "path": "packages/core/src/session/runner/model.ts",
+      "start_line": 147,
+      "end_line": 188,
+      "claim_supported": "Native routes strip API keys from body settings; unknown explicit variants fail rather than silently changing selection.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b",
+      "source_sha256": "25c8400ee9162fb798aafa3cf2c540b7364c097e669a7b361489e5cf1610db5f",
+      "source_byte_length": 14022,
+      "sha256": "37929a967f0f573bf2973a9cc84ee1f0998de36bea2e9116c5d3303d98241610",
+      "byte_length": 1452,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 42,
+      "id": "AEX088"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.models"
+      ],
+      "path": "packages/core/src/session/runner/model.ts",
+      "start_line": 193,
+      "end_line": 245,
+      "claim_supported": "The actual adapter branches accept a narrower API set than arbitrary SDK/catalog entries and return UnsupportedApiError otherwise.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b",
+      "source_sha256": "25c8400ee9162fb798aafa3cf2c540b7364c097e669a7b361489e5cf1610db5f",
+      "source_byte_length": 14022,
+      "sha256": "03c9a05685a4a958e901aa4ae1d0c40ce6306a33a46fb5f9cd6f3c6cef5ed1dd",
+      "byte_length": 2318,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 53,
+      "id": "AEX089"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.economy"
+      ],
+      "path": "packages/core/src/economy/admission.ts",
+      "start_line": 242,
+      "end_line": 284,
+      "claim_supported": "The final request digest participates in sealed identity; admitted bound dimensions are mandatory and positive safe integers.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f",
+      "source_sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "source_byte_length": 39716,
+      "sha256": "f8e2abe539559e09012ad7aa67fa1e2d87507fb43828e2acc6a6e99c73ee7962",
+      "byte_length": 1769,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 43,
+      "id": "AEX090"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.economy"
+      ],
+      "path": "packages/core/src/economy/admission.ts",
+      "start_line": 463,
+      "end_line": 505,
+      "claim_supported": "Occupancy uses settled usage or retained unsettled bounds and refuses/holds corrupt evidence; in-flight release is tracked independently.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f",
+      "source_sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "source_byte_length": 39716,
+      "sha256": "a9af3cab2a4ee26ae509e5c3d550b2a00c6e3346a17cbad7d6fefa35039e2ea2",
+      "byte_length": 2942,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 43,
+      "id": "AEX091"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.economy"
+      ],
+      "path": "packages/core/src/economy/admission.ts",
+      "start_line": 551,
+      "end_line": 579,
+      "claim_supported": "Reservation persists body snapshot and distinct forward/terminal/usage/completion/semantic fields in its immediate transaction.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f",
+      "source_sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "source_byte_length": 39716,
+      "sha256": "238a5ff7cdafbecbd0f20fc1ca075d349772923b0aa08546f6b5d99e06784ae1",
+      "byte_length": 1267,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 29,
+      "id": "AEX092"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "path": "packages/core/src/control-plane/move-session.ts",
+      "start_line": 83,
+      "end_line": 138,
+      "claim_supported": "Move applies captured changes, then publishes Session.Moved, then discards source changes with a distinct later failure; no cross-filesystem/event rollback appears in this function.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "49fe728d6956ca1555a763548e9458ea5f3938dc",
+      "source_sha256": "302fd923821d8f2d4124b8e4cca38485abe86c3f3c74e2f0b9bc420b56ec2518",
+      "source_byte_length": 5381,
+      "sha256": "0bf7650e1460727e2eadbf9006d079aae8f164dea4c4a3e62ffdf442ea2ad790",
+      "byte_length": 2427,
+      "overlapping_existing_compact_ids": [
+        "C080"
+      ],
+      "new_line_count_relative_to_compact": 47,
+      "id": "AEX093"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "start_line": 5,
+      "end_line": 81,
+      "claim_supported": "The complete remainder of the assigned RAG SQL schema shows table/column scope and the deliberate chunk-orphan cleanup boundary; it cannot prove an engine or retrieval implementation.",
+      "authority": "observed_implementation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "source_sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "source_byte_length": 2519,
+      "sha256": "8d6d5fd357fce5db74ab6c0c4e5668a3823304304895b2438c47622739766bdc",
+      "byte_length": 2228,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 77,
+      "id": "AEX094"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.entry",
+        "s1.core.models"
+      ],
+      "path": "packages/core/README.md",
+      "start_line": 54,
+      "end_line": 88,
+      "claim_supported": "The repository owner inventory places provider/vendor, utilities and data contracts under Core; this is navigation/ownership intent, not acceptance of every member.",
+      "authority": "repository_normative_documentation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "742921238462659e1a5a314f2e0238102c6e9f3a",
+      "source_sha256": "e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324",
+      "source_byte_length": 7777,
+      "sha256": "ecd892d2c5f5d48c4388e6b41bda4339921a4e300c33058212e1fd8be7e94f67",
+      "byte_length": 4223,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 35,
+      "id": "AEX095"
+    },
+    {
+      "artifact_keys": [
+        "s1.core.entry",
+        "s1.core.session-execution",
+        "s1.core.context"
+      ],
+      "path": "AGENTS.md",
+      "start_line": 207,
+      "end_line": 217,
+      "claim_supported": "The current repository instructions explicitly keep execution local and context ownership split across Core/domain/Session boundaries.",
+      "authority": "repository_normative_documentation",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "source_byte_length": 16501,
+      "sha256": "405cd0b08a53f053f88de7fd615712564267b65a3cfcdaafd0b86a7e177fb1c1",
+      "byte_length": 3113,
+      "overlapping_existing_compact_ids": [],
+      "new_line_count_relative_to_compact": 11,
+      "id": "AEX096"
+    }
+  ],
+  "product_execution": "NOT_RUN",
+  "remote_source_fetches_this_revision": 0,
+  "semantic_acceptance": false
+}

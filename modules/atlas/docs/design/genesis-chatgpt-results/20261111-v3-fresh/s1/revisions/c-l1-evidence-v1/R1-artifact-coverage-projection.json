@@ -1,0 +1,707 @@
+{
+  "projection_status": "Exact selected frozen JSON values; JSON formatting is new. Derived counts are separately labeled.",
+  "source_artifacts_sha256": "d91c3605542369e8b196daccbf25571f9dfd31d8b6ee1522c78178f2f91be27a",
+  "source_coverage_sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9",
+  "selected_artifact_fields": [
+    "key",
+    "scope",
+    "title",
+    "layer",
+    "need",
+    "body",
+    "authority",
+    "validity",
+    "gaps",
+    "build_dependencies",
+    "navigation",
+    "semantic_review_refs",
+    "runtime_receipt_refs"
+  ],
+  "required_artifact_keys": [
+    "s1.runtime.llm_turns.l1",
+    "s1.runtime.llm_providers.l1",
+    "s1.runtime.llm_recording.l1",
+    "s1.runtime.plugin.l1",
+    "s1.runtime.codemode.l1",
+    "s1.runtime.codemode_openapi.l1",
+    "s1.runtime.effect_sqlite.l1",
+    "s1.runtime.http_recorder.l1",
+    "s1.runtime.guides_intent.l1",
+    "s1.runtime.maintenance_intent.l1"
+  ],
+  "artifacts": [
+    {
+      "key": "s1.runtime.llm_turns.l1",
+      "scope": "orchestra.s1",
+      "title": "LLM provider turns and local tool settlement",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/c/bodies/llm-turns.md",
+        "encoding": "utf-8",
+        "byte_length": 3025,
+        "sha256": "c2dacdb2638ff47ffa60a7bb2d7f3e3403f574c0470fc853d45983020d66b831"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "No provider or product execution receipt.",
+        "Selected schema/reducer inspection does not certify every variant.",
+        "Session persistence, authorization and continuation require Core evidence."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.llm_providers.l1",
+      "scope": "orchestra.s1",
+      "title": "Provider facades, protocol lowering and refusal boundaries",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/c/bodies/provider-routes.md",
+        "encoding": "utf-8",
+        "byte_length": 4043,
+        "sha256": "5847b8777ad56f974685bf956a2fcf5ea0b189a6aae14721e544336871e1360f"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Remote compatibility and Core route admission are not established by facade source.",
+        "Protocol and multimodal helpers were not exhaustively audited."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.llm_recording.l1",
+      "scope": "orchestra.s1",
+      "title": "LLM recorded evidence and explicit fixture gaps",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "producers/c/bodies/recorded-evidence.md",
+        "encoding": "utf-8",
+        "byte_length": 3042,
+        "sha256": "28e1d579f17b5463c58c701c8f98c0b131bef0b1bbb2390317d30655c837519d"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Thirty-nine assigned fixture/media sources are metadata-only in this unit.",
+        "No declared test or fixture replay was executed.",
+        "Large OpenAPI fixture exceeds documented observer file-size limit."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.plugin.l1",
+      "scope": "orchestra.s1",
+      "title": "Plugin authoring contracts and host-owned behavior",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/c/bodies/plugin-contracts.md",
+        "encoding": "utf-8",
+        "byte_length": 3392,
+        "sha256": "9c3110e3b15b35e85285cab7f9440b6711110aaac8a1ca936c7ca86263c1e382"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Host loader, ordering, cleanup, installation and permission implementation not established by package types.",
+        "Plan, current declarations and frozen compatibility types must remain distinct."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.codemode.l1",
+      "scope": "orchestra.s1",
+      "title": "CodeMode explicit tools and plain-data boundary",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/c/bodies/codemode-interpreter.md",
+        "encoding": "utf-8",
+        "byte_length": 3480,
+        "sha256": "be8899d897dec584e7e74c597483dff9417dd1511e00e757e86a05378248487f"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Selected interpreter paths and supporting structural scans do not establish full language conformance.",
+        "Host adapters and leaf-tool authorization remain external to this implementation proof.",
+        "Result-envelope bytes may exceed configured value/log payload budget."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.codemode_openapi.l1",
+      "scope": "orchestra.s1",
+      "title": "OpenAPI tool planning and runtime boundaries",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/c/bodies/codemode-openapi.md",
+        "encoding": "utf-8",
+        "byte_length": 2698,
+        "sha256": "0f906322c8952eb43396870be8fea15b2d47146df43a9d604cfd39c9cb293977"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Response-schema validation and adapter-enforced redirect policy are documented future work.",
+        "Large reference fixture remains unobserved; no network or test execution."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.effect_sqlite.l1",
+      "scope": "orchestra.s1",
+      "title": "Effect SQLite transactions, migration refusal and Node limits",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/c/bodies/sqlite-adapters.md",
+        "encoding": "utf-8",
+        "byte_length": 3558,
+        "sha256": "b1dc22165fbdcee0a5811dc983548ac26f1189adc311e9855cfc22763b7d9597"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Generic adapter source does not establish Core startup, backup, restoration or after-commit policies.",
+        "Query-builder parity and Node package consumer absence are not independently proved.",
+        "Node executeStream is explicitly unimplemented."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.http_recorder.l1",
+      "scope": "orchestra.s1",
+      "title": "HTTP and socket recording contracts and limitations",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/c/bodies/http-recorder.md",
+        "encoding": "utf-8",
+        "byte_length": 3464,
+        "sha256": "4857371404625869016238e6ac23fbf7aad5ab0c7538f64df2ebfe91f1935fe7"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "No build, packed-consumer, replay or network execution receipt.",
+        "Recordings do not establish timing, backpressure, cancellation or bounded-memory fidelity.",
+        "Internal WebSocket helper has different chronology from public socket replay."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.guides_intent.l1",
+      "scope": "orchestra.s1",
+      "title": "User-guide intent with host implementation gaps",
+      "layer": 1,
+      "need": "operational",
+      "body": {
+        "path": "producers/c/bodies/user-guides.md",
+        "encoding": "utf-8",
+        "byte_length": 3362,
+        "sha256": "22303bf38d880468d845ec54732c2138f293243058d8cf8f1c6b9152c2587488"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Host implementation of guide claims was not read in this unit.",
+        "Config unknown-key behavior differs in documentary/schema surfaces and needs decoder evidence."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.runtime.maintenance_intent.l1",
+      "scope": "orchestra.s1",
+      "title": "Maintenance instructions, historical plans and configuration",
+      "layer": 1,
+      "need": "maintenance",
+      "body": {
+        "path": "producers/c/bodies/maintenance-intent.md",
+        "encoding": "utf-8",
+        "byte_length": 3852,
+        "sha256": "98d6626bcf2ae923fb8a905cef874bc3e086a42a71abc129a2e9471c0864bcb8"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Historical acceptance commands and completed labels are not current execution evidence.",
+        "Generated schema publisher and Core migration implementation are outside this source subset.",
+        "No L2–L4, semantic verdict or Atlas runtime object is produced here."
+      ],
+      "build_dependencies": [],
+      "navigation": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    }
+  ],
+  "known_limits": [
+    "Producer-local L1 source records only; independent semantic judges and real Atlas runtime proofs remain pending.",
+    "No uncaptured fixture is represented as a captured file input or accepted semantic source."
+  ],
+  "coverage_counts": {
+    "captured_assigned": 284,
+    "metadata_only": 39,
+    "by_depth": {
+      "document_read": 40,
+      "configuration_read": 17,
+      "decisive_implementation_read": 118,
+      "structural_scan": 39,
+      "declaration_scan": 53,
+      "json_structure": 6,
+      "git_metadata_only": 39,
+      "selected_document_sections": 2,
+      "decisive_harness_read": 5,
+      "structured_schema_read": 1,
+      "script_read": 3
+    }
+  },
+  "coverage_note": "A disposition covers ownership/classification; it is not semantic acceptance. Root AGENTS is an additional captured source outside the 323 assigned entries.",
+  "derived_by_family": {
+    "codemode": 42,
+    "effect-drizzle-sqlite": 28,
+    "effect-sqlite-node": 4,
+    "guides": 13,
+    "http-recorder": 24,
+    "llm": 155,
+    "maintenance-documents": 14,
+    "plugin": 43
+  },
+  "derived_by_kind": {
+    "build_configuration": 17,
+    "configuration_schema": 1,
+    "design_intent": 6,
+    "documentation": 23,
+    "example_or_script": 8,
+    "fixture": 44,
+    "historical_plan": 6,
+    "implementation": 141,
+    "instruction": 7,
+    "license_or_support": 2,
+    "media_asset": 1,
+    "test": 45,
+    "test_support": 13,
+    "vendored_adapter_support": 9
+  },
+  "derived_by_need": {
+    "component": 191,
+    "evidence": 105,
+    "maintenance": 14,
+    "operational": 13
+  },
+  "derived_by_disposition": {
+    "bounded_evidence": 186,
+    "classification_only": 137
+  },
+  "derived_by_artifact": [
+    {
+      "artifact_key": "s1.runtime.llm_turns.l1",
+      "entry_count": 32,
+      "families": {
+        "llm": 32
+      },
+      "depths": {
+        "configuration_read": 3,
+        "decisive_implementation_read": 20,
+        "document_read": 2,
+        "selected_document_sections": 2,
+        "structural_scan": 5
+      },
+      "kinds": {
+        "build_configuration": 3,
+        "design_intent": 1,
+        "documentation": 2,
+        "example_or_script": 1,
+        "implementation": 24,
+        "instruction": 1
+      },
+      "needs": {
+        "component": 32
+      },
+      "dispositions": {
+        "bounded_evidence": 27,
+        "classification_only": 5
+      },
+      "read_statuses": {
+        "captured_read": 3,
+        "captured_selected_read": 2,
+        "captured_semantic_read": 22,
+        "captured_structural_scan": 5
+      },
+      "captured_assigned": 32,
+      "metadata_only": 0
+    },
+    {
+      "artifact_key": "s1.runtime.llm_providers.l1",
+      "entry_count": 33,
+      "families": {
+        "llm": 33
+      },
+      "depths": {
+        "decisive_implementation_read": 26,
+        "structural_scan": 7
+      },
+      "kinds": {
+        "implementation": 33
+      },
+      "needs": {
+        "component": 33
+      },
+      "dispositions": {
+        "bounded_evidence": 26,
+        "classification_only": 7
+      },
+      "read_statuses": {
+        "captured_semantic_read": 26,
+        "captured_structural_scan": 7
+      },
+      "captured_assigned": 33,
+      "metadata_only": 0
+    },
+    {
+      "artifact_key": "s1.runtime.llm_recording.l1",
+      "entry_count": 90,
+      "families": {
+        "llm": 90
+      },
+      "depths": {
+        "decisive_harness_read": 5,
+        "declaration_scan": 42,
+        "git_metadata_only": 37,
+        "json_structure": 4,
+        "structural_scan": 2
+      },
+      "kinds": {
+        "example_or_script": 2,
+        "fixture": 40,
+        "media_asset": 1,
+        "test": 35,
+        "test_support": 12
+      },
+      "needs": {
+        "evidence": 90
+      },
+      "dispositions": {
+        "bounded_evidence": 5,
+        "classification_only": 85
+      },
+      "read_statuses": {
+        "captured_declarations_read": 42,
+        "captured_semantic_read": 5,
+        "captured_structural_scan": 2,
+        "captured_structure_read": 4,
+        "not_read": 37
+      },
+      "captured_assigned": 53,
+      "metadata_only": 37
+    },
+    {
+      "artifact_key": "s1.runtime.plugin.l1",
+      "entry_count": 43,
+      "families": {
+        "plugin": 43
+      },
+      "depths": {
+        "configuration_read": 3,
+        "decisive_implementation_read": 35,
+        "document_read": 4,
+        "structural_scan": 1
+      },
+      "kinds": {
+        "build_configuration": 3,
+        "design_intent": 1,
+        "documentation": 3,
+        "implementation": 35,
+        "license_or_support": 1
+      },
+      "needs": {
+        "component": 43
+      },
+      "dispositions": {
+        "bounded_evidence": 42,
+        "classification_only": 1
+      },
+      "read_statuses": {
+        "captured_read": 3,
+        "captured_semantic_read": 39,
+        "captured_structural_scan": 1
+      },
+      "captured_assigned": 43,
+      "metadata_only": 0
+    },
+    {
+      "artifact_key": "s1.runtime.codemode.l1",
+      "entry_count": 34,
+      "families": {
+        "codemode": 34
+      },
+      "depths": {
+        "configuration_read": 3,
+        "decisive_implementation_read": 10,
+        "declaration_scan": 7,
+        "document_read": 3,
+        "structural_scan": 11
+      },
+      "kinds": {
+        "build_configuration": 3,
+        "design_intent": 1,
+        "documentation": 1,
+        "implementation": 21,
+        "instruction": 1,
+        "test": 6,
+        "test_support": 1
+      },
+      "needs": {
+        "component": 27,
+        "evidence": 7
+      },
+      "dispositions": {
+        "bounded_evidence": 16,
+        "classification_only": 18
+      },
+      "read_statuses": {
+        "captured_declarations_read": 7,
+        "captured_read": 3,
+        "captured_semantic_read": 13,
+        "captured_structural_scan": 11
+      },
+      "captured_assigned": 34,
+      "metadata_only": 0
+    },
+    {
+      "artifact_key": "s1.runtime.codemode_openapi.l1",
+      "entry_count": 8,
+      "families": {
+        "codemode": 8
+      },
+      "depths": {
+        "decisive_implementation_read": 4,
+        "declaration_scan": 1,
+        "document_read": 1,
+        "git_metadata_only": 1,
+        "json_structure": 1
+      },
+      "kinds": {
+        "documentation": 1,
+        "fixture": 2,
+        "implementation": 4,
+        "test": 1
+      },
+      "needs": {
+        "component": 5,
+        "evidence": 3
+      },
+      "dispositions": {
+        "bounded_evidence": 5,
+        "classification_only": 3
+      },
+      "read_statuses": {
+        "captured_declarations_read": 1,
+        "captured_semantic_read": 5,
+        "captured_structure_read": 1,
+        "not_read": 1
+      },
+      "captured_assigned": 7,
+      "metadata_only": 1
+    },
+    {
+      "artifact_key": "s1.runtime.effect_sqlite.l1",
+      "entry_count": 32,
+      "families": {
+        "effect-drizzle-sqlite": 28,
+        "effect-sqlite-node": 4
+      },
+      "depths": {
+        "configuration_read": 5,
+        "decisive_implementation_read": 10,
+        "declaration_scan": 2,
+        "document_read": 3,
+        "structural_scan": 12
+      },
+      "kinds": {
+        "build_configuration": 5,
+        "documentation": 2,
+        "example_or_script": 2,
+        "implementation": 11,
+        "instruction": 1,
+        "test": 2,
+        "vendored_adapter_support": 9
+      },
+      "needs": {
+        "component": 30,
+        "evidence": 2
+      },
+      "dispositions": {
+        "bounded_evidence": 18,
+        "classification_only": 14
+      },
+      "read_statuses": {
+        "captured_declarations_read": 2,
+        "captured_read": 5,
+        "captured_semantic_read": 13,
+        "captured_structural_scan": 12
+      },
+      "captured_assigned": 32,
+      "metadata_only": 0
+    },
+    {
+      "artifact_key": "s1.runtime.http_recorder.l1",
+      "entry_count": 24,
+      "families": {
+        "http-recorder": 24
+      },
+      "depths": {
+        "configuration_read": 3,
+        "decisive_implementation_read": 13,
+        "declaration_scan": 1,
+        "document_read": 1,
+        "git_metadata_only": 1,
+        "json_structure": 1,
+        "script_read": 3,
+        "structural_scan": 1
+      },
+      "kinds": {
+        "build_configuration": 3,
+        "documentation": 1,
+        "example_or_script": 3,
+        "fixture": 2,
+        "implementation": 13,
+        "license_or_support": 1,
+        "test": 1
+      },
+      "needs": {
+        "component": 21,
+        "evidence": 3
+      },
+      "dispositions": {
+        "bounded_evidence": 20,
+        "classification_only": 4
+      },
+      "read_statuses": {
+        "captured_declarations_read": 1,
+        "captured_read": 3,
+        "captured_semantic_read": 17,
+        "captured_structural_scan": 1,
+        "captured_structure_read": 1,
+        "not_read": 1
+      },
+      "captured_assigned": 23,
+      "metadata_only": 1
+    },
+    {
+      "artifact_key": "s1.runtime.guides_intent.l1",
+      "entry_count": 13,
+      "families": {
+        "guides": 13
+      },
+      "depths": {
+        "document_read": 13
+      },
+      "kinds": {
+        "documentation": 13
+      },
+      "needs": {
+        "operational": 13
+      },
+      "dispositions": {
+        "bounded_evidence": 13
+      },
+      "read_statuses": {
+        "captured_semantic_read": 13
+      },
+      "captured_assigned": 13,
+      "metadata_only": 0
+    },
+    {
+      "artifact_key": "s1.runtime.maintenance_intent.l1",
+      "entry_count": 14,
+      "families": {
+        "maintenance-documents": 14
+      },
+      "depths": {
+        "document_read": 13,
+        "structured_schema_read": 1
+      },
+      "kinds": {
+        "configuration_schema": 1,
+        "design_intent": 3,
+        "historical_plan": 6,
+        "instruction": 4
+      },
+      "needs": {
+        "maintenance": 14
+      },
+      "dispositions": {
+        "bounded_evidence": 14
+      },
+      "read_statuses": {
+        "captured_selected_read": 1,
+        "captured_semantic_read": 13
+      },
+      "captured_assigned": 14,
+      "metadata_only": 0
+    }
+  ]
+}

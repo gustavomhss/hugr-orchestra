@@ -1,0 +1,57 @@
+{
+  "schema": "genesis-negative-dispatch-freeze/v1",
+  "frozen_before_dispatch_at": "2026-11-11T17:08:24.955890+00:00",
+  "production_not_yet_dispatched": true,
+  "oracle_sha256": "bcaeea762d7ef7c51d3593a9b2b4a3555946e5aa885854fc31a9f9436f398a2d",
+  "fixture_sha256": "f1ca4a02fd35278eb70fac4074b0c10e250a88e82013b789b112a3641165a2e8",
+  "source_packet_sha256": "9d4c950196ab5a596da8de80a466977ee4873a88441280eb28c4ac2cd269f86c",
+  "source_packet_bytes": 13593,
+  "source_refs": [
+    {
+      "path": "packages/core/src/session/input.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "start_line": 44,
+      "end_line": 94,
+      "excerpt_sha256": "23e8c1808243b79e985d8ea748d227c4504408f1024c81c499ae5e42535f977b"
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "start_line": 291,
+      "end_line": 303,
+      "excerpt_sha256": "df234a0fbe832bf27d4af4c5088759b1417763b456385f22bfe31e9b73ea75ff"
+    },
+    {
+      "path": "packages/core/src/session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "start_line": 491,
+      "end_line": 521,
+      "excerpt_sha256": "ca1f9a972ca86ec5821366714569e60681dcb7c5ec7c39360bffdeb08d94d319"
+    },
+    {
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "start_line": 1,
+      "end_line": 153,
+      "excerpt_sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa"
+    },
+    {
+      "path": "packages/core/src/session/execution/local.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+      "sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97",
+      "start_line": 1,
+      "end_line": 57,
+      "excerpt_sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97"
+    }
+  ],
+  "classification": "native producer controls, separate from Atlas runtime controls"
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/isolated-c-v2",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+    "/workspace/scratch/2b46fb541868/genesis-s1/output/runtime/preparation/prepared-c-r1-v2.json"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:14:02.159900+00:00",
+  "end": "2026-11-11T18:14:04.499328+00:00",
+  "exit_code": 0,
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "release_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+  "selected_package_sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060",
+  "stdout_sha256": "29eab30b178b2330347ef61b9c57ba77cf1bb2835b3560d0afad709fb6fd2ae5",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "product_tests": "NOT_RUN",
+  "binding": "NOT_RUN",
+  "publication": "NOT_RUN",
+  "scope": "ten accepted C bodies only; whole S1 remains IN_PROGRESS",
+  "state": "PROVEN_PREPARATION_ONLY",
+  "candidate_id": "1670bc712e472b9f449d277da324b17fa8fb951cbc62c2bc07fa8718e89c063f",
+  "contract": "d291ec8a5d4b11d04048f2214d9e44209ef35861e4bdfe272b455530e7063966",
+  "prepared_sha256": "da176fcfe22a0db1a45ba10f0d5cdbe84ca2958c8824ae47c02bad3f2cb65d94",
+  "prepared_bytes": 167141,
+  "entries": 10,
+  "observations": 294,
+  "observed_head": null
+}

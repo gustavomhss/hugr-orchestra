@@ -1,0 +1,15 @@
+[
+  {
+    "tool": "collaboration.followup_task",
+    "target": "/root/judge2",
+    "transporter": "/root/producer_c/transport_judge2",
+    "batch": "S1-L1-C-v1",
+    "supplement": "c-l1-evidence-v1",
+    "part": 1,
+    "request_path": "/workspace/scratch/2b46fb541868/genesis-s1/transports/c-l1-evidence-v1/part-01.request.txt",
+    "request_bytes": 38263,
+    "request_sha256": "9ecdbc1c253df59538e982c3f13da6c816426d11dca0950fcc308a004df043e3",
+    "visible_tool_result": "collab tool failed: agent thread limit reached",
+    "tool_error_observed": true
+  }
+]

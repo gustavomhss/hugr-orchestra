@@ -1,0 +1,75 @@
+{
+  "unit": "S1-L1-C",
+  "supplement": "c-l1-evidence-v1",
+  "directory": "/workspace/scratch/2b46fb541868/genesis-s1/revisions/c-l1-evidence-v1",
+  "payload_file_count": 64,
+  "archive_file_count_including_manifest": 65,
+  "files": [
+    {
+      "path": "c-l1-evidence-v1.tar.gz",
+      "bytes": 221304,
+      "sha256": "80d65faad2bdfbdefa7d74d51ca2e7e3c6e69115ddf6ebf4cfd941aac7a0f4d5"
+    },
+    {
+      "path": "package-manifest.json",
+      "bytes": 10460,
+      "sha256": "3d0ca72eee68f45bed478a8f2f4b8b2e6723c579a3285b8fa8330c06e8e90f81"
+    },
+    {
+      "path": "supplement.md",
+      "bytes": 203995,
+      "sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 1672,
+      "sha256": "1968965badb375c7a34244631f4980cac8f4bb728e4b27fbb12d56d25123dcc0"
+    },
+    {
+      "path": "R1-frozen-projection.md",
+      "bytes": 36851,
+      "sha256": "924dfaa18db69ac1d5185549e5a135479396042d7f8cb47b7670fd9487e85560"
+    },
+    {
+      "path": "R1-new-proposals.md",
+      "bytes": 8270,
+      "sha256": "5834eb80a3a90a13c88c750962e60e16e1ea1b93bf95b9c6dd9d86ee6d191f70"
+    },
+    {
+      "path": "R2-frozen-groups.md",
+      "bytes": 11332,
+      "sha256": "4456ffd48b73faab8cde8ab7de42f919ab53c1961b090606ce2e96d32389cbf0"
+    },
+    {
+      "path": "R3-implementation-spans.md",
+      "bytes": 127109,
+      "sha256": "63525fc3fe760444d5300eb5381cbef90037a3dd90c40c0b5b3d372757f21e10"
+    },
+    {
+      "path": "R4-documentary-spans.md",
+      "bytes": 18102,
+      "sha256": "9c34c51cfd13ab637df4edafe43bc84a9a5f636ab500fda96842c9b457e7a726"
+    }
+  ],
+  "artifact_count": 10,
+  "coverage_entries": 323,
+  "metadata_only_entries": 39,
+  "restored_groups": [
+    "C04",
+    "C06",
+    "C10",
+    "C17",
+    "C39",
+    "C43"
+  ],
+  "restored_excerpts": 9,
+  "additional_excerpt_groups": 34,
+  "additional_source_excerpts": 104,
+  "captured_sources_used": 48,
+  "original_gap_strings": 26,
+  "new_classification_proposals": 7,
+  "judge_dispatch": "none",
+  "product_execution": "none",
+  "originals": "unchanged; verified against frozen hashes",
+  "semantic_verdict": "not asserted"
+}

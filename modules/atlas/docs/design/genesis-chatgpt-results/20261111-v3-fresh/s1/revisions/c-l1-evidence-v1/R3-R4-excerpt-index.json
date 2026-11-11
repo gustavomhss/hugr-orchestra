@@ -1,0 +1,1765 @@
+[
+  {
+    "id": "E01",
+    "title": "OpenAI facade default, explicit selectors and auth",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E01.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/openai.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "098cad84939bc46c5d15ea2ebcdc396feb1edfeb",
+        "source_sha256": "ed9056796038052bf3ae53e98071c2cdb3d3bba6a73f877c27561d5e8d297882",
+        "line_start": 1,
+        "line_end": 6,
+        "byte_length": 401,
+        "sha256": "3f9df551f7921ea1696c255c273ab9ed9fdc68bc6ecf23dcda480c96555ed6ad",
+        "group_data_byte_start": 480,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/providers/openai.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "098cad84939bc46c5d15ea2ebcdc396feb1edfeb",
+        "source_sha256": "ed9056796038052bf3ae53e98071c2cdb3d3bba6a73f877c27561d5e8d297882",
+        "line_start": 10,
+        "line_end": 55,
+        "byte_length": 1865,
+        "sha256": "930b80c52d8ab0a60b50fe07a767e894e5591fd294d9c9b394d0f94adb803968",
+        "group_data_byte_start": 1266,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3137,
+    "group_sha256": "4f8d8731abf729ffdbb3a681c45d6c7cf9a09575c43b96b3bd4fb59861fc69f6"
+  },
+  {
+    "id": "E02",
+    "title": "Anthropic facade route and x-api-key resolution",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E02.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/anthropic.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "0c9640af5ea65bda1c50f73e5f8fdf3b35922841",
+        "source_sha256": "fc1ebda9167541ce18cce0160910ab08ec68a166b9c19ad9f62649678e214bf9",
+        "line_start": 1,
+        "line_end": 31,
+        "byte_length": 1176,
+        "sha256": "ff5f47df6c55c6cecb5f78bc3b41067a405ea3a37c2f8659abe6a49e70245213",
+        "group_data_byte_start": 482,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 1664,
+    "group_sha256": "59e4f714dbbf20f88f61ce1b76cc0a6bab74baf47b7c31c76b6cfaff7fd2ebeb"
+  },
+  {
+    "id": "E03",
+    "title": "Google facade route and x-goog-api-key resolution",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E03.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/google.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c8a72c31f671fb0b82686c8e082d4456c8001604",
+        "source_sha256": "58996462f9808e775367ec1cabe4158ba42650f4d6ca089ea8b1d7710ee4dc80",
+        "line_start": 1,
+        "line_end": 31,
+        "byte_length": 1144,
+        "sha256": "8e2e80bd187da43266f8fd137983b1da11b0ef81fc5dd479bac3bb5f329f9e83",
+        "group_data_byte_start": 481,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 1631,
+    "group_sha256": "4845585201fa481f7d61d9f919d1734bb19391a5471c92d285ec7291f21cda50"
+  },
+  {
+    "id": "E04",
+    "title": "Bedrock facade endpoint, region and auth branch",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E04.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/amazon-bedrock.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2f1791e0d620ab139e32158526e83229c464fa3f",
+        "source_sha256": "4902ee16f21cafa4f49f55acdce728b1db166ab55adb17dbfecf686b79c081a8",
+        "line_start": 1,
+        "line_end": 7,
+        "byte_length": 338,
+        "sha256": "2adcb72531883596844049af01692b85ce3ac796d5a3ad99b58f2ec0af645f22",
+        "group_data_byte_start": 485,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/providers/amazon-bedrock.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2f1791e0d620ab139e32158526e83229c464fa3f",
+        "source_sha256": "4902ee16f21cafa4f49f55acdce728b1db166ab55adb17dbfecf686b79c081a8",
+        "line_start": 18,
+        "line_end": 39,
+        "byte_length": 764,
+        "sha256": "2cce9433f240ab2f031f92c89261d1e83d27d725770b5373d4abbbeb7f3e769b",
+        "group_data_byte_start": 1215,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/protocols/bedrock-converse.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c447a1a39d346a39dd29eab59e2f3413ab9f8850",
+        "source_sha256": "cecbf39d8ec9a0d0837a9eb8e1f9a9966d16fc2c3d284c9e82806f8f0a5989df",
+        "line_start": 672,
+        "line_end": 672,
+        "byte_length": 43,
+        "sha256": "070cb03c7d458298bb889f40c20aa58a78dfefdf9bf03e88834e0aaf85174818",
+        "group_data_byte_start": 2374,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2423,
+    "group_sha256": "fee59611bd1fb69a12068f8887e09af07bd2a5a5d37baf02a5d82d6273686467"
+  },
+  {
+    "id": "E05",
+    "title": "Azure required URL alternatives, query/auth and model default",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E05.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/azure.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "bfac2d1cad34a680b62b3047e440988e112cd483",
+        "source_sha256": "8bf8f96445a42749ad8a856710ad27403afa186f644e554b7b7dc3fb4cae4961",
+        "line_start": 1,
+        "line_end": 46,
+        "byte_length": 1579,
+        "sha256": "b28a79ddd09944b027275931e1d7f54212b8bf283d4ada8ac04ab355064671ed",
+        "group_data_byte_start": 492,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/providers/azure.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "bfac2d1cad34a680b62b3047e440988e112cd483",
+        "source_sha256": "8bf8f96445a42749ad8a856710ad27403afa186f644e554b7b7dc3fb4cae4961",
+        "line_start": 65,
+        "line_end": 104,
+        "byte_length": 1437,
+        "sha256": "af76e4b6170de372e0555e1113be24aac1703dae99b1161e670d5afb1c671788",
+        "group_data_byte_start": 2456,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/auth-options.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "7e40aa12a2103369a1ee9f884fdef42e7ebb5b33",
+        "source_sha256": "623b152e96a7833de5c5ddf0b297461de2ad8990b6aa5e082c4b5376b05522d6",
+        "line_start": 33,
+        "line_end": 40,
+        "byte_length": 306,
+        "sha256": "adb8563942cceb96980f585471bd241640b557e358d93514721f72a0f5969dd0",
+        "group_data_byte_start": 4279,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 4591,
+    "group_sha256": "ad624560ca1443d23d2ffff1e82e71b2b139f2e18e85e7327db28bfbdcee55c6"
+  },
+  {
+    "id": "E06",
+    "title": "Copilot model-name routing and explicit endpoint/auth configuration",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E06.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/github-copilot.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1042f841456da4c6d2b3d687515b7641a791c72c",
+        "source_sha256": "e52daf8bda7a10fdeedeb20b96f1ed393b4d5291f494cd5c72f2c366e222244b",
+        "line_start": 1,
+        "line_end": 30,
+        "byte_length": 1323,
+        "sha256": "c282915197196a76f712df73bd91315d00e66db171d5f3159b83fdd12caa9be3",
+        "group_data_byte_start": 507,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/providers/github-copilot.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1042f841456da4c6d2b3d687515b7641a791c72c",
+        "source_sha256": "e52daf8bda7a10fdeedeb20b96f1ed393b4d5291f494cd5c72f2c366e222244b",
+        "line_start": 37,
+        "line_end": 64,
+        "byte_length": 986,
+        "sha256": "b3520718b1752d90499c04c753f2bdc2d69a309cc6f073f5f9119fb9a32d580d",
+        "group_data_byte_start": 2222,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3214,
+    "group_sha256": "41e33d9e4855ccd8e49a664fa0410c36cb032be9fc1b39f2e987e3192c256414"
+  },
+  {
+    "id": "E07",
+    "title": "Cloudflare derived endpoints and gateway/upstream auth branches",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E07.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/cloudflare.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a006152e9829cfc63bcd9a9ea5e27a0b2892aa04",
+        "source_sha256": "b616e983cac05b2a3d2480a4b1450ecc0a04ed03fe76c0434e6bb7bd89131ae6",
+        "line_start": 1,
+        "line_end": 11,
+        "byte_length": 687,
+        "sha256": "37d2ee502f758f267253b7d349cf651d0d2fefb8eb2d801e4d6df02877de7320",
+        "group_data_byte_start": 498,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/providers/cloudflare.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a006152e9829cfc63bcd9a9ea5e27a0b2892aa04",
+        "source_sha256": "b616e983cac05b2a3d2480a4b1450ecc0a04ed03fe76c0434e6bb7bd89131ae6",
+        "line_start": 36,
+        "line_end": 73,
+        "byte_length": 1694,
+        "sha256": "ae80b638dd03cb81742f709bb1853fe212cce55408dfa41b049f86f306624d54",
+        "group_data_byte_start": 1574,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/providers/cloudflare.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a006152e9829cfc63bcd9a9ea5e27a0b2892aa04",
+        "source_sha256": "b616e983cac05b2a3d2480a4b1450ecc0a04ed03fe76c0434e6bb7bd89131ae6",
+        "line_start": 93,
+        "line_end": 116,
+        "byte_length": 741,
+        "sha256": "7ec2570dcee5b9e455a36a7df30a24c07c2d79a17ca83da417ab3d79df72a675",
+        "group_data_byte_start": 3657,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 4404,
+    "group_sha256": "be5f6e71c5a3ccb680f0f1145e62e22dcb58962983254979742682618575f3f3"
+  },
+  {
+    "id": "E08",
+    "title": "Generic compatible facade and actual shared Chat protocol",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E08.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/openai-compatible.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a79f65f6dfe070c292ffe40722cf9d6a021a4ea7",
+        "source_sha256": "03a8b0a113bcf3eac0e27b1409280773e295c9eabb34351e17e10e702edc5022",
+        "line_start": 1,
+        "line_end": 35,
+        "byte_length": 1254,
+        "sha256": "3f64a4beb0644fa181b594ed4b2522bd5a7ed648f2e9860e73f3ed1327cee95c",
+        "group_data_byte_start": 500,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/protocols/openai-compatible-chat.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ce3f0a83d75a8dd646a9b7d588e9aa2dd6a61807",
+        "source_sha256": "b2c679ad7ee0d55a29dda1058e7541a745eae1e4024832fd98c6fee195415803",
+        "line_start": 1,
+        "line_end": 6,
+        "byte_length": 242,
+        "sha256": "27ac2d5a7bbec6fee02787b14641060d3e500899a6f1be064ce6f7c48f96bc55",
+        "group_data_byte_start": 2152,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/protocols/openai-compatible-chat.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ce3f0a83d75a8dd646a9b7d588e9aa2dd6a61807",
+        "source_sha256": "b2c679ad7ee0d55a29dda1058e7541a745eae1e4024832fd98c6fee195415803",
+        "line_start": 17,
+        "line_end": 22,
+        "byte_length": 157,
+        "sha256": "822e6ebdfccf4221708628dc92fc0c2bed95253c0a8c01a7b6bd0100da72d0ce",
+        "group_data_byte_start": 2794,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2957,
+    "group_sha256": "5af208a6cfb6a096042e0ed0bf52ec80497a122d0d16213b96087732b00090f5"
+  },
+  {
+    "id": "E09",
+    "title": "OpenRouter body extension, route and auth configuration",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E09.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/openrouter.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "914d7c0a0badbef0a6898588c497ca8c422935b5",
+        "source_sha256": "d036cfd496e0b4bac1beeb082f8ca41fa79ae5c7d6627381f45824039c4b0989",
+        "line_start": 1,
+        "line_end": 14,
+        "byte_length": 714,
+        "sha256": "d15f294d1faa63f11948fd6c9ffb441fceb1d68fada546f520e8c8786aef3348",
+        "group_data_byte_start": 490,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/providers/openrouter.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "914d7c0a0badbef0a6898588c497ca8c422935b5",
+        "source_sha256": "d036cfd496e0b4bac1beeb082f8ca41fa79ae5c7d6627381f45824039c4b0989",
+        "line_start": 33,
+        "line_end": 95,
+        "byte_length": 1796,
+        "sha256": "e48a27fd4c245ae57db6fdd33c197d22a1aba864730b041d28530888a6a0c93c",
+        "group_data_byte_start": 1593,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3395,
+    "group_sha256": "0b0b04d87efa4e8e67497f0147a2e572101b95e6e8ed89b0d5c0f44df45d1da1"
+  },
+  {
+    "id": "E10",
+    "title": "xAI Responses default with Chat selector",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E10.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/providers/xai.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "321db97db1049166f21f5aedc650894fe6f7bcd1",
+        "source_sha256": "5b4fe747f497d7008b1daaa442458d96af020964531d87f0c33849acfb650b41",
+        "line_start": 1,
+        "line_end": 50,
+        "byte_length": 1767,
+        "sha256": "f3a0ac656f8739b44eadf8f8d8de968ec1bbf7dd03275f1ae4b616620e5253e5",
+        "group_data_byte_start": 469,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2242,
+    "group_sha256": "f033f87b265fcee69e37dc3d5b416d1f5ef53174ad86051c3356dfaab64f97a7"
+  },
+  {
+    "id": "E11",
+    "title": "Shared bearer option/config fallback mechanism",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E11.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/route/auth-options.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "7e40aa12a2103369a1ee9f884fdef42e7ebb5b33",
+        "source_sha256": "623b152e96a7833de5c5ddf0b297461de2ad8990b6aa5e082c4b5376b05522d6",
+        "line_start": 42,
+        "line_end": 55,
+        "byte_length": 579,
+        "sha256": "eca590d61d6ccef0d13e673a1079a30c5d0f888817a7764836b235fa8f3897c3",
+        "group_data_byte_start": 480,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 1065,
+    "group_sha256": "1c0acdd7caf2fe8339fdcc15e002cc831a5298a791b7d81885746568d0cea26c"
+  },
+  {
+    "id": "E12",
+    "title": "Route/model/request precedence, recursive merge and compile use",
+    "artifact_keys": [
+      "s1.runtime.llm_turns.l1"
+    ],
+    "group_file": "excerpts/E12.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/route/client.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "5f064512f9ff1b449137778440eb0fd6b86c8131",
+        "source_sha256": "d5dea2096bdab9ef55e1d9593d5eb5e05adf0c7c873b5cfc8671b73b322e37c1",
+        "line_start": 167,
+        "line_end": 180,
+        "byte_length": 615,
+        "sha256": "b34fb03463fa84275cabd9758520d5804fb6ec4ad82c1d267980ca2301da4d8e",
+        "group_data_byte_start": 489,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/client.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "5f064512f9ff1b449137778440eb0fd6b86c8131",
+        "source_sha256": "d5dea2096bdab9ef55e1d9593d5eb5e05adf0c7c873b5cfc8671b73b322e37c1",
+        "line_start": 341,
+        "line_end": 351,
+        "byte_length": 579,
+        "sha256": "404578ad55ff1ca0ea97ccbfda140bd923236030fd793ca90bdd91ecd48bec62",
+        "group_data_byte_start": 1486,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/schema/options.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "fd4f8891921ca458ff6ffe9602e15f1732e6547a",
+        "source_sha256": "e0d71751715d707c735e927be0e1f30488fbd98ed3630675acc16fd531b1b867",
+        "line_start": 6,
+        "line_end": 34,
+        "byte_length": 1307,
+        "sha256": "de29fa57716e37ecf023deb8b3bf094d0af5998db7ff2c66eea823303d5c2be0",
+        "group_data_byte_start": 2447,
+        "frozen_coverage_depth": "structural_scan",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/schema/options.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "fd4f8891921ca458ff6ffe9602e15f1732e6547a",
+        "source_sha256": "e0d71751715d707c735e927be0e1f30488fbd98ed3630675acc16fd531b1b867",
+        "line_start": 39,
+        "line_end": 51,
+        "byte_length": 490,
+        "sha256": "950d8ac1969a295f9add407e48ef09b9c06575e78304c57bb8047357f5f18d65",
+        "group_data_byte_start": 4136,
+        "frozen_coverage_depth": "structural_scan",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/schema/options.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "fd4f8891921ca458ff6ffe9602e15f1732e6547a",
+        "source_sha256": "e0d71751715d707c735e927be0e1f30488fbd98ed3630675acc16fd531b1b867",
+        "line_start": 66,
+        "line_end": 72,
+        "byte_length": 434,
+        "sha256": "040cf38b3a117a059fba1eaa592444a3108279e0f45d9f17af65ff633efc3d87",
+        "group_data_byte_start": 5008,
+        "frozen_coverage_depth": "structural_scan",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/schema/options.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "fd4f8891921ca458ff6ffe9602e15f1732e6547a",
+        "source_sha256": "e0d71751715d707c735e927be0e1f30488fbd98ed3630675acc16fd531b1b867",
+        "line_start": 105,
+        "line_end": 122,
+        "byte_length": 863,
+        "sha256": "4dd898425991bd0784352159da5f61598f2ace86ac563e8cf34bda58f2a745fa",
+        "group_data_byte_start": 5826,
+        "frozen_coverage_depth": "structural_scan",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/utils/record.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a121fbde11a543fc674b2037fc051124492c1775",
+        "source_sha256": "d231e3f27c46bea0337dfaca41704d3729cd12b31f19c3afa0fb8112ec203a30",
+        "line_start": 1,
+        "line_end": 3,
+        "byte_length": 257,
+        "sha256": "d231e3f27c46bea0337dfaca41704d3729cd12b31f19c3afa0fb8112ec203a30",
+        "group_data_byte_start": 7067,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 7330,
+    "group_sha256": "88e62692f0c47f8bad2010fc6590118cc58eb2486c9b843953e9991809fd74c4"
+  },
+  {
+    "id": "E13",
+    "title": "Automatic cache route selection and preservation of existing hints",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1",
+      "s1.runtime.llm_turns.l1"
+    ],
+    "group_file": "excerpts/E13.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/cache-policy.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "60f96dc69aaa84e7b7d62fca97b96dac9f674924",
+        "source_sha256": "ad5d88575b9d5bff6f2896c9737e241b8c9e4caa39761c69947d5ee9acb7eaa7",
+        "line_start": 18,
+        "line_end": 24,
+        "byte_length": 138,
+        "sha256": "5987a6f0196fc239f474dbc266ea2ed2c473d79e42b1d10e03f040ae9ae47653",
+        "group_data_byte_start": 519,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/cache-policy.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "60f96dc69aaa84e7b7d62fca97b96dac9f674924",
+        "source_sha256": "ad5d88575b9d5bff6f2896c9737e241b8c9e4caa39761c69947d5ee9acb7eaa7",
+        "line_start": 33,
+        "line_end": 59,
+        "byte_length": 1316,
+        "sha256": "8dec0b3f0008a75a4730d639589027e9123bdafbe611bad264599d83267e1760",
+        "group_data_byte_start": 1038,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/cache-policy.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "60f96dc69aaa84e7b7d62fca97b96dac9f674924",
+        "source_sha256": "ad5d88575b9d5bff6f2896c9737e241b8c9e4caa39761c69947d5ee9acb7eaa7",
+        "line_start": 67,
+        "line_end": 83,
+        "byte_length": 1010,
+        "sha256": "a2e6594301050adccb1b50a640ee6f8f77c727556db5b7a0aa81c21874835a89",
+        "group_data_byte_start": 2735,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/cache-policy.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "60f96dc69aaa84e7b7d62fca97b96dac9f674924",
+        "source_sha256": "ad5d88575b9d5bff6f2896c9737e241b8c9e4caa39761c69947d5ee9acb7eaa7",
+        "line_start": 99,
+        "line_end": 111,
+        "byte_length": 756,
+        "sha256": "a6ae6d6557e2bb2aef8375552ebb704f253b5139f1953b74fd65a7f1f2c8ef38",
+        "group_data_byte_start": 4126,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 4888,
+    "group_sha256": "99ce91aa49d6f35c954df551ec4c8eba4867616dfbc98429dc1fc16660991981"
+  },
+  {
+    "id": "E14",
+    "title": "HTTP final URL/body/header overlays precede auth",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E14.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/route/transport/http.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "acc52c6ea173c28f92247b0fd31d58ea688df7e5",
+        "source_sha256": "7f956da303ff5d0532498901845ee0e64a26fa78dd25697b229d3855c9483dd7",
+        "line_start": 73,
+        "line_end": 106,
+        "byte_length": 1515,
+        "sha256": "054c3eaaa6f7ef00e5f87deb90d0910c1b289a0ed15b9e79a9abdb82423155d8",
+        "group_data_byte_start": 486,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2007,
+    "group_sha256": "34d00b53f40fdb78728a50665246869c803420a5f841dff737f35b3b5d545e89"
+  },
+  {
+    "id": "E15",
+    "title": "CodeMode constructed globals, scope-only lookup and explicit tool entry",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "group_file": "excerpts/E15.md",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 617,
+        "line_end": 661,
+        "byte_length": 3181,
+        "sha256": "5344d22e65201ce38539ba23e51dc8c184b6746d2769569d3f479aa7b941cef5",
+        "group_data_byte_start": 509,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3267,
+        "line_end": 3279,
+        "byte_length": 528,
+        "sha256": "c31130031ffbce1754be6fcd1324314568236e71f1b32d07e783be4f470df1ad",
+        "group_data_byte_start": 4086,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3297,
+        "line_end": 3308,
+        "byte_length": 296,
+        "sha256": "d7afc83db406f32cb9958e7bba7219d4f197629a3df402e605c643fa3e9758c8",
+        "group_data_byte_start": 5010,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3340,
+        "line_end": 3354,
+        "byte_length": 624,
+        "sha256": "c3a77e11139ebc1ec309d8c8b988bad11c843214c523fb263bd30574b1a8774f",
+        "group_data_byte_start": 5702,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3366,
+        "line_end": 3376,
+        "byte_length": 435,
+        "sha256": "95f458efc2e7f11d315d676e3e341d168c703da31e4de5ffb27311318bb124f1",
+        "group_data_byte_start": 6722,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 7163,
+    "group_sha256": "1d95ea3682e679afea33b17acba46c14a4dfd4ad6d443fff12b3f1e9c1755f1d"
+  },
+  {
+    "id": "E16",
+    "title": "CodeMode property access refuses blocked names and opaque runtime references",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "group_file": "excerpts/E16.md",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 550,
+        "line_end": 573,
+        "byte_length": 1248,
+        "sha256": "950148e7c2209bd5883547e942c4de4470c244b8267ad091eccb2e92877b7e92",
+        "group_data_byte_start": 514,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 1921,
+        "line_end": 1940,
+        "byte_length": 1094,
+        "sha256": "b208f41eb32de30b6edc9b52cbb7deb794d3d59b4f6753a68b2687bc2bf0f1e1",
+        "group_data_byte_start": 2159,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/stdlib/object.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2beda0bf5cae137b0715b61c603de05c6320f287",
+        "source_sha256": "7caf81d60f974e35ca81e09992a3192a6c19aaed18974141d6c829fce9f1b4c6",
+        "line_start": 6,
+        "line_end": 21,
+        "byte_length": 941,
+        "sha256": "85c1eae2143da60abb087e311a64c05d972c798ce49d8445d40606f6949d7137",
+        "group_data_byte_start": 3638,
+        "frozen_coverage_depth": "structural_scan",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/stdlib/math.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cc8dd0670e969929366e3fe8f07b700cc5f219f7",
+        "source_sha256": "cd80397a1ee8d106f7c850b5d068884117954d6422ba203da843ba9196c4d554",
+        "line_start": 1,
+        "line_end": 23,
+        "byte_length": 518,
+        "sha256": "0c8f6b82c3daa36e1c0fce9175589fbf9746eed6892514e98d1b6a3f683fc162",
+        "group_data_byte_start": 4962,
+        "frozen_coverage_depth": "structural_scan",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 2965,
+        "line_end": 3001,
+        "byte_length": 1665,
+        "sha256": "ef957f59462a32f65f5aacc98b3ae004373aa72ab69842ff2eeb648c7147487f",
+        "group_data_byte_start": 5877,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3067,
+        "line_end": 3122,
+        "byte_length": 2569,
+        "sha256": "cf1111a655479261787a2925e4a83f3adfb5d707e88f18b924009972c14b1c34",
+        "group_data_byte_start": 7939,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 10514,
+    "group_sha256": "1b0667d1f7c4b8b11ebd0b06e7819120bca130631f075a435bd29f08b0a07bb7"
+  },
+  {
+    "id": "E17",
+    "title": "CodeMode depth limit, blocked names and recursive plain-data enforcement",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "group_file": "excerpts/E17.md",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/tool-runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "f4ccc61d4c49a4f7572906559e5a4e2a11acdec9",
+        "source_sha256": "4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20",
+        "line_start": 117,
+        "line_end": 122,
+        "byte_length": 231,
+        "sha256": "cb93857eb2432d1342dfeefa17a9968408ece1fd040a48be66e098171a1ce431",
+        "group_data_byte_start": 502,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/tool-runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "f4ccc61d4c49a4f7572906559e5a4e2a11acdec9",
+        "source_sha256": "4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20",
+        "line_start": 152,
+        "line_end": 183,
+        "byte_length": 1528,
+        "sha256": "e0e210054b035032c1275f49a9953eb217e4c9abf429d7f9efcedc36d956463d",
+        "group_data_byte_start": 1121,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/tool-runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "f4ccc61d4c49a4f7572906559e5a4e2a11acdec9",
+        "source_sha256": "4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20",
+        "line_start": 269,
+        "line_end": 295,
+        "byte_length": 913,
+        "sha256": "5d290c91516895ad1523dc38fa397b6344f77bae722ff7d452b275aabd3e6795",
+        "group_data_byte_start": 3036,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3955,
+    "group_sha256": "0b70bfe2f96746c8872ce0c9332925846ddf471256e1f046f9e999957b26ac01"
+  },
+  {
+    "id": "E18",
+    "title": "Eight permits, eager supervised calls and pending-call drainage",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "group_file": "excerpts/E18.md",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/stdlib/promise.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "d0b442ccf74f2230e0e8cbe060b0be86a120ce6a",
+        "source_sha256": "ba9f90a9bb9c37feefbbc26b4cc28f259224a26fea193840162841d6fbe89609",
+        "line_start": 3,
+        "line_end": 6,
+        "byte_length": 227,
+        "sha256": "443654c970a3e25a4b0f356fd4d5b5a8701eb5a73ae52ef2c0a79d18b7c66800",
+        "group_data_byte_start": 491,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 70,
+        "line_end": 70,
+        "byte_length": 77,
+        "sha256": "d99ee336f0b258d68b3c60402614f0293719238c4254d014d99b5dbe25a5c446",
+        "group_data_byte_start": 1109,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 610,
+        "line_end": 615,
+        "byte_length": 474,
+        "sha256": "49547dd7965343ac4a96f1d21620f6c1e45c55db4c9ef1469d8893b1755e36a1",
+        "group_data_byte_start": 1580,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 690,
+        "line_end": 749,
+        "byte_length": 2928,
+        "sha256": "cdaf0fd421ea870cd210608d8f085956ca9096608f9cb96ac4b8f6cc845f4d92",
+        "group_data_byte_start": 2449,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 1895,
+        "line_end": 1911,
+        "byte_length": 886,
+        "sha256": "16c902835e15bf0aa8c2d28c3e3682c9e13133ca2824dd88d846c16f7987d93d",
+        "group_data_byte_start": 5773,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 6665,
+    "group_sha256": "c7e167e07745b4b6aaca2a0d21c96d405bcc183b4e3c8b8396ad788c5bca9dfe"
+  },
+  {
+    "id": "E19",
+    "title": "OpenAPI request construction and validation precede auth; auth headers apply last",
+    "artifact_keys": [
+      "s1.runtime.codemode_openapi.l1"
+    ],
+    "group_file": "excerpts/E19.md",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/openapi/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "source_sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d",
+        "line_start": 11,
+        "line_end": 30,
+        "byte_length": 768,
+        "sha256": "3c40f2812b41aa35112e1be5a244d7e0c3ee73176bd06e6e4246b5bba23bd8c0",
+        "group_data_byte_start": 520,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/codemode/src/openapi/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "source_sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d",
+        "line_start": 54,
+        "line_end": 114,
+        "byte_length": 2821,
+        "sha256": "85cc5156eface1cd1b98e7a3dba204226e23541ba8d59f38e8ad55a59eb0dafd",
+        "group_data_byte_start": 1678,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 4505,
+    "group_sha256": "39583e0fe9f5660c444a977741f9112b4e955c135c3fff77aaf1a9f3f8b3bb36"
+  },
+  {
+    "id": "E20",
+    "title": "OpenAPI security alternatives and conflicting credential carriers",
+    "artifact_keys": [
+      "s1.runtime.codemode_openapi.l1"
+    ],
+    "group_file": "excerpts/E20.md",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/openapi/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "source_sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d",
+        "line_start": 116,
+        "line_end": 198,
+        "byte_length": 3464,
+        "sha256": "5782a890161d2fc274ac0d73e40f0ba47c708de9134b3b139d1bb1e7cf35b7ae",
+        "group_data_byte_start": 507,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3977,
+    "group_sha256": "9e54d2656ae39526815e15655a1b30fe936e1e55ffe5d2d09847fff277ab98f7"
+  },
+  {
+    "id": "E21",
+    "title": "SQLite reserve/reuse, transaction state, interruption restoration and scope closure",
+    "artifact_keys": [
+      "s1.runtime.effect_sqlite.l1"
+    ],
+    "group_file": "excerpts/E21.md",
+    "excerpts": [
+      {
+        "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "e7b9d6b32cd835bdf54d70ba39e92a5839f26968",
+        "source_sha256": "4fa29583a6cbd148a5a8699dfd96d87944b2b04a559335c461a6e3635d7d9cf1",
+        "line_start": 115,
+        "line_end": 218,
+        "byte_length": 4793,
+        "sha256": "bf9abc52573140a2c29bdccb2519b2b21d0114c3cf8bbd7759c3600065d354ac",
+        "group_data_byte_start": 541,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 5340,
+    "group_sha256": "3fa6b3d4d93e628fa89503b7a985bc21f564d37b36f92b65a0b2341db0cf06b4"
+  },
+  {
+    "id": "E22",
+    "title": "SQLite init journal-only branch and normal transactional statements/journal",
+    "artifact_keys": [
+      "s1.runtime.effect_sqlite.l1"
+    ],
+    "group_file": "excerpts/E22.md",
+    "excerpts": [
+      {
+        "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/session.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "15a56f2ca7d9fe73a1fdaaa244d3430fb74cd965",
+        "source_sha256": "54648e442841965faa98f12948903d3805207412d338bedbe460e27034114d82",
+        "line_start": 426,
+        "line_end": 490,
+        "byte_length": 2116,
+        "sha256": "2975c5ef7dcd31a32632dbd6a1ec58b0d04345bcf2cfa342beaaf965c2e7e22d",
+        "group_data_byte_start": 538,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2660,
+    "group_sha256": "39eab7bdb1879626a1ca0d0dda8b470314e5f25b017a00ef4422c063cc19dac4"
+  },
+  {
+    "id": "E23",
+    "title": "Recorder redaction configuration reaches request and response snapshots",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "group_file": "excerpts/E23.md",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/effect.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "583dee8ca12230382d0835bc564096b1c874bfe1",
+        "source_sha256": "404e3d62496531efc09a272f3f543345238f3528b9c2da4c116ad8a4150383ae",
+        "line_start": 16,
+        "line_end": 25,
+        "byte_length": 403,
+        "sha256": "6d5f22e531695507b987ae26a7973a05fdbba163251ad52502793a8be57ac1f7",
+        "group_data_byte_start": 502,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/redactor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "582c647702abcaf1496e6da634d699482d78bc3e",
+        "source_sha256": "b283b934d9a83278cdf3fa34cd5f95ea760125e778d8b58ef18f667a08d86f7d",
+        "line_start": 8,
+        "line_end": 9,
+        "byte_length": 184,
+        "sha256": "2ec2e07b2555802422a4f3064c94f85544b447c79701cb7ada7087a936ccad83",
+        "group_data_byte_start": 1288,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/redactor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "582c647702abcaf1496e6da634d699482d78bc3e",
+        "source_sha256": "b283b934d9a83278cdf3fa34cd5f95ea760125e778d8b58ef18f667a08d86f7d",
+        "line_start": 18,
+        "line_end": 24,
+        "byte_length": 552,
+        "sha256": "9200a61e5c9fbd134f85a428532184eef44cffc20cef0db646f32526535e79bd",
+        "group_data_byte_start": 1857,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/redactor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "582c647702abcaf1496e6da634d699482d78bc3e",
+        "source_sha256": "b283b934d9a83278cdf3fa34cd5f95ea760125e778d8b58ef18f667a08d86f7d",
+        "line_start": 32,
+        "line_end": 53,
+        "byte_length": 794,
+        "sha256": "fbd8e6860453421daa9d56e7879f3ad6a5c83a24086ee4cc6cd0085cdb0b3e9c",
+        "group_data_byte_start": 2794,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/redactor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "582c647702abcaf1496e6da634d699482d78bc3e",
+        "source_sha256": "b283b934d9a83278cdf3fa34cd5f95ea760125e778d8b58ef18f667a08d86f7d",
+        "line_start": 72,
+        "line_end": 127,
+        "byte_length": 1866,
+        "sha256": "7647f5e7c7e802f692185fcbeb36fb01416fede46b3a69c6d1290e039609dbc3",
+        "group_data_byte_start": 3975,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/internal-effect.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "6b886311a99548188be8ab4086dc30be49bf6846",
+        "source_sha256": "06b7522ec87f00c79ea9045e3570921de90ef910c740e7c757faf12836fa1c2d",
+        "line_start": 100,
+        "line_end": 116,
+        "byte_length": 799,
+        "sha256": "1f3b72791ede9a7a07275fccc345e19efbb92f107550c04a840b7351a2e540e1",
+        "group_data_byte_start": 6235,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/internal-effect.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "6b886311a99548188be8ab4086dc30be49bf6846",
+        "source_sha256": "06b7522ec87f00c79ea9045e3570921de90ef910c740e7c757faf12836fa1c2d",
+        "line_start": 129,
+        "line_end": 145,
+        "byte_length": 812,
+        "sha256": "10a20faa08b91a6f1a3890e6eb8be41f1b1413ba5f2013c5bd16de35895557ba",
+        "group_data_byte_start": 7428,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 8246,
+    "group_sha256": "91c0ec48e8b5def15b4b7969c182224d8a7b3a4a313578a41d5f5a9645e83e2b"
+  },
+  {
+    "id": "E24",
+    "title": "Recorder known/configured names, URL/header redaction and bounded secret scan",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "group_file": "excerpts/E24.md",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/redaction.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b84996adecb921b8edceddce49364e42b592f9ba",
+        "source_sha256": "033907c13b7d5e84855c7eb1b839b5b48cdc51f4bc59ea52f68b88a7d2c2c593",
+        "line_start": 3,
+        "line_end": 98,
+        "byte_length": 3411,
+        "sha256": "5dcb261f41a9310cc93f7923a2efb1a69b3da2857b8797d8508a8b29011fb610",
+        "group_data_byte_start": 511,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/redaction.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b84996adecb921b8edceddce49364e42b592f9ba",
+        "source_sha256": "033907c13b7d5e84855c7eb1b839b5b48cdc51f4bc59ea52f68b88a7d2c2c593",
+        "line_start": 106,
+        "line_end": 117,
+        "byte_length": 489,
+        "sha256": "2b378990f8235bd48d84828d482507581d76acee51d67deeb7d1fc539246ea10",
+        "group_data_byte_start": 4310,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 4805,
+    "group_sha256": "a11023d4a96aad70eaaa23e7ca31eab8aed1799c16abf16e3d9bfac224a55fc9"
+  },
+  {
+    "id": "E25",
+    "title": "Recorder lexical path, unsafe-cassette refusal and temp-write/rename sequence",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "group_file": "excerpts/E25.md",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/cassette.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cefc3fbc703db1f8e4dceb1cf9249f900dadd08a",
+        "source_sha256": "e023331feff17778547ae4d42387ce9a7147ddc40e01b2464b7fddc8ea4ae4f0",
+        "line_start": 41,
+        "line_end": 50,
+        "byte_length": 508,
+        "sha256": "88fd30ed874ee504e99b7b25fd18b8037728bffbb8cca26e25d4af1dbd28e075",
+        "group_data_byte_start": 510,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/cassette.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cefc3fbc703db1f8e4dceb1cf9249f900dadd08a",
+        "source_sha256": "e023331feff17778547ae4d42387ce9a7147ddc40e01b2464b7fddc8ea4ae4f0",
+        "line_start": 69,
+        "line_end": 70,
+        "byte_length": 190,
+        "sha256": "6cf9838a46d7755b1ef00761767a8dea5d2d67d08f374ac4e57479de0624ed8e",
+        "group_data_byte_start": 1403,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/cassette.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cefc3fbc703db1f8e4dceb1cf9249f900dadd08a",
+        "source_sha256": "e023331feff17778547ae4d42387ce9a7147ddc40e01b2464b7fddc8ea4ae4f0",
+        "line_start": 104,
+        "line_end": 123,
+        "byte_length": 1228,
+        "sha256": "56e6dd3c0a7192ec7ce90660a9f78de3276c7fd5301c8c9de30a09ae845cb37c",
+        "group_data_byte_start": 1981,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3215,
+    "group_sha256": "217c9d9e4a06c0a0f25eb98b2b311672b29f44b6bb2c82a995b6b41402c64166"
+  },
+  {
+    "id": "E26",
+    "title": "Recorder binary encoding and socket redaction boundary",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "group_file": "excerpts/E26.md",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/internal-effect.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "6b886311a99548188be8ab4086dc30be49bf6846",
+        "source_sha256": "06b7522ec87f00c79ea9045e3570921de90ef910c740e7c757faf12836fa1c2d",
+        "line_start": 55,
+        "line_end": 62,
+        "byte_length": 361,
+        "sha256": "8dfab5097c6e513dee2d85cce2fa1cce781193ce11908bb429d8651c8823f221",
+        "group_data_byte_start": 494,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/socket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c7486db4aa29bc88bd48eaa17890286670cb575d",
+        "source_sha256": "92a6e20bdf6d056f0bcbbc861b508db62a5accc5a8c0659f140b15dad5086228",
+        "line_start": 34,
+        "line_end": 49,
+        "byte_length": 800,
+        "sha256": "fbfc4a3bd854b29d41252790da5219d880fa7d7985d40876c02072ca39b1f531",
+        "group_data_byte_start": 1238,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/src/socket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c7486db4aa29bc88bd48eaa17890286670cb575d",
+        "source_sha256": "92a6e20bdf6d056f0bcbbc861b508db62a5accc5a8c0659f140b15dad5086228",
+        "line_start": 291,
+        "line_end": 298,
+        "byte_length": 438,
+        "sha256": "41b55094c4ae44e1193f794059d03a5d1bd6cad1703e54349efa6d2221bf4148",
+        "group_data_byte_start": 2423,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2867,
+    "group_sha256": "dce9cccb3823bbade24bd20c16906f1c26f3245ebf3309d2537011568b0f4eb2"
+  },
+  {
+    "id": "E27",
+    "title": "Associated C06 support: classifier, retry default, redacted diagnostics and post-read truncation",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E27.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/route/executor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+        "source_sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+        "line_start": 35,
+        "line_end": 39,
+        "byte_length": 132,
+        "sha256": "05b071b9e3435b2696149ba5b881bddb4f1568ccf993a509ebfd1d8dc9be46e1",
+        "group_data_byte_start": 526,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/executor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+        "source_sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+        "line_start": 48,
+        "line_end": 74,
+        "byte_length": 1244,
+        "sha256": "99193364253782ec3dd467bd549bc6f313d69f871b12c8e30322901e61c5dc5f",
+        "group_data_byte_start": 1041,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/executor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+        "source_sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+        "line_start": 150,
+        "line_end": 164,
+        "byte_length": 528,
+        "sha256": "bff0daa613f20c68385c4a801afa8564171bc55a329bff2ab474f8b204f672b6",
+        "group_data_byte_start": 2669,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/executor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+        "source_sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+        "line_start": 188,
+        "line_end": 222,
+        "byte_length": 1677,
+        "sha256": "bbc102e6cd51f143bdc52fc5f683777a68dbc00f8045c75fb416cd172f72055c",
+        "group_data_byte_start": 3582,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/executor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+        "source_sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+        "line_start": 225,
+        "line_end": 305,
+        "byte_length": 2795,
+        "sha256": "6d4dfbb76b4f41b64f10f9fffa2f91301ed74ea6c6a0b3520c731e8baff158d7",
+        "group_data_byte_start": 5644,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/executor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+        "source_sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+        "line_start": 370,
+        "line_end": 378,
+        "byte_length": 445,
+        "sha256": "5fd05a835f471700e06cc8589f4d98412ac06f2008949ecc62e8ed199821472d",
+        "group_data_byte_start": 8823,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/schema/errors.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "072e4e83892890ba48b25e45eb3cd2592afc9f86",
+        "source_sha256": "a1b34b20c32343aeece5d0da5e93896f7b1102b7a2cf4e1b65609d982ba5b159",
+        "line_start": 62,
+        "line_end": 73,
+        "byte_length": 412,
+        "sha256": "d55491f8db2547cb87411d02587ac23ea79c982bc7ed2177df03d640a93edc32",
+        "group_data_byte_start": 9649,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/schema/errors.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "072e4e83892890ba48b25e45eb3cd2592afc9f86",
+        "source_sha256": "a1b34b20c32343aeece5d0da5e93896f7b1102b7a2cf4e1b65609d982ba5b159",
+        "line_start": 181,
+        "line_end": 183,
+        "byte_length": 57,
+        "sha256": "fa8ba6a554ed01a119e8f8258d6bcc69ac12d4c27d6b2a5ba2a449895a869c13",
+        "group_data_byte_start": 10443,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 10506,
+    "group_sha256": "7b149b9f1e2dbd027d47ec1d3d0dffd853f2c95f4bf797bd30d70e31a3deed91"
+  },
+  {
+    "id": "E28",
+    "title": "Associated C10 support: Responses protocol reuse and WebSocket message preparation",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/E28.md",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/protocols/openai-responses.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503",
+        "source_sha256": "3f097c0228e1d579c602569292b443459dc802bc8b9f10387e66c0c67beda46e",
+        "line_start": 977,
+        "line_end": 1013,
+        "byte_length": 1149,
+        "sha256": "2c6b8a633295b8839de162319e9b30cc7a849bc1e7fdea62671565c525867958",
+        "group_data_byte_start": 528,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/llm/src/route/transport/websocket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "edb8aafa28922cbe1dda18c28367e0b3487297b7",
+        "source_sha256": "faf505cee9cb136244b6dd36db4209770243028f0fbd48bb2463e4b694a3a6e9",
+        "line_start": 226,
+        "line_end": 239,
+        "byte_length": 517,
+        "sha256": "38617a11359902b4bf781f027dc58c1a79e2560828440650a6381c2e9fd331b1",
+        "group_data_byte_start": 2072,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2595,
+    "group_sha256": "0d499719eb974f2902284a021d1d83d794e90d4d854ee93a63dd8895f324f679"
+  },
+  {
+    "id": "E29",
+    "title": "Associated C17 support: TUI lifecycle and preceding capability declarations",
+    "artifact_keys": [
+      "s1.runtime.plugin.l1"
+    ],
+    "group_file": "excerpts/E29.md",
+    "excerpts": [
+      {
+        "path": "packages/plugin/src/tui.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "df0eec88398ab435191810dc5e651b746561c512",
+        "source_sha256": "cdc7bc32e189f2924c79e587729458f7c39bac7d3be08b30637b7cf09e9a6d28",
+        "line_start": 560,
+        "line_end": 565,
+        "byte_length": 159,
+        "sha256": "bd955c78a1fbd3a5423702c68f69aaccbfc823ae4c3863d2af1f08034ade84ee",
+        "group_data_byte_start": 492,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "packages/plugin/src/tui.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "df0eec88398ab435191810dc5e651b746561c512",
+        "source_sha256": "cdc7bc32e189f2924c79e587729458f7c39bac7d3be08b30637b7cf09e9a6d28",
+        "line_start": 618,
+        "line_end": 646,
+        "byte_length": 1114,
+        "sha256": "32567f7309966e2b2518c926f145f45877ef9e7774a6c7ebba4bb9623295f6c7",
+        "group_data_byte_start": 1028,
+        "frozen_coverage_depth": "decisive_implementation_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2148,
+    "group_sha256": "d5e4cd23108a12b909544515bf8b8d1451ae3ad5ce063e74c94030efe60dfdc0"
+  },
+  {
+    "id": "E30",
+    "title": "Associated C39 support: workspace exports, runtime/peer declarations and retained build files",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "group_file": "excerpts/E30.md",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/package.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cbee51daaf63a3bf771afb7e0d3ec23acb24e015",
+        "source_sha256": "913278b6857c59b808ccedae530e0179cbf9869f008abd6ef8272965da4bb7dc",
+        "line_start": 23,
+        "line_end": 25,
+        "byte_length": 39,
+        "sha256": "e09ee2abbfde675ec6ba6d418c13d33c4d8b8b65cba695f57cd65b832ad09b7a",
+        "group_data_byte_start": 522,
+        "frozen_coverage_depth": "configuration_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/package.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cbee51daaf63a3bf771afb7e0d3ec23acb24e015",
+        "source_sha256": "913278b6857c59b808ccedae530e0179cbf9869f008abd6ef8272965da4bb7dc",
+        "line_start": 35,
+        "line_end": 38,
+        "byte_length": 85,
+        "sha256": "11e47cefa844571b7173a6e34cd18abcc065719df94bdc66761f839c91173cc6",
+        "group_data_byte_start": 942,
+        "frozen_coverage_depth": "configuration_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/package.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cbee51daaf63a3bf771afb7e0d3ec23acb24e015",
+        "source_sha256": "913278b6857c59b808ccedae530e0179cbf9869f008abd6ef8272965da4bb7dc",
+        "line_start": 53,
+        "line_end": 59,
+        "byte_length": 181,
+        "sha256": "e0b3a3fc4a0095f03e29da72b355449210ba0613b1beb020aada65f098d9a8bf",
+        "group_data_byte_start": 1409,
+        "frozen_coverage_depth": "configuration_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "tooling/http-recorder/script/build.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "3f66abd5dca1bc0e307b869c6005447a3ee789aa",
+        "source_sha256": "9a750a61161e2e6e48ff48b740d548d4d26738077ac6dd38de953404959b3c6b",
+        "line_start": 5,
+        "line_end": 20,
+        "byte_length": 579,
+        "sha256": "a48b35cccbe4510ebdb48938770771b7a4f566a1753522631793a7b3f85cc234",
+        "group_data_byte_start": 1974,
+        "frozen_coverage_depth": "script_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 2559,
+    "group_sha256": "5a9e6e448b1343601837442e44c55bab152316648b4156c1162bb808b6a66727"
+  },
+  {
+    "id": "D01",
+    "title": "Model guide: Core routing limits, one host turn, outer orchestration, gates and billing refusal",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1",
+      "s1.runtime.llm_providers.l1"
+    ],
+    "group_file": "excerpts/D01.md",
+    "excerpts": [
+      {
+        "path": "docs/guides/models.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1acc49061d975b65c05cb2c194cd612b802914d8",
+        "source_sha256": "5821a5ac3a5cc3090224989a2b94e32d80b55f4dbc6f3b296272b63e32c8d399",
+        "line_start": 9,
+        "line_end": 16,
+        "byte_length": 327,
+        "sha256": "3d8c3ccd5f77e4db977a987bc049b1489f18ddb310dbe4ac83d17cc9b3970d9f",
+        "group_data_byte_start": 624,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "docs/guides/models.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1acc49061d975b65c05cb2c194cd612b802914d8",
+        "source_sha256": "5821a5ac3a5cc3090224989a2b94e32d80b55f4dbc6f3b296272b63e32c8d399",
+        "line_start": 24,
+        "line_end": 24,
+        "byte_length": 124,
+        "sha256": "0190e10018b332a7875f29ca83877eb4ef22b87a6aef3f583f94b7b1d67fbc2e",
+        "group_data_byte_start": 1320,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "docs/guides/models.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1acc49061d975b65c05cb2c194cd612b802914d8",
+        "source_sha256": "5821a5ac3a5cc3090224989a2b94e32d80b55f4dbc6f3b296272b63e32c8d399",
+        "line_start": 31,
+        "line_end": 37,
+        "byte_length": 1365,
+        "sha256": "3fb33105c1fa0180618054620ca19190c4c427ba33cc843b9fd6b1c31d4d7296",
+        "group_data_byte_start": 1814,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3185,
+    "group_sha256": "3450176d3fd73478085b89de10740fd65bd6f893bceec0d29e25ec3a95214c8c"
+  },
+  {
+    "id": "D02",
+    "title": "Claude-mode guide: provider entry, retained orchestration/tools and billing intent",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1"
+    ],
+    "group_file": "excerpts/D02.md",
+    "excerpts": [
+      {
+        "path": "docs/guides/claude-mode.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "77e0c8baca27404196d3c1536003321d8ea036df",
+        "source_sha256": "2983000d717fabb224f0bdb11d507289d2afe396abeee967758753e7d00050d3",
+        "line_start": 3,
+        "line_end": 5,
+        "byte_length": 262,
+        "sha256": "b8f31a8f61d817a5c957248eb64455ff3149ab21e02592332f37db0339222360",
+        "group_data_byte_start": 586,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "docs/guides/claude-mode.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "77e0c8baca27404196d3c1536003321d8ea036df",
+        "source_sha256": "2983000d717fabb224f0bdb11d507289d2afe396abeee967758753e7d00050d3",
+        "line_start": 12,
+        "line_end": 15,
+        "byte_length": 394,
+        "sha256": "49a7876da430a01d5c808f696fabb28c9bdce67206ce3452c3f646e1882a26f1",
+        "group_data_byte_start": 1222,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "docs/guides/claude-mode.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "77e0c8baca27404196d3c1536003321d8ea036df",
+        "source_sha256": "2983000d717fabb224f0bdb11d507289d2afe396abeee967758753e7d00050d3",
+        "line_start": 24,
+        "line_end": 32,
+        "byte_length": 850,
+        "sha256": "9fdde036f5b819eb5c8a9db8fea2282e55b9850da2df0c53565fccd47b001346",
+        "group_data_byte_start": 1990,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "docs/guides/claude-mode.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "77e0c8baca27404196d3c1536003321d8ea036df",
+        "source_sha256": "2983000d717fabb224f0bdb11d507289d2afe396abeee967758753e7d00050d3",
+        "line_start": 38,
+        "line_end": 46,
+        "byte_length": 552,
+        "sha256": "84a2536bfbd74cb2237eb2ed2e1c8c00c6a9b6ae57df3f6b2e2c50b640ef19c0",
+        "group_data_byte_start": 3214,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3772,
+    "group_sha256": "bb92c1dfdf70ea7dcadaa9d3fc562230657a25f17a38847bf1880e4829144bac"
+  },
+  {
+    "id": "D03",
+    "title": "Claude maintenance: host/tool ownership, governed loading and billing restrictions",
+    "artifact_keys": [
+      "s1.runtime.maintenance_intent.l1"
+    ],
+    "group_file": "excerpts/D03.md",
+    "excerpts": [
+      {
+        "path": ".orchestra/skills/claude-code-maintenance/SKILL.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "7f3c5b9525fbe1b7bd7a34f60e6f143a8f5505d7",
+        "source_sha256": "dfdceecf6ba2395d80332762ae9b1bbc09b83b6d9ee69ac1d0c7a68b99d5cb9c",
+        "line_start": 12,
+        "line_end": 30,
+        "byte_length": 2018,
+        "sha256": "6cda13b5496393daeb28e4e5034d163c98df417d0df3894e3dac4369fd0d3fde",
+        "group_data_byte_start": 618,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": ".orchestra/skills/claude-code-maintenance/SKILL.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "7f3c5b9525fbe1b7bd7a34f60e6f143a8f5505d7",
+        "source_sha256": "dfdceecf6ba2395d80332762ae9b1bbc09b83b6d9ee69ac1d0c7a68b99d5cb9c",
+        "line_start": 42,
+        "line_end": 48,
+        "byte_length": 1518,
+        "sha256": "8df1392d8bc28168eb0adc0893daa26d6dabaea5fad537dff90d7ff8d3cb6fba",
+        "group_data_byte_start": 3035,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": ".orchestra/skills/claude-mode-maintenance/SKILL.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "398b0505f2cb06d475eb4fcbf4f90f7b571d8270",
+        "source_sha256": "51cd45d3b4e3bff7e1ac50dd5bd9354efb1e8be616f84837fbbf512cfec19c20",
+        "line_start": 25,
+        "line_end": 40,
+        "byte_length": 1437,
+        "sha256": "65539d7e7fde20abcd3f0beb705fcc7b2f3ea439195dd20c6dcfc223cb9a0b5a",
+        "group_data_byte_start": 4952,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": ".orchestra/skills/claude-mode-maintenance/SKILL.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "398b0505f2cb06d475eb4fcbf4f90f7b571d8270",
+        "source_sha256": "51cd45d3b4e3bff7e1ac50dd5bd9354efb1e8be616f84837fbbf512cfec19c20",
+        "line_start": 56,
+        "line_end": 64,
+        "byte_length": 980,
+        "sha256": "4661bae23503a0102c3b80a85f017aa22c7bd557b2ab4c1308e2b26e4c8d7040",
+        "group_data_byte_start": 6787,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 7773,
+    "group_sha256": "00ce68982476b69245c6ea242ad9d8d89d3fb87b84b5158e0b34535543e148e0"
+  },
+  {
+    "id": "D04",
+    "title": "Config guide and generated schema: both unresolved documentary/schema sides",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1",
+      "s1.runtime.maintenance_intent.l1"
+    ],
+    "group_file": "excerpts/D04.md",
+    "excerpts": [
+      {
+        "path": "docs/guides/config-errors.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "bf6413cf2175b7804616709506aec44b5e1f5c31",
+        "source_sha256": "8051b0ad4d4d638d808a04d00b82193fe455cc6cb409e4fff1bcc8c59e4e4d60",
+        "line_start": 9,
+        "line_end": 20,
+        "byte_length": 597,
+        "sha256": "bf036d753bb0f29caab3bd462475b5bdc1562e71180109cba15485f82cbefbeb",
+        "group_data_byte_start": 616,
+        "frozen_coverage_depth": "document_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "schema/config.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+        "source_sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "line_start": 1,
+        "line_end": 4,
+        "byte_length": 109,
+        "sha256": "80e43edc1b9ca0dc0ac5f1ec0741047f1bcdd98eafabb0a4e3b49f39705efa4a",
+        "group_data_byte_start": 1577,
+        "frozen_coverage_depth": "structured_schema_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "schema/config.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+        "source_sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "line_start": 1054,
+        "line_end": 1064,
+        "byte_length": 349,
+        "sha256": "f15989b4f6ed3b58925b54afe99ba9f0497e2e87da106a99d132c65135306e81",
+        "group_data_byte_start": 2056,
+        "frozen_coverage_depth": "structured_schema_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      },
+      {
+        "path": "schema/config.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+        "source_sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "line_start": 1234,
+        "line_end": 1246,
+        "byte_length": 269,
+        "sha256": "b90d4d7b79ca7026bdfcbc8b74bc49500d52b2690b2f44acffad5fd01d3f6ac5",
+        "group_data_byte_start": 2775,
+        "frozen_coverage_depth": "structured_schema_read",
+        "supplement_read_status": "selected_exact_excerpt_inspected_and_verified"
+      }
+    ],
+    "group_bytes": 3051,
+    "group_sha256": "515d14444f33e5825b367303b1f405b8836ec33b9dde8a091f99c4013cc4790e"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-principal-transport-verification/v1",
+  "batch": "S1-L1-C-v1",
+  "verification": "PASS",
+  "checks": [
+    "raw parts concatenate to frozen dossier",
+    "frozen dossier SHA256 matches",
+    "all ten original artifact bodies appear verbatim"
+  ],
+  "artifacts": 10,
+  "dossier_sha256": "9f44b927d8b5dd277ffe188197575d133afb910c53430a5c05630f78b526e83f",
+  "judge_handles": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "semantic_status": "REQUEST_EVIDENCE from both judges; no layer release",
+  "source_of_decision_records": "Native FINAL_ANSWER messages copied without editorial change; host exposes no response byte signature",
+  "judgments": {
+    "l1-c-v1-j1.md": {
+      "bytes": 14114,
+      "sha256": "e928bc4d57f3c9bbe20e74a24d55e7744ab227ad13a3bb7b56231b8934767fc0"
+    },
+    "l1-c-v1-j2.md": {
+      "bytes": 9627,
+      "sha256": "cfc4a93d90efe60920db3269c1f1776d5bad61d09d7f20c2d4f50f15c2e6013a"
+    }
+  }
+}

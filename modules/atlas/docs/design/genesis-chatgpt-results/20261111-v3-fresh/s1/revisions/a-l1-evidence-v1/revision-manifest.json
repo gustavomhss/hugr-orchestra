@@ -1,0 +1,111 @@
+{
+  "schema": "genesis-evidence-revision-manifest/v1",
+  "revision": "a-l1-evidence-v1",
+  "producer_task": "S1-L1-A",
+  "producer_handle": "/root/producer_a",
+  "scope": "orchestra.s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "principal_execution": "c56ee4c3-b9dc-4569-aeb0-d3cfa5c2a502",
+  "request": {
+    "path": "request.txt",
+    "sha256": "aca45a020b1d64f632610db8898562df81bb616b3411ee869ec4e13847f5277a",
+    "byte_length": 990
+  },
+  "steering": {
+    "path": "request-steering.txt",
+    "sha256": "5ee73afd2c05590be0a9c7a16b60cd0ea4f544ff14504e2d88cfcacab33a7fbf",
+    "byte_length": 613
+  },
+  "base_artifacts": {
+    "path": "producers/a/artifacts.json",
+    "sha256": "528eaae032b21708a9a55ef027bd7449b6e29d0c9881f26d84b16d58805a67e7",
+    "byte_length": 81278
+  },
+  "base_dossier": {
+    "path_as_provided_by_principal": "output/producers/a/review-dossier.md",
+    "sha256_as_provided_by_principal": "cf7676f527067c7b2aa3fc4bd0d4629e8fa2afa5b843ddc70f857dacc0abffbc",
+    "content_read_by_producer": false,
+    "hash_locally_verified": false
+  },
+  "purpose": "Supplement the frozen L1 evidence with lossless grouped coverage/needs projections and exact extra spans from already-captured source bytes. No body/original changes or new L2–L4 artifacts.",
+  "files": [
+    {
+      "path": "build_excerpts.py",
+      "sha256": "4f62d22b6bf684433bb64691c756db836f6c4e549a44276a91597c75796f304e",
+      "byte_length": 25139
+    },
+    {
+      "path": "build_projection.py",
+      "sha256": "5bb34bab110c003350948f76239c08a743fdcf173ffb3aa7745c4880a6c53127",
+      "byte_length": 34465
+    },
+    {
+      "path": "coverage-needs-projection.json",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "byte_length": 726892
+    },
+    {
+      "path": "coverage-needs-projection.md",
+      "sha256": "ef88933d09278c75669906cd45cbe43df5aa205ee7dea71ca64a6fafce609658",
+      "byte_length": 89146
+    },
+    {
+      "path": "deterministic-source-observations.json",
+      "sha256": "7c63f19aa32bda7e8f62be01dcc18690a3444687b436fc1def8eaf4fd81279a2",
+      "byte_length": 622
+    },
+    {
+      "path": "needs-and-blockers.json",
+      "sha256": "6e6b424cbe58b1a324dd0b47efb9b5a4bc118f83d62693df85107f3081922e76",
+      "byte_length": 30815
+    },
+    {
+      "path": "original-freeze-before.json",
+      "sha256": "e8407bff4b982d95c1edb1a24413966c583d32689d198fa517d5da4afde5d1e8",
+      "byte_length": 26726
+    },
+    {
+      "path": "request-steering.txt",
+      "sha256": "5ee73afd2c05590be0a9c7a16b60cd0ea4f544ff14504e2d88cfcacab33a7fbf",
+      "byte_length": 613
+    },
+    {
+      "path": "request.txt",
+      "sha256": "aca45a020b1d64f632610db8898562df81bb616b3411ee869ec4e13847f5277a",
+      "byte_length": 990
+    },
+    {
+      "path": "response.md",
+      "sha256": "602f44b190fa3523eb47363c91bf4bf400f9bb2cb12f2f6801b68695b3a09de6",
+      "byte_length": 6382
+    },
+    {
+      "path": "seal_revision.py",
+      "sha256": "023f62f82e28336c783129b5333933ab5868bcfdf2f9f2633b12eee199c0e4e2",
+      "byte_length": 8350
+    },
+    {
+      "path": "supplement-evidence.md",
+      "sha256": "967b10123d15afe63d83a9e5f1189d0b8044b79609ed7548691c6397592be7c9",
+      "byte_length": 190745
+    },
+    {
+      "path": "supplement-excerpt-map.json",
+      "sha256": "e6916f979540bc619ba82ff07d7d093673aade1d81d90278006b3a48cc2ec48c",
+      "byte_length": 112526
+    }
+  ],
+  "new_classification_authority": "Separately labeled clarifications only; original fields unchanged. Unknown critical leaf behavior remains a mandatory gap when required by the L1 need.",
+  "judge_dispatch": "NOT_SENT",
+  "oracles": "NOT_READ",
+  "remote_reads_this_revision": 0,
+  "remote_writes": "NONE",
+  "product_execution": "NOT_RUN",
+  "semantic_acceptance": "PENDING_PRINCIPAL_INDEPENDENT_REVIEW",
+  "usage": {
+    "tokens": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

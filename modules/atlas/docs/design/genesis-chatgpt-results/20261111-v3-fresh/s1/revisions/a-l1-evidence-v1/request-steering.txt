@@ -1,0 +1,3 @@
+Principal /root, clarification received during this revision:
+
+Não há ledger de needs adicional oculto: use exatamente os campos need/gaps/input_keys/validity dos seus 17 artifacts + coverage/family-disposition + limites explícitos nos corpos. A principal montou o dossiê a partir desses registros. Uma nova projeção pode explicitar relações já existentes; qualquer classificação nova deve ser identificada como tal e não como parte retroativa do congelado. Não leia oracles. Se houver fato crítico realmente não observado para L1, mantenha-o obrigatório em vez de reclassificar como intencional.

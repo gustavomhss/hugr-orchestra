@@ -1,0 +1,102 @@
+{
+  "batch": "S1-L1-A2-v1",
+  "packet": {
+    "path": "review-packets/l1-a2-v1-dossier.md",
+    "sha256": "f61c1c3acf34da20b9b78d0a809e5aa23044d5e0f50c983a5f41715d563d77bf",
+    "byte_length": 181548
+  },
+  "bodies": [
+    {
+      "key": "s1.core.tools",
+      "sha256": "ed668009ad400bf61adee3f1d497c59f91c9932b1730642816659ddbf2978e23",
+      "byte_length": 5285
+    },
+    {
+      "key": "s1.core.security",
+      "sha256": "dd6e7372b2c26c8c05435db8a55dfa05cd42813a9f105f48dc8b5d702bacbbcf",
+      "byte_length": 7043
+    },
+    {
+      "key": "s1.core.capability",
+      "sha256": "a5d40d013b3976a612a53acb7999ea498c32c71bff5f7acb276f1ddc3be95e7a",
+      "byte_length": 4469
+    },
+    {
+      "key": "s1.core.extensions",
+      "sha256": "1adfea6dc88bb969fb2c9232c82b81ae917e8112a9d0993273733450891984d4",
+      "byte_length": 4994
+    }
+  ],
+  "membership_count": 424,
+  "coverage_groups": 49,
+  "family_names": [
+    "agent",
+    "capability",
+    "identity",
+    "instruction",
+    "permission",
+    "plugin-host",
+    "tool",
+    "tool-safety"
+  ],
+  "original_excerpt_ids": [
+    "C020",
+    "C021",
+    "C022",
+    "C023",
+    "C024",
+    "C025",
+    "C026",
+    "C027",
+    "C028",
+    "C029",
+    "C030",
+    "C031",
+    "C039",
+    "C040",
+    "C041",
+    "C042",
+    "C043",
+    "C044",
+    "C045",
+    "C046",
+    "C047",
+    "C048"
+  ],
+  "supplement_excerpt_ids": [
+    "AEX009",
+    "AEX028",
+    "AEX029",
+    "AEX030",
+    "AEX031",
+    "AEX032",
+    "AEX033",
+    "AEX034",
+    "AEX035",
+    "AEX036",
+    "AEX037",
+    "AEX038",
+    "AEX039",
+    "AEX040",
+    "AEX041",
+    "AEX042",
+    "AEX043",
+    "AEX044",
+    "AEX045",
+    "AEX046",
+    "AEX055",
+    "AEX056",
+    "AEX057",
+    "AEX058",
+    "AEX059",
+    "AEX060",
+    "AEX061",
+    "AEX062",
+    "AEX063",
+    "AEX064",
+    "AEX065",
+    "AEX066"
+  ],
+  "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "semantic_status": "NOT_REVIEWED"
+}

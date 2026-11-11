@@ -1,0 +1,15 @@
+{
+  "source_bytes": 203995,
+  "source_sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7",
+  "original_source_matches_transport_copy": true,
+  "contiguous_parts_reconstruct_source_exactly": true,
+  "all_local_part_bytes_and_sha256_match_plan": true,
+  "all_local_request_bytes_and_sha256_match_plan": true,
+  "request_DATA_sections_equal_raw_parts": true,
+  "utf8_decodes_without_replacement": true,
+  "known_wrong_request_restored_by_single_3_byte_insertion": true,
+  "known_wrong_request_insert_at_zero_based_offset": 15319,
+  "known_wrong_request_insert_bytes_hex": "313335",
+  "local_verification_only": true,
+  "receiver_byte_echo_exposed": false
+}

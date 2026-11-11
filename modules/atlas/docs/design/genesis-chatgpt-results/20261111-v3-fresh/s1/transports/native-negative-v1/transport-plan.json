@@ -1,0 +1,19 @@
+{
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "targets": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "transporter": "/root/producer_c",
+  "dossier_source": "/workspace/scratch/2b46fb541868/genesis-s1/output/review-packets/native-negative-v1-dossier.md",
+  "dossier_bytes": 32197,
+  "dossier_sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af",
+  "freeze_source": "/workspace/scratch/2b46fb541868/genesis-s1/output/receipts/native-negative-review-freeze.json",
+  "freeze_bytes": 1077,
+  "freeze_sha256": "4c4df5334a0678dc323d71c4c15e672cdfed8dd529f89a2c1f6063345efac9db",
+  "request_bytes": 32683,
+  "request_sha256": "43becef4b7e65e6dbaf80fd863defcfde34a60d27835340642d151e16f168a3c",
+  "canonical_request_path": "canonical-request.txt",
+  "ordering_gate": "J2 only after principal reports J1 ended",
+  "metrics_not_exposed": "UNKNOWN"
+}

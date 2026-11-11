@@ -1,0 +1,74 @@
+{
+  "schema": "genesis-s1-native-negative-checks/v1",
+  "unit": "S1-NATIVE-NEGATIVE-v1",
+  "run_id": "c56ee4c3-b9dc-4569-aeb0-d3cfa5c2a502",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "files_read": [
+    {
+      "path": "/workspace/scratch/2b46fb541868/genesis-s1/output/fixtures/construction-inputs.json",
+      "expected_sha256": "f1ca4a02fd35278eb70fac4074b0c10e250a88e82013b789b112a3641165a2e8",
+      "actual_sha256": "f1ca4a02fd35278eb70fac4074b0c10e250a88e82013b789b112a3641165a2e8",
+      "matches_expected": true,
+      "byte_count": 2173
+    },
+    {
+      "path": "/workspace/scratch/2b46fb541868/genesis-s1/output/fixtures/native-negative-source-packet.md",
+      "expected_sha256": "9d4c950196ab5a596da8de80a466977ee4873a88441280eb28c4ac2cd269f86c",
+      "actual_sha256": "9d4c950196ab5a596da8de80a466977ee4873a88441280eb28c4ac2cd269f86c",
+      "matches_expected": true,
+      "byte_count": 13593
+    }
+  ],
+  "input_read_passes": 2,
+  "read_scope_note": "Only these two paths were read as task content, once during inspection and once during delivery generation. No output files were reread.",
+  "deterministic_checks": {
+    "both_authorized_input_hashes_match": true,
+    "fixture_schema_matches": true,
+    "fixture_source_revision_matches_assignment": true,
+    "all_five_packet_revision_occurrences_match": true,
+    "four_cases": true,
+    "case_ids_match_fixture_in_order": true,
+    "case_ids_unique": true,
+    "all_cases_have_required_fields": true,
+    "all_cases_have_support_and_missing_evidence": true,
+    "all_case_ids_appear_in_response": true,
+    "json_serialization_roundtrip_preserves_dispositions": true,
+    "unexposed_metrics_are_unknown": true,
+    "no_runtime_observation_assigned": true,
+    "runtime_refusal_is_unknown_in_all_cases": true
+  },
+  "checks_limit": "Mechanical integrity/structure checks only. Boolean results are not semantic certification, runtime outcomes, public-criteria judgments, or a global verdict.",
+  "source_provenance_limit": "The supplied complete-source hashes and Git blob IDs were not independently verified; only the two input-file SHA256 values were verified.",
+  "execution_scope_attestation": {
+    "product_execution": false,
+    "external_calls": false,
+    "publication": false,
+    "credential_access": false,
+    "environment_inspection": false,
+    "oracles_other_producers_or_evaluations_read": false,
+    "judge_decision_assigned": false
+  },
+  "metrics": {
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "physical_attempts": "UNKNOWN"
+  },
+  "output_files": [
+    {
+      "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/controls/request.txt",
+      "sha256": "a279adc7e71beacc9d33153fbefd7ccdff72a1200dce13affb3d7ea7d8be8fda",
+      "byte_count": 1880
+    },
+    {
+      "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/controls/response.md",
+      "sha256": "03535e963b70ab3d5984d891981d03dcd645ac6d23bcb15ff53f6784c458c345",
+      "byte_count": 15583
+    },
+    {
+      "path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/controls/dispositions.json",
+      "sha256": "4aaa0281da54e5aea5bc6179b4ba741f2f07b3d351eb96fda6f5d46b15978af2",
+      "byte_count": 12369
+    }
+  ],
+  "hash_method": "SHA256 over the exact UTF-8 byte payload submitted to a successful write. Output files were not reread. The checks.json self-hash is reported separately to avoid self-reference."
+}
