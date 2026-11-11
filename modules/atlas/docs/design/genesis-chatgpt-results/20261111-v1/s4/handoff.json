@@ -1,0 +1,114 @@
+{
+  "schema": "genesis-session-handoff/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "handoff_sequence": 1,
+  "supersedes": null,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "prompt_revision": {
+    "commit": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-host-migracao.md",
+    "sha256": "89e691e05102a7b0d6443d2bc0d2cdc77c4ce63421bf380151ccf6f406fa457f"
+  },
+  "actual_head_before_checkpoint": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "scope_revision": null,
+  "criteria_revision": null,
+  "state": "BLOCKED",
+  "attempt_id": "S4-PREP-ROOT-001",
+  "dependencies": [
+    {
+      "session": "s1",
+      "branch": "genesis-chatgpt-s1",
+      "commit": null,
+      "discovery_attempt": 1,
+      "status": "UNAVAILABLE",
+      "observation": "Git ref GET returned 404 NOT_FOUND",
+      "required": "Frozen scope, criteria, interfaces, exclusive S4 allocation"
+    },
+    {
+      "session": "s2",
+      "branch": "genesis-chatgpt-s2",
+      "commit": null,
+      "discovery_attempt": 1,
+      "status": "UNAVAILABLE",
+      "observation": "Git ref GET returned 404 NOT_FOUND",
+      "required": "Exact candidate and handoff evidence"
+    },
+    {
+      "session": "s3",
+      "branch": "genesis-chatgpt-s3",
+      "commit": null,
+      "discovery_attempt": 1,
+      "status": "UNAVAILABLE",
+      "observation": "Git ref GET returned 404 NOT_FOUND",
+      "required": "Exact candidate and handoff evidence"
+    },
+    {
+      "session": "s5",
+      "branch": "genesis-chatgpt-s5",
+      "commit": null,
+      "discovery_attempt": 1,
+      "status": "UNAVAILABLE",
+      "observation": "Git ref GET returned 404 NOT_FOUND",
+      "required": "Integrated compatible candidate and binding independent judgments"
+    }
+  ],
+  "criteria_ref": null,
+  "receipts": [],
+  "patches": [],
+  "budget_allocation_ref": null,
+  "budget_ledger_ref": null,
+  "capabilities": {
+    "github_read": "OBSERVED",
+    "github_branch_create": "OBSERVED",
+    "sandbox_execution": "OBSERVED",
+    "sandbox_node": "v24.22.1",
+    "sandbox_python": "3.12.14",
+    "sandbox_git": "2.52.0",
+    "bun": "NOT_FOUND_IN_PATH",
+    "checkout": "NOT_MATERIALIZED",
+    "native_agent_slots": 4,
+    "native_agents": [
+      "/root/host_readers",
+      "/root/ci_gates",
+      "/root/protected_migration"
+    ],
+    "ci_dispatch": "NO_TOOL_EXPOSED_IN_GITHUB_TOOL_INVENTORY",
+    "tests_policy": "GitHub Actions only; no local owner exception requested or inferred"
+  },
+  "preparation": {
+    "allowed": "Independent inspection, source hashing, entrypoint mapping, case and fixture preparation",
+    "admitted_candidate_execution": false,
+    "agents": [
+      {
+        "attempt_id": "S4-PREP-HOST-001",
+        "task": "host callers/readers"
+      },
+      {
+        "attempt_id": "S4-PREP-CI-001",
+        "task": "gates/workflow/protection"
+      },
+      {
+        "attempt_id": "S4-PREP-PRESERVE-001",
+        "task": "historical preservation/migration"
+      }
+    ],
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN"
+  },
+  "blockers": [
+    "S1 immutable scope/criteria/interfaces/allocation unavailable",
+    "S2 exact producer/rebuild candidate unavailable",
+    "S3 exact activation/recovery candidate unavailable",
+    "S5 integrated compatible candidate and judgment handoff unavailable",
+    "GitHub connector exposes Actions reads/reruns but no workflow dispatch; test gate capability remains unproven"
+  ],
+  "next_action": "Finish independent preparation and verify source hashes. Discover dependencies at most three times per work cycle. Execute dependent integration only against an exact compatible integrated candidate, within S1 allocation and repository test policy."
+}
