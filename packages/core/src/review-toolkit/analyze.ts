@@ -29,6 +29,7 @@ import { ReviewBuildLane } from "./build-lane"
 import { ReviewGolangci } from "./golangci"
 import { ReviewInvoke } from "./invoke"
 import { ReviewOsv } from "./osv"
+import { ReviewSyft } from "./syft"
 import { ReviewGoPinned } from "./go-pinned"
 import { ReviewGoVet } from "./govet"
 import { ReviewLspDiagnostics } from "./lsp-diagnostics"
@@ -247,6 +248,7 @@ const runPack = Effect.fnUntraced(function* (packID: string, pack: Pack | undefi
   if (pack.template === "golangci-lint") return yield* ReviewGolangci.run(pack, context, confined)
   if (pack.template === "invoke") return yield* ReviewInvoke.run(pack, context, confined)
   if (pack.template === "osv-offline") return yield* ReviewOsv.run(pack, context, confined)
+  if (pack.template === "syft-dir-json") return yield* ReviewSyft.run(pack, context, confined)
   if (pack.lane === "build") return yield* ReviewBuildLane.run(pack, context, confined)
   if (LANES.indexOf(pack.lane) > LANES.indexOf(lane)) return refused(`lane: ${pack.lane} is above ${lane}`)
   if (pack.status === "dropped") return refused("dropped")
