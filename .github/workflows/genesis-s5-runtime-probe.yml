@@ -38,7 +38,7 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      - name: Install and prepare with captured evidence
+      - name: Install, build, and prepare with captured evidence
         id: probe
         shell: bash
         run: |
@@ -46,6 +46,8 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/output"
 
           bun --version > "$GITHUB_WORKSPACE/output/bun-version.txt" 2>&1
+          node --version > "$GITHUB_WORKSPACE/output/node-version.txt" 2>&1
+          npm --version > "$GITHUB_WORKSPACE/output/npm-version.txt" 2>&1
           git -C "$GITHUB_WORKSPACE/runtime" rev-parse HEAD > "$GITHUB_WORKSPACE/output/runtime-head.txt"
           git -C "$GITHUB_WORKSPACE/source" rev-parse HEAD > "$GITHUB_WORKSPACE/output/source-head.txt"
           cp "$GITHUB_WORKSPACE/source/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json" "$GITHUB_WORKSPACE/output/native-package.input.json"
@@ -53,12 +55,13 @@ jobs:
 
           (
             cd "$GITHUB_WORKSPACE/runtime/modules/atlas"
-            bun install --ignore-scripts
-          ) > "$GITHUB_WORKSPACE/output/install.stdout.log" 2> "$GITHUB_WORKSPACE/output/install.stderr.log"
-          install_status=$?
+            npm ci --ignore-scripts
+            npm run build
+          ) > "$GITHUB_WORKSPACE/output/install-build.stdout.log" 2> "$GITHUB_WORKSPACE/output/install-build.stderr.log"
+          install_build_status=$?
 
           prepare_status=125
-          if [ "$install_status" -eq 0 ]; then
+          if [ "$install_build_status" -eq 0 ]; then
             (
               cd "$GITHUB_WORKSPACE/runtime/modules/atlas"
               bun scripts/genesis-native.ts prepare \
@@ -68,7 +71,7 @@ jobs:
             ) > "$GITHUB_WORKSPACE/output/prepare.stdout.log" 2> "$GITHUB_WORKSPACE/output/prepare.stderr.log"
             prepare_status=$?
           else
-            printf 'prepare skipped because dependency installation exited %s\n' "$install_status" > "$GITHUB_WORKSPACE/output/prepare.stderr.log"
+            printf 'prepare skipped because Atlas install/build exited %s\n' "$install_build_status" > "$GITHUB_WORKSPACE/output/prepare.stderr.log"
             : > "$GITHUB_WORKSPACE/output/prepare.stdout.log"
           fi
 
@@ -77,10 +80,10 @@ jobs:
             wc -c < "$GITHUB_WORKSPACE/output/s5-prepared.json" > "$GITHUB_WORKSPACE/output/s5-prepared.bytes"
           fi
 
-          printf '{"install_exit_code":%s,"prepare_exit_code":%s,"runtime_revision":"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1","source_artifact_revision":"a7bd6daff3bf254c002d8540657fa52ae34d3b21","publication_attempted":false}\n' \
-            "$install_status" "$prepare_status" > "$GITHUB_WORKSPACE/output/probe-status.json"
+          printf '{"install_build_exit_code":%s,"prepare_exit_code":%s,"runtime_revision":"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1","source_artifact_revision":"a7bd6daff3bf254c002d8540657fa52ae34d3b21","publication_attempted":false}\n' \
+            "$install_build_status" "$prepare_status" > "$GITHUB_WORKSPACE/output/probe-status.json"
 
-          printf 'install_exit_code=%s\n' "$install_status" >> "$GITHUB_OUTPUT"
+          printf 'install_build_exit_code=%s\n' "$install_build_status" >> "$GITHUB_OUTPUT"
           printf 'prepare_exit_code=%s\n' "$prepare_status" >> "$GITHUB_OUTPUT"
           exit 0
 
@@ -97,6 +100,6 @@ jobs:
         if: always()
         shell: bash
         run: |
-          test "${{ steps.probe.outputs.install_exit_code }}" = "0"
+          test "${{ steps.probe.outputs.install_build_exit_code }}" = "0"
           test "${{ steps.probe.outputs.prepare_exit_code }}" = "0"
           test -s output/s5-prepared.json
