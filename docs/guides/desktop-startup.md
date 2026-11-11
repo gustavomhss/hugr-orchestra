@@ -8,6 +8,8 @@ Orchestra starts its own local server when it opens. If that server exits, the s
 
 The first launch after you install or update an unsigned build is slower: macOS scans the new server program before its first run, which can take about half a minute. Later launches skip that scan.
 
+The app limits Chromium's disk cache to 256 MiB. After verifying its current server program, it can remove verified older copies from its cache when the registered services are inactive. A running service, an unreadable registration or a cleanup failure leaves those copies in place. JavaScript and CSS debug maps are omitted from the installer; runtime source files, native resources and language packs are retained. Packaged stack traces may therefore refer to compiled positions.
+
 If you have a healthy remote server configured, the app connects to it instead and keeps the failure in its diagnostics.
 
 ## The server's own folder

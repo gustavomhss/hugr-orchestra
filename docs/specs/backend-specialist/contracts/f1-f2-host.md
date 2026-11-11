@@ -1,5 +1,7 @@
 # The backend specialist frozen interfaces F1 and F2 — draft for LEAD-0
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: draft contract text, 2026-10-05. Source baseline: Orchestra worktree `_worktrees/backend-plugin`, HEAD `d11d8652aa` (`fork/dev`). Source-read only; no test, typecheck or install was run. Anchors are `file:line @ d11d8652aa`; **O** = `packages/orchestra/src`, **C** = `packages/core/src`, **P** = `packages/plugin/src`.
 
 Normative words: MUST / MUST NOT / MAY. "Existing" means the behavior is in source at HEAD. "Required new (WP)" means the work package that owns it must add it; no signature below is claimed to exist unless it is marked existing.

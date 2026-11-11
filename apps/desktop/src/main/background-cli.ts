@@ -1,12 +1,14 @@
 import { execFile } from "node:child_process"
 import { existsSync } from "node:fs"
 import { dirname, join } from "node:path"
+import { homedir } from "node:os"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 import { app } from "electron"
 import { nativeCliTarget, signatureCheck, verifyCliArtifact } from "./cli-artifacts"
 import { cliEnv } from "./cli-env"
 import { installCliArtifact } from "./cli-install"
+import { cliStateHomes, finishCliResolution } from "./cli-cache"
 
 const execFileAsync = promisify(execFile)
 const root = dirname(fileURLToPath(import.meta.url))
@@ -19,15 +21,17 @@ type Logger = {
 }
 
 export async function startBackgroundCli(logger: Logger, shellStateHome?: string) {
-  const binary = await resolveCliBinary(logger)
+  const binary = await resolveCliBinary(logger, shellStateHome)
   const candidates = [
     ...new Set([stateHome, shellStateHome, ...desktopStateNames.map((name) => join(app.getPath("appData"), name))]),
-  ].filter((candidate) => candidate === undefined || existsSync(candidate))
+  ]
   const discovered = await Promise.all(
-    candidates.map(async (candidate) => ({
-      stateHome: candidate,
-      url: serviceUrl(await run(binary, ["service", "status"], logger, { stateHome: candidate })),
-    })),
+    candidates
+      .filter((candidate) => candidate === undefined || existsSync(candidate))
+      .map(async (candidate) => ({
+        stateHome: candidate,
+        url: serviceUrl(await run(binary, ["service", "status"], logger, { stateHome: candidate })),
+      })),
   )
   const found = discovered.find((candidate) => candidate.url !== undefined)
   logger.log("v2 CLI background instance checked", {
@@ -54,7 +58,7 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
 }
 
 /** The bundled CLI, verified against its manifest (packaged builds run an installed, signature-checked copy). */
-export async function resolveCliBinary(logger: Logger) {
+export async function resolveCliBinary(logger: Logger, shellStateHome?: string) {
   const directory = app.isPackaged ? join(process.resourcesPath, "cli") : join(root, "../../resources/cli")
   const target = nativeCliTarget(process.platform, process.arch)
   const artifact = app.isPackaged
@@ -70,12 +74,26 @@ export async function resolveCliBinary(logger: Logger) {
         },
       })
     : await verifyCliArtifact(directory, target)
-  logger.log("v2 CLI executable resolved", { binary: artifact.path, version: artifact.version, packaged: app.isPackaged })
-  if ((await run(artifact.path, ["--version"], logger)) !== artifact.version)
-    throw new Error("Owned CLI executable version differs from its manifest")
-  return artifact.path
+  logger.log("v2 CLI executable resolved", {
+    binary: artifact.path,
+    version: artifact.version,
+    packaged: app.isPackaged,
+  })
+  return finishCliResolution(
+    artifact,
+    () => run(artifact.path, ["--version"], logger),
+    app.isPackaged
+      ? {
+          directory: join(app.getPath("userData"), "cli"),
+          stateHomes: cliStateHomes(join(homedir(), ".local", "state"), [
+            stateHome,
+            shellStateHome,
+            ...desktopStateNames.map((name) => join(app.getPath("appData"), name)),
+          ]),
+        }
+      : undefined,
+  )
 }
-
 
 async function run(
   binary: string,

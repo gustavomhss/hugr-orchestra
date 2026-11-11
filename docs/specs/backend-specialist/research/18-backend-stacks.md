@@ -1,5 +1,7 @@
 # R18 — the backend specialist polyglot backend procedures
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Research date: **2026-10-03**. Primary documentation and source inspection only. **Runtime verification: NOT RUN.** Commands, controls, and acceptance outcomes below describe proposed future work; none constitute measured compatibility, test results, or performance claims.
 
 ## Decision

@@ -1,5 +1,7 @@
 # Initial owned tool contracts
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: proposed qualified backend specialist contracts, 2026-10-04. The existing tool names and producer functions below are real; the stricter input/result behavior and qualification work described here are not implemented by this document.
 
 ## Selected initial operations

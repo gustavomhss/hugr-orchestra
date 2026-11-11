@@ -1,5 +1,7 @@
 # Original production baseline benchmark
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Result
 
 The actual original product baseline completed all three predeclared production Chromium repetitions in [38005242923](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38005242923). All three emitted complete metrics with the expected workload digest, zero retries and `renderer: legacy`. The candidate reference is the already executed [37985414156](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37985414156), not a new candidate run.

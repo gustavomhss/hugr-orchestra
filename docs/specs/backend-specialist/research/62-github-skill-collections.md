@@ -1,5 +1,7 @@
 # R62 — GitHub skill collections: reusable backend authoring patterns
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Inspection: **2026-10-04**. Source-only research; proposed selection/behavior checks below **unexecuted**.
 
 ## Decision and evidence boundary

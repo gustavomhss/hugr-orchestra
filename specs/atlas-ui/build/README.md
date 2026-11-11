@@ -1,5 +1,7 @@
 # Atlas UI build plan
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 This plan builds the Atlas screen designed in `specs/atlas-ui/mock` inside the Orchestra app, and the engine capabilities R1–R11 it needs.
 
 - Claude (the lead) made every decision; they are in [DECISIONS.md](DECISIONS.md).

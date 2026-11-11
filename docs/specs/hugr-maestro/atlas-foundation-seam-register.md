@@ -1,5 +1,7 @@
 # HuGR Maestro V2: Atlas Foundation Seam Register
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: current-source lift, measured seam subset. Source is vendored Atlas snapshot `foundation/atlas` at source commit
 `b319723`. This register is independent from `v1-portability-register.md`: V1 internal `atlas/` proves nothing
 about this foundation.

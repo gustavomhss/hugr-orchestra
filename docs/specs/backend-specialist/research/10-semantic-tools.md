@@ -1,5 +1,7 @@
 # R10 — Semantic navigation and change safety for the backend specialist
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Research date: **2026-10-03**. Primary documentation and source inspection only. Runtime controls below are proposed acceptance tests, not executed results. Source revisions pinned; branch snapshots do not imply released package versions.
 
 ## Verdict

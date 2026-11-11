@@ -1,5 +1,7 @@
 # Native bridge closeout workflow
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Baseline: `5e4bea3b519c04cebfb787e98dfa171f5771d25c`; worktree/branch `dock-accessibility`.
 User requested substantially faster progress and lower resource waste on 2026-10-02. This changes execution order and feedback cost, not acceptance or the authorized scope.
 

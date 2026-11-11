@@ -1,5 +1,7 @@
 # Orchestra — reconciliação de cobertura (#215)
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Reconciliação de 2026-10-02 de cada task/WP dos subépicos #130–#133 contra o código
 em `dev` depois de #239 (identidade), #240 (chapters onda 1) e #241 (correção de CI).
 Feita por auditoria read-only com evidência por arquivo/linha; amostras das linhas

@@ -1,5 +1,7 @@
 # Admit Request: Runtime Research
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: deterministic kernel and durable record writer implemented; automatic per-message trigger remains unimplemented.
 
 ## Verified Orchestra Seams

@@ -1,5 +1,7 @@
 # Orchestra — Team & Phases (the separation of concerns)
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 > The owner's directive: **one specialist owns product, architecture, specification and planning;
 > Maestro owns orchestration.** These upstream disciplines use distinct procedures inside one member,
 > rather than separate personas. There is no architecture-only review seat. This document is the

@@ -1,5 +1,7 @@
 # P3 — Default toolkit delivery research
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 2026-10-04. Read-only source/release-metadata research; proposed packaging and checks, not installed-readiness evidence. Lead decides final pins, recipes, channels and support claims.
 
 ## Basis and delivery conclusion
