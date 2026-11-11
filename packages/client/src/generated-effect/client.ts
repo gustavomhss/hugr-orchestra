@@ -83,15 +83,15 @@ const Endpoint2_3 = (raw: RawClient["server.agent"]) => (input: Endpoint2_3Input
     params: { agentID: input["agentID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
-      description: input["description"],
-      mode: input["mode"],
-      model: input["model"],
-      avatar: input["avatar"],
-      steps: input["steps"],
-      system: input["system"],
-      permission: input["permission"],
-      disable: input["disable"],
-      revision: input["revision"],
+      ...(input["description"] === undefined ? {} : { description: input["description"] }),
+      ...(input["mode"] === undefined ? {} : { mode: input["mode"] }),
+      ...(input["model"] === undefined ? {} : { model: input["model"] }),
+      ...(input["avatar"] === undefined ? {} : { avatar: input["avatar"] }),
+      ...(input["steps"] === undefined ? {} : { steps: input["steps"] }),
+      ...(input["system"] === undefined ? {} : { system: input["system"] }),
+      ...(input["permission"] === undefined ? {} : { permission: input["permission"] }),
+      ...(input["disable"] === undefined ? {} : { disable: input["disable"] }),
+      ...(input["revision"] === undefined ? {} : { revision: input["revision"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -138,7 +138,12 @@ type Endpoint3_1Input = {
 }
 const Endpoint3_1 = (raw: RawClient["server.session"]) => (input?: Endpoint3_1Input) =>
   raw["session.create"]({
-    payload: { id: input?.["id"], agent: input?.["agent"], model: input?.["model"], location: input?.["location"] },
+    payload: {
+      ...(input?.["id"] === undefined ? {} : { id: input?.["id"] }),
+      ...(input?.["agent"] === undefined ? {} : { agent: input?.["agent"] }),
+      ...(input?.["model"] === undefined ? {} : { model: input?.["model"] }),
+      ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }),
+    },
   }).pipe(
     Effect.mapError(mapClientError),
     Effect.map((value) => value.data),
@@ -258,7 +263,12 @@ type Endpoint3_13Input = {
 const Endpoint3_13 = (raw: RawClient["server.session"]) => (input: Endpoint3_13Input) =>
   raw["session.prompt"]({
     params: { sessionID: input["sessionID"] },
-    payload: { id: input["id"], prompt: input["prompt"], delivery: input["delivery"], resume: input["resume"] },
+    payload: {
+      ...(input["id"] === undefined ? {} : { id: input["id"] }),
+      prompt: input["prompt"],
+      ...(input["delivery"] === undefined ? {} : { delivery: input["delivery"] }),
+      ...(input["resume"] === undefined ? {} : { resume: input["resume"] }),
+    },
   }).pipe(
     Effect.mapError(mapClientError),
     Effect.map((value) => value.data),
@@ -279,13 +289,13 @@ const Endpoint3_14 = (raw: RawClient["server.session"]) => (input: Endpoint3_14I
   raw["session.command"]({
     params: { sessionID: input["sessionID"] },
     payload: {
-      id: input["id"],
+      ...(input["id"] === undefined ? {} : { id: input["id"] }),
       command: input["command"],
-      arguments: input["arguments"],
-      files: input["files"],
-      agents: input["agents"],
-      delivery: input["delivery"],
-      resume: input["resume"],
+      ...(input["arguments"] === undefined ? {} : { arguments: input["arguments"] }),
+      ...(input["files"] === undefined ? {} : { files: input["files"] }),
+      ...(input["agents"] === undefined ? {} : { agents: input["agents"] }),
+      ...(input["delivery"] === undefined ? {} : { delivery: input["delivery"] }),
+      ...(input["resume"] === undefined ? {} : { resume: input["resume"] }),
     },
   }).pipe(
     Effect.mapError(mapClientError),
@@ -306,7 +316,10 @@ type Endpoint3_16Input = {
   readonly messageID?: Endpoint3_16Request["payload"]["messageID"]
 }
 const Endpoint3_16 = (raw: RawClient["server.session"]) => (input: Endpoint3_16Input) =>
-  raw["session.fork"]({ params: { sessionID: input["sessionID"] }, payload: { messageID: input["messageID"] } }).pipe(
+  raw["session.fork"]({
+    params: { sessionID: input["sessionID"] },
+    payload: { ...(input["messageID"] === undefined ? {} : { messageID: input["messageID"] }) },
+  }).pipe(
     Effect.mapError(mapClientError),
     Effect.map((value) => value.data),
   )
@@ -320,7 +333,10 @@ type Endpoint3_17Input = {
 const Endpoint3_17 = (raw: RawClient["server.session"]) => (input: Endpoint3_17Input) =>
   raw["session.move"]({
     params: { sessionID: input["sessionID"] },
-    payload: { location: input["location"], moveChanges: input["moveChanges"] },
+    payload: {
+      location: input["location"],
+      ...(input["moveChanges"] === undefined ? {} : { moveChanges: input["moveChanges"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint3_18Request = Parameters<RawClient["server.session"]["session.shell"]>[0]
@@ -332,7 +348,7 @@ type Endpoint3_18Input = {
 const Endpoint3_18 = (raw: RawClient["server.session"]) => (input: Endpoint3_18Input) =>
   raw["session.shell"]({
     params: { sessionID: input["sessionID"] },
-    payload: { id: input["id"], command: input["command"] },
+    payload: { ...(input["id"] === undefined ? {} : { id: input["id"] }), command: input["command"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint3_19Request = Parameters<RawClient["server.session"]["session.skill"]>[0]
@@ -344,7 +360,7 @@ type Endpoint3_19Input = {
 const Endpoint3_19 = (raw: RawClient["server.session"]) => (input: Endpoint3_19Input) =>
   raw["session.skill"]({
     params: { sessionID: input["sessionID"] },
-    payload: { skill: input["skill"], resume: input["resume"] },
+    payload: { skill: input["skill"], ...(input["resume"] === undefined ? {} : { resume: input["resume"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint3_20Request = Parameters<RawClient["server.session"]["session.synthetic"]>[0]
@@ -357,7 +373,11 @@ type Endpoint3_20Input = {
 const Endpoint3_20 = (raw: RawClient["server.session"]) => (input: Endpoint3_20Input) =>
   raw["session.synthetic"]({
     params: { sessionID: input["sessionID"] },
-    payload: { id: input["id"], text: input["text"], resume: input["resume"] },
+    payload: {
+      ...(input["id"] === undefined ? {} : { id: input["id"] }),
+      text: input["text"],
+      ...(input["resume"] === undefined ? {} : { resume: input["resume"] }),
+    },
   }).pipe(
     Effect.mapError(mapClientError),
     Effect.map((value) => value.data),
@@ -411,7 +431,7 @@ type Endpoint3_25Input = {
 const Endpoint3_25 = (raw: RawClient["server.session"]) => (input: Endpoint3_25Input) =>
   raw["session.revert.stage"]({
     params: { sessionID: input["sessionID"] },
-    payload: { messageID: input["messageID"], files: input["files"] },
+    payload: { messageID: input["messageID"], ...(input["files"] === undefined ? {} : { files: input["files"] }) },
   }).pipe(
     Effect.mapError(mapClientError),
     Effect.map((value) => value.data),
@@ -667,7 +687,11 @@ const Endpoint8_3 = (raw: RawClient["server.integration"]) => (input: Endpoint8_
   raw["integration.connect.key"]({
     params: { integrationID: input["integrationID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { key: input["key"], label: input["label"], metadata: input["metadata"] },
+    payload: {
+      key: input["key"],
+      ...(input["label"] === undefined ? {} : { label: input["label"] }),
+      ...(input["metadata"] === undefined ? {} : { metadata: input["metadata"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint8_4Request = Parameters<RawClient["server.integration"]["integration.connect.oauth"]>[0]
@@ -682,7 +706,11 @@ const Endpoint8_4 = (raw: RawClient["server.integration"]) => (input: Endpoint8_
   raw["integration.connect.oauth"]({
     params: { integrationID: input["integrationID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { methodID: input["methodID"], inputs: input["inputs"], label: input["label"] },
+    payload: {
+      methodID: input["methodID"],
+      inputs: input["inputs"],
+      ...(input["label"] === undefined ? {} : { label: input["label"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint8_5Request = Parameters<RawClient["server.integration"]["integration.oauth.status"]>[0]
@@ -708,7 +736,7 @@ const Endpoint8_6 = (raw: RawClient["server.integration"]) => (input: Endpoint8_
   raw["integration.oauth.complete"]({
     params: { integrationID: input["integrationID"], attemptID: input["attemptID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { code: input["code"] },
+    payload: { ...(input["code"] === undefined ? {} : { code: input["code"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint8_7Request = Parameters<RawClient["server.integration"]["integration.oauth.cancel"]>[0]
@@ -744,7 +772,7 @@ const Endpoint8_9 = (raw: RawClient["server.integration"]) => (input: Endpoint8_
   raw["integration.attempt.complete"]({
     params: { attemptID: input["attemptID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { code: input["code"] },
+    payload: { ...(input["code"] === undefined ? {} : { code: input["code"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint8_10Request = Parameters<RawClient["server.integration"]["integration.attempt.cancel"]>[0]
@@ -835,13 +863,13 @@ const Endpoint10_3 = (raw: RawClient["server.permission"]) => (input: Endpoint10
   raw["session.permission.create"]({
     params: { sessionID: input["sessionID"] },
     payload: {
-      id: input["id"],
+      ...(input["id"] === undefined ? {} : { id: input["id"] }),
       action: input["action"],
       resources: input["resources"],
-      save: input["save"],
-      metadata: input["metadata"],
-      source: input["source"],
-      agent: input["agent"],
+      ...(input["save"] === undefined ? {} : { save: input["save"] }),
+      ...(input["metadata"] === undefined ? {} : { metadata: input["metadata"] }),
+      ...(input["source"] === undefined ? {} : { source: input["source"] }),
+      ...(input["agent"] === undefined ? {} : { agent: input["agent"] }),
     },
   }).pipe(
     Effect.mapError(mapClientError),
@@ -877,7 +905,7 @@ type Endpoint10_6Input = {
 const Endpoint10_6 = (raw: RawClient["server.permission"]) => (input: Endpoint10_6Input) =>
   raw["session.permission.reply"]({
     params: { sessionID: input["sessionID"], requestID: input["requestID"] },
-    payload: { reply: input["reply"], message: input["message"] },
+    payload: { reply: input["reply"], ...(input["message"] === undefined ? {} : { message: input["message"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup10 = (raw: RawClient["server.permission"]) => ({
@@ -1208,8 +1236,8 @@ const Endpoint17_3 = (raw: RawClient["server.skill"]) => (input: Endpoint17_3Inp
       name: input["name"],
       description: input["description"],
       content: input["content"],
-      path: input["path"],
-      mtime: input["mtime"],
+      ...(input["path"] === undefined ? {} : { path: input["path"] }),
+      ...(input["mtime"] === undefined ? {} : { mtime: input["mtime"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -1276,13 +1304,13 @@ const Endpoint20_1 = (raw: RawClient["server.pty"]) => (input?: Endpoint20_1Inpu
   raw["pty.create"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
     payload: {
-      command: input?.["command"],
-      args: input?.["args"],
-      cwd: input?.["cwd"],
-      title: input?.["title"],
-      env: input?.["env"],
-      cols: input?.["cols"],
-      rows: input?.["rows"],
+      ...(input?.["command"] === undefined ? {} : { command: input?.["command"] }),
+      ...(input?.["args"] === undefined ? {} : { args: input?.["args"] }),
+      ...(input?.["cwd"] === undefined ? {} : { cwd: input?.["cwd"] }),
+      ...(input?.["title"] === undefined ? {} : { title: input?.["title"] }),
+      ...(input?.["env"] === undefined ? {} : { env: input?.["env"] }),
+      ...(input?.["cols"] === undefined ? {} : { cols: input?.["cols"] }),
+      ...(input?.["rows"] === undefined ? {} : { rows: input?.["rows"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -1308,7 +1336,10 @@ const Endpoint20_3 = (raw: RawClient["server.pty"]) => (input: Endpoint20_3Input
   raw["pty.update"]({
     params: { ptyID: input["ptyID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { title: input["title"], size: input["size"] },
+    payload: {
+      ...(input["title"] === undefined ? {} : { title: input["title"] }),
+      ...(input["size"] === undefined ? {} : { size: input["size"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint20_4Request = Parameters<RawClient["server.pty"]["pty.remove"]>[0]
@@ -1395,7 +1426,11 @@ const Endpoint23_0 = (raw: RawClient["server.projectCopy"]) => (input: Endpoint2
   raw["projectCopy.create"]({
     params: { projectID: input["projectID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { strategy: input["strategy"], directory: input["directory"], name: input["name"] },
+    payload: {
+      strategy: input["strategy"],
+      directory: input["directory"],
+      ...(input["name"] === undefined ? {} : { name: input["name"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint23_1Request = Parameters<RawClient["server.projectCopy"]["projectCopy.remove"]>[0]
@@ -1433,7 +1468,7 @@ const Endpoint23_3 = (raw: RawClient["server.projectCopy"]) => (input: Endpoint2
   raw["projectCopy.generateName"]({
     params: { projectID: input["projectID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { context: input["context"] },
+    payload: { ...(input["context"] === undefined ? {} : { context: input["context"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup23 = (raw: RawClient["server.projectCopy"]) => ({
@@ -1461,7 +1496,11 @@ type Endpoint24_2Input = {
 const Endpoint24_2 = (raw: RawClient["server.project"]) => (input: Endpoint24_2Input) =>
   raw["project.update"]({
     params: { projectID: input["projectID"] },
-    payload: { name: input["name"], icon: input["icon"], commands: input["commands"] },
+    payload: {
+      ...(input["name"] === undefined ? {} : { name: input["name"] }),
+      ...(input["icon"] === undefined ? {} : { icon: input["icon"] }),
+      ...(input["commands"] === undefined ? {} : { commands: input["commands"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint24_3Request = Parameters<RawClient["server.project"]["project.initGit"]>[0]
@@ -1494,7 +1533,7 @@ type Endpoint25_1Input = {
 const Endpoint25_1 = (raw: RawClient["server.lean"]) => (input: Endpoint25_1Input) =>
   raw["lean.update"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { itemID: input["itemID"], enabled: input["enabled"] },
+    payload: { ...(input["itemID"] === undefined ? {} : { itemID: input["itemID"] }), enabled: input["enabled"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint25_2Request = Parameters<RawClient["server.lean"]["lean.history"]>[0]
@@ -1773,7 +1812,10 @@ type Endpoint27_4Input = {
 const Endpoint27_4 = (raw: RawClient["server.atlas"]) => (input?: Endpoint27_4Input) =>
   raw["atlas.promote"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
-    payload: { token: input?.["token"], nodeKeys: input?.["nodeKeys"] },
+    payload: {
+      ...(input?.["token"] === undefined ? {} : { token: input?.["token"] }),
+      ...(input?.["nodeKeys"] === undefined ? {} : { nodeKeys: input?.["nodeKeys"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint27_5Request = Parameters<RawClient["server.atlas"]["atlas.draft"]>[0]
@@ -1792,8 +1834,8 @@ const Endpoint27_5 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_5Inp
       anchor: input["anchor"],
       slot: input["slot"],
       claim: input["claim"],
-      supersede: input["supersede"],
-      token: input["token"],
+      ...(input["supersede"] === undefined ? {} : { supersede: input["supersede"] }),
+      ...(input["token"] === undefined ? {} : { token: input["token"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -1807,7 +1849,11 @@ type Endpoint27_6Input = {
 const Endpoint27_6 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_6Input) =>
   raw["atlas.emit"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { fact: input["fact"], at: input["at"], token: input["token"] },
+    payload: {
+      fact: input["fact"],
+      at: input["at"],
+      ...(input["token"] === undefined ? {} : { token: input["token"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint27_7Request = Parameters<RawClient["server.atlas"]["atlas.link"]>[0]
@@ -1821,7 +1867,12 @@ type Endpoint27_7Input = {
 const Endpoint27_7 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_7Input) =>
   raw["atlas.link"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { a: input["a"], b: input["b"], retract: input["retract"], token: input["token"] },
+    payload: {
+      a: input["a"],
+      b: input["b"],
+      ...(input["retract"] === undefined ? {} : { retract: input["retract"] }),
+      ...(input["token"] === undefined ? {} : { token: input["token"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint27_8Request = Parameters<RawClient["server.atlas"]["atlas.verify"]>[0]
@@ -1841,9 +1892,9 @@ const Endpoint27_8 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_8Inp
       kind: input["kind"],
       target: input["target"],
       scope: input["scope"],
-      world: input["world"],
-      min: input["min"],
-      exact: input["exact"],
+      ...(input["world"] === undefined ? {} : { world: input["world"] }),
+      ...(input["min"] === undefined ? {} : { min: input["min"] }),
+      ...(input["exact"] === undefined ? {} : { exact: input["exact"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -1904,7 +1955,7 @@ const Endpoint27_13 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_13I
       proposalId: input["proposalId"],
       verdict: input["verdict"],
       reason: input["reason"],
-      token: input["token"],
+      ...(input["token"] === undefined ? {} : { token: input["token"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -1918,7 +1969,11 @@ type Endpoint27_14Input = {
 const Endpoint27_14 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_14Input) =>
   raw["atlas.answer"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { questionId: input["questionId"], answer: input["answer"], drafted: input["drafted"] },
+    payload: {
+      questionId: input["questionId"],
+      answer: input["answer"],
+      ...(input["drafted"] === undefined ? {} : { drafted: input["drafted"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint27_15Request = Parameters<RawClient["server.atlas"]["atlas.memoryDecide"]>[0]
@@ -1932,7 +1987,12 @@ type Endpoint27_15Input = {
 const Endpoint27_15 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_15Input) =>
   raw["atlas.memoryDecide"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { proposalId: input["proposalId"], verdict: input["verdict"], rule: input["rule"], scope: input["scope"] },
+    payload: {
+      proposalId: input["proposalId"],
+      verdict: input["verdict"],
+      ...(input["rule"] === undefined ? {} : { rule: input["rule"] }),
+      ...(input["scope"] === undefined ? {} : { scope: input["scope"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint27_16Request = Parameters<RawClient["server.atlas"]["atlas.territory"]>[0]
@@ -1952,7 +2012,7 @@ const Endpoint27_16 = (raw: RawClient["server.atlas"]) => (input: Endpoint27_16I
       owner: input["owner"],
       tier: input["tier"],
       globs: input["globs"],
-      token: input["token"],
+      ...(input["token"] === undefined ? {} : { token: input["token"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2035,12 +2095,12 @@ type Endpoint28_1Input = {
 const Endpoint28_1 = (raw: RawClient["server.config"]) => (input?: Endpoint28_1Input) =>
   raw["config.update"]({
     payload: {
-      model: input?.["model"],
-      shell: input?.["shell"],
-      agents: input?.["agents"],
-      disabledProviders: input?.["disabledProviders"],
-      providers: input?.["providers"],
-      permissions: input?.["permissions"],
+      ...(input?.["model"] === undefined ? {} : { model: input?.["model"] }),
+      ...(input?.["shell"] === undefined ? {} : { shell: input?.["shell"] }),
+      ...(input?.["agents"] === undefined ? {} : { agents: input?.["agents"] }),
+      ...(input?.["disabledProviders"] === undefined ? {} : { disabledProviders: input?.["disabledProviders"] }),
+      ...(input?.["providers"] === undefined ? {} : { providers: input?.["providers"] }),
+      ...(input?.["permissions"] === undefined ? {} : { permissions: input?.["permissions"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2113,7 +2173,7 @@ type Endpoint30_4Input = {
 const Endpoint30_4 = (raw: RawClient["server.board"]) => (input: Endpoint30_4Input) =>
   raw["board.answer"]({
     params: { key: input["key"], id: input["id"] },
-    payload: { option: input["option"], text: input["text"] },
+    payload: { option: input["option"], ...(input["text"] === undefined ? {} : { text: input["text"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint30_5Request = Parameters<RawClient["server.board"]["board.note"]>[0]
@@ -2167,9 +2227,9 @@ const Endpoint30_8 = (raw: RawClient["server.board"]) => (input: Endpoint30_8Inp
     payload: {
       kind: input["kind"],
       name: input["name"],
-      mime: input["mime"],
-      data: input["data"],
-      value: input["value"],
+      ...(input["mime"] === undefined ? {} : { mime: input["mime"] }),
+      ...(input["data"] === undefined ? {} : { data: input["data"] }),
+      ...(input["value"] === undefined ? {} : { value: input["value"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2212,7 +2272,7 @@ type Endpoint30_13Input = {
 const Endpoint30_13 = (raw: RawClient["server.board"]) => (input: Endpoint30_13Input) =>
   raw["board.decisionChange"]({
     params: { key: input["key"], id: input["id"] },
-    payload: { option: input["option"], text: input["text"] },
+    payload: { option: input["option"], ...(input["text"] === undefined ? {} : { text: input["text"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint30_14Request = Parameters<RawClient["server.board"]["board.proof"]>[0]
@@ -2236,11 +2296,13 @@ const Endpoint30_15 = (raw: RawClient["server.board"]) => (input: Endpoint30_15I
   raw["board.settings"]({
     params: { key: input["key"] },
     payload: {
-      target_date: input["target_date"],
-      budget_usd: input["budget_usd"],
-      review_tier: input["review_tier"],
-      review_accepted_unavailable: input["review_accepted_unavailable"],
-      reason: input["reason"],
+      ...(input["target_date"] === undefined ? {} : { target_date: input["target_date"] }),
+      ...(input["budget_usd"] === undefined ? {} : { budget_usd: input["budget_usd"] }),
+      ...(input["review_tier"] === undefined ? {} : { review_tier: input["review_tier"] }),
+      ...(input["review_accepted_unavailable"] === undefined
+        ? {}
+        : { review_accepted_unavailable: input["review_accepted_unavailable"] }),
+      ...(input["reason"] === undefined ? {} : { reason: input["reason"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2250,9 +2312,10 @@ type Endpoint30_16Input = {
   readonly reason?: Endpoint30_16Request["payload"]["reason"]
 }
 const Endpoint30_16 = (raw: RawClient["server.board"]) => (input: Endpoint30_16Input) =>
-  raw["board.pause"]({ params: { key: input["key"] }, payload: { reason: input["reason"] } }).pipe(
-    Effect.mapError(mapClientError),
-  )
+  raw["board.pause"]({
+    params: { key: input["key"] },
+    payload: { ...(input["reason"] === undefined ? {} : { reason: input["reason"] }) },
+  }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint30_17Request = Parameters<RawClient["server.board"]["board.resume"]>[0]
 type Endpoint30_17Input = { readonly key: Endpoint30_17Request["params"]["key"] }
@@ -2373,14 +2436,14 @@ const Endpoint31_1 = (raw: RawClient["server.relay.document"]) => (input?: Endpo
   raw["relay.document.create"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
     payload: {
-      name: input?.["name"],
-      description: input?.["description"],
-      nodes: input?.["nodes"],
-      connections: input?.["connections"],
-      nodeGroups: input?.["nodeGroups"],
-      tags: input?.["tags"],
-      meta: input?.["meta"],
-      isArchived: input?.["isArchived"],
+      ...(input?.["name"] === undefined ? {} : { name: input?.["name"] }),
+      ...(input?.["description"] === undefined ? {} : { description: input?.["description"] }),
+      ...(input?.["nodes"] === undefined ? {} : { nodes: input?.["nodes"] }),
+      ...(input?.["connections"] === undefined ? {} : { connections: input?.["connections"] }),
+      ...(input?.["nodeGroups"] === undefined ? {} : { nodeGroups: input?.["nodeGroups"] }),
+      ...(input?.["tags"] === undefined ? {} : { tags: input?.["tags"] }),
+      ...(input?.["meta"] === undefined ? {} : { meta: input?.["meta"] }),
+      ...(input?.["isArchived"] === undefined ? {} : { isArchived: input?.["isArchived"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2416,17 +2479,17 @@ const Endpoint31_3 = (raw: RawClient["server.relay.document"]) => (input: Endpoi
     params: { documentID: input["documentID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
-      name: input["name"],
-      description: input["description"],
-      nodes: input["nodes"],
-      connections: input["connections"],
-      nodeGroups: input["nodeGroups"],
-      tags: input["tags"],
-      meta: input["meta"],
-      isArchived: input["isArchived"],
-      versionId: input["versionId"],
-      expectedChecksum: input["expectedChecksum"],
-      force: input["force"],
+      ...(input["name"] === undefined ? {} : { name: input["name"] }),
+      ...(input["description"] === undefined ? {} : { description: input["description"] }),
+      ...(input["nodes"] === undefined ? {} : { nodes: input["nodes"] }),
+      ...(input["connections"] === undefined ? {} : { connections: input["connections"] }),
+      ...(input["nodeGroups"] === undefined ? {} : { nodeGroups: input["nodeGroups"] }),
+      ...(input["tags"] === undefined ? {} : { tags: input["tags"] }),
+      ...(input["meta"] === undefined ? {} : { meta: input["meta"] }),
+      ...(input["isArchived"] === undefined ? {} : { isArchived: input["isArchived"] }),
+      ...(input["versionId"] === undefined ? {} : { versionId: input["versionId"] }),
+      ...(input["expectedChecksum"] === undefined ? {} : { expectedChecksum: input["expectedChecksum"] }),
+      ...(input["force"] === undefined ? {} : { force: input["force"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2500,10 +2563,10 @@ const Endpoint31_9 = (raw: RawClient["server.relay.document"]) => (input: Endpoi
     params: { documentID: input["documentID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
-      position: input["position"],
-      counter: input["counter"],
-      baseRef: input["baseRef"],
-      params: input["params"],
+      ...(input["position"] === undefined ? {} : { position: input["position"] }),
+      ...(input["counter"] === undefined ? {} : { counter: input["counter"] }),
+      ...(input["baseRef"] === undefined ? {} : { baseRef: input["baseRef"] }),
+      ...(input["params"] === undefined ? {} : { params: input["params"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2523,14 +2586,14 @@ const Endpoint31_10 = (raw: RawClient["server.relay.document"]) => (input?: Endp
   raw["relay.document.preview"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
     payload: {
-      name: input?.["name"],
-      description: input?.["description"],
-      nodes: input?.["nodes"],
-      connections: input?.["connections"],
-      nodeGroups: input?.["nodeGroups"],
-      tags: input?.["tags"],
-      meta: input?.["meta"],
-      isArchived: input?.["isArchived"],
+      ...(input?.["name"] === undefined ? {} : { name: input?.["name"] }),
+      ...(input?.["description"] === undefined ? {} : { description: input?.["description"] }),
+      ...(input?.["nodes"] === undefined ? {} : { nodes: input?.["nodes"] }),
+      ...(input?.["connections"] === undefined ? {} : { connections: input?.["connections"] }),
+      ...(input?.["nodeGroups"] === undefined ? {} : { nodeGroups: input?.["nodeGroups"] }),
+      ...(input?.["tags"] === undefined ? {} : { tags: input?.["tags"] }),
+      ...(input?.["meta"] === undefined ? {} : { meta: input?.["meta"] }),
+      ...(input?.["isArchived"] === undefined ? {} : { isArchived: input?.["isArchived"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -2550,7 +2613,7 @@ type Endpoint31_12Input = {
 const Endpoint31_12 = (raw: RawClient["server.relay.document"]) => (input: Endpoint31_12Input) =>
   raw["relay.document.trial"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { command: input["command"], params: input["params"] },
+    payload: { command: input["command"], ...(input["params"] === undefined ? {} : { params: input["params"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint31_13Request = Parameters<RawClient["server.relay.document"]["relay.document.nodeTypes"]>[0]
@@ -2576,7 +2639,10 @@ type Endpoint31_15Input = {
 const Endpoint31_15 = (raw: RawClient["server.relay.document"]) => (input: Endpoint31_15Input) =>
   raw["relay.scope.create"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { name: input["name"], description: input["description"] },
+    payload: {
+      name: input["name"],
+      ...(input["description"] === undefined ? {} : { description: input["description"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint31_16Request = Parameters<RawClient["server.relay.document"]["relay.scope.update"]>[0]
@@ -2590,7 +2656,10 @@ const Endpoint31_16 = (raw: RawClient["server.relay.document"]) => (input: Endpo
   raw["relay.scope.update"]({
     params: { scopeID: input["scopeID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { name: input["name"], description: input["description"] },
+    payload: {
+      name: input["name"],
+      ...(input["description"] === undefined ? {} : { description: input["description"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint31_17Request = Parameters<RawClient["server.relay.document"]["relay.scope.remove"]>[0]
@@ -2636,7 +2705,10 @@ const Endpoint32_0 = (raw: RawClient["server.relay.publish"]) => (input: Endpoin
   raw["relay.publish.publish"]({
     params: { documentID: input["documentID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { versionId: input["versionId"], expectedChecksum: input["expectedChecksum"] },
+    payload: {
+      versionId: input["versionId"],
+      ...(input["expectedChecksum"] === undefined ? {} : { expectedChecksum: input["expectedChecksum"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint32_1Request = Parameters<RawClient["server.relay.publish"]["relay.publish.unpublish"]>[0]
@@ -2649,7 +2721,7 @@ const Endpoint32_1 = (raw: RawClient["server.relay.publish"]) => (input: Endpoin
   raw["relay.publish.unpublish"]({
     params: { documentID: input["documentID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { expectedChecksum: input["expectedChecksum"] },
+    payload: { ...(input["expectedChecksum"] === undefined ? {} : { expectedChecksum: input["expectedChecksum"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup32 = (raw: RawClient["server.relay.publish"]) => ({
@@ -2673,7 +2745,7 @@ type Endpoint33_1Input = {
 const Endpoint33_1 = (raw: RawClient["server.relay.hook"]) => (input: Endpoint33_1Input) =>
   raw["relay.hook.install"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { document: input["document"], version: input["version"] },
+    payload: { document: input["document"], ...(input["version"] === undefined ? {} : { version: input["version"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint33_2Request = Parameters<RawClient["server.relay.hook"]["relay.hook.update"]>[0]
@@ -2686,7 +2758,7 @@ const Endpoint33_2 = (raw: RawClient["server.relay.hook"]) => (input: Endpoint33
   raw["relay.hook.update"]({
     params: { installID: input["installID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { version: input["version"] },
+    payload: { ...(input["version"] === undefined ? {} : { version: input["version"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint33_3Request = Parameters<RawClient["server.relay.hook"]["relay.hook.enable"]>[0]
@@ -2785,7 +2857,12 @@ type Endpoint34_1Input = {
 const Endpoint34_1 = (raw: RawClient["server.pullRequest"]) => (input: Endpoint34_1Input) =>
   raw["pullRequest.create"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { title: input["title"], body: input["body"], base: input["base"], head: input["head"] },
+    payload: {
+      title: input["title"],
+      body: input["body"],
+      base: input["base"],
+      ...(input["head"] === undefined ? {} : { head: input["head"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup34 = (raw: RawClient["server.pullRequest"]) => ({ list: Endpoint34_0(raw), create: Endpoint34_1(raw) })
@@ -2869,7 +2946,7 @@ type Endpoint47_1Input = {
 const Endpoint47_1 = (raw: RawClient["server.guardrail"]) => (input?: Endpoint47_1Input) =>
   raw["guardrail.run"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
-    payload: { base: input?.["base"] },
+    payload: { ...(input?.["base"] === undefined ? {} : { base: input?.["base"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup47 = (raw: RawClient["server.guardrail"]) => ({ rules: Endpoint47_0(raw), run: Endpoint47_1(raw) })
@@ -2888,7 +2965,7 @@ const Endpoint48_0 = (raw: RawClient["server.meeting"]) => (input: Endpoint48_0I
     payload: {
       sessionID: input["sessionID"],
       title: input["title"],
-      retention: input["retention"],
+      ...(input["retention"] === undefined ? {} : { retention: input["retention"] }),
       consent: input["consent"],
     },
   }).pipe(Effect.mapError(mapClientError))
@@ -2983,7 +3060,11 @@ type Endpoint48_7Input = {
 const Endpoint48_7 = (raw: RawClient["server.meeting"]) => (input: Endpoint48_7Input) =>
   raw["meeting.confirm"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { meetingID: input["meetingID"], items: input["items"], people: input["people"] },
+    payload: {
+      meetingID: input["meetingID"],
+      ...(input["items"] === undefined ? {} : { items: input["items"] }),
+      ...(input["people"] === undefined ? {} : { people: input["people"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint48_8Request = Parameters<RawClient["server.meeting"]["meeting.commitment"]>[0]
@@ -3044,7 +3125,11 @@ const Endpoint50_0 = (raw: RawClient["server.capability.connections"]) => (input
   raw["capability.connection.connect"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     headers: { "idempotency-key": input["idempotency-key"] },
-    payload: { provider: input["provider"], key: input["key"], label: input["label"] },
+    payload: {
+      provider: input["provider"],
+      key: input["key"],
+      ...(input["label"] === undefined ? {} : { label: input["label"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint50_1Request = Parameters<RawClient["server.capability.connections"]["capability.target.get"]>[0]
@@ -3432,7 +3517,11 @@ type Endpoint53_4Input = {
 const Endpoint53_4 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_4Input) =>
   raw["inbox.addFeed"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { source: input["source"], url: input["url"], name: input["name"] },
+    payload: {
+      source: input["source"],
+      url: input["url"],
+      ...(input["name"] === undefined ? {} : { name: input["name"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint53_5Request = Parameters<RawClient["server.inbox"]["inbox.syncFeed"]>[0]
@@ -3484,9 +3573,9 @@ const Endpoint53_8 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_8Inp
       source: input["source"],
       generation: input["generation"],
       selected: input["selected"],
-      organization: input["organization"],
-      environment: input["environment"],
-      relevance: input["relevance"],
+      ...(input["organization"] === undefined ? {} : { organization: input["organization"] }),
+      ...(input["environment"] === undefined ? {} : { environment: input["environment"] }),
+      ...(input["relevance"] === undefined ? {} : { relevance: input["relevance"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -3573,14 +3662,14 @@ const Endpoint53_15 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_15I
   raw["inbox.upsert"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
-      revision: input["revision"],
+      ...(input["revision"] === undefined ? {} : { revision: input["revision"] }),
       source: input["source"],
       externalId: input["externalId"],
       actor: input["actor"],
       snippet: input["snippet"],
       threadId: input["threadId"],
       reply: input["reply"],
-      deepLink: input["deepLink"],
+      ...(input["deepLink"] === undefined ? {} : { deepLink: input["deepLink"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -3741,9 +3830,9 @@ const Endpoint53_28 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_28I
     payload: {
       source: input["source"],
       token: input["token"],
-      email: input["email"],
-      site: input["site"],
-      account: input["account"],
+      ...(input["email"] === undefined ? {} : { email: input["email"] }),
+      ...(input["site"] === undefined ? {} : { site: input["site"] }),
+      ...(input["account"] === undefined ? {} : { account: input["account"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -3801,7 +3890,7 @@ type Endpoint53_34Input = {
 const Endpoint53_34 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_34Input) =>
   raw["inbox.slackDiscover"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { generation: input["generation"], cursor: input["cursor"] },
+    payload: { generation: input["generation"], ...(input["cursor"] === undefined ? {} : { cursor: input["cursor"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint53_35Request = Parameters<RawClient["server.inbox"]["inbox.slackSelect"]>[0]
@@ -3836,7 +3925,7 @@ type Endpoint53_37Input = {
 const Endpoint53_37 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_37Input) =>
   raw["inbox.door"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { number: input["number"], from: input["from"] },
+    payload: { ...(input["number"] === undefined ? {} : { number: input["number"] }), from: input["from"] },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup53 = (raw: RawClient["server.inbox"]) => ({

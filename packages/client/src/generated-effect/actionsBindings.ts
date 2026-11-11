@@ -28,7 +28,7 @@ const Endpoint36_1 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoi
       remote: input["remote"],
       provider: input["provider"],
       projectPath: input["projectPath"],
-      expectedRevision: input["expectedRevision"],
+      ...(input["expectedRevision"] === undefined ? {} : { expectedRevision: input["expectedRevision"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -62,7 +62,7 @@ const Endpoint36_3 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoi
       remote: input["remote"],
       provider: input["provider"],
       projectPath: input["projectPath"],
-      expectedRevision: input["expectedRevision"],
+      ...(input["expectedRevision"] === undefined ? {} : { expectedRevision: input["expectedRevision"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -114,7 +114,10 @@ const Endpoint36_7 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoi
   raw["actions.binding.updatePolicy"]({
     params: { bindingID: input["bindingID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
-    payload: { retentionDays: input["retentionDays"], execution: input["execution"] },
+    payload: {
+      ...(input["retentionDays"] === undefined ? {} : { retentionDays: input["retentionDays"] }),
+      ...(input["execution"] === undefined ? {} : { execution: input["execution"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 export const adaptGroup36 = (raw: RawClient["server.actionsBinding"]) => ({
