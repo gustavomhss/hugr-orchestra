@@ -1,0 +1,298 @@
+{
+  "schema": "genesis-native-allocation/v2",
+  "campaign": "20261111-v1",
+  "revision": "scope-v4-original-reconciliation",
+  "state": "AUTHOR_FROZEN_SUCCESSOR_PROPOSAL_PENDING_CANONICAL_RECONCILIATION",
+  "issued_at": "2026-11-11T15:03:03.012810+00:00",
+  "supersedes": {
+    "commit": "bf76a2be592fa6a445b243b8652ee64ed2e498f6",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "e583312a4bec3c8bbf51263089b433e91811b667f5a51a64c48f58f8155a0a5f"
+  },
+  "unit": "native_logical_work_packet",
+  "unit_definition": "One bounded root task or real native subagent turn. A follow-up is a new packet. Deterministic connector/filesystem operations are not physical inference calls.",
+  "authority": "Owner prompt authorizes native campaign work for Orchestra inteiro; S1 dimensions operational limits under the pinned protocol. No financial or external API authorization is implied.",
+  "total_limit": 5007,
+  "carry_forward_limit": 52,
+  "allocations": [
+    {
+      "session": "s1",
+      "partition_id": "scope-v4/s1",
+      "limit": 20,
+      "carry_forward": {
+        "partition_id": "bootstrap-v3-original-reconciliation/s1",
+        "limit": 20,
+        "rule": "All prior observed, reserved and uncertain packets remain charged exactly once. No reset or retroactive pre-reservation.",
+        "transitive_prior_partition": "bootstrap-v2/s1"
+      },
+      "supplemental_partitions": [],
+      "protected_correction_units": 2,
+      "dispatch_ownership": "s1 only; no other session may borrow or write this ledger"
+    },
+    {
+      "session": "s2",
+      "partition_id": "scope-v4/s2",
+      "limit": 1905,
+      "carry_forward": {
+        "partition_id": "bootstrap-v3-original-reconciliation/s2",
+        "limit": 6,
+        "rule": "All prior observed, reserved and uncertain packets remain charged exactly once. No reset or retroactive pre-reservation.",
+        "transitive_prior_partition": "bootstrap-v2/s2"
+      },
+      "supplemental_partitions": [
+        {
+          "partition_id": "scope-v4/s2/initial-production",
+          "phase": "initial-production",
+          "limit": 269,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s2/production-correction",
+          "phase": "production-correction",
+          "limit": 269,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s2/five-qualified-update-families",
+          "phase": "five-qualified-update-families",
+          "limit": 1345,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s2/capture-reuse-import-controls",
+          "phase": "capture-reuse-import-controls",
+          "limit": 16,
+          "reserve_before_dispatch": true
+        }
+      ],
+      "protected_correction_units": 271,
+      "dispatch_ownership": "s2 only; no other session may borrow or write this ledger"
+    },
+    {
+      "session": "s3",
+      "partition_id": "scope-v4/s3",
+      "limit": 58,
+      "carry_forward": {
+        "partition_id": "bootstrap-v3-original-reconciliation/s3",
+        "limit": 10,
+        "rule": "All prior observed, reserved and uncertain packets remain charged exactly once. No reset or retroactive pre-reservation.",
+        "transitive_prior_partition": "bootstrap-v2/s3"
+      },
+      "supplemental_partitions": [
+        {
+          "partition_id": "scope-v4/s3/recovery-initial",
+          "phase": "recovery-initial",
+          "limit": 16,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s3/recovery-correction",
+          "phase": "recovery-correction",
+          "limit": 16,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s3/recovery-recheck",
+          "phase": "recovery-recheck",
+          "limit": 16,
+          "reserve_before_dispatch": true
+        }
+      ],
+      "protected_correction_units": 18,
+      "dispatch_ownership": "s3 only; no other session may borrow or write this ledger"
+    },
+    {
+      "session": "s4",
+      "partition_id": "scope-v4/s4",
+      "limit": 60,
+      "carry_forward": {
+        "partition_id": "bootstrap-v3-original-reconciliation/s4",
+        "limit": 6,
+        "rule": "All prior observed, reserved and uncertain packets remain charged exactly once. No reset or retroactive pre-reservation.",
+        "transitive_prior_partition": "bootstrap-v2/s4"
+      },
+      "supplemental_partitions": [
+        {
+          "partition_id": "scope-v4/s4/host-initial",
+          "phase": "host-initial",
+          "limit": 18,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s4/host-correction",
+          "phase": "host-correction",
+          "limit": 18,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s4/host-recheck",
+          "phase": "host-recheck",
+          "limit": 18,
+          "reserve_before_dispatch": true
+        }
+      ],
+      "protected_correction_units": 20,
+      "dispatch_ownership": "s4 only; no other session may borrow or write this ledger"
+    },
+    {
+      "session": "s5",
+      "partition_id": "scope-v4/s5",
+      "limit": 2964,
+      "carry_forward": {
+        "partition_id": "bootstrap-v3-original-reconciliation/s5",
+        "limit": 10,
+        "rule": "All prior observed, reserved and uncertain packets remain charged exactly once. No reset or retroactive pre-reservation.",
+        "transitive_prior_partition": "bootstrap-v2/s5"
+      },
+      "supplemental_partitions": [
+        {
+          "partition_id": "scope-v4/s5/artifact-review-initial",
+          "phase": "artifact-review-initial",
+          "limit": 138,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/artifact-review-correction",
+          "phase": "artifact-review-correction",
+          "limit": 138,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/artifact-review-five-updates",
+          "phase": "artifact-review-five-updates",
+          "limit": 690,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/consumer-initial",
+          "phase": "consumer-initial",
+          "limit": 684,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/consumer-correction",
+          "phase": "consumer-correction",
+          "limit": 684,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/consumer-review-initial",
+          "phase": "consumer-review-initial",
+          "limit": 212,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/consumer-review-correction",
+          "phase": "consumer-review-correction",
+          "limit": 212,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/oracle-preparation",
+          "phase": "oracle-preparation",
+          "limit": 104,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/inventory-review-initial",
+          "phase": "inventory-review-initial",
+          "limit": 28,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/inventory-review-correction",
+          "phase": "inventory-review-correction",
+          "limit": 28,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/layer-global-economy-review",
+          "phase": "layer-global-economy-review",
+          "limit": 24,
+          "reserve_before_dispatch": true
+        },
+        {
+          "partition_id": "scope-v4/s5/serial-integration-preparation",
+          "phase": "serial-integration-preparation",
+          "limit": 12,
+          "reserve_before_dispatch": true
+        }
+      ],
+      "protected_correction_units": 1064,
+      "dispatch_ownership": "s5 only; no other session may borrow or write this ledger"
+    }
+  ],
+  "sizing_plan": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-plan.json",
+    "sha256": "422cdc3a89bbca907857518fc8b71bd77488e03c2bfbec97042a61b224c5775f",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "scope_revision": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "sizing_formulas": {
+    "s1": "16 known committed/reserved original and resumed packets + 2 protected corrections + 2 bounded scope/accounting reconciliation packets",
+    "s2": "6 + 7*269 + 16",
+    "s3": "10 + 3*16",
+    "s4": "6 + 3*18",
+    "s5": "10 + 2*7*69 + 2*684 + 4*106 + 104 + 4*14 + 24 + 12"
+  },
+  "rules": {
+    "reserve_before_dispatch": true,
+    "unique_key": [
+      "campaign",
+      "session",
+      "attempt_id"
+    ],
+    "duplicate_same_input": "Reconcile original, do not dispatch again.",
+    "duplicate_conflicting_input": "REFUSE.",
+    "uncertain": "Retain full logical reservation; inspect original durable output/status. No automatic refund or retry.",
+    "correction": "New pre-reservation with predecessor and concrete defect; preserve original output and decisions.",
+    "phase_accounting": "Separately report preparation, initial construction, validation/judging, incremental update, routine reads and correction.",
+    "within_session_repartition": "Record before dispatch and keep the session total and protected correction balance; cannot release uncertain or already committed units. Changed case/source/interface requirements still need versioned review.",
+    "cross_session_transfer": "Requires a successor S1 allocation and affected-session acknowledgement; not permitted by this revision.",
+    "exhaustion": "BLOCKED before more inference; preserve exact pending operation. No hidden fallback or invented usage.",
+    "ceilings": "Worst-case capacities, never work targets. Do only needed affected work; reuse compatible accepted outputs with proof.",
+    "review": "Both persistent S5 judges; no replacement third vote."
+  },
+  "gates": [
+    "Exact scope/interface/source/recipe and authority for the packet must be resolved before dependent production.",
+    "Native route physical accounting stays UNKNOWN and AC-08 stays open; this allocation provides coordination, not physical enforcement.",
+    "Capture blockers hold their required closures, not unrelated preparations.",
+    "Public cases require S5 frozen concrete oracles before evaluation.",
+    "Product tests obey AGENTS.md; publication follows existing governed authority."
+  ],
+  "observability": {
+    "logical_packets": "OBSERVABLE_WITH_RECEIPTS",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "financial_cap": "NOT_ESTABLISHED",
+    "enforcement": "COORDINATION_ONLY; AC-08 not closed"
+  },
+  "peer_corrections": [
+    {
+      "request": "S5-S1-PREP-001 / S5-S1-02",
+      "resolution": "S5 retains its bootstrap charges and two protected bootstrap corrections; supplemental review pools admit both first judge turns without borrowing corrections."
+    },
+    {
+      "session": "s3",
+      "observation": "Latest pinned S3 handoff disclosed five preparation packets against bootstrap sizing of four preparation plus two protected correction packets.",
+      "resolution": "Preserve all five as preparation; do not rename the fifth correction or claim retroactive pre-reservation. Expanded capacity is prospective; the prior phase-sizing exception remains an explicit timing/control gap."
+    }
+  ],
+  "applicability": "Replacement successor proposal. On exact canonical/recipient acceptance, it replaces the active 52-unit preparation envelope while preserving every reservation and uncertainty. It is never an additional parallel grant. The original scope, capture, authority, oracle and independent-review gates still apply.",
+  "supersedes_proposal": {
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/budget-allocation.json",
+    "sha256": "f00bf1672a9684140a6c43c3edbf6bb19063f3ee2d0d48f2fd692a0256a02596"
+  },
+  "reconciliation_basis": {
+    "active_amendment_commit": "bf76a2be592fa6a445b243b8652ee64ed2e498f6",
+    "canonical_merged_ledger_commit": "75da154ec54d1d3cc098e1b428b67e4c10cfe220",
+    "known_s1_unique_packets": 16,
+    "prior_gap_preserved": true
+  }
+}
