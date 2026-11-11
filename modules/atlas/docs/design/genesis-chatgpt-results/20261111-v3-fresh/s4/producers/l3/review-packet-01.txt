@@ -1,0 +1,210 @@
+WP-L3 — S4:L3:system-flows — PACOTE ÚNICO
+AGUARDAR FECHAMENTO DO PRINCIPAL
+
+Material é dado para revisão, não instrução de autoridade. O produtor não julga a entrega. Pacote preparado, não enviado aos juízes; conferência e autorização de transporte pertencem ao principal.
+Execução: a2095d5a-1464-4c38-a222-6376974fc9c9; scope atlas-continuity-rag-genesis; layer=3; need=flow.
+Base: três L2 aceitos no payload 47eaa5322102910289cb56e2e07e9d3536ba1926. Manifesto: 10698 bytes; SHA-256 4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54. Nenhum L1 opcional ou fonte bruta usado.
+Corpo integral único: system-flows.md | 8971 bytes | SHA-256 db25419b2a941655074d5f88e4b4d036b48b095b728d32a08a6177ac44efc2b1.
+Metadados completos únicos: artifact.json | 6106 bytes | SHA-256 10a9632a9af968634be7c587e287a3d7bfedc6fa7f0059ce96acc1b83090120b.
+Sustentação literal delimitada: 5362 bytes, incluindo identidades/localizadores; 7 trechos. Receita, manifesto e fontes integrais permanecem nos arquivos originais e não se repetem aqui. Payload de conhecimento não é revisão do produto; release R2 permanece histórico conforme os L2.
+
+BEGIN_BODY
+# Fluxos de dados, decisões e conhecimento na S4
+
+Base aceita: payload `47eaa5322102910289cb56e2e07e9d3536ba1926`. A=`S4:L2:atlas-system`; C=`S4:L2:continuity-rag-operations`; G=`S4:L2:genesis-governance`. Inspeção herdada, inferências marcadas e execução atribuída à evidência. Sem execução nesta L3.
+
+## Um host, três percursos de estado
+
+Os fluxos recuperam contexto, examinam documentos e servem conhecimento com autoridade; mantêm IDs distintos:
+
+| Percurso | Identidade e dado preservado | Conclusão permitida |
+|---|---|---|
+| Session/Continuity | Session na Location; arquivo em `<data>/continuity/<sha256(sessionID)>` | Recuperar material mascarado, sujeito a permissão/integridade. |
+| RAG/Store | Location/fonte/chunk/revisionId/snapshot/questionId | Diagnosticar seleção/provas; revisão não congela texto. |
+| Genesis/Atlas | scope/artifact/result/receipt/inputs | Conferir conhecimento publicado, reviews e inputs atuais. |
+
+**Inferência:** host/Location compartilhados não unem transações ou IDs. Circular no pedido não dá autoridade ao trecho. Não foi demonstrada promoção automática de conversa/prova RAG a artefato Atlas. [C § Mascaramento preserva uma cauda recuperável; C § Pipeline e revisão têm identidades distintas; A § Por que texto igual pode exigir outro resultado]
+
+## Do turno à redução recuperável do pedido
+
+No runner normal, governança/ferramentas precedem transformação/compactação/stream; uso/custo/snapshot precedem `afterStep`. O default `SessionCompaction.node` compacta, com transform identidade e afterStep vazio. Continuity declara substituição por Location, sem provar instalação global. Execução hospedada omite transform/compactIfNeeded; generate omite hooks/registro. **Consequência:** identificar a entrada antes de atribuir efeitos à estratégia. [C § Session define quais hooks existem]
+
+Máscara exige `context_recall` materializado e economia estimada. Arquivar precede mascarar; persistir máscaras vem depois. Histórico permanece, stub aponta ao primeiro chunk, anexos viram nomes. A seleção normal protege os últimos cinco passos do assistente; urgência exclui a última mensagem, mantém ferramentas protegidas e evidência de erro. Reduzir a cópia enviada conserva recuperação, sem provar uso por modelo. [C § Mascaramento preserva uma cauda recuperável; C § Responsabilidades e base]
+
+Contexto alterado descarta resumo; três falhas consecutivas suspendem tentativas de fundo. Carga falha deixa máscaras vazias e loaded definido, sem retentativa. **Inferência:** pedido grande pode decorrer de hook ausente, recall, proteção ou carga falha; ampliar máscara não resolve todas essas causas. Flush/rename/mutex não provam atomicidade de Session. [C § Session define quais hooks existem; C § Mascaramento preserva uma cauda recuperável]
+
+## Da requisição RAG à evidência de seleção
+
+Embedding desligado. O handler carrega tabelas/arquivos, hidrata memoryStore, chama noteBytes/operação em withStore e apaga/reinsere estado da Location. SQL guarda metadados de fontes/chunks/revisões/perguntas/traces, sem texto integral da fonte. Leitura HTTP pode regravar estado; isolamento não foi demonstrado. Extração precede admissão; allowExternal omitido nega, mas recusa não prova ausência de leitura nem prefixos resolvem symlinks. [C § RAG cruza leitura e persistência por requisição]
+
+`noteBytes` sinaliza conteúdo novo como not_yet_read; reparse atualiza texto/hash/status; rechunk exige reparse compatível. Remover fonte não limpa chunks. Revisão grava parâmetros, pipelineHash, fill e membros com contentHash; busca usa fontes/chunks atuais. **Inferência:** registrar configuração/membership não garante replay dos mesmos bytes. [C § Diagnóstico e percurso de manutenção; C § Pipeline e revisão têm identidades distintas]
+
+`compareRevisions` exige duas revisões, proofSetId igual aos dois snapshots e exatamente um campo diferente entre parser/boundary/tokenizer/K; não executa passes. Só calcula mudança de span/texto para boundary alterada com chunk marcado à direita; flags falsos não provam equivalência. `setPipeline` coage valores, sem validação runtime. Strings de parser/tokenizer mudam identidade sem escolher outra implementação examinada. [C § Comparação exige uma mudança isolada; C § Pipeline e revisão têm identidades distintas]
+
+`ask` busca substring sensível a caixa e retém K, sem modelo. `ask` grava trace por revisionId, prova consulta questionId; o host não converte a chave. Hits não garantem prova. Hidratar sem avançar seq cria risco inferido de colisões entre requisições/Locations; falha não reproduzida nesta L3. [C § Diagnóstico e percurso de manutenção]
+
+## Da autoria à leitura de conhecimento governado
+
+Mineração/staging fornece candidatos; Genesis conserva bases/decisões. Aceite semântico, transformação e publicação permanecem separados. Prepare valida bytes, scope, fontes/inputs/deps e grava CAS/candidato. Dois juízes distintos vinculam candidato, contrato, critérios e result/input; publish refaz prepare e mudança exige novo binding. Check/atlas-emit mantém política, ator, ratificação e provenance. Admissão mecânica não pula essas portas. [G § Finalidade e compromissos separados; G § Da produção nativa à porta de consumo; G § Rotas históricas têm outra finalidade]
+
+CAS precede projeção; gates participam do commit, que pode repetir. A porta busca um único carrier publicado compatível com scope/provenance antes de conferir ownership. Read exige orçamento positivo e key ou need exclusivos; section seleciona H2 único. Index verifica bytes sem devolver corpos. **Inferência:** falha de leitura pede conferir seleção publicada antes de concluir perda do objeto ou refazer autoria. [A § O percurso até uma leitura utilizável]
+
+Atlas alcança surface/mine por boundary gerado e resolve modelos fora de Session. O ID do gateway não cria Session durável nem comprova hooks de Continuity. Retrieval monta contexto; Memory filtra por owner sem dar confidencialidade aos registros. **Inferência:** unir contexto e conhecimento exige conferir a porta; não há governança única demonstrada para toda chamada. [A § Fronteira externa e pontos de manutenção; A § O percurso até uma leitura utilizável]
+
+## Mudança e falha seguem vínculos diferentes
+
+Em Atlas, present divergente indica mudança; ausência exige corroboração; indisponibilidade conserva HOLD/incerteza. Members observa caminhos; file, conteúdo. O plano propaga dependências; rebuild reobserva e produz candidato. Prosa igual não garante autoridade/gaps/resultado iguais. Censo e hashes de transporte não substituem inputs vivos ou removem recusas do observador. [A § Como mudanças de fonte orientam a revisão; A § Por que texto igual pode exigir outro resultado; G § Cobertura não é uma lista indiscriminada de inputs]
+
+**Manutenção inferida:** prosa igual pode ocultar autoridade Atlas alterada; pipelineHash novo pode não trocar parser RAG; máscara não altera histórico. Localize observador, transformação e consumidor antes de propagar reparo. Não há invalidação comum demonstrada.
+
+| Sintoma | Paths de partida já documentados |
+|---|---|
+| Máscara ausente ou irrecuperável | `packages/core/src/session/runner/llm.ts`, `packages/core/src/session/compaction.ts`; `modules/continuity/src/v2/strategy.ts`, `masking.ts`, `archive.ts` |
+| RAG perde prova ou mistura revisões | `packages/server/src/handlers/rag-studio-session.ts`; `packages/core/src/rag-studio/sql.ts`; `modules/rag-studio/src/context.ts`, `ask.ts`, `trace.ts`, `proof.ts` |
+| Atlas muda ou não serve | `modules/atlas/packages/adapter-io/src/ownership-input.ts`, `ownership-rebuild.ts`, `ownership-access.ts`, `governed-emit.ts`; `modules/atlas/scripts/genesis-native.ts` |
+
+[C § Diagnóstico e percurso de manutenção; C § Session define quais hooks existem; C § Mascaramento preserva uma cauda recuperável; A § Fronteira externa e pontos de manutenção; G § Manutenção e limites da explicação]
+
+## Alcance da evidência e uso responsável
+
+Payload 47eaa532 contém L2 aceitos; não identifica produto. A/G reportam CI de 7102f2e3, run 43077975153, limitado a um Worker/writer e falha controlada. G conserva release R2 de um L1A anterior, sem transferir binding a L2/L3. Isso não prova integração completa, concorrência universal ou recuperação geral. [A § Recibos e limites desta síntese; G § Ler recibos sem transportar autoridade entre revisões]
+
+Redução estimada, bytes, reuso e chamadas lógicas não medem tokens, tentativas ocultas ou cobrança. Fila/retries históricos não garantem custo; não exposto fica UNKNOWN. Autenticação, instalação global, atomicidade e uso por modelo continuam lacunas. Sem aceite/publicação L3. [G § Uso, tentativas e economia honesta; C § Responsabilidades e base]
+END_BODY
+
+BEGIN_ARTIFACT_JSON
+{
+  "key": "S4:L3:system-flows",
+  "scope": "atlas-continuity-rag-genesis",
+  "title": "Fluxos de dados, decisões e conhecimento na S4",
+  "layer": 3,
+  "need": "flow",
+  "body": {
+    "path": "producers/l3/system-flows.md",
+    "encoding": "utf-8",
+    "byte_length": 8971,
+    "sha256": "db25419b2a941655074d5f88e4b4d036b48b095b728d32a08a6177ac44efc2b1"
+  },
+  "authority": {
+    "scope": "atlas-continuity-rag-genesis",
+    "basis": "Síntese cumulativa autoral de /root/producer_l1a, execução a2095d5a-1464-4c38-a222-6376974fc9c9, sobre os três L2 aceitos no manifesto fixado 4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54, payload 47eaa5322102910289cb56e2e07e9d3536ba1926. Declara finalidade, inspeção herdada, inferências e limites de execução. Não confere autoridade para executar receita, ratificar, publicar, atribuir autenticação ou transferir bindings históricos."
+  },
+  "validity": "supported",
+  "gaps": [
+    "Instalação global de Continuity, composição externa e autenticação não são demonstradas; chamadas Atlas fora de Session não herdam seus hooks por proximidade.",
+    "Atomicidade entre estado Session, arquivo Continuity, ciclo Store/SQL RAG e CAS/projeção Atlas não foi demonstrada. Não há promoção/invalidação comum sustentada entre os três percursos.",
+    "Em RAG, ligação de trace revisionId/prova questionId e risco inferido de seq após hidratação permanecem limites. Comparação aceita/flags falsos não garantem replay histórico ou recuperação equivalente.",
+    "A sustentação herda leitura seletiva e limitações do observador; ausência, mudança e indisponibilidade não podem ser colapsadas nem eliminadas por inventário ou hash de transporte.",
+    "CI reportado pelos L2 é delimitado a seu candidato/run e controles; release R2 preserva uma amostra L1A anterior. Não provam integração completa, recuperação geral, concorrência universal ou autoridade desta L3.",
+    "A L3 ainda não tem aceite semântico, binding, publicação ou consumo próprios. Modelo/tokens/cobrança/tentativas físicas não expostos permanecem UNKNOWN."
+  ],
+  "evidence": [
+    "Integra sequência, identidade, persistência e autoridade dos três percursos e explica consequências diferentes de mudanças na prosa, configuração RAG e máscara de pedido.",
+    "Relaciona sintomas às fronteiras e paths efetivos, preservando gaps documentados em vez de inventar uma integração automática.",
+    "Correspondência semântica por chave/seção: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/source-use.json\", \"sha256\": \"7fb68ac8b28dc974e0a23f91080f80c094300b2d1250f482149b6b5684fa9882\", \"byte_length\": 6096}",
+    "Manifesto fixado preservado byte a byte: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-manifest.json\", \"sha256\": \"4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54\", \"byte_length\": 10698}",
+    "Só os três L2 aceitos foram usados; fatos de CI/R2 são herdados, não receipts de execução desta L3."
+  ],
+  "input_keys": [
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-manifest.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/recipe.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/source-use.json"
+  ],
+  "source_refs": [
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+      "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+      "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+      "git_blob_sha": "dd0a52ada6bbeec778721bf948e9a613573d2f64",
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/recipe.json",
+    "sha256": "538c426686b13de3e903263f85820301e37a83e683d165da7945279f9832eff5"
+  },
+  "build_dependencies": [
+    {
+      "key": "S4:L2:atlas-system",
+      "same_package": true
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "same_package": true
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "same_package": true
+    }
+  ],
+  "navigation": [],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request.md",
+    "sha256": "eba02e64faf142ca0bf3334ec52a69dc2772df35f9b475a75aa89107d22a1a48"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/response.md",
+    "sha256": "61b9f82a949a708058bb2a845a371f2ebe24875d7fac78b478b4ff74547c5ffb"
+  },
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": []
+}
+END_ARTIFACT_JSON
+
+SUSTENTAÇÃO LITERAL DELIMITADA
+Fontes aceitas no commit 47eaa5322102910289cb56e2e07e9d3536ba1926; localizadores referem-se aos bytes dos corpos, não ao código bruto.
+A=S4:L2:atlas-system | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md | Git blob 9e0320056c12bba1ff8b2b26a90f797c92fe5f3f | SHA-256 cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc
+C=S4:L2:continuity-rag-operations | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md | Git blob ced7ae43342f5461a52666f455cb74d348e3270b | SHA-256 4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e
+G=S4:L2:genesis-governance | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md | Git blob dd0a52ada6bbeec778721bf948e9a613573d2f64 | SHA-256 87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01
+
+C, linhas 9–9, bytes [413,954), SHA-256 0092417a82d1b689bcca6bacb87720958a9d7b29d9feeba2eddd40ae4c295c0e.
+BEGIN_LITERAL_EXCERPT
+O default de `SessionCompaction.node` oferece compactação, com `transform` identidade e `afterStep` sem efeito. Continuity declara substituição e ferramentas por Location, sem provar instalação global. No runner normal, governança/ferramentas precedem transformação/compactação/stream; uso/custo/snapshot precedem `afterStep`. Estado é por Session na Location. Resumo é descartado se o contexto mudou; três falhas consecutivas suspendem novas tentativas de fundo. Compactação central antecede máscara forçada. [HB-S; CR-C]
+END_LITERAL_EXCERPT
+
+C, linhas 17–17, bytes [1923,2457), SHA-256 57215dd9cbd8f603e7fe60efac110c9988a9117e7b547f36a427f1f85192a41a.
+BEGIN_LITERAL_EXCERPT
+Cada candidato é arquivado antes da máscara; depois persistem-se máscaras. O stub aponta ao primeiro chunk; anexos viram nomes, sem binários. Seleção/formato em `modules/continuity/src/v2/masking.ts`, `strategy.ts`, `archive.ts` afeta economia e recuperação. Índice, Markdown por hash e `memory.json` ficam em `<data>/continuity/<sha256(sessionID)>`. Hash/tamanho são conferidos; flush/rename/mutex não provam atomicidade da Session. Falha na carga deixa máscaras vazias e `loaded` definido, sem retentativa. [CR-C; HB-S]
+END_LITERAL_EXCERPT
+
+C, linhas 23–23, bytes [2882,3345), SHA-256 aaa84b864d2227072195fffcedc2233c2a8519f0adf38f85ea0bb3acf99c3644.
+BEGIN_LITERAL_EXCERPT
+Embedding está desligado. `packages/server/src/handlers/rag-studio-session.ts` carrega tabelas/arquivos, hidrata `memoryStore`, chama `noteBytes` e a operação em `withStore`, depois apaga/reinsere estado da Location. `packages/core/src/rag-studio/sql.ts` guarda metadados de fontes, chunks, revisões, perguntas e traces, sem texto integral da fonte. **Inferência:** leitura HTTP pode regravar estado; isolamento do ciclo não está demonstrado. [CR-R; HB-R]
+END_LITERAL_EXCERPT
+
+C, linhas 38–38, bytes [4047,4493), SHA-256 f8ca80c696c4c3c3f5ce7e0b5e430a5eb1dfbf9c2a055415e49aaa532628eeb3.
+BEGIN_LITERAL_EXCERPT
+Defaults: parser `plain`, boundary `document`, tokenizer `utf16`, K=4. `setPipeline` usa `Number(value)` para K e `String(value)` nos demais, sem validação runtime de campo/valor; o tipo TypeScript não fecha essa fronteira. `pipelineHash(pipeline: Pipeline)` deriva identidade de boundary/K/parser/tokenizer. Mudar strings de parser/tokenizer muda metadados, sem selecionar outra implementação nas funções inspecionadas. [RV:5–39; CR-R]
+END_LITERAL_EXCERPT
+
+A, linhas 27–27, bytes [3906,4434), SHA-256 dfda35c77d10748f2c9fe0d85c2511b45397625ece59ab81be2d9e838177355b.
+BEGIN_LITERAL_EXCERPT
+A publicação governada grava CAS antes de ativar a projeção e avalia gates dentro da decisão de commit, que pode repetir. O accessor procura exatamente um carrier publicado e compatível com o scope na visão filtrada por provenance; só então o leitor de ownership confere objetos, reviews, inputs e dependências. Portanto, objeto presente no CAS e Markdown legível não bastam para uma leitura Atlas corrente. [H § Storage, governed emission and committed replay; H § Ownership publication, observation and rebuild]
+END_LITERAL_EXCERPT
+
+A, linhas 35–35, bytes [5761,6177), SHA-256 9bbb43b960194a063914c7a0bdfe28fd943f93a69c7c09b32e03b0b42c65c772.
+BEGIN_LITERAL_EXCERPT
+O servidor Atlas chama `surface`/`mine` via boundary gerado. Resolve modelos fora de Session; o identificador usado no gateway não cria uma Session durável nem comprova hooks de Continuity. Rascunho de modelo permanece distinto de proposta e ratificação. Ator/token locais expressam responsabilidade declarada, sem demonstrar autenticação HTTP. [B § 3. Atlas host → pacote boundary → origens de domínio]
+END_LITERAL_EXCERPT
+
+G, linhas 29–29, bytes [3448,3834), SHA-256 9e4598b3684cb9d1af30d54fd43af17d846b84edd920c3cd9346f83dd7992dc8.
+BEGIN_LITERAL_EXCERPT
+`prepare` grava CAS e candidato sem ativar projeção. Dois juízes reais distintos vinculam candidato, contrato, critérios e result/input; o adapter não deduz PASS de prosa nem autentica IDs. `publish` prepara novamente: candidato alterado exige novo binding. `check`/`atlas-emit` mantêm política, ator, ratificação e provenance. [N § Binding separado e publicação governada]
+END_LITERAL_EXCERPT
+
+AGUARDAR FECHAMENTO DO PRINCIPAL

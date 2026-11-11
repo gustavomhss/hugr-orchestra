@@ -9,6 +9,7 @@ on:
       - ".github/workflows/atlas-pilot.yml"
       - "modules/atlas/**"
       - "!modules/atlas/docs/design/genesis-chatgpt-results/**"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs"
 
 permissions:
   contents: read
@@ -28,6 +29,8 @@ jobs:
       - name: Typecheck Atlas
         working-directory: modules/atlas
         run: bun typecheck
+      - name: Parse the native maintenance operation
+        run: node --check modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs
       - name: Grouped ownership and existing door regressions
         working-directory: modules/atlas
         run: |

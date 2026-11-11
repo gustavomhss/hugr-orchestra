@@ -1,0 +1,152 @@
+{
+  "agent_id": "/root/judge_j1",
+  "identity_role": "parallel-v3-fresh/S4/J1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "semantic-layer3-review",
+  "key": "S4:L3:system-flows",
+  "body_sha256": "9df212b46f057c9e8369df6ed30e2e931a8fa9bc7f72ef51afba9eb4ea79d642",
+  "body_bytes": 8952,
+  "metadata_sha256": "51f7f018a5a936dff7d95658437e407d5fba4317d1570405e41074bec49fe61e",
+  "predecessor_commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+  "verdict": "FIX-FIRST",
+  "summary": "P1-01 e P1-02 foram resolvidos. Resta corrigir a descrição do estado RAG: a síntese perdeu a distinção entre metadados da fonte e texto persistido nos chunks, além da condição que faz noteBytes marcar a fonte como não lida.",
+  "criteria": [
+    {
+      "id": "AC-01",
+      "verdict": "FIX-FIRST",
+      "location": "Da requisição RAG à evidência de seleção",
+      "reason": "Os percursos estão integrados, mas o estado persistido e a condição de invalidação RAG precisam da correção L3-J1-01."
+    },
+    {
+      "id": "CC-2",
+      "verdict": "PASS",
+      "location": "Base, source_refs e build_dependencies",
+      "reason": "Declara as três L2 completas e os dois L1 efetivamente usados, todos no payload aceito, sem substituir os intermediários por descoberta nova."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "FIX-FIRST",
+      "location": "Corpo, seção RAG; metadata/body",
+      "reason": "Identidades, formato, teto e referências são coerentes. A formulação sobre SQL e noteBytes não conserva com precisão os contratos herdados."
+    },
+    {
+      "id": "CC-7",
+      "verdict": "FIX-FIRST",
+      "location": "Fronteira Store/SQL em Da requisição RAG à evidência de seleção",
+      "reason": "A fronteira entre arquivo vivo, metadados da fonte e conteúdo dos chunks foi comprimida em uma afirmação genérica inadequada; ver L3-J1-01."
+    },
+    {
+      "id": "QS-1",
+      "verdict": "FIX-FIRST",
+      "location": "SQL persiste metadados, sem texto integral; NoteBytes marca not_yet_read",
+      "reason": "A primeira formulação perde a qualificação sobre a fonte; a segunda omite o gatilho de mudança de conteúdo. Ambas afetam a interpretação do fluxo."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "location": "Mudanças propagam por resultados e vínculos; Após falha; Manutenção",
+      "reason": "Oferece relações operacionais úteis, condições de parada, diagnóstico de falhas e caminhos concretos de manutenção."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "location": "Referências A/C/G/H/N, oito trechos e metadados",
+      "reason": "A origem das afirmações é localizável; inspeção herdada, inferência contratual e execução histórica são identificadas separadamente."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "location": "Um host, três percursos de estado; autoria, leitura e propagação",
+      "reason": "Explica responsabilidades e relações entre dados, decisão e autoridade, sem promover automaticamente conversa ou prova RAG a conhecimento Atlas."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "location": "source_refs/input_keys; observador e reconstrução",
+      "reason": "Os cinco predecessores têm referências e file inputs correspondentes. Ausência, mudança e indisponibilidade permanecem distintas."
+    },
+    {
+      "id": "GO-I4",
+      "verdict": "PASS",
+      "location": "Parada condicional e controles NR1-01/02/03",
+      "reason": "A argumentação usa condições verificáveis e controles delimitados. Não apresenta inferência contratual nem contagem de autoria sintética como execução L3 ou telemetria de modelo."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "location": "Resultado completo, receipts, independentes e recuperação",
+      "reason": "Preserva autoridade/validade/gaps/evidência, vínculos afetados, histórico e unidades independentes válidas; não exige regeneração indiscriminada."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "location": "Da autoria à leitura; retorno à publicação anterior",
+      "reason": "Mantém duas decisões distintas, binding exato e gates normais. Não atribui autorização automática a rollback, histórico ou receipt antigo."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "FIX-FIRST",
+      "location": "Descrição herdada do ciclo RAG",
+      "reason": "Os limites gerais são honestos, mas a contração de duas afirmações removeu qualificações necessárias da evidência aceita; L3-J1-01."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "L3-flows",
+      "verdict": "FIX-FIRST",
+      "reason": "A integração produtor/preparação/CAS/observador/publicação/leitura e os percursos Session/RAG estão presentes. O fluxo de estado RAG exige L3-J1-01 para não confundir persistência e invalidação."
+    },
+    {
+      "id": "L3-impact",
+      "verdict": "PASS",
+      "reason": "Receita/input afetam o grafo declarado; resultado inclui autoridade e demais campos. A parada exige resultado completo validado igual e vínculos próprios válidos. Navegação não cria dependência; independentes válidos conservam identidades."
+    },
+    {
+      "id": "L3-failure",
+      "verdict": "PASS",
+      "reason": "Histórico não torna inputs antigos atuais; drift e falha conservam HOLD/recusa. Retomada reutiliza candidato/CAS duráveis e reconfere bindings. Rollback exige compatibilidade e gates, sem inventar fence cronológico ou atomicidade universal."
+    },
+    {
+      "id": "L3-host-limits",
+      "verdict": "FIX-FIRST",
+      "reason": "Preserva mismatch revisionId/questionId, busca corrente, seq, extração anterior ao gate, isolamento não demonstrado e lifecycles distintos. A caracterização do conteúdo SQL e de noteBytes ainda precisa da correção indicada."
+    },
+    {
+      "id": "L3-cumulative",
+      "verdict": "PASS",
+      "reason": "As três L2 aceitas continuam dependências explícitas e úteis; H/N sustentam diretamente propagação e recuperação. Há caminhos de manutenção sem prescrição de edição fora da fatia."
+    }
+  ],
+  "primary_corrections": [
+    {
+      "id": "P1-01",
+      "disposition": "RESOLVED",
+      "location": "Mudanças propagam por resultados e vínculos",
+      "reason": "Acrescenta resultado completo, parada condicional após reavaliação, atualização dos vínculos afetados e preservação de independentes. Prosa igual não é usada como teste de equivalência."
+    },
+    {
+      "id": "P1-02",
+      "disposition": "RESOLVED",
+      "location": "Após falha, separar recuperação de nova publicação",
+      "reason": "Distingue corrente/histórico, preparação/recusa/erro, retomada durável e rollback compatível, mantendo a necessidade de binding exato e os limites dos controles."
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "L3-J1-01",
+      "criteria": ["AC-01", "CC-3", "CC-7", "QS-1", "GO-I8"],
+      "location": "Da requisição RAG à evidência de seleção, primeiro e segundo parágrafos",
+      "expected": "Distinguir metadados persistidos da fonte do texto/offsets persistidos nos chunks. Explicar que noteBytes marca not_yet_read quando detecta conteúdo legível alterado; falha de leitura não equivale automaticamente a essa transição.",
+      "observed": "O corpo afirma genericamente 'SQL persiste metadados, sem texto integral' e depois 'NoteBytes marca not_yet_read'. A primeira perde a distinção entre fonte e chunk; a segunda perde a condição de mudança. Isso pode induzir a conclusão de que o texto depende sempre do arquivo vivo ou de que toda requisição reinicia o status.",
+      "evidence": "C distingue a fonte, os chunks e o ciclo carregar–operar–salvar; seu diagnóstico preserva mudança de conteúdo versus falha de leitura. A sustentação cumulativa de C já recebida, S4:L1:host-boundaries §2, explicita que fontes persistem caminho/hash/status e que chunks persistem texto e offsets.",
+      "required_correction": "Qualificar a afirmação SQL por entidade, preservando explicitamente o texto dos chunks. Repor a condição de mudança de conteúdo em noteBytes e a distinção de falha de leitura. Corrigir somente a descrição e seus vínculos de versão, mantendo o teto de 9000 bytes e preservando v2. Não é solicitado conserto do produto nem nova execução."
+    }
+  ],
+  "optional_suggestions": [],
+  "limits": [
+    "Recebi corpo, metadados e suporte decisivo; não há pedido adicional de evidência.",
+    "Não usei ferramentas, não executei o produto e não recomputei hashes. A conferência mecânica é a fornecida pelo principal.",
+    "P1-01/P1-02 resolvidos não eliminam o finding independente sobre fidelidade do fluxo RAG.",
+    "Este parecer é exclusivamente semântico L3; não emite binding, autorização de publicação, prova de consumo ou conclusão S4."
+  ]
+}

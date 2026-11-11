@@ -72,3 +72,11 @@ Branch protection read returned HTTP403 (Resource not accessible by integration)
 ## Complete L2 accepted
 
 Both persistent judges returned PASS for all three exact L2 bodies and metadata v2, all applicable criteria and primary corrections. The layer barrier is released for L3; five required L3/L4 artifacts and the remaining operational obligations stay open. See l2-acceptance.json and judgments/l2.
+
+## L3 review and driver CI coverage
+
+L3 v2 was reviewed independently: both primary propagation/recovery corrections resolved; J1 requires L3-J1-01 (source metadata versus chunk text, and conditional noteBytes invalidation), while J2 passed with the same precision as optional. Original decisions are preserved. Native v3 correction and same-pair reassessment are active; L4 remains blocked on complete L3 acceptance, not on ROOT.
+
+The new maintenance driver now has a specific workflow path trigger and a parse step. Existing tests, mutation controls, generation and guards are unchanged. This commit requests the required remote checks for that executable reproducer; parse/CI do not claim actual maintenance, which still requires the complete native package.
+
+Mechanical corpus materialization executed 21 proposed copies with exact byte verification. Accounting scaffold contains all 50 IDs with dispositions unassigned. A late connector read confirmed old run 43066241607 failed at repository guards; no rerun or new detailed finding was inferred.

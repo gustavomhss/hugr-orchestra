@@ -1,0 +1,115 @@
+{
+  "key": "S4:L3:system-flows",
+  "scope": "atlas-continuity-rag-genesis",
+  "title": "Fluxos de dados, decisões e conhecimento na S4",
+  "layer": 3,
+  "need": "flow",
+  "body": {
+    "path": "producers/l3/system-flows-v2.md",
+    "encoding": "utf-8",
+    "byte_length": 8952,
+    "sha256": "9df212b46f057c9e8369df6ed30e2e931a8fa9bc7f72ef51afba9eb4ea79d642"
+  },
+  "authority": {
+    "scope": "atlas-continuity-rag-genesis",
+    "basis": "Síntese cumulativa autoral v2/P1 de /root/producer_l1a, execução a2095d5a-1464-4c38-a222-6376974fc9c9: três L2 obrigatórios e os L1 H/N autorizados, aceitos segundo o manifesto fixado 4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54, payload 47eaa5322102910289cb56e2e07e9d3536ba1926. Separa inspeção herdada, inferência contratual e execução histórica reportada. Não autoriza executar receita, ratificar/publicar, autenticar identidades ou transferir bindings históricos."
+  },
+  "validity": "supported",
+  "gaps": [
+    "Instalação global de Continuity, composição externa e autenticação não são demonstradas; chamadas Atlas fora de Session não herdam hooks por proximidade.",
+    "Atomicidade entre Session, arquivo Continuity, ciclo Store/SQL RAG e CAS/projeção Atlas não foi demonstrada; não há promoção ou invalidação comum sustentada entre os percursos.",
+    "Em RAG, ligação trace revisionId/prova questionId e risco inferido de seq após hidratação permanecem limites; comparação/flags falsos não garantem replay ou recuperação equivalente.",
+    "Parada da reinterpretação por resultado completo validado igual é inferência condicional dos contratos; não dispensa observação, grafo, receipts/bindings afetados ou gates. Nenhum rebuild/retorno foi executado nesta entrega.",
+    "Sustentação herda leitura seletiva e limites do observador. Ausência, mudança e indisponibilidade não se colapsam nem se eliminam por censo/hash de transporte.",
+    "Controles N e CI reportado pelos L2 são delimitados a seus candidatos/condições; R2 é amostra L1A anterior. Não provam recuperação geral, concorrência universal, queda arbitrária/perda de energia ou autoridade desta L3.",
+    "L3 ainda sem aceite semântico, binding, publicação ou consumo próprios. Modelo/tokens/cobrança/tentativas físicas não expostos são UNKNOWN."
+  ],
+  "evidence": [
+    "Integra identidades, sequência, persistência e autoridade de Session/Continuity, RAG/Store e Atlas/Genesis, com caminhos documentados de manutenção.",
+    "P1-01: receita/input, resultado completo/receipt, parada condicional, navegação/build e preservação de unidades independentes. P1-02: consumo corrente/histórico, retomada durável, rollback compatível e vínculos atuais.",
+    "Correspondência semântica, capturas exatas e limites por fonte: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/source-use-v2.json\", \"sha256\": \"38ff7ce33001cdb0927a30da3d243d445cb2983ac016e7bd1d2e218246c9274e\", \"byte_length\": 11365}",
+    "Pedido original e correção preservados na receita; manifesto fixado: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-manifest.json\", \"sha256\": \"4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54\", \"byte_length\": 10698}",
+    "Cinco predecessores aceitos no manifesto usados efetivamente. Nenhuma fonte bruta ou parecer consultado; CI/R2 são herdados, não receipts de execução desta L3."
+  ],
+  "input_keys": [
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-p1.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-manifest.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/recipe-v2.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/source-use-v2.json"
+  ],
+  "source_refs": [
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+      "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+      "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+      "git_blob_sha": "dd0a52ada6bbeec778721bf948e9a613573d2f64",
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+      "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+      "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/recipe-v2.json",
+    "sha256": "d78121df69c755f2a1b8a339b037b710dfe7a8f8262642dc6d0e6d2aa111033a"
+  },
+  "build_dependencies": [
+    {
+      "key": "S4:L2:atlas-system",
+      "same_package": true
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "same_package": true
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "same_package": true
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "same_package": true
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "same_package": true
+    }
+  ],
+  "navigation": [],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-p1.md",
+    "sha256": "9f1db6d26fe17f850209cb6b26fb08bbde76dcf8220196b8d5dd51920f4ce506"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/response-v2.md",
+    "sha256": "45153b043c9c88ce2a57623f3ef41615b63563867a0bd3d7fbae97028b23909f"
+  },
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": []
+}

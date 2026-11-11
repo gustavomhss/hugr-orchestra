@@ -1,0 +1,20 @@
+{
+  "schema": "s4-progressive-input-addendum/v1",
+  "frozen_utc": "2026-11-11T20:10:22.595901+00:00",
+  "purpose": "Resolve L3-J1-01 with accepted predecessor only; no raw source expansion",
+  "existing_manifest_sha256": "4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54",
+  "additional_predecessor": {
+    "key": "S4:L1:host-boundaries",
+    "body_bytes": 11972,
+    "source_ref": {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+    },
+    "local_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+    "authorized_section": "2. HTTP RAG → Store por requisição → SQLite"
+  },
+  "new_input_keys_must_be_explicit": true,
+  "two_reassessment_decisions_required": true
+}

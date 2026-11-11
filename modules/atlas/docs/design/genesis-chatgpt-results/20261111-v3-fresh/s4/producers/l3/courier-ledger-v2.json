@@ -1,0 +1,47 @@
+{
+  "schema": "genesis-courier-ledger/v1",
+  "unit": "WP-L3-TRANSPORTE-v2",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "courier": "/root/producer_l1a",
+  "request": {
+    "path": "courier-request-v2.txt",
+    "byte_length": 1111,
+    "sha256": "203630901e9c5bcdcb16e75637a98c0d68ebdc05ba1cb8d82c5606dc3a7a32a4"
+  },
+  "frozen_packet": {
+    "path": "review-packet-v2-01.txt",
+    "byte_length": 23869,
+    "sha256": "170094c804e5bc230dc0fe3927b10042dd3c04d5587cc6c9b050b4095992b633"
+  },
+  "transmissions": [
+    {
+      "sequence": 1,
+      "tool": "collaboration.send_message",
+      "target": "/root/judge_j1",
+      "argument_literal_byte_length": 23869,
+      "argument_literal_sha256": "170094c804e5bc230dc0fe3927b10042dd3c04d5587cc6c9b050b4095992b633",
+      "argument_basis": "Conteúdo literal integral do pacote conferido, sem wrapper, adendo ou reescrita.",
+      "observed_return": "Retorno vazio; chamada concluída sem erro reportado.",
+      "reported_error": null,
+      "message_id": "UNKNOWN",
+      "independent_recipient_ack": "UNKNOWN"
+    },
+    {
+      "sequence": 2,
+      "tool": "collaboration.send_message",
+      "target": "/root/judge_j2",
+      "argument_literal_byte_length": 23869,
+      "argument_literal_sha256": "170094c804e5bc230dc0fe3927b10042dd3c04d5587cc6c9b050b4095992b633",
+      "argument_basis": "Conteúdo literal integral do pacote conferido, sem wrapper, adendo ou reescrita.",
+      "observed_return": "Retorno vazio; chamada concluída sem erro reportado.",
+      "reported_error": null,
+      "message_id": "UNKNOWN",
+      "independent_recipient_ack": "UNKNOWN"
+    }
+  ],
+  "production_files_unchanged": true,
+  "review_created": false,
+  "verdict_given": false,
+  "closure_requested": false,
+  "limits": "O retorno não expôs message ID, eco dos bytes ou aceite semântico. O registro confirma as duas chamadas e seus retornos observáveis; não declara decisão dos juízes."
+}

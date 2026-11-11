@@ -40,7 +40,7 @@
     },
     {
       "stage": "WP-L3",
-      "status": "authorized after complete L2 acceptance; dispatch being frozen"
+      "status": "v2 reviewed: J1 FIX-FIRST L3-J1-01, J2 PASS; native v3 correction active; both reassessments required"
     },
     {
       "stage": "WP-L4",
@@ -273,6 +273,51 @@
         }
       ],
       "mandatory_findings_open": []
+    },
+    {
+      "operation": "WP-L3",
+      "producer": "/root/producer_l1a",
+      "versions": [
+        "v1 produced",
+        "v2 primary P1-01/P1-02 corrections produced"
+      ],
+      "review_v2": [
+        {
+          "agent_id": "/root/judge_j1",
+          "verdict": "FIX-FIRST",
+          "finding": "L3-J1-01",
+          "response_sha256": "19aea33cf89af81e5948891903f07380eb56825366ba1d7c00cba3c6699f02b0"
+        },
+        {
+          "agent_id": "/root/judge_j2",
+          "verdict": "PASS",
+          "response_sha256": "c9a3069eeee23285a4c56e302889a0d1ddedcc9091129d09de32938715241b99"
+        }
+      ],
+      "next": "v3 and same-judge reassessment; no L4 production authorized yet"
+    },
+    {
+      "operation": "corpus-preflight",
+      "agent": "/root/producer_runtime",
+      "required_paths_current_ten": 244,
+      "materialization_actions_executed_by_principal": 21,
+      "runtime_execution": false
+    },
+    {
+      "operation": "accounting-preflight",
+      "agent": "/root/producer_runtime",
+      "criterion_ids": 50,
+      "new_pass_assigned": false,
+      "tokens_physical_attempts_billing": "UNKNOWN"
+    },
+    {
+      "operation": "late-old-CI-metadata-read",
+      "run": 43066241607,
+      "head": "b42d14978c8b727310369920d4bfaf86145a2b80",
+      "conclusion": "failure",
+      "failed_step": "Check repository guards on the candidate",
+      "rerun": false,
+      "detailed_findings": "not inspected"
     }
   ],
   "native_input_tokens": "UNKNOWN",
@@ -293,5 +338,5 @@
     "Final two-judge evidence/matrix review; final payload and sealed handoff"
   ],
   "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero.",
-  "last_reconciled_utc": "2026-11-11T19:33:23.208743+00:00"
+  "last_reconciled_utc": "2026-11-11T20:11:57.531928+00:00"
 }

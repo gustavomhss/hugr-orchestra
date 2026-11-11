@@ -1,0 +1,3452 @@
+{
+  "schema": "s4-accounting-preflight/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "observation_utc": "2026-11-11T19:56:53.160815+00:00",
+  "local_root": "/workspace/scratch/aff930d22ec7/s4",
+  "request_ref": "producers/accounting-preflight/request.md",
+  "scope": "Bookkeeping of visible native work, not semantic judgment or runtime proof.",
+  "unknowns_preserved": {
+    "host_conversation_id": "UNKNOWN",
+    "native_input_tokens": "UNKNOWN",
+    "native_output_tokens": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "provider_internal_retries": "UNKNOWN",
+    "historical_campaign_usage": "GLOBAL_UNRECONCILED_BY_ROOT;not_reset",
+    "model_diversity": "NOT_CLAIMED",
+    "external_paid_model_calls_issued": false
+  },
+  "total_tool_calls": "UNKNOWN",
+  "total_physical_attempts_all_phases": "UNKNOWN",
+  "no_inferred_historical_total": true,
+  "primary_usage_last_reconciled_utc": "2026-11-11T19:33:23.208743+00:00",
+  "observed_representation_counts": {
+    "work_queue_rows": 11,
+    "usage_stage_records": 10,
+    "usage_grouped_observations": 18,
+    "ledger_event_lines": 12,
+    "ledger_events_with_explicit_at": 3,
+    "ledger_events_without_explicit_at": 9,
+    "native_artifacts": 10,
+    "normative_criteria": 50
+  },
+  "role_ids_as_recorded": {
+    "principal": "/root",
+    "producer_l1": "/root/producer_l1a",
+    "producer_runtime": "/root/producer_runtime",
+    "judge_j1": "/root/judge_j1",
+    "judge_j2": "/root/judge_j2",
+    "review_packet_courier": "/root/review_courier",
+    "continuity_subproducer": "/root/producer_l1a/continuity_research"
+  },
+  "original_stage_records": [
+    {
+      "stage": "WP-L1A",
+      "status": "produced-and-two-semantic-PASS"
+    },
+    {
+      "stage": "WP-R0",
+      "status": "implemented;actual-prepare;two-new-binding-PASS;governed-publish-index-read-PROVEN-for-sample"
+    },
+    {
+      "stage": "WP-L1B",
+      "status": "produced-metadata-v2-accepted-by-J1-and-J2"
+    },
+    {
+      "stage": "WP-R1",
+      "status": "accepted-by-both;R1-J1-01-and-J2-R1-01-resolved;CI7102f2e-PASS"
+    },
+    {
+      "stage": "WP-L1-BOUNDARY",
+      "status": "v2-produced-and-accepted-by-both-persistent-judges",
+      "purpose": "Read-only neighboring Session/Store/server boundary knowledge at baseline, not population expansion"
+    },
+    {
+      "stage": "WP-L2",
+      "status": "complete, both judges PASS, no mandatory findings"
+    },
+    {
+      "stage": "WP-L3",
+      "status": "authorized after complete L2 acceptance; dispatch being frozen"
+    },
+    {
+      "stage": "WP-L4",
+      "status": "reserved;requires-complete-L3-acceptance"
+    },
+    {
+      "stage": "consumers",
+      "status": "reserved-fresh-context;requires-governed-reader"
+    },
+    {
+      "stage": "final-two-judge-review",
+      "status": "reserved;same-persistent-IDs"
+    }
+  ],
+  "ledger_events": [
+    {
+      "line": 1,
+      "event": "l1b-semantic-acceptance",
+      "unit": "WP-L1B",
+      "at": "UNKNOWN",
+      "recorded_state": {
+        "verdicts": [
+          "PASS",
+          "PASS"
+        ]
+      },
+      "receipt": null
+    },
+    {
+      "line": 2,
+      "event": "runtime-r1-source-reconciliation",
+      "unit": null,
+      "at": "UNKNOWN",
+      "recorded_state": {},
+      "receipt": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/primary-check-v2.json"
+    },
+    {
+      "line": 3,
+      "event": "remote-gate",
+      "unit": null,
+      "at": "UNKNOWN",
+      "recorded_state": {
+        "status": "PASS"
+      },
+      "receipt": null
+    },
+    {
+      "line": 4,
+      "event": "dispatch",
+      "unit": "WP-L1-BOUNDARY",
+      "at": "UNKNOWN",
+      "recorded_state": {},
+      "receipt": null
+    },
+    {
+      "line": 5,
+      "event": "native-runtime-path",
+      "unit": null,
+      "at": "UNKNOWN",
+      "recorded_state": {},
+      "receipt": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json"
+    },
+    {
+      "line": 6,
+      "event": "boundary-v2-semantic-acceptance",
+      "unit": null,
+      "at": "2026-11-11T18:35:21.905205+00:00",
+      "recorded_state": {},
+      "receipt": null
+    },
+    {
+      "line": 7,
+      "event": "runtime-r2-reassessment-dispatched",
+      "unit": null,
+      "at": "2026-11-11T18:35:21.905205+00:00",
+      "recorded_state": {},
+      "receipt": null
+    },
+    {
+      "line": 8,
+      "event": "complete-local-L1-accepted",
+      "unit": null,
+      "at": "2026-11-11T18:40:29.342466+00:00",
+      "recorded_state": {
+        "required": 7
+      },
+      "receipt": null
+    },
+    {
+      "line": 9,
+      "event": "L2-corrected-productions-ready",
+      "unit": null,
+      "at": "UNKNOWN",
+      "recorded_state": {
+        "state": "BOTH_JUDGES_EVALUATING"
+      },
+      "receipt": null
+    },
+    {
+      "line": 10,
+      "event": "maintenance-driver-static-accepted",
+      "unit": null,
+      "at": "UNKNOWN",
+      "recorded_state": {
+        "execution": "NOT_RUN"
+      },
+      "receipt": null
+    },
+    {
+      "line": 11,
+      "event": "branch-protection-read",
+      "unit": null,
+      "at": "UNKNOWN",
+      "recorded_state": {
+        "status": "403_FORBIDDEN"
+      },
+      "receipt": null
+    },
+    {
+      "line": 12,
+      "event": "complete-local-L2-accepted",
+      "unit": null,
+      "at": "UNKNOWN",
+      "recorded_state": {
+        "next_layer": 3,
+        "required": 3
+      },
+      "receipt": null
+    }
+  ],
+  "queue": [
+    {
+      "logical_unit": "WP-L1A",
+      "artifact_keys": [
+        "S4:L1:ownership-boundaries"
+      ],
+      "recorded_or_observable_state": "L1 accepted recorded",
+      "evidence_refs": [
+        "E-L1",
+        "E-NATIVE",
+        "E-SAMPLE"
+      ],
+      "original_provenance": [
+        {
+          "artifact": "S4:L1:ownership-boundaries",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+            "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/response.md",
+            "sha256": "589317e9e30c9192f1edb208d7e298f9fbcb87ca5a2b660e8adacbc3cc9c7819"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+            "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+              "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+              "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+            }
+          ]
+        }
+      ],
+      "remaining_or_limit": "Initial judge request was not contemporaneously exported; canonical resubmission has separate identity.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-L1B",
+      "artifact_keys": [
+        "S4:L1:atlas-engine",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:continuity-rag",
+        "S4:L1:coverage-governance"
+      ],
+      "recorded_or_observable_state": "Four bodies/metadata-v2 accepted recorded",
+      "evidence_refs": [
+        "E-L1",
+        "E-CENSUS",
+        "E-TRANSPORT"
+      ],
+      "original_provenance": [
+        {
+          "artifact": "S4:L1:atlas-engine",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+            "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+            "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+            "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+              "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+              "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+            }
+          ]
+        },
+        {
+          "artifact": "S4:L1:atlas-host-genesis",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+            "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+            "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+            "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+              "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+              "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+            }
+          ]
+        },
+        {
+          "artifact": "S4:L1:continuity-rag",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+            "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+            "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+            "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+              "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+              "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+            }
+          ]
+        },
+        {
+          "artifact": "S4:L1:coverage-governance",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+            "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+            "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+            "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+              "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+              "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+            }
+          ]
+        }
+      ],
+      "remaining_or_limit": "Keep original v1 census and corrected selection; do not relabel earlier metadata as v2.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-L1-BOUNDARY",
+      "artifact_keys": [
+        "S4:L1:host-boundaries"
+      ],
+      "recorded_or_observable_state": "v2 accepted recorded",
+      "evidence_refs": [
+        "E-L1",
+        "E-TRANSPORT"
+      ],
+      "original_provenance": [
+        {
+          "artifact": "S4:L1:host-boundaries",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md",
+            "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-response.md",
+            "sha256": "da170a0a301ad8bf4d70f3bf3b04a89f09fdb6d8a2292ae035d87fee598da411"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe-v2.json",
+            "sha256": "fa525df5574cd2953f1b6d5fb1a8ba9e71ad0b12f74bafc4283419bf9dfaf712"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j1-response-v2.json",
+              "sha256": "424c8d13ce680b1522e5970ea99f4a049c975899ddf9fcbd48bea397009a0d49"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j2-response-v2.json",
+              "sha256": "33e8b837a0cda76bda59a4f972e62c3ec7beefad98c53db1c913e39ff6c36845"
+            }
+          ]
+        }
+      ],
+      "remaining_or_limit": "V1/v2 transport history and correction retained.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-R0",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "One-artifact prepare/binding/publication/index/read recorded",
+      "evidence_refs": [
+        "E-SAMPLE",
+        "E-CI",
+        "E-WORK"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Sample does not discharge full-package or independent-consumer obligations.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-R1/R2",
+      "artifact_keys": [
+        "S4:L1:native-runtime-delta"
+      ],
+      "recorded_or_observable_state": "Corrected common candidate 7102f2e and same-judge acceptance recorded",
+      "evidence_refs": [
+        "E-L1",
+        "E-CI",
+        "E-WORK"
+      ],
+      "original_provenance": [
+        {
+          "artifact": "S4:L1:native-runtime-delta",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-request.md",
+            "sha256": "89ecb99272363b0ec6c23b5ae945e477afbfcb66992775055ccdf9888d0d0035"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-response.md",
+            "sha256": "fb969863825b5e8e31f8e369516e78aafee5b7273505586e271ba21f71c47ad4"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v3.json",
+            "sha256": "39e8c03c32e1cd862836118cd3e51028e4c2ff88fbed5fb615c7032e8f24fb96"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+              "sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+              "sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440"
+            }
+          ]
+        }
+      ],
+      "remaining_or_limit": "Earlier test/candidate receipts remain bounded; producer NOT_RUN is historical, not edited into later CI success.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-L2A",
+      "artifact_keys": [
+        "S4:L2:atlas-system",
+        "S4:L2:genesis-governance"
+      ],
+      "recorded_or_observable_state": "v2 and primary corrections accepted recorded",
+      "evidence_refs": [
+        "E-L2",
+        "E-NATIVE",
+        "E-TRANSPORT"
+      ],
+      "original_provenance": [
+        {
+          "artifact": "S4:L2:atlas-system",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+            "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response-v2.md",
+            "sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+            "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+              "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+              "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+            }
+          ]
+        },
+        {
+          "artifact": "S4:L2:genesis-governance",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+            "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response-v2.md",
+            "sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+            "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+              "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+              "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+            }
+          ]
+        }
+      ],
+      "remaining_or_limit": "Original request, response, immutable input manifest and correction preserved.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-L2B",
+      "artifact_keys": [
+        "S4:L2:continuity-rag-operations"
+      ],
+      "recorded_or_observable_state": "v2 and primary corrections accepted recorded",
+      "evidence_refs": [
+        "E-L2",
+        "E-NATIVE",
+        "E-TRANSPORT"
+      ],
+      "original_provenance": [
+        {
+          "artifact": "S4:L2:continuity-rag-operations",
+          "body_path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+          "request_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+            "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+          },
+          "response_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/response-v2.md",
+            "sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a"
+          },
+          "recipe_ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+            "sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199"
+          },
+          "semantic_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+              "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+              "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+            }
+          ]
+        }
+      ],
+      "remaining_or_limit": "Progressive manifest v2 and corrected courier copy retain distinct identities.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-L3",
+      "artifact_keys": [
+        "S4:L3:system-flows"
+      ],
+      "recorded_or_observable_state": "L3/P1 EM PRODUÇÃO, segundo steering do principal; recibo v1 e dispatch P1 visíveis.",
+      "evidence_refs": [
+        "E-L3",
+        "E-DISPATCH"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Nenhuma auditoria de prontidão ou aceite da L3/P1 é feita nesta inspeção. Concluir produção/correção e revisão pelo par continua tarefa do principal.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-L4",
+      "artifact_keys": [
+        "S4:L4:entry",
+        "S4:L4:ownership",
+        "S4:L4:maintenance",
+        "S4:L4:operational"
+      ],
+      "recorded_or_observable_state": "Reserved after accepted L3 in usage",
+      "evidence_refs": [
+        "E-USAGE",
+        "E-NATIVE"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Produce/review the four required L4 artifacts after the layer barrier.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-MAINTENANCE-PORTS",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "Read-only memo delivered",
+      "evidence_refs": [
+        "E-PORTS",
+        "E-USAGE"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Does not count as maintenance execution.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-MAINTENANCE-DRIVER",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "Static acceptance recorded; operation NOT_RUN",
+      "evidence_refs": [
+        "E-DRIVER"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Actual full package, no-op reuse and independently frozen native change remain required.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-CORPUS-PREFLIGHT",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "Mechanical reconciliation delivered locally",
+      "evidence_refs": [
+        "E-CORPUS"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Not yet represented by its own event in the inspected primary execution ledger.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-ACCOUNTING-PREFLIGHT",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "This auxiliary delivery being prepared",
+      "evidence_refs": [
+        "E-USAGE",
+        "E-LEDGER"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Primary must export new accounting state; no remote write by producer.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-C",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "Independent Atlas-only consumer reserved",
+      "evidence_refs": [
+        "E-USAGE",
+        "E-WORK"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Run required cases and shallow/deep reads on exact accepted governed package.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-G",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "Common runtime gates recorded; final package-specific validation remains scoped",
+      "evidence_refs": [
+        "E-CI",
+        "E-DRIVER"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Link compatible common evidence to exact delivered candidate; no unnecessary suite repetition.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    },
+    {
+      "logical_unit": "WP-H",
+      "artifact_keys": [],
+      "recorded_or_observable_state": "Final decisions, accounting and sealed Git handoff pending",
+      "evidence_refs": [
+        "E-USAGE",
+        "E-LEDGER",
+        "E-NORM"
+      ],
+      "original_provenance": [],
+      "remaining_or_limit": "Final matrix, two decisions, payload/seal/readback and open-item audit remain principal work.",
+      "physical_attempts": "UNKNOWN",
+      "new_status_assigned": null
+    }
+  ],
+  "transport_scopes_not_summed": [
+    {
+      "scope": "L1B",
+      "ref": "review-packets/l1b/manifest.json",
+      "record_array": "delivery",
+      "record_count": 12,
+      "explicit_count": null,
+      "explicit_count_field": null,
+      "recorded_status": "five_parts_and_literal_part4_body_replacement_delivered_to_both",
+      "message_ids": "UNKNOWN",
+      "receiver_side_digest": "NOT_EXPOSED",
+      "no_global_total": true,
+      "counts_agree_with_record_array": null
+    },
+    {
+      "scope": "R0",
+      "ref": "review-packets/runtime-v1/manifest.json",
+      "record_array": "deliveries",
+      "record_count": 12,
+      "explicit_count": 12,
+      "explicit_count_field": "delivered_message_count",
+      "recorded_status": "five_parts_and_literal_contract_replacement_delivered_to_both",
+      "message_ids": "UNKNOWN",
+      "receiver_side_digest": "NOT_EXPOSED",
+      "no_global_total": true,
+      "counts_agree_with_record_array": true
+    },
+    {
+      "scope": "R1",
+      "ref": "review-packets/runtime-r1/manifest.json",
+      "record_array": "deliveries",
+      "record_count": 6,
+      "explicit_count": 6,
+      "explicit_count_field": "delivery_count",
+      "recorded_status": "three_parts_delivered_to_both",
+      "message_ids": "UNKNOWN",
+      "receiver_side_digest": "NOT_EXPOSED",
+      "no_global_total": true,
+      "counts_agree_with_record_array": true
+    },
+    {
+      "scope": "BOUNDARY",
+      "ref": "review-packets/l1-boundary/send-ledger.json",
+      "record_array": "sends",
+      "record_count": 8,
+      "explicit_count": null,
+      "explicit_count_field": null,
+      "recorded_status": true,
+      "message_ids": "UNKNOWN",
+      "receiver_side_digest": "NOT_EXPOSED",
+      "no_global_total": true,
+      "counts_agree_with_record_array": null
+    },
+    {
+      "scope": "L2A",
+      "ref": "producers/l2a/transport-ledger-v2.json",
+      "record_array": "deliveries",
+      "record_count": 8,
+      "explicit_count": 8,
+      "explicit_count_field": "send_calls_completed",
+      "recorded_status": "all-four-parts-sent-to-both-judges-awaiting-principal-closure",
+      "message_ids": "UNKNOWN",
+      "receiver_side_digest": "NOT_EXPOSED",
+      "no_global_total": true,
+      "counts_agree_with_record_array": true
+    },
+    {
+      "scope": "L2B",
+      "ref": "producers/l2b/courier-ledger-v2.json",
+      "record_array": "sends",
+      "record_count": 9,
+      "explicit_count": null,
+      "explicit_count_field": null,
+      "recorded_status": "TRANSPORT_COMPLETED_NO_VERDICT_AWAITED",
+      "message_ids": "UNKNOWN",
+      "receiver_side_digest": "NOT_EXPOSED",
+      "no_global_total": true,
+      "explicit_subcounts": {
+        "active_content_sends": 6,
+        "superseded_content_sends": 1,
+        "correction_notices": 2,
+        "total_tool_calls_to_judges": 9
+      },
+      "counts_agree_with_record_array": null
+    },
+    {
+      "scope": "DRIVER",
+      "ref": "producers/maintenance-driver/review-packets/transport/ledger.json",
+      "record_array": "deliveries",
+      "record_count": 8,
+      "explicit_count": 8,
+      "explicit_count_field": "delivery_count",
+      "recorded_status": "four_parts_sent_to_both",
+      "message_ids": "UNKNOWN",
+      "receiver_side_digest": "NOT_EXPOSED",
+      "no_global_total": true,
+      "counts_agree_with_record_array": true
+    }
+  ],
+  "ci_receipts": [
+    {
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json",
+      "run_id": 43065851373,
+      "conclusion": "failure"
+    },
+    {
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/receipt.json",
+      "candidate_revision": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+      "run_id": 43069951327,
+      "conclusion": "success",
+      "mutation_controls": 22,
+      "guards": {
+        "exitCode": 0,
+        "gate_findings": 0,
+        "warning_findings": 0
+      }
+    },
+    {
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/receipt.json",
+      "candidate_revision": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+      "run_id": 43070538154,
+      "conclusion": "success",
+      "tests": {
+        "numTotalTests": 220,
+        "numPassedTests": 220,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      },
+      "mutation_controls": 22,
+      "guards": {
+        "command": "bun run check:guards --base origin/dev",
+        "exitCode": 0,
+        "candidate": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1"
+      }
+    },
+    {
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2/receipt.json",
+      "candidate_revision": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+      "run_id": 43077167418,
+      "conclusion": "failure",
+      "tests": {
+        "numTotalTests": 220,
+        "numPassedTests": 220,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      },
+      "mutation_controls": 22,
+      "guards": {
+        "command": "bun run check:guards --base origin/dev",
+        "exitCode": 1,
+        "candidate": "a3f224843321f2c18fb9532ef275411c6a0f617e"
+      }
+    },
+    {
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "run_id": 43077975153,
+      "conclusion": "success",
+      "tests": {
+        "numTotalTests": 220,
+        "numPassedTests": 220,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      },
+      "mutation_controls": 22,
+      "guards": {
+        "command": "bun run check:guards --base origin/dev",
+        "exitCode": 0,
+        "candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+      }
+    }
+  ],
+  "ci_run_ids_named_in_usage": [
+    43065851373,
+    43066241607,
+    43069951327,
+    43070538154,
+    43077167418,
+    43077975153
+  ],
+  "ci_run_ids_without_detail_receipt_in_selected_indices": [
+    43066241607
+  ],
+  "native_provenance_digest_checks": [
+    {
+      "artifact": "S4:L1:ownership-boundaries",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+      "expected_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:ownership-boundaries",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+      "expected_sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:ownership-boundaries",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+      "expected_sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:ownership-boundaries",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/response.md",
+      "expected_sha256": "589317e9e30c9192f1edb208d7e298f9fbcb87ca5a2b660e8adacbc3cc9c7819",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:ownership-boundaries",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+      "expected_sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:ownership-boundaries",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+      "expected_sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-engine",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+      "expected_sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-engine",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+      "expected_sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-engine",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+      "expected_sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-engine",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+      "expected_sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-engine",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+      "expected_sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-engine",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+      "expected_sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-host-genesis",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+      "expected_sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-host-genesis",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+      "expected_sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-host-genesis",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+      "expected_sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-host-genesis",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+      "expected_sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-host-genesis",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+      "expected_sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:atlas-host-genesis",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+      "expected_sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:continuity-rag",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+      "expected_sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:continuity-rag",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+      "expected_sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:continuity-rag",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+      "expected_sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:continuity-rag",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+      "expected_sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:continuity-rag",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+      "expected_sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:continuity-rag",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+      "expected_sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:coverage-governance",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+      "expected_sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:coverage-governance",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+      "expected_sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:coverage-governance",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+      "expected_sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:coverage-governance",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+      "expected_sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:coverage-governance",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+      "expected_sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:coverage-governance",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+      "expected_sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:host-boundaries",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "expected_sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:host-boundaries",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe-v2.json",
+      "expected_sha256": "fa525df5574cd2953f1b6d5fb1a8ba9e71ad0b12f74bafc4283419bf9dfaf712",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:host-boundaries",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md",
+      "expected_sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:host-boundaries",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-response.md",
+      "expected_sha256": "da170a0a301ad8bf4d70f3bf3b04a89f09fdb6d8a2292ae035d87fee598da411",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:host-boundaries",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j1-response-v2.json",
+      "expected_sha256": "424c8d13ce680b1522e5970ea99f4a049c975899ddf9fcbd48bea397009a0d49",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:host-boundaries",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j2-response-v2.json",
+      "expected_sha256": "33e8b837a0cda76bda59a4f972e62c3ec7beefad98c53db1c913e39ff6c36845",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:native-runtime-delta",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+      "expected_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:native-runtime-delta",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v3.json",
+      "expected_sha256": "39e8c03c32e1cd862836118cd3e51028e4c2ff88fbed5fb615c7032e8f24fb96",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:native-runtime-delta",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-request.md",
+      "expected_sha256": "89ecb99272363b0ec6c23b5ae945e477afbfcb66992775055ccdf9888d0d0035",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:native-runtime-delta",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-response.md",
+      "expected_sha256": "fb969863825b5e8e31f8e369516e78aafee5b7273505586e271ba21f71c47ad4",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:native-runtime-delta",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+      "expected_sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:native-runtime-delta",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+      "expected_sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L1:native-runtime-delta",
+      "role": "runtime_receipt_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "expected_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:atlas-system",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+      "expected_sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:atlas-system",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+      "expected_sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:atlas-system",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+      "expected_sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:atlas-system",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response-v2.md",
+      "expected_sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:atlas-system",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+      "expected_sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:atlas-system",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+      "expected_sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:genesis-governance",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+      "expected_sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:genesis-governance",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+      "expected_sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:genesis-governance",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+      "expected_sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:genesis-governance",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response-v2.md",
+      "expected_sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:genesis-governance",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+      "expected_sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:genesis-governance",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+      "expected_sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:continuity-rag-operations",
+      "role": "body",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+      "expected_sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:continuity-rag-operations",
+      "role": "recipe_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+      "expected_sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:continuity-rag-operations",
+      "role": "producer_request_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+      "expected_sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:continuity-rag-operations",
+      "role": "producer_response_ref",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/response-v2.md",
+      "expected_sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:continuity-rag-operations",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+      "expected_sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87",
+      "matches": true
+    },
+    {
+      "artifact": "S4:L2:continuity-rag-operations",
+      "role": "semantic_review_refs",
+      "ref": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+      "expected_sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6",
+      "matches": true
+    }
+  ],
+  "judge_files_identity_only": [
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/finding-evidence.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/principal-request.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-request-evidence.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j2-response.md",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j1-response.md",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r1/j2-response-v1.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r1/j1-response-v1.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/l2-close.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/l2-criteria.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/principal-close.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/courier-request.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/payload-manifest-v2.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/excerpt-manifest.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/pending-default-compaction.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j2-response-v2.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-v2-02.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/courier-request-record.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-02.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/courier-response.md",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j1-response-v2.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-v2-01.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/principal-criteria.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-01.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/steering-v2-request.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/payload-manifest.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/final-manifest.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-v2-03.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-03.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/pending-default-compaction-record.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/steering-v2-ready.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/mechanical-summary-v2.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/send-ledger.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/mechanical-summary.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/steering-primary-check-v2.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/excerpt-manifest-v2.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/principal-close.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-3.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/measurements-v2.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/principal-criteria.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-4.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-2.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/manifest.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/measurements.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-1.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/build_packets.py",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-4-body-replacement.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-4-j2-transmitted-error.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/build_delta5.py",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-5.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j1-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/maintenance-driver-criteria.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j2-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/maintenance-driver-dispatch-status.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/maintenance-driver-close.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-close.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-3.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-3-contract-replacement.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-close-v2.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-criteria.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-4.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-2.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/manifest.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/measurements.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-1.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/build_packets.py",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/ci-summary.json",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-3-j2-transmitted-error.txt",
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-5.txt"
+  ],
+  "pending_reservations_as_recorded": [
+    "One L3 producer after L2 acceptance; same two judges",
+    "Two complementary L4 producers after L3 acceptance; same two judges",
+    "Full native package exact binding by same two judges and actual governed publication",
+    "One domain maintenance author, same two semantic and exact binding decisions; actual existing rebuild/reuse operations",
+    "One fresh Atlas-only consumer; same two case evaluations",
+    "Final two-judge evidence/matrix review; final payload and sealed handoff"
+  ],
+  "export_gaps": [
+    {
+      "id": "G-ORIGINAL-L1A",
+      "observation": "work.md and runtime-v1 courier manifest explicitly state that initial L1A review requests were not exported as literal files.",
+      "refs": [
+        "E-WORK",
+        "E-TRANSPORT"
+      ],
+      "required_treatment": "Preserve UNKNOWN original request identity; new canonical submissions do not repair historical provenance retroactively."
+    },
+    {
+      "id": "G-LEDGER-COVERAGE",
+      "observation": "The exported ledger begins with L1B acceptance and contains 12 selected events, only 3 with explicit at timestamps. It is not a complete contemporaneous native host trace.",
+      "refs": [
+        "E-LEDGER",
+        "E-USAGE"
+      ],
+      "required_treatment": "Retain the sparse original ledger and append sourced reconciliation; do not invent old dispatch counts/times."
+    },
+    {
+      "id": "G-CI-SECOND-RUN",
+      "observation": "usage names 43066241607 as failed with details not yet inspected. No detailed receipt for that ID was among the five selected CI receipt indices.",
+      "refs": [
+        "E-USAGE",
+        "E-CI"
+      ],
+      "required_treatment": "Keep the observed failure and unknown details; absence here does not establish unavailability."
+    },
+    {
+      "id": "G-LOCAL-POST-RECONCILIATION",
+      "observation": "L3 dispatch/input manifest/P1 correction and corpus-preflight output are locally visible but have no corresponding events in the inspected core ledger; this accounting task will also need export.",
+      "refs": [
+        "E-DISPATCH",
+        "E-L3",
+        "E-CORPUS",
+        "E-LEDGER"
+      ],
+      "required_treatment": "Primary may append actual records with exact hashes and new timestamps; do not claim reconstructed contemporaneous export."
+    },
+    {
+      "id": "G-TELEMETRY",
+      "observation": "Tokens, provider attempts/retries, billing and host conversation/message IDs remain UNKNOWN where not exposed.",
+      "refs": [
+        "E-USAGE",
+        "E-TRANSPORT"
+      ],
+      "required_treatment": "Separate logical units, recorded transport sends, CI run identities and physical provider attempts."
+    },
+    {
+      "id": "G-HISTORY-GLOBAL",
+      "observation": "Historical campaign use remains GLOBAL_UNRECONCILED_BY_ROOT;not_reset.",
+      "refs": [
+        "E-USAGE",
+        "E-NORM"
+      ],
+      "required_treatment": "ROOT reconciles aggregate historical uncertainty; S4 retains and reports its own current work."
+    }
+  ],
+  "historical_not_current_obligations": [
+    {
+      "observation": "Early prepare/publication-open paragraphs precede the one-artifact sample verification.",
+      "refs": [
+        "E-WORK",
+        "E-SAMPLE"
+      ]
+    },
+    {
+      "observation": "L2 production/evaluating records precede explicit complete-L2 acceptance.",
+      "refs": [
+        "E-WORK",
+        "E-L2",
+        "E-LEDGER"
+      ]
+    },
+    {
+      "observation": "Runtime producer receipts say NOT_RUN at authoring time; later CI receipts and corrected candidates keep separate identities.",
+      "refs": [
+        "E-CI",
+        "E-WORK"
+      ]
+    },
+    {
+      "observation": "Earlier transport errors and corrected payloads stay recorded; replacement does not erase the initial send.",
+      "refs": [
+        "E-TRANSPORT"
+      ]
+    }
+  ],
+  "current_local_obligations": [
+    {
+      "id": "OPEN-L3",
+      "obligation": "Complete current correction and obtain the two exact L3 decisions; reconcile layer barrier.",
+      "refs": [
+        "E-L3",
+        "E-USAGE"
+      ]
+    },
+    {
+      "id": "OPEN-L4",
+      "obligation": "Produce, review and persist four required L4 artifacts after accepted L3.",
+      "refs": [
+        "E-NATIVE",
+        "E-USAGE"
+      ]
+    },
+    {
+      "id": "OPEN-NATIVE",
+      "obligation": "Bind and publish the complete package, then perform real index/read with exact inputs/contracts.",
+      "refs": [
+        "E-SAMPLE",
+        "E-DRIVER",
+        "E-USAGE"
+      ]
+    },
+    {
+      "id": "OPEN-MAINTENANCE",
+      "obligation": "Execute no-op reuse and the independently frozen own maintenance change through existing ports with real decisions/bindings.",
+      "refs": [
+        "E-DRIVER",
+        "E-PORTS",
+        "E-USAGE"
+      ]
+    },
+    {
+      "id": "OPEN-CONSUMER",
+      "obligation": "Run fresh Atlas-only consumer cases and bounded shallow/deep reads, then obtain the required evaluations.",
+      "refs": [
+        "E-USAGE",
+        "E-WORK"
+      ]
+    },
+    {
+      "id": "OPEN-ACCOUNTING",
+      "obligation": "Export new dispatch/response/correction/transport/decision records and reconcile reservations without inventing telemetry.",
+      "refs": [
+        "E-USAGE",
+        "E-LEDGER",
+        "E-DISPATCH"
+      ]
+    },
+    {
+      "id": "OPEN-FINAL",
+      "obligation": "Final two-judge criterion disposition, required candidate gates, queue audit and sealed Git payload/handoff/readback.",
+      "refs": [
+        "E-NORM",
+        "E-WORK"
+      ]
+    }
+  ],
+  "handoff_json_in_payload_copy": {
+    "path": "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json",
+    "exists": false,
+    "remote_state": "NOT_CHECKED"
+  },
+  "evidence_groups": {
+    "E-WORK": {
+      "label": "Fila do principal",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/work.md"
+      ],
+      "principal_recorded_state": "IN_PROGRESS",
+      "limit": "Sections append history; latest explicit closure does not delete prior states."
+    },
+    "E-USAGE": {
+      "label": "Uso e reservas",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/usage.json"
+      ],
+      "principal_recorded_state": "IN_PROGRESS",
+      "limit": "Logical observations are not physical provider attempts."
+    },
+    "E-LEDGER": {
+      "label": "Eventos exportados",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/execution-ledger.jsonl"
+      ],
+      "principal_recorded_state": null,
+      "limit": "12 selected events, not a complete host event stream."
+    },
+    "E-NATIVE": {
+      "label": "Índice nativo atual",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json"
+      ],
+      "principal_recorded_state": {
+        "artifacts": 10,
+        "missing_keys": [
+          "S4:L3:system-flows",
+          "S4:L4:entry",
+          "S4:L4:ownership",
+          "S4:L4:maintenance",
+          "S4:L4:operational"
+        ]
+      },
+      "limit": "No fresh semantic evaluation; index does not replace bodies."
+    },
+    "E-L1": {
+      "label": "Aceite L1 registrado",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l1-acceptance.json"
+      ],
+      "principal_recorded_state": {
+        "all_accepted": true,
+        "required_count": 7,
+        "judge_ids": [
+          "/root/judge_j1",
+          "/root/judge_j2"
+        ]
+      },
+      "limit": "Decision recorded by principal; not rejudged."
+    },
+    "E-L2": {
+      "label": "Aceite L2 registrado",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l2-acceptance.json"
+      ],
+      "principal_recorded_state": {
+        "complete_required_layer": true,
+        "next_layer_authorized": 3,
+        "runtime_binding": "NOT_INFERRED",
+        "consumer": "NOT_RUN"
+      },
+      "limit": "Semantic layer acceptance does not supply runtime binding."
+    },
+    "E-CENSUS": {
+      "label": "Censo e reconciliação L1B",
+      "refs": [
+        "producers/l1b/delivery-receipt.json",
+        "producers/l1b/metadata-v2/correction-receipt.json",
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/source-capture-receipt.json"
+      ],
+      "principal_recorded_state": {
+        "principal_population": 2220
+      },
+      "limit": "2220 is the population count in source indices, not a current semantic score."
+    },
+    "E-CI": {
+      "label": "Gates do candidato comum",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json",
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/receipt.json",
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/receipt.json",
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2/receipt.json",
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json"
+      ],
+      "principal_recorded_state": {
+        "latest_named_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+        "latest_receipt_conclusion": "success"
+      },
+      "limit": "Historical successes/failures remain candidate-specific; no run executed here."
+    },
+    "E-SAMPLE": {
+      "label": "Caminho nativo isolado",
+      "refs": [
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json"
+      ],
+      "principal_recorded_state": {
+        "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "body_bytes": 17959,
+        "body_exact": true
+      },
+      "limit": "One artifact, executed by principal, not independent consumer or full package."
+    },
+    "E-DRIVER": {
+      "label": "Driver e revisão estática",
+      "refs": [
+        "dispatches/maintenance-driver.txt",
+        "producers/maintenance-driver/hash-receipt.json",
+        "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-driver-static-acceptance.json"
+      ],
+      "principal_recorded_state": {
+        "verdict": "STATIC_PASS_BOTH",
+        "runtime_execution": "NOT_RUN"
+      },
+      "limit": "No operational maintenance execution established."
+    },
+    "E-TRANSPORT": {
+      "label": "Ledgers de transporte",
+      "refs": [
+        "review-packets/l1b/manifest.json",
+        "review-packets/runtime-v1/manifest.json",
+        "review-packets/runtime-r1/manifest.json",
+        "review-packets/l1-boundary/send-ledger.json",
+        "producers/l2a/transport-ledger-v2.json",
+        "producers/l2b/courier-ledger-v2.json",
+        "producers/maintenance-driver/review-packets/transport/ledger.json"
+      ],
+      "principal_recorded_state": null,
+      "limit": "Per-scope records only; no provider-attempt or billing aggregation."
+    },
+    "E-DISPATCH": {
+      "label": "Dispatches e manifestos de entrada",
+      "refs": [
+        "dispatches/accepted-section-catalog-before-l3.json",
+        "dispatches/accounting-preflight.txt",
+        "dispatches/corpus-preflight.txt",
+        "dispatches/courier-l1-boundary.txt",
+        "dispatches/courier-runtime-r1.txt",
+        "dispatches/l1-boundary-correction.txt",
+        "dispatches/l1-boundary.txt",
+        "dispatches/l2-input-manifest.json",
+        "dispatches/l2-transport-steering.txt",
+        "dispatches/l2a-p1.txt",
+        "dispatches/l2a-transport-trigger.txt",
+        "dispatches/l2a-transport.txt",
+        "dispatches/l2a.txt",
+        "dispatches/l2b-p1.txt",
+        "dispatches/l2b-transport.txt",
+        "dispatches/l2b.txt",
+        "dispatches/l3-input-manifest.json",
+        "dispatches/l3-p1.txt",
+        "dispatches/l3.txt",
+        "dispatches/maintenance-driver-transport.txt",
+        "dispatches/maintenance-driver.txt",
+        "dispatches/maintenance-ports.txt",
+        "dispatches/runtime-r2.txt"
+      ],
+      "principal_recorded_state": null,
+      "limit": "Existence/hash is not execution or acceptance."
+    },
+    "E-L3": {
+      "label": "Produção L3 e correção visíveis",
+      "refs": [
+        "dispatches/l3.txt",
+        "dispatches/l3-p1.txt",
+        "dispatches/l3-input-manifest.json",
+        "producers/l3/integrity-receipt.json",
+        "producers/l3/request-p1.md"
+      ],
+      "principal_recorded_state": null,
+      "limit": "L3/P1 remains in production according to principal. Original receipt/dispatch are provenance only; no readiness or acceptance audit."
+    },
+    "E-PORTS": {
+      "label": "Inspeção de portas de manutenção",
+      "refs": [
+        "dispatches/maintenance-ports.txt",
+        "producers/maintenance-ports/integrity-receipt.json"
+      ],
+      "principal_recorded_state": null,
+      "limit": "Exploratory memo, no runtime operation."
+    },
+    "E-CORPUS": {
+      "label": "Pré-conferência de materialização",
+      "refs": [
+        "dispatches/corpus-preflight.txt",
+        "producers/corpus-preflight/plan.json",
+        "producers/corpus-preflight/response.md"
+      ],
+      "principal_recorded_state": null,
+      "limit": "Mechanical file plan only; source overlays are not executed by that report."
+    },
+    "E-NORM": {
+      "label": "Norma e contrato de conclusão",
+      "refs": [
+        "protocol/principles.md",
+        "protocol/completion.md",
+        "protocol/handoffs.md",
+        "protocol/criteria.json"
+      ],
+      "principal_recorded_state": null,
+      "limit": "Exactly 50 IDs; ROOT global complement does not absorb missing local work."
+    }
+  },
+  "file_catalog": {
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md": {
+      "exists": true,
+      "bytes": 11980,
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/execution-ledger.jsonl": {
+      "exists": true,
+      "bytes": 4959,
+      "sha256": "25503806c2c9a35e81e053654e65226d711fdec33fa7116ca5d22058144b7fc3",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/courier-request-record.json": {
+      "exists": true,
+      "bytes": 297,
+      "sha256": "9cba15ef7a444601a256ed93cec0c86ce94aa5a9e5eac67923bd7ca641c38f1e",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/courier-request.txt": {
+      "exists": true,
+      "bytes": 1775,
+      "sha256": "dd9b36e2462372e9caa0db89f83b8200a9ec77e8424a41ec5f323a11146eadb5",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/courier-response.md": {
+      "exists": true,
+      "bytes": 2219,
+      "sha256": "4f0c66bc3b01f43a2b2ec45fa35361ccc520eccaf06ecb42f31c7b1486487a42",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/excerpt-manifest-v2.json": {
+      "exists": true,
+      "bytes": 14593,
+      "sha256": "e3d99773cf41e0b6861accd3adfa6865445b45f0ee58f90283d93a36028988b5",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/excerpt-manifest.json": {
+      "exists": true,
+      "bytes": 14040,
+      "sha256": "6b19fd0671e2939e7459c4659d527847f6173936d40e11e9b571ec58fcc22954",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/final-manifest.json": {
+      "exists": true,
+      "bytes": 4396,
+      "sha256": "f68675c49f1f348ba68e630c680cca06953a58c04217eee67baaa4c8c0c28032",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j1-response-v2.json": {
+      "exists": true,
+      "bytes": 7624,
+      "sha256": "424c8d13ce680b1522e5970ea99f4a049c975899ddf9fcbd48bea397009a0d49",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j2-response-v2.json": {
+      "exists": true,
+      "bytes": 7367,
+      "sha256": "33e8b837a0cda76bda59a4f972e62c3ec7beefad98c53db1c913e39ff6c36845",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/mechanical-summary-v2.json": {
+      "exists": true,
+      "bytes": 6585,
+      "sha256": "9d09cebd58828db79b3f0c58b7a25506fe71c2da846a2530266e3e9e35c1caf9",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/mechanical-summary.json": {
+      "exists": true,
+      "bytes": 10477,
+      "sha256": "87330f64b0424abadb99ba049fbb71cd3713ad5e9abbb9324cbf0bb2d85ef3f6",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-01.txt": {
+      "exists": true,
+      "bytes": 30167,
+      "sha256": "5386edc301113650a88c5271e17dfd4baa90f60cf837a140c428314c5e76a5a0",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-02.txt": {
+      "exists": true,
+      "bytes": 28072,
+      "sha256": "24a04b3dad4b41455fcb142eb262c30677398ae0a2c997cca846a83a74408ff0",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-03.txt": {
+      "exists": true,
+      "bytes": 26619,
+      "sha256": "87f45545c122f4fb4862b5faf4aaa392553cc910657793c99a293641a3ce4b9a",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-v2-01.txt": {
+      "exists": true,
+      "bytes": 31097,
+      "sha256": "2ff8c3089dae943270bdde00eb050c2dd520225e0974be27025d878d68621af3",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-v2-02.txt": {
+      "exists": true,
+      "bytes": 30675,
+      "sha256": "45813371f5608cce9b6c75fa5d863862bcb2df998dd2db56ae47987901382fc7",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/part-v2-03.txt": {
+      "exists": true,
+      "bytes": 28448,
+      "sha256": "3cb8423648e6145ee65444ace09e255334ca97cc7941a27e351fb3e4909796dd",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/payload-manifest-v2.json": {
+      "exists": true,
+      "bytes": 1031,
+      "sha256": "a50e77015a926107df426c30da01c41af5a85d586a5caa81e619403a3ed6a30d",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/payload-manifest.json": {
+      "exists": true,
+      "bytes": 907,
+      "sha256": "100e72d2ef3d1be7898fe18cd7e8d2b07447cb0aad9da1f36e7f267bffbfef9c",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/pending-default-compaction-record.json": {
+      "exists": true,
+      "bytes": 533,
+      "sha256": "57bd85cb3e9c238fba8844af4c053cb669faa776c79e5e4a16d505662936e95d",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/pending-default-compaction.txt": {
+      "exists": true,
+      "bytes": 631,
+      "sha256": "ca4368de58966f5f85a223a1d8147642c6e72b0f9d640675a03350893317af72",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/principal-close.txt": {
+      "exists": true,
+      "bytes": 1400,
+      "sha256": "3a6f0a684ca6c0218b263f630b458f72b10d580fe521337e064eb15014b28781",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/principal-criteria.txt": {
+      "exists": true,
+      "bytes": 3576,
+      "sha256": "bf3dae18602cd0d9ac4fb61c155f62c1250fe92d44591cabc4d90cbaf6a44708",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/send-ledger.json": {
+      "exists": true,
+      "bytes": 5436,
+      "sha256": "425bb4497d9b575d983016e22215d6d39f279703fae300d56f5fa45ebf023f55",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/steering-primary-check-v2.txt": {
+      "exists": true,
+      "bytes": 388,
+      "sha256": "b2325101056c3e820cbc1d6aede0c82c670628712b322efa607bf407e59543f8",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/steering-v2-ready.txt": {
+      "exists": true,
+      "bytes": 663,
+      "sha256": "bbe4095b38cf4ef8d459a9c0cb725dfb03fde4f4f34f3fbc6106b7d4799b8dcf",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/steering-v2-request.txt": {
+      "exists": true,
+      "bytes": 500,
+      "sha256": "8db8a1ef5a512956958e9baaa39c4a892853170982c3acd224d1438841d6c3a8",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j1-response.md": {
+      "exists": true,
+      "bytes": 6430,
+      "sha256": "0c52867a7be59f93735b52c7a422b6a43329fac42a2128c251238d4e024b1e01",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j2-response.md": {
+      "exists": true,
+      "bytes": 6404,
+      "sha256": "b572b66e0d6172c4d67919918cda59dce6864972610fcbdf4da76a2c0f6a2319",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md": {
+      "exists": true,
+      "bytes": 10767,
+      "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md": {
+      "exists": true,
+      "bytes": 10301,
+      "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/build_delta5.py": {
+      "exists": true,
+      "bytes": 4100,
+      "sha256": "ac488e63239b9a3ebb9de37ee2dc03f3d67074f206b8b4b9d50131821aedc0d8",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/build_packets.py": {
+      "exists": true,
+      "bytes": 7125,
+      "sha256": "c15b40ec79bbea517d22addf8dd46e5dd44e4da25f31038879fdff59f94f830d",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/manifest.json": {
+      "exists": true,
+      "bytes": 24323,
+      "sha256": "5055ed46acc3bb5c5a6f605ed902ee6524adca095795f0f6c5af33c456f20d44",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/measurements-v2.json": {
+      "exists": true,
+      "bytes": 3342,
+      "sha256": "e96236bd8be5d4e1e5270aff294a90e3cad55e6994ff628cc4d9f2d8d5146769",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/measurements.json": {
+      "exists": true,
+      "bytes": 6715,
+      "sha256": "a0e6929695eaa9ff08f7749ecd9919070ac7a1f36c19c3427c9c5efe04ec48f3",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/principal-close.txt": {
+      "exists": true,
+      "bytes": 1314,
+      "sha256": "0c99fd218516cef0b062921ff04ad6b1b405a6fa36de35cf527f96ffd4320f7b",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/principal-criteria.txt": {
+      "exists": true,
+      "bytes": 2784,
+      "sha256": "0d4198671b513ed0b5a8b4e0493b3453e157a282075d24be20cb7d5d5cadb948",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-1.txt": {
+      "exists": true,
+      "bytes": 33255,
+      "sha256": "43097ff0c3d49e61abcab7f68de66c1a634e0d9cd1e7c30ed1b1e81ad942f4b5",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-2.txt": {
+      "exists": true,
+      "bytes": 35917,
+      "sha256": "ad86c67152c9b069b39a760d6277948810392c622752282bf3b793207722442f",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-3.txt": {
+      "exists": true,
+      "bytes": 34319,
+      "sha256": "d79f4aa252b8356d41a6bb3942b81a13bb5225375f7711b5e92d503330eb0ccc",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-4-body-replacement.txt": {
+      "exists": true,
+      "bytes": 18488,
+      "sha256": "4f82a7b324b1281bbb46b0aa560802865d46eccfda660ae4762e2796a7ff45b2",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-4-j2-transmitted-error.txt": {
+      "exists": true,
+      "bytes": 36571,
+      "sha256": "30a06e1687e2e8df3730a393c067b5f5d7aff4891546210aa311624e1b8f24d7",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-4.txt": {
+      "exists": true,
+      "bytes": 35785,
+      "sha256": "bcb7637e9b173b9cd5b2e5115f1b42db9b1528910d571abffd93832dc6677330",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/requests/request-part-5.txt": {
+      "exists": true,
+      "bytes": 28845,
+      "sha256": "8409e9922543c47ae5c500ed7f8e04793032d4110e546b19c5befa628cdbacd8",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json": {
+      "exists": true,
+      "bytes": 8986,
+      "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json": {
+      "exists": true,
+      "bytes": 9172,
+      "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/l2-close.txt": {
+      "exists": true,
+      "bytes": 1738,
+      "sha256": "74f87246943129aff0cddf0359d452f7bed3b2ef605a3cfcbf77474b01f5c86e",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/l2-criteria.txt": {
+      "exists": true,
+      "bytes": 4454,
+      "sha256": "96386a4453e2254011740cd447d689960fa00c0b490192521eb94d4fd3142060",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j1-response.json": {
+      "exists": true,
+      "bytes": 7717,
+      "sha256": "af169fb0afb2e25358df8c8d72c4112cf4045be366d2091a846366103429498f",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j2-response.json": {
+      "exists": true,
+      "bytes": 8121,
+      "sha256": "4b1e530fb29a40303af1f307cfbf808161946bd66f0813935951acef14b1a49e",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/maintenance-driver-close.txt": {
+      "exists": true,
+      "bytes": 1148,
+      "sha256": "a1c014e16335a06808355d23e6b3d55d7c8d9507a75b3a340516705ac6b2165e",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/maintenance-driver-criteria.txt": {
+      "exists": true,
+      "bytes": 3730,
+      "sha256": "d87862c7176af6da1f4745b714512711910ea63b361f39b16cf145eff452a3c9",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/maintenance-driver-dispatch-status.json": {
+      "exists": true,
+      "bytes": 811,
+      "sha256": "105d31aae7e0e6e4eadeb4b3e34defffb739919df4c1ad588168ebac496cfe34",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r1/j1-response-v1.json": {
+      "exists": true,
+      "bytes": 7625,
+      "sha256": "1ec2d002dae073899c1a3dd1090d875e270a5b4ad240b5a659ec7df82b448d41",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r1/j2-response-v1.json": {
+      "exists": true,
+      "bytes": 7008,
+      "sha256": "194815e3b9c4033a007f8372537e983de85946131921963acf0a38d9a00a0c37",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/finding-evidence.txt": {
+      "exists": true,
+      "bytes": 2010,
+      "sha256": "d51c0cec655401fb6e4752c1f23930599264f638c2a5189fb47f6cc4ae8592b3",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-request-evidence.json": {
+      "exists": true,
+      "bytes": 2911,
+      "sha256": "4c77e18d6475aa8321147f16b0de903ccf8291999949f2dc3f4716a68cad3f63",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json": {
+      "exists": true,
+      "bytes": 6447,
+      "sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json": {
+      "exists": true,
+      "bytes": 7372,
+      "sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/principal-request.txt": {
+      "exists": true,
+      "bytes": 9872,
+      "sha256": "bf0166bef928e799dd688501628b7e4f3d714ac9edcf7fa19d9648a76459a0ec",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json": {
+      "exists": true,
+      "bytes": 10282,
+      "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json": {
+      "exists": true,
+      "bytes": 9874,
+      "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/build_packets.py": {
+      "exists": true,
+      "bytes": 8743,
+      "sha256": "3c511c094ad2ddbd33492dd4ac73211501c42b3516a66bc0e458f2facae579ae",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/ci-summary.json": {
+      "exists": true,
+      "bytes": 7486,
+      "sha256": "b1f6a320a827e74e766fec8148fa60b2370a8b7aeb55d1e8d86068fbb23567d2",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/manifest.json": {
+      "exists": true,
+      "bytes": 15554,
+      "sha256": "858849ffd859073eec2eb925cadebb17cb6a9d6d38b7766471318d38998a2d2c",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/measurements.json": {
+      "exists": true,
+      "bytes": 5387,
+      "sha256": "4df3e40dbfd9915d9f6282293aaa343bc0e8a888b3901fbc3cc6d198037a6b7c",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-close-v2.txt": {
+      "exists": true,
+      "bytes": 2321,
+      "sha256": "687a3a88b149d82ff65770f43908706a356ab0dd5df4e809af43a436ace8e3f7",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-close.txt": {
+      "exists": true,
+      "bytes": 1987,
+      "sha256": "d4760771f7728563c59d4e1351dd3158ff6da496b5b9e4134319c35b127d4afc",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/principal-criteria.txt": {
+      "exists": true,
+      "bytes": 4115,
+      "sha256": "4141ba5ccd911f000f01d3b7b3014b99a9570b29b28316a3e35ea8be329ab05a",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-1.txt": {
+      "exists": true,
+      "bytes": 24586,
+      "sha256": "de5fd6306711a73775d1931676d219f6f1b3ee123098eb6cc544fdeccd6f373a",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-2.txt": {
+      "exists": true,
+      "bytes": 27392,
+      "sha256": "84b625e554532703a8a1d868485af270eb3454c1b17a799948c926d1a92551a0",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-3-contract-replacement.txt": {
+      "exists": true,
+      "bytes": 886,
+      "sha256": "c94e59243de54a1f000a17881e912652ccbbf1094dd334db74e5aa81dee0cfac",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-3-j2-transmitted-error.txt": {
+      "exists": true,
+      "bytes": 34507,
+      "sha256": "b7b7aae24392782cd20d0381093788f9226b151d0112e8eb91a8c49b1172c0fb",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-3.txt": {
+      "exists": true,
+      "bytes": 34499,
+      "sha256": "bc035b9a079d3db1622afb2e2d88a7b736c01c2bc206074351bf9a6cf2edf7ed",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-4.txt": {
+      "exists": true,
+      "bytes": 22407,
+      "sha256": "3e98c5aba5cb0eb8a415a7b281223b7a70e4c5bf4ea9da428c82ce763b1a1c9a",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/requests/request-part-5.txt": {
+      "exists": true,
+      "bytes": 25931,
+      "sha256": "38f1f1748f638648b25e3e33dfd448d00d02d7ab3ea440e99969924d94ef26ba",
+      "inspection": "judgment_identity_only_no_text_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l1-acceptance.json": {
+      "exists": true,
+      "bytes": 6721,
+      "sha256": "d9b84707462391759ef6b3471fd48f3d9a19845df4bcc8465f24d9d6fb1cdafa",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l2-acceptance.json": {
+      "exists": true,
+      "bytes": 3100,
+      "sha256": "f4d0dfc01bf4a3c8a4ec43c9012522c3debe92417b96d227c650f0337b2751b5",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json": {
+      "exists": true,
+      "bytes": 166351,
+      "sha256": "3ca92e5114946ee97de2bde5ea829feb94e5c07c358e8170ddfcc08071741bd1",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md": {
+      "exists": true,
+      "bytes": 11972,
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md": {
+      "exists": true,
+      "bytes": 1082,
+      "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-response.md": {
+      "exists": true,
+      "bytes": 2344,
+      "sha256": "da170a0a301ad8bf4d70f3bf3b04a89f09fdb6d8a2292ae035d87fee598da411",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe-v2.json": {
+      "exists": true,
+      "bytes": 5878,
+      "sha256": "fa525df5574cd2953f1b6d5fb1a8ba9e71ad0b12f74bafc4283419bf9dfaf712",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md": {
+      "exists": true,
+      "bytes": 17959,
+      "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt": {
+      "exists": true,
+      "bytes": 1969,
+      "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/response.md": {
+      "exists": true,
+      "bytes": 2517,
+      "sha256": "589317e9e30c9192f1edb208d7e298f9fbcb87ca5a2b660e8adacbc3cc9c7819",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md": {
+      "exists": true,
+      "bytes": 17987,
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md": {
+      "exists": true,
+      "bytes": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md": {
+      "exists": true,
+      "bytes": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md": {
+      "exists": true,
+      "bytes": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json": {
+      "exists": true,
+      "bytes": 4137,
+      "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt": {
+      "exists": true,
+      "bytes": 2464,
+      "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md": {
+      "exists": true,
+      "bytes": 2397,
+      "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md": {
+      "exists": true,
+      "bytes": 7954,
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md": {
+      "exists": true,
+      "bytes": 7971,
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json": {
+      "exists": true,
+      "bytes": 11215,
+      "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md": {
+      "exists": true,
+      "bytes": 3906,
+      "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response-v2.md": {
+      "exists": true,
+      "bytes": 3902,
+      "sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md": {
+      "exists": true,
+      "bytes": 7949,
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json": {
+      "exists": true,
+      "bytes": 8374,
+      "sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md": {
+      "exists": true,
+      "bytes": 7394,
+      "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/response-v2.md": {
+      "exists": true,
+      "bytes": 2584,
+      "sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-request.md": {
+      "exists": true,
+      "bytes": 4563,
+      "sha256": "89ecb99272363b0ec6c23b5ae945e477afbfcb66992775055ccdf9888d0d0035",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-response.md": {
+      "exists": true,
+      "bytes": 4588,
+      "sha256": "fb969863825b5e8e31f8e369516e78aafee5b7273505586e271ba21f71c47ad4",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v3.json": {
+      "exists": true,
+      "bytes": 3033,
+      "sha256": "39e8c03c32e1cd862836118cd3e51028e4c2ff88fbed5fb615c7032e8f24fb96",
+      "inspection": "declared_provenance_identity_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/receipt.json": {
+      "exists": true,
+      "bytes": 901,
+      "sha256": "4882a501a4ae89e6d92566a264f8a2e5adbbe8e7aa14602ddbbbc16b42e38849",
+      "inspection": "primary_receipt_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/receipt.json": {
+      "exists": true,
+      "bytes": 2150,
+      "sha256": "32c72a14a9ad5753dac4b49ba9d847aef8ffd2c05224f15b0be3d09fea39ae20",
+      "inspection": "primary_receipt_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2/receipt.json": {
+      "exists": true,
+      "bytes": 7917,
+      "sha256": "3e2e1a8c82e8e194c1fa69df4fa8e8c335fe4f5374867ce3cb42ca1667d50dfe",
+      "inspection": "primary_receipt_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json": {
+      "exists": true,
+      "bytes": 6997,
+      "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+      "inspection": "primary_receipt_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json": {
+      "exists": true,
+      "bytes": 1650,
+      "sha256": "ad3cd8613f88833c58061ae65399451d8763f5d085309ef85627ce6c55d3042c",
+      "inspection": "primary_receipt_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-driver-static-acceptance.json": {
+      "exists": true,
+      "bytes": 1220,
+      "sha256": "e81817d78c1807c67e2153a463393888627fb3aaeb3a16e1357e2632c7745c09",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.receipt.json": {
+      "exists": true,
+      "bytes": 694,
+      "sha256": "d8fbfd4722f6dbdd78916cda600b295af45554046ead97a08ae315b72b9b024e",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json": {
+      "exists": true,
+      "bytes": 977,
+      "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.receipt.json": {
+      "exists": true,
+      "bytes": 693,
+      "sha256": "90a9478a6965bea7bc4c4eb0246c0c50d14d2b0198d1c1a8815b9e09ccf2cd15",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json": {
+      "exists": true,
+      "bytes": 1488,
+      "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json": {
+      "exists": true,
+      "bytes": 2877,
+      "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/source-capture-receipt.json": {
+      "exists": true,
+      "bytes": 594072,
+      "sha256": "a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b",
+      "inspection": "index_metadata_count_only"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/usage.json": {
+      "exists": true,
+      "bytes": 10478,
+      "sha256": "b1b011f979e6ecf075231c6969e8e4584069f1587f2a9ef7b0e17dc1e2137682",
+      "inspection": "primary_metadata_read"
+    },
+    "candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/work.md": {
+      "exists": true,
+      "bytes": 8358,
+      "sha256": "9008a0deca4fc61cca279a0543472c91028cbe3ff2bc72e1d2865e539396029e",
+      "inspection": "primary_metadata_read"
+    },
+    "dispatches/accepted-section-catalog-before-l3.json": {
+      "exists": true,
+      "bytes": 8175,
+      "sha256": "ff33f6499d3cb986f34c34f33c17b24a77176c9056569d7389e62fa2ec7edd8e",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/accounting-preflight.txt": {
+      "exists": true,
+      "bytes": 1877,
+      "sha256": "2c9801b1646527d2b9d115a4e84518895d487ace0489e44707a49291338e0d9b",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/corpus-preflight.txt": {
+      "exists": true,
+      "bytes": 2647,
+      "sha256": "80a96db9b9c394ba47de2f2c75b936361c4ee3d9f22c647694b2a82df271afc3",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/courier-l1-boundary.txt": {
+      "exists": true,
+      "bytes": 1775,
+      "sha256": "dd9b36e2462372e9caa0db89f83b8200a9ec77e8424a41ec5f323a11146eadb5",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/courier-runtime-r1.txt": {
+      "exists": true,
+      "bytes": 1816,
+      "sha256": "ea7b823d963809e1a4d33c8991611a5fee9efcfae8ed03f1cf2cc9d8330a0792",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l1-boundary-correction.txt": {
+      "exists": true,
+      "bytes": 1082,
+      "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l1-boundary.txt": {
+      "exists": true,
+      "bytes": 2831,
+      "sha256": "222d944f611edfe9627164437d8c4909898bd20ce315173fea4e9129037cbbc7",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2-input-manifest.json": {
+      "exists": true,
+      "bytes": 12610,
+      "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2-transport-steering.txt": {
+      "exists": true,
+      "bytes": 734,
+      "sha256": "add609d0046aacbb45471dd87eeee1ca035c63b3e18cf8a4d379b413d371bf9a",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2a-p1.txt": {
+      "exists": true,
+      "bytes": 1445,
+      "sha256": "d8952808b1db8ca5ff65b88e78f6fcb2e632d443376df09947d7d2ec1b8454d9",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2a-transport-trigger.txt": {
+      "exists": true,
+      "bytes": 370,
+      "sha256": "46fe2743ecb38fe57db7177b1257786cfeb058a94dededcfe919695886a04b77",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2a-transport.txt": {
+      "exists": true,
+      "bytes": 1508,
+      "sha256": "cdfc4429be7f9199e3a50560b52d3030c285854dfcbeedee5617726beb66be1e",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2a.txt": {
+      "exists": true,
+      "bytes": 3906,
+      "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2b-p1.txt": {
+      "exists": true,
+      "bytes": 3091,
+      "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2b-transport.txt": {
+      "exists": true,
+      "bytes": 1010,
+      "sha256": "7093bccc06617834101948caee4311058b4d5f7aa0b3dcca7855c750c5b5e736",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l2b.txt": {
+      "exists": true,
+      "bytes": 3856,
+      "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l3-input-manifest.json": {
+      "exists": true,
+      "bytes": 10698,
+      "sha256": "4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l3-p1.txt": {
+      "exists": true,
+      "bytes": 2366,
+      "sha256": "9f1db6d26fe17f850209cb6b26fb08bbde76dcf8220196b8d5dd51920f4ce506",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/l3.txt": {
+      "exists": true,
+      "bytes": 3551,
+      "sha256": "eba02e64faf142ca0bf3334ec52a69dc2772df35f9b475a75aa89107d22a1a48",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/maintenance-driver-transport.txt": {
+      "exists": true,
+      "bytes": 839,
+      "sha256": "d453438b3b5657d29e169d18b136922bcbae7e7a77eed4030e6f22e02dd3d9e1",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/maintenance-driver.txt": {
+      "exists": true,
+      "bytes": 4348,
+      "sha256": "97c549c9d20cda753e7900def71af9b941dec6e70e1d75d2d8a8190617085508",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/maintenance-ports.txt": {
+      "exists": true,
+      "bytes": 1978,
+      "sha256": "2585b621f1e56fa3a037297128e839d1219bb38ef29eeb4deb5a2de02eaa9241",
+      "inspection": "dispatch_identity_only"
+    },
+    "dispatches/runtime-r2.txt": {
+      "exists": true,
+      "bytes": 1624,
+      "sha256": "b1ac96827f406f92416ed77c42eeb139abde2f87df3de41159480d6da3f9bd8c",
+      "inspection": "dispatch_identity_only"
+    },
+    "producers/accounting-preflight/request.md": {
+      "exists": true,
+      "bytes": 1877,
+      "sha256": "2c9801b1646527d2b9d115a4e84518895d487ace0489e44707a49291338e0d9b",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/corpus-preflight/plan.json": {
+      "exists": true,
+      "bytes": 233705,
+      "sha256": "ecf7f075f882eceedb997110621a34351817338bca4d27ee58168d42aa790306",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/corpus-preflight/request.md": {
+      "exists": true,
+      "bytes": 2647,
+      "sha256": "80a96db9b9c394ba47de2f2c75b936361c4ee3d9f22c647694b2a82df271afc3",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/corpus-preflight/response.md": {
+      "exists": true,
+      "bytes": 3842,
+      "sha256": "005050d4c7bb563cc82884878cea4a6da7ae8cc4f0afb26491669ff67288c0f7",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/artifact-v2.json": {
+      "exists": true,
+      "bytes": 18270,
+      "sha256": "a972bc6f6558191ac06d9b7c307e57bb571bf385b04fe4d15352965ff9203051",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/artifact.json": {
+      "exists": true,
+      "bytes": 17463,
+      "sha256": "cb312e867b96458a7e2e1c2d89e2287b223d25f4d33cbf69ae957759470ed6c8",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/correction-request.md": {
+      "exists": true,
+      "bytes": 1082,
+      "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/correction-response.md": {
+      "exists": true,
+      "bytes": 2344,
+      "sha256": "da170a0a301ad8bf4d70f3bf3b04a89f09fdb6d8a2292ae035d87fee598da411",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/integrity-receipt-v2.json": {
+      "exists": true,
+      "bytes": 3898,
+      "sha256": "4f5aa3c9a17cdb057ea93027609a4dee722792f2ef765043c094bb90539a8f04",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/integrity-receipt.json": {
+      "exists": true,
+      "bytes": 3335,
+      "sha256": "094211ad9152bb78adae123832c403cf990a9049171b41e8fed37cf089fff232",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/recipe-v2.json": {
+      "exists": true,
+      "bytes": 5878,
+      "sha256": "fa525df5574cd2953f1b6d5fb1a8ba9e71ad0b12f74bafc4283419bf9dfaf712",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/recipe.json": {
+      "exists": true,
+      "bytes": 5309,
+      "sha256": "b6aa3e05d44ef6a5a824de7421eedd120010fadbf03390cb82e04d0fa4e2ba78",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/request.md": {
+      "exists": true,
+      "bytes": 2831,
+      "sha256": "222d944f611edfe9627164437d8c4909898bd20ce315173fea4e9129037cbbc7",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1-boundary/response.md": {
+      "exists": true,
+      "bytes": 4110,
+      "sha256": "1aa49ca659bd16f49cb68ef48270eac4626b9c59235e35dc8dd2fb3157dba5ee",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1a/artifact.json": {
+      "exists": true,
+      "bytes": 6450,
+      "sha256": "ba9611f3cd228e6e320e05317150ffc128650f848082b829c4ae2f8c54fda2c0",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1a/request.txt": {
+      "exists": true,
+      "bytes": 1969,
+      "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1a/response.md": {
+      "exists": true,
+      "bytes": 2517,
+      "sha256": "589317e9e30c9192f1edb208d7e298f9fbcb87ca5a2b660e8adacbc3cc9c7819",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/artifacts-v2.json": {
+      "exists": true,
+      "bytes": 93445,
+      "sha256": "6a1e451387b25dfec778f326bbdcd61fbbc95e90e819cfba7ce70da43493a058",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/artifacts.json": {
+      "exists": true,
+      "bytes": 1283519,
+      "sha256": "85e6c4697791dc476ea0d64ae3d4ee34b992294d471090fd558054445a78c859",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/continuity-research/research-receipt.json": {
+      "exists": true,
+      "bytes": 2137,
+      "sha256": "8ea95553afadc5ea1f68738b5604e29b0c12da124b9c7cc9138a1221ab48ac17",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/correction-request.txt": {
+      "exists": true,
+      "bytes": 1692,
+      "sha256": "671cece49048054a22836db0c89114c32b885e8de3a1ba961d604c6752c079d5",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/correction-response.md": {
+      "exists": true,
+      "bytes": 1968,
+      "sha256": "46a97ffb240b5f62d86ce9bfd8a96092677db3eb44d9ac2d0c3791ffc93fa445",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/coverage-governance.md": {
+      "exists": true,
+      "bytes": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/coverage-summary.md": {
+      "exists": true,
+      "bytes": 4550,
+      "sha256": "159c005b7b8fae9d3d8fa3069ff736b8252b51521088fe7ac25befc67745b9a8",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/coverage.json": {
+      "exists": true,
+      "bytes": 1729414,
+      "sha256": "9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/delivery-receipt.json": {
+      "exists": true,
+      "bytes": 1760,
+      "sha256": "ac2ecdfd035ddc168ae5a2b4221a9c380121230f942c86584bf82c5788506818",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/metadata-v2/correction-receipt.json": {
+      "exists": true,
+      "bytes": 5568,
+      "sha256": "8679ff1790b8f5f552f1a80f29df0cfda46e6e8035fc6a5882d3d09baebd5f56",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/metadata-v2/recipe.json": {
+      "exists": true,
+      "bytes": 4137,
+      "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/request.txt": {
+      "exists": true,
+      "bytes": 2464,
+      "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l1b/response.md": {
+      "exists": true,
+      "bytes": 2397,
+      "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/artifacts-v2.json": {
+      "exists": true,
+      "bytes": 15563,
+      "sha256": "7d0ab864cadc5d19414e87ee6b72e6887d4539a938d669de3157ed11fcb31bf5",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/artifacts.json": {
+      "exists": true,
+      "bytes": 15017,
+      "sha256": "a24b333d6e1fa77f801c27d1166f3eb30458bbe1c897f146ada40c7600307a02",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/input-manifest.json": {
+      "exists": true,
+      "bytes": 12610,
+      "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/integrity-receipt-v1.json": {
+      "exists": true,
+      "bytes": 4268,
+      "sha256": "f1e0e06a1f1667330d9a24cd632e7fdfcf87d280fd249fdaf46ab21265540a4e",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/integrity-receipt-v2.json": {
+      "exists": true,
+      "bytes": 4127,
+      "sha256": "5fb8f97190b37489c7b6dca1bfebca882c19f01e568cc0c76f49bb416fde4c52",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/primary-correction-request.md": {
+      "exists": true,
+      "bytes": 1445,
+      "sha256": "d8952808b1db8ca5ff65b88e78f6fcb2e632d443376df09947d7d2ec1b8454d9",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/recipe-v2.json": {
+      "exists": true,
+      "bytes": 11215,
+      "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/recipe.json": {
+      "exists": true,
+      "bytes": 8647,
+      "sha256": "f19c56dca48f8ba0b826660631742451a457645ae303580d16633686273fbe7f",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/request.md": {
+      "exists": true,
+      "bytes": 3906,
+      "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/response-v2.md": {
+      "exists": true,
+      "bytes": 3902,
+      "sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/response.md": {
+      "exists": true,
+      "bytes": 3323,
+      "sha256": "1f27a82f630023cf6329c42fc606a5645239d7447fc821c69ace695c936a30e6",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/transport-ledger-v2.json": {
+      "exists": true,
+      "bytes": 5475,
+      "sha256": "dd95b4202c4b23f3cb8c191f7dd56be3758b86845a602eae892a48a498d4d7ec",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2a/transport-request.md": {
+      "exists": true,
+      "bytes": 1508,
+      "sha256": "cdfc4429be7f9199e3a50560b52d3030c285854dfcbeedee5617726beb66be1e",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/artifacts-v2.json": {
+      "exists": true,
+      "bytes": 7852,
+      "sha256": "ee3beed1896ad4abe3a119df2e62e9d24fb7ebc6907c591965852290e50e00c0",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/artifacts.json": {
+      "exists": true,
+      "bytes": 5875,
+      "sha256": "042d59823ea1ecf3a823f410688c1ec30e3a088b94554c3214d76d1053e81d15",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/correction-request-v2.md": {
+      "exists": true,
+      "bytes": 3091,
+      "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/courier-integrity-v2.json": {
+      "exists": true,
+      "bytes": 5938,
+      "sha256": "e93ea647ee131104f4bfdf0b2483bd3b5f653f0377af5ee4db5d428f60551e2a",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/courier-ledger-v2.json": {
+      "exists": true,
+      "bytes": 12179,
+      "sha256": "7378f692aa0f94084dc6b4a8d4626054d9b563e837c009a4ecf335f8faf8ca7d",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/courier-request-v2.md": {
+      "exists": true,
+      "bytes": 1010,
+      "sha256": "7093bccc06617834101948caee4311058b4d5f7aa0b3dcca7855c750c5b5e736",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/courier-response-v2.md": {
+      "exists": true,
+      "bytes": 2422,
+      "sha256": "cfaf8e7e61f745083f3ebbcf521b54cd970becf48559746546ba357b00a2fd24",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/input-manifest-v2.freeze.json": {
+      "exists": true,
+      "bytes": 1241,
+      "sha256": "141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/input-manifest-v2.json": {
+      "exists": true,
+      "bytes": 13899,
+      "sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/input-manifest.json": {
+      "exists": true,
+      "bytes": 12610,
+      "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/integrity-receipt-v2.json": {
+      "exists": true,
+      "bytes": 7347,
+      "sha256": "60b3c143d7489e0c323fdb4b225b26bdaef408e4e75af760fc5943b82731eb3a",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/integrity-receipt.json": {
+      "exists": true,
+      "bytes": 5663,
+      "sha256": "09506a74e14f537a38d1f46fc8b2546bcbf295d6eb6467782b937ab321405bfc",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/recipe-v2.json": {
+      "exists": true,
+      "bytes": 8374,
+      "sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/recipe.json": {
+      "exists": true,
+      "bytes": 5353,
+      "sha256": "7574858d2403bb05df856c753421345007cce1884dd9cdf3ed9f16b8e14db666",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/request-record.json": {
+      "exists": true,
+      "bytes": 675,
+      "sha256": "7218157317eedb61d42e96370857176067c7af78b8fe5f527750f898dfd0ccb5",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/request-v2.md": {
+      "exists": true,
+      "bytes": 7394,
+      "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/request.md": {
+      "exists": true,
+      "bytes": 3856,
+      "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/response-v2.md": {
+      "exists": true,
+      "bytes": 2584,
+      "sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/response.md": {
+      "exists": true,
+      "bytes": 2292,
+      "sha256": "41a21515ac6e2e057623e74b3fa67cf1fea90bf4ee5fb7096a3fd5637764799c",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/review-packet-manifest.json": {
+      "exists": true,
+      "bytes": 1460,
+      "sha256": "c880118b5d863f596912b6b9ec67d9e95c8376cc2678ff599a558e3799e85804",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l2b/review-packet-v2-manifest.json": {
+      "exists": true,
+      "bytes": 2679,
+      "sha256": "d113948edfea048a7f6b467fd872546127d80e06c56cdbea2392cf6fa42a66e2",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l3/artifact.json": {
+      "exists": true,
+      "bytes": 6106,
+      "sha256": "10a9632a9af968634be7c587e287a3d7bfedc6fa7f0059ce96acc1b83090120b",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l3/input-manifest.json": {
+      "exists": true,
+      "bytes": 10698,
+      "sha256": "4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l3/integrity-receipt.json": {
+      "exists": true,
+      "bytes": 3618,
+      "sha256": "203b30d4d54b22d215e18004d3166f4779d151dd708d64cf7076285f2f0b1e9d",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l3/recipe.json": {
+      "exists": true,
+      "bytes": 5992,
+      "sha256": "538c426686b13de3e903263f85820301e37a83e683d165da7945279f9832eff5",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l3/request-p1.md": {
+      "exists": true,
+      "bytes": 2366,
+      "sha256": "9f1db6d26fe17f850209cb6b26fb08bbde76dcf8220196b8d5dd51920f4ce506",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l3/request.md": {
+      "exists": true,
+      "bytes": 3551,
+      "sha256": "eba02e64faf142ca0bf3334ec52a69dc2772df35f9b475a75aa89107d22a1a48",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/l3/response.md": {
+      "exists": true,
+      "bytes": 3257,
+      "sha256": "61b9f82a949a708058bb2a845a371f2ebe24875d7fac78b478b4ff74547c5ffb",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/hash-receipt.json": {
+      "exists": true,
+      "bytes": 3833,
+      "sha256": "635088a4879263cc1e45d3c1cd5da8799ecbbb6659c5d45de8ca8aa577badcb7",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/request-addendum-2.md": {
+      "exists": true,
+      "bytes": 574,
+      "sha256": "2a1761b79cf10c073f70ccff56068301fef4d57ce00c2d48d6cb818e0e290a84",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/request-addendum.md": {
+      "exists": true,
+      "bytes": 497,
+      "sha256": "266044586ddaecd8a0907d97fed471f4460e71cd17284d8a75e34d6866134a19",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/request.md": {
+      "exists": true,
+      "bytes": 4349,
+      "sha256": "06d85c21ef782416bf8ceca46a690af83cb826f4fd1f044519637708e7569fb4",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/response.md": {
+      "exists": true,
+      "bytes": 3288,
+      "sha256": "30a092b6951b201de0b61c83122e2a450f0a926d26265491355b9c8388076184",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/review-packets/manifest.json": {
+      "exists": true,
+      "bytes": 15806,
+      "sha256": "9b6730a73a366b19da8b25ff21720eeaf968bfb9f6211cb05900a151da6b4bee",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/review-packets/request-part-1.txt": {
+      "exists": true,
+      "bytes": 27067,
+      "sha256": "123f5fb2942bb17a6039e0c3f069bd90a1da0d401265b925cd4b2e5f9ecc32cb",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/review-packets/request-part-2.txt": {
+      "exists": true,
+      "bytes": 31021,
+      "sha256": "7bb6cb70008c82a2280a6f686a44b721e4dd4a028d65e1159493609bac7b25e8",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/review-packets/request-part-3.txt": {
+      "exists": true,
+      "bytes": 24092,
+      "sha256": "1b25a0a9113964b3c5ffe2deba069bc895231914c4020b874832f178b1c6d7e0",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/review-packets/request-part-4.txt": {
+      "exists": true,
+      "bytes": 16888,
+      "sha256": "1d97999122217dd35b7181d67ed4fee84390ca547f4a1ba64a664815926a7e98",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/review-packets/transport/ledger.json": {
+      "exists": true,
+      "bytes": 7415,
+      "sha256": "a3822bdeac664115bcb3726267a2711e7c4bf0e95e32379aa78564ca4e952d13",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-driver/review-packets/transport/request.md": {
+      "exists": true,
+      "bytes": 840,
+      "sha256": "1c5b533c97d578fc2168e7ccec37e58202f654374400a3f3332cfee24fb60650",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-ports/followup-request-record.json": {
+      "exists": true,
+      "bytes": 297,
+      "sha256": "8c621e04c7fd1d5b7740c9d0400d624e9eacfb1c99e12694ddd4bfc206a700c6",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-ports/followup-request.md": {
+      "exists": true,
+      "bytes": 551,
+      "sha256": "4386ac35a263c5fb3c1958b465c32400038176011dd57eb98675ff07814327d7",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-ports/integrity-receipt.json": {
+      "exists": true,
+      "bytes": 2574,
+      "sha256": "6de1d1e6fc252566d89888fa7f1abddfaaeb7847f5d32ae43859abd8035cc803",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-ports/request-record.json": {
+      "exists": true,
+      "bytes": 195,
+      "sha256": "e3ff63eeca790dff8bb04bef35f5747915241677fda162b4c80fde943014e740",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-ports/request.md": {
+      "exists": true,
+      "bytes": 1977,
+      "sha256": "4136aadf0bb0eeceac59bc3920dc4bb962aafdd3f5e25acc6b514b2679bd3700",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/maintenance-ports/response.md": {
+      "exists": true,
+      "bytes": 2964,
+      "sha256": "7ed6693a545023df3023d4d5ff6db9b76bffb153cc8d65da8ce0561ce1a62271",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime-r2/request.md": {
+      "exists": true,
+      "bytes": 1624,
+      "sha256": "b1ac96827f406f92416ed77c42eeb139abde2f87df3de41159480d6da3f9bd8c",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime-r2/response.md": {
+      "exists": true,
+      "bytes": 2705,
+      "sha256": "ef93ac4842f0d2324ac2e7769f9f418fb6c5b2e2f2740b0a1738e65e8a396f5d",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime/implementation-files.json": {
+      "exists": true,
+      "bytes": 2221,
+      "sha256": "7cc3030936807ca61a26d0a065642fd577f875837a7ec23fbc53f4d255cfaf6a",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime/implementation-report.md": {
+      "exists": true,
+      "bytes": 11283,
+      "sha256": "ff8291bfd73bbd51969fae8df6c1e024610b7fdca73cddf6608c531596a2b125",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime/original-request.md": {
+      "exists": true,
+      "bytes": 2501,
+      "sha256": "c8c1159d4068957e8e87c5d7bbc6793d83975e637f314346fb433e50bd6e9fcd",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime/original-response.md": {
+      "exists": true,
+      "bytes": 4212,
+      "sha256": "67687ff5460f28b825908f76db0fc1436d1223004fb89470205e6ba9b4c139cd",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime/r1/handoff-manifest.json": {
+      "exists": true,
+      "bytes": 3113,
+      "sha256": "ca90a68641276590aeb7e9ef5df5a2f27be58cc5e6faea2c0825acb6d00014bc",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime/r1/implementation-files.json": {
+      "exists": true,
+      "bytes": 1486,
+      "sha256": "0b6a5033c565c36bedfa3186500fcca7e5b5e101a170134934f3939ef6350baf",
+      "inspection": "opaque_hash_only"
+    },
+    "producers/runtime/r1/implementation-report.md": {
+      "exists": true,
+      "bytes": 9501,
+      "sha256": "1701867dcbf6a8bceb5da2dc0c4ce473238d5d63e798b1bc1710d10723b469d6",
+      "inspection": "opaque_hash_only"
+    },
+    "protocol/completion.md": {
+      "exists": true,
+      "bytes": 4497,
+      "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+      "inspection": "normative_text_read"
+    },
+    "protocol/criteria.json": {
+      "exists": true,
+      "bytes": 4001,
+      "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+      "inspection": "normative_text_read"
+    },
+    "protocol/handoffs.md": {
+      "exists": true,
+      "bytes": 6282,
+      "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+      "inspection": "normative_text_read"
+    },
+    "protocol/principles.md": {
+      "exists": true,
+      "bytes": 6011,
+      "sha256": "da313b35ca8852f724051cbc104a0842067bd0b87426feb02438ba81c2bb6242",
+      "inspection": "normative_text_read"
+    },
+    "review-packets/l1-boundary/courier-request-record.json": {
+      "exists": true,
+      "bytes": 297,
+      "sha256": "9cba15ef7a444601a256ed93cec0c86ce94aa5a9e5eac67923bd7ca641c38f1e",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/courier-request.txt": {
+      "exists": true,
+      "bytes": 1775,
+      "sha256": "dd9b36e2462372e9caa0db89f83b8200a9ec77e8424a41ec5f323a11146eadb5",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/courier-response.md": {
+      "exists": true,
+      "bytes": 2219,
+      "sha256": "4f0c66bc3b01f43a2b2ec45fa35361ccc520eccaf06ecb42f31c7b1486487a42",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/excerpt-manifest-v2.json": {
+      "exists": true,
+      "bytes": 14593,
+      "sha256": "e3d99773cf41e0b6861accd3adfa6865445b45f0ee58f90283d93a36028988b5",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/excerpt-manifest.json": {
+      "exists": true,
+      "bytes": 14040,
+      "sha256": "6b19fd0671e2939e7459c4659d527847f6173936d40e11e9b571ec58fcc22954",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/final-manifest.json": {
+      "exists": true,
+      "bytes": 4396,
+      "sha256": "f68675c49f1f348ba68e630c680cca06953a58c04217eee67baaa4c8c0c28032",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/payload-manifest-v2.json": {
+      "exists": true,
+      "bytes": 1031,
+      "sha256": "a50e77015a926107df426c30da01c41af5a85d586a5caa81e619403a3ed6a30d",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/payload-manifest.json": {
+      "exists": true,
+      "bytes": 907,
+      "sha256": "100e72d2ef3d1be7898fe18cd7e8d2b07447cb0aad9da1f36e7f267bffbfef9c",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/send-ledger.json": {
+      "exists": true,
+      "bytes": 5436,
+      "sha256": "425bb4497d9b575d983016e22215d6d39f279703fae300d56f5fa45ebf023f55",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1-boundary/steering-v2-request.txt": {
+      "exists": true,
+      "bytes": 500,
+      "sha256": "8db8a1ef5a512956958e9baaa39c4a892853170982c3acd224d1438841d6c3a8",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/manifest.json": {
+      "exists": true,
+      "bytes": 24323,
+      "sha256": "5055ed46acc3bb5c5a6f605ed902ee6524adca095795f0f6c5af33c456f20d44",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/request-part-1.txt": {
+      "exists": true,
+      "bytes": 33255,
+      "sha256": "43097ff0c3d49e61abcab7f68de66c1a634e0d9cd1e7c30ed1b1e81ad942f4b5",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/request-part-2.txt": {
+      "exists": true,
+      "bytes": 35917,
+      "sha256": "ad86c67152c9b069b39a760d6277948810392c622752282bf3b793207722442f",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/request-part-3.txt": {
+      "exists": true,
+      "bytes": 34319,
+      "sha256": "d79f4aa252b8356d41a6bb3942b81a13bb5225375f7711b5e92d503330eb0ccc",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/request-part-4-body-replacement.txt": {
+      "exists": true,
+      "bytes": 18488,
+      "sha256": "4f82a7b324b1281bbb46b0aa560802865d46eccfda660ae4762e2796a7ff45b2",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/request-part-4-j2-transmitted-error.txt": {
+      "exists": true,
+      "bytes": 36571,
+      "sha256": "30a06e1687e2e8df3730a393c067b5f5d7aff4891546210aa311624e1b8f24d7",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/request-part-4.txt": {
+      "exists": true,
+      "bytes": 35785,
+      "sha256": "bcb7637e9b173b9cd5b2e5115f1b42db9b1528910d571abffd93832dc6677330",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/l1b/request-part-5.txt": {
+      "exists": true,
+      "bytes": 28845,
+      "sha256": "8409e9922543c47ae5c500ed7f8e04793032d4110e546b19c5befa628cdbacd8",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-r1/manifest.json": {
+      "exists": true,
+      "bytes": 8026,
+      "sha256": "fafd4f513f8d1f45e1d48e4f4fb7050e285cd1fc3c1e88ab9ba88c82de244cd1",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-r1/request-part-1.txt": {
+      "exists": true,
+      "bytes": 28943,
+      "sha256": "f71027604a3400299de9d7c27851b1f3c173b02a768c9d0504055e3a5b2c5e61",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-r1/request-part-2.txt": {
+      "exists": true,
+      "bytes": 24150,
+      "sha256": "2b8e17335bc907817c64a9aa4db1da104ced422e0d6a9145455822f1e2e688a8",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-r1/request-part-3.txt": {
+      "exists": true,
+      "bytes": 31965,
+      "sha256": "a59e461879bc397295e51d5aefa982dcd43c1418e3336fa7c58a64021503d66b",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-r2/principal-request.txt": {
+      "exists": true,
+      "bytes": 9872,
+      "sha256": "bf0166bef928e799dd688501628b7e4f3d714ac9edcf7fa19d9648a76459a0ec",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/manifest.json": {
+      "exists": true,
+      "bytes": 15554,
+      "sha256": "858849ffd859073eec2eb925cadebb17cb6a9d6d38b7766471318d38998a2d2c",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/request-part-1.txt": {
+      "exists": true,
+      "bytes": 24586,
+      "sha256": "de5fd6306711a73775d1931676d219f6f1b3ee123098eb6cc544fdeccd6f373a",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/request-part-2.txt": {
+      "exists": true,
+      "bytes": 27392,
+      "sha256": "84b625e554532703a8a1d868485af270eb3454c1b17a799948c926d1a92551a0",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/request-part-3-contract-replacement.txt": {
+      "exists": true,
+      "bytes": 886,
+      "sha256": "c94e59243de54a1f000a17881e912652ccbbf1094dd334db74e5aa81dee0cfac",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/request-part-3-j2-transmitted-error.txt": {
+      "exists": true,
+      "bytes": 34507,
+      "sha256": "b7b7aae24392782cd20d0381093788f9226b151d0112e8eb91a8c49b1172c0fb",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/request-part-3.txt": {
+      "exists": true,
+      "bytes": 34499,
+      "sha256": "bc035b9a079d3db1622afb2e2d88a7b736c01c2bc206074351bf9a6cf2edf7ed",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/request-part-4.txt": {
+      "exists": true,
+      "bytes": 22407,
+      "sha256": "3e98c5aba5cb0eb8a415a7b281223b7a70e4c5bf4ea9da428c82ce763b1a1c9a",
+      "inspection": "opaque_hash_only"
+    },
+    "review-packets/runtime-v1/request-part-5.txt": {
+      "exists": true,
+      "bytes": 25931,
+      "sha256": "38f1f1748f638648b25e3e33dfd448d00d02d7ab3ea440e99969924d94ef26ba",
+      "inspection": "opaque_hash_only"
+    },
+    "source/modules/atlas/docs/design/genesis-ownership-plan.md": {
+      "exists": true,
+      "bytes": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "inspection": "normative_AC_rows_138_147_only"
+    }
+  },
+  "limits": [
+    "No product/test/build/runtime/Git/GitHub or remote action performed.",
+    "No oracle bytes or consumer answers read; judgment content was hashed only.",
+    "Native usage data are not a provider billing or physical-attempt ledger.",
+    "All recorded PASS/acceptance text is attributed to prior principal records; this preflight assigns no criterion status.",
+    "Local file observations are time-bounded and not an atomic snapshot of concurrent production."
+  ],
+  "closing_steering": {
+    "literal": "Vou abrir a revisão L3 em breve e precisarei dos dois slots dos juízes. Feche esta inspeção como scaffold limitado ao que já está verificável; não aprofunde arqueologia opcional nem produza conclusão final. Registre honestamente as lacunas de exportação/contagem. L3/P1 ainda em produção e não deve ser auditada como pronta.",
+    "message_id": "UNKNOWN",
+    "consequence": "No further archaeology. L3/P1 remains in production, not audited as ready."
+  }
+}

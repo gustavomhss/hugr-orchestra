@@ -1,0 +1,195 @@
+{
+  "schema": "genesis-mechanical-integrity/v1",
+  "version": "l3-v2-p1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "artifact_key": "S4:L3:system-flows",
+  "verification_kind": "static-files-only",
+  "files": [
+    {
+      "path": "artifact-v2.json",
+      "byte_length": 7708,
+      "sha256": "51f7f018a5a936dff7d95658437e407d5fba4317d1570405e41074bec49fe61e"
+    },
+    {
+      "path": "input-manifest.json",
+      "byte_length": 10698,
+      "sha256": "4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54"
+    },
+    {
+      "path": "inputs/atlas-host-genesis.md",
+      "byte_length": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "path": "inputs/atlas-system.md",
+      "byte_length": 7954,
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    {
+      "path": "inputs/continuity-rag-operations.md",
+      "byte_length": 7949,
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+    },
+    {
+      "path": "inputs/genesis-governance.md",
+      "byte_length": 7971,
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+    },
+    {
+      "path": "inputs/native-runtime-delta.md",
+      "byte_length": 11980,
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+    },
+    {
+      "path": "recipe-v2.json",
+      "byte_length": 8258,
+      "sha256": "d78121df69c755f2a1b8a339b037b710dfe7a8f8262642dc6d0e6d2aa111033a"
+    },
+    {
+      "path": "request-p1.md",
+      "byte_length": 2366,
+      "sha256": "9f1db6d26fe17f850209cb6b26fb08bbde76dcf8220196b8d5dd51920f4ce506"
+    },
+    {
+      "path": "request.md",
+      "byte_length": 3551,
+      "sha256": "eba02e64faf142ca0bf3334ec52a69dc2772df35f9b475a75aa89107d22a1a48"
+    },
+    {
+      "path": "response-v2.md",
+      "byte_length": 3758,
+      "sha256": "45153b043c9c88ce2a57623f3ef41615b63563867a0bd3d7fbae97028b23909f"
+    },
+    {
+      "path": "review-excerpts-v2.json",
+      "byte_length": 7941,
+      "sha256": "79138c50cbf1682b6f9c2f4c51223ca5581aa0f22dc711449b741ae4e5a50069"
+    },
+    {
+      "path": "review-packet-v2-01.txt",
+      "byte_length": 23869,
+      "sha256": "170094c804e5bc230dc0fe3927b10042dd3c04d5587cc6c9b050b4095992b633"
+    },
+    {
+      "path": "source-use-v2.json",
+      "byte_length": 11365,
+      "sha256": "38ff7ce33001cdb0927a30da3d243d445cb2983ac016e7bd1d2e218246c9274e"
+    },
+    {
+      "path": "system-flows-v2.md",
+      "byte_length": 8952,
+      "sha256": "9df212b46f057c9e8369df6ed30e2e931a8fa9bc7f72ef51afba9eb4ea79d642"
+    }
+  ],
+  "preserved_v1": {
+    "integrity_receipt": {
+      "path": "integrity-receipt.json",
+      "byte_length": 3618,
+      "sha256": "203b30d4d54b22d215e18004d3166f4779d151dd708d64cf7076285f2f0b1e9d"
+    },
+    "files_verified_unchanged": [
+      {
+        "path": "artifact.json",
+        "byte_length": 6106,
+        "sha256": "10a9632a9af968634be7c587e287a3d7bfedc6fa7f0059ce96acc1b83090120b"
+      },
+      {
+        "path": "input-manifest.json",
+        "byte_length": 10698,
+        "sha256": "4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54"
+      },
+      {
+        "path": "inputs/atlas-system.md",
+        "byte_length": 7954,
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      {
+        "path": "inputs/continuity-rag-operations.md",
+        "byte_length": 7949,
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      {
+        "path": "inputs/genesis-governance.md",
+        "byte_length": 7971,
+        "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+      },
+      {
+        "path": "recipe.json",
+        "byte_length": 5992,
+        "sha256": "538c426686b13de3e903263f85820301e37a83e683d165da7945279f9832eff5"
+      },
+      {
+        "path": "request.md",
+        "byte_length": 3551,
+        "sha256": "eba02e64faf142ca0bf3334ec52a69dc2772df35f9b475a75aa89107d22a1a48"
+      },
+      {
+        "path": "response.md",
+        "byte_length": 3257,
+        "sha256": "61b9f82a949a708058bb2a845a371f2ebe24875d7fac78b478b4ff74547c5ffb"
+      },
+      {
+        "path": "review-excerpts.json",
+        "byte_length": 5695,
+        "sha256": "fb4d06d70da71e6fe09535479bc073dd6f9c7167fba0906a9959eb157b492bd5"
+      },
+      {
+        "path": "review-packet-01.txt",
+        "byte_length": 21695,
+        "sha256": "3a2cc9465767b615daf58bacfc04d3fbba2442ded3c7dc14eef465b985037e76"
+      },
+      {
+        "path": "source-captures.json",
+        "byte_length": 4231,
+        "sha256": "8dc10cd80f19c4965dc54dee534db3430e6bb72b32d180c6081a6d362976087f"
+      },
+      {
+        "path": "source-use.json",
+        "byte_length": 6096,
+        "sha256": "7fb68ac8b28dc974e0a23f91080f80c094300b2d1250f482149b6b5684fa9882"
+      },
+      {
+        "path": "system-flows.md",
+        "byte_length": 8971,
+        "sha256": "db25419b2a941655074d5f88e4b4d036b48b095b728d32a08a6177ac44efc2b1"
+      }
+    ],
+    "total_files_including_receipt": 14
+  },
+  "checks": {
+    "body_utf8_bytes": 8952,
+    "body_limit": 9000,
+    "unique_h2": 7,
+    "source_copies_verified_sha256_git_blob_bytes": 5,
+    "mandatory_semantic_predecessors": 3,
+    "optional_l1_used": [
+      "S4:L1:atlas-host-genesis",
+      "S4:L1:native-runtime-delta"
+    ],
+    "source_refs": 5,
+    "same_path_file_inputs_for_all_sources": true,
+    "file_inputs": 10,
+    "max_input_bytes": 17595,
+    "own_payload_refs_verified": 8,
+    "metadata_nfc": true,
+    "cited_sections_verified": true,
+    "semantic_review_refs_empty": true,
+    "runtime_receipt_refs_empty": true,
+    "packet_bytes": 23869,
+    "packet_limit": 32000,
+    "body_and_artifact_appear_exactly_once": true,
+    "literal_support_bytes_including_identities_and_locators": 6177,
+    "literal_support_limit": 7000,
+    "literal_excerpt_count": 8,
+    "literal_excerpt_bytes": 3944,
+    "literal_excerpt_slices_verified": true,
+    "sent_to_judges": false
+  },
+  "limits": [
+    "Conferência mecânica de arquivos/referências/bytes; não execução do produto, teste/build/runtime ou decisão semântica.",
+    "Pertencimento ao commit e aceites são os declarados pelo manifesto fixado; hashes locais foram conferidos, sem nova operação Git/remota ou leitura de pareceres.",
+    "Parada de reinterpretação é inferência contratual condicional; controles N e CI/R2 herdados não são execução, aceite ou publicação desta L3.",
+    "Somente três L2 e os L1 opcionais H/N autorizados; nenhum oracle, consumer, fonte bruta, produção concorrente ou R3 consultado."
+  ],
+  "self_excluded": true
+}
