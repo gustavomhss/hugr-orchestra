@@ -151,8 +151,10 @@ export function create(options: {
           const child = (options.spawnRun ?? LinuxWorkspaceOmni.spawnRun)(host)
           const stdout: Buffer[] = []
           const stderr: Buffer[] = []
+          const settlement = { finished: false }
           const escalation = { timer: undefined as ReturnType<typeof setTimeout> | undefined }
           const stop = (timedOut = false) => {
+            if (settlement.finished) return
             status.timedOut ||= timedOut
             status.cancelled ||= !timedOut
             status.cancellation ??= cancel(connection, runID)
@@ -162,6 +164,7 @@ export function create(options: {
               reject(new Error("workspace-termination-unknown"))
             }, 25_000)
             void status.cancellation.catch(() => {
+              if (settlement.finished) return
               child.kill("SIGKILL")
               reject(new Error("workspace-termination-unknown"))
             })
@@ -178,19 +181,36 @@ export function create(options: {
             if (kept.length) (stream === "stdout" ? stdout : stderr).push(kept)
             if (kept.length < data.length) status.truncated = true
           }
-          child.stdout.on("data", (data: Buffer) => capture("stdout", data))
-          child.stderr.on("data", (data: Buffer) => capture("stderr", data))
+          const stdoutData = (data: Buffer) => capture("stdout", data)
+          const stderrData = (data: Buffer) => capture("stderr", data)
+          child.stdout.on("data", stdoutData)
+          child.stderr.on("data", stderrData)
           if (optionsRun.output) {
             child.stdout.pipe(optionsRun.output.stdout, { end: false })
             child.stderr.pipe(optionsRun.output.stderr, { end: false })
           }
           child.stdin.on("error", () => undefined)
-          child.once("error", () => reject(new Error("workspace-exec-failed")))
-          child.once("close", (code) => {
+          const cleanup = () => {
+            settlement.finished = true
             clearTimeout(timer)
             clearTimeout(escalation.timer)
             controller.signal.removeEventListener("abort", onAbort)
             optionsRun.input?.unpipe(child.stdin)
+            child.stdout.removeListener("data", stdoutData)
+            child.stderr.removeListener("data", stderrData)
+            if (optionsRun.output) {
+              child.stdout.unpipe(optionsRun.output.stdout)
+              child.stderr.unpipe(optionsRun.output.stderr)
+            }
+            child.removeListener("error", onError)
+            child.removeListener("close", onClose)
+          }
+          const onError = () => {
+            cleanup()
+            reject(new Error("workspace-exec-failed"))
+          }
+          const onClose = (code: number | null) => {
+            cleanup()
             void (status.cancellation ?? Promise.resolve()).then(
               () =>
                 resolve({
@@ -203,7 +223,9 @@ export function create(options: {
                 }),
               () => reject(new Error("workspace-termination-unknown")),
             )
-          })
+          }
+          child.once("error", onError)
+          child.once("close", onClose)
           if (optionsRun.input) optionsRun.input.pipe(child.stdin)
           if (!optionsRun.input) child.stdin.end(input.stdin ?? "")
           if (controller.signal.aborted) stop()
