@@ -3872,6 +3872,19 @@ const adaptGroup53 = (raw: RawClient["server.inbox"]) => ({
   door: Endpoint53_37(raw),
 })
 
+const Endpoint54_0 = (raw: RawClient["server.activity"]) => () =>
+  raw["activity.snapshot"]({}).pipe(Effect.mapError(mapClientError))
+
+type Endpoint54_1Request = Parameters<RawClient["server.activity"]["activity.inspect"]>[0]
+type Endpoint54_1Input = { readonly recordID: Endpoint54_1Request["params"]["recordID"] }
+const Endpoint54_1 = (raw: RawClient["server.activity"]) => (input: Endpoint54_1Input) =>
+  raw["activity.inspect"]({ params: { recordID: input["recordID"] } }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup54 = (raw: RawClient["server.activity"]) => ({
+  snapshot: Endpoint54_0(raw),
+  inspect: Endpoint54_1(raw),
+})
+
 const adaptClient = (raw: RawClient) => ({
   health: adaptGroup0(raw["server.health"]),
   location: adaptGroup1(raw["server.location"]),
@@ -3927,6 +3940,7 @@ const adaptClient = (raw: RawClient) => ({
   artifacts: adaptGroup51(raw["server.capability.artifacts"]),
   capabilitySchedules: adaptGroup52(raw["server.capability.schedules"]),
   "server.inbox": adaptGroup53(raw["server.inbox"]),
+  activity: adaptGroup54(raw["server.activity"]),
 })
 
 export const make = (options?: {

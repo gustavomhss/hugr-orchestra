@@ -598,6 +598,9 @@ import type {
   ServerInboxSlackSyncOutput,
   ServerInboxDoorInput,
   ServerInboxDoorOutput,
+  ActivitySnapshotOutput,
+  ActivityInspectInput,
+  ActivityInspectOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 import { makeResearch } from "./research"
@@ -4684,6 +4687,24 @@ export function make(options: ClientOptions) {
             path: `/api/inbox/door`,
             query: { location: input["location"] },
             body: { number: input["number"], from: input["from"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    activity: {
+      snapshot: (requestOptions?: RequestOptions) =>
+        request<ActivitySnapshotOutput>(
+          { method: "GET", path: `/api/activity`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+      inspect: (input: ActivityInspectInput, requestOptions?: RequestOptions) =>
+        request<ActivityInspectOutput>(
+          {
+            method: "GET",
+            path: `/api/activity/${encodeURIComponent(input.recordID)}/inspection`,
             successStatus: 200,
             declaredStatuses: [400, 401],
             empty: false,

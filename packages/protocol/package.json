@@ -5,6 +5,7 @@
   "type": "module",
   "license": "MIT",
   "exports": {
+    "./groups/activity": "./src/groups/activity.ts",
     "./api": "./src/api.ts",
     "./errors": "./src/errors.ts",
     "./groups/actions-binding": "./src/groups/actions-binding.ts",
