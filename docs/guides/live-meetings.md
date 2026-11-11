@@ -63,7 +63,11 @@ before a real meeting by watching your own share from a second device.
 
 ## After the meeting
 
-Stop ends capture and the hotkeys at once. The card arrives when the model finishes. On it you confirm, dispute or
+Stop ends capture and the hotkeys at once. Transcription may deliver its last words for up to three seconds, then
+its connection closes and later replies are ignored. Concurrent screen captures keep the overlay transparent until
+every capture finishes, then restore its original opacity.
+
+The card arrives when the model finishes. On it you confirm, dispute or
 dismiss items, track commitments, and confirm new people. A dismiss or handoff that fails comes back with an error
 instead of staying hidden, and its buttons wait until the request ends. **Hand to Maestro** on an item sends that item
 to Maestro; **Send open items to Maestro** sends all the open ones as one message. Maestro does not act on them until
