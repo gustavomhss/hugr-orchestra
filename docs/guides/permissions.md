@@ -34,3 +34,9 @@ If saved permissions could not load, click **Retry** to load the list again.
 Click **Remove** to delete a rule. The next matching request asks again. Removing a rule does not stop a run that is already in progress.
 
 The per-tool settings above the list are different. They set the defaults for every agent and repository, and a project's config or an agent's own rules can override them.
+
+## Session rules and pending approvals
+
+Orchestra applies the agent's rules followed by the Session's rules, keeping the last matching rule. A saved project approval cannot override a deny in those effective rules. If the selected agent is unavailable, execution stays denied.
+
+Allow once and Always allow recheck the effective rules before releasing a pending request. A new deny rejects that request and saves no approval; removing its Session also declines it. An explicit request for your intent still needs a live answer even when ordinary rules allow the action. These checks do not cancel an action that was already authorized and started.
