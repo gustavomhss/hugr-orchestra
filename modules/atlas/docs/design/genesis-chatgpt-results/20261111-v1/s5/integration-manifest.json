@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-integration-manifest/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "preparation_base_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "integrated_producer_commits": [],
+  "comparison": {
+    "source_to_protocol": "11 added execute-genesis instruction files; no runtime change",
+    "source_to_protocol_receipt": "receipts/source-protocol-diff.json"
+  },
+  "shared_runtime_files_changed": [],
+  "gates": {
+    "tests": "NOT_RUN",
+    "typecheck": "NOT_RUN",
+    "generated_check": "NOT_RUN",
+    "guards": "NOT_RUN",
+    "final_epic": "NOT_RUN"
+  }
+}

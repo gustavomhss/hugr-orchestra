@@ -1,0 +1,151 @@
+{
+  "campaign": "20261111-v1",
+  "files": [
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/atlas-usage/SKILL.md",
+      "git_blob": "2b14ae2e4d74dd0f3f7785dd9c86f27905d3c0e3",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/atlas-usage/SKILL.md",
+      "sha256": "5d010ffd2fb910dddfd7685820963ca310bd72d603d718c16f28ed1a090556d0",
+      "bytes": 4986,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+      "git_blob": "cc1f0fef978e0a0ca96b0388d90d55660a1f7f9e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/atlas-maintenance/SKILL.md",
+      "sha256": "947c9a4b4756c62a9c26bc413dabb8444af3d9462439099b2f2e29c47fc8bde5",
+      "bytes": 24282,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+      "git_blob": "72654ea24028de8f86a569a30fa9e5552eca611f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/atlas-ownership/SKILL.md",
+      "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e",
+      "bytes": 8668,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "bytes": 28267,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "git_blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108",
+      "bytes": 18420,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-judges.md",
+      "git_blob": "94346c139f7daa4cf1e42068964c5e84db17a3a8",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-judges.md",
+      "sha256": "f7851eaf6a48016f9a8b45010c4cac871ae42495ff1966c417c4f589ce7c9e48",
+      "bytes": 14259,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-economy-control-contract.md",
+      "git_blob": "47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-economy-control-contract.md",
+      "sha256": "bccb68976c96d2c1d97dbd3523ca05121359507e2efac00467cd223dcfa830a5",
+      "bytes": 5928,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-update-plan-contract.md",
+      "git_blob": "2729d2a77b1e96caf4ce0b4d6ece4a92b72cfc11",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-update-plan-contract.md",
+      "sha256": "5f0eb376cd9d61b23550bebf639f9a4a312cda4f1750e1399a30e55afbaaf3b1",
+      "bytes": 11516,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-seats.md",
+      "git_blob": "9d59733348a0f999b73ffad47d89160501001ec5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-seats.md",
+      "sha256": "5c7754fb9fb17c4626947fe233209091f0f48e99ef53f2609de16112d52250c1",
+      "bytes": 14360,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/SKILL.md",
+      "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "bytes": 10130,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "git_blob": "9ecf72085f15b0bd2a8a4b7ad7b1e116271b9f31",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/references/campaign.md",
+      "sha256": "1c6f86e865d49388cbcb9913f0d515a9607589e868fd2e1990f95460893b03d1",
+      "bytes": 10182,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "git_blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28",
+      "bytes": 12992,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/references/runtime.md",
+      "sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b",
+      "bytes": 18070,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-5.md",
+      "git_blob": "d739ae8c61af160a53abce0a3d9d83e29e6c78a6",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/references/fatia-5.md",
+      "sha256": "fc6f2e5d2f027ad234e5ef71083530f0c0699fbbbd11b8f54a69a027d39be189",
+      "bytes": 10736,
+      "verified_git_blob": true
+    },
+    {
+      "source_commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "git_blob": "c92cb96892a1eeb7d61a738aa29bd508d3be3eb4",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/references/judging.md",
+      "sha256": "7058dd7a1119a6ed21ac6c508095ae398234b84e84c45575e104f8e4be22fe57",
+      "bytes": 9331,
+      "verified_git_blob": true
+    }
+  ],
+  "all_git_blobs_verified": true,
+  "method": "UTF-8 source bytes matched to immutable Git blob SHA; SHA-256 computed on those exact bytes."
+}

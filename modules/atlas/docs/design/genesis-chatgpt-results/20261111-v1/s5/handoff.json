@@ -1,0 +1,64 @@
+{
+  "schema": "genesis-session-handoff/v1",
+  "campaign": "20261111-v1",
+  "session": "s5",
+  "handoff_sequence": 1,
+  "supersedes": null,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "scope_revision": null,
+  "criteria_revision": null,
+  "state": "BLOCKED",
+  "attempt_id": "s5-preparation-001",
+  "dependencies": [
+    {
+      "session": "s1",
+      "branch": "genesis-chatgpt-s1",
+      "consumed_commit": null,
+      "validation": "ABSENT_AT_OBSERVATION"
+    },
+    {
+      "session": "s2",
+      "branch": "genesis-chatgpt-s2",
+      "consumed_commit": null,
+      "validation": "ABSENT_AT_OBSERVATION"
+    },
+    {
+      "session": "s3",
+      "branch": "genesis-chatgpt-s3",
+      "consumed_commit": null,
+      "validation": "ABSENT_AT_OBSERVATION"
+    },
+    {
+      "session": "s4",
+      "branch": "genesis-chatgpt-s4",
+      "consumed_commit": null,
+      "validation": "ABSENT_AT_OBSERVATION"
+    }
+  ],
+  "criteria_ref": null,
+  "receipts": [],
+  "patches": [],
+  "budget_allocation_ref": null,
+  "budget_ledger_ref": null,
+  "same_commit_paths": {
+    "criteria": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/criteria.json",
+    "rubric": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/rubric-v1.json",
+    "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/execution-ledger.jsonl",
+    "capabilities": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/capabilities.json",
+    "tree": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/source-tree-verification.json"
+  },
+  "reference_note": "Initial checkpoint uses same-commit relative paths; immutable commit/path/sha256 refs are published in the next handoff after this commit exists.",
+  "blockers": [
+    "S1 branch/handoff, complete semantic inventory, criterion catalog and exclusive S5 logical allocation are not yet published.",
+    "S2 layer manifests, native importer candidate and actual producer/rebuild receipts are not yet published.",
+    "S3 recovery/publication evidence and S4 host/migration evidence are not yet published.",
+    "No executable integrated candidate or real reader/consumer observations exist in S5."
+  ],
+  "next_action": "Read published S1 handoff at exact SHA, validate all bindings/quota and review its first complete prerequisite package immediately using two clean persistent judges; do not wait for S2-S4 completion."
+}

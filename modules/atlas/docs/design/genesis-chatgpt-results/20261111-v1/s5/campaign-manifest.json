@@ -1,0 +1,60 @@
+{
+  "schema": "genesis-campaign-manifest/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "prompt_revision": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e",
+  "integration_branch": "genesis-chatgpt-s5",
+  "candidate_revision": null,
+  "state": "BLOCKED",
+  "scope": "Orchestra inteiro",
+  "mechanical_population": {
+    "blobs": 14442,
+    "trees": 2268
+  },
+  "semantic_population": null,
+  "semantic_coverage": "UNKNOWN_PENDING_S1",
+  "accepted_domain_count": 0,
+  "accepted_layer_count": 0,
+  "consumers_executed": 0,
+  "dependencies": [
+    {
+      "session": "s1",
+      "consumed_commit": null,
+      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+    },
+    {
+      "session": "s2",
+      "consumed_commit": null,
+      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+    },
+    {
+      "session": "s3",
+      "consumed_commit": null,
+      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+    },
+    {
+      "session": "s4",
+      "consumed_commit": null,
+      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+    }
+  ],
+  "barriers": {
+    "contract": "HOLD_MISSING_HANDOFF",
+    "L1": "NOT_RELEASED",
+    "L2": "NOT_RELEASED",
+    "L3": "NOT_RELEASED",
+    "L4": "NOT_RELEASED"
+  },
+  "technical_conclusion": "NOT_COMPLETE",
+  "owner_acceptance": "NOT_REQUESTED_OR_RECEIVED",
+  "landing": "NOT_PERFORMED",
+  "production_activation": "NOT_PERFORMED",
+  "historical_invariants": [
+    "AC-03 OPEN",
+    "AC-10 GLOBAL_UNRECONCILED",
+    "old-producer INDETERMINATE",
+    "M1 route retired; do not restart"
+  ],
+  "manifest_purpose": "Coordination only; no Atlas store, generation, publication or acceptance authority."
+}

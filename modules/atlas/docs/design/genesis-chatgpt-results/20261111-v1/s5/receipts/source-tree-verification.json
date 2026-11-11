@@ -1,0 +1,139 @@
+{
+  "schema": "genesis-source-tree-verification/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "retrieval": "GitHub connector; root nonrecursive plus 19 recursive top-level subtree calls after root recursive transport error",
+  "root_git_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "reconstructed_root_git_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "all_2268_subtree_hashes_match": true,
+  "recursive_truncations": 0,
+  "unique_paths": 16710,
+  "git_types": {
+    "tree": 2268,
+    "blob": 14442
+  },
+  "git_modes": {
+    "040000": 2268,
+    "100644": 14370,
+    "100755": 71,
+    "120000": 1
+  },
+  "full_listing_sha256": "c665f3c4c8d48371aac698e3dcfd20bd4d2e5dd6096c42cabf71177635c5daf4",
+  "top_level_subtrees": [
+    {
+      "path": ".atlas",
+      "git_tree": "444b296cce40bbea83476cc24d5f8fb1c273b409",
+      "entries": 7,
+      "truncated": false
+    },
+    {
+      "path": ".claude",
+      "git_tree": "d415b0bd6f3925a4ad97f577a20ae029cc011c4e",
+      "entries": 14,
+      "truncated": false
+    },
+    {
+      "path": ".github",
+      "git_tree": "05f142b6ff354fcf668d02bd544bab307af41a7d",
+      "entries": 44,
+      "truncated": false
+    },
+    {
+      "path": ".orchestra",
+      "git_tree": "27a5944fb03e2ca3fa7f8fc2bce8a0160e31ef17",
+      "entries": 107,
+      "truncated": false
+    },
+    {
+      "path": ".vscode",
+      "git_tree": "a23e0817e01d9c3d8f54220e41685bd81ce20367",
+      "entries": 2,
+      "truncated": false
+    },
+    {
+      "path": ".zed",
+      "git_tree": "4e70a233bdfd8abac9d81d421ccdce58e409c882",
+      "entries": 1,
+      "truncated": false
+    },
+    {
+      "path": "apps",
+      "git_tree": "167b1bf4c7f9f15c87b42e643a4e536ffe5881e9",
+      "entries": 780,
+      "truncated": false
+    },
+    {
+      "path": "assets",
+      "git_tree": "99328c12d8f3817cd6c888e74baf9957cd50b154",
+      "entries": 8,
+      "truncated": false
+    },
+    {
+      "path": "docs",
+      "git_tree": "88ca1ab27ad7fd787e8343e9d1311be57aedc7ec",
+      "entries": 520,
+      "truncated": false
+    },
+    {
+      "path": "modules",
+      "git_tree": "c80d5587e0ab36bc67d7720424930fa945c1b6bb",
+      "entries": 7795,
+      "truncated": false
+    },
+    {
+      "path": "native",
+      "git_tree": "3d6855b29342ef9ea42f0db77a70639adf8f7544",
+      "entries": 522,
+      "truncated": false
+    },
+    {
+      "path": "nix",
+      "git_tree": "896cf105c08479898f480109c729cdbf43a03c5c",
+      "entries": 32,
+      "truncated": false
+    },
+    {
+      "path": "packages",
+      "git_tree": "384adf76200c0931a1108fba9cd0b145ca4e637e",
+      "entries": 6349,
+      "truncated": false
+    },
+    {
+      "path": "patches",
+      "git_tree": "c282f603c7b87d5e1e4a698cd2ddd38c93ef0e06",
+      "entries": 20,
+      "truncated": false
+    },
+    {
+      "path": "perf",
+      "git_tree": "7fbe6fb720d61d16029d749a5674f39df2d27d6a",
+      "entries": 1,
+      "truncated": false
+    },
+    {
+      "path": "schema",
+      "git_tree": "c6030bc5f5588431d1c0fc6b2dee4dcf14c2bc58",
+      "entries": 3,
+      "truncated": false
+    },
+    {
+      "path": "script",
+      "git_tree": "e6a88f72ed147d1d13e2780036e88918a2913775",
+      "entries": 222,
+      "truncated": false
+    },
+    {
+      "path": "specs",
+      "git_tree": "d2f2e46d14ac84a9a5d998b1f290e5c320f3b1ed",
+      "entries": 170,
+      "truncated": false
+    },
+    {
+      "path": "tooling",
+      "git_tree": "d944ea7d9a6c28b475683e4a686585e22b5d8e8b",
+      "entries": 70,
+      "truncated": false
+    }
+  ],
+  "scope_limit": "Mechanical completeness only; S1 still owns semantic domain/flow/need classification and exclusions."
+}

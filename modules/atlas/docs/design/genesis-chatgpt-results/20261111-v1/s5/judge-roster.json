@@ -1,0 +1,23 @@
+{
+  "campaign": "20261111-v1",
+  "epoch": 1,
+  "state": "AWAITING_FIRST_JUDGABLE_PACKAGE_AND_S1_ALLOCATION",
+  "judges": [
+    {
+      "role": "J1",
+      "emphasis": "fidelidade/autoridade",
+      "agent_id": null
+    },
+    {
+      "role": "J2",
+      "emphasis": "completude/utilidade",
+      "agent_id": null
+    }
+  ],
+  "rules": [
+    "Create each once using fork_turns=none and inherited model; persist returned real IDs.",
+    "Reuse each ID for every delta; never use historical Terra IDs.",
+    "No tools or delegation in judge role; supply exact dossier bytes.",
+    "Both cover all applicable mandatory criteria of the same version."
+  ]
+}

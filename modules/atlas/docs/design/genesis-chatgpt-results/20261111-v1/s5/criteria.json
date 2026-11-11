@@ -1,0 +1,1027 @@
+{
+  "schema": "genesis-s5-criteria/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "catalog_status": "NORMATIVE_CATALOG_EXTRACTED_PENDING_S1_BINDING",
+  "catalog_origin": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+  },
+  "scope_amendment": {
+    "prompt_revision": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e",
+    "authorized_scope": "Orchestra inteiro",
+    "old_pilot_exclusions_not_imported": true
+  },
+  "core_count": 29,
+  "crosscutting_count": 21,
+  "criteria": [
+    {
+      "criterion_id": "GO-A1",
+      "text": "The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery.",
+      "source_line": 52,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-A2",
+      "text": "Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch.",
+      "source_line": 53,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-A3",
+      "text": "Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories.",
+      "source_line": 54,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-A4",
+      "text": "Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics.",
+      "source_line": 55,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-A5",
+      "text": "Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties.",
+      "source_line": 56,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-A6",
+      "text": "Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work.",
+      "source_line": 57,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-A7",
+      "text": "Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default.",
+      "source_line": 58,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I1",
+      "text": "Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities.",
+      "source_line": 120,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I2",
+      "text": "Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty.",
+      "source_line": 121,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I3",
+      "text": "Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled.",
+      "source_line": 122,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I4",
+      "text": "Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist.",
+      "source_line": 123,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I5",
+      "text": "Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist.",
+      "source_line": 124,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I6",
+      "text": "Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model.",
+      "source_line": 125,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I7",
+      "text": "Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority.",
+      "source_line": 126,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "GO-I8",
+      "text": "A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete.",
+      "source_line": 127,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-01",
+      "text": "**Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency.",
+      "source_line": 138,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s1",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-02",
+      "text": "**Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row.",
+      "source_line": 139,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-03",
+      "text": "**Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links.",
+      "source_line": 140,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "inherited_disposition": "OPEN"
+    },
+    {
+      "criterion_id": "AC-04",
+      "text": "**Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test.",
+      "source_line": 141,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s2",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-05",
+      "text": "**Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links.",
+      "source_line": 142,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s2",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-06",
+      "text": "**Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient.",
+      "source_line": 143,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s2",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-07",
+      "text": "**Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled.",
+      "source_line": 144,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-08",
+      "text": "**Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction.",
+      "source_line": 145,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s1",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-09",
+      "text": "**Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately.",
+      "source_line": 146,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s4",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "AC-10",
+      "text": "**Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators.",
+      "source_line": 147,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s4",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "inherited_disposition": "GLOBAL_UNRECONCILED"
+    },
+    {
+      "criterion_id": "CC-1",
+      "text": "Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen.",
+      "source_line": 159,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s1",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "CC-2",
+      "text": "The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path.",
+      "source_line": 160,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s2+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "CC-3",
+      "text": "Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled.",
+      "source_line": 161,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s2+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "CC-4",
+      "text": "Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end.",
+      "source_line": 162,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s2",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "CC-5",
+      "text": "Coherent publication, reader verification, failure recovery and rollback work without weakening governance.",
+      "source_line": 163,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3+s4",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "CC-6",
+      "text": "Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles.",
+      "source_line": 164,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s1",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "CC-7",
+      "text": "Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete.",
+      "source_line": 165,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s4+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "SC-1",
+      "text": "**SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.",
+      "source_line": 169,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "SC-2",
+      "text": "**SC-2 — progressive use:** AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.",
+      "source_line": 170,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "SC-3",
+      "text": "**SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
+      "source_line": 171,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s2",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "SC-4",
+      "text": "**SC-4 — economics:** separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
+      "source_line": 172,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s1",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "SC-5",
+      "text": "**SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "source_line": 173,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3+s4",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "QS-1",
+      "text": "**QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "source_line": 180,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "QS-2",
+      "text": "**QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "source_line": 181,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "QS-3",
+      "text": "**QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "source_line": 182,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "QS-4",
+      "text": "**QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "source_line": 183,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "QS-5",
+      "text": "**QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "source_line": 184,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "QS-6",
+      "text": "**QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "source_line": 185,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "all+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "DOD-1",
+      "text": "CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.",
+      "source_line": 223,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "DOD-2",
+      "text": "all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
+      "source_line": 224,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "DOD-3",
+      "text": "real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.",
+      "source_line": 225,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "DOD-4",
+      "text": "scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
+      "source_line": 226,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s4+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "DOD-5",
+      "text": "real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
+      "source_line": 227,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s1",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "DOD-6",
+      "text": "docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
+      "source_line": 228,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s4+s5",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    },
+    {
+      "criterion_id": "DOD-7",
+      "text": "owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
+      "source_line": 229,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s5+owner",
+      "integrated_decision_owner": "s5",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "schema": "genesis-s5-rubric/v1",
+  "campaign": "20261111-v1",
+  "created_at": "2026-11-11T14:10:11.096957+00:00",
+  "status": "FROZEN_GENERAL_BAR_DOMAIN_INSTANCES_PENDING_S1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "normative_catalog": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+  },
+  "candidate_outputs_seen": false,
+  "mandatory_core_criteria": [
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "mandatory_crosscutting_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6"
+  ],
+  "contract_package_checks": [
+    {
+      "criteria": [
+        "AC-01",
+        "CC-1",
+        "GO-I8"
+      ],
+      "requirement": "Exact full-tree denominator; every domain, flow, need, artifact, source and case has accountable coverage or an explicit blocking gap. Directory coverage alone is not semantic sufficiency."
+    },
+    {
+      "criteria": [
+        "AC-08",
+        "CC-6",
+        "SC-4",
+        "DOD-5",
+        "GO-I6"
+      ],
+      "requirement": "Finite disjoint S1-S5 allocation covers judges, consumers and corrections; logical reservations precede dispatch. Physical attempts, tokens and billing remain UNKNOWN when unobservable. Contract acceptance is not runtime economic conformance."
+    },
+    {
+      "criteria": [
+        "GO-I1",
+        "GO-I2",
+        "GO-I7",
+        "QS-1"
+      ],
+      "requirement": "Exact source/protocol/recipe/authority bindings; original records immutable; source text is data; missing or conflicting authority holds the affected output."
+    },
+    {
+      "criteria": [
+        "GO-A2",
+        "GO-A4",
+        "GO-A5",
+        "GO-A7",
+        "QS-3",
+        "QS-4"
+      ],
+      "requirement": "Shared-file ownership, existing Atlas doors/types, cumulative prerequisites and minimal integration seam are explicit; no second knowledge store or bypass."
+    },
+    {
+      "criteria": [
+        "DOD-1",
+        "DOD-2",
+        "DOD-3",
+        "DOD-4",
+        "DOD-6",
+        "DOD-7",
+        "QS-5",
+        "QS-6"
+      ],
+      "requirement": "Separate planned, executed, reviewed, accepted, landed and activated states; no blanket PASS from preparation or historical pilot evidence."
+    }
+  ],
+  "layer_package_checks": [
+    "Every required artifact and dependency of the finite layer is present with exact original and derivative byte identities.",
+    "Both judges review the same union and all applicable criteria; complete-layer release requires both applicable PASS and no critical conflict.",
+    "Source/intent/inference/gap remain distinguishable; unsupported critical content prevents acceptance.",
+    "Each required intermediate answers a frozen need; direct-use consumer proof stays open until real reader execution.",
+    "A changed body, source, recipe, authority, contract or dependency receives a new manifest and affected-criterion reassessment."
+  ],
+  "consumer_package_checks": [
+    "Freeze task, independent oracle, critical mistakes and task-specific limits before exposing outputs.",
+    "Cover allowed maintenance, violation, cross-component impact, operational failure, out-of-scope abstention, shallow/deep use and every required intermediate directly.",
+    "Record real ownership.index/read calls and exact returned bytes/sections/versions including misses, truncation and HOLD.",
+    "Consumer never receives oracle, authoring prompt or source-discovery tools; disclose any host inability to enforce this.",
+    "Exposed historical cases remain regressions; renamed cases do not become held-out."
+  ],
+  "judge_output_contract": {
+    "decision": [
+      "PASS",
+      "FIX-FIRST",
+      "HOLD"
+    ],
+    "intermediate_request": "REQUEST_EVIDENCE with exact criterion, artifact/section and deciding question",
+    "required_fields": [
+      "reviewed_manifest_sha256",
+      "candidate_revision",
+      "criteria",
+      "critical_findings",
+      "permitted_unknowns",
+      "optional_suggestions"
+    ],
+    "approval_validation": "Coordinator mechanically verifies complete criterion set and input/response binding; no self-reported hash trusted without comparison."
+  },
+  "permitted_unknowns": [
+    "Unexposed host physical attempts",
+    "Unexposed host token use",
+    "Unexposed billing",
+    "Historical unresolved requests explicitly retained"
+  ],
+  "unknowns_do_not_waive": [
+    "Required in-scope knowledge",
+    "Execution of mandatory paths",
+    "Current authority",
+    "CI gates",
+    "Owner acceptance",
+    "Landing",
+    "Production activation"
+  ],
+  "domain_specific_rubric": {
+    "state": "PENDING_S1",
+    "reason": "No finite approved domain/need/artifact inventory yet; no pilot criterion set copied as universal."
+  },
+  "model_diversity": "UNKNOWN; independent contexts do not establish independent model families"
+}

@@ -1,0 +1,43 @@
+{
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T14:10:11.096957+00:00",
+  "method": [
+    "github_search_branches",
+    "github_fetch matching-refs/heads/genesis-chatgpt"
+  ],
+  "observed_refs": [
+    {
+      "branch": "genesis-chatgpt-kit",
+      "sha": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e"
+    }
+  ],
+  "dependencies": [
+    {
+      "session": "s1",
+      "branch": "genesis-chatgpt-s1",
+      "state": "ABSENT_AT_OBSERVATION",
+      "handoff_read": false
+    },
+    {
+      "session": "s2",
+      "branch": "genesis-chatgpt-s2",
+      "state": "ABSENT_AT_OBSERVATION",
+      "handoff_read": false
+    },
+    {
+      "session": "s3",
+      "branch": "genesis-chatgpt-s3",
+      "state": "ABSENT_AT_OBSERVATION",
+      "handoff_read": false
+    },
+    {
+      "session": "s4",
+      "branch": "genesis-chatgpt-s4",
+      "state": "ABSENT_AT_OBSERVATION",
+      "handoff_read": false
+    }
+  ],
+  "queries_this_cycle_per_dependency": 2,
+  "maximum_per_cycle": 3,
+  "no_polling_loop": true
+}

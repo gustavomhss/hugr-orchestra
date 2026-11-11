@@ -1,0 +1,22 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "[{\"ref\":\"refs/heads/genesis-chatgpt-kit\",\"node_id\":\"REF_kwDOU78kOr5yZWZzL2hlYWRzL2dlbmVzaXMtY2hhdGdwdC1raXQ\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/refs/heads/genesis-chatgpt-kit\",\"object\":{\"sha\":\"cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e\"}}]",
+    "title": "genesis-chatgpt",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/matching-refs/heads/genesis-chatgpt",
+    "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/matching-refs/heads/genesis-chatgpt",
+    "display_title": "genesis-chatgpt",
+    "structuredContent": {
+      "title": "genesis-chatgpt",
+      "content": "[{\"ref\":\"refs/heads/genesis-chatgpt-kit\",\"node_id\":\"REF_kwDOU78kOr5yZWZzL2hlYWRzL2dlbmVzaXMtY2hhdGdwdC1raXQ\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/refs/heads/genesis-chatgpt-kit\",\"object\":{\"sha\":\"cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e\"}}]",
+      "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/matching-refs/heads/genesis-chatgpt"
+    }
+  },
+  "isError": false
+}

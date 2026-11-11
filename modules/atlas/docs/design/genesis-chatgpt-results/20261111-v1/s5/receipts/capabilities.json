@@ -1,0 +1,34 @@
+{
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T14:10:11.096957+00:00",
+  "read_write_transport": "GitHub connector",
+  "remote_branch": "genesis-chatgpt-s5",
+  "branch_created_from": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "source_materialization": "Normative files and complete Git tree metadata only; no executable checkout claimed.",
+  "tools": {
+    "node": "v24.22.1",
+    "python": "3.12.14",
+    "git": "2.52.0",
+    "rg": "15.2.0",
+    "bun": "NOT_FOUND_ON_PATH"
+  },
+  "native_agents": {
+    "concurrency_limit_including_root": 4,
+    "judge_slots_reserved": 2,
+    "preparation_agent_id": "/root/prepare_history",
+    "preparation_only": true,
+    "judges_created": false
+  },
+  "ci": {
+    "repository_tests": "GitHub Actions required by AGENTS.md and atlas-maintenance",
+    "dispatch_tool": "NOT_EXPOSED_IN_DISCOVERED_GITHUB_TOOLS",
+    "tests_executed": false
+  },
+  "external_model_apis_called": false,
+  "gh_called": false,
+  "credentials_searched_or_set": false,
+  "production_activated": false,
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN"
+}
