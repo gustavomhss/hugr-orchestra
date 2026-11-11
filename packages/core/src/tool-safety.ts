@@ -438,11 +438,7 @@ export const make = Effect.gen(function* () {
               ),
             catch: () => new Denied({ reason: "invalid-patch-acquisition" }),
           })
-        : typeof args.filePath === "string"
-          ? [args.filePath]
-          : reading && typeof args.path === "string"
-            ? [args.path]
-            : []
+        : [args.path, args.filePath].filter((path) => typeof path === "string")
     if (paths.length === 0) return yield* new Denied({ reason: "missing-native-path" })
     if (!fs) return yield* new Denied({ reason: "filesystem-acquisition" })
     const directory = yield* fs
