@@ -5,6 +5,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { promisify } from "node:util"
+import { packagedDebugMapExclusions } from "./src/main/packaged-debug-maps"
 
 import type { AfterPackContext, Configuration } from "electron-builder"
 
@@ -147,6 +148,7 @@ const getBase = (appId: string): Configuration => ({
     "!resources/icons/**/*",
     "!resources/omni/**",
     "!resources/claude-code{,/**/*}",
+    ...packagedDebugMapExclusions,
   ],
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
