@@ -1,0 +1,15 @@
+{
+  "schema": "genesis-dependency-observation/v1",
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11 14:47:40 UTC",
+  "dependency": "s1",
+  "head": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+  "previously_consumed_head": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+  "changed": false,
+  "scope_revision": null,
+  "allocation": "bootstrap-v1/s5",
+  "operation_blocked": "Paired first judge dispatch and dependent production/integration",
+  "reason": "No complete S1 scope/interface package or revised allocation was published in the bounded discovery cycle. Three preparation packets plus two protected corrections leave one ordinary unit under limit six.",
+  "request_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/integration-feedback-004.json",
+  "automatic_polling_after_turn": false
+}
