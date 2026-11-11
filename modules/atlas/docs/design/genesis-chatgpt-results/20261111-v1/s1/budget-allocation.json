@@ -1,66 +1,80 @@
 {
   "schema": "genesis-native-allocation/v1",
   "campaign": "20261111-v1",
-  "revision": "bootstrap-v1",
+  "revision": "bootstrap-v2",
   "state": "FROZEN_PREPARATION_ONLY",
   "unit": "native_logical_work_packet",
-  "total_limit": 40,
+  "total_limit": 48,
   "scope": "Independent inspection, inventory, contracts and initial review; no dependent ownership production released",
   "allocations": [
     {
       "session": "s1",
       "limit": 16,
-      "partition_id": "bootstrap-v1/s1",
+      "partition_id": "bootstrap-v2/s1",
       "covered": [
         "preparation",
         "bounded technical review",
         "preparation correction"
       ],
-      "reserved_for_correction": 2
+      "reserved_for_correction": 2,
+      "carries_forward_partition": "bootstrap-v1/s1",
+      "carries_forward_all_usage_and_uncertainty": true
     },
     {
       "session": "s2",
       "limit": 6,
-      "partition_id": "bootstrap-v1/s2",
+      "partition_id": "bootstrap-v2/s2",
       "covered": [
         "preparation",
         "bounded technical review",
         "preparation correction"
       ],
-      "reserved_for_correction": 2
+      "reserved_for_correction": 2,
+      "carries_forward_partition": "bootstrap-v1/s2",
+      "carries_forward_all_usage_and_uncertainty": true
     },
     {
       "session": "s3",
-      "limit": 6,
-      "partition_id": "bootstrap-v1/s3",
+      "limit": 10,
+      "partition_id": "bootstrap-v2/s3",
       "covered": [
         "preparation",
         "bounded technical review",
-        "preparation correction"
+        "preparation correction",
+        "preparation reconciliation and bounded correction"
       ],
-      "reserved_for_correction": 2
+      "reserved_for_correction": 2,
+      "carries_forward_partition": "bootstrap-v1/s3",
+      "carries_forward_all_usage_and_uncertainty": true,
+      "additional_units": 4
     },
     {
       "session": "s4",
       "limit": 6,
-      "partition_id": "bootstrap-v1/s4",
+      "partition_id": "bootstrap-v2/s4",
       "covered": [
         "preparation",
         "bounded technical review",
         "preparation correction"
       ],
-      "reserved_for_correction": 2
+      "reserved_for_correction": 2,
+      "carries_forward_partition": "bootstrap-v1/s4",
+      "carries_forward_all_usage_and_uncertainty": true
     },
     {
       "session": "s5",
-      "limit": 6,
-      "partition_id": "bootstrap-v1/s5",
+      "limit": 10,
+      "partition_id": "bootstrap-v2/s5",
       "covered": [
         "preparation",
         "bounded technical review",
-        "preparation correction"
+        "preparation correction",
+        "paired initial independent judge turns"
       ],
-      "reserved_for_correction": 2
+      "reserved_for_correction": 2,
+      "carries_forward_partition": "bootstrap-v1/s5",
+      "carries_forward_all_usage_and_uncertainty": true,
+      "additional_units": 4
     }
   ],
   "sizing": {
@@ -96,5 +110,16 @@
     "financial_cap": "NOT_ESTABLISHED",
     "enforcement": "COORDINATION_ONLY; product AC-08 remains open"
   },
-  "issued_at": "2026-11-11T14:09:06.013020+00:00"
+  "issued_at": "2026-11-11T14:52:57.305Z",
+  "supersedes": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "amendment": {
+    "reason": "S5-S1-02 requires both initial judges plus protected corrections; S3 preparation reconciliation requested by S5. Additive capacity only; no uncertain units released.",
+    "request_commit": "13289d8c4aa1bd82a128e171cbc042ba1827c76b",
+    "request_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/integration-feedback-004.json",
+    "acceptance": "Recipient records consumption of this exact revision before spending added units. No transfer from another session."
+  }
 }
