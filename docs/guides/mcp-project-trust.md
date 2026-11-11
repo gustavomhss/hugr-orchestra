@@ -58,3 +58,9 @@ The server refuses a folder that does not exist, a file, a relative path and the
 ```
 
 Only the global config counts. A `trusted_projects` entry in a project's own config is ignored, so a repository cannot approve itself.
+
+## Saved MCP settings
+
+Adding or updating a server preserves its OAuth choice, including explicit `false`, client details, scopes, callback settings and startup/request timeouts when the project is opened again. Legacy numeric timeouts still mean a request timeout in milliseconds. Saving both timeouts writes an object with `startup` and `request` fields.
+
+Switching between local and remote transport removes fields exclusive to the previous transport. Fields you did not edit, including environment references and comments, remain in place.
