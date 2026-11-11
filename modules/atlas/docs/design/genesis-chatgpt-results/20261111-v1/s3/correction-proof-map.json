@@ -1,0 +1,70 @@
+{
+  "schema": "genesis-s3-proof-renewal-map/v1",
+  "campaign": "20261111-v1",
+  "current_candidate_revision": null,
+  "executed_recovery_proofs_to_reuse": [],
+  "rules": "Bind each renewed observation to exact inputs/code/recipe/contracts/authority. Reuse historical evidence only after explicit relevant-equivalence verification. Do not replay model requests with uncertain outcome.",
+  "changes": [
+    {
+      "finding": "S3-ENV-01",
+      "changed_surface": "Copied node_modules/@c4312/scip/package.json through existing postinstall",
+      "renewed": [
+        {
+          "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/runtime/runtime-build-corrected.json",
+          "sha256": "4da7203e1f818a08335d32a65b4824696f5bf5c3cc70670912b2753aa979ab54"
+        },
+        {
+          "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/runtime/operational-bootstrap-read.json",
+          "sha256": "d04a9fd608d294a6195deb45c37143f3aa454f023eca38b8edb5f46bc7e25729"
+        }
+      ],
+      "status": "OBSERVED_CORRECTED",
+      "scope": "Baseline runtime preparation only"
+    },
+    {
+      "finding": "S3-B06",
+      "changed_surface": "S1 handoff protocol digest",
+      "renewed": [
+        {
+          "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/dependencies/cycle2-binding-verification.json",
+          "sha256": "df6354794118580c5aba1f0936189639221b1b86a58a9708efa5593de2c40d57"
+        }
+      ],
+      "status": "OBSERVED_CORRECTED",
+      "scope": "Dependency binding, not scope/semantic admission"
+    },
+    {
+      "finding": "S3-ROLLBACK-01",
+      "changed_surface": "Governed ownership emit and focused publication regression proposed to S5",
+      "primary_cases": [
+        "S3-R01",
+        "S3-R02",
+        "S3-ACT-02"
+      ],
+      "conditional_cases": [
+        "S3-ACT-01",
+        "S3-ACT-03",
+        "S3-R03",
+        "S3-R04"
+      ],
+      "condition": "Include conditional cases only when the integrated decision, claim receipt or selected manifest/input bindings change their oracle; S5 records the exact invalidation map.",
+      "status": "NOT_RUN",
+      "new_claim_allowed_now": "Proposed refusal only; no compatible rollback success"
+    },
+    {
+      "finding": "S3-RESUME-01",
+      "changed_surface": "Producer/rebuild durable completion and decision selection, pending S2/S5 design",
+      "primary_cases": [
+        "S3-RESUME-01",
+        "S3-RESUME-02",
+        "S3-REBUILD-FAIL-01"
+      ],
+      "status": "NOT_RUN",
+      "new_claim_allowed_now": "Gap documented; no restore implementation or proof"
+    }
+  ],
+  "two_judge_delta_review": "Both persistent S5 judges assess changed criteria on the same new candidate; no previous approval is silently rebound."
+}
