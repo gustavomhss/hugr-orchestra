@@ -107,6 +107,12 @@ jobs:
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
         run: |
+          # GitHub's image points apt at azure.archive.ubuntu.com through apt-mirrors.txt. That name
+          # stops resolving for minutes. The public archive is the fallback, before the first fetch.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's/azure\.archive\.ubuntu\.com/archive.ubuntu.com/g' /etc/apt/apt-mirrors.txt
+          fi
+          sudo find /etc/apt -type f \( -name '*.sources' -o -name '*.list' -o -name 'sources.list' \) -exec sed -i 's/azure\.archive\.ubuntu\.com/archive.ubuntu.com/g' {} +
           sudo apt-get update -qq
           sudo apt-get install -y -qq bubblewrap socat
           # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
