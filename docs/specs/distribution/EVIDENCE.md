@@ -142,3 +142,9 @@ Release order: `release-cli.yml` publishes the npm packages first and creates th
 [Distribution bundle 43086767454](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43086767454) completed successfully at `bc1c5aaad7fb86ff338ea054f1c52a4c1f4cf2c7`: static checks plus all ten qualification jobs passed, including Windows x64/ARM64, macOS ARM64/Intel, Linux x64/ARM64 and both musl lanes. This receipt qualifies that SHA only.
 
 Recovery inspected `dev` at `107669604c022e71c35ad9e8250abfcc8533b719`. That newer tree and the separately reviewed transcript, snapshot and desktop-cache candidates are not qualified by the earlier bundle. Their focused hosted checks must complete before integration; the app change also requires a production benchmark comparison. A queued run without executed jobs is infrastructure state, not a passing test.
+
+Focused recovery receipts, recorded separately from distribution qualification:
+
+- [App regressions 43099525521](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43099525521) passed on Linux and Windows at uploaded snapshot `a9fbefc6005028941e8899493387617dabcebd5d`, from transcript candidate `47bc5027894fa7024e7edb7acb83962500f25c84`.
+- [Production benchmark baseline 43099161205](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43099161205) passed six cases at uploaded snapshot `fd83b6d45e86069ff6fd56ad9222df4b04f396d4`, from baseline `107669604c022e71c35ad9e8250abfcc8533b719`. The candidate comparison remains pending; the baseline alone establishes no performance improvement.
+- [Combined typecheck 43100304577](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43100304577) passed for `@orchestra/app`, `@orchestra/core` and `@orchestra/desktop` at integration rehearsal `78ad45b360f173418f21aa80f8e7d23f19b14be1`. This is type evidence for that composition, not distribution, runtime or production admission.
