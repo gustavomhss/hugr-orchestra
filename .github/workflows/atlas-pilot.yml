@@ -4,7 +4,7 @@ name: atlas-pilot
 on:
   workflow_dispatch:
   push:
-    branches: ["pilot-check-*"]
+    branches: ["pilot-check-*", "genesis-fresh-s4"]
     paths:
       - ".github/workflows/atlas-pilot.yml"
       - "modules/atlas/**"
