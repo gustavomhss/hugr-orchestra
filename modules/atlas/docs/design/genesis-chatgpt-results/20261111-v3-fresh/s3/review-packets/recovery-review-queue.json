@@ -1,0 +1,84 @@
+{
+  "schema": "s3-recovery-review-queue/v1",
+  "recorded_at": "2026-11-11T18:38:49.241371+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "persistent_judge_roles": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "current_availability": "UNAVAILABLE_IN_CURRENT_RECOVERY_INTERFACE",
+  "invariants": [
+    "Each judge reads the frozen oracle, candidate bodies and cited predecessor evidence independently.",
+    "The orchestrator does not prefill verdicts and a principal/static validation is not a judge decision.",
+    "Any material correction invalidates both decisions and requires both judges to review the corrected bytes.",
+    "A later layer is released only after both persistent judges accept the predecessor."
+  ],
+  "queue": [
+    {
+      "order": 1,
+      "unit": "L2-all",
+      "oracle": "oracles/L2-all.json",
+      "candidates": [
+        "bodies/l2-maestro.md",
+        "bodies/l2-relay.md",
+        "bodies/l2-integrations.md"
+      ],
+      "support": [
+        "evidence/L2-static-validation.json",
+        "receipts/L2-all/recovery-producer.json"
+      ],
+      "required_outcome": "two independent ACCEPT decisions on exact candidate hashes",
+      "on_failure": "correct candidates, persist new immutable revisions and re-run both judges",
+      "unlocks": "L3 review"
+    },
+    {
+      "order": 2,
+      "unit": "L3-flows",
+      "oracle": "oracles/L3-flows.json",
+      "candidates": [
+        "bodies/l3-flows.md"
+      ],
+      "required_precondition": "L2-all accepted by both persistent judges",
+      "required_outcome": "two independent ACCEPT decisions on exact candidate hash",
+      "on_failure": "correct candidate and re-run both judges",
+      "unlocks": "L4 review"
+    },
+    {
+      "order": 3,
+      "unit": "L4-ownership",
+      "oracle": "oracles/L4-ownership.json",
+      "consumer_oracle": "oracles/ownership-cases.json",
+      "candidates": [
+        "bodies/l4-entry.md",
+        "bodies/l4-ownership.md",
+        "bodies/l4-maintenance.md",
+        "bodies/l4-operational.md"
+      ],
+      "required_precondition": "L3-flows accepted by both persistent judges",
+      "required_outcome": "two independent ACCEPT decisions for every exact candidate hash",
+      "on_failure": "correct affected candidate set and re-run both judges",
+      "unlocks": "native package finalization and runtime import/binding/publication/index/read/consumer"
+    },
+    {
+      "order": 4,
+      "unit": "runtime-and-consumer",
+      "required_precondition": "all 11 artifact keys accepted and native package complete",
+      "steps": [
+        "finalize native-package.json with immutable accepted revisions",
+        "import through S4 runtime contract",
+        "prove binding and publication",
+        "prove index and read for required keys",
+        "run isolated consumer cases S3-C1 through S3-C7",
+        "persist results, costs and unknowns",
+        "complete handoff only after gates pass"
+      ]
+    }
+  ],
+  "observability": {
+    "tokens": "UNKNOWN",
+    "physical_calls": "UNKNOWN",
+    "cost": "UNKNOWN"
+  },
+  "status": "WAITING_FOR_INDEPENDENT_JUDGES"
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "s3-recovery-candidate-state/v1",
+  "recorded_at": "2026-11-11T18:38:49.241371+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "branch": "genesis-fresh-s3",
+  "branch_head_parent": "84a3e82e7aa22fb7f7cadca4740d97842e0e5c92",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "release_state": "BLOCKED_PRECONDITION",
+  "preconditions": {
+    "L1": "persisted-and-accepted-by-original-persistent-pair",
+    "L2": "persisted-reconstructed-not-independently-judged",
+    "L3": "candidate-only-until-L2-accepted",
+    "L4": "candidate-only-until-L3-accepted"
+  },
+  "artifacts": [
+    {
+      "key": "s3-l3-flows",
+      "path": "bodies/l3-flows.md",
+      "byte_length": 10977,
+      "sha256": "fe0d8617ecb2039ef92d08b59c9e98974f1f3ee0166af57e281d56ef0552ff9b",
+      "state": "CANDIDATE_UNRELEASED"
+    },
+    {
+      "key": "s3-l4-entry",
+      "path": "bodies/l4-entry.md",
+      "byte_length": 5187,
+      "sha256": "43dfa1d4d82c7072c911f8e28e6abecce9686f0dea1be7d19077f3d2c27de871",
+      "state": "CANDIDATE_UNRELEASED"
+    },
+    {
+      "key": "s3-l4-ownership",
+      "path": "bodies/l4-ownership.md",
+      "byte_length": 5914,
+      "sha256": "6c27da488bf8a376b0153150b59584766abd2a8c420910ec9ed542b8c2d4bfa3",
+      "state": "CANDIDATE_UNRELEASED"
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "path": "bodies/l4-maintenance.md",
+      "byte_length": 6783,
+      "sha256": "2124c96e9f36c7860aacec3d89e5d6ca2ce744e3e5a9e55a754aeaeb9e78ae68",
+      "state": "CANDIDATE_UNRELEASED"
+    },
+    {
+      "key": "s3-l4-operational",
+      "path": "bodies/l4-operational.md",
+      "byte_length": 6401,
+      "sha256": "6533af7e862236381678ba9cbcd70a5b4691e53615ea49b6ee3ad3acb6125add",
+      "state": "CANDIDATE_UNRELEASED"
+    }
+  ],
+  "historical_chat_assertions": {
+    "reported": "The previous session reported L2 and L3 accepted by both persistent judges and L4 dispatched.",
+    "durability": "The complete L2/L3 bodies and their two judge decisions were not found in the branch, refs, workflow artifacts or recoverable session handles.",
+    "use": "The report is retained as recovery context only and is not used as release, acceptance or runtime evidence."
+  },
+  "recovered_review_findings": {
+    "display_name_precedence": "Implemented from pinned source: labelEnv, else agent.<id>.name, else roster default; an invalid selected value returns the roster default instead of falling through to the lower-priority source.",
+    "direct_l1_evidence_routes": "Implemented in l4-entry as navigation-only routes to bodies, acceptance, source/coverage receipts and persistent L1 judgments.",
+    "six_dependency_audit": "The old session reported six dependency removals, but the exact set was not durable. The reconstruction declares only minimal build/semantic dependencies and labels all direct evidence links as navigation; it does not claim exact reproduction of the unavailable list."
+  },
+  "execution_capabilities_observed": {
+    "github_actions_runs_for_branch": 0,
+    "commit_statuses_at_l2_head": 0,
+    "desktop_commander_device": "offline",
+    "synchronous_native_subagent_or_judge_handle": "not exposed to this recovery session",
+    "atlas_genesis_workflow": "available but semantically scoped to atlas-mine candidate judging, not S3 artifact review"
+  },
+  "runtime": {
+    "product": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "native_import": "NOT_RUN",
+    "runtime_binding": "NOT_RUN",
+    "atlas_publication": "NOT_RUN",
+    "atlas_index_read": "NOT_RUN",
+    "independent_consumer": "NOT_RUN",
+    "cost": "UNKNOWN",
+    "physical_calls": "UNKNOWN"
+  },
+  "acceptance": "NOT_JUDGED"
+}
