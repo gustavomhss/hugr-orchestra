@@ -1,0 +1,1 @@
+{"package":"core","packageSelector":"packages/core","directory":"packages/core","runner":"bun","args":["./test/session-runner-snapshot-overlap.test.ts","test/session-runner-snapshots.test.ts","--timeout","120000"],"env":{}}

@@ -201,6 +201,22 @@ describe("review route", () => {
     expect(release.tier).toEqual({ id: "standard", source: "catalog", requested: "deep", signals: [] })
   })
 
+  test("standard routes syft when a named lockfile changes and quick does not", () => {
+    const lockBase = { files: ["bun.lock"] }
+    const lockHead = {
+      files: ["bun.lock"],
+      changes: [{ path: "bun.lock", added: [{ line: 1, text: "{}" }], removed: 0 }],
+    }
+    const settings = { acceptedUnavailable: [] }
+    expect(ReviewRoute.route({ stage: "code", tier: "standard", settings }, lockBase, lockHead, catalog).packs).toContainEqual({ id: "syft", source: "catalog", lane: "no-build", status: "routed" })
+    expect(ReviewRoute.route({ stage: "code", tier: "quick", settings }, lockBase, lockHead, catalog).packs.some((pack) => pack.id === "syft")).toBe(false)
+    const nested = ReviewRoute.route({ stage: "code", tier: "standard", settings }, { files: ["apps/desktop/yarn.lock"] }, {
+      files: ["apps/desktop/yarn.lock"],
+      changes: [{ path: "apps/desktop/yarn.lock", added: [{ line: 1, text: "#" }], removed: 0 }],
+    }, catalog)
+    expect(nested.packs).toContainEqual({ id: "syft", source: "catalog", lane: "no-build", status: "routed" })
+  })
+
   test("an explicit pr request uses pr and the same lenses as code", () => {
     const governed = ReviewRoute.route(code, owner.base, owner.head, catalog)
     const pr = ReviewRoute.route({ ...code, profile: "pr" }, owner.base, owner.head, catalog)

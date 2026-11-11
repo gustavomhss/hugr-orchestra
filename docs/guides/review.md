@@ -160,6 +160,8 @@ If `shellcheck` or `hadolint` is already installed, Standard or Deep runs it on 
 
 When a lockfile changes, Standard or Deep runs pinned osv-scanner 2.7.1 as `scan source -r` with `--offline` in the scratch copy. It does not download that database, and it does not run `fix`. The host refreshes it outside the review with `orchestra toolkit osv`, which runs `osv-scanner --offline-vulnerabilities --download-offline-databases` against a host directory, not the review copy. A missing database is recorded as `not run: osv advisory database absent` and does not block approval. When the database is present, the card states its age. Quick does not run the scan. On a machine that is not the qualified Linux x64 runtime the card records that and does not block approval. A missing pin on Linux still does.
 
+The same lockfile change also runs pinned syft 1.57.1 as `scan dir:<copy> --base-path <copy> -o syft-json`. It does not enrich, and it does not scan an image or a registry. The result is an SBOM kept as an artifact, not a finding. Quick does not run it. On a machine that is not the qualified Linux x64 runtime the card records that and does not block approval. A missing pin on Linux still does.
+
 The same review runs pinned staticcheck 2026.2.2 and pinned gosec 2.30.0 on those packages. The host names both binaries. staticcheck gets no flag. gosec gets only `-fmt sarif` and an output path in the copy. It does not send findings to an external service. On a machine that is not the qualified Linux x64 runtime the card records that and does not block approval. A missing pin on Linux still does.
 
 A Go concurrency candidate can be probed with `go test -race` in the scratch copy. The host fixes that command. The verifier reads the result from the race proof leaf and does not name the command. It does not install Go. A missing Go is unavailable, and approval waits until that check is listed in `review.acceptedUnavailable` or Go is present. Other languages are not offered that probe, because they have no race detector in the catalog. Mutants, interleave and property still do not run.
@@ -175,6 +177,16 @@ card cites `typecheck.yml` instead, and that citation does not block approval. A
 - **Per project**: set the project's review tier (`review.tier`, in the board project settings) to `quick` or `standard`.
 
 The order is: the request's tier, else the project pin, else the risk rule above.
+
+## Languages and packs
+
+The host picks the pack from the changed files. The reader does not choose the command.
+
+A pinned pack is fetched and checked by hash. The licences that may be pinned are MIT, BSD, Apache-2.0, ISC and MPL.
+
+GPL and AGPL tools are not bundled. If one is already installed, the host may run it. A missing one is recorded as `not run: <tool> absent` and does not block approval. `shellcheck` and `hadolint` are the examples.
+
+A raw hit from a rule on probation is a candidate. It is not, by itself, a confirmed defect. The card keeps that label.
 
 ## The host routes, the model judges
 
