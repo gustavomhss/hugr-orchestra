@@ -1,0 +1,98 @@
+{
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "s5",
+  "execution_id": "40bacfb3-0f05-4d4c-b045-0b7cf449e2ad",
+  "branch": "genesis-fresh-s5",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "observed_branch_head_before_seal": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
+  "candidate_revision": null,
+  "artifact_revision": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json",
+    "byte_length": 6180,
+    "sha256": "96cbf4a8711fff1a9b48fb0e64a960a3ecd985e75687ee9da001c930923194ca",
+    "validity": "blocked"
+  },
+  "work": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/work.md",
+    "byte_length": 7252,
+    "sha256": "cabc3fdc517f7814f5e892f6f0025fec2f91ba51aef6e8e33f66b8d721885f3f"
+  },
+  "ledger": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/execution-ledger.jsonl",
+    "byte_length": 2635,
+    "sha256": "78abe35b3c2adfff6e7cb1e5a7220542572e7fdfa8cc84cf2bce7a180e454f2d"
+  },
+  "judgments": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/judgments/s5-l1/review-a-hold.json",
+      "sha256": "71eb2aee4bfb4cdf4ec4c631014d385ada06a39581a19569fe6347636ef5b412",
+      "verdict": "HOLD",
+      "independent": false,
+      "binding": false,
+      "effect": "NONE"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/judgments/s5-l1/review-b-hold.json",
+      "sha256": "7393168f69f3d328ff70bbc97b51f621ef4fc54494f91e34a0d5feaffb2d170d",
+      "verdict": "HOLD",
+      "independent": false,
+      "binding": false,
+      "effect": "NONE"
+    }
+  ],
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "delivery_complete": false,
+  "local_obligations_open": [
+    "Expand byte-level source captures or reproduce the package through an isolated independent producer.",
+    "Prepare the exact package through the S4 runtime candidate and preserve the resulting candidate bytes.",
+    "Obtain two new persistent independent semantic decisions for the same exact package and criteria.",
+    "Correct all critical and major findings and obtain re-evaluation by the same judges.",
+    "Run candidate product tests and applicable GitHub Actions and preserve run evidence.",
+    "Obtain exact runtime binding decisions and governed publication, index and read receipts.",
+    "Run shallow, intermediate, deep and abstention consumer cases without source-tree fallback.",
+    "Reconcile the complete 927-entry population, roots, dependencies and accounting uncertainty.",
+    "Change validity from blocked only after all semantic and runtime prerequisites are true.",
+    "Produce a final payload and a new sealing handoff after local completion."
+  ],
+  "blockers": [
+    "No native subagent or persistent-judge dispatch tool is exposed in the recovered conversation.",
+    "No local repository checkout or Bun runtime is available.",
+    "The authorized Desktop Commander device is offline.",
+    "The GitHub connector cannot start the required new candidate workflows."
+  ],
+  "next_operation": {
+    "runtime_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "source_artifact_revision": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
+    "cwd": "modules/atlas in the S4 runtime tree",
+    "argv": [
+      "bun",
+      "scripts/genesis-native.ts",
+      "prepare",
+      "<S5_ISOLATED_SOURCE_ROOT>",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json",
+      "<NEW_S5_PREPARED_CANDIDATE_FILE>"
+    ],
+    "publication_allowed": false,
+    "reason": "The current package validity is blocked and has no actual independent binding decisions."
+  },
+  "global_integration": {
+    "owner": "root",
+    "status": "NOT_READY",
+    "reason": "Local semantic, runtime, CI and consumer obligations remain open."
+  },
+  "consumed_dependencies": [],
+  "observed_dependencies": [
+    {
+      "release_id": "20261111-v3-fresh-s4-r2",
+      "artifact_revision": "dce90698713d997bf9072707b51e26448a9c54a2",
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "status": "AVAILABLE_NOT_EXECUTED_BY_S5",
+      "note": "The S4 sample candidate and judgments are not reusable for S5."
+    }
+  ],
+  "supersedes": null
+}
