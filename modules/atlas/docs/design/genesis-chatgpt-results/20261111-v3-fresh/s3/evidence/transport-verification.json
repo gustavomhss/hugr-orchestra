@@ -1,0 +1,26 @@
+{
+  "status": "PASS_TRANSPORT_BYTES_AND_REFERENCES_ONLY",
+  "artifact_count": 3,
+  "required_count": 11,
+  "missing": [
+    "s3-l2-maestro",
+    "s3-l2-relay",
+    "s3-l2-integrations",
+    "s3-l3-flows",
+    "s3-l4-entry",
+    "s3-l4-ownership",
+    "s3-l4-maintenance",
+    "s3-l4-operational"
+  ],
+  "payload_references_checked": 66,
+  "distinct_payload_files": 58,
+  "package_sha256": "cd19bf501df6ec40386b812725d38747707c00609afd612212e4b6c16feb5f4a",
+  "does_not_prove": [
+    "semantic acceptance",
+    "runtime import",
+    "input versions",
+    "ownership.index/read",
+    "consumer performance",
+    "CI"
+  ]
+}

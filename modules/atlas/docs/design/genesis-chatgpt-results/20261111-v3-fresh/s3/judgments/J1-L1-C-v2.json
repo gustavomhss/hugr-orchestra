@@ -1,0 +1,68 @@
+{
+  "unit": "L1-C v2",
+  "judge": "J1",
+  "body_hash": "c348fbcdb07c7be3f3eebb4d8cb85d9ecb94b094f9e2e086f118298b8e956541",
+  "verdict": "PASS",
+  "scope": "Base estática L1; não aprova runtime, CI, publicação ou a campanha completa.",
+  "transport_correction": "Recebida a correção da §9: o backtick após suggestion era erro de transcrição. Avaliado o texto corrigido, mantendo o hash do arquivo informado.",
+  "criteria": [
+    {
+      "id": "C1/QS1",
+      "status": "PASS",
+      "location": "§§2–10; E01–E12 e recortes fornecidos",
+      "reason": "Fonte pinada e integridade identificadas. Código, prescrição documental, histórico e gaps são separados. A precedência Dock corrigida corresponde ao unshift dos denials antes das regras próprias."
+    },
+    {
+      "id": "C2/CC1",
+      "status": "PASS",
+      "location": "§1; §11.5; coverage",
+      "reason": "As sete macrofamílias somam 429 entradas. A classificação das 370 entradas sem leitura individual permanece explícita; membership não é apresentado como inspeção integral."
+    },
+    {
+      "id": "C3/CC2–3/GO-A1–3",
+      "status": "PASS",
+      "location": "§§2–9; §11",
+      "reason": "Identifica consumidores, contratos, geração, autoridade e lifetime, oferecendo pontos de aprofundamento sem fingir L2–L4 ou exigir sua execução antecipada."
+    },
+    {
+      "id": "C4/GO-I1,2,7/QS4",
+      "status": "PASS",
+      "location": "§§2–4,7–10",
+      "reason": "Preserva IDs, aliases somente de leitura, gerados e conflitos históricos. Distingue assets de capacidades instaladas, hooks de MCP, scanner de UI e charter de enforcement."
+    },
+    {
+      "id": "C5/GO-I8/QS5–6",
+      "status": "PASS",
+      "location": "Abertura; §§10–11; recibos fornecidos",
+      "reason": "23.970 bytes respeitam o teto. Captura, hashing e reconciliação são separados de testes, login, fornecedor e runtime; não há PASS operacional fabricado."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "location": "§7; capability-assets/README.md:9–27; sources.ts:29",
+      "reason": "32 entradas declarativas, destinos reservados, ausência de carregamento por seats e pendências de source qualification estão preservados; catálogo não equivale a capacidade pronta."
+    },
+    {
+      "id": "R2",
+      "status": "PASS",
+      "location": "§8; socket-transport.ts; application-tools.ts:134–178",
+      "reason": "E08 sustenta WebSocket loopback e token por lançamento do desktop; o corpo distingue receptor, canal condicionado ao ambiente, permissões e reaper por Session deletada."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "location": "§9; scan.ts; janitor/README.md:13–28",
+      "reason": "Scanner somente leitura, sem limpeza automática, estado em memória e sink fornecido pelo host. Existência de UI não é convertida em composição ativa comprovada."
+    },
+    {
+      "id": "R4",
+      "status": "PASS",
+      "location": "§§5–6; host.ts:38–42,158–164,574–593; sdk.ts:43–47",
+      "reason": "Gate depende de carga bem-sucedida da skill por Session; exceções não removem autorização. Preset claude_code e execução pelo runner estão sustentados, sem inferir execução observada."
+    }
+  ],
+  "required_findings": [],
+  "optional": []
+}

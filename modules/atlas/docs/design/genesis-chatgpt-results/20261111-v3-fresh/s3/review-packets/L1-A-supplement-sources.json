@@ -1,0 +1,114 @@
+[
+  {
+    "source_capture": "sources/modules/maestro/coordination/src/roster.ts",
+    "sha256": "5a75024571efbb7edcb37ea0b50c27174439f48c69c00fefe3caa16e3eea2627",
+    "git_blob_sha": "979ea02edc7ebe24c511d2511ca41518ec21df14",
+    "ranges": [
+      {
+        "start": 20,
+        "end": 29,
+        "text": "// Data written before the backend seat got its stable `backend` id carries its former id, which was the lowercased\n// default label. It is derived, never spelled, and only read: `canonicalMemberId` maps it to `backend` wherever a stored\n// or user-supplied member id enters, and every write uses `backend`.\nexport const LEGACY_BACKEND_ID = BACKEND_DEFAULT_LABEL.toLowerCase()\n\nexport function canonicalMemberId(id: string): string\nexport function canonicalMemberId(id: string | undefined): string | undefined\nexport function canonicalMemberId(id: string | undefined) {\n  return id === LEGACY_BACKEND_ID ? \"backend\" : id\n}\n"
+      },
+      {
+        "start": 49,
+        "end": 56,
+        "text": "  review: Object.freeze({\n    \"*\": \"deny\",\n    read: envRead(\"deny\"),\n    glob: \"allow\",\n    grep: \"allow\",\n    maestro_record_review: \"allow\",\n    external_directory: Object.freeze({ \"*\": \"deny\", [path.join(TRUNCATION_DIR, \"*\")]: \"allow\" } as const),\n  } as const),\n"
+      },
+      {
+        "start": 71,
+        "end": 83,
+        "text": "  direct: Object.freeze({\n    \"*\": \"deny\",\n    read: envRead(\"deny\"),\n    glob: \"allow\",\n    grep: \"allow\",\n    websearch: \"allow\",\n    webfetch: \"allow\",\n    live_look: \"allow\",\n    meeting_recall: \"allow\",\n    meeting_commitments: \"allow\",\n    team_message: \"allow\",\n    external_directory: Object.freeze({ \"*\": \"deny\", [path.join(TRUNCATION_DIR, \"*\")]: \"allow\" } as const),\n  } as const),\n"
+      },
+      {
+        "start": 101,
+        "end": 143,
+        "text": "export const nativeProfiles: Readonly<Record<string, NativeProfile>> = Object.freeze({\n  ...baseProfiles,\n  ...Object.fromEntries(Object.values(Seats.all).flatMap((seat) => {\n    const profile = seatProfile(seat)\n    return [[seat.id, profile], ...(seat.profileKey && seat.profileKey !== seat.id ? [[seat.profileKey, profile]] : [])]\n  })),\n})\n\n// Seat-specific grants extend the unchanged base. The root edit deny is worktree-relative and added by Agent.\nfunction seatProfile(seat: Seat): NativeProfile {\n  const root = SeatSkillRoot.roots[seat.id]\n  if (seat.skills.length > 0 && !root) throw new Error(`Missing native seat skill root: ${seat.id}`)\n  return Object.freeze({\n    ...baseProfiles[seat.profile],\n    ...Object.fromEntries((seat.mcp ?? []).map((server) => [`${server}_*`, \"allow\" as const])),\n    ...(seat.atlasMemory ? { atlas_context: \"allow\" as const, atlas_memory_recall: \"allow\" as const, atlas_memory_emit: \"allow\" as const } : {}),\n    ...(seat.id === \"archie\" ? {\n      atlas_context: \"allow\" as const,\n      archie_draft_workflow: \"allow\" as const,\n      maestro_arsenal_catalog: \"allow\" as const,\n      ...Object.fromEntries([\"maestro_arsenal_describe\", \"maestro_arsenal_execute\"].map((name) => [name, Object.freeze({\n        \"*\": \"deny\" as const,\n        ...Object.fromEntries(UpstreamArsenal.UPSTREAM_AUTHORING_OPERATIONS.map((operation) => [operation, \"allow\" as const])),\n      })])),\n    } : {}),\n    ...(seat.skills.length > 0 ? {\n      // A root opens its whole tree: every node below it is named `<root>-<path>`.\n      skill: Object.freeze({\n        \"*\": \"deny\" as const,\n        ...Object.fromEntries(seat.skills.flatMap((name) => [[name, \"allow\" as const], [`${name}-*`, \"allow\" as const]])),\n      }),\n      external_directory: Object.freeze({\n        ...(seat.profile === \"review\" ? baseProfiles.review.external_directory\n          : seat.profile === \"discovery\" ? baseProfiles.discovery.external_directory\n          : seat.profile === \"direct\" ? baseProfiles.direct.external_directory : { \"*\": \"deny\" as const }),\n        [path.join(root, \"*\")]: \"allow\" as const,\n        ...(SeatSkillRoot.shared && seat.skills.some((skill) => skill.startsWith(\"team-\"))\n          ? { [path.join(SeatSkillRoot.shared, \"*\")]: \"allow\" as const }\n          : {}),\n      }),\n    } : {}),\n  })\n}\n"
+      },
+      {
+        "start": 147,
+        "end": 149,
+        "text": "export function envRead<Action extends \"ask\" | \"deny\">(action: Action) {\n  return Object.freeze({ \"*\": \"allow\", \"*.env\": action, \"*.env.*\": action, \"*.env.example\": \"allow\" } as const)\n}\n"
+      }
+    ]
+  },
+  {
+    "source_capture": "agents/maestro-l1/sources/modules/maestro/coordination/src/v2/seats.ts",
+    "sha256": "4dd2acad909ce35909d82b3eac095a316c0f8695dd26ed0f9d627ea088641de6",
+    "git_blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+    "ranges": [
+      {
+        "start": 73,
+        "end": 126,
+        "text": "    yield* plugins.wait(PluginV2.ID.make(\"config-agent\"))\n    yield* plugins.ensure(pluginID, () =>\n      Effect.gen(function* () {\n        if (skillRoot) {\n          yield* skills.transform(MaestroSkillSourcesV2.seats({\n              ...skillRoot.SeatSkillRoot.roots,\n              ...(skillRoot.SeatSkillRoot.shared ? { team: skillRoot.SeatSkillRoot.shared } : {}),\n            }),\n          )\n          yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))\n        }\n        yield* agents.transform(\n          Effect.fn(function* (draft) {\n            const members = roster ? roster.roster.filter((member) => seats.has(member.memberId)) : []\n            for (const member of members) {\n              const id = AgentV2.ID.make(member.memberId)\n              const resolved = label(member.memberId, member.displayName, draft.get(id)?.name, draft.list())\n              if (resolved.problem)\n                yield* Effect.logWarning(\n                  `Invalid configuration ${resolved.path}: label ${resolved.problem}. Using \"${member.displayName}\".`,\n                )\n              draft.update(id, (agent) => {\n                const root = skillRoot?.SeatSkillRoot.roots[member.memberId]\n                const shared = Seats.all[member.memberId].skills.some((skill) => skill.startsWith(\"team-\"))\n                  ? skillRoot?.SeatSkillRoot.shared\n                  : undefined\n                agent.name = resolved.label\n                agent.system ??= roster?.renderPrompt(member, resolved.label)\n                agent.description ??= Seats.all[member.memberId].description\n                agent.mode = Seats.all[member.memberId].direct ? \"primary\" : \"subagent\"\n                agent.skills = carried.get(member.memberId)\n                agent.toolkit = Seats.all[member.memberId].toolkit\n                  ? \"backend\"\n                  : Seats.all[member.memberId].research\n                    ? \"research\"\n                    : undefined\n                agent.permissions.push(\n                  ...floor(roster?.nativeProfiles[member.memberId]),\n                  // A seat reads its own skill tree but never edits it; inside the Location it is ordinary source.\n                  ...[root, shared]\n                    .filter((dir) => dir !== undefined)\n                    .map((dir) => ({ action: \"edit\", resource: path.join(dir, \"*\"), effect: \"deny\" as const })),\n                )\n              })\n            }\n            draft\n              .list()\n              .forEach((agent) => draft.update(agent.id, (item) => item.permissions.push(...visibility(agent.id))))\n          }),\n        )\n      }),\n    )\n  }),\n)\n"
+      },
+      {
+        "start": 176,
+        "end": 185,
+        "text": "/** A roster profile (`{ action: effect | { resource: effect } }`) as V2 rules, in the profile's order. */\nexport function floor(\n  profile: Readonly<Record<string, RuleEffect | Readonly<Record<string, RuleEffect>>>> | undefined,\n) {\n  return Object.entries(profile ?? {}).flatMap(([action, value]) =>\n    typeof value === \"string\"\n      ? [{ action, resource: \"*\", effect: value }]\n      : Object.entries(value).map(([resource, effect]) => ({ action, resource, effect })),\n  )\n}\n"
+      },
+      {
+        "start": 224,
+        "end": 233,
+        "text": "/** The rules denying an agent the tools it may not use, other seats' skills and, unless it is Maestro, the playbooks. */\nexport function visibility(id: string): PermissionV2.Ruleset {\n  return [\n    ...owners\n      .filter((owner) => !owner.agents.includes(id))\n      .flatMap((owner) => owner.tools.map((tool) => ({ action: tool, resource: \"*\", effect: \"deny\" as const }))),\n    ...MaestroSkillSourcesV2.foreign(id),\n    ...(id === AgentV2.defaultID ? [] : MaestroSkillSourcesV2.denied),\n  ]\n}\n"
+      }
+    ]
+  },
+  {
+    "source_capture": "agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/caller.ts",
+    "sha256": "b615682563757c48c261f9ec342f5c34d9c58d51959e77bdc4ecd7801d1acf61",
+    "git_blob_sha": "fa962883aab5ee982da671d5983bd84cb1306324",
+    "ranges": [
+      {
+        "start": 13,
+        "end": 28,
+        "text": "export const check = Effect.fn(\"CallerGateV2.check\")(function* (\n  seats: MaestroSeats.Interface,\n  profiles: typeof nativeProfiles,\n  caller: string,\n  target: string,\n) {\n  if (!seats.has(caller)) return\n  // The profile's own order, as `MaestroSeatsV2.floor` reads it; importing that here would make `seats.ts` a cycle.\n  const rules = Object.entries(profiles[caller] ?? {}).flatMap(([action, value]) =>\n    typeof value === \"string\"\n      ? [{ action, resource: \"*\", effect: value }]\n      : Object.entries(value).map(([resource, effect]) => ({ action, resource, effect })),\n  )\n  if (PermissionV2.evaluate(\"task\", target, rules).effect !== \"deny\") return\n  return yield* new ToolFailure({ message: `Task denied: ${caller} may not start ${target}` })\n})\n"
+      }
+    ]
+  },
+  {
+    "source_capture": "sources/packages/core/src/permission.ts",
+    "sha256": "19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6",
+    "git_blob_sha": "2e3d29d3f1ec1fe805d21af091029721c9fa738e",
+    "ranges": [
+      {
+        "start": 78,
+        "end": 91,
+        "text": "    rulesets\n      .flat()\n      .findLast((rule) => Wildcard.match(action, rule.action) && Wildcard.match(resource, rule.resource)) ?? {\n      action,\n      resource: \"*\",\n      effect: \"ask\",\n    }\n  )\n}\n\nexport function merge(...rulesets: Permission.Ruleset[]): Permission.Ruleset {\n  return rulesets.flat()\n}\n\n"
+      },
+      {
+        "start": 176,
+        "end": 193,
+        "text": "        sessionID: input.sessionID,\n        action: input.action,\n        resources: input.resources,\n        ...(explicit || input.save === undefined ? {} : { save: input.save }),\n        ...(input.metadata === undefined ? {} : { metadata: input.metadata }),\n        ...(input.source === undefined ? {} : { source: input.source }),\n      }\n    }\n\n    const create = (request: Request, agent?: AgentV2.ID, explicit = false) =>\n      EffectRuntime.uninterruptible(\n        EffectRuntime.gen(function* () {\n          const deferred = yield* Deferred.make<void, DeclinedError | CorrectedError>()\n          const item = { request, agent, deferred, explicit }\n          if (pending.has(request.id)) return yield* EffectRuntime.die(`Duplicate pending permission ID: ${request.id}`)\n          pending.set(request.id, item)\n          yield* events\n            .publish(Event.Asked, request)\n"
+      }
+    ]
+  },
+  {
+    "source_capture": "agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance.ts",
+    "sha256": "7ab5f454b0443a311f8671b4153d64f83f0d9f18997d913d166911823757885c",
+    "git_blob_sha": "acab0bd78caa6e4810b08a2fbabf9bc9ff437ba7",
+    "ranges": [
+      {
+        "start": 87,
+        "end": 92,
+        "text": "  // The roster loads lazily (see `seats.ts`); where it cannot load no agent is a seat, so no profile is read.\n  const rosterModule = yield* Effect.tryPromise(() => import(\"../roster\")).pipe(Effect.option)\n  const profiles = rosterModule._tag === \"Some\" ? rosterModule.value.nativeProfiles : {}\n  const canonical = (id: string): string => (rosterModule._tag === \"Some\" ? rosterModule.value.canonicalMemberId(id) : id)\n  const services = { db: database.db, store, events, canonical, allowances, location, atlas: { config, git, fs, skills } }\n  const seatOf = (id: string) => (seats.has(canonical(id)) ? Seats.all[canonical(id)] : undefined)\n"
+      },
+      {
+        "start": 390,
+        "end": 410,
+        "text": "  // A child's first provider turn: its reservation is revalidated or consumed, and a strict-resume seat binds its task.\n  function firstTurn(session: SessionSchema.Info) {\n    return Effect.gen(function* () {\n      const dispatch = session.id.startsWith(GovernanceDispatchV2.CHILD_PREFIX)\n      const governed = session.id.startsWith(GovernanceReservationV2.CHILD_PREFIX)\n      if (dispatch) yield* revalidateDispatch(session.id)\n      if (governed) yield* GovernanceReservationV2.consume(services, session.id)\n      const member = canonical(session.agent ?? AgentV2.defaultID)\n      if (!seatOf(member)?.strictResume && !(yield* WorkflowGateV2.bound(database, session.id))) return\n      const authority = yield* SessionAuthority.make(store.get)(session.id, session.projectID).pipe(\n        Effect.mapError((error) => new ToolFailure({ message: `Task binding denied: ${error.reason}` })),\n      )\n      yield* LogicalTaskV2.ensure(services, {\n        executionSessionID: session.id,\n        authoritySessionID: authority.rootID,\n        projectID: session.projectID,\n        memberID: member,\n        ...LogicalTaskV2.origin(dispatch || governed ? session.id : undefined, governed),\n      })\n    })\n  }\n"
+      }
+    ]
+  },
+  {
+    "source_capture": "agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/logical-task.ts",
+    "sha256": "213030fb802670a0fd44379ead1fdf6e1c701e82a61087cf0ecc5728a79d6672",
+    "git_blob_sha": "16f5d28adbc75a8b08f2e33aadba13413cf59b52",
+    "ranges": [
+      {
+        "start": 34,
+        "end": 75,
+        "text": "/**\n * Bind the execution Session to its logical task, once. Re-binding with the same fields returns the stored binding;\n * any different binding on the same Session fails `task-binding-mismatch`. Without `taskId` the host generates one.\n */\nexport const ensure = Effect.fn(\"LogicalTaskV2.ensure\")(function* (\n  services: Services,\n  input: {\n    executionSessionID: string\n    authoritySessionID: string\n    projectID: string\n    memberID: string\n    source: Source\n    taskId?: string\n  },\n) {\n  if (input.source === \"user\" && !USER_TASK_ID.test(input.taskId ?? \"\")) return yield* denied(\"binding\", \"task-id-invalid\")\n  const existing = yield* readStored(services, input.executionSessionID)\n  if (existing) return yield* reconcile(services, existing, input)\n  const authority = yield* SessionAuthority.make(services.store.get)(input.executionSessionID, input.projectID).pipe(\n    Effect.mapError((error) => denied(\"binding\", error.reason)),\n  )\n  if (input.authoritySessionID !== authority.rootID) return yield* denied(\"binding\", \"task-authority-mismatch\")\n  const binding = {\n    taskId: input.taskId ?? `tsk_${ascending()}`,\n    projectID: input.projectID,\n    memberID: input.memberID,\n    executionSessionID: input.executionSessionID,\n    authoritySessionID: authority.rootID,\n    source: input.source,\n  }\n  return yield* services.events.publish(MaestroEvent.Task.Bound, binding, { id: eventID(input.executionSessionID) }).pipe(\n    Effect.map((event) => event.data),\n    // A concurrent bind of the same Session won the insert: the stored binding decides.\n    Effect.catchCause((cause) =>\n      Effect.gen(function* () {\n        const stored = yield* readStored(services, input.executionSessionID)\n        if (!stored) return yield* Effect.failCause(cause)\n        return yield* reconcile(services, stored, input)\n      }),\n    ),\n  )\n})\n"
+      }
+    ]
+  }
+]

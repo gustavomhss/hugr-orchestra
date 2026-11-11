@@ -1,0 +1,27 @@
+{
+  "phase": "L2",
+  "frozen_at": "2026-11-11T17:00:17.863812+00:00",
+  "producer_tasks": [
+    "L2-A",
+    "L2-B",
+    "L2-C"
+  ],
+  "max_body_bytes_each": 14000,
+  "judges": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "native_calls_planned": {
+    "production": 3,
+    "review": 2,
+    "correction": "as required by findings only"
+  },
+  "consumer_reserve": 7,
+  "release_condition": "both judges pass all L1 first",
+  "paid_calls": 0,
+  "observability": {
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "cost": "UNKNOWN"
+  }
+}

@@ -1,0 +1,19 @@
+[
+  {
+    "operation": "GitHub get dev ref",
+    "observed": "97a7ebb36cff18fdad299eee53cd8ed0e9b66f91"
+  },
+  {
+    "operation": "compare dev to baseline",
+    "status": "diverged",
+    "ahead_by": 221,
+    "behind_by": 947,
+    "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249"
+  },
+  {
+    "operation": "S4 runtime-release discovery",
+    "attempts_observed": 2,
+    "result": "404 NOT_FOUND",
+    "consequence": "runtime-dependent proofs remain pending; independent native queue continues"
+  }
+]

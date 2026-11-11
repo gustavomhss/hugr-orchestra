@@ -1,0 +1,74 @@
+{
+  "unit": "L1-C",
+  "state": "L1_PRODUCED_FOR_REVIEW",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "bdac971f-e4ee-40e5-ad9b-30d659303bab",
+  "files": {
+    "body.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/body.md",
+      "bytes": 23971,
+      "sha256": "2d2f5a1f64167d791f793e92b855c5c71facdd09e227b30a122eb22185c81ba4"
+    },
+    "review-evidence.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/review-evidence.md",
+      "bytes": 15879,
+      "sha256": "3a9fa1ef571e1b80c247e3c42451b3d362949b21f9642a08b10c9db9c5ff944c"
+    },
+    "sources.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/sources.json",
+      "bytes": 87627,
+      "sha256": "3e659688f4bcb86bc957c76f380d6eb3b82f589b001f2ac21d4e1fbc01be762c"
+    },
+    "coverage.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/coverage.json",
+      "bytes": 438017,
+      "sha256": "b206d7a9d970c135c3aca9a0b3531fb22c7ffc14d5a7f4d9fb06e5335ac5dc39"
+    },
+    "findings.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/findings.md",
+      "bytes": 11925,
+      "sha256": "f65548f0fa53777fef7fd55522a37894c60e56ef1c2d58c729a31fde222fa052"
+    },
+    "request.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/request.md",
+      "bytes": 2487,
+      "sha256": "c167f9e4c04fa559f1e6e4271c002a7e03548ad2fc0b7f03faf08ea67bdea7b7"
+    },
+    "request-followup.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/request-followup.md",
+      "bytes": 700,
+      "sha256": "1a6b8d3ed1a53db32a01a6b08598fc8ca3ddeb9b2800a71ed9fbbc2898df044c"
+    },
+    "verification.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/verification.json",
+      "bytes": 1095,
+      "sha256": "55fd9e953408bf6c2a692ff767320f005e0501b62252dc3e46bce66ae3dfa55a"
+    },
+    "review-bindings.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/review-bindings.json",
+      "bytes": 11197,
+      "sha256": "cbab82feb9267e26727022591e62aed95b48311f1964534763afc39242bfe0e4"
+    },
+    "captures-index.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-index.json",
+      "bytes": 82458,
+      "sha256": "2bddbb08240ae7ecef95698d91231d25d47ec50bcc1ad264c5d100cd68c54b20"
+    },
+    "capture-errors.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/capture-errors.json",
+      "bytes": 814,
+      "sha256": "f604a4b323d81819ff9ef3f428be261676f3bb4ec9694c2e5541b9c3510f6626"
+    },
+    "capture-errors-05.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/capture-errors-05.json",
+      "bytes": 830,
+      "sha256": "aff43c28bd636f76597b5a089f9a3c52e8618d5f840f595a52a2fb8373a26db9"
+    },
+    "response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/response.md",
+      "bytes": 7927,
+      "sha256": "829beb55bcc3f924dc508736ef858371157f2c466839f5cfb723c3327d45b463"
+    }
+  }
+}

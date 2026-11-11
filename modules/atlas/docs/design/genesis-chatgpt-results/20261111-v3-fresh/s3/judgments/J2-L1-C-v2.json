@@ -1,0 +1,70 @@
+{
+  "unit": "L1-C v2",
+  "body_hash": "c348fbcdb07c7be3f3eebb4d8cb85d9ecb94b094f9e2e086f118298b8e956541",
+  "verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "C1",
+      "status": "PASS",
+      "location": "Cabeçalho; §§2–10",
+      "reason": "Proveniência pinada e distinções entre código, intenção, histórico e inferência preservadas. A descrição corrigida de scope respeita a ordem das regras, sem exclusividade absoluta de linux."
+    },
+    {
+      "id": "C2",
+      "status": "PASS",
+      "location": "§1; §11.5; coverage",
+      "reason": "As sete macrofamílias somam 429 entradas. Reconciliação fornecida preserva membership, classificação e profundidade; 370 entradas sem leitura individual não são apresentadas como lidas."
+    },
+    {
+      "id": "C3",
+      "status": "PASS",
+      "location": "§§2–11",
+      "reason": "Mapa útil de consumidores, identidades, empacotamento, execução e lifetime; separa capacidades declaradas de disponibilidade e fornece contratos para aprofundamento posterior."
+    },
+    {
+      "id": "C4",
+      "status": "FIX-FIRST",
+      "location": "§8, Entrada",
+      "reason": "Fronteiras e gerados estão preservados, mas o canal Dock omite dois elementos obrigatórios de R2: WebSocket loopback e token por lançamento."
+    },
+    {
+      "id": "C5",
+      "status": "PASS",
+      "location": "§§6–7, 9–11",
+      "reason": "Não infere execução, login, aquisição de engine, integração ativa ou aceitação live. Capturas/hashes não viram testes. Os 23970 bytes declarados respeitam 24000."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "reason": "32 entradas classificadas como dados; destinos provider/native reservados; source qualification pendente; ausência de carregamento por seats explicitada."
+    },
+    {
+      "id": "R2",
+      "status": "FIX-FIRST",
+      "reason": "Desktop main, canal ausente por default fora do desktop e envio de linux.session.close na deleção estão presentes. Faltam loopback WebSocket e token por lançamento no corpo."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "reason": "Scanner somente leitura, sem limpeza; estado do módulo em memória, sink externo e ausência de composição ativa comprovada claramente separados do store da UI."
+    },
+    {
+      "id": "R4",
+      "status": "PASS",
+      "reason": "Gate depende de carregamento bem-sucedido pelo MCP Orchestra, por Session; exceções Arsenal/workflows não concedem autoridade. Preset claude_code, turn.execute e ausência de execução de fornecedor estão explícitos."
+    }
+  ],
+  "required_findings": [
+    {
+      "id": "F1",
+      "criterion": "C4/R2",
+      "location": "§8, Entrada",
+      "expected": "Descrever o canal entregue pelo desktop como WebSocket loopback com token por lançamento.",
+      "observed": "O corpo menciona URL, token, Bearer e receptor desktop, mas omite transporte/localidade e lifetime do token; socket-transport.ts fornecido declara ambos.",
+      "correction": "Substituir “o socket envia Bearer. O receptor pertence a `apps/desktop/src/main`, não ao módulo.” por “o WebSocket loopback usa token por lançamento e Bearer; o receptor está em `apps/desktop/src/main`.” Reconferir o teto de bytes após a troca."
+    }
+  ],
+  "optional": []
+}

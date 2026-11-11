@@ -1,0 +1,61 @@
+{
+  "unit": "L1-B v1",
+  "judge": "J1",
+  "body_hash": "660d39c4a3f140f86af31d84369e44835abab6e9b26136439d07eb702f63a528",
+  "verdict": "PASS",
+  "scope": "Base estática L1. Não constitui PASS de runtime, CI, L2–L4 ou da campanha completa.",
+  "criteria": [
+    {
+      "id": "C1/QS1",
+      "status": "PASS",
+      "location": "§§1–7; evidências exatas; complemento README.md:85–98,110–117",
+      "reason": "Fonte e integridade identificadas. O complemento confirma os contratos críticos de auditoria e hook; os trechos de código corroboram limites e ordenação. Não há contradição material demonstrada."
+    },
+    {
+      "id": "C2/CC1",
+      "status": "PASS",
+      "location": "§2; §7 Cobertura e profundidade; reconciliação fornecida",
+      "reason": "3.330 goldens + 66 fixtures + 304 demais paths reconciliam 3.700. Famílias, disposição e profundidade são preservadas; o lote não se apresenta como fechamento independente de S3."
+    },
+    {
+      "id": "C3/CC2–3/GO-A1–3",
+      "status": "PASS",
+      "location": "§§2–6; Uso desta base",
+      "reason": "Mapa de portas, diferenças entre drivers, contratos e limitações permite consulta progressiva e seleção de fontes/testes posteriores, sem exigir execução ou entrega antecipada de L2–L4."
+    },
+    {
+      "id": "C4/GO-I1,2,7/QS4",
+      "status": "PASS",
+      "location": "§§1,4–7",
+      "reason": "Preserva goldens e referências históricas; distingue YAML de compilado, Python atual de authoring retirado, integridade de autoridade e planejamento de execução. Não promete atomicidade, aprovação autenticada ou independência inexistentes."
+    },
+    {
+      "id": "C5/GO-I8/QS5–6",
+      "status": "PASS",
+      "location": "Abertura; §7; recibos fornecidos",
+      "reason": "23.802 bytes respeitam o teto de 24.000. A conferência estática dos 14 pins do ORACLE do repositório não é apresentada como execução de suíte nem como validação do oracle reservado."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "location": "§5; README.md:85–98; audit.ts:659–672",
+      "reason": "Exit 0 não prova artefatos atuais. Comparação requerida exige recheck ok; not-run pode acompanhar 0; sprint ilegível/malformado produz invalid/2."
+    },
+    {
+      "id": "R2",
+      "status": "PASS",
+      "location": "§§4–5; README.md:110–117; arm/settlement.ts:53–59",
+      "reason": "Stdout vazio permanece ambíguo; o complemento confirma inspeção de estado/stderr/verify, contenção com exit 3 e appends obrigatórios antes das atualizações correspondentes, sem atomicidade geral."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "location": "§§1,3–4,6–7; SPEC.md:39–55; lib/orchestra_relay",
+      "reason": "Drivers e superfícies Python são distinguidos; compilação não equivale a execução. Goldens permanecem evidência histórica, e texto de review/judge não cria revisão independente."
+    }
+  ],
+  "required_findings": [],
+  "optional": []
+}

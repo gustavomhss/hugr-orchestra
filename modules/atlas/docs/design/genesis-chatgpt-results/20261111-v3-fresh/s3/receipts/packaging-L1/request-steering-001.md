@@ -1,0 +1,5 @@
+# Direção da raiz durante o empacotamento
+
+Finais C copiados para out e SHA c348fbcdb07c7be3f3eebb4d8cb85d9ecb94b094f9e2e086f118298b8e956541 reconferido. Pode seguir package mecânico. Atenção B recebe correção obrigatória J2 blankstdout diagnóstico; preserve drafts sem congelar B comofinal, raiz corrigirá refs apósdelivery. Coberturas >256k são evidência, não necessariamente inputfileindispensável se manifestomembershiptree compacto satisfaz invalidação — não omita fonte grande se semântica depende dela.
+
+Disposição mecânica: o builder exige o hash novo de C; B conserva seus bytes atuais com lacuna de correção pendente. Todos os 4.553 arquivos de fonte da população, as fontes adicionais capturadas, o protocolo e a receita têm inputs declarados; membership cobre novos filhos. As coberturas e populações completas permanecem como evidência exata com hash e referência, sem inventar que relatórios derivados eram inputs indispensáveis ao observador. Nenhum input semântico grande foi eliminado e nenhum PASS runtime foi declarado.

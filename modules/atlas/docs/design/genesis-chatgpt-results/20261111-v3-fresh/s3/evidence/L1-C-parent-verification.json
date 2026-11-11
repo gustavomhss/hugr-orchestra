@@ -1,0 +1,11 @@
+{
+  "unit": "L1-C",
+  "checked_at": "2026-11-11T16:54:18.365455+00:00",
+  "sources_count": 90,
+  "source_bytes_and_git_blobs_all_match": true,
+  "coverage_count": 429,
+  "unique_count": 429,
+  "no_missing_or_extra": true,
+  "body_sha256": "2d2f5a1f64167d791f793e92b855c5c71facdd09e227b30a122eb22185c81ba4",
+  "status": "PASS_ARTIFACT_INTEGRITY_ONLY"
+}

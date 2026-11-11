@@ -1,0 +1,60 @@
+{
+  "schema": "s3-oracle/v1",
+  "unit": "L1-A",
+  "frozen_at": "2026-11-11T16:25:51.010545+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "cases": [
+    {
+      "id": "L1A-R1",
+      "question": "Config renames backend and conductor. Which identity is routed and what may change?",
+      "expected": [
+        "Maestro fixed",
+        "backend stable member id",
+        "display name customizable",
+        "legacy backend alias canonicalized on reads; canonical writes",
+        "do not repeat backend default literal outside roster"
+      ],
+      "sources": [
+        "AGENTS.md",
+        "modules/maestro/coordination/src/roster.ts"
+      ]
+    },
+    {
+      "id": "L1A-R2",
+      "question": "Can a direct or review seat grant itself execution/publishing by loading a skill?",
+      "expected": [
+        "base profiles deny by default",
+        "direct seat reads/looks/messages; no edit/bash/dispatch",
+        "review only bounded read/review and skill grants",
+        "skill grant does not override governance",
+        "Maestro cannot self review or implement product"
+      ],
+      "sources": [
+        "modules/maestro/coordination/src/roster.ts"
+      ]
+    },
+    {
+      "id": "L1A-R3",
+      "question": "Where must installed seat knowledge live?",
+      "expected": [
+        "runtime prompt or shipped seat skill",
+        "repo maintenance skills not seat.skills",
+        "skill trees embedded at build time",
+        "docs-only statement does not establish runtime support"
+      ],
+      "sources": [
+        "AGENTS.md"
+      ]
+    }
+  ],
+  "limits": {
+    "status": "semantic L1 evaluation only, no runtime evidence inferred",
+    "max_body_bytes": 20000
+  },
+  "critical_errors": [
+    "route by display name",
+    "claim unobserved tests executed",
+    "turn repo maintenance skills into runtime authority",
+    "omit assigned populations silently"
+  ]
+}

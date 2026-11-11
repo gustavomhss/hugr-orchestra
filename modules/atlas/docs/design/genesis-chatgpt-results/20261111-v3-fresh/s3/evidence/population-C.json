@@ -1,0 +1,3863 @@
+[
+  {
+    "path": ".orchestra/skills/mcp-dock-servers-maintenance/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8f0f9bfcc2c3565c6f62baab7d3b44a89f352711",
+    "size": 3054,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8f0f9bfcc2c3565c6f62baab7d3b44a89f352711",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/RD-JANITOR.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d538929a6f554fb1fc31b1269f450ab27d2d0bb5",
+    "size": 4357,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d538929a6f554fb1fc31b1269f450ab27d2d0bb5",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/guides/mcp-dock-servers.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d58aa3ed3a04e01c135bb19bb62e06c551f3c683",
+    "size": 2470,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d58aa3ed3a04e01c135bb19bb62e06c551f3c683",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a784501b844de6b851e8c573e0e417394ffb1f35",
+    "size": 29904,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a784501b844de6b851e8c573e0e417394ffb1f35",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/acceptance.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "745c6add585efbe478c28747af3407293de43b03",
+    "size": 37266,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/745c6add585efbe478c28747af3407293de43b03",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/atlas-memory-contract.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fe5887a00017adbf3a13403cfb54be76a0e1ac6c",
+    "size": 13138,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fe5887a00017adbf3a13403cfb54be76a0e1ac6c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/atlas.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c455b02dc6be5452b8ec343fccfa52bd302d84a0",
+    "size": 29844,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c455b02dc6be5452b8ec343fccfa52bd302d84a0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/backend-toolbox.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3c36d74b871551425836ca8730c3924f17b53c27",
+    "size": 13855,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3c36d74b871551425836ca8730c3924f17b53c27",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/capabilities.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "617094b9827717012e7f917ca3c3537fe8d66259",
+    "size": 42071,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/617094b9827717012e7f917ca3c3537fe8d66259",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/cassandra-build.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5cbdd9c0bea06faaef884184f14cf089fa91445f",
+    "size": 29188,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5cbdd9c0bea06faaef884184f14cf089fa91445f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/charter-draft.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cfd0e2ce1d598645bad73bc014060ac3589fc494",
+    "size": 17468,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cfd0e2ce1d598645bad73bc014060ac3589fc494",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/contracts/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5ec01ff3ec186163d1d79e62b1799e634fe674ec",
+    "size": 23850,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5ec01ff3ec186163d1d79e62b1799e634fe674ec",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/contracts/f1-f2-host.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1c21a25fede0146a6f9b0d6f1c67f4f445b860d7",
+    "size": 31352,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1c21a25fede0146a6f9b0d6f1c67f4f445b860d7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/contracts/f3-atlas.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "54921f3c9ae123b4411b3a680aceb530e79ef25b",
+    "size": 29988,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/54921f3c9ae123b4411b3a680aceb530e79ef25b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/contracts/f4-work-result.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "914c23b19198a2883b53305ebaaee708f3283dda",
+    "size": 31065,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/914c23b19198a2883b53305ebaaee708f3283dda",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/contracts/f5-f6-toolkit-skills.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "321bd7a85570dc2288e734e72c8230e769ad2d4a",
+    "size": 67414,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/321bd7a85570dc2288e734e72c8230e769ad2d4a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/delivery-plan.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "60a2ab21d509c107a2e4000e4251cc74daafd084",
+    "size": 8040,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/60a2ab21d509c107a2e4000e4251cc74daafd084",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/execution-plan.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "64f8cc7583063357782f24c0463b24e1b1280f9f",
+    "size": 18647,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/64f8cc7583063357782f24c0463b24e1b1280f9f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/integration-flow.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "eea511a5eaf3cd62a0a3dff8db2b7951cc3be8cb",
+    "size": 7268,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/eea511a5eaf3cd62a0a3dff8db2b7951cc3be8cb",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/owned-tools.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "518867f71b96b14bdaac2ad183e2363c324720ee",
+    "size": 19449,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/518867f71b96b14bdaac2ad183e2363c324720ee",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/01-codex.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b07937a485c79e94d85a801aa51a1297c5f7c67",
+    "size": 30903,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b07937a485c79e94d85a801aa51a1297c5f7c67",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/02-claude.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e1d52fcdc14923f21048a919fa4032740943267e",
+    "size": 42773,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e1d52fcdc14923f21048a919fa4032740943267e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/03-native-plugin.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "228bcf45586341990eca9a9c97054f4e8412fee3",
+    "size": 22708,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/228bcf45586341990eca9a9c97054f4e8412fee3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/04-editors.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "eebbbed8acf8a32aec129fdcb40183031e86f3fe",
+    "size": 52194,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/eebbbed8acf8a32aec129fdcb40183031e86f3fe",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/05-autonomous.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dc1dc203511380fc9bd694953be7ba8b9d346412",
+    "size": 37030,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dc1dc203511380fc9bd694953be7ba8b9d346412",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/06-repomaps.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d180d46a0df91546ee6a24c099142cddb338e65c",
+    "size": 28855,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d180d46a0df91546ee6a24c099142cddb338e65c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/07-protocols.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f1c8f3579608b42486dde4030ee34e3a41dca3e0",
+    "size": 18958,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f1c8f3579608b42486dde4030ee34e3a41dca3e0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/08-atlas-memory.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "19b09597f5fca4f1fce00ca5cbf06009f365a9dc",
+    "size": 36918,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/19b09597f5fca4f1fce00ca5cbf06009f365a9dc",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/09-memory-lifecycle.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "40c2c9252cf7faf3f959f01b38a9af1a3bc7a156",
+    "size": 39003,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/40c2c9252cf7faf3f959f01b38a9af1a3bc7a156",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/10-semantic-tools.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b0f5202a067c10078ce93e9bdf181148c67bbce4",
+    "size": 32673,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b0f5202a067c10078ce93e9bdf181148c67bbce4",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/11-devin.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6789f6bf98140b2512e81074b46210f5936bd41b",
+    "size": 44815,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6789f6bf98140b2512e81074b46210f5936bd41b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/12-replit.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b6cf7e81218798508e2340e66c36a635ecaed4c3",
+    "size": 42027,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b6cf7e81218798508e2340e66c36a635ecaed4c3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/13-grok.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b76e9863f2dee07b0ff5829bc1fe3180f0ad3dae",
+    "size": 34030,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b76e9863f2dee07b0ff5829bc1fe3180f0ad3dae",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/14-other-competitors.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3527513ff2d54538b2336e8f888b903091593644",
+    "size": 31049,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3527513ff2d54538b2336e8f888b903091593644",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/15-community.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "12743dd032567a7cd6f064960265c0682facda62",
+    "size": 32881,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/12743dd032567a7cd6f064960265c0682facda62",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/16-efficiency.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "36b50dfcd39c99eab6d247e54ebcf5eb483bdd08",
+    "size": 41010,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/36b50dfcd39c99eab6d247e54ebcf5eb483bdd08",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/17-rust-go.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "29c98c295ff0126ef2cf7f1710870a569ba69516",
+    "size": 44322,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/29c98c295ff0126ef2cf7f1710870a569ba69516",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/18-backend-stacks.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "21f96449421c31cc396d6d1c81ab7abf0eba349c",
+    "size": 47970,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/21f96449421c31cc396d6d1c81ab7abf0eba349c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/19-data-api.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f400eabc4b86dda1f239e1592add1d62a2355371",
+    "size": 31660,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f400eabc4b86dda1f239e1592add1d62a2355371",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/20-evaluation.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6788913cd3025b4963f3b2d43bf28af8334e1f2c",
+    "size": 42355,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6788913cd3025b4963f3b2d43bf28af8334e1f2c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/21-openclaw-runtime.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "70b9bcbdc70c8b9223f5ef233c5ce687d03fe6e1",
+    "size": 36116,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/70b9bcbdc70c8b9223f5ef233c5ce687d03fe6e1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/22-openclaw-memory.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a766f0a599f18733bf2762e521114133595c2251",
+    "size": 37960,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a766f0a599f18733bf2762e521114133595c2251",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/23-openclaw-tools.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "48ff4402710259734391e197cd2eca273829be0a",
+    "size": 40003,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/48ff4402710259734391e197cd2eca273829be0a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/24-hermes-runtime.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "66d6165df39325b3f316e0a3653ed734fe81b986",
+    "size": 34888,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/66d6165df39325b3f316e0a3653ed734fe81b986",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/25-hermes-memory.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d67b8aba402541b7f8809d2dc96ce0cbe56522a9",
+    "size": 52859,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d67b8aba402541b7f8809d2dc96ce0cbe56522a9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/26-hermes-tools.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c11c2d08676f34a83f698001103c868764f9c2fb",
+    "size": 37171,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c11c2d08676f34a83f698001103c868764f9c2fb",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/27-agent-failures.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "71f1265ca33aabc69bc7558fe7816505be85e2d7",
+    "size": 31550,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/71f1265ca33aabc69bc7558fe7816505be85e2d7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/28-backend-depth.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "82047ff6609bc49f805b97e459ee55a220c61bfc",
+    "size": 32536,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/82047ff6609bc49f805b97e459ee55a220c61bfc",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/29-http-codegen.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9448142ceed30f8060f44fbeff4752026f18c677",
+    "size": 23872,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9448142ceed30f8060f44fbeff4752026f18c677",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/30-rpc-contracts.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a89bdd0e720490c367140bdefa90b849a2e2f1ad",
+    "size": 16427,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a89bdd0e720490c367140bdefa90b849a2e2f1ad",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/31-typed-sql.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b66a917015c7deb6574c953f6fea101d7667aa8",
+    "size": 27275,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b66a917015c7deb6574c953f6fea101d7667aa8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/32-migrations.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6dd12433df70179c787ccf861bd9da4b509fc544",
+    "size": 26360,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6dd12433df70179c787ccf861bd9da4b509fc544",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/33-codemods.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8c13972008e969e4b556cff0661452951f37c3dd",
+    "size": 22431,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8c13972008e969e4b556cff0661452951f37c3dd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/34-generated-tests.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "79c875533112e582d6f4a38a09e02445738a4092",
+    "size": 17940,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/79c875533112e582d6f4a38a09e02445738a4092",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/35-test-fixtures.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "60269d2d8dde2d9d695641eb42cd1f859130da3f",
+    "size": 18673,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/60269d2d8dde2d9d695641eb42cd1f859130da3f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/36-rust-code.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8fca1eff0f01e1698a8e3e82e33e03d11acb7426",
+    "size": 19708,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8fca1eff0f01e1698a8e3e82e33e03d11acb7426",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/37-go-code.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "45cc28a5de04d42d8e8010d51c6a771d28294987",
+    "size": 21071,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/45cc28a5de04d42d8e8010d51c6a771d28294987",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/38-python-composer.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a73a212b44539c0c0c8c11225a2b3f33744f25ac",
+    "size": 27489,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a73a212b44539c0c0c8c11225a2b3f33744f25ac",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/39-typescript-code.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4ef04c376119dd0ebf8e12cd436a24c731ba19a1",
+    "size": 22565,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4ef04c376119dd0ebf8e12cd436a24c731ba19a1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/40-jvm-dotnet.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "243b1a7eee148fd7dd6be4b39d257dbe911d78b9",
+    "size": 18883,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/243b1a7eee148fd7dd6be4b39d257dbe911d78b9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/41-application-jobs.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9a043ce86b4fd0d19bb5825f400914fbb463e29c",
+    "size": 26469,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9a043ce86b4fd0d19bb5825f400914fbb463e29c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/42-web-backends.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c6a8a12a63dd286df7d383228c33a8f785c96190",
+    "size": 22954,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c6a8a12a63dd286df7d383228c33a8f785c96190",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/43-verified-code.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c94689b3acf835062844360854d8e1173ba86a6c",
+    "size": 17197,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c94689b3acf835062844360854d8e1173ba86a6c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/44-compiled-validation.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "71dc7ffbdab88a40ac64ed7aca264aa7d93a618f",
+    "size": 24345,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/71dc7ffbdab88a40ac64ed7aca264aa7d93a618f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/45-binary-codecs.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "15bc693dd95cc0a1a0231c9c07b4fc924fbb15c6",
+    "size": 20894,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/15bc693dd95cc0a1a0231c9c07b4fc924fbb15c6",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/46-skill-composition.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a29d1cc3d27947f7ede6eb928490bd77ed4f6ba9",
+    "size": 21722,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a29d1cc3d27947f7ede6eb928490bd77ed4f6ba9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/47-scope-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ca027d0d239c5e4bbee7f8cbfc3d9c8c101f71dd",
+    "size": 28936,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ca027d0d239c5e4bbee7f8cbfc3d9c8c101f71dd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/48-python-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b7af9c36fa664cc282e4b947180c2be45443a839",
+    "size": 26239,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b7af9c36fa664cc282e4b947180c2be45443a839",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/49-go-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7631022668a3af502b3b87e0b4b1fc9aba7ab763",
+    "size": 26056,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7631022668a3af502b3b87e0b4b1fc9aba7ab763",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/50-rust-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b463ccab60a9c4db694b6418182e78b61afbb44",
+    "size": 27027,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b463ccab60a9c4db694b6418182e78b61afbb44",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/51-js-runtime-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d87c022b7491a1c5f189b99a656b8b9445321478",
+    "size": 30299,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d87c022b7491a1c5f189b99a656b8b9445321478",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/52-effect-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c734e62f57adfa19eb13143490b08f7d8b7c72ee",
+    "size": 25843,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c734e62f57adfa19eb13143490b08f7d8b7c72ee",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/53-next-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a957b4361ec56804727f0120c167b207ab3c263f",
+    "size": 30296,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a957b4361ec56804727f0120c167b207ab3c263f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/54-jvm-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6bff296f9bf9f2a5fd1928078bd127acbc6beb70",
+    "size": 29414,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6bff296f9bf9f2a5fd1928078bd127acbc6beb70",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/55-dotnet-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b2283b5e9766a1898a9e5cc8d4031b0345cedb42",
+    "size": 29894,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b2283b5e9766a1898a9e5cc8d4031b0345cedb42",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/56-ruby-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "06789722723b5a710fda2ff8d745000cd76136cd",
+    "size": 25767,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/06789722723b5a710fda2ff8d745000cd76136cd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/57-php-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ef8ffaee2068ee5f0195c9f16c8ba410b9e8dded",
+    "size": 32452,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ef8ffaee2068ee5f0195c9f16c8ba410b9e8dded",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/58-elixir-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "41d6f745a3f2855b17c1e8aeb9eb4931a5505b53",
+    "size": 26882,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/41d6f745a3f2855b17c1e8aeb9eb4931a5505b53",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/59-protocol-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d44ad8da6f063c409ed29ce28923bdc8cd70171d",
+    "size": 28671,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d44ad8da6f063c409ed29ce28923bdc8cd70171d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/60-data-effect-variants.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5d86958eb7e8743151ce74966ce41d1dd9b6fcfd",
+    "size": 27343,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5d86958eb7e8743151ce74966ce41d1dd9b6fcfd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/61-matt-pocock-skills.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "204b37d15a738c731747d70ea5ef2661c4df377f",
+    "size": 27899,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/204b37d15a738c731747d70ea5ef2661c4df377f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/62-github-skill-collections.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6fb9b645dcc49dd8d5fad2386b00d93722741d98",
+    "size": 27293,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6fb9b645dcc49dd8d5fad2386b00d93722741d98",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/63-github-plugins.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a54ec1a64e5fac7b89ce08a5147fdfdc9956dfa6",
+    "size": 23311,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a54ec1a64e5fac7b89ce08a5147fdfdc9956dfa6",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/64-vendor-backend-skills.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b0ff3a05331ee3a37d7ae5e6b9f1ee31e66b5d74",
+    "size": 29112,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b0ff3a05331ee3a37d7ae5e6b9f1ee31e66b5d74",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/65-system-prompt-practice.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3f3c24f622690bb0bffc2d04b5232ac382e93f48",
+    "size": 32523,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3f3c24f622690bb0bffc2d04b5232ac382e93f48",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/66-persona-evidence.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "06280c35fd163dde42fca83fe30b287d0fa0b284",
+    "size": 33515,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/06280c35fd163dde42fca83fe30b287d0fa0b284",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/67-backend-prompt-requirements.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "28de49cf633eb2d256554d544639e8f90063d1b3",
+    "size": 32591,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/28de49cf633eb2d256554d544639e8f90063d1b3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "750a0f5a0fb1e1b180d237663017e6b5c3d72acd",
+    "size": 35808,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/750a0f5a0fb1e1b180d237663017e6b5c3d72acd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/backend-toolbox-review.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "603296244aa54c35b1c6c3d9212674b318e5e064",
+    "size": 6076,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/603296244aa54c35b1c6c3d9212674b318e5e064",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/delivery-atlas.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "26660d3c9ab17844bba56b6b9ae9e58ef62fca29",
+    "size": 33549,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/26660d3c9ab17844bba56b6b9ae9e58ef62fca29",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/delivery-composer.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "168c55efeeffc0e980d9fa6e74570d958c79d819",
+    "size": 36389,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/168c55efeeffc0e980d9fa6e74570d958c79d819",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/delivery-host.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4f050ee6bb85f8b6275e0b83285046cbd24403c0",
+    "size": 27995,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4f050ee6bb85f8b6275e0b83285046cbd24403c0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/delivery-planning.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "86cbdbfca427d4161b715e9a2b0a4cb06328eeec",
+    "size": 5080,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/86cbdbfca427d4161b715e9a2b0a4cb06328eeec",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/delivery-quality.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3684d6c236d96da79f1f94d5457654cc2073bc35",
+    "size": 35383,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3684d6c236d96da79f1f94d5457654cc2073bc35",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/delivery-toolkit.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ce534800de7939d8c86f43204e2056f7089d1cff",
+    "size": 34851,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ce534800de7939d8c86f43204e2056f7089d1cff",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/skill-composition-review.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "65956d051e577f00f9c99e82204576355a325f94",
+    "size": 3235,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/65956d051e577f00f9c99e82204576355a325f94",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/skill-matrix-review.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5541af44db1857cde20f6547051e057181ff83a8",
+    "size": 4946,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5541af44db1857cde20f6547051e057181ff83a8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/skill-variants-plan.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "056048f9fd8dff344b76ca46219033d5b06488f3",
+    "size": 8475,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/056048f9fd8dff344b76ca46219033d5b06488f3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/session-handoff.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "07cf370be0539030b11c93093099d1cad558a0f8",
+    "size": 10702,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/07cf370be0539030b11c93093099d1cad558a0f8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/session-resume-2026-10-08.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "615b71c1ac763cfeef7fd3d3f7ca894b30872d89",
+    "size": 17586,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/615b71c1ac763cfeef7fd3d3f7ca894b30872d89",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/session-state-2026-10-08.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "44b8906d57d222564e75528732976341e429444e",
+    "size": 16276,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/44b8906d57d222564e75528732976341e429444e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/skill-catalog.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1cf2c45efc0c1b9632fbea01b93084bf119b2233",
+    "size": 16299,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1cf2c45efc0c1b9632fbea01b93084bf119b2233",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/skill-matrix.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e633c3d174bbd969b7c8ea076a5025fca7f8e560",
+    "size": 18902,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e633c3d174bbd969b7c8ea076a5025fca7f8e560",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/technical-depth.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "95c14d4c35b79f9c46d63ea848866fda0e900910",
+    "size": 28037,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/95c14d4c35b79f9c46d63ea848866fda0e900910",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/tool-distribution.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2ad7a204e74d660fdc6ea727d1a51d54e79ad1ef",
+    "size": 9792,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2ad7a204e74d660fdc6ea727d1a51d54e79ad1ef",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/backend-specialist/toolkit-floors.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "94dfce043394f945a710d0fafb83aef0f7c110e2",
+    "size": 7175,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/94dfce043394f945a710d0fafb83aef0f7c110e2",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/claude-mode-onboarding/UI-MAP.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c92dafc5349dfa310e89275115ed536dcd13f7e5",
+    "size": 9394,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c92dafc5349dfa310e89275115ed536dcd13f7e5",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/claude-mode/meta-harness.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3803d48b112b127460ed1ac77adde34849a669d7",
+    "size": 8670,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3803d48b112b127460ed1ac77adde34849a669d7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/1-internal.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9c2df5522f2da416897733b9687bc3c30ea1806d",
+    "size": 18467,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9c2df5522f2da416897733b9687bc3c30ea1806d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/10-eu-regulation-governance.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fdd076a55e584f52d18dae623038a58675b94904",
+    "size": 19571,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fdd076a55e584f52d18dae623038a58675b94904",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/11-formal-correctness.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d24521ab4e87e4584ceadc304d442f7b908902c8",
+    "size": 17574,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d24521ab4e87e4584ceadc304d442f7b908902c8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/12-systems-engineering.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0e767fc695d3da713d1fb4a8c5855bc5990182a9",
+    "size": 19777,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0e767fc695d3da713d1fb4a8c5855bc5990182a9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/13-git-change-hygiene.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "80c9e2728b35736b2dda9a2f59a26f6b4f496cf7",
+    "size": 19573,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/80c9e2728b35736b2dda9a2f59a26f6b4f496cf7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/14-ux-ui.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ac8799e77b36517d4324a65295697c1c1ce3c102",
+    "size": 20106,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ac8799e77b36517d4324a65295697c1c1ce3c102",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/15-ai-agent-artifacts.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b9fe3961c0226ed83175dfaf021664f8b47633b2",
+    "size": 26441,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b9fe3961c0226ed83175dfaf021664f8b47633b2",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/16-cicd-infra-release.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9928b256ddbb4f1e04594cfddb5ae14faff24034",
+    "size": 21359,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9928b256ddbb4f1e04594cfddb5ae14faff24034",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/17-maintainability.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d82fa6f967025f2e34f6dd3f53bc18cb3a6dda47",
+    "size": 18187,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d82fa6f967025f2e34f6dd3f53bc18cb3a6dda47",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/18-test-review.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c14d89c31acfb997589ec4852fcf0c2ac6f15fa4",
+    "size": 17963,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c14d89c31acfb997589ec4852fcf0c2ac6f15fa4",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/19-integrations-review.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7d2cbb98f871d284ca902d7b2110cfbdb3a6e608",
+    "size": 23643,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7d2cbb98f871d284ca902d7b2110cfbdb3a6e608",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/2-products.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c50ed0c3fe26a4091f9cd78fea5db7e0a7fee31f",
+    "size": 22973,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c50ed0c3fe26a4091f9cd78fea5db7e0a7fee31f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/20-edge-cases.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7d42ee65c623b71647c8871b4956869a6e9a6834",
+    "size": 20871,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7d42ee65c623b71647c8871b4956869a6e9a6834",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/21-race-conditions.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c574214da555a8172c56f7c860d9b374ad35b764",
+    "size": 17600,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c574214da555a8172c56f7c860d9b374ad35b764",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/22-skills-team.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7708bb749460328a87559d57782357375c4c30f7",
+    "size": 24504,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7708bb749460328a87559d57782357375c4c30f7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/23-atlas.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7507536198c1fe9f9f76fb99de7bb1ea85b0d9da",
+    "size": 20222,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7507536198c1fe9f9f76fb99de7bb1ea85b0d9da",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/24-runtime-surfaces.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d7460461043d8f40c00ca90e01bf547b97fe3f19",
+    "size": 21964,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d7460461043d8f40c00ca90e01bf547b97fe3f19",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/25-due-diligence.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "45070ff0aa393a7361ed6a4924c5c8605a3ea21b",
+    "size": 23387,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/45070ff0aa393a7361ed6a4924c5c8605a3ea21b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/26-audit-techniques.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fbc1bca4d8f25935b6ccdb2f2193ddc8d9cd1883",
+    "size": 17257,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fbc1bca4d8f25935b6ccdb2f2193ddc8d9cd1883",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/27-audit-firm-methods.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "420b7fe934d49f4ef8b6890b85a59370fce7dc79",
+    "size": 26139,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/420b7fe934d49f4ef8b6890b85a59370fce7dc79",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/28-lang-rust.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c13ec4443334304f7ce0ede7f667dd7040794c3a",
+    "size": 22368,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c13ec4443334304f7ce0ede7f667dd7040794c3a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/29-lang-typescript.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9f30ec8415a796fb80830ad49daaabaebdcea308",
+    "size": 17974,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9f30ec8415a796fb80830ad49daaabaebdcea308",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/3-methods.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c0c6cdffd79b944484e2d5cab96e67036260f88f",
+    "size": 20659,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c0c6cdffd79b944484e2d5cab96e67036260f88f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/30-lang-jvm.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8884426e2822f31f2780997d2d83ac58e4f9e944",
+    "size": 18874,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8884426e2822f31f2780997d2d83ac58e4f9e944",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/31-lang-python.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "db068e4f504e91337e4e1dca4de801bf38c25bee",
+    "size": 15842,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/db068e4f504e91337e4e1dca4de801bf38c25bee",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/32-lang-go-c-cpp.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "632358f5bc2a0a0a77952df7e8da7ec774256898",
+    "size": 20376,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/632358f5bc2a0a0a77952df7e8da7ec774256898",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/33-lang-other.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "39e3db51b67638d07e84121e351b39021e8e97c9",
+    "size": 18143,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/39e3db51b67638d07e84121e351b39021e8e97c9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/34-lang-integration.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7385b52dc4b4a79b1b7258f7cd46c1300bc07d73",
+    "size": 21789,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7385b52dc4b4a79b1b7258f7cd46c1300bc07d73",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/4-native-tools.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "535ab24eb7f14820b798476bb3c73b41b5c86479",
+    "size": 15564,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/535ab24eb7f14820b798476bb3c73b41b5c86479",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/5-audit.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b7127ef5962ce4673ac801cf7309846f1f108fbd",
+    "size": 17656,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b7127ef5962ce4673ac801cf7309846f1f108fbd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/6-integrations.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b121ccb1291521a33022c3fd81e53effc3190992",
+    "size": 19295,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b121ccb1291521a33022c3fd81e53effc3190992",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/7-techniques.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a8ea27d31a0dd5a40892500f834e7ac935dd1862",
+    "size": 6491,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a8ea27d31a0dd5a40892500f834e7ac935dd1862",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/8-skills-protocols.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2aefbad785ccf7a2bed2c7cc5f2c2718fad83410",
+    "size": 22178,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2aefbad785ccf7a2bed2c7cc5f2c2718fad83410",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/9-privacy-law.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0fe82d9a38f7b8394506274da8a5d0f5de806e63",
+    "size": 20119,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0fe82d9a38f7b8394506274da8a5d0f5de806e63",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/1-internal.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "792f1cbfddf4cb9df0d5f2cb15e8a62d2cb2612d",
+    "size": 1330,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/792f1cbfddf4cb9df0d5f2cb15e8a62d2cb2612d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/10-eu-regulation-governance.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "91a5e1ca54e657e4d944c1ad422b0793812ddc06",
+    "size": 1783,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/91a5e1ca54e657e4d944c1ad422b0793812ddc06",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/11-formal-correctness.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8fe876ec7a1c3766b5b427e4922adb62e4a8d43f",
+    "size": 1524,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8fe876ec7a1c3766b5b427e4922adb62e4a8d43f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/12-systems-engineering.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "acb8ad7a75e2e187538212dde2378e150627aef3",
+    "size": 1698,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/acb8ad7a75e2e187538212dde2378e150627aef3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/13-git-change-hygiene.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "da0a09b028a6588b081d2c03d01e6878003c383f",
+    "size": 1374,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/da0a09b028a6588b081d2c03d01e6878003c383f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/14-ux-ui.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "23c825d49648d3d391d6e0648cd5bfe935468678",
+    "size": 1576,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/23c825d49648d3d391d6e0648cd5bfe935468678",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/15-ai-agent-artifacts.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f163114575d4636701e5c5562770574966fe60e8",
+    "size": 1634,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f163114575d4636701e5c5562770574966fe60e8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/16-cicd-infra-release.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "684d30da7b9beb77ee1478dfe5c9fbb1a60a6100",
+    "size": 1538,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/684d30da7b9beb77ee1478dfe5c9fbb1a60a6100",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/17-maintainability.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cdbe085d2933168e4a949110d8869465681ebd29",
+    "size": 1469,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cdbe085d2933168e4a949110d8869465681ebd29",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/18-test-review.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "85b649dd9264175c43de59d176a6261eec6dcdf3",
+    "size": 1448,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/85b649dd9264175c43de59d176a6261eec6dcdf3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/19-integrations-review.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "91a98522e221852843d2defa3e9e9bdee7d80641",
+    "size": 1560,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/91a98522e221852843d2defa3e9e9bdee7d80641",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/2-products.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dba48c064af7e6b607a34839724e68bdf84465fa",
+    "size": 1248,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dba48c064af7e6b607a34839724e68bdf84465fa",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/20-edge-cases.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "02812c8fa58e6c52c79fe2c7483accfffec23b2f",
+    "size": 1788,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/02812c8fa58e6c52c79fe2c7483accfffec23b2f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/21-race-conditions.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6638d9be031534821770435f530e2de85e7c0f97",
+    "size": 1761,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6638d9be031534821770435f530e2de85e7c0f97",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/22-skills-team.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6dae30b558c2d8b9a695eb93bba7f443e9fd69fd",
+    "size": 1519,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6dae30b558c2d8b9a695eb93bba7f443e9fd69fd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/23-atlas.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1472ded6651ffd4930665a4bac7c6d0f2d8225b0",
+    "size": 1167,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1472ded6651ffd4930665a4bac7c6d0f2d8225b0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/24-runtime-surfaces.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "64fae3fd2a73a83d1ec49e7e4d9d696efd3f9c71",
+    "size": 1448,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/64fae3fd2a73a83d1ec49e7e4d9d696efd3f9c71",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/25-due-diligence.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "de9ddf02fd923f52fa587f9be9ba87f5c8ced5b6",
+    "size": 1499,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/de9ddf02fd923f52fa587f9be9ba87f5c8ced5b6",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/26-audit-techniques.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "28b6e01b0d5f2677aed8a2c18bfe9c64384fbd17",
+    "size": 1585,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/28b6e01b0d5f2677aed8a2c18bfe9c64384fbd17",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/27-audit-firm-methods.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "24d10cd43843a0bbffdcf22b300ac5f3e31df7d1",
+    "size": 1625,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/24d10cd43843a0bbffdcf22b300ac5f3e31df7d1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/28-lang-rust.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1c2b56120d15ac46f22c2a3daf27750dc74df84c",
+    "size": 2171,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1c2b56120d15ac46f22c2a3daf27750dc74df84c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/29-lang-typescript.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4fedeca8f35d0cbb098556720c0c6cddb1af59f7",
+    "size": 2254,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4fedeca8f35d0cbb098556720c0c6cddb1af59f7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/3-methods.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6170ded882b0658ac80134925a89754f727ecfcd",
+    "size": 1177,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6170ded882b0658ac80134925a89754f727ecfcd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/30-lang-jvm.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e72b6040575ca0de2298d0efb9a7b2929e30cfbf",
+    "size": 2245,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e72b6040575ca0de2298d0efb9a7b2929e30cfbf",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/31-lang-python.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "439446acb6b3a6a4975b517f7e34a010b41310b4",
+    "size": 2213,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/439446acb6b3a6a4975b517f7e34a010b41310b4",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/32-lang-go-c-cpp.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "20a98631757f8854e19469d1b40acc35fec17b88",
+    "size": 2182,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/20a98631757f8854e19469d1b40acc35fec17b88",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/33-lang-other.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bc83c97301283c090c8635b4f08c8961921aa6db",
+    "size": 2341,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bc83c97301283c090c8635b4f08c8961921aa6db",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/34-lang-integration.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2657b722ee6603159c278a00f86f547f84512c8d",
+    "size": 1585,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2657b722ee6603159c278a00f86f547f84512c8d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/4-native-tools.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "98d2a0b64b9f067fa85a4850f3650b9daf5ec863",
+    "size": 1225,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/98d2a0b64b9f067fa85a4850f3650b9daf5ec863",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/5-audit.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e1fe0ccfbcca763ff0050fd85e3985f6e7edfe72",
+    "size": 1251,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e1fe0ccfbcca763ff0050fd85e3985f6e7edfe72",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/6-integrations.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "eae0a574d3ca5742eb219ed428fa1673e1b75d53",
+    "size": 1178,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/eae0a574d3ca5742eb219ed428fa1673e1b75d53",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/7-techniques.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e5ba213d855a5465520e3bcd0dfcc0215d712e73",
+    "size": 1772,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e5ba213d855a5465520e3bcd0dfcc0215d712e73",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/8-skills-protocols.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e23a4db655dfd7471a8b0025460414657af0920c",
+    "size": 1709,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e23a4db655dfd7471a8b0025460414657af0920c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/lucy/research/questions/9-privacy-law.txt",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c9ccb188981d00342ac6ec79cae67df69755cc6e",
+    "size": 1636,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c9ccb188981d00342ac6ec79cae67df69755cc6e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/EVIDENCE-2026-10-11.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "159304f30d6200e3966684c8f579d4643aff0efd",
+    "size": 2711,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/159304f30d6200e3966684c8f579d4643aff0efd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/NAMING-CORRECTION.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8f7559d131dc6be60c6a20b179ed2f8649077926",
+    "size": 4955,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8f7559d131dc6be60c6a20b179ed2f8649077926",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/maestro-planning-handoff.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c17fbbb58f786ffbeb6ed8e4a7fbc0a437402d61",
+    "size": 45948,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c17fbbb58f786ffbeb6ed8e4a7fbc0a437402d61",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/maestro-transfer-gate.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6461c1f57f0986175d4257cb28b0384c1ee3481a",
+    "size": 8246,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6461c1f57f0986175d4257cb28b0384c1ee3481a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/runtime-handoff.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "06d1803c0286d5a14435f5412ed118387dba3d64",
+    "size": 7803,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/06d1803c0286d5a14435f5412ed118387dba3d64",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/v2-arsenal-handoff.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1456058c1b6548509259de8111c741f28be63a02",
+    "size": 8577,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1456058c1b6548509259de8111c741f28be63a02",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/w6-binding-handoff.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f0e5233165418c47e0de587096597c2b45fc61b3",
+    "size": 7617,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f0e5233165418c47e0de587096597c2b45fc61b3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/wave-2.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "563aa24a2bf086360722924cb367e0ba8c795792",
+    "size": 6787,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/563aa24a2bf086360722924cb367e0ba8c795792",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4733021c4c76e5fdd3ffdd2d9c8fa6749b654714",
+    "size": 2490,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4733021c4c76e5fdd3ffdd2d9c8fa6749b654714",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "size": 104,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "86a5b92da8a1f099308b70c2ab30b8a44069ff11",
+    "size": 928,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/86a5b92da8a1f099308b70c2ab30b8a44069ff11",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock-focus.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4cb38b019f14c4e768c07a14ea9d4c9a539b843d",
+    "size": 6893,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4cb38b019f14c4e768c07a14ea9d4c9a539b843d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock-hints.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "813c5f92d7bdeb33eace1317837e99219c62337f",
+    "size": 1778,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/813c5f92d7bdeb33eace1317837e99219c62337f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock-linux.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8fe41edf09e045d3371d88f166371a68e20f5adb",
+    "size": 3790,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8fe41edf09e045d3371d88f166371a68e20f5adb",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock-outline.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b62542e65d3006b0c5ef1a342e3e7c1073ce18a7",
+    "size": 12590,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b62542e65d3006b0c5ef1a342e3e7c1073ce18a7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock-outline.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d1fbcd7c09d41981865a6ee3e5ab8e0effc47b6a",
+    "size": 13431,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d1fbcd7c09d41981865a6ee3e5ab8e0effc47b6a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock-target.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "905e66670375269814eb1045e4d9441bab625303",
+    "size": 46034,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/905e66670375269814eb1045e4d9441bab625303",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock.fixture.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "566b287c07f86620ea1f189118cf92cbb5f6f6c5",
+    "size": 3665,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/566b287c07f86620ea1f189118cf92cbb5f6f6c5",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1645ccfd4c29b347cb1b59f8df41d19f2ae6526a",
+    "size": 30001,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1645ccfd4c29b347cb1b59f8df41d19f2ae6526a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ad81a43b726abe216e5dc7cf45768698aaf59c03",
+    "size": 55918,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ad81a43b726abe216e5dc7cf45768698aaf59c03",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/application-tools.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e85beeb95485c96cd4ec937d8b085113d68d9c31",
+    "size": 6505,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e85beeb95485c96cd4ec937d8b085113d68d9c31",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/application-tools.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c9ba94b8da4cb68d4c95b2c9f3fc80176a068f59",
+    "size": 8462,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c9ba94b8da4cb68d4c95b2c9f3fc80176a068f59",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/dock-mcp.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c46b384985825a99f135b4045fbf3f142ca72123",
+    "size": 15056,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c46b384985825a99f135b4045fbf3f142ca72123",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/dock-mcp.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f775e4234a59d56218b5dd50c0e716bdcb8a2a72",
+    "size": 33449,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f775e4234a59d56218b5dd50c0e716bdcb8a2a72",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/linux-workspace.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "869494b0ba05c54b44c76aa71171d821f4dc831f",
+    "size": 1441,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/869494b0ba05c54b44c76aa71171d821f4dc831f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/linux-workspace.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "21dee9ab76e0506275768ac9632b15580d588241",
+    "size": 8150,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/21dee9ab76e0506275768ac9632b15580d588241",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/socket-transport.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bdb749fdb2707e486b57e85d5921faa1c122ac20",
+    "size": 1687,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bdb749fdb2707e486b57e85d5921faa1c122ac20",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/src/transport.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "398a7604f26c612c6c86c5f96fa098a38076cdc0",
+    "size": 278,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/398a7604f26c612c6c86c5f96fa098a38076cdc0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/app-dock/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ebf498e9a70943d703288d28a71e1a4e59643498",
+    "size": 280,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ebf498e9a70943d703288d28a71e1a4e59643498",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/.gitattributes",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d73c532a7d7ce1a46f3b141b36b1a49a4e5451e9",
+    "size": 102,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d73c532a7d7ce1a46f3b141b36b1a49a4e5451e9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/NOTICES",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cbc9b5613063df84582a1fffe28fb8a6fc61788a",
+    "size": 2449,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cbc9b5613063df84582a1fffe28fb8a6fc61788a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c0c1f947e9ced6e7c67e5b113927272e2b2ec849",
+    "size": 3317,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c0c1f947e9ced6e7c67e5b113927272e2b2ec849",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/api-discovery/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "452ee4350bbd4026f84c14780e668cef7d3ddd15",
+    "size": 6128,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/452ee4350bbd4026f84c14780e668cef7d3ddd15",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/api-discovery/scripts/har_capture.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "445a01ecb1f4cac3414b8e00b35536a77012bf9c",
+    "size": 2516,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/445a01ecb1f4cac3414b8e00b35536a77012bf9c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/api-discovery/scripts/har_capture_cdp.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f51a101412e8647d89abd2cb3f082435937d70cd",
+    "size": 4596,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f51a101412e8647d89abd2cb3f082435937d70cd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/api-discovery/scripts/har_to_client.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "27eb2821a473a609a827bc0ac135b304befc5923",
+    "size": 5834,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/27eb2821a473a609a827bc0ac135b304befc5923",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7ba9b2dfaf0637699c64a460392cc1654f39efba",
+    "size": 7132,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7ba9b2dfaf0637699c64a460392cc1654f39efba",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/_raster.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d9ccbc91538f222a49d8d26d1a449fc4ad8bbae7",
+    "size": 2614,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d9ccbc91538f222a49d8d26d1a449fc4ad8bbae7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/extract_marker.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "044eda22b07843888e2ad1a0692b1da7cf9e858b",
+    "size": 3458,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/044eda22b07843888e2ad1a0692b1da7cf9e858b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/extract_pymupdf.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0edc2bd51feccf51e0a27b23e18a0d36a106b3a0",
+    "size": 3671,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0edc2bd51feccf51e0a27b23e18a0d36a106b3a0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/pdf_meta.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ab90f6a4ce890a4e8350f0c211726caca12cdfc1",
+    "size": 4517,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ab90f6a4ce890a4e8350f0c211726caca12cdfc1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/pdf_page_image.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "692d7a592b2a7a0233b2d1117882e0af98fcc829",
+    "size": 3658,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/692d7a592b2a7a0233b2d1117882e0af98fcc829",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/pdf_read.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a9114e1e3bffc19b83ceac806cd792fd2ac9c2fc",
+    "size": 5954,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a9114e1e3bffc19b83ceac806cd792fd2ac9c2fc",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/pdf_secure.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b15a405ecfbd43fb6af271ce7d631e57ac914f96",
+    "size": 2888,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b15a405ecfbd43fb6af271ce7d631e57ac914f96",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-pdf/scripts/pdf_stamp.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f346f60a9f1170b0c061f0107c6ad6cff40d6c54",
+    "size": 5779,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f346f60a9f1170b0c061f0107c6ad6cff40d6c54",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-sheets/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "51223581668b7eea1a65bf77cf7d1acba1f924d8",
+    "size": 7020,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/51223581668b7eea1a65bf77cf7d1acba1f924d8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-sheets/references/restructuring.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "66f0bef1771db7e2d74c2db06fb7ff24fcb60a52",
+    "size": 3688,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/66f0bef1771db7e2d74c2db06fb7ff24fcb60a52",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-sheets/scripts/xlsx_create.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "14b351cfd994b36b05192a54341ad8e3a39aff7a",
+    "size": 9858,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/14b351cfd994b36b05192a54341ad8e3a39aff7a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-sheets/scripts/xlsx_edit.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "83b7892a7f968ee1d25ba5ccf96bf728efda187d",
+    "size": 10828,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/83b7892a7f968ee1d25ba5ccf96bf728efda187d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-sheets/scripts/xlsx_read.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6b753c1ef876eb439a4f264ff8989e78e8d3e88d",
+    "size": 5806,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6b753c1ef876eb439a4f264ff8989e78e8d3e88d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-sheets/scripts/xlsx_recalc.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e63300d9f51eac964c707e9a5ae1414cf070b592",
+    "size": 4173,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e63300d9f51eac964c707e9a5ae1414cf070b592",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/document-sheets/scripts/xlsx_restructure.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d58a640498a3b61bbe8e6bc5b6eacf017461228a",
+    "size": 13739,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d58a640498a3b61bbe8e6bc5b6eacf017461228a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/edge-preview/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "12f2202230f891d78594bffa7bdf08485fe540ff",
+    "size": 8141,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/12f2202230f891d78594bffa7bdf08485fe540ff",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/edge-preview/scripts/parse_deploy_output.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "978f0a06ed75e49e98fddee6fdcd65f79b44e0e0",
+    "size": 4281,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/978f0a06ed75e49e98fddee6fdcd65f79b44e0e0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e16e58d174091a9f8885775ef380cb4ae092b6f2",
+    "size": 6131,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e16e58d174091a9f8885775ef380cb4ae092b6f2",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/auth.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1bd3d9c0583ae6ee90253dd378ac04ec419667eb",
+    "size": 10900,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1bd3d9c0583ae6ee90253dd378ac04ec419667eb",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/ci-troubleshooting.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "46220de18992598ea22d4c44f4a9bfd38534891e",
+    "size": 4936,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/46220de18992598ea22d4c44f4a9bfd38534891e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/code-review.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "78f653461c7f5328d5fb5e2488bf249921c7b018",
+    "size": 12976,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/78f653461c7f5328d5fb5e2488bf249921c7b018",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/conventional-commits.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9c7532f27ca3117e709e2ffafde5b4041fe1a056",
+    "size": 2417,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9c7532f27ca3117e709e2ffafde5b4041fe1a056",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/github-api-cheatsheet.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0158db0995d801dad4c1753195d692c15fc4ab46",
+    "size": 6048,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0158db0995d801dad4c1753195d692c15fc4ab46",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/issue-to-pr.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f6da3e8db1f8054244a1ad580adf75e2fe2b631f",
+    "size": 5622,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f6da3e8db1f8054244a1ad580adf75e2fe2b631f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/issues.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d86c4a8aed63c0970d49194815d994820a00879a",
+    "size": 8738,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d86c4a8aed63c0970d49194815d994820a00879a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/pr-workflow.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f4478353a56ba0499bc98af42a2bb4adfb0ad344",
+    "size": 9465,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f4478353a56ba0499bc98af42a2bb4adfb0ad344",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/repo-management.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f411dc309f5a11a26d2c9f35a66a9e291c542bea",
+    "size": 13401,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f411dc309f5a11a26d2c9f35a66a9e291c542bea",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/references/review-output-template.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7f540aa37a44c80258252cc8a940ced15565c80c",
+    "size": 2462,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7f540aa37a44c80258252cc8a940ced15565c80c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/scripts/gh-env.sh",
+    "mode": "100755",
+    "type": "blob",
+    "sha": "aef98c247c9479816a7884d9d2a6ceee3141eb80",
+    "size": 2249,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/aef98c247c9479816a7884d9d2a6ceee3141eb80",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/scripts/git-credential-token.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7955aed6fac90d8b171a32175d2bd9b09558e6a2",
+    "size": 1788,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7955aed6fac90d8b171a32175d2bd9b09558e6a2",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/templates/bug-report.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c07a782f0c1508ca256af627fa13654a547698b3",
+    "size": 469,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c07a782f0c1508ca256af627fa13654a547698b3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/templates/feature-request.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "449ad82d548d3767e48c0808fa2b3850a9236e15",
+    "size": 598,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/449ad82d548d3767e48c0808fa2b3850a9236e15",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/templates/pr-body-bugfix.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c80f220c8f275168fc31e08d9b4db7ff7abc7392",
+    "size": 513,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c80f220c8f275168fc31e08d9b4db7ff7abc7392",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/github-operations/templates/pr-body-feature.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "495aa162400a7a9b68b335cff835ceeea7993e90",
+    "size": 580,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/495aa162400a7a9b68b335cff835ceeea7993e90",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/mail-operations/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "988996b44614ce17cb8f7d2abfcea2482b208275",
+    "size": 4402,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/988996b44614ce17cb8f7d2abfcea2482b208275",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/mail-operations/references/configuration.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "872edf67fd7b9cd40d82b09d9b8b18384c35f487",
+    "size": 4093,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/872edf67fd7b9cd40d82b09d9b8b18384c35f487",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/mail-operations/references/message-composition.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2dbd7a99d481092b0c1217e2975585677cadae6f",
+    "size": 3799,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2dbd7a99d481092b0c1217e2975585677cadae6f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/mcp-client-build/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cb168a0d464bb8c47adfc6e1c620048faca51071",
+    "size": 5666,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cb168a0d464bb8c47adfc6e1c620048faca51071",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/notion-operations/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9cff50fee0a1eda5e2cc665604a7a314d246334b",
+    "size": 5081,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9cff50fee0a1eda5e2cc665604a7a314d246334b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "59c73c9c0350cb2d4c520d73e266c46f573d89ae",
+    "size": 12442,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/59c73c9c0350cb2d4c520d73e266c46f573d89ae",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/references/daily-brief.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "aced18f4505320f55fceeaa89c21401471512f43",
+    "size": 3217,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/aced18f4505320f55fceeaa89c21401471512f43",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/references/gmail-search-syntax.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f662346791b62eff1bd9907f4b48c95f5ce4ca55",
+    "size": 2150,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f662346791b62eff1bd9907f4b48c95f5ce4ca55",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/references/output-format.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5a05fee4eed170d4217c3df60acc5fd333761416",
+    "size": 1317,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5a05fee4eed170d4217c3df60acc5fd333761416",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/scripts/_state_home.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ce4f6018e29a018466c93a65eba4f1d278d7b13f",
+    "size": 725,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ce4f6018e29a018466c93a65eba4f1d278d7b13f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/scripts/google_api.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ad3ebf82ce8502c22a3ce5eb810f116110e906bc",
+    "size": 46963,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ad3ebf82ce8502c22a3ce5eb810f116110e906bc",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/scripts/gws_bridge.py",
+    "mode": "100755",
+    "type": "blob",
+    "sha": "60da73331cefebaa18a80ab2ffc942e67cac452b",
+    "size": 4357,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/60da73331cefebaa18a80ab2ffc942e67cac452b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/office-operations/scripts/setup.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "be48bcfe3fe645bc6f3c5358232d2b5ed8069992",
+    "size": 17183,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/be48bcfe3fe645bc6f3c5358232d2b5ed8069992",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/platform-cli/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e278c3cb9b5132fbf49b88808dc036008ae31011",
+    "size": 12559,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e278c3cb9b5132fbf49b88808dc036008ae31011",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/resource-watch/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c9f7b04b28436e546458ef4fd23ac0313c385808",
+    "size": 5884,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c9f7b04b28436e546458ef4fd23ac0313c385808",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/resource-watch/scripts/_watermark.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "67af6df5aa7415dcba3ec75cea7b2d9992b24898",
+    "size": 5107,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/67af6df5aa7415dcba3ec75cea7b2d9992b24898",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/resource-watch/scripts/watch_github.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3a34f67af437771c4dc48a63ba937ec106fd3260",
+    "size": 5962,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3a34f67af437771c4dc48a63ba937ec106fd3260",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/resource-watch/scripts/watch_http_json.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1f653df0a77d16b72341606c31d8eb17776432e8",
+    "size": 4394,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1f653df0a77d16b72341606c31d8eb17776432e8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/resource-watch/scripts/watch_rss.py",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0a3205752d0047616ae592481de565e0f08627d3",
+    "size": 3942,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0a3205752d0047616ae592481de565e0f08627d3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/site-publish/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4355a5d003ec2c3dd74e761b9125d31e09d20296",
+    "size": 9627,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4355a5d003ec2c3dd74e761b9125d31e09d20296",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/stack-provision/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dce714b424f03a12ea79910908c8a9dbf47be684",
+    "size": 5179,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dce714b424f03a12ea79910908c8a9dbf47be684",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/vault-operations/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "225397d4129347806fa178f51da30c80eba43d8e",
+    "size": 6348,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/225397d4129347806fa178f51da30c80eba43d8e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/vault-operations/references/cli-examples.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "857ce6999a15609a61915d453c619bcf333f42ef",
+    "size": 913,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/857ce6999a15609a61915d453c619bcf333f42ef",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/assets/skills/vault-operations/references/get-started.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "851c6d471da33fdec2a4730887c87cf64c8aceb4",
+    "size": 1985,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/851c6d471da33fdec2a4730887c87cf64c8aceb4",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6a7a84a36a8a7ca8625c92217cf090743d8a42d2",
+    "size": 48,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6a7a84a36a8a7ca8625c92217cf090743d8a42d2",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/licenses/hermes.LICENSE",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "75410e73319c72cd3e991a501c5455eb78f38375",
+    "size": 1070,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/75410e73319c72cd3e991a501c5455eb78f38375",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/licenses/openclaw.LICENSE",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ed064819ab537575d0cad902f7e5af4a3488b1d0",
+    "size": 1076,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ed064819ab537575d0cad902f7e5af4a3488b1d0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "af6ad590fbda4072e1ec499bd763f47773c20321",
+    "size": 467,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/af6ad590fbda4072e1ec499bd763f47773c20321",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/src/catalog.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9ce9a7e101908063bc4bff5120c8e86ad2526df8",
+    "size": 11769,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9ce9a7e101908063bc4bff5120c8e86ad2526df8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/src/providers.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "28c4af1a40443eb176f794e93335e52fb4097023",
+    "size": 2857,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/28c4af1a40443eb176f794e93335e52fb4097023",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/src/sources.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c9823e4e18f9a405b72929a9dac472c75715729b",
+    "size": 1364,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c9823e4e18f9a405b72929a9dac472c75715729b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/test/catalog.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "06aee8dd85234ddf128071d1ba4af1d59607e357",
+    "size": 13145,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/06aee8dd85234ddf128071d1ba4af1d59607e357",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/capability-assets/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "427e265f6d77693c38e09bb57ec0a57090623fa5",
+    "size": 303,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/427e265f6d77693c38e09bb57ec0a57090623fa5",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "32476597cc07a6dec9bd75db9625d2f00481eb6e",
+    "size": 2828,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/32476597cc07a6dec9bd75db9625d2f00481eb6e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f3832a4bb25078ca30e4a5bf1b11c989d2079235",
+    "size": 107,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f3832a4bb25078ca30e4a5bf1b11c989d2079235",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "59b5371069b1bda0e5304453d5ad588b4bd8360a",
+    "size": 1001,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/59b5371069b1bda0e5304453d5ad588b4bd8360a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/executable.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "76e50bd7d1844e67ec53a174e6d0d0d9e06e9da2",
+    "size": 6527,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/76e50bd7d1844e67ec53a174e6d0d0d9e06e9da2",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/host/options.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1396356d4f998a87becb1474ab3e272544b2f82b",
+    "size": 7025,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1396356d4f998a87becb1474ab3e272544b2f82b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/sdk.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "41aee3049016ffd91e29000580c19b0fa7898c8d",
+    "size": 5306,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/41aee3049016ffd91e29000580c19b0fa7898c8d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/transcript.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b0f3ff180daef3084134bb88c63fab5a80cc34d8",
+    "size": 202,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b0f3ff180daef3084134bb88c63fab5a80cc34d8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/account.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cf86e1118f4e1dcb38bd9c1c90483fa66d78ba10",
+    "size": 6703,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cf86e1118f4e1dcb38bd9c1c90483fa66d78ba10",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/catalog.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "568ff7f8d67f79af324ac3dd0377c7485ec8498f",
+    "size": 3033,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/568ff7f8d67f79af324ac3dd0377c7485ec8498f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+    "size": 41462,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/login.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c17f8aef562089eb2f9e92483e4c26bc93232fef",
+    "size": 4299,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c17f8aef562089eb2f9e92483e4c26bc93232fef",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/output.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0c5cac07ea2def653cc850d54508d9b59fbbe6a9",
+    "size": 3447,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0c5cac07ea2def653cc850d54508d9b59fbbe6a9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/record.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "232cf6b1f2834aefda1d7cad2ae7fb6a71d61fdc",
+    "size": 4436,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/232cf6b1f2834aefda1d7cad2ae7fb6a71d61fdc",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/credential-access.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3bfd323b5d228372f13f6cdc8fc8da53cac02c29",
+    "size": 16342,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3bfd323b5d228372f13f6cdc8fc8da53cac02c29",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/fixture/tmpdir.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6b6c066815ae52543cb23b4fdf267293418d0b83",
+    "size": 377,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6b6c066815ae52543cb23b4fdf267293418d0b83",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/preset-guard.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "757a7e49634cea27f6037880bcbacdd945c8f9dd",
+    "size": 1348,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/757a7e49634cea27f6037880bcbacdd945c8f9dd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/sdk-lifecycle.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4fe53ca7e35e0dfb8171855299fe93ac45cd380e",
+    "size": 4713,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4fe53ca7e35e0dfb8171855299fe93ac45cd380e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/spawn-environment.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e54303215735bfc7f7d2dab867084ae7e348e4ac",
+    "size": 3885,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e54303215735bfc7f7d2dab867084ae7e348e4ac",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/v2-account.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b89b74c8a4b5e988be033c42028ed2f175d6848",
+    "size": 11175,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b89b74c8a4b5e988be033c42028ed2f175d6848",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/v2-catalog.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7aebda2fa65bcf6c6430ba267e0d0204c025467a",
+    "size": 4480,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7aebda2fa65bcf6c6430ba267e0d0204c025467a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/v2-host-seats.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f595dd98786b7e3a33687b34730668ed73ebadcb",
+    "size": 4059,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f595dd98786b7e3a33687b34730668ed73ebadcb",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/test/v2-host.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1355a6a5a7afd805ea460a7ab72bad45cd0e3b34",
+    "size": 45691,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1355a6a5a7afd805ea460a7ab72bad45cd0e3b34",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ebf498e9a70943d703288d28a71e1a4e59643498",
+    "size": 280,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ebf498e9a70943d703288d28a71e1a4e59643498",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "98c7e605b2bc954f39eef51a97a18fa077ee7a3f",
+    "size": 2534,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/98c7e605b2bc954f39eef51a97a18fa077ee7a3f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "size": 104,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2ceb95ef74f2ef9ac716b48c472cac0d15575b16",
+    "size": 598,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2ceb95ef74f2ef9ac716b48c472cac0d15575b16",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/bootstrap.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ec561c7ae686d1137930abccf07e7b420a5f5128",
+    "size": 1361,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ec561c7ae686d1137930abccf07e7b420a5f5128",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/bootstrap.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bf021d51fae750aed994189985f2e43ff7b11269",
+    "size": 1838,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bf021d51fae750aed994189985f2e43ff7b11269",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/report-state.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0764a73f318e53d58a0e32d3eed6c05e3eb59b14",
+    "size": 438,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0764a73f318e53d58a0e32d3eed6c05e3eb59b14",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/report-state.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e3bd24a082b5b4ea2075948efb739808f099dfdd",
+    "size": 257,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e3bd24a082b5b4ea2075948efb739808f099dfdd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/scan.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fce179e41c0be2e989b1294d668e969ad5354efd",
+    "size": 2696,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fce179e41c0be2e989b1294d668e969ad5354efd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/scan.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e4512251b7db3fc10981766565ba5e47918bf513",
+    "size": 13691,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e4512251b7db3fc10981766565ba5e47918bf513",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/scheduler.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c4f452be965622a576c0efdcea8ef5d822f2d102",
+    "size": 3684,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c4f452be965622a576c0efdcea8ef5d822f2d102",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/scheduler.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9c1c23ebb6393e222adfab32a59f369730c8c840",
+    "size": 4239,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9c1c23ebb6393e222adfab32a59f369730c8c840",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/src/thresholds.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ed62f11887bdb0f6dc823e61806536e33dd460b4",
+    "size": 456,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ed62f11887bdb0f6dc823e61806536e33dd460b4",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/janitor/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ebf498e9a70943d703288d28a71e1a4e59643498",
+    "size": 280,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ebf498e9a70943d703288d28a71e1a4e59643498",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4927238a31339a604a0f2360b5957f4f602f89ed",
+    "size": 1624,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4927238a31339a604a0f2360b5957f4f602f89ed",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-plan/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "89ceb6c06cc45277c5bf0a7148c064d88464a083",
+    "size": 6529,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/89ceb6c06cc45277c5bf0a7148c064d88464a083",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-plan/briefs/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2e7e069cbc2c6a2ba209c9ec8aa62364a9856a57",
+    "size": 7807,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2e7e069cbc2c6a2ba209c9ec8aa62364a9856a57",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-plan/decomposition/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b78cc17c7164e071712ace24a355e4a928a2f696",
+    "size": 9730,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b78cc17c7164e071712ace24a355e4a928a2f696",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-plan/load-bearing-contracts/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "49f45f343893f846b28bba40b8ca7996b13056d8",
+    "size": 6386,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/49f45f343893f846b28bba40b8ca7996b13056d8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-plan/product-design-spec/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "30e28a0cbd5f89b717af860711a82e5d1ddf8551",
+    "size": 9125,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/30e28a0cbd5f89b717af860711a82e5d1ddf8551",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-work-package/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0aecb78ed72d253a217d8be350a7b7be2dda99f4",
+    "size": 4749,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0aecb78ed72d253a217d8be350a7b7be2dda99f4",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-work-package/native-fields/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ef4654af8f439b5b816c600641626af597646a20",
+    "size": 4298,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ef4654af8f439b5b816c600641626af597646a20",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-work-package/native-proposal/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "72595074807db7005e2f70d78e4b3373535f9597",
+    "size": 6101,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/72595074807db7005e2f70d78e4b3373535f9597",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-workflow/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dd47ef27ac5ef0e5a032d50daf2b4e5dc0f80620",
+    "size": 4639,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dd47ef27ac5ef0e5a032d50daf2b4e5dc0f80620",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-workflow/references/example.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "373368c6caed8a47db9f99d26dc2b6730c3da4d0",
+    "size": 4060,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/373368c6caed8a47db9f99d26dc2b6730c3da4d0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dfb91ee3a2cd2b2b308a14864677d9141140919f",
+    "size": 1958,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dfb91ee3a2cd2b2b308a14864677d9141140919f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7cc973debeb9b3ed2ed97397b71bd150644340cc",
+    "size": 5863,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7cc973debeb9b3ed2ed97397b71bd150644340cc",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/app-auth/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5c4aec27b827f325d7753fa1138b3054f5d69e47",
+    "size": 2039,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5c4aec27b827f325d7753fa1138b3054f5d69e47",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/codec/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "75937ee0aa35f2feaddb73c22a06037706626d3e",
+    "size": 2832,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/75937ee0aa35f2feaddb73c22a06037706626d3e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/graphql/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2f062de9b17bfc29d82885711cbdf7c8e4623456",
+    "size": 2738,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2f062de9b17bfc29d82885711cbdf7c8e4623456",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/grpc/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "640ad745e754d963eeca8cb01a397525e75cea6f",
+    "size": 2661,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/640ad745e754d963eeca8cb01a397525e75cea6f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/observability/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3250154c6d90ceb5aae49b60887bf11040f0b9d2",
+    "size": 1900,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3250154c6d90ceb5aae49b60887bf11040f0b9d2",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/rest/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "810e68189f856fe30a0bd50267add540889b945e",
+    "size": 2607,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/810e68189f856fe30a0bd50267add540889b945e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/sse/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0525983ede8f2e7f269d75be6f195934a6300458",
+    "size": 2366,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0525983ede8f2e7f269d75be6f195934a6300458",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/upload/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f32d34d0c4ac92c014b2b41015fe52f548495e85",
+    "size": 2061,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f32d34d0c4ac92c014b2b41015fe52f548495e85",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/webhook/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5676adbc76cacefc4f15d90ba44c7ffd7aa02cc4",
+    "size": 2227,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5676adbc76cacefc4f15d90ba44c7ffd7aa02cc4",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-api/websocket/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "913e8e7e7f5ba4d3444b1c918c7a4fa601905b08",
+    "size": 2308,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/913e8e7e7f5ba4d3444b1c918c7a4fa601905b08",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-check/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b0fa89cb8ddd253878c4647df83101b9811855a6",
+    "size": 5046,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b0fa89cb8ddd253878c4647df83101b9811855a6",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-check/faults/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "79005ea2419ec6ec21f9392c87874af4add98166",
+    "size": 2317,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/79005ea2419ec6ec21f9392c87874af4add98166",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-check/generated-inputs/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2fbc6589ace95b4bcb6b8d24b0b1e200a6293961",
+    "size": 2644,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2fbc6589ace95b4bcb6b8d24b0b1e200a6293961",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-check/http-fixtures/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7330895069fcf3e10c6de5cf59ed954c50c7c0df",
+    "size": 2234,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7330895069fcf3e10c6de5cf59ed954c50c7c0df",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-check/real-services/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ce33c1d59cdf4fe783af5cd32805e0d367157dad",
+    "size": 2717,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ce33c1d59cdf4fe783af5cd32805e0d367157dad",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e389cdd7dd650079d2191f21e4f1f6e65cef8c83",
+    "size": 825,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e389cdd7dd650079d2191f21e4f1f6e65cef8c83",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/code/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a8cc415a0c446c866e0a134b990fd5932f4c5a83",
+    "size": 395,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a8cc415a0c446c866e0a134b990fd5932f4c5a83",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/code/ast-grep/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "31a05b0e5da5946507cbaeb6c845ede87dfe8698",
+    "size": 4288,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/31a05b0e5da5946507cbaeb6c845ede87dfe8698",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/kube/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7f195250086f7f1f440b76a5802185c0755ae8ed",
+    "size": 483,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7f195250086f7f1f440b76a5802185c0755ae8ed",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/kube/controller-gen/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b706f765ca07ff2701e6224075b51d9ac841fb65",
+    "size": 4622,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b706f765ca07ff2701e6224075b51d9ac841fb65",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/kube/kopium/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ca4bef4f65a110e31e8b70cd3d833e22b7e80740",
+    "size": 4754,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ca4bef4f65a110e31e8b70cd3d833e22b7e80740",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/kube/kubeconform/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "827fc011f91982d14b2b225ffbaf001af99bbd31",
+    "size": 3702,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/827fc011f91982d14b2b225ffbaf001af99bbd31",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b2768fc3d82fdcd9262b2863655a01dc0eb1087",
+    "size": 520,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b2768fc3d82fdcd9262b2863655a01dc0eb1087",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/buf/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2acc80c7bed26804d56453eef67895602bccdac6",
+    "size": 4475,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2acc80c7bed26804d56453eef67895602bccdac6",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/datamodel-codegen/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "77ce5fdfc82c671a04b0c9843ec25c5a8a40688a",
+    "size": 5171,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/77ce5fdfc82c671a04b0c9843ec25c5a8a40688a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/kiota/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "195fc7519f2e290e2083b88054da03df12cec91e",
+    "size": 4067,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/195fc7519f2e290e2083b88054da03df12cec91e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/modelina/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8db2800654be7452c65be2831d265de357ec7766",
+    "size": 4502,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8db2800654be7452c65be2831d265de357ec7766",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/ogen/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "320c007206d1c23ea166a929f767573bde3d602d",
+    "size": 4503,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/320c007206d1c23ea166a929f767573bde3d602d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/openapi-generator/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "32b1c177c7be83963c0b3ae35bb45dac533af554",
+    "size": 4819,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/32b1c177c7be83963c0b3ae35bb45dac533af554",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/orval/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4c195afabb70fd0d9b05cafce54227e9495b1c1d",
+    "size": 4638,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4c195afabb70fd0d9b05cafce54227e9495b1c1d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/schema/protoc-gen-es/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a11ee56597e38858e0a93ea7bfa3dd4e52cfce1c",
+    "size": 5224,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a11ee56597e38858e0a93ea7bfa3dd4e52cfce1c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3b50aa14c7acfc81ab946381dadc75c98f36a45a",
+    "size": 443,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3b50aa14c7acfc81ab946381dadc75c98f36a45a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/datafusion-cli/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dffbcebd0055eaf322d801b782fc0fd4acc6d17a",
+    "size": 4123,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dffbcebd0055eaf322d801b782fc0fd4acc6d17a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/gocqlx-schemagen/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bc7bf8794b5c14d201a14f85b9d8801b0c33c447",
+    "size": 5491,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bc7bf8794b5c14d201a14f85b9d8801b0c33c447",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/kysely-codegen/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ba1f002ebc0bedd39e23288ce1c089d1b833423e",
+    "size": 3720,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ba1f002ebc0bedd39e23288ce1c089d1b833423e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/postgres-language-server/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "81a2fafb0836362ab48c34d67a92214020ae2add",
+    "size": 3895,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/81a2fafb0836362ab48c34d67a92214020ae2add",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/sqlc/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b7526d657cac5170bc3736f28b6b48ded39b44cf",
+    "size": 4682,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b7526d657cac5170bc3736f28b6b48ded39b44cf",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/sqlglot/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f39c7b3fb60c2da4037ef8bba78aafdb6470c1e1",
+    "size": 3317,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f39c7b3fb60c2da4037ef8bba78aafdb6470c1e1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/sqlx/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d0d4297a4ec9afe6082ba1e89a13d28239422c3d",
+    "size": 4614,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d0d4297a4ec9afe6082ba1e89a13d28239422c3d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/sql/squawk/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0e3904d9333ec46c463d5f6398031424cf73a8d8",
+    "size": 4094,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0e3904d9333ec46c463d5f6398031424cf73a8d8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-concurrency/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3c2c3d72d63abb43300774dbed73b45c97bec6d5",
+    "size": 4790,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3c2c3d72d63abb43300774dbed73b45c97bec6d5",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-concurrency/cancellation/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "79af5d85812f8b8b47db78b8e4c3672485937ce7",
+    "size": 2291,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/79af5d85812f8b8b47db78b8e4c3672485937ce7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-concurrency/jobs/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bd572ee53089a3d1be219ae850e3e7470bc0da81",
+    "size": 2772,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bd572ee53089a3d1be219ae850e3e7470bc0da81",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-concurrency/retries/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4aa0b58b560d8d2dc129c463fe8855f4f012cb68",
+    "size": 2748,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4aa0b58b560d8d2dc129c463fe8855f4f012cb68",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-concurrency/streams/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6235dc8c40cb6200dcd0673bac786ce10edc42f3",
+    "size": 2860,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6235dc8c40cb6200dcd0673bac786ce10edc42f3",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-data/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dde1f1b4906a5ca3e311ff51eaa3b857d97a84cf",
+    "size": 4862,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dde1f1b4906a5ca3e311ff51eaa3b857d97a84cf",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-data/migration-phase/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "685858d1b4af43536dc343452a6ecde32f8244c1",
+    "size": 2992,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/685858d1b4af43536dc343452a6ecde32f8244c1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-data/query/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "64cf7f280af690ec7f812da563032140a0c3d447",
+    "size": 2368,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/64cf7f280af690ec7f812da563032140a0c3d447",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-data/transaction/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "eb8ca9c3f446c08ca6dfd051bfcee1cd98cebb15",
+    "size": 2370,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/eb8ca9c3f446c08ca6dfd051bfcee1cd98cebb15",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "06074a613a2b778265c44d2e889752dc7d2c73ac",
+    "size": 6807,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/06074a613a2b778265c44d2e889752dc7d2c73ac",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/feature/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1f8b94579b3ed08844e91860ccf9ffd827097f7d",
+    "size": 2230,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1f8b94579b3ed08844e91860ccf9ffd827097f7d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/migration/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e73f349a389db55411b7a0d3d27f5d877fe853ff",
+    "size": 2634,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e73f349a389db55411b7a0d3d27f5d877fe853ff",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/optimization/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c0ae375c700ed4fd1345cb938565235aa1c77a09",
+    "size": 1752,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c0ae375c700ed4fd1345cb938565235aa1c77a09",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/refactor/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b42077245ccfc19b2c048a6da7f37228787fdd1",
+    "size": 2058,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b42077245ccfc19b2c048a6da7f37228787fdd1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/references/continuity.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ce6cbf72114b03cf6fff2068eb68accd169453ee",
+    "size": 4267,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ce6cbf72114b03cf6fff2068eb68accd169453ee",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/repair/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0ad627797fe977a32d1e6f4c51d816c49121dd00",
+    "size": 2328,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0ad627797fe977a32d1e6f4c51d816c49121dd00",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/tests/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "494d85764933cb54940b806312f8ff36dd2b8f5a",
+    "size": 1947,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/494d85764933cb54940b806312f8ff36dd2b8f5a",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-refactor/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7ff9fef7be649b6b2892cb662de41c6cb90b0725",
+    "size": 4226,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7ff9fef7be649b6b2892cb662de41c6cb90b0725",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-refactor/scoped-transformation/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9f7e44b28d2c24adf218875e68d044033ee195cf",
+    "size": 2624,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9f7e44b28d2c24adf218875e68d044033ee195cf",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-refactor/syntax-vs-symbol/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "435c0e0fc2e1340de39ccdd6fa1adfd77eeb4cd7",
+    "size": 2523,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/435c0e0fc2e1340de39ccdd6fa1adfd77eeb4cd7",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "79b1cf87ce0eeb2e4436f0ab4c305491f594d14d",
+    "size": 885,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/79b1cf87ce0eeb2e4436f0ab4c305491f594d14d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c9ec00a6ca8576164b221039e0d375d46681f325",
+    "size": 654,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c9ec00a6ca8576164b221039e0d375d46681f325",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/go/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "85155d9c29f71db565363e73e16b62d422fc33dd",
+    "size": 4486,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/85155d9c29f71db565363e73e16b62d422fc33dd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/go/chi/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4dd1f20017481c3290dbde2cac1f865511f478c8",
+    "size": 4097,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4dd1f20017481c3290dbde2cac1f865511f478c8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/go/pgx/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "43b55d0329a27edf2a9c02f29293ee0c9ac0ae43",
+    "size": 4923,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/43b55d0329a27edf2a9c02f29293ee0c9ac0ae43",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/go/sqlc/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "57b730d88be920f5833ec54e7639f76719f5ab98",
+    "size": 4301,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/57b730d88be920f5833ec54e7639f76719f5ab98",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/js-ts/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3c6913d11d6897731789dd768f45b6f2d041902d",
+    "size": 4602,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3c6913d11d6897731789dd768f45b6f2d041902d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/js-ts/express/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "72c7a9753a50f7a647b53f6ec8036c8d9ade6677",
+    "size": 4399,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/72c7a9753a50f7a647b53f6ec8036c8d9ade6677",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/js-ts/fastify/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "65ec02d0687b9a8f884f0d68f54c9194c83c3d9b",
+    "size": 4265,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/65ec02d0687b9a8f884f0d68f54c9194c83c3d9b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/php/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b4a7f87ef8ec5eea10374300e4bf0b0042f8857c",
+    "size": 3505,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b4a7f87ef8ec5eea10374300e4bf0b0042f8857c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/php/laravel/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c973fd4e515321ea9893abb150f181f429468a46",
+    "size": 4123,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c973fd4e515321ea9893abb150f181f429468a46",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/python/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "45c24dab6743ec8638690fd65e50bd7b7aa0627b",
+    "size": 4138,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/45c24dab6743ec8638690fd65e50bd7b7aa0627b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/python/django/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "efbc7305870f9cc8a57292f2b9ed039260b659d0",
+    "size": 5038,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/efbc7305870f9cc8a57292f2b9ed039260b659d0",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/python/fastapi/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c25bb176b1d649b8846fb79e379d5b414fe59d79",
+    "size": 4388,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c25bb176b1d649b8846fb79e379d5b414fe59d79",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/python/kubeflow/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b77d37fbf3e5d365bd5696a8dfd6ebd1adc7e98c",
+    "size": 2657,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b77d37fbf3e5d365bd5696a8dfd6ebd1adc7e98c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/python/pydantic/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "69eb88b55fa2fc05a730621db56bb5ff9e4199c9",
+    "size": 3871,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/69eb88b55fa2fc05a730621db56bb5ff9e4199c9",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/python/sqlalchemy/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "40b567e4f228267e9097717bb920a4edc4a0fc2b",
+    "size": 4432,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/40b567e4f228267e9097717bb920a4edc4a0fc2b",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/ruby/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4e3834726d335efaa48460806da452f9ab0b1112",
+    "size": 3850,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4e3834726d335efaa48460806da452f9ab0b1112",
+    "unit": "L1-C"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/ruby/rails/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "348f02dac30e5eb852896c459fa8f993f90530bd",
+    "size": 4329,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/348f02dac30e5eb852896c459fa8f993f90530bd",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/BASELINE-BENCHMARK.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "88df2721894e39b4820aca2ed5c974a2f6b73e57",
+    "size": 19243,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/88df2721894e39b4820aca2ed5c974a2f6b73e57",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/CHARTER.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "73b274763dcd564348cfdcaea6678abf333b3c7e",
+    "size": 3946,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/73b274763dcd564348cfdcaea6678abf333b3c7e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/DELIVERY.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "370dd6238a711e2eb9dc9a39aeb7dafdd600ba18",
+    "size": 10930,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/370dd6238a711e2eb9dc9a39aeb7dafdd600ba18",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/DESKTOP-EVIDENCE.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "514adeaa5c578f52e368321d5243a245ff43d11f",
+    "size": 12503,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/514adeaa5c578f52e368321d5243a245ff43d11f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/EPIC-CONFIRMATION.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fe466ecf5700683b9e367267ec7ec00e070e5a90",
+    "size": 42364,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fe466ecf5700683b9e367267ec7ec00e070e5a90",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/EVALUATION.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2e86a69c63ebf996fc9e41648a72a7be38d9a284",
+    "size": 34228,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2e86a69c63ebf996fc9e41648a72a7be38d9a284",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/FIXTURE-SETUP.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c9979143f09c1b94d5fd129e95db68353e4b1b65",
+    "size": 13550,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c9979143f09c1b94d5fd129e95db68353e4b1b65",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/HANDOFF.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c0413068b140e8f94f8bf726c4402d0e21c4f76f",
+    "size": 11819,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c0413068b140e8f94f8bf726c4402d0e21c4f76f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/IMPLEMENTATION.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a980b084a5c2c6294c4560771ba2ff9827ddc14f",
+    "size": 30693,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a980b084a5c2c6294c4560771ba2ff9827ddc14f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/MUTATIONS.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "40b9e92e2ec49dc08697bab23b960aa51b9e0e4e",
+    "size": 8075,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/40b9e92e2ec49dc08697bab23b960aa51b9e0e4e",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/QUALIFICATION-MUTATIONS.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e4e06b9af3ee4ab2f8c791001947b22794a252a8",
+    "size": 5380,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e4e06b9af3ee4ab2f8c791001947b22794a252a8",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/QUALIFICATION.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ff0980f9eecc501704e00557c2ae1d87a7fe2f1d",
+    "size": 12063,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ff0980f9eecc501704e00557c2ae1d87a7fe2f1d",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/QUALITY-PILOT-CLAUDE.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "700787cbf4f468fd5ac82f5e3500089c58e54580",
+    "size": 12063,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/700787cbf4f468fd5ac82f5e3500089c58e54580",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/QUALITY-PILOT.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e8bd7b75462f2c4dec2125cde540f95a160df23c",
+    "size": 5464,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e8bd7b75462f2c4dec2125cde540f95a160df23c",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/STUDY-CONFIRMATION.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3d8c45b254356e6c0994ba3a310bba457b8e3f59",
+    "size": 5383,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3d8c45b254356e6c0994ba3a310bba457b8e3f59",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/STUDY-FAILURES.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8ee766381237c78c3132ade762d38db657c16a9f",
+    "size": 4054,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8ee766381237c78c3132ade762d38db657c16a9f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/STUDY-LANE.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bec351b63aa3b1f10f3f6c4142268177fbb7a930",
+    "size": 4075,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bec351b63aa3b1f10f3f6c4142268177fbb7a930",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/SWE-QA-PRO.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "aaa9c1b7550944fdca8b593508c8e33045519b8f",
+    "size": 15073,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/aaa9c1b7550944fdca8b593508c8e33045519b8f",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/UI-QUALIFICATION.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f9fea15e0ede6df45d8d00211feef16c45cd8509",
+    "size": 21104,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f9fea15e0ede6df45d8d00211feef16c45cd8509",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/skills/jimmy-calibration/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "77823850be86ad39aa328bd93247f7d422d120f1",
+    "size": 2983,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/77823850be86ad39aa328bd93247f7d422d120f1",
+    "unit": "L1-C"
+  },
+  {
+    "path": "packages/jimmy-specialist/skills/jimmy-web-research/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "250c39cf6a16f44713a37780aa9b21f7fd8682b3",
+    "size": 2364,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/250c39cf6a16f44713a37780aa9b21f7fd8682b3",
+    "unit": "L1-C"
+  }
+]

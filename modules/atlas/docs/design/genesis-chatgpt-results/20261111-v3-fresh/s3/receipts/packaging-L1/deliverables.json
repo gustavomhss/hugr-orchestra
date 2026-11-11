@@ -1,0 +1,126 @@
+{
+  "state": "DRAFT_READY_FOR_ROOT_BINDING",
+  "package_state": "IN_PROGRESS",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "current_files": [
+    "draft-native-package.json",
+    "population-map.jsonl",
+    "mapping-contract.json",
+    "integrity-report.json",
+    "input-snapshot.json",
+    "payload-placement.json",
+    "request.md",
+    "request-steering-001.md",
+    "request-steering-002.md",
+    "request-steering-003.md",
+    "build_package.py",
+    "validate_package.py",
+    "response.md"
+  ],
+  "historical_files": [
+    "draft-native-package-v1.json",
+    "draft-native-package-v2.json",
+    "integrity-report-v1.json",
+    "integrity-report-v2.json",
+    "input-snapshot-v1.json",
+    "input-snapshot-v2.json"
+  ],
+  "files": {
+    "draft-native-package.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/draft-native-package.json",
+      "byte_length": 491913,
+      "sha256": "3dd2f55896912b7caa3e4717c7ed57f82c63b993c5eab90d3ef008f596dca2d9"
+    },
+    "population-map.jsonl": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/population-map.jsonl",
+      "byte_length": 3106292,
+      "sha256": "1693d8a0ee92955bc928e32083a2d125802dc8ccf28322b89624910f4dffd7a7"
+    },
+    "mapping-contract.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/mapping-contract.json",
+      "byte_length": 5258,
+      "sha256": "c08e06df84de7db974f8f6a165943b24576c183b0d8fd89e8322f68dad879b51"
+    },
+    "integrity-report.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/integrity-report.json",
+      "byte_length": 15844,
+      "sha256": "7c3f90ccae190f67552160fb00be46160caa65e201331711f510ed899bdd4f4d"
+    },
+    "input-snapshot.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/input-snapshot.json",
+      "byte_length": 22115,
+      "sha256": "3e768105a52f647283fbdfceb598e28603b1caf1aa2dc6a98ea2d5cbb917b2f4"
+    },
+    "payload-placement.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/payload-placement.json",
+      "byte_length": 1874,
+      "sha256": "282114db4e6bdf0935fa7b7d81bb9eb4ba579d367e45d40267f6480b9a90f7b1"
+    },
+    "request.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/request.md",
+      "byte_length": 1705,
+      "sha256": "0d5acaf30ced7a633aff15b755cce104209d62a8830bb2ea864a5fd6cb2cd847"
+    },
+    "request-steering-001.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/request-steering-001.md",
+      "byte_length": 1075,
+      "sha256": "8327ebeebcee437db512ed3cdaa9635859109f32498ea294b5a0d473fcab5349"
+    },
+    "request-steering-002.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/request-steering-002.md",
+      "byte_length": 704,
+      "sha256": "defb7bf54ecec8029faf480c96e5d5a11eee1d359aea577e7883bdf744da6cb0"
+    },
+    "request-steering-003.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/request-steering-003.md",
+      "byte_length": 720,
+      "sha256": "036b8d5968a92323dae545197a841ff6c0f779f5d8af08e2b779a8a3331a27a2"
+    },
+    "build_package.py": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/build_package.py",
+      "byte_length": 23838,
+      "sha256": "0ebd1906d3c7707ffbe55da738b6c8dbf739e34ee4c90bde32845741d2720993"
+    },
+    "validate_package.py": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/validate_package.py",
+      "byte_length": 4659,
+      "sha256": "e35ef72d813794b022f7c42e71fd0adf8e931ae8d63be3a4b5d7ce741352ec45"
+    },
+    "draft-native-package-v1.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/draft-native-package-v1.json",
+      "byte_length": 486412,
+      "sha256": "565d98eaac94ed9020916649a104cdb9230443a9a3a378063753eb7e0b858233"
+    },
+    "input-snapshot-v2.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/input-snapshot-v2.json",
+      "byte_length": 20210,
+      "sha256": "04ec62e82b99fe8096fd2a6282226960dd145d8881411c24652ee4cd1ada6cc8"
+    },
+    "input-snapshot-v1.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/input-snapshot-v1.json",
+      "byte_length": 14844,
+      "sha256": "1515a2e31b03e6166e4b7dce5a9c386cdfc58d464de1bd3e3b658de2e4712f93"
+    },
+    "integrity-report-v1.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/integrity-report-v1.json",
+      "byte_length": 13959,
+      "sha256": "4b94fb741da1acdc070d5969d62fa7bb4b1875f6a4fb1a4eddb71eed78255290"
+    },
+    "response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/response.md",
+      "byte_length": 8910,
+      "sha256": "03c598e8e2fe97374ef8c84088d5fe52a7736f89cbcd32b687b0e3bc7041bedd"
+    },
+    "integrity-report-v2.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/integrity-report-v2.json",
+      "byte_length": 14790,
+      "sha256": "bbb51bfc84f13e98cfe2da7d3b80e952feac0a323dd852e183978ea273ec7169"
+    },
+    "draft-native-package-v2.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/draft-native-package-v2.json",
+      "byte_length": 490588,
+      "sha256": "c14c02cfc9f684d71bdc96354ca6366e67fdc59177ce79e66b8cf2d789280acb"
+    }
+  }
+}

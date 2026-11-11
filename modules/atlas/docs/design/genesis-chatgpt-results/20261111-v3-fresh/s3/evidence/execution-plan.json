@@ -1,0 +1,18 @@
+{
+  "batch": "B1-L1",
+  "planned_producers": 3,
+  "planned_judges": 2,
+  "max_concurrent_agents_including_orchestrator": 4,
+  "layers": [
+    "L1",
+    "L2",
+    "L3",
+    "L4"
+  ],
+  "consumer_reserve": "one independent native consumer after runtime capability, corrective followups bounded to mandatory findings",
+  "paid_external_calls_authorized": false,
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN",
+  "historical_reservations": "UNRECONCILED_BY_ROOT",
+  "next_plan_revision": "before L2 dispatch after complete L1 acceptance"
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "s3-layer-acceptance/v1",
+  "layer": 1,
+  "recorded_at": "2026-11-11T17:10:03.824852+00:00",
+  "status": "ACCEPTED_STATIC_LAYER",
+  "population": 4553,
+  "paths_sha256": "6ca1aca1f8a1da4bf4061c67f06f983f0b676e6d90a7f2af945cb57a7f76c4f1",
+  "artifacts": [
+    {
+      "key": "s3-l1-maestro",
+      "body_sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918",
+      "byte_length": 19752,
+      "judgments": [
+        {
+          "path": "judgments/J1-L1-A-v1-final.md",
+          "sha256": "20b148e9540e6de0238c6699b02f12ed2cad31bb0e14941ca462bffb2d9a0bbd"
+        },
+        {
+          "path": "judgments/J2-L1-A-v1-final.md",
+          "sha256": "a85a4c67e691c2da7d8e7f71d4bbd3f0e22f006f8a1c11e8d750f46d3687735c"
+        }
+      ],
+      "required_findings_open": 0
+    },
+    {
+      "key": "s3-l1-relay",
+      "body_sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+      "byte_length": 23932,
+      "judgments": [
+        {
+          "path": "judgments/J1-L1-B-v2.json",
+          "sha256": "e5a2d69f618dbc35adc3a635a57c480be497a738b0ab7306249d2364f0de38bc"
+        },
+        {
+          "path": "judgments/J2-L1-B-v2.json",
+          "sha256": "5e6ea8916baeeae4aad90a058937f337605955ec44a989ef9a0622ab3c1efc77"
+        }
+      ],
+      "required_findings_open": 0
+    },
+    {
+      "key": "s3-l1-integrations",
+      "body_sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+      "byte_length": 23985,
+      "judgments": [
+        {
+          "path": "judgments/J1-L1-C-v3.json",
+          "sha256": "1f60db67ea177bde0fae1f4f4ce2c30d356e527e8ca4e478218fc0c068796706"
+        },
+        {
+          "path": "judgments/J2-L1-C-v3.json",
+          "sha256": "57f762e9e074b81044dfb308885b366afe59c189a941d2125f0404601a15a893"
+        }
+      ],
+      "required_findings_open": 0
+    }
+  ],
+  "judges": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "released_next_layer": 2,
+  "not_runtime_acceptance": true
+}

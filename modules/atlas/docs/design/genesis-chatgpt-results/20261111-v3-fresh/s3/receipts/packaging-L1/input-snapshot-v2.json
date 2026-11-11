@@ -1,0 +1,343 @@
+{
+  "schema": "genesis-transport-input-snapshot/v1",
+  "files": {
+    "evidence/population-A.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/evidence/population-A.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-A.json",
+      "byte_length": 141142,
+      "sha256": "b865312ec1b1fc621379f5c8b6d70a79dcf81ef013d9de4ec8bfa590e5cfcacd"
+    },
+    "evidence/required-artifacts.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/evidence/required-artifacts.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/required-artifacts.json",
+      "byte_length": 1429,
+      "sha256": "bde4d1e5fb8849dd3f6efedd1379f6aa71c229fa23841e78c91a9785b8dd3912"
+    },
+    "receipts/L1-A/request.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/request.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/request.md",
+      "byte_length": 2610,
+      "sha256": "b862cccb8e4a6c9c1130a9ce2b2b1750800d646f54a41d9927cbb52a32015c40"
+    },
+    "receipts/L1-A/response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/response.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/response.md",
+      "byte_length": 6363,
+      "sha256": "5a9517b94319f023e20f22ae525688c57d95370948c13c13759605d5c8b57e35"
+    },
+    "receipts/L1-A/sources.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/sources.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/sources.json",
+      "byte_length": 80227,
+      "sha256": "62fde90293198a3db6c93d8b46a069c21e96c229ca7735cc6eaac6edc6419e50"
+    },
+    "receipts/L1-A/coverage.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/coverage.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json",
+      "byte_length": 373917,
+      "sha256": "6955c66f704faaa7547ac1f70b69008149db2cf66d3f1bd2373be6fd86d6f4ff"
+    },
+    "receipts/L1-A/findings.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/findings.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/findings.md",
+      "byte_length": 6850,
+      "sha256": "7b6a67cfd137b475baee5a632f515ef85c1095da452435eae0594bb65c53b25c"
+    },
+    "receipts/L1-A/review-evidence.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/review-evidence.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/review-evidence.md",
+      "byte_length": 15891,
+      "sha256": "4e66b263d8844d9fd06007bc7148bf06c3f2ea314812c2517f73cc916f0a7965"
+    },
+    "receipts/L1-A/verification.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/verification.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/verification.json",
+      "byte_length": 974,
+      "sha256": "5166161922639d01e9a5836ad4b5a5a3d743be3288f02c56f590362bc8a962f6"
+    },
+    "receipts/L1-A/request-delta-001.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-A/request-delta-001.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/request-delta-001.md",
+      "byte_length": 773,
+      "sha256": "de7c64e1d9f60d2256ea1686ef350380ad9cfed0dfdadc317f97fa2787646828"
+    },
+    "bodies/l1-maestro.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/bodies/l1-maestro.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-maestro.md",
+      "byte_length": 19752,
+      "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918"
+    },
+    "evidence/population-B.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/evidence/population-B.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-B.json",
+      "byte_length": 1282364,
+      "sha256": "c9712b4bcc8be04ef433e3d666b7957c9968c84ee29d340f3469ff94039a71a2"
+    },
+    "receipts/L1-B/request.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/request.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/request.md",
+      "byte_length": 3125,
+      "sha256": "7d57f73c2c12d7c639430467cb2be4a4c321cb21b659ee570774bb8a998aec6c"
+    },
+    "receipts/L1-B/response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/response.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/response.md",
+      "byte_length": 9089,
+      "sha256": "55a6cab9be9f004483f5e5c3f9c01b15fac0dab13380ff62b1e275cfaa22c217"
+    },
+    "receipts/L1-B/sources.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/sources.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/sources.json",
+      "byte_length": 161105,
+      "sha256": "28a7a3ff3ec4dd337098c28d3fa3e8715d296142974302559180281fbf40e513"
+    },
+    "receipts/L1-B/coverage.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/coverage.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json",
+      "byte_length": 2575078,
+      "sha256": "44615f804cd806ade4ac0770237156992badf63459d787a8c08dfb6f55fdfbb9"
+    },
+    "receipts/L1-B/findings.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/findings.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/findings.md",
+      "byte_length": 6788,
+      "sha256": "7c6af68f2ea2cbf1b98048fb34792f2bf8216d23e0e513c9c8bd728a17920550"
+    },
+    "receipts/L1-B/review-evidence.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/review-evidence.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/review-evidence.md",
+      "byte_length": 15697,
+      "sha256": "3a34a3e008b4d7ae42b17aff556a635d88a06e0b28b755e8f4a037795339e8cb"
+    },
+    "receipts/L1-B/verification.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/verification.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/verification.json",
+      "byte_length": 5463,
+      "sha256": "0cba7f4f71fc68eb37159babdb8c8684f23657c9db4b2a7d1627d6e22291b59e"
+    },
+    "receipts/L1-B/request-delta-002.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/request-delta-002.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/request-delta-002.md",
+      "byte_length": 1478,
+      "sha256": "467258d894b8a86d84d4cd53d127ae192a8e566531d72a24badcfda8629df9a9"
+    },
+    "receipts/L1-B/body-v1.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/body-v1.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/body-v1.md",
+      "byte_length": 23802,
+      "sha256": "660d39c4a3f140f86af31d84369e44835abab6e9b26136439d07eb702f63a528"
+    },
+    "receipts/L1-B/response-v1.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/response-v1.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/response-v1.md",
+      "byte_length": 7477,
+      "sha256": "664bc26bd79ca1657f08e87b428c57d7cd59738ff30766a00b00d6e28b9137ed"
+    },
+    "receipts/L1-B/verification-v1.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/verification-v1.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/verification-v1.json",
+      "byte_length": 5463,
+      "sha256": "220caaf004559794fda05dc88b8349405d4e6ab975236042a858a651f564c30b"
+    },
+    "receipts/L1-B/body-delta-002.diff": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/body-delta-002.diff",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/body-delta-002.diff",
+      "byte_length": 3179,
+      "sha256": "1af9fb7b394b26265c2c66c4114a9d6f8797fef5ce5c7ca3199e48d8414c75f4"
+    },
+    "receipts/L1-B/finding-delta-002.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/finding-delta-002.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/finding-delta-002.md",
+      "byte_length": 2078,
+      "sha256": "0c0ffeae934f471bbf05ad942da557e7e27d44c7fdea4758c166a5bc35f69bed"
+    },
+    "receipts/L1-B/delta-validation-002.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/delta-validation-002.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/delta-validation-002.json",
+      "byte_length": 1102,
+      "sha256": "b3f99b930c85f1765e1de4e887ff0ad5b6178256dde10cccb178f318d4a19907"
+    },
+    "receipts/L1-B/artifact-hashes-v2.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/artifact-hashes-v2.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/artifact-hashes-v2.json",
+      "byte_length": 2761,
+      "sha256": "6f8402e389768f1023042f4f4b1335a39fa5a501b03ba59f29f21f40d4a7e773"
+    },
+    "receipts/L1-B/v1/response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/v1/response.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/v1/response.md",
+      "byte_length": 7477,
+      "sha256": "664bc26bd79ca1657f08e87b428c57d7cd59738ff30766a00b00d6e28b9137ed"
+    },
+    "receipts/L1-B/v1/verification.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-B/v1/verification.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/v1/verification.json",
+      "byte_length": 5463,
+      "sha256": "220caaf004559794fda05dc88b8349405d4e6ab975236042a858a651f564c30b"
+    },
+    "bodies/l1-relay.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/bodies/l1-relay.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-relay.md",
+      "byte_length": 23932,
+      "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb"
+    },
+    "evidence/population-C.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/evidence/population-C.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-C.json",
+      "byte_length": 145085,
+      "sha256": "e5e5afb5d9919cea514206ac66c1ebe1253c0c425651492d8bbdeb34a3c41a66"
+    },
+    "receipts/L1-C/request.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/request.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/request.md",
+      "byte_length": 2487,
+      "sha256": "c167f9e4c04fa559f1e6e4271c002a7e03548ad2fc0b7f03faf08ea67bdea7b7"
+    },
+    "receipts/L1-C/response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/response.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/response.md",
+      "byte_length": 8540,
+      "sha256": "3f00566952a78e6494f9fbe278751d366144afffeaf12033cec619c8402de9a7"
+    },
+    "receipts/L1-C/sources.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/sources.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/sources.json",
+      "byte_length": 87627,
+      "sha256": "3e659688f4bcb86bc957c76f380d6eb3b82f589b001f2ac21d4e1fbc01be762c"
+    },
+    "receipts/L1-C/coverage.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/coverage.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json",
+      "byte_length": 438017,
+      "sha256": "b206d7a9d970c135c3aca9a0b3531fb22c7ffc14d5a7f4d9fb06e5335ac5dc39"
+    },
+    "receipts/L1-C/findings.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/findings.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/findings.md",
+      "byte_length": 11958,
+      "sha256": "c695a7f4b569c7bf5b99d775277b8813d6be8ba3649e95153e30cff2e7cfe009"
+    },
+    "receipts/L1-C/review-evidence.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/review-evidence.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/review-evidence.md",
+      "byte_length": 15879,
+      "sha256": "3a9fa1ef571e1b80c247e3c42451b3d362949b21f9642a08b10c9db9c5ff944c"
+    },
+    "receipts/L1-C/verification.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/verification.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/verification.json",
+      "byte_length": 1240,
+      "sha256": "47df5b1567a0f70fb4a34bbb9ce568e54a341fdca5d687204d724b0046eaa07f"
+    },
+    "receipts/L1-C/root-finding-delta-001.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/root-finding-delta-001.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/root-finding-delta-001.md",
+      "byte_length": 2172,
+      "sha256": "c8b99e0313b8c83100c65b1ae3ef5ab68ed26129280c293c45a4789709f0dc0c"
+    },
+    "receipts/L1-C/body-v1.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/body-v1.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/body-v1.md",
+      "byte_length": 23971,
+      "sha256": "2d2f5a1f64167d791f793e92b855c5c71facdd09e227b30a122eb22185c81ba4"
+    },
+    "receipts/L1-C/v1/response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/v1/response.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v1/response.md",
+      "byte_length": 7927,
+      "sha256": "829beb55bcc3f924dc508736ef858371157f2c466839f5cfb723c3327d45b463"
+    },
+    "receipts/L1-C/v1/verification.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/v1/verification.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v1/verification.json",
+      "byte_length": 1095,
+      "sha256": "55fd9e953408bf6c2a692ff767320f005e0501b62252dc3e46bce66ae3dfa55a"
+    },
+    "receipts/L1-C/v1/findings.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/receipts/L1-C/v1/findings.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v1/findings.md",
+      "byte_length": 11925,
+      "sha256": "f65548f0fa53777fef7fd55522a37894c60e56ef1c2d58c729a31fde222fa052"
+    },
+    "bodies/l1-integrations.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/bodies/l1-integrations.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-integrations.md",
+      "byte_length": 23970,
+      "sha256": "c348fbcdb07c7be3f3eebb4d8cb85d9ecb94b094f9e2e086f118298b8e956541"
+    }
+  },
+  "protocol": [
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "byte_length": 8143,
+      "local_copy_matches_canonical_capture": true
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+      "byte_length": 3933,
+      "local_copy_matches_canonical_capture": true
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "byte_length": 4408,
+      "local_copy_matches_canonical_capture": true
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "byte_length": 6010,
+      "local_copy_matches_canonical_capture": true
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "byte_length": 8478,
+      "local_copy_matches_canonical_capture": true
+    }
+  ],
+  "historical_metadata_preserved": [
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "captured_sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "original_provided_local_sha256": "32a0d8f9cbfd379e688cef6510d19062ed0a8fd0834614ee4a9810621d3d1182",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "captured_sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "original_provided_local_sha256": "da313b35ca8852f724051cbc104a0842067bd0b87426feb02438ba81c2bb6242",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "captured_sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+      "original_provided_local_sha256": "2765637857decd13fda7056869458da1062bff6789abdadc2e213119d313f217",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+      "captured_sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "original_provided_local_sha256": "09706746cad6cdc20ff82add0fb19e278090b3b505655535c8c36e633ee0d664",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "captured_sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "original_provided_local_sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    }
+  ]
+}

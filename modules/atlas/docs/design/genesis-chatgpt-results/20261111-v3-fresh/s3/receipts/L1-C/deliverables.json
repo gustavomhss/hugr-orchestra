@@ -1,0 +1,114 @@
+{
+  "unit": "L1-C",
+  "state": "L1_PRODUCED_FOR_REVIEW",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "bdac971f-e4ee-40e5-ad9b-30d659303bab",
+  "files": {
+    "body.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/body.md",
+      "bytes": 23985,
+      "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a"
+    },
+    "review-evidence.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/review-evidence.md",
+      "bytes": 15879,
+      "sha256": "3a9fa1ef571e1b80c247e3c42451b3d362949b21f9642a08b10c9db9c5ff944c"
+    },
+    "sources.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/sources.json",
+      "bytes": 87627,
+      "sha256": "3e659688f4bcb86bc957c76f380d6eb3b82f589b001f2ac21d4e1fbc01be762c"
+    },
+    "coverage.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/coverage.json",
+      "bytes": 438017,
+      "sha256": "b206d7a9d970c135c3aca9a0b3531fb22c7ffc14d5a7f4d9fb06e5335ac5dc39"
+    },
+    "findings.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/findings.md",
+      "bytes": 11958,
+      "sha256": "c695a7f4b569c7bf5b99d775277b8813d6be8ba3649e95153e30cff2e7cfe009"
+    },
+    "request.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/request.md",
+      "bytes": 2487,
+      "sha256": "c167f9e4c04fa559f1e6e4271c002a7e03548ad2fc0b7f03faf08ea67bdea7b7"
+    },
+    "request-followup.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/request-followup.md",
+      "bytes": 700,
+      "sha256": "1a6b8d3ed1a53db32a01a6b08598fc8ca3ddeb9b2800a71ed9fbbc2898df044c"
+    },
+    "verification.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/verification.json",
+      "bytes": 1429,
+      "sha256": "b9e5432112281877231684da77b34c7d8577556210c6b7c12266cc308bf2e83b"
+    },
+    "review-bindings.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/review-bindings.json",
+      "bytes": 11197,
+      "sha256": "cbab82feb9267e26727022591e62aed95b48311f1964534763afc39242bfe0e4"
+    },
+    "captures-index.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-index.json",
+      "bytes": 82458,
+      "sha256": "2bddbb08240ae7ecef95698d91231d25d47ec50bcc1ad264c5d100cd68c54b20"
+    },
+    "capture-errors.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/capture-errors.json",
+      "bytes": 814,
+      "sha256": "f604a4b323d81819ff9ef3f428be261676f3bb4ec9694c2e5541b9c3510f6626"
+    },
+    "capture-errors-05.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/capture-errors-05.json",
+      "bytes": 830,
+      "sha256": "aff43c28bd636f76597b5a089f9a3c52e8618d5f840f595a52a2fb8373a26db9"
+    },
+    "response.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/response.md",
+      "bytes": 9022,
+      "sha256": "f5d09f3d3023a7003a34b5abf9f1b6b6eafad8a4dd843b74751325a5e08f3955"
+    },
+    "body-v1.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/body-v1.md",
+      "bytes": 23971,
+      "sha256": "2d2f5a1f64167d791f793e92b855c5c71facdd09e227b30a122eb22185c81ba4"
+    },
+    "response-v1.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/response-v1.md",
+      "bytes": 7927,
+      "sha256": "829beb55bcc3f924dc508736ef858371157f2c466839f5cfb723c3327d45b463"
+    },
+    "deliverables-v1.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/deliverables-v1.json",
+      "bytes": 3327,
+      "sha256": "35b35a326d7f824debdcf61a60bf6cbc74a21a5b789d72a68e2120ad69659dc5"
+    },
+    "root-finding-delta-001.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/root-finding-delta-001.md",
+      "bytes": 2172,
+      "sha256": "c8b99e0313b8c83100c65b1ae3ef5ab68ed26129280c293c45a4789709f0dc0c"
+    },
+    "body-v2.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/body-v2.md",
+      "bytes": 23970,
+      "sha256": "c348fbcdb07c7be3f3eebb4d8cb85d9ecb94b094f9e2e086f118298b8e956541"
+    },
+    "response-v2.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/response-v2.md",
+      "bytes": 8540,
+      "sha256": "3f00566952a78e6494f9fbe278751d366144afffeaf12033cec619c8402de9a7"
+    },
+    "deliverables-v2.json": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/deliverables-v2.json",
+      "bytes": 4286,
+      "sha256": "849b952480114c44a6e46495476f90b321859be0bfcadacd73e3074efd62749b"
+    },
+    "root-finding-delta-002.md": {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/root-finding-delta-002.md",
+      "bytes": 1841,
+      "sha256": "436c179a0541f9dce24ad879b1e01ad8a911e4bfb3eaf135966163f5a48e62c8"
+    }
+  }
+}

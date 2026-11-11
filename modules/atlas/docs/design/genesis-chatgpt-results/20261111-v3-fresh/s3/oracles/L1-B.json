@@ -1,0 +1,59 @@
+{
+  "schema": "s3-oracle/v1",
+  "frozen_at": "2026-11-11T16:28:56.510810+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "limits": {
+    "max_body_bytes": 24000,
+    "evaluation": "L1 factual basis, no runtime acceptance claimed"
+  },
+  "critical_errors": [
+    "source/model intention presented as runtime authority",
+    "fixtures treated as independent semantic requirements",
+    "claims of execution absent receipts",
+    "silent path exclusion"
+  ],
+  "unit": "L1-B",
+  "cases": [
+    {
+      "id": "L1B-R1",
+      "question": "Does relay verify exit 0 establish current artifact correctness?",
+      "expected": [
+        "recorded-checklist audit only",
+        "does not rerun checks or validate current artifacts",
+        "when plan comparison is required oracle_recheck.status must be ok",
+        "not-run can accompany exit0; invalid sprint exit2"
+      ],
+      "sources": [
+        "modules/relay/README.md"
+      ]
+    },
+    {
+      "id": "L1B-R2",
+      "question": "Does blank hook stdout prove completion and can control append loss be ignored?",
+      "expected": [
+        "blank can be escalation/refusal/plan defect/completion",
+        "inspect state stderr verify",
+        "run lock contention exit3",
+        "mandatory append fails before associated state changes; no global atomic rollback promise"
+      ],
+      "sources": [
+        "modules/relay/README.md"
+      ]
+    },
+    {
+      "id": "L1B-R3",
+      "question": "Are TypeScript, shell gate and Python interchangeable, and may goldens be changed to turn green?",
+      "expected": [
+        "separate native TypeScript and shell CLI lifecycle support",
+        "Python regression/parity role",
+        "compiler acceptance not every driver support",
+        "preserve fixtures and recorded results",
+        "review skill instructions advisory not enforcement"
+      ],
+      "sources": [
+        "modules/relay/AGENTS.md",
+        "modules/relay/README.md"
+      ]
+    }
+  ]
+}

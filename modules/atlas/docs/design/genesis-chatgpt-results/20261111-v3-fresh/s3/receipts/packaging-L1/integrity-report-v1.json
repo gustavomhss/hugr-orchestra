@@ -1,0 +1,327 @@
+{
+  "schema": "genesis-l1-packaging-integrity/v1",
+  "status": "MECHANICALLY_RECONCILED_DRAFT",
+  "not_semantic_acceptance": true,
+  "not_product_test": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "orchestra.s3.agents",
+  "execution_id": "bdac971f-e4ee-40e5-ad9b-30d659303bab",
+  "counts": {
+    "required_artifacts": 11,
+    "present_l1_artifacts": 3,
+    "missing_required_artifacts": 8,
+    "population_entries": 4553,
+    "unique_paths": 4553,
+    "population_missing": 0,
+    "population_extra": 0,
+    "population_duplicates": 0,
+    "unique_source_refs": 262,
+    "oversized_declared_input_occurrences": 0
+  },
+  "units": {
+    "L1-A": {
+      "artifact_key": "s3-l1-maestro",
+      "population_count": 424,
+      "body": {
+        "path": "bodies/l1-maestro.md",
+        "encoding": "utf-8",
+        "byte_length": 19752,
+        "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918"
+      },
+      "source_refs": 85,
+      "protocol_refs": 5,
+      "file_inputs": 439,
+      "membership_inputs": 24,
+      "oversized_input_count": 0,
+      "original_coverage_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json",
+        "sha256": "6955c66f704faaa7547ac1f70b69008149db2cf66d3f1bd2373be6fd86d6f4ff"
+      },
+      "future_keys": [
+        "s3-l2-maestro",
+        "s3-l4-entry",
+        "s3-l4-maintenance",
+        "s3-l4-operational",
+        "s3-l4-ownership"
+      ]
+    },
+    "L1-B": {
+      "artifact_key": "s3-l1-relay",
+      "population_count": 3700,
+      "body": {
+        "path": "bodies/l1-relay.md",
+        "encoding": "utf-8",
+        "byte_length": 23932,
+        "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb"
+      },
+      "source_refs": 109,
+      "protocol_refs": 5,
+      "file_inputs": 3712,
+      "membership_inputs": 9,
+      "oversized_input_count": 0,
+      "original_coverage_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json",
+        "sha256": "44615f804cd806ade4ac0770237156992badf63459d787a8c08dfb6f55fdfbb9"
+      },
+      "future_keys": [
+        "s3-l2-relay",
+        "s3-l3-flows",
+        "s3-l4-entry",
+        "s3-l4-maintenance",
+        "s3-l4-operational",
+        "s3-l4-ownership"
+      ]
+    },
+    "L1-C": {
+      "artifact_key": "s3-l1-integrations",
+      "population_count": 429,
+      "body": {
+        "path": "bodies/l1-integrations.md",
+        "encoding": "utf-8",
+        "byte_length": 23970,
+        "sha256": "c348fbcdb07c7be3f3eebb4d8cb85d9ecb94b094f9e2e086f118298b8e956541"
+      },
+      "source_refs": 90,
+      "protocol_refs": 5,
+      "file_inputs": 463,
+      "membership_inputs": 21,
+      "oversized_input_count": 0,
+      "original_coverage_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json",
+        "sha256": "b206d7a9d970c135c3aca9a0b3531fb22c7ffc14d5a7f4d9fb06e5335ac5dc39"
+      },
+      "future_keys": [
+        "s3-l2-integrations",
+        "s3-l3-flows",
+        "s3-l4-entry",
+        "s3-l4-maintenance",
+        "s3-l4-operational",
+        "s3-l4-ownership"
+      ]
+    }
+  },
+  "memberships": {
+    "L1-A": {
+      "keys": [
+        "members:.orchestra/skills/conveyor-maintenance",
+        "members:.orchestra/skills/conveyor-ownership",
+        "members:.orchestra/skills/conveyor-usage",
+        "members:.orchestra/skills/execute-genesis",
+        "members:.orchestra/skills/live-seat-maintenance",
+        "members:.orchestra/skills/live-seat-ownership",
+        "members:.orchestra/skills/live-seat-usage",
+        "members:.orchestra/skills/maestro-maintenance",
+        "members:.orchestra/skills/maestro-ownership",
+        "members:.orchestra/skills/maestro-usage",
+        "members:.orchestra/skills/seat-skill-tree-maintenance",
+        "members:apps/cli/script",
+        "members:apps/cli/src",
+        "members:docs/architecture/phase-plans",
+        "members:docs/guides",
+        "members:docs/specs/actions",
+        "members:docs/specs/hugr-maestro",
+        "members:docs/specs/live-seat",
+        "members:docs/specs/maestro-lead",
+        "members:docs/specs/maestro-live-proof",
+        "members:docs/specs/seat-framework",
+        "members:modules/engine-adapters/claude-code/src/v2",
+        "members:modules/maestro",
+        "members:packages/core/src"
+      ],
+      "status": "declared only; no Git membership query or kernel version invented",
+      "purpose": "new child/subtree detection at component, supporting source, protocol and receipt boundaries"
+    },
+    "L1-B": {
+      "keys": [
+        "members:.orchestra/skills/execute-genesis",
+        "members:.orchestra/skills/relay-usage",
+        "members:docs/architecture/phase-plans",
+        "members:docs/guides",
+        "members:modules/relay",
+        "members:packages/core/src",
+        "members:packages/schema/src",
+        "members:packages/server/src",
+        "members:specs/relay-langgraph"
+      ],
+      "status": "declared only; no Git membership query or kernel version invented",
+      "purpose": "new child/subtree detection at component, supporting source, protocol and receipt boundaries"
+    },
+    "L1-C": {
+      "keys": [
+        "members:.orchestra/skills/execute-genesis",
+        "members:.orchestra/skills/mcp-dock-servers-maintenance",
+        "members:apps/cli/src",
+        "members:apps/desktop/src/main",
+        "members:docs/architecture/phase-plans",
+        "members:docs/guides",
+        "members:docs/specs/backend-specialist",
+        "members:docs/specs/claude-mode",
+        "members:docs/specs/claude-mode-onboarding",
+        "members:docs/specs/lucy",
+        "members:docs/specs/upstream-specialist",
+        "members:modules/app-dock",
+        "members:modules/capability-assets",
+        "members:modules/engine-adapters",
+        "members:modules/janitor",
+        "members:modules/maestro/coordination/src",
+        "members:modules/maestro/coordination/test",
+        "members:modules/specialists",
+        "members:packages/core/script",
+        "members:packages/core/src",
+        "members:packages/jimmy-specialist"
+      ],
+      "status": "declared only; no Git membership query or kernel version invented",
+      "purpose": "new child/subtree detection at component, supporting source, protocol and receipt boundaries"
+    }
+  },
+  "oversized_inputs": [],
+  "oversized_evidence": [
+    {
+      "artifact_key": "s3-l1-maestro",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json",
+      "byte_length": 373917,
+      "sha256": "6955c66f704faaa7547ac1f70b69008149db2cf66d3f1bd2373be6fd86d6f4ff",
+      "role": "preserved-final-receipt",
+      "disposition": "exact evidence retained; files plus directory membership carry source invalidation; if observed as one file later, the 256.000-byte refusal remains"
+    },
+    {
+      "artifact_key": "s3-l1-relay",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-B.json",
+      "byte_length": 1282364,
+      "sha256": "c9712b4bcc8be04ef433e3d666b7957c9968c84ee29d340f3469ff94039a71a2",
+      "role": "frozen-population",
+      "disposition": "exact evidence retained; files plus directory membership carry source invalidation; if observed as one file later, the 256.000-byte refusal remains"
+    },
+    {
+      "artifact_key": "s3-l1-relay",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json",
+      "byte_length": 2575078,
+      "sha256": "44615f804cd806ade4ac0770237156992badf63459d787a8c08dfb6f55fdfbb9",
+      "role": "preserved-final-receipt",
+      "disposition": "exact evidence retained; files plus directory membership carry source invalidation; if observed as one file later, the 256.000-byte refusal remains"
+    },
+    {
+      "artifact_key": "s3-l1-integrations",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json",
+      "byte_length": 438017,
+      "sha256": "b206d7a9d970c135c3aca9a0b3531fb22c7ffc14d5a7f4d9fb06e5335ac5dc39",
+      "role": "preserved-final-receipt",
+      "disposition": "exact evidence retained; files plus directory membership carry source invalidation; if observed as one file later, the 256.000-byte refusal remains"
+    }
+  ],
+  "largest_source_population_member": {
+    "path": "modules/relay/test/fixtures/research-v2-live-PASS.ledger.jsonl",
+    "byte_length": 179417
+  },
+  "auxiliary_observer_risk": {
+    "file": "population-map.jsonl",
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/l1-population-map.jsonl",
+    "byte_length": 3106292,
+    "sha256": "1693d8a0ee92955bc928e32083a2d125802dc8ccf28322b89624910f4dffd7a7",
+    "entries": 4553
+  },
+  "checks": {
+    "source_versions_match_original_populations": true,
+    "source_ref_duplicates_agree_on_bytes": true,
+    "body_paths_relative_safe": true,
+    "all_body_hashes_recomputed": true,
+    "all_bodies_utf8": true,
+    "all_payload_refs_prefixed": true,
+    "all_payload_refs_hash_existing_exact_bytes": true,
+    "all_declared_directory_inputs_safe": true,
+    "new_children_have_membership_boundary": true,
+    "criteria_and_required_keys_from_frozen_contract": true,
+    "protocol_local_matches_canonical_capture": true,
+    "no_fake_runtime_versions": true,
+    "no_semantic_reviews_added": true,
+    "no_runtime_receipts_added": true,
+    "original_coverage_entries_hash_bound": true
+  },
+  "preserved_protocol_history": [
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "captured_sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "original_provided_local_sha256": "32a0d8f9cbfd379e688cef6510d19062ed0a8fd0834614ee4a9810621d3d1182",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "captured_sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "original_provided_local_sha256": "da313b35ca8852f724051cbc104a0842067bd0b87426feb02438ba81c2bb6242",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "captured_sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+      "original_provided_local_sha256": "2765637857decd13fda7056869458da1062bff6789abdadc2e213119d313f217",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+      "captured_sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "original_provided_local_sha256": "09706746cad6cdc20ff82add0fb19e278090b3b505655535c8c36e633ee0d664",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    },
+    {
+      "unit": "L1-A",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "captured_sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "original_provided_local_sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f",
+      "disposition": "original producer discrepancy retained; canonical captured source selected"
+    }
+  ],
+  "limits": [
+    "The package stays blocked/IN_PROGRESS until root binds exact oracle/reviews and later runtime proof as required.",
+    "Source capture integrity is inherited from final producer receipts; this mechanical task does not re-fetch sources or claim new semantic inspection.",
+    "No source files or fixtures copied into payload.",
+    "Membership inputs are declared, not observed: no Git query, kernel version, accepted manifest or reader was executed.",
+    "Oversized evidence remains exact and unresolved if demanded as one observer file; no semantic source was dropped for size and no runtime PASS is claimed.",
+    "L1-B correction for blank stdout diagnostic is pending; present hashes bind a draft, not a final accepted version."
+  ],
+  "actions": {
+    "out_written": false,
+    "candidate_written": false,
+    "git_writes": false,
+    "remote_writes": false,
+    "product_tests": false,
+    "ci": false,
+    "reserved_oracle_read": false,
+    "L2_started": false,
+    "semantic_judgment": false
+  },
+  "artifacts": {
+    "draft-native-package.json": {
+      "byte_length": 486412,
+      "sha256": "565d98eaac94ed9020916649a104cdb9230443a9a3a378063753eb7e0b858233"
+    },
+    "population-map.jsonl": {
+      "byte_length": 3106292,
+      "sha256": "1693d8a0ee92955bc928e32083a2d125802dc8ccf28322b89624910f4dffd7a7"
+    },
+    "mapping-contract.json": {
+      "byte_length": 5258,
+      "sha256": "c08e06df84de7db974f8f6a165943b24576c183b0d8fd89e8322f68dad879b51"
+    },
+    "input-snapshot.json": {
+      "byte_length": 14844,
+      "sha256": "1515a2e31b03e6166e4b7dce5a9c386cdfc58d464de1bd3e3b658de2e4712f93"
+    },
+    "payload-placement.json": {
+      "byte_length": 1874,
+      "sha256": "282114db4e6bdf0935fa7b7d81bb9eb4ba579d367e45d40267f6480b9a90f7b1"
+    },
+    "request.md": {
+      "byte_length": 1705,
+      "sha256": "0d5acaf30ced7a633aff15b755cce104209d62a8830bb2ea864a5fd6cb2cd847"
+    },
+    "build_package.py": {
+      "byte_length": 23132,
+      "sha256": "e19c7a76b4fa3a87c8220d93befbee0e085c5bed92c8be3485cb8283a5b053fc"
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "schema": "genesis-l1-population-mapping/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "orchestra.s3.agents",
+  "mapper": {
+    "file": "population-map.jsonl",
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/l1-population-map.jsonl",
+    "byte_length": 3106292,
+    "sha256": "1693d8a0ee92955bc928e32083a2d125802dc8ccf28322b89624910f4dffd7a7",
+    "entries": 4553
+  },
+  "original_coverage_refs": {
+    "L1-A": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json",
+      "sha256": "6955c66f704faaa7547ac1f70b69008149db2cf66d3f1bd2373be6fd86d6f4ff"
+    },
+    "L1-B": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json",
+      "sha256": "44615f804cd806ade4ac0770237156992badf63459d787a8c08dfb6f55fdfbb9"
+    },
+    "L1-C": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json",
+      "sha256": "b206d7a9d970c135c3aca9a0b3531fb22c7ffc14d5a7f4d9fb06e5335ac5dc39"
+    }
+  },
+  "original_populations": {
+    "L1-A": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-A.json",
+      "sha256": "b865312ec1b1fc621379f5c8b6d70a79dcf81ef013d9de4ec8bfa590e5cfcacd"
+    },
+    "L1-B": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-B.json",
+      "sha256": "c9712b4bcc8be04ef433e3d666b7957c9968c84ee29d340f3469ff94039a71a2"
+    },
+    "L1-C": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-C.json",
+      "sha256": "e5e5afb5d9919cea514206ac66c1ebe1253c0c425651492d8bbdeb34a3c41a66"
+    }
+  },
+  "original_entry_hash_recipe": "SHA-256 of UTF-8 JSON with ensure_ascii=false, sort_keys=true, separators=(comma,colon), no trailing newline; original_entry_index indexes the original coverage entries array.",
+  "current_mapping": "One existing L1 key per original population partition, without merging or changing original source versions. Shared family/need is retained.",
+  "future_mapping": {
+    "status": "candidate routing only; no L2–L4 production or accepted dependency",
+    "all_rows": "same-domain L2 component key",
+    "additional_by_original_need": {
+      "entry": "s3-l4-entry",
+      "ownership": "s3-l4-ownership",
+      "maintenance": "s3-l4-maintenance",
+      "operational": "s3-l4-operational",
+      "flow": "s3-l3-flows"
+    },
+    "component_and_evidence": "same-domain L2 only unless another original need supplies an additional route"
+  },
+  "depth_policy": "Original depth/rationale and inspection flag retained; family-only classification is not promoted to content reading. Full original entry remains recoverable and hash-bound.",
+  "families": {
+    "L1-A": {
+      "maestro-associated-documentation": 99,
+      "maestro-arsenal": 116,
+      "maestro-coordination": 209
+    },
+    "L1-B": {
+      "entry": 12,
+      "documentation": 18,
+      "authoring": 418,
+      "packaging": 11,
+      "benchmark": 37,
+      "judge": 238,
+      "ledger-audit": 1313,
+      "arm-lifecycle": 1286,
+      "autodecompose": 4,
+      "telemetry": 8,
+      "daemon": 6,
+      "gate-evaluation": 241,
+      "policies": 8,
+      "profiles": 23,
+      "spec-library": 11,
+      "examples": 6,
+      "design": 3,
+      "langgraph": 21,
+      "planning": 8,
+      "research": 8,
+      "specification": 2,
+      "hooks": 4,
+      "encoding": 7,
+      "parity-governance": 7
+    },
+    "L1-C": {
+      "maintenance.dock": 1,
+      "history.janitor-migration": 1,
+      "guide.dock": 1,
+      "contracts.backend": 25,
+      "history.backend-research": 78,
+      "contracts.claude": 2,
+      "history.review-research": 68,
+      "contracts.upstream-history": 8,
+      "integration.app-dock": 21,
+      "provenance.capability-assets": 75,
+      "engine.claude-code": 23,
+      "integration.janitor": 13,
+      "specialists.archie": 11,
+      "specialists.backend": 62,
+      "specialists.team": 19,
+      "history.discovery": 19,
+      "specialists.discovery": 2
+    }
+  },
+  "needs": {
+    "L1-A": {
+      "ownership": 10,
+      "evidence": 173,
+      "entry": 2,
+      "component": 190,
+      "operational": 48,
+      "maintenance": 1
+    },
+    "L1-B": {
+      "entry": 18,
+      "ownership": 18,
+      "component": 904,
+      "maintenance": 11,
+      "evidence": 1365,
+      "flow": 1311,
+      "operational": 73
+    },
+    "L1-C": {
+      "maintenance": 1,
+      "evidence": 276,
+      "entry": 1,
+      "component": 151
+    }
+  },
+  "future_artifact_reference_counts": {
+    "s3-l2-maestro": 424,
+    "s3-l4-ownership": 230,
+    "s3-l2-integrations": 429,
+    "s3-l4-maintenance": 182,
+    "s3-l2-relay": 3700,
+    "s3-l4-entry": 21,
+    "s3-l4-operational": 179,
+    "s3-l3-flows": 1368
+  },
+  "observer_limit_note": "Mapper exceeds 256.000 bytes; it is auxiliary transport evidence, not retroactively an input used by the L1 producers. If a later binding observes it as one file, the same explicit size refusal applies; no runtime read is claimed."
+}

@@ -1,0 +1,74 @@
+{
+  "schema": "s3-oracle/v1",
+  "frozen_at": "2026-11-11T16:28:56.510810+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "limits": {
+    "max_body_bytes": 24000,
+    "evaluation": "L1 factual basis, no runtime acceptance claimed"
+  },
+  "critical_errors": [
+    "source/model intention presented as runtime authority",
+    "fixtures treated as independent semantic requirements",
+    "claims of execution absent receipts",
+    "silent path exclusion"
+  ],
+  "unit": "L1-C",
+  "cases": [
+    {
+      "id": "L1C-R1",
+      "question": "Do A13-A24 presets represent working approved integrations?",
+      "expected": [
+        "data-only no tool registration",
+        "closed 32 catalog entries",
+        "provider/native destinations reserved absent files",
+        "source-qualified not conformance/live accepted",
+        "no seat loads asset skills yet"
+      ],
+      "sources": [
+        "modules/capability-assets/README.md"
+      ]
+    },
+    {
+      "id": "L1C-R2",
+      "question": "Can standalone CLI use app-dock without desktop main channel?",
+      "expected": [
+        "Transport to Electron main",
+        "loopback websocket URL and per-launch token",
+        "no channel outside desktop",
+        "Session deletion reaper closes Linux session"
+      ],
+      "sources": [
+        "modules/app-dock/README.md"
+      ]
+    },
+    {
+      "id": "L1C-R3",
+      "question": "Is janitor an autonomous deletion or restart mechanism?",
+      "expected": [
+        "read-only scan",
+        "no deletes/kills",
+        "in-memory report",
+        "host sink dependency",
+        "current README says no workspace consumer; confirm code before stronger claim"
+      ],
+      "sources": [
+        "modules/janitor/README.md"
+      ]
+    },
+    {
+      "id": "L1C-R4",
+      "question": "What happens to governed Maestro call before playbook load in Claude host?",
+      "expected": [
+        "refused until session successfully loads maestro-run-governed through Orchestra skill tool",
+        "arsenal and workflows excluded from that gate",
+        "claude_code preset retained",
+        "host tool execution uses turn.execute",
+        "do not infer paid/runtime execution"
+      ],
+      "sources": [
+        "AGENTS.md",
+        "modules/engine-adapters/claude-code/src/v2/host.ts"
+      ]
+    }
+  ]
+}

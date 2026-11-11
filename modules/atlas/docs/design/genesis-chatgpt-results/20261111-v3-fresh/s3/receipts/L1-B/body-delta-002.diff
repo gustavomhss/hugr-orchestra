@@ -1,0 +1,17 @@
+--- body-v1.md
++++ body.md
+@@ -68,11 +68,13 @@
+ | `relay-gate check` | Só checklist selecionado; sem regressão. | Não registra veredictos, avança ou cobra retry; ainda executa efeitos dos comandos/judge e cria/adquire lock. Posição nomeada sobrepõe counter. |
+ | Benchmark hook | DoD atual, depois checklist; regressão só DoD anteriores. | Counter inteiro; `RELAY_GATE=off` avança sem controles. Não generalizar seus dados ao runtime nativo. |
+ 
++Com stdout vazio, confira arm `state`, stderr e `relay verify`; runner parado não comprova conclusão. [`README.md:110–117`]
++
+ [`src/arm/evaluate.ts:24–63,116–126,222–254`; `src/arm/round.ts:107–211`; `SPEC.md:39–55,385–391`; `bin/relay-gate:183–325`; `bin/relay-arm-hook.sh:40–100,583–608`; `benchmark/relay_hook.sh`]
+ 
+ **A porta instalada decide isolamento e timeout.** Core executa shell novo via AppProcess/ToolSafetySandbox, ambiente sem extensão automática, PATH/HOME e params filtrados; não passa RELAY_* do processo, chaves do provider nem ledger key. `GATE_TIMEOUT` atual é **15 minutos por check de workflow**; hook Verify e Test now têm **60 s**; host_check e judge API têm seus 60 s próprios. O shell standalone não fornece timeout de comando. Comentários antigos de `GateShell`/PARITY sobre RELAY_* e 60 s não substituem Core atual. [`packages/core/src/relay.ts:38–48,219–257`; `src/gate/shell.ts:14–28`; `SPEC.md:98–101`]
+ 
+-ArmCreate cria por staging+rename e aceita repetição idêntica, recusando conflito do mesmo token. Rebind nativo exige arm ainda não avaliado, bytes iguais, execução compatível e run lock; não é migração arbitrária de um run. Loader recusa symlink/tipo/tamanho acima de 512 KiB e mudança de tamanho/mtime durante a leitura. ArmState resolve ID inteiro primeiro, depois sufixo após primeiro ponto, depois compatibilidade sem LF final; CR permanece identidade. Não confundir esse resolver com autenticação. [`src/arm/create.ts:26–88,96–136`; `src/arm/load.ts:9–46`; `src/arm/state.ts:28–65`]
++ArmCreate cria por staging+rename e aceita repetição idêntica, recusando conflito do mesmo token. Rebind nativo exige arm ainda não avaliado, bytes iguais, execução compatível e run lock; não é migração arbitrária de um run. Loader recusa symlink/tipo/tamanho acima de 512 KiB e mudança de tamanho/mtime durante a leitura. ArmState resolve ID completo primeiro, depois sufixo após primeiro ponto, depois compatibilidade sem LF final; CR permanece identidade. Não confundir esse resolver com autenticação. [`src/arm/create.ts:26–88,96–136`; `src/arm/load.ts:9–46`; `src/arm/state.ts:28–65`]
+ 
+ Budget 3 permite três reblocks e escala na próxima falha; regressão isolada no arm tem budget separado. Rodadas idênticas podem ser compactadas como gate-fail-repeat sem cancelar cobrança de retries. Release com motivo registra human-release antes de consumir o arquivo/resetar; refaz o mesmo WP, sem dispensar controles. No standalone, o mesmo usuário do SO pode editar release/plano/estado: texto de motivo não autentica aprovação. [`SPEC.md:223–257`; `src/arm/evaluate.ts:67–89,267–276`]
+ 

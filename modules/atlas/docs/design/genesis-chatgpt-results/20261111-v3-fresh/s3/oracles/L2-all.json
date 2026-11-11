@@ -1,0 +1,96 @@
+{
+  "schema": "s3-oracle/v1",
+  "unit": "L2-all",
+  "frozen_at": "2026-11-11T17:00:17.863812+00:00",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "precondition": "All L1 units accepted by both persistent judges before any L2 production",
+  "cases": [
+    {
+      "id": "L2-A1",
+      "artifact": "s3-l2-maestro",
+      "question": "Owner approval exists but a changed Task prompt or reservation child is proposed. What may proceed?",
+      "expected": [
+        "exact current revision/context/policy/task binding",
+        "immediate genuine owner reply",
+        "reservation child and permission snapshot",
+        "beforeTurn revalidation/consume",
+        "mismatch HOLD rather than broader delegation"
+      ]
+    },
+    {
+      "id": "L2-A2",
+      "artifact": "s3-l2-maestro",
+      "question": "One new UTF8 companion is added beneath an existing backend skill root. Explain installed consequences and ownership.",
+      "expected": [
+        "membership input catches addition",
+        "tree bytes enter virtual module and digest/cache",
+        "declared tree/names regular UTF8 no symlinks",
+        "source generator not manual generated edit",
+        "repo maintenance stays repo-only",
+        "Maestro does not acquire product implementation or self-accept authority"
+      ]
+    },
+    {
+      "id": "L2-B1",
+      "artifact": "s3-l2-relay",
+      "question": "A process dies after command effect but before receipt/state; can release or audit guarantee rollback or exactly once?",
+      "expected": [
+        "separate effects signed disposition durable caller receipt state apply",
+        "repair lock and safe names",
+        "no effect rollback/exactly once guarantee",
+        "native workflow settlement cannot bypass via plain evaluate",
+        "evidence provenance before retry"
+      ]
+    },
+    {
+      "id": "L2-B2",
+      "artifact": "s3-l2-relay",
+      "question": "A policy merge compiles, all judgements are advisory, hook stdout blank. What is actually established?",
+      "expected": [
+        "unique control IDs conflict retained",
+        "compiler separate driver support",
+        "judge blocking false advisory",
+        "blank notcompletion",
+        "auditnotcurrentartefacts",
+        "preserve fixtures sourceYAML generated profiles distinction"
+      ]
+    },
+    {
+      "id": "L2-C1",
+      "artifact": "s3-l2-integrations",
+      "question": "Adding a preset to catalog makes it live and bypasses Claude tools through Agent; is either valid?",
+      "expected": [
+        "catalog data-only",
+        "qualification pending not live",
+        "Agent Task refused childSession via Orchestra task",
+        "per-tool host authorize/execute",
+        "governed skill success Session state preserves preset",
+        "exclusionsnotallauthority"
+      ]
+    },
+    {
+      "id": "L2-C2",
+      "artifact": "s3-l2-integrations",
+      "question": "Dock returns uncertain action and Janitor reports scanner failure. Can we retry action and auto-clean?",
+      "expected": [
+        "unknown action not auto-repeat",
+        "only stale not-dispatched max1 retry",
+        "native RPC channel desktop actual URL/token",
+        "direct hook permission order distinguished MCP",
+        "scanner failure unavailable notclean",
+        "no deletekill Janitor",
+        "module in-memory vs desktopstore no proven composition"
+      ]
+    }
+  ],
+  "critical_errors": [
+    "normative prose treated as mechanical enforcement",
+    "semantic acceptance invented as runtime proof",
+    "omission of required family contracts",
+    "navigation treated as rebuild dependency"
+  ],
+  "limits": {
+    "max_body_bytes_each": 14000,
+    "evaluation": "static local contracts; full runtime acceptance later"
+  }
+}

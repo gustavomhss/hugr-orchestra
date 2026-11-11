@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-11-11T17:10:41.595864+00:00",
+  "supersedes": "plan-L2.json",
+  "reason": "Four live contexts: root plus two persistent independent judges plus one producer. Preserve both judge identities; one producer executes the three finite L2 units against accepted L1.",
+  "producer": "/root/producer_integrations_l1",
+  "units": [
+    "L2-A",
+    "L2-B",
+    "L2-C"
+  ],
+  "max_body_bytes_each": 14000,
+  "oracle_sha256": "83336a10722d23fbda496347940f0d1405dd7c9a44085bbd9adecff05bcaa003",
+  "L1_acceptance_sha256": "0fed339fa5e6fae09d554570081b7126adb7f464d2a6acc3fe022d75ba27b033",
+  "paid_calls": 0,
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

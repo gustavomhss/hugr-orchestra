@@ -1,0 +1,33 @@
+{
+  "schema": "genesis.s3.l1-b.delta-002.v1",
+  "status": "PASS_EXACT_AUTHORIZED_DELTA_ONLY",
+  "producer": "/root/producer_relay_l1",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "v1_body_sha256": "660d39c4a3f140f86af31d84369e44835abab6e9b26136439d07eb702f63a528",
+  "v2_body_sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+  "v2_body_bytes": 23932,
+  "body_limit": 24000,
+  "changes": [
+    "Insert requested stdout diagnostic with README.md:110–117 citation immediately after drivers table",
+    "Replace ID inteiro primeiro with ID completo primeiro"
+  ],
+  "inverse_transform_equals_v1": true,
+  "prior_response_and_receipt_preserved": true,
+  "judge_feedback_received": {
+    "J1": "PASS v1",
+    "J2": "FIX-FIRST F1 C3/R2 v1"
+  },
+  "v2_judgment": "pending two independent judges",
+  "product_tests_executed": 0,
+  "ci_runs_triggered": 0,
+  "remote_writes": 0,
+  "l2_started": false,
+  "source": {
+    "path": "modules/relay/README.md",
+    "git_blob_sha": "cd560185711063570400578596daa387f98c841f",
+    "lines": [
+      110,
+      117
+    ]
+  }
+}

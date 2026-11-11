@@ -1,0 +1,73 @@
+{
+  "schema": "genesis-producer-delivery/v1",
+  "unit": "L1-A",
+  "producer_id": "/root/producer_maestro_l1",
+  "state": "READY_FOR_REVIEW",
+  "files": [
+    {
+      "path": "body.md",
+      "byte_length": 19752,
+      "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918"
+    },
+    {
+      "path": "sources.json",
+      "byte_length": 80227,
+      "sha256": "62fde90293198a3db6c93d8b46a069c21e96c229ca7735cc6eaac6edc6419e50"
+    },
+    {
+      "path": "coverage.json",
+      "byte_length": 373917,
+      "sha256": "6955c66f704faaa7547ac1f70b69008149db2cf66d3f1bd2373be6fd86d6f4ff"
+    },
+    {
+      "path": "findings.md",
+      "byte_length": 6850,
+      "sha256": "7b6a67cfd137b475baee5a632f515ef85c1095da452435eae0594bb65c53b25c"
+    },
+    {
+      "path": "review-evidence.md",
+      "byte_length": 15891,
+      "sha256": "4e66b263d8844d9fd06007bc7148bf06c3f2ea314812c2517f73cc916f0a7965"
+    },
+    {
+      "path": "review-evidence-index.json",
+      "byte_length": 11631,
+      "sha256": "7f86d36e6731f4b6e81f03a9164556e5ac1060427365d26cfec9497a11e01d51"
+    },
+    {
+      "path": "verification.json",
+      "byte_length": 974,
+      "sha256": "5166161922639d01e9a5836ad4b5a5a3d743be3288f02c56f590362bc8a962f6"
+    },
+    {
+      "path": "request.md",
+      "byte_length": 2610,
+      "sha256": "b862cccb8e4a6c9c1130a9ce2b2b1750800d646f54a41d9927cbb52a32015c40"
+    },
+    {
+      "path": "request-delta-001.md",
+      "byte_length": 773,
+      "sha256": "de7c64e1d9f60d2256ea1686ef350380ad9cfed0dfdadc317f97fa2787646828"
+    },
+    {
+      "path": "request-delta-002.md",
+      "byte_length": 777,
+      "sha256": "9b11ebee0075575b3f532ffa7323011e8dae7fff932faa5008f1dd96196e1c14"
+    },
+    {
+      "path": "protocol-sources.json",
+      "byte_length": 3264,
+      "sha256": "1c1333413702b3b5369ad7dcb30a4f046696c7220cb59a83804cf97ec5359495"
+    },
+    {
+      "path": "population-A.json",
+      "byte_length": 141142,
+      "sha256": "b865312ec1b1fc621379f5c8b6d70a79dcf81ef013d9de4ec8bfa590e5cfcacd"
+    },
+    {
+      "path": "response.md",
+      "byte_length": 6363,
+      "sha256": "5a9517b94319f023e20f22ae525688c57d95370948c13c13759605d5c8b57e35"
+    }
+  ]
+}

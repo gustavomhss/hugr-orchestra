@@ -1,0 +1,62 @@
+[
+  {
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "role": "recipe/protocol",
+    "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+    "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/SKILL.md",
+    "verified_git_blob": true,
+    "read_scope": "full",
+    "provided_local_sha256": "32a0d8f9cbfd379e688cef6510d19062ed0a8fd0834614ee4a9810621d3d1182",
+    "provided_local_matches": false
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/principles.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "role": "recipe/protocol",
+    "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+    "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+    "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/principles.md",
+    "verified_git_blob": true,
+    "read_scope": "full",
+    "provided_local_sha256": "da313b35ca8852f724051cbc104a0842067bd0b87426feb02438ba81c2bb6242",
+    "provided_local_matches": false
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "role": "recipe/protocol",
+    "git_blob_sha": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+    "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+    "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/fatia-3.md",
+    "verified_git_blob": true,
+    "read_scope": "full",
+    "provided_local_sha256": "2765637857decd13fda7056869458da1062bff6789abdadc2e213119d313f217",
+    "provided_local_matches": false
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "role": "recipe/protocol",
+    "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+    "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+    "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/orchestration.md",
+    "verified_git_blob": true,
+    "read_scope": "full",
+    "provided_local_sha256": "09706746cad6cdc20ff82add0fb19e278090b3b505655535c8c36e633ee0d664",
+    "provided_local_matches": false
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "role": "recipe/protocol",
+    "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+    "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/transport.md",
+    "verified_git_blob": true,
+    "read_scope": "full",
+    "provided_local_sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f",
+    "provided_local_matches": false
+  }
+]

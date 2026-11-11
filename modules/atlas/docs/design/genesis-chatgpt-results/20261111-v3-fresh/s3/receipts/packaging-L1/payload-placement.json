@@ -1,0 +1,32 @@
+{
+  "schema": "genesis-payload-placement/v1",
+  "prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/",
+  "status": "plan only; no out or remote writes",
+  "new_files": [
+    {
+      "local_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/draft-native-package.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json"
+    },
+    {
+      "local_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/population-map.jsonl",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/l1-population-map.jsonl"
+    },
+    {
+      "local_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/mapping-contract.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/l1-mapping-contract.json"
+    },
+    {
+      "local_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/integrity-report.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/l1-packaging-integrity.json"
+    },
+    {
+      "local_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/request.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/packaging-l1/request.md"
+    },
+    {
+      "local_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/packaging-l1/response.md",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/packaging-l1/response.md"
+    }
+  ],
+  "existing_files": "All body/receipt/population refs resolve under the verified out directory and retain their exact current bytes; source_refs resolve in their original source repository commits."
+}

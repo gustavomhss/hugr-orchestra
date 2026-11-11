@@ -1,0 +1,147 @@
+{
+  "schema": "genesis.s3.l1-b.artifact-verification.v1",
+  "status": "PASS_ARTIFACT_INTEGRITY_ONLY",
+  "producer": "/root/producer_relay_l1",
+  "execution_id": "bdac971f-e4ee-40e5-ad9b-30d659303bab",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_pin": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "not_product_test": true,
+  "product_tests_executed": 0,
+  "ci_runs_triggered": 0,
+  "remote_writes": 0,
+  "coverage": {
+    "expected": 3700,
+    "actual": 3700,
+    "unique": 3700,
+    "missing": 0,
+    "extra": 0,
+    "duplicate": 0,
+    "families": 24,
+    "golden": 3330,
+    "test_fixtures": 66,
+    "other": 304
+  },
+  "sources": {
+    "captured": 109,
+    "content_read": 84,
+    "integrity_only": 25,
+    "by_commit": {
+      "1cde2ff7a71bcf7aecb5d030917b577165135d38": 104,
+      "ee2521a5b966bd505cc95bd1c733e09e12f33531": 5
+    },
+    "all_git_blob_and_sha256_match": true
+  },
+  "excerpts": {
+    "count": 35,
+    "source_files": 11,
+    "all_exact": true
+  },
+  "payload": {
+    "body_bytes": 23802,
+    "body_limit": 24000,
+    "evidence_bytes": 15697,
+    "evidence_limit": 16000
+  },
+  "repository_oracle_metadata": {
+    "matched": 14,
+    "total": 14,
+    "generators_executed": 0
+  },
+  "reserved_campaign_oracle": {
+    "content_read": false,
+    "dispatch_hash_only": "fdfe2e9e61ba11f6d90885e92c397dc7d7e424032b46bc00f240691bc0098fce"
+  },
+  "limit": "This receipt is not a product test, independent judgment, acceptance, proof of deployment, or exhaustive reading attestation. Response and this receipt are excluded from their own hash table to avoid self-reference.",
+  "artifacts": [
+    {
+      "path": "request.md",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/request.md",
+      "bytes": 3125,
+      "sha256": "7d57f73c2c12d7c639430467cb2be4a4c321cb21b659ee570774bb8a998aec6c"
+    },
+    {
+      "path": "body.md",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/body.md",
+      "bytes": 23802,
+      "sha256": "660d39c4a3f140f86af31d84369e44835abab6e9b26136439d07eb702f63a528"
+    },
+    {
+      "path": "sources.json",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/sources.json",
+      "bytes": 161105,
+      "sha256": "28a7a3ff3ec4dd337098c28d3fa3e8715d296142974302559180281fbf40e513"
+    },
+    {
+      "path": "coverage.json",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/coverage.json",
+      "bytes": 2575078,
+      "sha256": "44615f804cd806ade4ac0770237156992badf63459d787a8c08dfb6f55fdfbb9"
+    },
+    {
+      "path": "findings.md",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/findings.md",
+      "bytes": 6788,
+      "sha256": "7c6af68f2ea2cbf1b98048fb34792f2bf8216d23e0e513c9c8bd728a17920550"
+    },
+    {
+      "path": "review-evidence.md",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/review-evidence.md",
+      "bytes": 15697,
+      "sha256": "3a34a3e008b4d7ae42b17aff556a635d88a06e0b28b755e8f4a037795339e8cb"
+    },
+    {
+      "path": "review-evidence-index.json",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/review-evidence-index.json",
+      "bytes": 13700,
+      "sha256": "9a15d098d6e045625933e41bbb0563589777ee781cd555d7e37c7eda20a3a3da"
+    },
+    {
+      "path": "oracle-pins-static-check.json",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/oracle-pins-static-check.json",
+      "bytes": 3762,
+      "sha256": "a8448964866b7627d88de857b296dd0cb435e0085105bed28d4e541ea6f0132f"
+    },
+    {
+      "path": "read-log.json",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/read-log.json",
+      "bytes": 27122,
+      "sha256": "4391e0d36688f0d22cffe862c2a1ec95a0d7047e4bbf1fea06954186472fa488"
+    },
+    {
+      "path": "capture_sources.py",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/capture_sources.py",
+      "bytes": 1894,
+      "sha256": "784602ee446270a65c4af0311badf774a4d674b4b3c1b55cc7d79f6650b43101"
+    },
+    {
+      "path": "read_sources.py",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/read_sources.py",
+      "bytes": 912,
+      "sha256": "e26d0c1465610dbd619ff9fe5dc414c149c85ae614e8f4594716114da62013e5"
+    },
+    {
+      "path": "build_coverage.py",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/build_coverage.py",
+      "bytes": 22701,
+      "sha256": "2472483e920388e62c03808fe1a385521832db5472ef98ce374adc147c0ac089"
+    },
+    {
+      "path": "finalize_sources.py",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/finalize_sources.py",
+      "bytes": 3097,
+      "sha256": "4afe22f73f030eb31883515f218d058a2611136bf8d8ed9828d0addec41dcf14"
+    },
+    {
+      "path": "build_review_evidence.py",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/build_review_evidence.py",
+      "bytes": 3043,
+      "sha256": "50d41d30147de51e0658276bb3cf051c0d633af0e5e7dab7d03132d94d032530"
+    },
+    {
+      "path": "verify_artifacts.py",
+      "absolute_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/verify_artifacts.py",
+      "bytes": 5607,
+      "sha256": "7094791cba6cb2265df469d474bc68fdc22c350ddad707b13c2f2de95e8ae3b9"
+    }
+  ]
+}

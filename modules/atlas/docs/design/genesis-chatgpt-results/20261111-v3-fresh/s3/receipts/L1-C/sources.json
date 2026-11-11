@@ -1,0 +1,1898 @@
+[
+  {
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+    "byte_length": 8143,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/.orchestra/skills/execute-genesis/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/SKILL.md",
+    "id": "S001",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        125
+      ]
+    ],
+    "authority": "campaign protocol"
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+    "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+    "byte_length": 3933,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/.orchestra/skills/execute-genesis/references/fatia-3.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-3.md",
+    "id": "S002",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        62
+      ]
+    ],
+    "authority": "campaign protocol"
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+    "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+    "byte_length": 4408,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/.orchestra/skills/execute-genesis/references/orchestration.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/orchestration.md",
+    "id": "S003",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        78
+      ]
+    ],
+    "authority": "campaign protocol"
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/principles.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+    "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+    "byte_length": 6010,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/.orchestra/skills/execute-genesis/references/principles.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+    "id": "S004",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        72
+      ]
+    ],
+    "authority": "campaign protocol"
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+    "byte_length": 8478,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/.orchestra/skills/execute-genesis/references/transport.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+    "id": "S005",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        149
+      ]
+    ],
+    "authority": "campaign protocol"
+  },
+  {
+    "path": ".orchestra/skills/mcp-dock-servers-maintenance/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "8f0f9bfcc2c3565c6f62baab7d3b44a89f352711",
+    "sha256": "88e7f81c210e491ef61a770abd1c5e96df053b06a16b7608e07f76ad74ff653f",
+    "byte_length": 3054,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/.orchestra/skills/mcp-dock-servers-maintenance/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/mcp-dock-servers-maintenance/SKILL.md",
+    "id": "S006",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        44
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "AGENTS.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+    "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+    "byte_length": 16501,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/AGENTS.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+    "id": "S007",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        223
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "apps/cli/src/commands/handlers/serve.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+    "sha256": "67ae899cdd8cd4f1df84c51bc6102e11159ba8cbc20535f8bd92dac8f0d2b67b",
+    "byte_length": 7143,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/apps/cli/src/commands/handlers/serve.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/src/commands/handlers/serve.ts",
+    "id": "S008",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        130,
+        135
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "apps/cli/src/host.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+    "sha256": "8ac600b520f90454eb6f0e1e2030ebdd8522df7290f7a0ab9d052a53f4a3e25e",
+    "byte_length": 1624,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/apps/cli/src/host.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/src/host.ts",
+    "id": "S009",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        28
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "apps/desktop/src/main/janitor-ipc.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "012348dca649c5607587dcc7eb91858ff3d2b8ed",
+    "sha256": "e63de2e109bfcabac030305da643156ee31fe131dc22dfab6ae3ed28bf55dc57",
+    "byte_length": 5005,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/apps/desktop/src/main/janitor-ipc.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/desktop/src/main/janitor-ipc.ts",
+    "id": "S010",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        135
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "apps/desktop/src/main/janitor.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "304be2cfaedec251e624477350fccdb9aa6a4864",
+    "sha256": "c6b7033601b6fbce594dd7828ffe6b256cd76608c20dd6e04f902b4b995bb3d6",
+    "byte_length": 2467,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/apps/desktop/src/main/janitor.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/desktop/src/main/janitor.ts",
+    "id": "S011",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        71
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/RD-JANITOR.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "d538929a6f554fb1fc31b1269f450ab27d2d0bb5",
+    "sha256": "984d7c6d2e865af8591bb8d86b7db504b2cf7c87000ddfa6c0423c453d40b600",
+    "byte_length": 4357,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/architecture/phase-plans/70-90-briefs/RD-JANITOR.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/architecture/phase-plans/70-90-briefs/RD-JANITOR.md",
+    "id": "S012",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        90
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/guides/mcp-dock-servers.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "d58aa3ed3a04e01c135bb19bb62e06c551f3c683",
+    "sha256": "6833f8417bd0ced0084b5b49497630e29ccb40d28ee26971647ec01621a446cd",
+    "byte_length": 2470,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/guides/mcp-dock-servers.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/guides/mcp-dock-servers.md",
+    "id": "S013",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        41
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/backend-specialist/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "a784501b844de6b851e8c573e0e417394ffb1f35",
+    "sha256": "7a8cae95b951d622b0b7963acdc855091ccc662a352d063d2db65d980e7c5c00",
+    "byte_length": 29904,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/backend-specialist/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/backend-specialist/README.md",
+    "id": "S014",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        55
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/backend-specialist/acceptance.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "745c6add585efbe478c28747af3407293de43b03",
+    "sha256": "8b1775bac51013452bf38e6ce077cea31cc6f1b6cab98cd3a1f524c3e5b20beb",
+    "byte_length": 37266,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/backend-specialist/acceptance.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-04.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/backend-specialist/acceptance.md",
+    "id": "S015",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        31
+      ],
+      [
+        1,
+        60
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/backend-specialist/integration-flow.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "eea511a5eaf3cd62a0a3dff8db2b7951cc3be8cb",
+    "sha256": "a067eb7cad6310c9a30c3f0faa772fb165ea44e7e3f4241b770cf97f5fe00f00",
+    "byte_length": 7268,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/backend-specialist/integration-flow.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/backend-specialist/integration-flow.md",
+    "id": "S016",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        61
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/backend-specialist/research/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "750a0f5a0fb1e1b180d237663017e6b5c3d72acd",
+    "sha256": "40f0009fe498c9dfbfafbdeb8d1d6e0db98d3e85ba89378174531f161ac35816",
+    "byte_length": 35808,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/backend-specialist/research/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/backend-specialist/research/README.md",
+    "id": "S017",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        38
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/backend-specialist/session-handoff.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "07cf370be0539030b11c93093099d1cad558a0f8",
+    "sha256": "d6083692d87dd6b9148723acc96cec7e3b3fa0694448ab7b83e6e24ea47654ec",
+    "byte_length": 10702,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/backend-specialist/session-handoff.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/backend-specialist/session-handoff.md",
+    "id": "S018",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        45
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/backend-specialist/skill-catalog.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "1cf2c45efc0c1b9632fbea01b93084bf119b2233",
+    "sha256": "130490bb6e8cd9c4ab87ff15290a8de63d0e105c1be540bef531f3b90096edbd",
+    "byte_length": 16299,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/backend-specialist/skill-catalog.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/backend-specialist/skill-catalog.md",
+    "id": "S019",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        55
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/claude-mode-onboarding/UI-MAP.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c92dafc5349dfa310e89275115ed536dcd13f7e5",
+    "sha256": "e3571d35770cdb4f053d06cac47c411d5beacd336cb6215c132a1dffe98cc117",
+    "byte_length": 9394,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/claude-mode-onboarding/UI-MAP.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/claude-mode-onboarding/UI-MAP.md",
+    "id": "S020",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        27
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/claude-mode/meta-harness.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "3803d48b112b127460ed1ac77adde34849a669d7",
+    "sha256": "80f4c5ebbef8de9d05dd4f47c0849f85489332768c3b2d19e6f28150d01c5d82",
+    "byte_length": 8670,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/claude-mode/meta-harness.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/claude-mode/meta-harness.md",
+    "id": "S021",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        86
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/1-internal.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "9c2df5522f2da416897733b9687bc3c30ea1806d",
+    "sha256": "bb1e5dfb840c98d16063a248301603bbd140ae5365e36d092b97435c8d31d296",
+    "byte_length": 18467,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/lucy/research/answers/1-internal.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/lucy/research/answers/1-internal.md",
+    "id": "S022",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        45
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/lucy/research/answers/24-runtime-surfaces.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "d7460461043d8f40c00ca90e01bf547b97fe3f19",
+    "sha256": "752eb74fa8929229ebf3d435454d1a628c7789d4424ceea45a4fbfd664cb3328",
+    "byte_length": 21964,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/lucy/research/answers/24-runtime-surfaces.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/lucy/research/answers/24-runtime-surfaces.md",
+    "id": "S023",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        36
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/EVIDENCE-2026-10-11.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "159304f30d6200e3966684c8f579d4643aff0efd",
+    "sha256": "8d4b82d702301ce4ff1abb7299cd04084cf055facbd0258a2ae1e55af9a49e29",
+    "byte_length": 2711,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/upstream-specialist/EVIDENCE-2026-10-11.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/upstream-specialist/EVIDENCE-2026-10-11.md",
+    "id": "S024",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        35
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/NAMING-CORRECTION.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "8f7559d131dc6be60c6a20b179ed2f8649077926",
+    "sha256": "809d09a098e6397eb93a71a94a958e620587a692f830139f65cfb88b5f3df2bf",
+    "byte_length": 4955,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/upstream-specialist/NAMING-CORRECTION.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/upstream-specialist/NAMING-CORRECTION.md",
+    "id": "S025",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        40
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/runtime-handoff.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "06d1803c0286d5a14435f5412ed118387dba3d64",
+    "sha256": "180a3152b361e25929074c17144fceffa01622719aab0ad84506f24b31b64d78",
+    "byte_length": 7803,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/upstream-specialist/runtime-handoff.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/upstream-specialist/runtime-handoff.md",
+    "id": "S026",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        65
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "docs/specs/upstream-specialist/v2-arsenal-handoff.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "1456058c1b6548509259de8111c741f28be63a02",
+    "sha256": "e3deadf9d2d4394d1588bce9b78ed21e8aca89f475abcfeb6c8838fe8b66affd",
+    "byte_length": 8577,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/docs/specs/upstream-specialist/v2-arsenal-handoff.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/upstream-specialist/v2-arsenal-handoff.md",
+    "id": "S027",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        45
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/app-dock/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "4733021c4c76e5fdd3ffdd2d9c8fa6749b654714",
+    "sha256": "86cc3f2d919338a88ceeedcf645d00749090892538a558b117bd7ab8c9078536",
+    "byte_length": 2490,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/app-dock/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/app-dock/README.md",
+    "id": "S028",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        47
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/app-dock/src/app-dock.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "ad81a43b726abe216e5dc7cf45768698aaf59c03",
+    "sha256": "e70b35aea0b041ab27f01823ecee2893d0738b657a4de1f67121ac016dc8e980",
+    "byte_length": 55918,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/app-dock/src/app-dock.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/app-dock/src/app-dock.ts",
+    "id": "S029",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        162
+      ],
+      [
+        348,
+        392
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/app-dock/src/application-tools.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c9ba94b8da4cb68d4c95b2c9f3fc80176a068f59",
+    "sha256": "b042db65ce513cf4af1954c244bfb67b7554fca874277c3ee23703cee44fdc7a",
+    "byte_length": 8462,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/app-dock/src/application-tools.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/app-dock/src/application-tools.ts",
+    "id": "S030",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        194
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/app-dock/src/dock-mcp.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "f775e4234a59d56218b5dd50c0e716bdcb8a2a72",
+    "sha256": "32f09168cb688d6c7fb6a8ce36a5a305a5857c1333be5d43745bbd9ed3e1db5d",
+    "byte_length": 33449,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/app-dock/src/dock-mcp.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/app-dock/src/dock-mcp.ts",
+    "id": "S031",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        210
+      ],
+      [
+        261,
+        316
+      ],
+      [
+        448,
+        467
+      ],
+      [
+        489,
+        518
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/app-dock/src/linux-workspace.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "21dee9ab76e0506275768ac9632b15580d588241",
+    "sha256": "bdd0c8fd43be4b09f178f1d8e3f3f383e039c6cec834df51ed9d7026ad02a850",
+    "byte_length": 8150,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/app-dock/src/linux-workspace.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/app-dock/src/linux-workspace.ts",
+    "id": "S032",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        178
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/app-dock/src/socket-transport.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "bdb749fdb2707e486b57e85d5921faa1c122ac20",
+    "sha256": "545f1026e03420188cffa85cd0514608e6b1ae579a46bce009d67c5853c63afd",
+    "byte_length": 1687,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/app-dock/src/socket-transport.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/app-dock/src/socket-transport.ts",
+    "id": "S033",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        40
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/app-dock/src/transport.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "398a7604f26c612c6c86c5f96fa098a38076cdc0",
+    "sha256": "2c38fb11024a9596e382d63c17ddd526e39ad712726b3706d6ef06746bdd39da",
+    "byte_length": 278,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/app-dock/src/transport.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/app-dock/src/transport.ts",
+    "id": "S034",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        5
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/capability-assets/NOTICES",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "cbc9b5613063df84582a1fffe28fb8a6fc61788a",
+    "sha256": "9c7ac5de45fe24e6dc0c1463a1cbff48f7392a5faa55e4675a09d13f34b4f6ef",
+    "byte_length": 2449,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/capability-assets/NOTICES",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/capability-assets/NOTICES",
+    "id": "S035",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        51
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/capability-assets/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c0c1f947e9ced6e7c67e5b113927272e2b2ec849",
+    "sha256": "29b1e897388210be29292bbbb7ca06ecc577ec71c81d16430f634fd2c5679f7f",
+    "byte_length": 3317,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/capability-assets/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/capability-assets/README.md",
+    "id": "S036",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        56
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/capability-assets/src/catalog.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "9ce9a7e101908063bc4bff5120c8e86ad2526df8",
+    "sha256": "86eb83ae1d7883e40da31921bfbfb1d0a529a50670f6941e8fca3426116d422e",
+    "byte_length": 11769,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/capability-assets/src/catalog.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/capability-assets/src/catalog.ts",
+    "id": "S037",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        110
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/capability-assets/src/providers.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "28c4af1a40443eb176f794e93335e52fb4097023",
+    "sha256": "7914ab60e5cc31c2a5c52470f85c5875a04e181536b5375134b7d29e16cce51a",
+    "byte_length": 2857,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/capability-assets/src/providers.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/capability-assets/src/providers.ts",
+    "id": "S038",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        31
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/capability-assets/src/sources.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c9823e4e18f9a405b72929a9dac472c75715729b",
+    "sha256": "b4d75e9b463e74ed39bcf925d02a050ee79b72acc8a96400aced9090dfc54dda",
+    "byte_length": 1364,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/capability-assets/src/sources.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/capability-assets/src/sources.ts",
+    "id": "S039",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        30
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "32476597cc07a6dec9bd75db9625d2f00481eb6e",
+    "sha256": "3081bd035c42a95701bc162812e4be16b754592a137d638c47217abf70222a3b",
+    "byte_length": 2828,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/README.md",
+    "id": "S040",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        48
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/package.json",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "59b5371069b1bda0e5304453d5ad588b4bd8360a",
+    "sha256": "669464513351bf9bc3443547f63361c971fff6820bddf8e1e39c1219799ad42d",
+    "byte_length": 1001,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/package.json",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/package.json",
+    "id": "S041",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        35
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/executable.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "76e50bd7d1844e67ec53a174e6d0d0d9e06e9da2",
+    "sha256": "0ab4793ffdb8e7afdf1aa2ebeb52284ee08851033fc5b5e6ce971988519e9c00",
+    "byte_length": 6527,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/src/executable.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/src/executable.ts",
+    "id": "S042",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        165
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/host/options.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "1396356d4f998a87becb1474ab3e272544b2f82b",
+    "sha256": "8207af0963b45fd2c58b732b100ccd5d32ae21655eddebb3def439fa3a0fe6f9",
+    "byte_length": 7025,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/src/host/options.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/src/host/options.ts",
+    "id": "S043",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        113
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/sdk.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "41aee3049016ffd91e29000580c19b0fa7898c8d",
+    "sha256": "898fb2065592f1e0c465465a1a80549d84a2f52a71a1ceccdf105567e71e61b1",
+    "byte_length": 5306,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/src/sdk.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/src/sdk.ts",
+    "id": "S044",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        105
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/transcript.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "b0f3ff180daef3084134bb88c63fab5a80cc34d8",
+    "sha256": "5f5d56389e1573fc4928115cd3a9c6beb16b0d2b7db25800c2192c610966afde",
+    "byte_length": 202,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/src/transcript.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/src/transcript.ts",
+    "id": "S045",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        5
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/account.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "cf86e1118f4e1dcb38bd9c1c90483fa66d78ba10",
+    "sha256": "525e5efeb8719da46e16c8ba4ef11c1cce9fade2a60b522d2beda6f2165e5978",
+    "byte_length": 6703,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/src/v2/account.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/src/v2/account.ts",
+    "id": "S046",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        148
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/catalog.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "568ff7f8d67f79af324ac3dd0377c7485ec8498f",
+    "sha256": "3262aee8ba4efb37f09e5f4bad2d460c400579dcb7c9dc42173c09f832487de2",
+    "byte_length": 3033,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/src/v2/catalog.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/src/v2/catalog.ts",
+    "id": "S047",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        61
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+    "sha256": "630e68e234e862cdd5d2b6d33732e3e7072fe0145b60d0a476c985a379bd6e1e",
+    "byte_length": 41462,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/engine-adapters/claude-code/src/v2/host.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/engine-adapters/claude-code/src/v2/host.ts",
+    "id": "S048",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        101
+      ],
+      [
+        109,
+        240
+      ],
+      [
+        263,
+        311
+      ],
+      [
+        314,
+        369
+      ],
+      [
+        420,
+        436
+      ],
+      [
+        551,
+        604
+      ],
+      [
+        665,
+        692
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/janitor/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "98c7e605b2bc954f39eef51a97a18fa077ee7a3f",
+    "sha256": "db87c67067b25140dc8301f2e21cd26b81740bf2ecf3317b274308a33346c2fe",
+    "byte_length": 2534,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/janitor/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/janitor/README.md",
+    "id": "S049",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        49
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/janitor/src/bootstrap.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "bf021d51fae750aed994189985f2e43ff7b11269",
+    "sha256": "6e6e1f68a2426eb6f6e6648bd5229fc90d1722228e7b51a854290d3f49e3defe",
+    "byte_length": 1838,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/janitor/src/bootstrap.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/janitor/src/bootstrap.ts",
+    "id": "S050",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        53
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/janitor/src/report-state.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "e3bd24a082b5b4ea2075948efb739808f099dfdd",
+    "sha256": "58d18998885ef62035b1ff3b14688da071a521604d71d253e4c3cdab1a42f930",
+    "byte_length": 257,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/janitor/src/report-state.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/janitor/src/report-state.ts",
+    "id": "S051",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        15
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/janitor/src/scan.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "e4512251b7db3fc10981766565ba5e47918bf513",
+    "sha256": "9ed10a9066296f67c8eafac4168cd3dd39fe6f5fc4fdf6afff7dace11cede4bf",
+    "byte_length": 13691,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/janitor/src/scan.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/janitor/src/scan.ts",
+    "id": "S052",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        48
+      ],
+      [
+        155,
+        211
+      ],
+      [
+        231,
+        255
+      ],
+      [
+        347,
+        350
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/janitor/src/scheduler.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "9c1c23ebb6393e222adfab32a59f369730c8c840",
+    "sha256": "79c5bb30fd1de7b810d5d9f80acfd5e125026ee4f71f1255faa8755a7bc5e3be",
+    "byte_length": 4239,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/janitor/src/scheduler.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/janitor/src/scheduler.ts",
+    "id": "S053",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        127
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/janitor/src/thresholds.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "ed62f11887bdb0f6dc823e61806536e33dd460b4",
+    "sha256": "c2aa0b9a77437c475235132c5dd07ea464ff501cba5cfd07c43afd797f3ba7fc",
+    "byte_length": 456,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/janitor/src/thresholds.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/janitor/src/thresholds.ts",
+    "id": "S054",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        19
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/roster.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "979ea02edc7ebe24c511d2511ca41518ec21df14",
+    "sha256": "5a75024571efbb7edcb37ea0b50c27174439f48c69c00fefe3caa16e3eea2627",
+    "byte_length": 11307,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/roster.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/roster.ts",
+    "id": "S055",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        16
+      ],
+      [
+        18,
+        242
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c01632881ed8e61ee0b008fb41d36ef8ceba8afd",
+    "sha256": "804a7ec1d341ba32e074d1badd3cbce8612b218d105b61660beae44340dd705c",
+    "byte_length": 10150,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/seat-skill-root.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seat-skill-root.ts",
+    "id": "S056",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        89
+      ],
+      [
+        1,
+        181
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/seat-skills-module.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "19f7786d82aa7043213a95a3e3e5eb8cb505d573",
+    "sha256": "f468d2d52a9d5c7007dd938ad7d41fe9f9b312637c2ba173f1a447de4ab88d11",
+    "byte_length": 2018,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/seat-skills-module.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seat-skills-module.ts",
+    "id": "S057",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        42
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/seats/archie.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "82c7347a145df3858e83ca524d0837e546d0783f",
+    "sha256": "433298d2c20210d91bbed8ba8c904aaae8a3ef5ae208ed7be2978cada841de52",
+    "byte_length": 1533,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/seats/archie.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seats/archie.ts",
+    "id": "S058",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        34
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/seats/backend.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "57b6c41492d6baec1704fb2bdc109bb4d656a457",
+    "sha256": "443cece7cb51ff4f5424b7d475f8e072a81707615bb589d24c9f43de0ae496fb",
+    "byte_length": 1599,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/seats/backend.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seats/backend.ts",
+    "id": "S059",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        43
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/seats/jimmy.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c4c2cc732cead0ff3e0d19e5edcc5a2c76beefeb",
+    "sha256": "9d71eac80fb360de851df69e4d80b1906239660ed37200da8af5f30501b44025",
+    "byte_length": 1023,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/seats/jimmy.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seats/jimmy.ts",
+    "id": "S060",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        21
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/seats/prompt/jimmy.txt",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "ff485c909600c02d0eded9e79c6585360efa57ca",
+    "sha256": "ea138456d15755bd9ffb304a6ca6d5056022a38ca57c7c45323bf90a99ac9f54",
+    "byte_length": 2470,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/seats/prompt/jimmy.txt",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seats/prompt/jimmy.txt",
+    "id": "S061",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        22
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/seats/seat.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c75b784297a5f0fe35fbc62dbae235c3ea1b11a7",
+    "sha256": "69de5c93578764496eff9df937c8f0cc7cfe5f11a2f40156a0c091959c35662b",
+    "byte_length": 7196,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/seats/seat.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seats/seat.ts",
+    "id": "S062",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        114
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/v2/seats.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+    "sha256": "4dd2acad909ce35909d82b3eac095a316c0f8695dd26ed0f9d627ea088641de6",
+    "byte_length": 11640,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/v2/seats.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-05.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/seats.ts",
+    "id": "S063",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        76,
+        124
+      ],
+      [
+        129,
+        155
+      ],
+      [
+        188,
+        234
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/src/v2/tools/inquiry.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "6df5cc6c414b6f1bc49ece596add3521b196fd32",
+    "sha256": "99510eed3c258e3fc67e9f7b87a60ca4fe01482fa6189c643d5d9e660d45e833",
+    "byte_length": 24015,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/src/v2/tools/inquiry.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/tools/inquiry.ts",
+    "id": "S064",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        15
+      ],
+      [
+        45,
+        83
+      ],
+      [
+        133,
+        178
+      ],
+      [
+        320,
+        368
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/maestro/coordination/test/jimmy-method.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "be82f7361bef40d5039a2b02c7a008750ebab901",
+    "sha256": "6528ba085960c0056ffb9c2658fb16edb7f1a088c88a76949683a41200cd7b24",
+    "byte_length": 3209,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/maestro/coordination/test/jimmy-method.test.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/test/jimmy-method.test.ts",
+    "id": "S065",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        61
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/archie/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "4927238a31339a604a0f2360b5957f4f602f89ed",
+    "sha256": "5c6e97374ae4151f55a111792389d89edc99e32ccd9859351d4247fbaa6f8392",
+    "byte_length": 1624,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/archie/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/archie/README.md",
+    "id": "S066",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        30
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/archie/skills/archie-workflow/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "dd47ef27ac5ef0e5a032d50daf2b4e5dc0f80620",
+    "sha256": "62f6d6a35a8c65f8f0e2a7d2250295d09a9bbf5839fc193649b0b4cf6f59a063",
+    "byte_length": 4639,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/archie/skills/archie-workflow/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/archie/skills/archie-workflow/SKILL.md",
+    "id": "S067",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        20
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/backend/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "dfb91ee3a2cd2b2b308a14864677d9141140919f",
+    "sha256": "8e85cfd6115b7b38c6169f7ad40f25615281e49fd330b5b0f8ea5c468cbdf21c",
+    "byte_length": 1958,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/backend/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/backend/README.md",
+    "id": "S068",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        33
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "e389cdd7dd650079d2191f21e4f1f6e65cef8c83",
+    "sha256": "ef8755479beefc3be7a36c5ff3abca74a42a5f7e91d0ca37281424227f17a318",
+    "byte_length": 825,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/backend/skills/backend-codegen/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/backend/skills/backend-codegen/SKILL.md",
+    "id": "S069",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        13
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-codegen/code/ast-grep/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "31a05b0e5da5946507cbaeb6c845ede87dfe8698",
+    "sha256": "df73309438a2fa30a394709c033ed1de9871866872472f7dd780f3f5b104a1b4",
+    "byte_length": 4288,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/backend/skills/backend-codegen/code/ast-grep/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/backend/skills/backend-codegen/code/ast-grep/SKILL.md",
+    "id": "S070",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        55
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/backend/skills/backend-implement/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "06074a613a2b778265c44d2e889752dc7d2c73ac",
+    "sha256": "fb90ed6da0cb64c74ee241af48d6ba39016bdc0ee77ef35e371c440ec32dd3ee",
+    "byte_length": 6807,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/backend/skills/backend-implement/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/backend/skills/backend-implement/SKILL.md",
+    "id": "S071",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        17
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/team/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "79b1cf87ce0eeb2e4436f0ab4c305491f594d14d",
+    "sha256": "79f1227fad063d4def86587bfeb6c612ac1d458045247bcf5a26c9367335f1d1",
+    "byte_length": 885,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/team/README.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/team/README.md",
+    "id": "S072",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        18
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "modules/specialists/team/skills/team-stack/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c9ec00a6ca8576164b221039e0d375d46681f325",
+    "sha256": "1f5fc6de86649b62a047ff4804c2cb815bc22872f0aabba220ed2552fe7db4c6",
+    "byte_length": 654,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/modules/specialists/team/skills/team-stack/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/specialists/team/skills/team-stack/SKILL.md",
+    "id": "S073",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        11
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/script/toolkit-pack.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c77e95e4fa8228bea806a29f66ed4d28c6abeac3",
+    "sha256": "cc01627f1823cd53a45f3d4a1b87fbef9de1349440dec721ccc1dd036286a308",
+    "byte_length": 16119,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/script/toolkit-pack.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/script/toolkit-pack.ts",
+    "id": "S074",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        90
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/backend-toolkit/index.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "e5c8e61d202f8a79a5b967d5abc467a97b58f4a3",
+    "sha256": "d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a",
+    "byte_length": 15426,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/backend-toolkit/index.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-04.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/backend-toolkit/index.ts",
+    "id": "S075",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        17,
+        38
+      ],
+      [
+        67,
+        133
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/backend-toolkit/manifest.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "d756770cd4679a9c3c983703b2f7deae8ea1cced",
+    "sha256": "2fdbb18ddc44c50456322b2fc55ed1d1c3fd7d69f15cf807c5a2a40c0231f63d",
+    "byte_length": 5839,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/backend-toolkit/manifest.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-04.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/backend-toolkit/manifest.ts",
+    "id": "S076",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        50
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/backend-toolkit/target.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "38c19f508bf3c5ab49fdfb0e10b60d762cf9a457",
+    "sha256": "fc76f5c887936816fc46826cacb01a4f19d04fe823ca16a82fac83f9337bffd7",
+    "byte_length": 6940,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/backend-toolkit/target.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-04.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/backend-toolkit/target.ts",
+    "id": "S077",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        85
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/capability/service/PROVENANCE.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "e7bbd558e031db60f157e6dd5622975072c4e4c6",
+    "sha256": "f093ea5700221d83f25761375e6080b5859c8f32c6bd74cfc330213703c552e1",
+    "byte_length": 1097,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/capability/service/PROVENANCE.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-01.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/capability/service/PROVENANCE.md",
+    "id": "S078",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        21
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/mcp.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "3d2203cb152ef733ca3b7d3231a302416a1f394b",
+    "sha256": "73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59",
+    "byte_length": 39585,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/mcp.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/mcp.ts",
+    "id": "S079",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        175,
+        195
+      ],
+      [
+        214,
+        260
+      ],
+      [
+        770,
+        825
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/mcp/provided.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "8d892803d1c58e163561d83a59e0980c974759bb",
+    "sha256": "e1e235880485e4016f659063278a83455053a899dd02ea2314e03cef0bc423b9",
+    "byte_length": 2159,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/mcp/provided.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/mcp/provided.ts",
+    "id": "S080",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        46
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/research/binding.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "5f5c7f92d7ade9c902d54c0e9bce713871952e78",
+    "sha256": "b64e476309f22af194c1459389814939887c117819be494adaac0b2fa73d1701",
+    "byte_length": 7351,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/research/binding.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-03.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/research/binding.ts",
+    "id": "S081",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        104
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/research/seat-tools.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "60cbc55506b5e3cd9cd7d937abf532399ec235b5",
+    "sha256": "d88373a47e970593f281019269874b0cbe981e09b86d500604eaa4e24b29c36e",
+    "byte_length": 1258,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/research/seat-tools.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/research/seat-tools.ts",
+    "id": "S082",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        25
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/core/src/session/runner/execution-host.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c0d2b18d120a1b3380d8bab3ba5405cdc8f70e1e",
+    "sha256": "b2fb2a1ace88be09a099f386269d71b12f3b00f838557590f2bf916a3507ced7",
+    "byte_length": 9616,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/core/src/session/runner/execution-host.ts",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-05.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/execution-host.ts",
+    "id": "S083",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        150
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/jimmy-specialist/CHARTER.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "73b274763dcd564348cfdcaea6678abf333b3c7e",
+    "sha256": "8d86e6f062bb98d298ef6acaaf55943e6e4c043e8015cfc9a0e17f638fe15a07",
+    "byte_length": 3946,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/jimmy-specialist/CHARTER.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/jimmy-specialist/CHARTER.md",
+    "id": "S084",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        29
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/jimmy-specialist/DELIVERY.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "370dd6238a711e2eb9dc9a39aeb7dafdd600ba18",
+    "sha256": "0e89f67a1a49343e5c977014532a10d843c80bd8477798324e8d3a413f5d1324",
+    "byte_length": 10930,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/jimmy-specialist/DELIVERY.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/jimmy-specialist/DELIVERY.md",
+    "id": "S085",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        36
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/jimmy-specialist/HANDOFF.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "c0413068b140e8f94f8bf726c4402d0e21c4f76f",
+    "sha256": "6d0f960310b03c588f40672036a294dbe58f6bd421c946a4b1106a73cffc7185",
+    "byte_length": 11819,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/jimmy-specialist/HANDOFF.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/jimmy-specialist/HANDOFF.md",
+    "id": "S086",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        85
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/jimmy-specialist/STUDY-FAILURES.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "8ee766381237c78c3132ade762d38db657c16a9f",
+    "sha256": "7321c5a90c5f0fe77caf473117f5c8d87661e332f30cbb3ca149025b63672811",
+    "byte_length": 4054,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/jimmy-specialist/STUDY-FAILURES.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/jimmy-specialist/STUDY-FAILURES.md",
+    "id": "S087",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        55
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/jimmy-specialist/STUDY-LANE.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "bec351b63aa3b1f10f3f6c4142268177fbb7a930",
+    "sha256": "73e806b04ea83a8e70bb1e7e3376d00a2bd0d98de7e3e67aa5a89745854b8ed0",
+    "byte_length": 4075,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/jimmy-specialist/STUDY-LANE.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/jimmy-specialist/STUDY-LANE.md",
+    "id": "S088",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        30
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/jimmy-specialist/skills/jimmy-calibration/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "77823850be86ad39aa328bd93247f7d422d120f1",
+    "sha256": "b351df7c9ada2eb83c707161b6c4aab55b3d1411f1ebdb4e027588cca9c557c8",
+    "byte_length": 2983,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/jimmy-specialist/skills/jimmy-calibration/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/jimmy-specialist/skills/jimmy-calibration/SKILL.md",
+    "id": "S089",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        48
+      ]
+    ],
+    "authority": "immutable baseline source"
+  },
+  {
+    "path": "packages/jimmy-specialist/skills/jimmy-web-research/SKILL.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "250c39cf6a16f44713a37780aa9b21f7fd8682b3",
+    "sha256": "f6da3ec8744d309ff1069654cf87898f11a6dcf9fa8f0ad6def608ba52be9dc3",
+    "byte_length": 2364,
+    "capture_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures/packages/jimmy-specialist/skills/jimmy-web-research/SKILL.md",
+    "connector_receipt_path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/integrations-l1/captures-raw-02.json",
+    "git_blob_verified": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/jimmy-specialist/skills/jimmy-web-research/SKILL.md",
+    "id": "S090",
+    "reading": "semantic excerpts; full source bytes captured; no product execution",
+    "read_line_ranges": [
+      [
+        1,
+        33
+      ]
+    ],
+    "authority": "immutable baseline source"
+  }
+]

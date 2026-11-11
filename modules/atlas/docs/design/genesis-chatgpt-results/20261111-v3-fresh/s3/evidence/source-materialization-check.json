@@ -1,0 +1,186 @@
+[
+  {
+    "path": "protocol/SKILL.md",
+    "expected_blob": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+    "observed_blob": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/AGENTS.md",
+    "expected_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+    "observed_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+    "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/modules/maestro/coordination/src/roster.ts",
+    "expected_blob": "979ea02edc7ebe24c511d2511ca41518ec21df14",
+    "observed_blob": "979ea02edc7ebe24c511d2511ca41518ec21df14",
+    "sha256": "5a75024571efbb7edcb37ea0b50c27174439f48c69c00fefe3caa16e3eea2627",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/modules/engine-adapters/claude-code/src/v2/host.ts",
+    "expected_blob": "fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+    "observed_blob": "fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+    "sha256": "630e68e234e862cdd5d2b6d33732e3e7072fe0145b60d0a476c985a379bd6e1e",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/genesis-ownership-plan.md",
+    "expected_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "observed_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/criteria.json",
+    "expected_blob": "6171f3d23d3e0263e578c04338067ecb8012016d",
+    "observed_blob": "6171f3d23d3e0263e578c04338067ecb8012016d",
+    "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/package.json",
+    "expected_blob": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+    "observed_blob": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+    "sha256": "797b93c084aaf809f0bc02013e9e1eb0ae0d0addfa9ae8b9b783ceb83e6173ab",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/principles.md",
+    "expected_blob": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+    "observed_blob": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+    "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/fatia-3.md",
+    "expected_blob": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+    "observed_blob": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+    "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/fresh-start.md",
+    "expected_blob": "ca485b25e43293a309c5489279dce80ce1441ed0",
+    "observed_blob": "ca485b25e43293a309c5489279dce80ce1441ed0",
+    "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/parallel-partition.json",
+    "expected_blob": "cdd2fba881059af6152371b417d8a791d8090a9f",
+    "observed_blob": "cdd2fba881059af6152371b417d8a791d8090a9f",
+    "sha256": "c8ade6470889a801b000583cfbb8f121482ec9ba1f2c4c72c539513723801d07",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/orchestration.md",
+    "expected_blob": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+    "observed_blob": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+    "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/judging.md",
+    "expected_blob": "452dc16776f84a6b0010dafa217564fc6411f183",
+    "observed_blob": "452dc16776f84a6b0010dafa217564fc6411f183",
+    "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/transport.md",
+    "expected_blob": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+    "observed_blob": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/runtime.md",
+    "expected_blob": "0e0f1607003ff49946ed7a155c268b31239930e6",
+    "observed_blob": "0e0f1607003ff49946ed7a155c268b31239930e6",
+    "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/handoffs.md",
+    "expected_blob": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+    "observed_blob": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+    "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/completion.md",
+    "expected_blob": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+    "observed_blob": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+    "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "protocol/campaign.md",
+    "expected_blob": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+    "observed_blob": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+    "sha256": "b3cb6324c348ca3fbe92ccf73b2a5e17d36d0822aa3cddeec84c0a9bb2a907bb",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/modules/relay/AGENTS.md",
+    "expected_blob": "8b48d7183c2872fb0a2fb8ba9ea41f715c31f74b",
+    "observed_blob": "8b48d7183c2872fb0a2fb8ba9ea41f715c31f74b",
+    "sha256": "02d23e86df2695b0acaa8bffa338554025ce8777d104167febee7c937f9dd32a",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/modules/relay/README.md",
+    "expected_blob": "cd560185711063570400578596daa387f98c841f",
+    "observed_blob": "cd560185711063570400578596daa387f98c841f",
+    "sha256": "7db61c7076b66cc627ce8769e0bb2b0932b9259d82778ed306871349fc4cb981",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/modules/app-dock/README.md",
+    "expected_blob": "4733021c4c76e5fdd3ffdd2d9c8fa6749b654714",
+    "observed_blob": "4733021c4c76e5fdd3ffdd2d9c8fa6749b654714",
+    "sha256": "86cc3f2d919338a88ceeedcf645d00749090892538a558b117bd7ab8c9078536",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/modules/capability-assets/README.md",
+    "expected_blob": "c0c1f947e9ced6e7c67e5b113927272e2b2ec849",
+    "observed_blob": "c0c1f947e9ced6e7c67e5b113927272e2b2ec849",
+    "sha256": "29b1e897388210be29292bbbb7ca06ecc577ec71c81d16430f634fd2c5679f7f",
+    "matches": true,
+    "extra_lf_removed": true
+  },
+  {
+    "path": "sources/modules/janitor/README.md",
+    "expected_blob": "98c7e605b2bc954f39eef51a97a18fa077ee7a3f",
+    "observed_blob": "98c7e605b2bc954f39eef51a97a18fa077ee7a3f",
+    "sha256": "db87c67067b25140dc8301f2e21cd26b81740bf2ecf3317b274308a33346c2fe",
+    "matches": true,
+    "extra_lf_removed": true
+  }
+]

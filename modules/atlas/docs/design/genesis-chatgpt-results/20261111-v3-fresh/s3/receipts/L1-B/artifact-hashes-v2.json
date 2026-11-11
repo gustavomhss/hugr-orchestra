@@ -1,0 +1,93 @@
+{
+  "schema": "genesis.s3.l1-b.artifact-hashes.v2",
+  "revision": 2,
+  "execution_id": "bdac971f-e4ee-40e5-ad9b-30d659303bab",
+  "self_hash_excluded": true,
+  "files": [
+    {
+      "path": "body.md",
+      "bytes": 23932,
+      "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb"
+    },
+    {
+      "path": "review-evidence.md",
+      "bytes": 15697,
+      "sha256": "3a34a3e008b4d7ae42b17aff556a635d88a06e0b28b755e8f4a037795339e8cb"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 161105,
+      "sha256": "28a7a3ff3ec4dd337098c28d3fa3e8715d296142974302559180281fbf40e513"
+    },
+    {
+      "path": "coverage.json",
+      "bytes": 2575078,
+      "sha256": "44615f804cd806ade4ac0770237156992badf63459d787a8c08dfb6f55fdfbb9"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 6788,
+      "sha256": "7c6af68f2ea2cbf1b98048fb34792f2bf8216d23e0e513c9c8bd728a17920550"
+    },
+    {
+      "path": "request.md",
+      "bytes": 3125,
+      "sha256": "7d57f73c2c12d7c639430467cb2be4a4c321cb21b659ee570774bb8a998aec6c"
+    },
+    {
+      "path": "response.md",
+      "bytes": 9089,
+      "sha256": "55a6cab9be9f004483f5e5c3f9c01b15fac0dab13380ff62b1e275cfaa22c217"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 5463,
+      "sha256": "0cba7f4f71fc68eb37159babdb8c8684f23657c9db4b2a7d1627d6e22291b59e"
+    },
+    {
+      "path": "review-evidence-index.json",
+      "bytes": 13700,
+      "sha256": "9a15d098d6e045625933e41bbb0563589777ee781cd555d7e37c7eda20a3a3da"
+    },
+    {
+      "path": "oracle-pins-static-check.json",
+      "bytes": 3762,
+      "sha256": "a8448964866b7627d88de857b296dd0cb435e0085105bed28d4e541ea6f0132f"
+    },
+    {
+      "path": "body-v1.md",
+      "bytes": 23802,
+      "sha256": "660d39c4a3f140f86af31d84369e44835abab6e9b26136439d07eb702f63a528"
+    },
+    {
+      "path": "response-v1.md",
+      "bytes": 7477,
+      "sha256": "664bc26bd79ca1657f08e87b428c57d7cd59738ff30766a00b00d6e28b9137ed"
+    },
+    {
+      "path": "verification-v1.json",
+      "bytes": 5463,
+      "sha256": "220caaf004559794fda05dc88b8349405d4e6ab975236042a858a651f564c30b"
+    },
+    {
+      "path": "request-delta-002.md",
+      "bytes": 1478,
+      "sha256": "467258d894b8a86d84d4cd53d127ae192a8e566531d72a24badcfda8629df9a9"
+    },
+    {
+      "path": "finding-delta-002.md",
+      "bytes": 2078,
+      "sha256": "0c0ffeae934f471bbf05ad942da557e7e27d44c7fdea4758c166a5bc35f69bed"
+    },
+    {
+      "path": "body-delta-002.diff",
+      "bytes": 3179,
+      "sha256": "1af9fb7b394b26265c2c66c4114a9d6f8797fef5ce5c7ca3199e48d8414c75f4"
+    },
+    {
+      "path": "delta-validation-002.json",
+      "bytes": 1102,
+      "sha256": "b3f99b930c85f1765e1de4e887ff0ad5b6178256dde10cccb178f318d4a19907"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "unit": "L1-B v1",
+  "body_hash": "660d39c4a3f140f86af31d84369e44835abab6e9b26136439d07eb702f63a528",
+  "verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "C1",
+      "status": "PASS",
+      "location": "Cabeçalho; §§1–7",
+      "reason": "Pins e proveniência explícitos. Distingue contrato, implementação, intenção histórica e evidência estática; os recortes sustentam os limites decisivos."
+    },
+    {
+      "id": "C2",
+      "status": "PASS",
+      "location": "§2; §7 Cobertura e profundidade",
+      "reason": "Reconciliação fornecida fecha 3700 paths sem exclusões: 3330 golden, 66 test/fixtures e 304 demais. Agrupamento preserva os membros e sua profundidade."
+    },
+    {
+      "id": "C3",
+      "status": "FIX-FIRST",
+      "location": "§4, tabela de drivers, linha Arm shell",
+      "reason": "A ambiguidade de stdout vazio está correta, mas falta a orientação diagnóstica explícita state/stderr/verify exigida por R2. Restante do mapa fornece portas, contratos e limites úteis ao aprofundamento."
+    },
+    {
+      "id": "C4",
+      "status": "PASS",
+      "location": "§§1–2, 5–7",
+      "reason": "Preserva drivers distintos, Python ativo versus referência histórica, goldens, identidade por WP e fronteiras entre planejamento, host, avaliação e registro."
+    },
+    {
+      "id": "C5",
+      "status": "PASS",
+      "location": "Abertura; §§5 e 7",
+      "reason": "Não converte hashes, goldens, compilação, docs ou 14/14 pins em testes executados. Limitações de integridade, independência e transação estão claras. 23802 bytes declarados respeitam 24000."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "reason": "Audit exit 0 é aceite dos controles registrados; não prova qualidade atual. Exige oracle_recheck ok quando há comparação, distingue not-run e invalid e informa exit 2 para ausência de passe auditável."
+    },
+    {
+      "id": "R2",
+      "status": "FIX-FIRST",
+      "reason": "Ambiguidade do hook, lock exit 3, append obrigatório antes do estado e ausência de atomicidade estão presentes; falta ligar a saída vazia à inspeção de state, stderr e relay verify."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "reason": "Diferencia drivers e destinos Python; compilação não comprova execução; preserva goldens e reconhece que texto de revisão fria não cria independência."
+    }
+  ],
+  "required_findings": [
+    {
+      "id": "F1",
+      "criterion": "C3/R2",
+      "location": "§4, imediatamente após a tabela ou na célula Arm shell",
+      "expected": "Indicar como distinguir os significados de stdout vazio usando arm state, stderr e relay verify.",
+      "observed": "O corpo enumera os significados possíveis, mas não fornece essa orientação conjunta. README pinado L110–117 a fornece expressamente.",
+      "correction": "Acrescentar: \"Com stdout vazio, confira arm `state`, stderr e `relay verify`; runner parado não comprova conclusão.\" A frase cabe na margem declarada do corpo."
+    }
+  ],
+  "optional": [
+    {
+      "location": "§4, parágrafo ArmState",
+      "suggestion": "Trocar “ID inteiro primeiro” por “ID completo primeiro” para evitar leitura de “inteiro” como tipo numérico."
+    }
+  ]
+}

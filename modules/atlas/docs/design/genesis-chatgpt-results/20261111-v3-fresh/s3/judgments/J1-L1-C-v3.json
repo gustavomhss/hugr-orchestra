@@ -1,0 +1,68 @@
+{
+  "unit": "L1-C v3",
+  "judge": "J1",
+  "body_hash": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+  "verdict": "PASS",
+  "scope": "Aceite estático da unidade L1. Não constitui comprovação de runtime, CI, publicação ou conclusão da campanha.",
+  "review_basis": "Parecer próprio sobre v2, delta exato da §8 e conferência de reversibilidade dos bytes informada pela raiz.",
+  "criteria": [
+    {
+      "id": "C1/QS1",
+      "status": "PASS",
+      "location": "§8 Entrada; socket-transport.ts:5–24",
+      "reason": "WebSocket loopback e token por lançamento correspondem ao comentário exato já examinado. Bearer e receptor desktop permanecem consistentes com a base anterior."
+    },
+    {
+      "id": "C2/CC1",
+      "status": "PASS",
+      "location": "§1; §11.5; coverage",
+      "reason": "As 429 entradas, classificação por família e limites de leitura permanecem inalterados."
+    },
+    {
+      "id": "C3/CC2–3/GO-A1–3",
+      "status": "PASS",
+      "location": "§8 Entrada",
+      "reason": "A descrição agora explicita no corpo o transporte e o lifetime do token, melhorando a compreensão da integração sem exigir aprofundamento de níveis posteriores."
+    },
+    {
+      "id": "C4/GO-I1,2,7/QS4",
+      "status": "PASS",
+      "location": "§8; demais fronteiras preservadas",
+      "reason": "O receptor continua identificado em apps/desktop/src/main. Não há mudança de permissões, identidade, empacotamento, reaper ou evidência histórica."
+    },
+    {
+      "id": "C5/GO-I8/QS5–6",
+      "status": "PASS",
+      "location": "§§8,10–11; tamanho informado",
+      "reason": "23.985 bytes respeitam o teto de 24.000. A descrição do contrato não é apresentada como conexão ou execução observada."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "location": "§7",
+      "reason": "Preservadas as 32 entradas declarativas, destinos reservados, ausência de carregamento por seats e pendências de qualificação."
+    },
+    {
+      "id": "R2",
+      "status": "PASS",
+      "location": "§8",
+      "reason": "WebSocket loopback, token por lançamento, Bearer e receptor desktop estão explícitos. Permanecem o canal condicionado ao ambiente e o reaper por Session deletada."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "location": "§9",
+      "reason": "Preservados scanner somente leitura, estado em memória, sink externo e ausência de composição ativa demonstrada."
+    },
+    {
+      "id": "R4",
+      "status": "PASS",
+      "location": "§§5–6",
+      "reason": "Preservados carga bem-sucedida da skill por Session, exceções sem bypass de autorização, preset claude_code e execução pelo runner."
+    }
+  ],
+  "required_findings": [],
+  "optional": []
+}

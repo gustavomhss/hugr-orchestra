@@ -1,0 +1,70 @@
+{
+  "unit": "L1-C v3",
+  "body_hash": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+  "verdict": "PASS",
+  "scope": "Aceite estático desta unidade; não aprova runtime, publicação, consumidores ou camadas posteriores.",
+  "criteria": [
+    {
+      "id": "C1",
+      "status": "PASS",
+      "location": "Cabeçalho; §§2–10",
+      "reason": "Mantido e vinculado à v3. A frase acrescentada corresponde ao contrato pinado do socket; a referência agora inclui suas linhas pertinentes."
+    },
+    {
+      "id": "C2",
+      "status": "PASS",
+      "location": "§1; §11.5; coverage",
+      "reason": "Mantido: 429 entradas reconciliadas, classificação e profundidade inalteradas; membership não é apresentado como leitura integral."
+    },
+    {
+      "id": "C3",
+      "status": "PASS",
+      "location": "§§2–11",
+      "reason": "Mantido: mapa útil de donos, consumidores, contratos, autoridade, empacotamento, lifetime e lacunas para aprofundamento."
+    },
+    {
+      "id": "C4",
+      "status": "PASS",
+      "location": "§8, Entrada; demais fronteiras",
+      "reason": "F1 resolvido: transporte WebSocket loopback, token por lançamento, Bearer e receptor desktop estão explícitos. Preservadas as distinções de permissões e lifetime."
+    },
+    {
+      "id": "C5",
+      "status": "PASS",
+      "location": "§§6–7, 9–11; corpo integral",
+      "reason": "Mantida a separação entre evidência estática e execução. Os 23985 bytes declarados respeitam o teto de 24000."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "reason": "Mantidos os 32 assets como dados, destinos reservados, qualification pendente e ausência de carregamento por seats."
+    },
+    {
+      "id": "R2",
+      "status": "PASS",
+      "reason": "Canal loopback WebSocket com token por lançamento e receptor desktop agora explícito; mantidos ausência por default fora do desktop e envio de linux.session.close na deleção."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "reason": "Mantidos scanner somente leitura, estado em memória, sink externo e lacuna de composição ativa."
+    },
+    {
+      "id": "R4",
+      "status": "PASS",
+      "reason": "Mantidos carregamento bem-sucedido por Session, exceções sem grant, preset claude_code, turn.execute e ausência de execução inferida."
+    }
+  ],
+  "required_findings": [],
+  "resolved_findings": [
+    {
+      "id": "F1",
+      "status": "RESOLVED",
+      "location": "§8, Entrada",
+      "reason": "A substituição exata e a referência ampliada atendem integralmente C4/R2."
+    }
+  ],
+  "optional": []
+}

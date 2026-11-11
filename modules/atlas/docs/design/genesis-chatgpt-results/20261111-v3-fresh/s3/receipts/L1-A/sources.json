@@ -1,0 +1,2362 @@
+{
+  "schema": "genesis-source-captures/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "hash_verifier": "Python hashlib SHA-256 and Git blob SHA-1 over exact connector-decoded bytes",
+  "sources": [
+    {
+      "id": "B:AGENTS.md",
+      "path": "AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/AGENTS.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "repository-instruction"
+    },
+    {
+      "id": "B:apps/cli/script/build.ts",
+      "path": "apps/cli/script/build.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a5066b1fe295a10c5463e33f4a256fb3dab32cc4",
+      "sha256": "e6fdba44f87bf7edc3875ecda0461a0c8dbd2c33c72b390e6612f76756812a9c",
+      "byte_length": 14512,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/apps/cli/script/build.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            42,
+            61
+          ],
+          [
+            97,
+            108
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "B:apps/cli/script/packaged-skills.ts",
+      "path": "apps/cli/script/packaged-skills.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "72e362c649c1a88d83ee2adca9b5bd1acedde217",
+      "sha256": "cad1aeeb4dc4232917b89cf141493f2236a691edf48fd911730c0f10d4fb2943",
+      "byte_length": 934,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/apps/cli/script/packaged-skills.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            22
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "B:apps/cli/src/host.ts",
+      "path": "apps/cli/src/host.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+      "sha256": "8ac600b520f90454eb6f0e1e2030ebdd8522df7290f7a0ab9d052a53f4a3e25e",
+      "byte_length": 1624,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/apps/cli/src/host.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            3,
+            28
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "B:docs/guides/coordination.md",
+      "path": "docs/guides/coordination.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bdfdf06f66d07a113a6459ccec281e85c198b9c6",
+      "sha256": "71220f05967d3433d6cea009b9b210d43d05a569c8005b8e1ab079723db4560a",
+      "byte_length": 3884,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/docs/guides/coordination.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "B:docs/guides/maestro.md",
+      "path": "docs/guides/maestro.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c5cd426ee265b00e85e924c5f3bbc2b3f40e1cba",
+      "sha256": "500f559bab622240857985dcd7ff6f4c2a131c758a162f2c77a16f7f8cd28c39",
+      "byte_length": 5052,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/docs/guides/maestro.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            8
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            35,
+            37
+          ],
+          [
+            55,
+            57
+          ],
+          [
+            59,
+            61
+          ],
+          [
+            75,
+            82
+          ],
+          [
+            87,
+            89
+          ]
+        ]
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "B:docs/specs/hugr-maestro/actor-identity-contract.md",
+      "path": "docs/specs/hugr-maestro/actor-identity-contract.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "94dd7506c5d6fa0ced78bd48e11deb0f683bbfb1",
+      "sha256": "91c53687e22a873f57aac98225b508c90602d81d9b61bbba6c08542147c9388b",
+      "byte_length": 3020,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/docs/specs/hugr-maestro/actor-identity-contract.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "B:docs/specs/seat-framework/README.md",
+      "path": "docs/specs/seat-framework/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "67c2cefb21ad554cb4aed12051bba00a15a36a3e",
+      "sha256": "26dbc42efbffb0ab11d34f582dabc7f51ff5fb8492b46631634d657eef8a7553",
+      "byte_length": 10883,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/docs/specs/seat-framework/README.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "B:modules/engine-adapters/claude-code/src/v2/host.ts",
+      "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+      "sha256": "630e68e234e862cdd5d2b6d33732e3e7072fe0145b60d0a476c985a379bd6e1e",
+      "byte_length": 41462,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/engine-adapters/claude-code/src/v2/host.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            34,
+            47
+          ],
+          [
+            160,
+            169
+          ],
+          [
+            295,
+            304
+          ],
+          [
+            571,
+            580
+          ],
+          [
+            584,
+            593
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "A:README.md",
+      "path": "modules/maestro/arsenal/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "681342baea6566dc438f3ba1393f593cbfbdd8c2",
+      "sha256": "1bf9b6f76f74f66e42d5a606137d5d8ca1edf924fce18083f4166cc87572c75e",
+      "byte_length": 3606,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/README.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "A:package.json",
+      "path": "modules/maestro/arsenal/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a50f9b80bcd1b29248857274d2a277141404156c",
+      "sha256": "e6bc13db55708f9fb306765490ece8bc35d5a212432eeeb3a57e927824998f1d",
+      "byte_length": 681,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/package.json",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "A:contract",
+      "path": "modules/maestro/arsenal/src/contract.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d94540c2429d6148f8d7ebc183307b4c6e7e8272",
+      "sha256": "3e9d447d494a151a3f16619fa3a5247e2207a435ab0abe05db597c71c897343b",
+      "byte_length": 4496,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/src/contract.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "A:governance/HOST-BINDINGS.md",
+      "path": "modules/maestro/arsenal/src/governance/HOST-BINDINGS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "939ab983311d4b6a307e2de59cdff7d31f078988",
+      "sha256": "549017f61a3a4b91eb9bb2e53900cd9bc06ef5c83c0c5ebf3882a432aff76d24",
+      "byte_length": 10819,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/src/governance/HOST-BINDINGS.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "A:index",
+      "path": "modules/maestro/arsenal/src/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "98022f003dcb7166d3b9067730043bf4796eed88",
+      "sha256": "b29acf9b058dee2af69f3fafc4801931e9d93a8e49bf2eb31174f4a227da22b0",
+      "byte_length": 846,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/src/index.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "A:registry",
+      "path": "modules/maestro/arsenal/src/registry.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "57564377e5a7d0a008cdb3b94148deb0b48be634",
+      "sha256": "07b38e55c5dd1656c2380630da7db0e8afa2be01f35274598f27d656154f13ea",
+      "byte_length": 9647,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/src/registry.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "A:server",
+      "path": "modules/maestro/arsenal/src/server.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f4f48f6bc07b927cb154c497ecf1f2d48fb84f46",
+      "sha256": "1066e9a60800ee65ccd1628045d2ddb2d2c4108e9c46955711f9d12be5ada3f4",
+      "byte_length": 4079,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/src/server.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "A:test/registry.test",
+      "path": "modules/maestro/arsenal/test/registry.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d3d2ead418816d58d8c863c460f3940793f51f4b",
+      "sha256": "55b4c75cf60cac876388bd42135afa8b8c88fcee284169c18348aca69f6fca3f",
+      "byte_length": 14656,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/test/registry.test.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            8
+          ],
+          [
+            10,
+            12
+          ],
+          [
+            27,
+            29
+          ],
+          [
+            36,
+            38
+          ],
+          [
+            40,
+            42
+          ],
+          [
+            55,
+            57
+          ],
+          [
+            59,
+            61
+          ],
+          [
+            78,
+            80
+          ],
+          [
+            93,
+            95
+          ],
+          [
+            110,
+            112
+          ],
+          [
+            144,
+            146
+          ],
+          [
+            172,
+            174
+          ],
+          [
+            208,
+            210
+          ]
+        ]
+      },
+      "evidence_role": "source-test-not-executed"
+    },
+    {
+      "id": "A:test/resource-authority.test",
+      "path": "modules/maestro/arsenal/test/resource-authority.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b732cb8d3eebf3f8514071772e6bba41ac0fb0dc",
+      "sha256": "2c67b60aeac3ad4b274bacc5a28d6cf0261e021abccf4ce4f1cfce3f0f09b8a6",
+      "byte_length": 4659,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/arsenal/test/resource-authority.test.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            8
+          ],
+          [
+            52,
+            54
+          ],
+          [
+            56,
+            58
+          ],
+          [
+            60,
+            62
+          ],
+          [
+            64,
+            66
+          ]
+        ]
+      },
+      "evidence_role": "source-test-not-executed"
+    },
+    {
+      "id": "C:README.md",
+      "path": "modules/maestro/coordination/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8f5371033cbd85f21898ee4e6e2ec98eba3010ad",
+      "sha256": "43acf1877fa81cdff8a06601e4e424fbc7af4f1a942ad40e1f33b96901bf252a",
+      "byte_length": 2933,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/README.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "C:package.json",
+      "path": "modules/maestro/coordination/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "97397b0bc609fcf842f654ecbad2f4dd66d8d8d4",
+      "sha256": "5c7dd84d4f9cff1473ddd79cbc1a75462937ba23de14aafe32c1ce6051f7a155",
+      "byte_length": 1912,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/package.json",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:playbooks/maestro-orchestra/start/architecture/SKILL.md",
+      "path": "modules/maestro/coordination/playbooks/maestro-orchestra/start/architecture/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "da6766bcfc2ebebe7866af5483bdebfd379f9ce2",
+      "sha256": "993800e1f9e3bea705c5ab152694dc5f65b2f1fdb2871881d0e3d5d6afa10919",
+      "byte_length": 4907,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/playbooks/maestro-orchestra/start/architecture/SKILL.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "C:playbooks/maestro-run/governed/SKILL.md",
+      "path": "modules/maestro/coordination/playbooks/maestro-run/governed/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "445d4762380d71b8a69aeaf850b4ea23d0292ee9",
+      "sha256": "4e29ad3fd6e0791d83e8edd89721516a5f6082be5aef799b946378b6cf15b9ef",
+      "byte_length": 10485,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/playbooks/maestro-run/governed/SKILL.md",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "documentary-intent"
+    },
+    {
+      "id": "C:script/seat",
+      "path": "modules/maestro/coordination/script/seat.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e9f2688d754f9e40173f022e15d2f9008bd653d6",
+      "sha256": "a281e0b9364c53c55dca358cb8364f1017fd3604248d6310174aa42fa0bb1451",
+      "byte_length": 10498,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/script/seat.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:admit-request",
+      "path": "modules/maestro/coordination/src/admit-request.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fe1d9a9160fbca12b208ef75cb53e5829d8f0900",
+      "sha256": "b130f69c389ba40fe579c65eedeab4a095006d24e917ff9a5ac441da170b5aee",
+      "byte_length": 2043,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/admit-request.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:approval",
+      "path": "modules/maestro/coordination/src/approval.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4181f5cefc9b1541fc2b73b4fcaca7e1a349b12e",
+      "sha256": "70bb260f4e7ffb20844042f8c12934ce10398779d9ff4916b0ced9c5917cd8d4",
+      "byte_length": 9452,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/approval.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:arsenal-native",
+      "path": "modules/maestro/coordination/src/arsenal-native.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5e48630812db20b843ef4fe7b40b8f0592a03da9",
+      "sha256": "f8b1d2d0c25138e6c29bef446db34066659551b00c72c312d2730b745879b2a2",
+      "byte_length": 7114,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/arsenal-native.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:governed-task",
+      "path": "modules/maestro/coordination/src/governed-task.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "14944d11eb7f68e76ffac324f5122dd3874e40c1",
+      "sha256": "28da2f35a7fe0579d87c63a718628e2051b60c1ef0c64c1e66152f9fbeb23594",
+      "byte_length": 1973,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/governed-task.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:playbook-content",
+      "path": "modules/maestro/coordination/src/playbook-content.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "396e6f586c07471a9b14d8b985043a4874d0c0dd",
+      "sha256": "9c41d2109b24bb14c07286d052c739dd268736164db2ca03578873f92fe4e016",
+      "byte_length": 1880,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/playbook-content.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:roster",
+      "path": "modules/maestro/coordination/src/roster.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "979ea02edc7ebe24c511d2511ca41518ec21df14",
+      "sha256": "5a75024571efbb7edcb37ea0b50c27174439f48c69c00fefe3caa16e3eea2627",
+      "byte_length": 11307,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/roster.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:route-grant",
+      "path": "modules/maestro/coordination/src/route-grant.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "73165a426ffdab95cb385d0ab9697f305364d5e5",
+      "sha256": "a536da9785f6912aa3e27011edeffa5c4e744822f97d1017c5ec7439557a4f39",
+      "byte_length": 899,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/route-grant.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seat-skill-content",
+      "path": "modules/maestro/coordination/src/seat-skill-content.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ee9de21c4aeceb1c9b014cdae2b710efb9d0360a",
+      "sha256": "7aaebead2a68c47dd89f2e86541d53114039d5a1b38cb00ec6c455827fcb087f",
+      "byte_length": 8797,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seat-skill-content.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seat-skill-root",
+      "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c01632881ed8e61ee0b008fb41d36ef8ceba8afd",
+      "sha256": "804a7ec1d341ba32e074d1badd3cbce8612b218d105b61660beae44340dd705c",
+      "byte_length": 10150,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seat-skill-root.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seat-skills-module",
+      "path": "modules/maestro/coordination/src/seat-skills-module.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "19f7786d82aa7043213a95a3e3e5eb8cb505d573",
+      "sha256": "f468d2d52a9d5c7007dd938ad7d41fe9f9b312637c2ba173f1a447de4ab88d11",
+      "byte_length": 2018,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seat-skills-module.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/archie",
+      "path": "modules/maestro/coordination/src/seats/archie.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "82c7347a145df3858e83ca524d0837e546d0783f",
+      "sha256": "433298d2c20210d91bbed8ba8c904aaae8a3ef5ae208ed7be2978cada841de52",
+      "byte_length": 1533,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/archie.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/backend",
+      "path": "modules/maestro/coordination/src/seats/backend.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "57b6c41492d6baec1704fb2bdc109bb4d656a457",
+      "sha256": "443cece7cb51ff4f5424b7d475f8e072a81707615bb589d24c9f43de0ae496fb",
+      "byte_length": 1599,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/backend.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/billy",
+      "path": "modules/maestro/coordination/src/seats/billy.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "56d675389853833cd1a699442d4c736a89f9d5b7",
+      "sha256": "8484081c21302089334b56613b6146757e81ef1a85042cbf90120da0bebd4081",
+      "byte_length": 655,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/billy.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/frankie",
+      "path": "modules/maestro/coordination/src/seats/frankie.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "04ea6769609b80ce8c3c3a8ea4ed332214fdcb1e",
+      "sha256": "f2e03ec9234e3015e70726e432b566d70b7889c2b319c09610e25d9cea6851a8",
+      "byte_length": 594,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/frankie.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/index",
+      "path": "modules/maestro/coordination/src/seats/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a4f0ecf5b5144f91837571286f91fc552be0c826",
+      "sha256": "3c46606588711e9af4f71c8c3d04c69c76435bd7ca5049b8a7fafac014673f6b",
+      "byte_length": 2398,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/index.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/jimmy",
+      "path": "modules/maestro/coordination/src/seats/jimmy.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c4c2cc732cead0ff3e0d19e5edcc5a2c76beefeb",
+      "sha256": "9d71eac80fb360de851df69e4d80b1906239660ed37200da8af5f30501b44025",
+      "byte_length": 1023,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/jimmy.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/live",
+      "path": "modules/maestro/coordination/src/seats/live.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "91cc7fb0aedab0a206dd3d61ef4633cd95dde518",
+      "sha256": "54bbd0dccf540dc4474e3ce213b6c5ebc0af53d6e833e059f315dc5c646d8235",
+      "byte_length": 790,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/live.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/lucy",
+      "path": "modules/maestro/coordination/src/seats/lucy.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8594fd48f16007aa116bb050358562dfb74d1d03",
+      "sha256": "05c5d276c347a09ca04ba05fadad3b7d649135f1048da3d6f44b859ab0defaee",
+      "byte_length": 736,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/lucy.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/patty",
+      "path": "modules/maestro/coordination/src/seats/patty.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a1b226b095aa99f8254e6151fb05975079cebfd8",
+      "sha256": "c08fa7c1c864df8ef05d06fa91ddbd0c66117220b56a9a5523f817f3f7aeea39",
+      "byte_length": 677,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/patty.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/rosie",
+      "path": "modules/maestro/coordination/src/seats/rosie.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "aa03c53d091469775465bdd13e1b384e8bc4a8dc",
+      "sha256": "0eca2d6faecfcd5d52c1d5bb61c0152f79f3452928e9b975f6688c54a03732e2",
+      "byte_length": 571,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/rosie.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:seats/seat",
+      "path": "modules/maestro/coordination/src/seats/seat.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c75b784297a5f0fe35fbc62dbae235c3ea1b11a7",
+      "sha256": "69de5c93578764496eff9df937c8f0cc7cfe5f11a2f40156a0c091959c35662b",
+      "byte_length": 7196,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/seats/seat.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:session-authority",
+      "path": "modules/maestro/coordination/src/session-authority.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a7c0e9d669fd8d8416d96b16cd87db4d7966424b",
+      "sha256": "b3801e7dd350a4114b152dd39f941570771010308d726fcd816c3d887ef898b2",
+      "byte_length": 2206,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/session-authority.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:task-hash",
+      "path": "modules/maestro/coordination/src/task-hash.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "13deff383c123b399fa588c2db5fcdca6914dd0a",
+      "sha256": "f39f27feef3acc942a64230f7136909aa4c99adb07910272201024bd2c89c0ec",
+      "byte_length": 1480,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/task-hash.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/atlas-header-source",
+      "path": "modules/maestro/coordination/src/v2/atlas-header-source.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "be9c3095cdecc52993b6897177ff305c3d2f9269",
+      "sha256": "454b4a1dd73c4d4dbf0383fc3fae3811e5dcf7d5bf15fdb7d8045cd1e1d89204",
+      "byte_length": 4845,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/atlas-header-source.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            21
+          ],
+          [
+            26,
+            34
+          ],
+          [
+            46,
+            48
+          ],
+          [
+            59,
+            61
+          ],
+          [
+            70,
+            73
+          ],
+          [
+            76,
+            78
+          ],
+          [
+            86,
+            88
+          ],
+          [
+            94,
+            96
+          ],
+          [
+            102,
+            104
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/atlas-source",
+      "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+      "sha256": "62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3",
+      "byte_length": 16688,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/atlas-source.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            10
+          ],
+          [
+            17,
+            36
+          ],
+          [
+            39,
+            43
+          ],
+          [
+            47,
+            49
+          ],
+          [
+            56,
+            59
+          ],
+          [
+            96,
+            99
+          ],
+          [
+            121,
+            123
+          ],
+          [
+            314,
+            316
+          ],
+          [
+            341,
+            343
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/conductor",
+      "path": "modules/maestro/coordination/src/v2/conductor.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ced9a56f21940ef84417056eca5835be71e611da",
+      "sha256": "78c28c600d618f534ad0f9ed54e6e246fb1ea75650a0258870ac1d70a55cdb97",
+      "byte_length": 6569,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/conductor.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-01.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance",
+      "path": "modules/maestro/coordination/src/v2/governance.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "acab0bd78caa6e4810b08a2fbabf9bc9ff437ba7",
+      "sha256": "7ab5f454b0443a311f8671b4153d64f83f0d9f18997d913d166911823757885c",
+      "byte_length": 27278,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/caller",
+      "path": "modules/maestro/coordination/src/v2/governance/caller.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa962883aab5ee982da671d5983bd84cb1306324",
+      "sha256": "b615682563757c48c261f9ec342f5c34d9c58d51959e77bdc4ecd7801d1acf61",
+      "byte_length": 1245,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/caller.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/dispatch",
+      "path": "modules/maestro/coordination/src/v2/governance/dispatch.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "63af3a2e95eb280dfe0a98f22fd51079e1323819",
+      "sha256": "5f13bf85bf3bd74ba3e17caf4e6899dd2fd19503430b262976b57a82e53f7300",
+      "byte_length": 8908,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/dispatch.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            22
+          ],
+          [
+            25,
+            44
+          ],
+          [
+            48,
+            51
+          ],
+          [
+            53,
+            63
+          ],
+          [
+            65,
+            100
+          ],
+          [
+            102,
+            106
+          ],
+          [
+            110,
+            131
+          ],
+          [
+            134,
+            144
+          ],
+          [
+            157,
+            163
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/input",
+      "path": "modules/maestro/coordination/src/v2/governance/input.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "38b4a278af265b48eff320a532ae460ef37d701b",
+      "sha256": "7e5498ede362ab6dbb0a7f713e1b649eef7b7ca4b81d1dabc5b92e35950d30d3",
+      "byte_length": 3258,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/input.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-06.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/logical-task",
+      "path": "modules/maestro/coordination/src/v2/governance/logical-task.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "16f5d28adbc75a8b08f2e33aadba13413cf59b52",
+      "sha256": "213030fb802670a0fd44379ead1fdf6e1c701e82a61087cf0ecc5728a79d6672",
+      "byte_length": 8921,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/logical-task.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-06.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/records",
+      "path": "modules/maestro/coordination/src/v2/governance/records.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "800ba56aeb7865b2b2fd8b9adc9539523b408e5a",
+      "sha256": "14bc8dc4de7b9e78fa5f2a08b6b0f5fe63f32d2dfffe1eeeb3686cc4df1a0750",
+      "byte_length": 6515,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/records.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/reservation",
+      "path": "modules/maestro/coordination/src/v2/governance/reservation.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b3885aab1cd5f9c9a2bb71db90b1e8044edf933a",
+      "sha256": "f22d10e5ab86bf5289c9b9e58ebde6f3df702b566887725a88b2685ec24ff1a4",
+      "byte_length": 13426,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/reservation.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            18
+          ],
+          [
+            21,
+            26
+          ],
+          [
+            30,
+            37
+          ],
+          [
+            56,
+            60
+          ],
+          [
+            62,
+            67
+          ],
+          [
+            78,
+            95
+          ],
+          [
+            102,
+            107
+          ],
+          [
+            109,
+            115
+          ],
+          [
+            148,
+            151
+          ],
+          [
+            159,
+            163
+          ],
+          [
+            168,
+            175
+          ],
+          [
+            177,
+            181
+          ],
+          [
+            200,
+            203
+          ],
+          [
+            212,
+            216
+          ],
+          [
+            257,
+            263
+          ],
+          [
+            283,
+            285
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/resume-admission",
+      "path": "modules/maestro/coordination/src/v2/governance/resume-admission.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "13cd81bb63bc6d4ecd3c9a2fb6d4a8bf294089ea",
+      "sha256": "5de2cb479b22eef14ddcb6e2b9d8c3559feda972624525c37dc29523a6e13bb9",
+      "byte_length": 10408,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/resume-admission.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            26
+          ],
+          [
+            28,
+            31
+          ],
+          [
+            34,
+            38
+          ],
+          [
+            41,
+            47
+          ],
+          [
+            52,
+            55
+          ],
+          [
+            60,
+            70
+          ],
+          [
+            77,
+            80
+          ],
+          [
+            85,
+            88
+          ],
+          [
+            97,
+            112
+          ],
+          [
+            160,
+            163
+          ],
+          [
+            169,
+            172
+          ],
+          [
+            174,
+            177
+          ],
+          [
+            187,
+            190
+          ],
+          [
+            204,
+            208
+          ],
+          [
+            222,
+            225
+          ],
+          [
+            234,
+            237
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/unsupported",
+      "path": "modules/maestro/coordination/src/v2/governance/unsupported.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4d873da09f1fc58a54602ec75fd1e89081f5d490",
+      "sha256": "f0178a236f26dcb66e1bf6b53606067cea651bb71c4d9742cbfa63a209928266",
+      "byte_length": 392,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/unsupported.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/workflow-admission",
+      "path": "modules/maestro/coordination/src/v2/governance/workflow-admission.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "633cfc60d784e5df8d6d616bed568e5f881b3f11",
+      "sha256": "6375ae66c6eb080cabfc0dc6d1d1680d2d9f689aa9e0fbabcbe81456a9a43de1",
+      "byte_length": 12586,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/workflow-admission.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            21
+          ],
+          [
+            26,
+            31
+          ],
+          [
+            35,
+            42
+          ],
+          [
+            52,
+            55
+          ],
+          [
+            68,
+            75
+          ],
+          [
+            90,
+            93
+          ],
+          [
+            101,
+            111
+          ],
+          [
+            114,
+            117
+          ],
+          [
+            121,
+            127
+          ],
+          [
+            149,
+            156
+          ],
+          [
+            158,
+            161
+          ],
+          [
+            164,
+            169
+          ],
+          [
+            176,
+            183
+          ],
+          [
+            190,
+            193
+          ],
+          [
+            221,
+            224
+          ],
+          [
+            226,
+            233
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/governance/write-roots",
+      "path": "modules/maestro/coordination/src/v2/governance/write-roots.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "964f22804a2b06b9a14a5f95b2b428e1af77d586",
+      "sha256": "7b326b1daa57288ed2c01f889c743dfc286123d69b6c2e2b3a4152f31d7a8a43",
+      "byte_length": 13987,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/governance/write-roots.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/seats-service",
+      "path": "modules/maestro/coordination/src/v2/seats-service.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1b2dc4cd362ae2835ec2800cd7366af72f65b804",
+      "sha256": "f2b6a0de1d2611e4820d1e3f45dcd87759ca169ba70f076888c5cdc773f19995",
+      "byte_length": 1480,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/seats-service.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/seats",
+      "path": "modules/maestro/coordination/src/v2/seats.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+      "sha256": "4dd2acad909ce35909d82b3eac095a316c0f8695dd26ed0f9d627ea088641de6",
+      "byte_length": 11640,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/seats.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/skill-sources",
+      "path": "modules/maestro/coordination/src/v2/skill-sources.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f69456425da16565b69b3b1f9b8385c4130c9330",
+      "sha256": "34c92ead24c56beb877a845b226449a530c3b214bce4b2d3bb12acd681a78253",
+      "byte_length": 2161,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/skill-sources.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/team-source",
+      "path": "modules/maestro/coordination/src/v2/team-source.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e54097178f28020c961f948c9e1b02700ffc5c3c",
+      "sha256": "5fe124a806c7f5015a29a5e62d809d8a3b976e36ff03f7d0069865c267ac803d",
+      "byte_length": 4514,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/team-source.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/tools",
+      "path": "modules/maestro/coordination/src/v2/tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a5f3505da5197bacfb54207248c516b71f450762",
+      "sha256": "becd5cf96623449012f5b01acb8e821a2d82ee4388c476e459f71e372bdbf1c6",
+      "byte_length": 9391,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/tools.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/tools/chain",
+      "path": "modules/maestro/coordination/src/v2/tools/chain.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d11442e74ac2aa38f0d953a4c223e011d17797e5",
+      "sha256": "e38a4edcec6729b0d9a6031f42877cd17abb3dced54672b6d2491fac3a2896e7",
+      "byte_length": 5091,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/tools/chain.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            54
+          ],
+          [
+            56,
+            60
+          ],
+          [
+            66,
+            72
+          ],
+          [
+            74,
+            79
+          ],
+          [
+            89,
+            94
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/tools/gate",
+      "path": "modules/maestro/coordination/src/v2/tools/gate.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4a34873539145118daee41d4f12df2ef01c250b6",
+      "sha256": "4e4d69624acb9a73685db6376a778edcec4185caacc34f9506b2b81f790639d4",
+      "byte_length": 1444,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/tools/gate.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-03.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/tools/research-descriptions",
+      "path": "modules/maestro/coordination/src/v2/tools/research-descriptions.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b8e5fc0814789c15d39d07f0bb625c1ca336d732",
+      "sha256": "bd7c028e74d9b5b1425df07cc8a975d95ae083b15cde8ee46d7bf7df07958485",
+      "byte_length": 7930,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/tools/research-descriptions.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            10
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            25,
+            30
+          ],
+          [
+            45,
+            47
+          ],
+          [
+            56,
+            58
+          ],
+          [
+            67,
+            69
+          ],
+          [
+            79,
+            81
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/tools/result",
+      "path": "modules/maestro/coordination/src/v2/tools/result.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4b00a7cda38bc8940df36140d16f1f15edf35278",
+      "sha256": "074528996138e385d35c8cf7426cc01b682b46051e4dc5229fffa96b576d99f2",
+      "byte_length": 1968,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/tools/result.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-06.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/workflow/arm",
+      "path": "modules/maestro/coordination/src/v2/workflow/arm.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e13c671478e395e2b06f37fee680440090e98572",
+      "sha256": "26afc064b2966c158ed17c55556fb711ea4e1145a779cfa70cb8e0b8c8211d21",
+      "byte_length": 7487,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/workflow/arm.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            10
+          ],
+          [
+            16,
+            25
+          ],
+          [
+            57,
+            63
+          ],
+          [
+            72,
+            80
+          ],
+          [
+            107,
+            113
+          ],
+          [
+            115,
+            117
+          ],
+          [
+            121,
+            123
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/workflow/host",
+      "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+      "sha256": "e089aab5fd69259b2f9f7c91d948fac7e2ebcb8b92e7d3b91f1a6f14b1982b32",
+      "byte_length": 22139,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/workflow/host.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            10
+          ],
+          [
+            30,
+            35
+          ],
+          [
+            37,
+            39
+          ],
+          [
+            53,
+            60
+          ],
+          [
+            91,
+            96
+          ],
+          [
+            121,
+            123
+          ],
+          [
+            131,
+            133
+          ],
+          [
+            157,
+            159
+          ],
+          [
+            167,
+            169
+          ],
+          [
+            193,
+            195
+          ],
+          [
+            201,
+            203
+          ],
+          [
+            244,
+            249
+          ],
+          [
+            282,
+            284
+          ],
+          [
+            296,
+            301
+          ],
+          [
+            321,
+            323
+          ],
+          [
+            331,
+            333
+          ],
+          [
+            337,
+            340
+          ],
+          [
+            356,
+            358
+          ],
+          [
+            393,
+            395
+          ],
+          [
+            402,
+            404
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/workflow/relay",
+      "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+      "sha256": "0abc0e8e28bb950b6e521cc0e292b1b0a3d82ba8f39df24ef9f74fa6d63dc518",
+      "byte_length": 4269,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/workflow/relay.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            78
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:v2/workflow/settlement",
+      "path": "modules/maestro/coordination/src/v2/workflow/settlement.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ebf057a69816fdfcc2e87bf691f7ad12fd571321",
+      "sha256": "781297bb832902b16256506ceac279404826c46f014fb651b1ff8d6aeeb94531",
+      "byte_length": 22220,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/v2/workflow/settlement.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            10
+          ],
+          [
+            23,
+            27
+          ],
+          [
+            29,
+            32
+          ],
+          [
+            35,
+            38
+          ],
+          [
+            46,
+            57
+          ],
+          [
+            62,
+            64
+          ],
+          [
+            81,
+            89
+          ],
+          [
+            93,
+            104
+          ],
+          [
+            119,
+            124
+          ],
+          [
+            128,
+            130
+          ],
+          [
+            133,
+            136
+          ],
+          [
+            156,
+            163
+          ],
+          [
+            203,
+            205
+          ],
+          [
+            233,
+            237
+          ],
+          [
+            245,
+            247
+          ],
+          [
+            272,
+            274
+          ],
+          [
+            286,
+            296
+          ],
+          [
+            368,
+            374
+          ],
+          [
+            391,
+            393
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:verification-plan",
+      "path": "modules/maestro/coordination/src/verification-plan.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "23daf6704e07238576240da9bcb90f71bdf9c8ef",
+      "sha256": "8e60c4df776de6b37b45a35d206bb9cd1dd316d10407642acaf2018feea5ba05",
+      "byte_length": 3850,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/verification-plan.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:work-contract",
+      "path": "modules/maestro/coordination/src/work-contract.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9352fdd1589e5650dd7e298ef25e5c6357803bde",
+      "sha256": "0460f69cb1aa33548ea378de77b647dcc32c1fb656a7666d529e3b1ecbff4c32",
+      "byte_length": 6755,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/src/work-contract.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-02.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "C:test/roster.test",
+      "path": "modules/maestro/coordination/test/roster.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d9998fc04559f7e8db9f77bd2609894fa1962b4d",
+      "sha256": "75f642ba97016c97affcd24ac6cd087c28bea7690682077d55e416fd8e96aae1",
+      "byte_length": 7268,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/test/roster.test.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            10
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            17,
+            19
+          ],
+          [
+            21,
+            23
+          ],
+          [
+            25,
+            27
+          ],
+          [
+            29,
+            31
+          ],
+          [
+            43,
+            45
+          ],
+          [
+            47,
+            49
+          ],
+          [
+            61,
+            63
+          ],
+          [
+            65,
+            67
+          ],
+          [
+            69,
+            71
+          ],
+          [
+            73,
+            75
+          ],
+          [
+            77,
+            79
+          ],
+          [
+            81,
+            83
+          ],
+          [
+            85,
+            87
+          ],
+          [
+            89,
+            91
+          ],
+          [
+            93,
+            95
+          ],
+          [
+            97,
+            99
+          ],
+          [
+            101,
+            103
+          ],
+          [
+            105,
+            107
+          ],
+          [
+            109,
+            111
+          ],
+          [
+            113,
+            115
+          ],
+          [
+            124,
+            129
+          ],
+          [
+            132,
+            134
+          ],
+          [
+            138,
+            140
+          ],
+          [
+            144,
+            152
+          ],
+          [
+            154,
+            156
+          ],
+          [
+            161,
+            163
+          ],
+          [
+            165,
+            167
+          ],
+          [
+            169,
+            173
+          ]
+        ]
+      },
+      "evidence_role": "source-test-not-executed"
+    },
+    {
+      "id": "C:test/seat-skills-build.test",
+      "path": "modules/maestro/coordination/test/seat-skills-build.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9dc1d1750994a27d008fc19fe761f380c929eab0",
+      "sha256": "d8287586de2c54a980e9efb6995264bc9ccf7fa6771c818653ab653653bd9306",
+      "byte_length": 17367,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/test/seat-skills-build.test.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            8
+          ],
+          [
+            14,
+            17
+          ],
+          [
+            19,
+            24
+          ],
+          [
+            32,
+            37
+          ],
+          [
+            41,
+            43
+          ],
+          [
+            47,
+            52
+          ],
+          [
+            58,
+            60
+          ],
+          [
+            65,
+            67
+          ],
+          [
+            69,
+            71
+          ],
+          [
+            87,
+            89
+          ],
+          [
+            98,
+            100
+          ],
+          [
+            108,
+            110
+          ],
+          [
+            121,
+            123
+          ],
+          [
+            128,
+            132
+          ],
+          [
+            144,
+            146
+          ],
+          [
+            157,
+            162
+          ],
+          [
+            174,
+            179
+          ],
+          [
+            185,
+            192
+          ],
+          [
+            232,
+            244
+          ],
+          [
+            258,
+            260
+          ],
+          [
+            264,
+            266
+          ]
+        ]
+      },
+      "evidence_role": "source-test-not-executed"
+    },
+    {
+      "id": "C:test/v2-task-governance.test",
+      "path": "modules/maestro/coordination/test/v2-task-governance.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ae0cf94ad43e4428b030306b257ca4175426e151",
+      "sha256": "f0c3eae052a77d638e8bb016b6c0760c571dc1cf3732be1b281a155fe28104bf",
+      "byte_length": 18331,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/modules/maestro/coordination/test/v2-task-governance.test.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            8
+          ],
+          [
+            46,
+            48
+          ],
+          [
+            58,
+            60
+          ],
+          [
+            62,
+            69
+          ],
+          [
+            86,
+            88
+          ],
+          [
+            96,
+            98
+          ],
+          [
+            105,
+            107
+          ],
+          [
+            124,
+            126
+          ],
+          [
+            138,
+            140
+          ],
+          [
+            159,
+            161
+          ],
+          [
+            183,
+            185
+          ],
+          [
+            212,
+            214
+          ],
+          [
+            216,
+            221
+          ],
+          [
+            231,
+            233
+          ],
+          [
+            239,
+            241
+          ],
+          [
+            250,
+            252
+          ],
+          [
+            254,
+            258
+          ],
+          [
+            264,
+            266
+          ],
+          [
+            278,
+            280
+          ],
+          [
+            310,
+            312
+          ]
+        ]
+      },
+      "evidence_role": "source-test-not-executed"
+    },
+    {
+      "id": "B:packages/core/src/host.ts",
+      "path": "packages/core/src/host.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+      "sha256": "9c20433f123ac8ea41773434faaceaecfe87787143689f6862ef28e05a87cb0f",
+      "byte_length": 3802,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/packages/core/src/host.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-05.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "full"
+      },
+      "evidence_role": "implementation-or-build-contract"
+    },
+    {
+      "id": "B:packages/core/src/tool/maestro-arsenal.ts",
+      "path": "packages/core/src/tool/maestro-arsenal.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "84283f5af5ab599479b8185694f67c9a7142545c",
+      "sha256": "454db21c2aea1300dae8d0689780c0f33119db075c51c24f92757aa564ac41d3",
+      "byte_length": 33686,
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/sources/packages/core/src/tool/maestro-arsenal.ts",
+      "connector_receipt": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/capture-batch-04.json",
+      "verified_git_blob": true,
+      "read_scope": {
+        "mode": "selected-lines",
+        "line_ranges": [
+          [
+            1,
+            7
+          ],
+          [
+            22,
+            31
+          ],
+          [
+            33,
+            42
+          ],
+          [
+            58,
+            89
+          ],
+          [
+            119,
+            148
+          ],
+          [
+            159,
+            168
+          ],
+          [
+            221,
+            230
+          ],
+          [
+            234,
+            252
+          ],
+          [
+            254,
+            267
+          ],
+          [
+            311,
+            330
+          ],
+          [
+            337,
+            350
+          ],
+          [
+            391,
+            407
+          ],
+          [
+            413,
+            439
+          ],
+          [
+            506,
+            517
+          ],
+          [
+            524,
+            533
+          ],
+          [
+            540,
+            551
+          ],
+          [
+            592,
+            601
+          ],
+          [
+            611,
+            629
+          ],
+          [
+            631,
+            640
+          ],
+          [
+            645,
+            656
+          ]
+        ]
+      },
+      "evidence_role": "implementation-or-build-contract"
+    }
+  ],
+  "recipe_sources": [
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "role": "recipe/protocol",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/SKILL.md",
+      "verified_git_blob": true,
+      "read_scope": "full",
+      "provided_local_sha256": "32a0d8f9cbfd379e688cef6510d19062ed0a8fd0834614ee4a9810621d3d1182",
+      "provided_local_matches": false
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "role": "recipe/protocol",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/principles.md",
+      "verified_git_blob": true,
+      "read_scope": "full",
+      "provided_local_sha256": "da313b35ca8852f724051cbc104a0842067bd0b87426feb02438ba81c2bb6242",
+      "provided_local_matches": false
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "role": "recipe/protocol",
+      "git_blob_sha": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+      "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/fatia-3.md",
+      "verified_git_blob": true,
+      "read_scope": "full",
+      "provided_local_sha256": "2765637857decd13fda7056869458da1062bff6789abdadc2e213119d313f217",
+      "provided_local_matches": false
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "role": "recipe/protocol",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/orchestration.md",
+      "verified_git_blob": true,
+      "read_scope": "full",
+      "provided_local_sha256": "09706746cad6cdc20ff82add0fb19e278090b3b505655535c8c36e633ee0d664",
+      "provided_local_matches": false
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "role": "recipe/protocol",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/recipe/.orchestra/skills/execute-genesis/references/transport.md",
+      "verified_git_blob": true,
+      "read_scope": "full",
+      "provided_local_sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f",
+      "provided_local_matches": false
+    }
+  ],
+  "control_inputs": [
+    {
+      "path": "/workspace/scratch/2c7c4c0ad466/genesis-s3/out/evidence/population-A.json",
+      "sha256": "b865312ec1b1fc621379f5c8b6d70a79dcf81ef013d9de4ec8bfa590e5cfcacd",
+      "byte_length": 141142,
+      "role": "frozen-population",
+      "capture_local": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/maestro-l1/population-A.json"
+    }
+  ],
+  "inspection_note": "Full connector bytes are preserved. Selected-line inspection is explicit; source-test inspection is not test execution. Protocol/recipe is separate from product inputs."
+}

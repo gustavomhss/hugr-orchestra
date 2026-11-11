@@ -1,0 +1,62 @@
+{
+  "unit": "L1-B v2",
+  "judge": "J1",
+  "body_hash": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+  "verdict": "PASS",
+  "scope": "Reavaliação estática da unidade pelo delta informado. Não aprova runtime, CI, níveis posteriores ou a campanha completa.",
+  "review_basis": "Parecer próprio sobre v1, dois ajustes fornecidos e conferência de reversibilidade dos bytes informada pela raiz. Nenhuma decisão de outro juiz foi incorporada como evidência.",
+  "criteria": [
+    {
+      "id": "C1/QS1",
+      "status": "PASS",
+      "location": "§4; README.md:110–117; ArmState",
+      "reason": "O diagnóstico acrescentado corresponde ao trecho exato já examinado. 'ID completo' elimina a possível leitura numérica de 'ID inteiro', sem acrescentar comportamento."
+    },
+    {
+      "id": "C2/CC1",
+      "status": "PASS",
+      "location": "§§2,7",
+      "reason": "Cobertura, classificação dos 3.700 paths e limites de profundidade permanecem inalterados."
+    },
+    {
+      "id": "C3/CC2–3/GO-A1–3",
+      "status": "PASS",
+      "location": "§4",
+      "reason": "O corpo agora oferece diretamente a ação de diagnóstico para stdout vazio: consultar estado, stderr e auditoria. A utilidade como base progressiva é reforçada."
+    },
+    {
+      "id": "C4/GO-I1,2,7/QS4",
+      "status": "PASS",
+      "location": "§4; demais fronteiras preservadas",
+      "reason": "Os ajustes não alteram identidades, gerados, evidência histórica ou autoridade. A parada do runner continua separada da comprovação de conclusão."
+    },
+    {
+      "id": "C5/GO-I8/QS5–6",
+      "status": "PASS",
+      "location": "§4; §7; tamanho informado",
+      "reason": "23.932 bytes respeitam o teto de 24.000. Não foram acrescentadas alegações de execução, teste ou aceite operacional."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "location": "§5",
+      "reason": "Preservados os limites de exit 0, recheck requerido, not-run e sprint invalid."
+    },
+    {
+      "id": "R2",
+      "status": "PASS",
+      "location": "§§4–5; README.md:110–117",
+      "reason": "Ambiguidade de stdout vazio e diagnóstico conjunto estão explícitos no corpo. Permanecem contenção com exit 3 e ordenação de appends sem promessa de atomicidade."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "location": "§§1,3–4,6–7",
+      "reason": "Diferenças entre drivers, disposição Python, separação entre compilação e execução, preservação dos goldens e limites de review permanecem inalterados."
+    }
+  ],
+  "required_findings": [],
+  "optional": []
+}

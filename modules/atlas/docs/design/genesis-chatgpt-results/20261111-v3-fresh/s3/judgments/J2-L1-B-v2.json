@@ -1,0 +1,65 @@
+{
+  "unit": "L1-B v2",
+  "body_hash": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+  "verdict": "PASS",
+  "scope": "Revisão estática desta unidade; não aprova runtime, publicação, consumidores ou camada completa.",
+  "criteria": [
+    {
+      "id": "C1",
+      "status": "PASS",
+      "location": "Cabeçalho; §§1–7",
+      "reason": "Mantido e vinculado à v2. O diagnóstico acrescentado corresponde ao README pinado L110–117; o delta verificado não altera as demais afirmações."
+    },
+    {
+      "id": "C2",
+      "status": "PASS",
+      "location": "§2; §7 Cobertura e profundidade",
+      "reason": "Mantido: população e classificação dos 3700 paths permanecem inalteradas, sem faltas, extras ou duplicatas na reconciliação fornecida."
+    },
+    {
+      "id": "C3",
+      "status": "PASS",
+      "location": "§4, após a tabela de drivers",
+      "reason": "F1 resolvido: stdout vazio agora remete explicitamente a arm state, stderr e relay verify, sem atribuir conclusão ao runner parado."
+    },
+    {
+      "id": "C4",
+      "status": "PASS",
+      "location": "§§1–2, 4–7",
+      "reason": "Mantido: fronteiras, identidades, drivers e evidência histórica preservados. “ID completo” elimina ambiguidade sem mudar o contrato."
+    },
+    {
+      "id": "C5",
+      "status": "PASS",
+      "location": "Abertura; §§5 e 7; corpo integral",
+      "reason": "Mantida a distinção entre inspeção estática e execução. Os 23932 bytes declarados respeitam o teto de 24000."
+    }
+  ],
+  "oracle": [
+    {
+      "id": "R1",
+      "status": "PASS",
+      "reason": "Mantidas as distinções entre audit aceito, qualidade atual, oracle_recheck ok, not-run e invalid."
+    },
+    {
+      "id": "R2",
+      "status": "PASS",
+      "reason": "Diagnóstico state/stderr/verify incorporado; permanecem ambiguidade do hook, lock exit 3, precedência dos registros obrigatórios e ausência de atomicidade."
+    },
+    {
+      "id": "R3",
+      "status": "PASS",
+      "reason": "Mantidos drivers distintos, destinos Python, compilação versus execução, preservação dos goldens e limites da revisão fria declarada em texto."
+    }
+  ],
+  "required_findings": [],
+  "resolved_findings": [
+    {
+      "id": "F1",
+      "status": "RESOLVED",
+      "location": "§4",
+      "reason": "A inserção exata satisfaz integralmente a correção exigida em C3/R2."
+    }
+  ],
+  "optional": []
+}

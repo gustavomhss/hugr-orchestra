@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-11T17:07:39.841937+00:00",
+  "observed_via": "GitHub connector refs/heads/dev",
+  "origin_dev": "97a7ebb36cff18fdad299eee53cd8ed0e9b66f91",
+  "real_local_commit_object": true,
+  "copied_immutable_objects": 74,
+  "config_hooks_credentials_copied": false,
+  "network_used_for_objects": false,
+  "candidate_shallow": "1cde2ff7a71bcf7aecb5d030917b577165135d38\n",
+  "merge_base": {
+    "exit": 255,
+    "stdout": "",
+    "stderr": "error: Could not read 00e439cbb68fb9a6129b9192f51899ef6083fa92\nerror: could not parse commit 00e439cbb68fb9a6129b9192f51899ef6083fa92\n"
+  }
+}

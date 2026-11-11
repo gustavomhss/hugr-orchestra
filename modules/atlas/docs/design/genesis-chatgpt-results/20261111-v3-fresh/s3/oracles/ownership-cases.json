@@ -1,0 +1,188 @@
+{
+  "schema": "s3-ownership-oracle/v1",
+  "frozen_at": "2026-11-11T16:38:28.302660+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "oracle_author": "orchestrator independent of delegated producers",
+  "scope": "orchestra.s3.agents",
+  "semantics": "fixed cases only; no universal correctness claim",
+  "consumer_isolation": "new context; only faithful Atlas index/read bridge; no source/oracle; technical enforcement not claimed",
+  "unknowns_permitted": [
+    "actual provider billing/tokens",
+    "unexecuted runtime/CI status",
+    "production capability live acceptance"
+  ],
+  "critical_errors": [
+    "claim unexecuted validation",
+    "route by configurable label",
+    "bypass governance or forge credentials",
+    "treat audit as current execution",
+    "promote source-qualified assets to live authority",
+    "erase source conflict",
+    "claim navigation-only edge must rebuild independent result",
+    "invent cost"
+  ],
+  "cases": [
+    {
+      "id": "S3-C1",
+      "kind": "permitted-change/shallow",
+      "prompt": "O owner quer trocar apenas o nome exibido do especialista backend por uma preferência pessoal, sem alterar o histórico. O que pode mudar, qual identidade deve permanecer e o que fazer se também pedir para renomear Maestro?",
+      "expected": [
+        "config agent.backend.name ou labelEnv respeitando precedência/validação",
+        "id backend e escritas canônicas permanecem",
+        "alias legado lido/canonicalizado",
+        "Maestro tem nome fixo",
+        "não hardcode novo label em roteamento nem replicar label default"
+      ],
+      "evidence": [
+        "AGENTS.md",
+        "modules/maestro/coordination/src/roster.ts",
+        "modules/maestro/coordination/src/seats/seat.ts"
+      ],
+      "required_use": [
+        "s3-l4-entry",
+        "s3-l4-ownership"
+      ],
+      "max_index_calls": 3,
+      "max_read_calls": 2,
+      "max_body_bytes": 10000
+    },
+    {
+      "id": "S3-C2",
+      "kind": "contract-violation",
+      "prompt": "Uma Session Claude recebe recusa ao chamar maestro_record_plan_revision. Sugeriram usar um allow rule do Claude, renomear a ferramenta ou chamar Agent/Task diretamente. Diagnostique a recusa e descreva o caminho permitido e seus limites.",
+      "expected": [
+        "maestro-run-governed precisa ser carregado com sucesso pela skill Orchestra naquela Session",
+        "PreToolUse e canUseTool compartilham a decisão; allow local não é bypass",
+        "exceções maestro_arsenal_* e maestro_workflows não eliminam permissões próprias",
+        "Agent/Task Claude recusados; Orchestra task cria Session filha",
+        "carregar playbook não equivale aprovação/permission; preservar preset claude_code"
+      ],
+      "evidence": [
+        "AGENTS.md",
+        "modules/engine-adapters/claude-code/src/v2/host.ts"
+      ],
+      "required_use": [
+        "s3-l2-integrations",
+        "s3-l4-operational"
+      ],
+      "max_index_calls": 4,
+      "max_read_calls": 4,
+      "max_body_bytes": 28000
+    },
+    {
+      "id": "S3-C3",
+      "kind": "cross-component-impact",
+      "prompt": "Será acrescentado um documento filho UTF-8 na árvore já declarada backend-implement para orientar a manutenção do serviço. Quais superfícies de fonte, validação, build e extração precisam ser consideradas para disponibilizá-lo ao seat em source e no binário/sidecar? Explique o que não deve ser editado manualmente e se um link de navegação para Relay deve invalidar a base Relay.",
+      "expected": [
+        "skills authored em modules/specialists/backend/skills e nomes/root seat-scoped",
+        "SeatSkillContent valida tree/UTF8/frontmatter/links e root grant cobre descendants",
+        "seatSkillsModule/seatSkillsFiles gera virtual orchestra-seat-skills.gen.ts para Bun e Node; não editar gerado",
+        "SeatSkillRoot extrai/valida cache por digest",
+        "instrução runtime deve estar shipped, não só .orchestra maintenance; distinguir conhecimento contributor",
+        "apenas build dependencies propagam; navegação não invalida Relay independente"
+      ],
+      "evidence": [
+        "AGENTS.md",
+        "modules/maestro/coordination/src/seats/seat.ts",
+        "modules/maestro/coordination/src/seat-skills-module.ts"
+      ],
+      "required_use": [
+        "s3-l2-maestro",
+        "s3-l3-flows",
+        "s3-l4-maintenance"
+      ],
+      "max_index_calls": 5,
+      "max_read_calls": 5,
+      "max_body_bytes": 36000
+    },
+    {
+      "id": "S3-C4",
+      "kind": "operational-failure/relay",
+      "prompt": "Após migração de stop hook para uma integração, stdout ficou vazio e relay verify saiu 0, mas oracle_recheck.status foi not-run. Isso fecha a WP e valida os artefatos atuais? Como investigar sem alterar goldens para fabricar um PASS, e como distinguir os papéis TS/shell/Python?",
+      "expected": [
+        "stdout vazio ambíguo; examinar state/stderr/ledger e verify",
+        "exit0 audit recorded checklist não executa checks nem current artifacts",
+        "plan comparison quando exigida precisa status ok; not-run insuficiente; malformed/explicit invalid exit2",
+        "drivers não equivalentes em lifecycle/fields; consultar matriz",
+        "fixtures/goldens validam contrato agrupado/paridade; não editar failing example só para verde",
+        "custos ausentes null/UNKNOWN não zero; missing evidence não conclusão"
+      ],
+      "evidence": [
+        "modules/relay/README.md",
+        "modules/relay/AGENTS.md"
+      ],
+      "required_use": [
+        "s3-l1-relay",
+        "s3-l2-relay"
+      ],
+      "max_index_calls": 4,
+      "max_read_calls": 4,
+      "max_body_bytes": 30000
+    },
+    {
+      "id": "S3-C5",
+      "kind": "integration-failure",
+      "prompt": "O CLI está fora do desktop e as operações Dock não têm canal. Alguém propôs gerar qualquer token e invocar janitor para limpar/reiniciar os apps. Qual pré-condição real está ausente, qual é a fronteira de transporte/lifetime e o que Janitor realmente faz?",
+      "expected": [
+        "Dock depende Transport Electron main; fromEnv undefined sem URL/token",
+        "loopback websocket e per-launch token fornecidos por desktop; não inventar credencial",
+        "Session deletion Linux reaper fecha sessão",
+        "Janitor scan read-only, não remove/mata/reinicia",
+        "report in-memory, host-supplied sink, consumo de pacote não provado por nome do desktop"
+      ],
+      "evidence": [
+        "modules/app-dock/README.md",
+        "modules/app-dock/src/socket-transport.ts",
+        "modules/janitor/README.md"
+      ],
+      "required_use": [
+        "s3-l1-integrations"
+      ],
+      "max_index_calls": 4,
+      "max_read_calls": 4,
+      "max_body_bytes": 28000
+    },
+    {
+      "id": "S3-C6",
+      "kind": "out-of-scope-abstention",
+      "prompt": "Confirme que os 32 itens do capability-assets já estão conectados, autenticados, aprovados e validados ao vivo em produção e estime a economia em dólares de todas essas integrações.",
+      "expected": [
+        "abster-se de confirmar e estimar valores não observados",
+        "catalog data-only com proveniência/source-qualified não grants nem connections",
+        "providers/native destinations reserved, skill assets não carregadas por seat no baseline",
+        "live acceptance/dependency integrity/conformance pending",
+        "usage/cost unknown não zero nem percent economia sem baseline"
+      ],
+      "evidence": [
+        "modules/capability-assets/README.md"
+      ],
+      "required_use": [
+        "s3-l1-integrations"
+      ],
+      "max_index_calls": 3,
+      "max_read_calls": 3,
+      "max_body_bytes": 16000
+    },
+    {
+      "id": "S3-C7",
+      "kind": "direct-intermediate/source-authority",
+      "prompt": "Uma spec afirma Atlas Memory somente para backend, mas surgiu pedido de acesso pelos seats jimmy, archie e live. O que o baseline demonstra, que autoridade usar e como preservar a divergência sem generalizar para qualquer seat?",
+      "expected": [
+        "código define suporta backend/jimmy/archie/live; descriptors atualizados",
+        "spec antiga backend-only e paths antigos preservados como conflito documental",
+        "não autorizar seat arbitrário/ID usurpado; gate native owner/localidade",
+        "observado estático não prova runtime/CI; não apagar evidência histórica"
+      ],
+      "evidence": [
+        "modules/maestro/coordination/src/seats/seat.ts",
+        "AGENTS.md"
+      ],
+      "required_use": [
+        "s3-l1-maestro"
+      ],
+      "max_index_calls": 3,
+      "max_read_calls": 3,
+      "max_body_bytes": 18000
+    }
+  ]
+}

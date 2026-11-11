@@ -35,3 +35,8 @@ Cada unidade herda GO-A1..7, GO-I1..8, QS1..6, CC1..7, SC1..5 e DoD1..7. Oracle 
 Nenhum consumidor, gate de CI ou publicação Atlas foi executado até este registro. Testes do produto seguem AGENTS.md (GitHub Actions); não executar bun test local nem contornar guardas. Descobrir e usar runtime-release.json de S4 quando necessário. Integração global pertence a ROOT; não absorve pendências locais. Histórico 20261111-v1 permanece UNRECONCILED_BY_ROOT, sem custo/reservas zerados.
 
 Este registro inicial não é handoff final nem DELIVERY_COMPLETE. Continuar toda a fila.
+
+
+## Progresso observado — 2026-11-11T17:13:11.309830+00:00
+
+L1 completo aceito pelo par persistente /root/judge_j1 e /root/judge_j2. Maestro v1, Relay v2, integrações v3; população 4553 exata. Dois pedidos de evidência Maestro resolvidos; diagnóstico Relay e transporte Dock explicitados por correções autorais reavaliadas; precedência de permissões Dock corrigida antes da revisão. L2-all despachado ao produtor nativo com três unidades e oracle congelado. O pacote L1 permanece parcial para missão L1–L4, com oito artefatos ainda a produzir. Release S4 ausente (404), importação e consumidores NOT_RUN. Nenhuma alegação de DELIVERY_COMPLETE.

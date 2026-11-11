@@ -1,0 +1,2460 @@
+{
+  "schema": "genesis-sources/v1",
+  "unit": "L1-B",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sources": [
+    {
+      "path": ".orchestra/skills/relay-usage/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3e3d51a8cec8c14af6f838cac96fb024564caf2b",
+      "sha256": "40cbc1c22bdc6ac70602951aee927067a74312494289d28f5c2e3da1c38e3352",
+      "byte_length": 8898,
+      "capture_path": "captures/1cde2ff7/.orchestra/skills/relay-usage/SKILL.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/relay-usage/SKILL.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "40cbc1c22bdc6ac70602951aee927067a74312494289d28f5c2e3da1c38e3352",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/.orchestra/skills/relay-usage/SKILL.md.source"
+    },
+    {
+      "path": "AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "capture_path": "captures/1cde2ff7/AGENTS.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-01.json",
+      "sha256_external": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/AGENTS.md.source"
+    },
+    {
+      "path": "docs/architecture/phase-plans/70-90-briefs/EXP-RELAY.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "220418f99cf1f7c603241cd39bea36153b6f2c38",
+      "sha256": "01895f0d764136bce7dbf8bea0647f8b8f73a1e79f53e1312e1aab1c8f2ce9fc",
+      "byte_length": 4188,
+      "capture_path": "captures/1cde2ff7/docs/architecture/phase-plans/70-90-briefs/EXP-RELAY.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/architecture/phase-plans/70-90-briefs/EXP-RELAY.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "01895f0d764136bce7dbf8bea0647f8b8f73a1e79f53e1312e1aab1c8f2ce9fc",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/docs/architecture/phase-plans/70-90-briefs/EXP-RELAY.md.source"
+    },
+    {
+      "path": "docs/guides/relay.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "197ef196b8449e1ff21d28b17db54160af663fb7",
+      "sha256": "b44c2b031f92ac226637c1079771604a5aa2ad3301e1d01b5f3d10651a19c130",
+      "byte_length": 6653,
+      "capture_path": "captures/1cde2ff7/docs/guides/relay.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/guides/relay.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "b44c2b031f92ac226637c1079771604a5aa2ad3301e1d01b5f3d10651a19c130",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/docs/guides/relay.md.source"
+    },
+    {
+      "path": "modules/relay/AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8b48d7183c2872fb0a2fb8ba9ea41f715c31f74b",
+      "sha256": "02d23e86df2695b0acaa8bffa338554025ce8777d104167febee7c937f9dd32a",
+      "byte_length": 2553,
+      "capture_path": "captures/1cde2ff7/modules/relay/AGENTS.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/AGENTS.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-01.json",
+      "sha256_external": "02d23e86df2695b0acaa8bffa338554025ce8777d104167febee7c937f9dd32a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/AGENTS.md.source"
+    },
+    {
+      "path": "modules/relay/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cd560185711063570400578596daa387f98c841f",
+      "sha256": "7db61c7076b66cc627ce8769e0bb2b0932b9259d82778ed306871349fc4cb981",
+      "byte_length": 8323,
+      "capture_path": "captures/1cde2ff7/modules/relay/README.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/README.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-01.json",
+      "sha256_external": "7db61c7076b66cc627ce8769e0bb2b0932b9259d82778ed306871349fc4cb981",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/README.md.source"
+    },
+    {
+      "path": "modules/relay/SPEC.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2144a0ed82da6f1472c426aecf3022762bfff4e7",
+      "sha256": "890eda5a19aeaab567add78f77a6d91d1cd3f6ad78f8abaa3305a1fa44a65465",
+      "byte_length": 36911,
+      "capture_path": "captures/1cde2ff7/modules/relay/SPEC.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/SPEC.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-01.json",
+      "sha256_external": "890eda5a19aeaab567add78f77a6d91d1cd3f6ad78f8abaa3305a1fa44a65465",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          154
+        ],
+        [
+          165,
+          282
+        ],
+        [
+          280,
+          468
+        ],
+        [
+          39,
+          55
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/SPEC.md.source"
+    },
+    {
+      "path": "modules/relay/benchmark/METHODOLOGY.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8c998b08507dde0e9656ac2d1e5cec5e01b8eea2",
+      "sha256": "ad537bf339c8f339de5f34e426d2642d18f765f548e8546da59ad7f59bcce676",
+      "byte_length": 4823,
+      "capture_path": "captures/1cde2ff7/modules/relay/benchmark/METHODOLOGY.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/benchmark/METHODOLOGY.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "ad537bf339c8f339de5f34e426d2642d18f765f548e8546da59ad7f59bcce676",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/benchmark/METHODOLOGY.md.source"
+    },
+    {
+      "path": "modules/relay/benchmark/RESULTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "10450b569ec6ead40888501aaf7e1d91a926b2ed",
+      "sha256": "86349805d996740bf039d2bc79b25a2e92c0a4d2d5be2bff3774f9a9804c4a3b",
+      "byte_length": 7635,
+      "capture_path": "captures/1cde2ff7/modules/relay/benchmark/RESULTS.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/benchmark/RESULTS.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "86349805d996740bf039d2bc79b25a2e92c0a4d2d5be2bff3774f9a9804c4a3b",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/benchmark/RESULTS.md.source"
+    },
+    {
+      "path": "modules/relay/benchmark/judge.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5bffc670b41a269ed2b33f8897b6b32f4e79c7eb",
+      "sha256": "bf0d96cbc9efee59225b1e8211d88ffaa5116fa112aa81257f8830ed61c3db75",
+      "byte_length": 16465,
+      "capture_path": "captures/1cde2ff7/modules/relay/benchmark/judge.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/benchmark/judge.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "bf0d96cbc9efee59225b1e8211d88ffaa5116fa112aa81257f8830ed61c3db75",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/benchmark/judge.py.source"
+    },
+    {
+      "path": "modules/relay/benchmark/relay_hook.sh",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5a6b194845b495e0c1fa4fc1fdb63a8b7aee34b5",
+      "sha256": "484812f2627faa3407f24ea0f6ebf1fddec85e2b708c6ea203278ad186f8fc6c",
+      "byte_length": 6716,
+      "capture_path": "captures/1cde2ff7/modules/relay/benchmark/relay_hook.sh.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/benchmark/relay_hook.sh",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "484812f2627faa3407f24ea0f6ebf1fddec85e2b708c6ea203278ad186f8fc6c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/benchmark/relay_hook.sh.source"
+    },
+    {
+      "path": "modules/relay/benchmark/verify_ledger.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e023c2f565857817d7ffc7b5bfdf9e8d3d17e27d",
+      "sha256": "ce7fe19291da6b468679883db9372882062833cae3be4edd1e037c58fff9c45c",
+      "byte_length": 8069,
+      "capture_path": "captures/1cde2ff7/modules/relay/benchmark/verify_ledger.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/benchmark/verify_ledger.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "ce7fe19291da6b468679883db9372882062833cae3be4edd1e037c58fff9c45c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/benchmark/verify_ledger.py.source"
+    },
+    {
+      "path": "modules/relay/bin/check-docs.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bca2ecb796f7fb4d2a304bbb8fb824f5edcc1c3c",
+      "sha256": "1e8fafd7aa82bf73ef876c952b2fb1f853d14e216a80c631396d1ec69463568e",
+      "byte_length": 9366,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/check-docs.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/check-docs.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "1e8fafd7aa82bf73ef876c952b2fb1f853d14e216a80c631396d1ec69463568e",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/check-docs.py.source"
+    },
+    {
+      "path": "modules/relay/bin/gen-doc-index.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7ca165da69ddfc80648447d04b5bea85d22f856a",
+      "sha256": "6de360d4ddae63133de9f3e02eb027890fb7f4015ecae5dfca8460752a1d98ef",
+      "byte_length": 5509,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/gen-doc-index.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/gen-doc-index.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "6de360d4ddae63133de9f3e02eb027890fb7f4015ecae5dfca8460752a1d98ef",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/gen-doc-index.py.source"
+    },
+    {
+      "path": "modules/relay/bin/relay",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9bd0fd92e53692d50792f3eefaac02b009639f6b",
+      "sha256": "81b1cca267d535c47dcd04399ff877c1625a316d94427904a76857dbfa3cfbff",
+      "byte_length": 32381,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "81b1cca267d535c47dcd04399ff877c1625a316d94427904a76857dbfa3cfbff",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-arm-hook.sh",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "47ee501545ac184bd36d302bdf211b9902425bfa",
+      "sha256": "3ac92ae05e25d6fe2ac32754b18127a5c0a6dec3d8ff5063300b21b3c41bb264",
+      "byte_length": 44885,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-arm-hook.sh.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-arm-hook.sh",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "3ac92ae05e25d6fe2ac32754b18127a5c0a6dec3d8ff5063300b21b3c41bb264",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          100
+        ],
+        [
+          545,
+          642
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-arm-hook.sh.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-autodecompose.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "93db7530be6be45efdc597d168f75f386671651c",
+      "sha256": "d4f56297db9079909f68cb50bcc73d0bc14a3fbde693e8c1aa1f8302ee23ab0e",
+      "byte_length": 6942,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-autodecompose.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-autodecompose.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "d4f56297db9079909f68cb50bcc73d0bc14a3fbde693e8c1aa1f8302ee23ab0e",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-autodecompose.py.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-corpus.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "276758497c6c26986c35b39423dd4093abebb026",
+      "sha256": "dbdfb1e3991a2a1203db0b43c814974d678d925253f5db709dae8a359024f90c",
+      "byte_length": 7463,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-corpus.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-corpus.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "dbdfb1e3991a2a1203db0b43c814974d678d925253f5db709dae8a359024f90c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-corpus.py.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-daemon.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4b260632ba29d6ffb8335d1c6a54c5fac8ccbb93",
+      "sha256": "ec22116e2aedec1f9fa93a8f65777923415668659d04c1218fcedcb1296d6068",
+      "byte_length": 28699,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-daemon.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-daemon.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "ec22116e2aedec1f9fa93a8f65777923415668659d04c1218fcedcb1296d6068",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-daemon.py.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-dash.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c92b38f7fb8f025e92e2e73d7d974ae7cecc657b",
+      "sha256": "85980e80dbd34244b144075c64e2ea58016d3dd658e89a65eef277c76f1b0914",
+      "byte_length": 10887,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-dash.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-dash.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "85980e80dbd34244b144075c64e2ea58016d3dd658e89a65eef277c76f1b0914",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-dash.py.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-gate",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bc8af089e72d3d03b014fe134de170b9b638010d",
+      "sha256": "c57aabbff29c47683988948145dd71cd1d33e2cf5accd457750241cc66c008f8",
+      "byte_length": 16344,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-gate.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-gate",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "c57aabbff29c47683988948145dd71cd1d33e2cf5accd457750241cc66c008f8",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          180,
+          325
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-gate.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-note",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0186e8177ed4dce707bd6d838d9769a81970149a",
+      "sha256": "5c8dc07c16a5229303d5a7db97d429c7fe983a90e1f156d47453dc18421abb33",
+      "byte_length": 1155,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-note.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-note",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "5c8dc07c16a5229303d5a7db97d429c7fe983a90e1f156d47453dc18421abb33",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-note.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-policy.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4961bd9dff8bcd3505ab51cbce3ba22fbed6a149",
+      "sha256": "a5656335c095647a1be2dff49a937e4312dd303caafb2e1eb054b4db9d1f78ab",
+      "byte_length": 7969,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-policy.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-policy.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "a5656335c095647a1be2dff49a937e4312dd303caafb2e1eb054b4db9d1f78ab",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-policy.py.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-profile.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8140765c3a47a6eff04946993023fea7c64baf2b",
+      "sha256": "7ecc3bbd48fef23f7b0fac03f83e2b8c67334945e41a4af384d629566d5da5d9",
+      "byte_length": 12929,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-profile.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-profile.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "7ecc3bbd48fef23f7b0fac03f83e2b8c67334945e41a4af384d629566d5da5d9",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-profile.py.source"
+    },
+    {
+      "path": "modules/relay/bin/relay-spec.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4e02a8d38e9626526ad0ed23878ac8edc72e087c",
+      "sha256": "0c551fca206a37bd306a55494845336651cd46105d8a9fd06e5858561df8f6dd",
+      "byte_length": 29669,
+      "capture_path": "captures/1cde2ff7/modules/relay/bin/relay-spec.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/bin/relay-spec.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "0c551fca206a37bd306a55494845336651cd46105d8a9fd06e5858561df8f6dd",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/bin/relay-spec.py.source"
+    },
+    {
+      "path": "modules/relay/docs/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa8980e7120b06923798294d14c2cde1fce1c980",
+      "sha256": "c35f42a175300250751863ad5226fe5fce8d05cc26c6f03463a8b341f01f4536",
+      "byte_length": 2959,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/README.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/README.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-01.json",
+      "sha256_external": "c35f42a175300250751863ad5226fe5fce8d05cc26c6f03463a8b341f01f4536",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          49
+        ],
+        [
+          17,
+          49
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/README.md.source"
+    },
+    {
+      "path": "modules/relay/docs/authoring-api.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f0da178fa8c90ed245ea99da75f97c12b5b04d13",
+      "sha256": "f7fdebe391e6d77a6115e4356c6d8e88e9e9d5a1fdb43f7b42dd33538654712a",
+      "byte_length": 7033,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/authoring-api.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/authoring-api.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "f7fdebe391e6d77a6115e4356c6d8e88e9e9d5a1fdb43f7b42dd33538654712a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/authoring-api.md.source"
+    },
+    {
+      "path": "modules/relay/docs/daemon.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "791238b7e4dbe36b0990555d9cfa45f5e7ad8bf7",
+      "sha256": "071849dc2cec2f85f03c93d560c0f536c3523217ff0e9c87653bd55d2b386d25",
+      "byte_length": 7044,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/daemon.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/daemon.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "071849dc2cec2f85f03c93d560c0f536c3523217ff0e9c87653bd55d2b386d25",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          92
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/daemon.md.source"
+    },
+    {
+      "path": "modules/relay/docs/guardrails.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "85bba4463a4cfd454f8ae36a8587229c35baf930",
+      "sha256": "5b937c4b0b24d0133dd702f53bf0b37225432b0a8a24f50be3aa7229341b2a91",
+      "byte_length": 3664,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/guardrails.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/guardrails.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "5b937c4b0b24d0133dd702f53bf0b37225432b0a8a24f50be3aa7229341b2a91",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          62
+        ],
+        [
+          29,
+          35
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/guardrails.md.source"
+    },
+    {
+      "path": "modules/relay/docs/profiles.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a9984b3f5e6d5fe5a50271cd5a76d187383f92bb",
+      "sha256": "2f4959f7c8bdc509ebe4043c3a631a6d8829bd62cd5ea58bc8a93fc8ce284083",
+      "byte_length": 18427,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/profiles.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/profiles.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "2f4959f7c8bdc509ebe4043c3a631a6d8829bd62cd5ea58bc8a93fc8ce284083",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/profiles.md.source"
+    },
+    {
+      "path": "modules/relay/docs/python-runtime-disposition.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a37c974b39fa287b6b4e4908f10babbb3e286ed4",
+      "sha256": "376d1df692702d2c0330c7307e9c4865d125447bffb7d721459abfb19046eecc",
+      "byte_length": 6747,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/python-runtime-disposition.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/python-runtime-disposition.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "376d1df692702d2c0330c7307e9c4865d125447bffb7d721459abfb19046eecc",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/python-runtime-disposition.md.source"
+    },
+    {
+      "path": "modules/relay/docs/skills.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b1ed9415a0cc0f1c1fb229706f3555250b255ca0",
+      "sha256": "22a894b625cb1e80c46d875dd0522e8736cdcd9de5ef9aadd7a0f40501b7c7bf",
+      "byte_length": 6014,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/skills.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/skills.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-01.json",
+      "sha256_external": "22a894b625cb1e80c46d875dd0522e8736cdcd9de5ef9aadd7a0f40501b7c7bf",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/skills.json.source"
+    },
+    {
+      "path": "modules/relay/docs/skills/relay-blast-radius/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6f5ab43cb27aba20dc025fb1097ac09907f447b2",
+      "sha256": "9fc1138491e9bbf9b9da0d6118ee2db91d59e87b33d54fb5d7832153e7549404",
+      "byte_length": 18979,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/skills/relay-blast-radius/SKILL.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/skills/relay-blast-radius/SKILL.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "9fc1138491e9bbf9b9da0d6118ee2db91d59e87b33d54fb5d7832153e7549404",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          135
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/skills/relay-blast-radius/SKILL.md.source"
+    },
+    {
+      "path": "modules/relay/docs/skills/relay-integration/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9948103548db3396fdc49738740e96115ff4b2d6",
+      "sha256": "67602443d4834ab66f090df5c2711f3983a741aa6190848e2311883a0f93302e",
+      "byte_length": 19454,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/skills/relay-integration/SKILL.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/skills/relay-integration/SKILL.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "67602443d4834ab66f090df5c2711f3983a741aa6190848e2311883a0f93302e",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/skills/relay-integration/SKILL.md.source"
+    },
+    {
+      "path": "modules/relay/docs/skills/relay-maintenance/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6eb3fe8b94ae3c8fba14d3f781323cd47aec8da8",
+      "sha256": "714ddde66e3e7046c10be48c03554cb10cae966404426a9b34365ae20bd93ad1",
+      "byte_length": 11001,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/skills/relay-maintenance/SKILL.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/skills/relay-maintenance/SKILL.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "714ddde66e3e7046c10be48c03554cb10cae966404426a9b34365ae20bd93ad1",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/skills/relay-maintenance/SKILL.md.source"
+    },
+    {
+      "path": "modules/relay/docs/skills/relay-ownership/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "05cf3ccc83042274c53f47e80e6c25a6149c447c",
+      "sha256": "7be97798d0e82dae9f80c95a86caf4f9aa9ed87fdf96c41166719fb2be025967",
+      "byte_length": 9430,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/skills/relay-ownership/SKILL.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/skills/relay-ownership/SKILL.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "7be97798d0e82dae9f80c95a86caf4f9aa9ed87fdf96c41166719fb2be025967",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          109
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/skills/relay-ownership/SKILL.md.source"
+    },
+    {
+      "path": "modules/relay/docs/spec-library.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bf63dc74bf5d199e37736ce71cf2c76b4f9b974a",
+      "sha256": "94e911803777672f89ee02b0b0603204b104567b14c54250cbc2263c0573769c",
+      "byte_length": 3577,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/spec-library.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/spec-library.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "94e911803777672f89ee02b0b0603204b104567b14c54250cbc2263c0573769c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/spec-library.md.source"
+    },
+    {
+      "path": "modules/relay/docs/trace-corpus.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5937b034aeb1f97aece4424bddd327b533626ab",
+      "sha256": "8c8ad754faee2fcca5326bbe367b2b93e8508d99ace7356c1ad13b933be9e8bf",
+      "byte_length": 2890,
+      "capture_path": "captures/1cde2ff7/modules/relay/docs/trace-corpus.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/docs/trace-corpus.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "8c8ad754faee2fcca5326bbe367b2b93e8508d99ace7356c1ad13b933be9e8bf",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/docs/trace-corpus.md.source"
+    },
+    {
+      "path": "modules/relay/lib/orchestra_relay/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5f4c202ffb8aaf911422b73aea8ab08e57f92dcf",
+      "sha256": "ba379e85148eb40bf3c1b0edc65d6ed5b9efc24dcc4d97077b3fd0959e4eddf5",
+      "byte_length": 3526,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/orchestra_relay/README.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/orchestra_relay/README.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "ba379e85148eb40bf3c1b0edc65d6ed5b9efc24dcc4d97077b3fd0959e4eddf5",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          57
+        ],
+        [
+          37,
+          57
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/orchestra_relay/README.md.source"
+    },
+    {
+      "path": "modules/relay/lib/orchestra_relay/__init__.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d281b8bc0c3154bf33a21bca7ad9f528e3676e4d",
+      "sha256": "c059e339cf0d434c806dceccbd0d2da71b49ec70eabc52b39835de6d8fb91e65",
+      "byte_length": 13459,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/orchestra_relay/__init__.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/orchestra_relay/__init__.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "c059e339cf0d434c806dceccbd0d2da71b49ec70eabc52b39835de6d8fb91e65",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          120
+        ],
+        [
+          121,
+          259
+        ],
+        [
+          175,
+          183
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/orchestra_relay/__init__.py.source"
+    },
+    {
+      "path": "modules/relay/lib/relay-gate.sh",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b918826055297aef90ad44fd4d4d67ceffef1cb9",
+      "sha256": "06b731c1378130e55acb324c3e8e10c8818cd446530ba017cbc64cbe56494247",
+      "byte_length": 21843,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/relay-gate.sh.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/relay-gate.sh",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "06b731c1378130e55acb324c3e8e10c8818cd446530ba017cbc64cbe56494247",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          248,
+          363
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/relay-gate.sh.source"
+    },
+    {
+      "path": "modules/relay/lib/relay_authoring/__init__.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e4c331fd10fc13714d9e760422cbd07d23aee6bb",
+      "sha256": "e6e40854a7269b7b457bf4e914b06fb7e2a6966c87a57a377a89a3b200d86cad",
+      "byte_length": 123,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/relay_authoring/__init__.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/relay_authoring/__init__.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "e6e40854a7269b7b457bf4e914b06fb7e2a6966c87a57a377a89a3b200d86cad",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/relay_authoring/__init__.py.source"
+    },
+    {
+      "path": "modules/relay/lib/relay_authoring/config.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fb171c7d920b26fd4219f44eb5c280efd1df8b05",
+      "sha256": "cf0146ca49ab8025429449eae3659f546b6f6892a93f1f54e187980e7c4eac73",
+      "byte_length": 2671,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/relay_authoring/config.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/relay_authoring/config.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "cf0146ca49ab8025429449eae3659f546b6f6892a93f1f54e187980e7c4eac73",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/relay_authoring/config.py.source"
+    },
+    {
+      "path": "modules/relay/lib/relay_authoring/graph.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "31a10443c542e75e44642abfe263f271a0b80357",
+      "sha256": "c674fcb716c3fb61c4fb1d51de1ec0e66d0de5edd8ecfafeb3d8d032a89d662d",
+      "byte_length": 18597,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/relay_authoring/graph.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/relay_authoring/graph.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "c674fcb716c3fb61c4fb1d51de1ec0e66d0de5edd8ecfafeb3d8d032a89d662d",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/relay_authoring/graph.py.source"
+    },
+    {
+      "path": "modules/relay/lib/relay_authoring/hooks.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "81d4cda4e8302b478549817e7ec31d1577889839",
+      "sha256": "c4094bd9564ec0826b61216fe45faa6326cf5794c71275f82579e847b3e481be",
+      "byte_length": 6117,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/relay_authoring/hooks.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/relay_authoring/hooks.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "c4094bd9564ec0826b61216fe45faa6326cf5794c71275f82579e847b3e481be",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/relay_authoring/hooks.py.source"
+    },
+    {
+      "path": "modules/relay/lib/relay_authoring/skills.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9d6bea9abd70941c0fce75fda765b0771bf971cf",
+      "sha256": "e6b14467633c5a9278e31f39650e5c61d0d216ae78639e6e0eb7325242b911ac",
+      "byte_length": 4488,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/relay_authoring/skills.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/relay_authoring/skills.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "e6b14467633c5a9278e31f39650e5c61d0d216ae78639e6e0eb7325242b911ac",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/relay_authoring/skills.py.source"
+    },
+    {
+      "path": "modules/relay/lib/relay_authoring/store.py",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6ec6879ed5da6608009dddb09a74ae927f6369e4",
+      "sha256": "68a38b0b6bf0074fa659cda938b49c4886b7333e3cf80f39a37924c9152bc11c",
+      "byte_length": 8744,
+      "capture_path": "captures/1cde2ff7/modules/relay/lib/relay_authoring/store.py.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/lib/relay_authoring/store.py",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "68a38b0b6bf0074fa659cda938b49c4886b7333e3cf80f39a37924c9152bc11c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/lib/relay_authoring/store.py.source"
+    },
+    {
+      "path": "modules/relay/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c7145670d8f79d2db91eb8545af5361bc04549f1",
+      "sha256": "932b3b1432e0e8b210540025ac72fad4fce71c7f67185fa3c8c735af96fb3f1f",
+      "byte_length": 1535,
+      "capture_path": "captures/1cde2ff7/modules/relay/package.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/package.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-01.json",
+      "sha256_external": "932b3b1432e0e8b210540025ac72fad4fce71c7f67185fa3c8c735af96fb3f1f",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/package.json.source"
+    },
+    {
+      "path": "modules/relay/src/arm/cost.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e531915e7db7d2e5c56b43a15a45940323d62a5a",
+      "sha256": "038c03b4fcb881189d9d240f41c4316dffdaf5fe0cbc75b5775a27f9609c98ae",
+      "byte_length": 8528,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/arm/cost.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/arm/cost.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "038c03b4fcb881189d9d240f41c4316dffdaf5fe0cbc75b5775a27f9609c98ae",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/arm/cost.ts.source"
+    },
+    {
+      "path": "modules/relay/src/arm/create.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c7362eb0cd9fa8920cc80e7125dce60ba191c043",
+      "sha256": "8a47e591f018f0c646f0c08c0cbad98b1ddeb5a0f718e137793a7d0c2f7fa6eb",
+      "byte_length": 10925,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/arm/create.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/arm/create.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "8a47e591f018f0c646f0c08c0cbad98b1ddeb5a0f718e137793a7d0c2f7fa6eb",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          204
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/arm/create.ts.source"
+    },
+    {
+      "path": "modules/relay/src/arm/evaluate.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3e4675d89217e12c1b852f7bc50ff49c3aa59983",
+      "sha256": "a404c11fc270299ecc76def0fb40ad4ff2a146f4dc817a030394d33f4e0b064c",
+      "byte_length": 41405,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/arm/evaluate.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/arm/evaluate.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "a404c11fc270299ecc76def0fb40ad4ff2a146f4dc817a030394d33f4e0b064c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          139
+        ],
+        [
+          140,
+          309
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/arm/evaluate.ts.source"
+    },
+    {
+      "path": "modules/relay/src/arm/load.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ff3cd23053b334e35c09da1e0c3ae020868cd4e1",
+      "sha256": "53107833ee5d2eda1b7d12a3886ac50518654a7c1e080cca31b2570d2671c909",
+      "byte_length": 5420,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/arm/load.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/arm/load.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "53107833ee5d2eda1b7d12a3886ac50518654a7c1e080cca31b2570d2671c909",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/arm/load.ts.source"
+    },
+    {
+      "path": "modules/relay/src/arm/round.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2986a545b724f842d784022d997e42848457905c",
+      "sha256": "3506270cfa878b9f464043d3e130fd4029c4fd84db24b4085233eb885560f4d6",
+      "byte_length": 14415,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/arm/round.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/arm/round.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "3506270cfa878b9f464043d3e130fd4029c4fd84db24b4085233eb885560f4d6",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          270
+        ],
+        [
+          252,
+          299
+        ],
+        [
+          252,
+          293
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/arm/round.ts.source"
+    },
+    {
+      "path": "modules/relay/src/arm/settlement.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5a2c95f1b902a76f63c4b7620112875bc63fa46f",
+      "sha256": "dc2491de96dbfcc334ad57355addcf9db9506f1ddf83de61afa5d70b31dd39d7",
+      "byte_length": 4384,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/arm/settlement.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/arm/settlement.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "dc2491de96dbfcc334ad57355addcf9db9506f1ddf83de61afa5d70b31dd39d7",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          91
+        ],
+        [
+          13,
+          69
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/arm/settlement.ts.source"
+    },
+    {
+      "path": "modules/relay/src/arm/state.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fbd6be395cc87d0d81069154cd78caca90db95fc",
+      "sha256": "76b4b052742577148a292f30eeabcc21487cbf13d0b4b679a544211518d5df63",
+      "byte_length": 9817,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/arm/state.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/arm/state.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "76b4b052742577148a292f30eeabcc21487cbf13d0b4b679a544211518d5df63",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          157
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/arm/state.ts.source"
+    },
+    {
+      "path": "modules/relay/src/audit.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "75a97f45b5b5c7cb52110de2206b68457c524e92",
+      "sha256": "3261c023115c5b642a136328faa824e10289d412207c877f07596a37ce5b8e47",
+      "byte_length": 34332,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/audit.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/audit.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "3261c023115c5b642a136328faa824e10289d412207c877f07596a37ce5b8e47",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          200
+        ],
+        [
+          507,
+          642
+        ],
+        [
+          119,
+          194
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/audit.ts.source"
+    },
+    {
+      "path": "modules/relay/src/authoring/graph.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fe28dc0e99c38e7b68171bc60bcc74090e9fc403",
+      "sha256": "01a041604a146c14e38abefad463e5624193a2166cf11b7a3772ec34f1a06632",
+      "byte_length": 35618,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/authoring/graph.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/graph.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "01a041604a146c14e38abefad463e5624193a2166cf11b7a3772ec34f1a06632",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          108,
+          235
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/authoring/graph.ts.source"
+    },
+    {
+      "path": "modules/relay/src/authoring/hook.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d031bf2183642435eb0c725f2bfe3c1fc208050c",
+      "sha256": "a441e02ca6f537e1ff3aafc2e4050b3a04e93b244b0e86da2763717a611c561a",
+      "byte_length": 9351,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/authoring/hook.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/hook.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "a441e02ca6f537e1ff3aafc2e4050b3a04e93b244b0e86da2763717a611c561a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/authoring/hook.ts.source"
+    },
+    {
+      "path": "modules/relay/src/authoring/lint.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "42f63de687d5714f872b818f248321f48d101c6f",
+      "sha256": "55045c9f6c434e4746dbcaa0c39b4503793c22cac65ff65975758b8c0d6f4cfd",
+      "byte_length": 8906,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/authoring/lint.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/lint.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "55045c9f6c434e4746dbcaa0c39b4503793c22cac65ff65975758b8c0d6f4cfd",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/authoring/lint.ts.source"
+    },
+    {
+      "path": "modules/relay/src/authoring/sqlite.bun.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cb17c4431fee279275af333dcd2becec4cbf6b2f",
+      "sha256": "eb8f702b48cfb021f9157fd0568084f3a8c06ff5a561e8268ddf1203947608b9",
+      "byte_length": 735,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/authoring/sqlite.bun.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/sqlite.bun.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "eb8f702b48cfb021f9157fd0568084f3a8c06ff5a561e8268ddf1203947608b9",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/authoring/sqlite.bun.ts.source"
+    },
+    {
+      "path": "modules/relay/src/authoring/sqlite.node.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6f156dd865fe2f1f4c4bcb40933a8ea73edab6d7",
+      "sha256": "e2836e85d1143e52e14c0e47a66a8c9c5e6bc0ce40026dcce453599e1bf0a2a2",
+      "byte_length": 1232,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/authoring/sqlite.node.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/sqlite.node.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "e2836e85d1143e52e14c0e47a66a8c9c5e6bc0ce40026dcce453599e1bf0a2a2",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/authoring/sqlite.node.ts.source"
+    },
+    {
+      "path": "modules/relay/src/authoring/sqlite.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b01b3bdc9e3e4314253c78002674175a67086aac",
+      "sha256": "97bb5cb79bc7b4087cb05c9f418356ce338450f6664410f9ae2d82d7a1bf793a",
+      "byte_length": 792,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/authoring/sqlite.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/sqlite.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "97bb5cb79bc7b4087cb05c9f418356ce338450f6664410f9ae2d82d7a1bf793a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/authoring/sqlite.ts.source"
+    },
+    {
+      "path": "modules/relay/src/authoring/store.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b11d17cd55ffa69a307130a31ab44d01ac7e477d",
+      "sha256": "b1b7fa4d0abd6ce815d0451b495f8fd570c5f90c896dacd52581a67986f38d76",
+      "byte_length": 21145,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/authoring/store.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/store.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "b1b7fa4d0abd6ce815d0451b495f8fd570c5f90c896dacd52581a67986f38d76",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          125,
+          220
+        ],
+        [
+          250,
+          348
+        ],
+        [
+          253,
+          265
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/authoring/store.ts.source"
+    },
+    {
+      "path": "modules/relay/src/gate/check.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ae7b181d02028405ef5177893961a401ae48adc1",
+      "sha256": "cd02636c6b82d44bf6af342af1b76ce1351d90aac350513fc2bf8619722073a4",
+      "byte_length": 5706,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/gate/check.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/gate/check.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "cd02636c6b82d44bf6af342af1b76ce1351d90aac350513fc2bf8619722073a4",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          129
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/gate/check.ts.source"
+    },
+    {
+      "path": "modules/relay/src/gate/control.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "094077ca84e3b394c32e813402feb8ae63272892",
+      "sha256": "71d27c1b7189edc2038198ac0dfdb5b9155eb5224a2d413bd00ec4e43373567d",
+      "byte_length": 16574,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/gate/control.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/gate/control.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "71d27c1b7189edc2038198ac0dfdb5b9155eb5224a2d413bd00ec4e43373567d",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          109
+        ],
+        [
+          191,
+          306
+        ],
+        [
+          71,
+          99
+        ],
+        [
+          197,
+          220
+        ],
+        [
+          246,
+          290
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/gate/control.ts.source"
+    },
+    {
+      "path": "modules/relay/src/gate/diff.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "037de05fe04dcbfa20432851ef3812646082e846",
+      "sha256": "03c9abef88c009db124c22e776113f2f2b77d495698a0aa5a4d1110f46007aab",
+      "byte_length": 2748,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/gate/diff.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/gate/diff.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "03c9abef88c009db124c22e776113f2f2b77d495698a0aa5a4d1110f46007aab",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/gate/diff.ts.source"
+    },
+    {
+      "path": "modules/relay/src/gate/shell.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "75a56f2a566a49673ee8974882b04e57bde23fc5",
+      "sha256": "485f740fcbb07a05e7ef1cc81d34da84fd4f2ad34f7da10c905421802ce7c625",
+      "byte_length": 2467,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/gate/shell.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/gate/shell.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "485f740fcbb07a05e7ef1cc81d34da84fd4f2ad34f7da10c905421802ce7c625",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/gate/shell.ts.source"
+    },
+    {
+      "path": "modules/relay/src/hook/evaluate.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f7c6324e5b192d4c325ab666c88b16dbdd18c62e",
+      "sha256": "0bbb9c0b04de4708669032d2eaacd8bea890467cd37137d3ede25c57e52aeb8a",
+      "byte_length": 6273,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/hook/evaluate.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/hook/evaluate.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "0bbb9c0b04de4708669032d2eaacd8bea890467cd37137d3ede25c57e52aeb8a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          122
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/hook/evaluate.ts.source"
+    },
+    {
+      "path": "modules/relay/src/hook/glob.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bdb5938d2da6757ab53322c7f3774ec07716a346",
+      "sha256": "22338c12f91c24d3b85176d1bb28bec5b3fb353ba69344a7d58f41bf2bc27fcb",
+      "byte_length": 184,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/hook/glob.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/hook/glob.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "22338c12f91c24d3b85176d1bb28bec5b3fb353ba69344a7d58f41bf2bc27fcb",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/hook/glob.ts.source"
+    },
+    {
+      "path": "modules/relay/src/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "461f63455b40279addc37f25eaeae09e64d1f4ac",
+      "sha256": "0369055504d462bee40eca0e87ad536e46bb70421ae9f473b63852b27daa79a5",
+      "byte_length": 1028,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/index.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/index.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "0369055504d462bee40eca0e87ad536e46bb70421ae9f473b63852b27daa79a5",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/index.ts.source"
+    },
+    {
+      "path": "modules/relay/src/json.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "90cfe08b9a65eec684b495ffa61e6d141c44f735",
+      "sha256": "00f04fd3fac058a1fb5f0ef4682107d902cab0ec6277fc531b7b76d533a6aaf0",
+      "byte_length": 19696,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/json.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/json.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "00f04fd3fac058a1fb5f0ef4682107d902cab0ec6277fc531b7b76d533a6aaf0",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/json.ts.source"
+    },
+    {
+      "path": "modules/relay/src/judge/api.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "713970c7a3693bb5f40bdd501b072c3bd282399a",
+      "sha256": "f38a74d092dd293a08e46512922520bbfc2e8f788ed64da208e3f01fb8ed8ff0",
+      "byte_length": 8851,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/judge/api.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/judge/api.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "f38a74d092dd293a08e46512922520bbfc2e8f788ed64da208e3f01fb8ed8ff0",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          102
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/judge/api.ts.source"
+    },
+    {
+      "path": "modules/relay/src/judge/ballot.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3d9aaaa2a31cc5a27239af5d977d836921363e46",
+      "sha256": "a79f2c77afb6b55921aaa2d30a356ee05e05caa60c6c0cdccd781cea48237d06",
+      "byte_length": 3520,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/judge/ballot.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/judge/ballot.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "a79f2c77afb6b55921aaa2d30a356ee05e05caa60c6c0cdccd781cea48237d06",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/judge/ballot.ts.source"
+    },
+    {
+      "path": "modules/relay/src/judge/config.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f767ad933f9ac746f73993c43da6335a56d173a4",
+      "sha256": "b82ab3f3271c0220421fdeaac9eae28583b4e14e557a9db7bfac6c089510bcd4",
+      "byte_length": 2545,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/judge/config.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/judge/config.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "b82ab3f3271c0220421fdeaac9eae28583b4e14e557a9db7bfac6c089510bcd4",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/judge/config.ts.source"
+    },
+    {
+      "path": "modules/relay/src/judge/stub.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1eec63be0adc9415d62d2ab8a346bec1cf71f051",
+      "sha256": "db327435fe34a8db057cf6c561f0fcc41ed48d7eac8bee40e8a9cbc11eb2463c",
+      "byte_length": 1111,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/judge/stub.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/judge/stub.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "db327435fe34a8db057cf6c561f0fcc41ed48d7eac8bee40e8a9cbc11eb2463c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/judge/stub.ts.source"
+    },
+    {
+      "path": "modules/relay/src/ledger/chain.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f1c1094f32f2cefb09f0fda54f41a66687e10d77",
+      "sha256": "83cd5868140a99d9f0af7200308229245a32a87cdd055645337f69ce10cbf5e9",
+      "byte_length": 7634,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/ledger/chain.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/ledger/chain.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "83cd5868140a99d9f0af7200308229245a32a87cdd055645337f69ce10cbf5e9",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          157
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/ledger/chain.ts.source"
+    },
+    {
+      "path": "modules/relay/src/ledger/read.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "324518fd188963e1a458cfd0b7295d2352fa0c68",
+      "sha256": "dd00ca5f9dec4e54183fed3d7891d52e9b3c1b5ffad2cbcbb5c9004f6734ac5c",
+      "byte_length": 9008,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/ledger/read.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/ledger/read.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "dd00ca5f9dec4e54183fed3d7891d52e9b3c1b5ffad2cbcbb5c9004f6734ac5c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/ledger/read.ts.source"
+    },
+    {
+      "path": "modules/relay/src/ledger/verify.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9071d2e61cc0bc8f72d9657d5185735b23330810",
+      "sha256": "6588510a5183fe8c43ebd077a3e970f1297cccac5780676da05de46b640656f9",
+      "byte_length": 6355,
+      "capture_path": "captures/1cde2ff7/modules/relay/src/ledger/verify.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/ledger/verify.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-02.json",
+      "sha256_external": "6588510a5183fe8c43ebd077a3e970f1297cccac5780676da05de46b640656f9",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          136
+        ],
+        [
+          8,
+          57
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/src/ledger/verify.ts.source"
+    },
+    {
+      "path": "modules/relay/test/contracts.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c2de1eae34c9d1f23cb0399b4632cfb3f0ee1521",
+      "sha256": "74ce2449c8a6bab3f720c68b91cf4786c3c51b4ffb72617518b713fcbaa60eda",
+      "byte_length": 9751,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/contracts.test.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/contracts.test.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "74ce2449c8a6bab3f720c68b91cf4786c3c51b4ffb72617518b713fcbaa60eda",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/contracts.test.ts.source"
+    },
+    {
+      "path": "modules/relay/test/external.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bb06ecfab7bc8b206b0a52b85a7daeb3dfdf4087",
+      "sha256": "21a1920f5acb955d9ca8ac81fe6b8cf8df313a41afa0ed632c91a091391b2dfd",
+      "byte_length": 1840,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/external.test.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/external.test.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "21a1920f5acb955d9ca8ac81fe6b8cf8df313a41afa0ed632c91a091391b2dfd",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/external.test.ts.source"
+    },
+    {
+      "path": "modules/relay/test/golden/FORMAT.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4dd5746d77c8b44700196abc926817b2eb218e07",
+      "sha256": "7ecc189e195b66aeebbee6b39db711f67d77d6d834d06be0c8589c540aeb8ef4",
+      "byte_length": 11665,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/FORMAT.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/FORMAT.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "7ecc189e195b66aeebbee6b39db711f67d77d6d834d06be0c8589c540aeb8ef4",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/FORMAT.md.source"
+    },
+    {
+      "path": "modules/relay/test/golden/ORACLE",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f87182faea5fa50c1a2e1e9aaa177fda2cc27420",
+      "sha256": "f5383a963002ad1dd7238ec8795c36ed98659bbedfb9d2dc76fa26cefa8e65cd",
+      "byte_length": 2610,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/ORACLE.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/ORACLE",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "f5383a963002ad1dd7238ec8795c36ed98659bbedfb9d2dc76fa26cefa8e65cd",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/ORACLE.source"
+    },
+    {
+      "path": "modules/relay/test/golden/PARITY-EXCEPTIONS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b59cc560f5634738358e61c94781293ccb06052",
+      "sha256": "fbf8153fa74d8697e0258acde5fd9cea1d7d3a56f89f76a78409e8d1894b011a",
+      "byte_length": 22385,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/PARITY-EXCEPTIONS.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/PARITY-EXCEPTIONS.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "fbf8153fa74d8697e0258acde5fd9cea1d7d3a56f89f76a78409e8d1894b011a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/PARITY-EXCEPTIONS.md.source"
+    },
+    {
+      "path": "modules/relay/test/golden/arm/GENERATOR.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d462a95c4cd4d2c96766e2153738627ca032e3ba",
+      "sha256": "80599ea76421a5b1a6f3f707bd2b5d14bd0e49a61b4676b4bd6669dc07a51ea2",
+      "byte_length": 5031,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/arm/GENERATOR.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/arm/GENERATOR.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "80599ea76421a5b1a6f3f707bd2b5d14bd0e49a61b4676b4bd6669dc07a51ea2",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          225
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/arm/GENERATOR.json.source"
+    },
+    {
+      "path": "modules/relay/test/golden/audit/GENERATOR.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "aa8b605bf616ba70123b49365a592a75a3d22480",
+      "sha256": "08882e4c691e27ec3442305f41b4a192c23060f1b458659d574387b7a3be3397",
+      "byte_length": 797,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/audit/GENERATOR.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/audit/GENERATOR.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "08882e4c691e27ec3442305f41b4a192c23060f1b458659d574387b7a3be3397",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/audit/GENERATOR.json.source"
+    },
+    {
+      "path": "modules/relay/test/golden/authoring/GENERATOR.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c10ae30a1f30d8e01c2c79f510b3f8293e0d88b6",
+      "sha256": "d024f8aab74df00169f6fa321ec72f8d9e1e772d5ee55becc2cf93e0bd5455e6",
+      "byte_length": 1231,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/authoring/GENERATOR.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/authoring/GENERATOR.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "d024f8aab74df00169f6fa321ec72f8d9e1e772d5ee55becc2cf93e0bd5455e6",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/authoring/GENERATOR.json.source"
+    },
+    {
+      "path": "modules/relay/test/golden/check/GENERATOR.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0995c72de3c8063d5ec7872b91ce1967a4761198",
+      "sha256": "3902a7b46d2f9e859aeb504b28643d4bc9a8b43c4a43d6062cf526b17039a343",
+      "byte_length": 2600,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/check/GENERATOR.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/check/GENERATOR.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "3902a7b46d2f9e859aeb504b28643d4bc9a8b43c4a43d6062cf526b17039a343",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/check/GENERATOR.json.source"
+    },
+    {
+      "path": "modules/relay/test/golden/judge/GENERATOR.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "dc582172bad6174a904668f7e85921cfcf13d528",
+      "sha256": "4bbbbbf54f5e51c0604c1cc7625200d3811a77592dce97d79b1872feea353d9f",
+      "byte_length": 704,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/judge/GENERATOR.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/judge/GENERATOR.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "4bbbbbf54f5e51c0604c1cc7625200d3811a77592dce97d79b1872feea353d9f",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/judge/GENERATOR.json.source"
+    },
+    {
+      "path": "modules/relay/test/golden/ledger/GENERATOR.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "54fbdc8d785182914852cb33e8c0e3b05c34b631",
+      "sha256": "5c609c602b5f63deffa7da1405099c1d781840e43cb312028163c4e009be4fb5",
+      "byte_length": 981,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/golden/ledger/GENERATOR.json.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/golden/ledger/GENERATOR.json",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-03.json",
+      "sha256_external": "5c609c602b5f63deffa7da1405099c1d781840e43cb312028163c4e009be4fb5",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/golden/ledger/GENERATOR.json.source"
+    },
+    {
+      "path": "modules/relay/test/runtime.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9d18c0d79f85d9470ba1e13b8c2511360f031005",
+      "sha256": "2232583b6494ca9e34985e3183bd4b5ac468833e165238dba46dd5f4d9a5a7a4",
+      "byte_length": 3880,
+      "capture_path": "captures/1cde2ff7/modules/relay/test/runtime.test.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/test/runtime.test.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "2232583b6494ca9e34985e3183bd4b5ac468833e165238dba46dd5f4d9a5a7a4",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/test/runtime.test.ts.source"
+    },
+    {
+      "path": "modules/relay/tools/criterion",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "62838612baebae5787e00c57961bd2b5b8fdc0bd",
+      "sha256": "d3476c224aceb4233b6f1eb802589c6a53f7459321be38d986492c7094762038",
+      "byte_length": 2483,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/criterion.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/criterion",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "d3476c224aceb4233b6f1eb802589c6a53f7459321be38d986492c7094762038",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/criterion.source"
+    },
+    {
+      "path": "modules/relay/tools/design/design-check",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "87ef47dff35129e8e68ba2f6d68f19c0f8c55eaa",
+      "sha256": "05ca3d723712a23645273b0bfd1739b458961e9dd25254146cbe90ca2daab60b",
+      "byte_length": 22333,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/design/design-check.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/design/design-check",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "05ca3d723712a23645273b0bfd1739b458961e9dd25254146cbe90ca2daab60b",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/design/design-check.source"
+    },
+    {
+      "path": "modules/relay/tools/edd/plan-check",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8bfd9f9500b46737f1e60f9a933677cdb6571787",
+      "sha256": "6304cb574a88a9e3b59d6abc8e9e4ddced7d76794160436c8ec1775770564daa",
+      "byte_length": 89285,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/edd/plan-check.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/edd/plan-check",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "6304cb574a88a9e3b59d6abc8e9e4ddced7d76794160436c8ec1775770564daa",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/edd/plan-check.source"
+    },
+    {
+      "path": "modules/relay/tools/edd/plan-graph",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "af0dca21914a79817c6be8ac5d4f9495cb971ab3",
+      "sha256": "b4f615b1411bf20c07c699f604704037464e2fb79538c88ff6fcb19c30138ab2",
+      "byte_length": 20598,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/edd/plan-graph.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/edd/plan-graph",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "b4f615b1411bf20c07c699f604704037464e2fb79538c88ff6fcb19c30138ab2",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/edd/plan-graph.source"
+    },
+    {
+      "path": "modules/relay/tools/research/replay-evidence",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b7f61c94f8329c0e2fa21fb71ff2247586dd64cb",
+      "sha256": "90a6b5ccaa0368faec07733dbeb9c91df526eefae749f75dae7472dd235ee64e",
+      "byte_length": 5971,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/research/replay-evidence.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/research/replay-evidence",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "90a6b5ccaa0368faec07733dbeb9c91df526eefae749f75dae7472dd235ee64e",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/research/replay-evidence.source"
+    },
+    {
+      "path": "modules/relay/tools/research/research-capture",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4b1b3eaf16c861ab66709dea8c6ecd7f08057378",
+      "sha256": "93ce4037ddf7868c8fdf3e166df509a8d1012be118fbb1099c721335968ada05",
+      "byte_length": 5800,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/research/research-capture.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/research/research-capture",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "93ce4037ddf7868c8fdf3e166df509a8d1012be118fbb1099c721335968ada05",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/research/research-capture.source"
+    },
+    {
+      "path": "modules/relay/tools/research/research-check",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1babc4889167a6e7e92fd9cefead3ca5d31b35e7",
+      "sha256": "1524b1024d91cd745c11fff697c1dbc23cf9e76e3c71c346e500b1af426426e1",
+      "byte_length": 49892,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/research/research-check.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/research/research-check",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "1524b1024d91cd745c11fff697c1dbc23cf9e76e3c71c346e500b1af426426e1",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/research/research-check.source"
+    },
+    {
+      "path": "modules/relay/tools/spec/spec-check",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "14cdf9e471fc024553e7b3b6ec2f7e37c313b947",
+      "sha256": "1cdeed5d79836ba07a0adf5f224c988134016cb43cabba3db78030befbc6de97",
+      "byte_length": 13685,
+      "capture_path": "captures/1cde2ff7/modules/relay/tools/spec/spec-check.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/tools/spec/spec-check",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-05.json",
+      "sha256_external": "1cdeed5d79836ba07a0adf5f224c988134016cb43cabba3db78030befbc6de97",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/modules/relay/tools/spec/spec-check.source"
+    },
+    {
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "byte_length": 30225,
+      "capture_path": "captures/1cde2ff7/packages/core/src/relay.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/relay.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          629
+        ],
+        [
+          1,
+          89
+        ],
+        [
+          148,
+          257
+        ],
+        [
+          374,
+          418
+        ],
+        [
+          491,
+          520
+        ],
+        [
+          38,
+          48
+        ],
+        [
+          219,
+          257
+        ],
+        [
+          491,
+          500
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/packages/core/src/relay.ts.source"
+    },
+    {
+      "path": "packages/schema/src/relay-sprint.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef5f26e66e7e45db4b018a98bd33107fe34cfeca",
+      "sha256": "27a4d8fd186535ba617e23d3f41430de0ae90b48b54a79b843fc1a7546b599f6",
+      "byte_length": 5527,
+      "capture_path": "captures/1cde2ff7/packages/schema/src/relay-sprint.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/schema/src/relay-sprint.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "27a4d8fd186535ba617e23d3f41430de0ae90b48b54a79b843fc1a7546b599f6",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/packages/schema/src/relay-sprint.ts.source"
+    },
+    {
+      "path": "packages/server/src/handlers/relay-document.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "de7ff959ced8b2d0b4a2947add0f1a9600ffc845",
+      "sha256": "d0e7a217e76134cdd4699cf28fc1c5d4c792546326bc3450ad0602317643c889",
+      "byte_length": 15511,
+      "capture_path": "captures/1cde2ff7/packages/server/src/handlers/relay-document.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/handlers/relay-document.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "d0e7a217e76134cdd4699cf28fc1c5d4c792546326bc3450ad0602317643c889",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/packages/server/src/handlers/relay-document.ts.source"
+    },
+    {
+      "path": "packages/server/src/relay-documents.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5554b1dc72906ecfc1f55462c2e4e8bf2dcce724",
+      "sha256": "96141f654abd839de54f9668ded3efb2982c58b78929fe857c9247f257cafc0a",
+      "byte_length": 11105,
+      "capture_path": "captures/1cde2ff7/packages/server/src/relay-documents.ts.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/relay-documents.ts",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": false,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "96141f654abd839de54f9668ded3efb2982c58b78929fe857c9247f257cafc0a",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Integrity-only capture; not claimed as individually content-read",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/packages/server/src/relay-documents.ts.source"
+    },
+    {
+      "path": "specs/relay-langgraph/EXPERIENCE.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "606ea9e71b5bef7af47cb0dfbad26237269e71d1",
+      "sha256": "ecaa29ae01dd9b7ae40da19405e8e0e32ecf0cf3f714cbd9798f0d32fb4be4fb",
+      "byte_length": 11123,
+      "capture_path": "captures/1cde2ff7/specs/relay-langgraph/EXPERIENCE.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/specs/relay-langgraph/EXPERIENCE.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "ecaa29ae01dd9b7ae40da19405e8e0e32ecf0cf3f714cbd9798f0d32fb4be4fb",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/specs/relay-langgraph/EXPERIENCE.md.source"
+    },
+    {
+      "path": "specs/relay-langgraph/PLAN.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a762a884e451273373aa8a365ba5c781477368a8",
+      "sha256": "e0373479df55c956659a23779ccd09dde43910ac35efb6c861124a323f198a3b",
+      "byte_length": 5834,
+      "capture_path": "captures/1cde2ff7/specs/relay-langgraph/PLAN.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/specs/relay-langgraph/PLAN.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "e0373479df55c956659a23779ccd09dde43910ac35efb6c861124a323f198a3b",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [
+        [
+          1,
+          100
+        ],
+        [
+          1,
+          36
+        ]
+      ],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/1cde2ff7/specs/relay-langgraph/PLAN.md.source"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "byte_length": 8143,
+      "capture_path": "captures/ee2521a5/.orchestra/skills/execute-genesis/SKILL.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/SKILL.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/ee2521a5/.orchestra/skills/execute-genesis/SKILL.md.source"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+      "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+      "byte_length": 3933,
+      "capture_path": "captures/ee2521a5/.orchestra/skills/execute-genesis/references/fatia-3.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-3.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/ee2521a5/.orchestra/skills/execute-genesis/references/fatia-3.md.source"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "byte_length": 4408,
+      "capture_path": "captures/ee2521a5/.orchestra/skills/execute-genesis/references/orchestration.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/orchestration.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/ee2521a5/.orchestra/skills/execute-genesis/references/orchestration.md.source"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "byte_length": 6010,
+      "capture_path": "captures/ee2521a5/.orchestra/skills/execute-genesis/references/principles.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/ee2521a5/.orchestra/skills/execute-genesis/references/principles.md.source"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "byte_length": 8478,
+      "capture_path": "captures/ee2521a5/.orchestra/skills/execute-genesis/references/transport.md.source",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+      "acquisition": "GitHub connector fetch_file encoding=base64; decoded bytes verified with Python hashlib",
+      "content_read": true,
+      "response_capture": "source-responses-04.json",
+      "sha256_external": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "sha256_method": "Python hashlib.sha256 over exact connector-decoded capture bytes; digest is not a field trusted from the source",
+      "inspection": "Selected source content and/or structural contract read; no exhaustive file-reading claim",
+      "requested_read_ranges": [],
+      "range_limit": "Requested ranges record access, not exhaustive reading: some tool responses may have been truncated. Exact full capture is retained.",
+      "capture_path_absolute": "/workspace/scratch/2c7c4c0ad466/genesis-s3/agents/relay-l1/captures/ee2521a5/.orchestra/skills/execute-genesis/references/transport.md.source"
+    }
+  ],
+  "producer": "/root/producer_relay_l1",
+  "execution_id": "bdac971f-e4ee-40e5-ad9b-30d659303bab",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_pin": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "inspection_policy": "A captured source is not automatically a source read. content_read means selected content was inspected; ranges and complete captures permit review without claiming exhaustive reading. Only source contracts actually used inform the body.",
+  "counts": {
+    "captured": 109,
+    "content_read": 84,
+    "integrity_only": 25,
+    "capture_bytes": 1224779
+  }
+}
