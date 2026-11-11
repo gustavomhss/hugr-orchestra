@@ -1,8 +1,5 @@
-# Prompt por fase substituído
+# Caminho histórico por fase
 
-Este caminho é mantido apenas para compatibilidade de links. A divisão por fases
-foi substituída por cinco orquestradoras de domínios no protocolo `parallel-v2`.
-
-Para a mesma sessão S5, execute [o prompt ativo 05-plataforma.md](05-plataforma.md).
-Mantenha branch, número e evidências anteriores. A integração final fica com ROOT.
-O histórico imutável continua no commit `cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e`.
+Para uma conversa nova **S5**, usar [o prompt explícito de início](05-plataforma.md).
+A divisão antiga por fases está preservada nos commits históricos e não rege
+o início `parallel-v3-fresh`. A integração final pertence a ROOT.

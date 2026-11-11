@@ -1,81 +1,62 @@
-# Genesis: cinco orquestradoras em paralelo
+# Genesis: cinco conversas novas, cinco missões explícitas
 
-**Cada sessão entrega um domínio inteiro com seus subagentes e dois juízes. A
-integração final fica com ROOT, na conversa original.** Este é o protocolo `parallel-v2`.
+Abra **cinco conversas novas** e use **um prompt diferente em cada uma**, conforme
+a tabela. Cada prompt já atribui o número, domínio, branch e entrega. Nenhuma
+conversa precisa do histórico das anteriores para saber o que fazer.
 
-## Retomar as cinco conversas já abertas
+| Conversa | Domínio completo | Branch nova | Prompt |
+| --- | --- | --- | --- |
+| 1 | Core, sessões, modelos, APIs e SDKs | `genesis-fresh-s1` | [Prompt 1](prompts/01-core.md) |
+| 2 | Interfaces: desktop, web, app-shell, UI e TUI | `genesis-fresh-s2` | [Prompt 2](prompts/02-interfaces.md) |
+| 3 | Maestro, Relay, especialistas e integrações | `genesis-fresh-s3` | [Prompt 3](prompts/03-agentes.md) |
+| 4 | Atlas, continuidade, RAG e Genesis | `genesis-fresh-s4` | [Prompt 4](prompts/04-atlas.md) |
+| 5 | CLI, Omni, distribuição e infraestrutura | `genesis-fresh-s5` | [Prompt 5](prompts/05-plataforma.md) |
 
-Use [o mesmo prompt de continuação](continue-parallel.md) nas cinco conversas.
-Cada uma mantém seu número, branch e trabalho anterior, lê sua nova atribuição e
-executa. Atualizar a branch do kit não muda automaticamente prompts antigos fixados
-em commits: a continuação explícita é necessária.
+Cada conversa é uma orquestradora: decompõe a missão, delega a produtores reais,
+recolhe e verifica, aciona dois juízes persistentes independentes, corrige, reavalia,
+executa as provas próprias e entrega tudo. As cinco trabalham em paralelo.
+**A integração final pertence a ROOT, na conversa original.**
 
-| Sessão | Domínio completo | Prompt ativo |
-| --- | --- | --- |
-| S1 | Core, sessões, modelos e contratos de API | [Prompt 1](prompts/01-core.md) |
-| S2 | Interfaces: desktop, web, shell, UI e TUI | [Prompt 2](prompts/02-interfaces.md) |
-| S3 | Maestro, Relay, especialistas e integrações | [Prompt 3](prompts/03-agentes.md) |
-| S4 | Atlas, continuidade, RAG e Genesis | [Prompt 4](prompts/04-atlas.md) |
-| S5 | CLI, Omni, distribuição, infraestrutura e contratos transversais | [Prompt 5](prompts/05-plataforma.md) |
+## Princípios que ajudam a executar
 
-As cinco começam em paralelo; cada uma orquestra inventário, produção L1–L4,
-dois juízes, correções, reavaliação, consumidores e todas as provas locais aplicáveis.
-As dependências cumulativas existem dentro da própria fatia. Não há liberação
-inicial de S1/S5 nem espera da integração para começar trabalho independente.
+Os prompts incluem **axiomas, quality standards, completeness criteria, success
+criteria, invariants e Definition of Done**. Axiomas orientam decisões; qualidade
+define a barra; completude define cobertura; sucesso pede resultado observável;
+invariants preservam as regras; DoD define quando a entrega termina.
 
-ROOT receberá os cinco commits/handoffs, verificará cobertura e compatibilidade,
-resolverá conflitos e conduzirá o par de juízes e as provas da união. S5 faz CLI e
-infraestrutura; não centraliza a revisão ou a integração das outras quatro.
+Não são um pedido de papelada. A população mecânica já está atribuída. Cada sessão
+prepara a primeira unidade e produz enquanto refina o restante, com oracle fixado
+antes da produção correspondente. Uma matriz de evidências é suficiente no fechamento.
 
-## Entrega completa, sem encerramento antecipado
+## Como evitar os bloqueios anteriores
 
-As sessões são responsáveis pelo resultado, inclusive pelo trabalho delegado.
-O ciclo obrigatório é decompor → despachar produtores → recolher/verificar → julgar
-com dois independentes → corrigir → reavaliar → auditar tudo → persistir e confirmar.
+- Números e branches são explícitos; não existe escolha por inferência ou migração obrigatória de conversa antiga.
+- Cada sessão tem seus produtores e dois juízes; S1/S5/ROOT não liberam o início das outras.
+- Os cinco usam um formato nativo comum desde a primeira entrega.
+- S4 publica cedo o runtime que tiver comprovado, com candidato e comandos reais, por capacidade.
+- Juízes recebem os corpos e as evidências decisivas; não recebem só links que não podem abrir.
+- Gates e provas comuns têm donos; as cinco não reimplementam nem repetem todo o motor Atlas.
+- Delegação, plano, lote, checkpoint e PASS parcial não permitem encerrar; obrigações reais continuam até o DoD.
 
-Plano, proposta, checkpoint, delegação ou PASS semântico isolado não são entrega.
-Só `DELIVERY_COMPLETE` após todas as obrigações locais; pendência externa demonstrada
-fica `INCOMPLETE_BLOCKED` e não pode ser vendida como sucesso. Não encerrar enquanto
-há tarefa executável ou agente em andamento. Não pedir confirmação para continuar
-etapas já autorizadas, nem prometer atividade em segundo plano após o fim do turno.
+Uma dependência externa comprovada pode impedir um resultado; nesse caso ele fica
+INCOMPLETE_BLOCKED, com evidência e todo trabalho independente realizado. O kit não
+transforma limitação de ferramenta em aprovação ou promessa de execução em background.
 
-## Identidades e cobertura
+## Identidades
 
-- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; árvore `a522a53e5f046f1758151b0f558531bbded04592`.
-- Protocolo/skill: `928006636b345faac2b35b20093e79f85d983b5a`.
-- Campanha lógica contínua: `20261111-v1`; resultados novos: `20261111-v2-parallel`.
-- Branches: `genesis-chatgpt-s1` até `genesis-chatgpt-s5`; integração: `genesis-chatgpt-final`.
-- Partição: 14.442 entradas, 0 não atribuídas, 0 sobreposições; 2.236/4.506/4.553/2.220/927.
-- Critérios: 50 IDs GO-A/GO-I/AC/CC/SC/QS/DOD, com disposição local e revisão global.
+- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+- Protocolo da skill: `ee2521a5b966bd505cc95bd1c733e09e12f33531`; `parallel-v3-fresh`.
+- Execução nova: `20261111-v3-fresh`; campanha lógica histórica: `20261111-v1`.
+- População: 14.442 entradas, atribuídas uma vez; contagens não são estimativas de esforço.
+- Integração: `genesis-fresh-final`; produção local: `genesis-fresh-s1` até `genesis-fresh-s5`.
 
-O número de arquivos não mede esforço nem suficiência semântica. Cada domínio deve
-classificar sua população e produzir entendimento útil; fixtures/assets podem ser
-representados por fronteiras justificadas. Os casos reais e juízes decidem a qualidade.
-
-## Preservação e dependências reais
-
-As cinco branches já têm trabalho v1; preservar tudo, reler HEAD e migrar por refs
-imutáveis. O protocolo substitui somente a coordenação serial e quotas de preparação
-que bloqueavam produção. Mantém respostas, reservas e incertezas da mesma campanha.
-
-S4 assume o importer/runtime Atlas necessário e aproveita as propostas anteriores.
-As outras continuam produção/revisão nativa enquanto uma prova operacional dependente
-não está disponível. Isso não transforma Markdown em publicação, readback ou CI.
-Os testes seguem `AGENTS.md`; não há autorização nova para burlá-los ou gastar com
-provedores externos. Use o GitHub conectado sem login/extração de credenciais.
-
-Com quatro slots observados, uma sessão pode coordenar um produtor e dois juízes;
-distribui outras tarefas em ondas. Há dez papéis locais de juiz e um par final de
-ROOT, sem promessa de que todos os agentes fiquem simultaneamente ativos.
-
-## Contratos
+Artefatos e branches anteriores permanecem históricos. Reúso compatível pode ajudar,
+mas leitura de chats/handoffs/ledgers antigos não é pré-requisito deste início.
+Uso anterior desconhecido não foi zerado; ROOT reconcilia o agregado na integração.
 
 [Manifesto](manifest.json) · [Skill](../../../../../.orchestra/skills/execute-genesis/SKILL.md) ·
-[Orquestração](../../../../../.orchestra/skills/execute-genesis/references/orchestration.md) ·
-[Condição de entrega](../../../../../.orchestra/skills/execute-genesis/references/completion.md) ·
-[Partição](../../../../../.orchestra/skills/execute-genesis/references/parallel-partition.json) ·
-[Integração de ROOT](../../../../../.orchestra/skills/execute-genesis/references/integration.md)
+[Princípios](../../../../../.orchestra/skills/execute-genesis/references/principles.md) ·
+[DoD local](../../../../../.orchestra/skills/execute-genesis/references/completion.md) ·
+[Validação do kit](kit-validation.json)
 
-Este commit entrega instruções corrigidas e verificáveis. Não declara o Genesis
-executado, julgado ou integrado. Resultados reais ficam nas branches das sessões,
-e só suas evidências podem estabelecer esses estados.
+Este pacote prepara a execução; não declara o Genesis executado ou aprovado.
