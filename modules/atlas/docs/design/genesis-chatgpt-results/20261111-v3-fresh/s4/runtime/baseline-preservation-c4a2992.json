@@ -1,0 +1,141 @@
+{
+  "schema": "s4-baseline-preservation/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact_revision": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+  "root_tree": "ec3912bc1400396dcb98255ad4054076e20c7220",
+  "population": 2220,
+  "unchanged": 2215,
+  "changed": [
+    {
+      "path": ".github/workflows/atlas-pilot.yml",
+      "before": {
+        "sha": "faa85f4d265a85fa0ace743fb86433a1e8730318",
+        "mode": "100644",
+        "type": "blob"
+      },
+      "after": {
+        "sha": "7a22f7213e99f1daf1c8be0efa9b351138b0204b",
+        "mode": "100644",
+        "type": "blob"
+      }
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "before": {
+        "sha": "e3d5fed3e80881e6389c4de426b0f16df76ed6f3",
+        "mode": "100644",
+        "type": "blob"
+      },
+      "after": {
+        "sha": "dd6a874d93f2e44815e595c94cc83738e35472c1",
+        "mode": "100644",
+        "type": "blob"
+      }
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.js",
+      "before": {
+        "sha": "8951eb418e8ea88053b047b11156c1d4594b665f",
+        "mode": "100644",
+        "type": "blob"
+      },
+      "after": {
+        "sha": "9fd49ff606df9054791aa77e8d7f3e1fab375654",
+        "mode": "100644",
+        "type": "blob"
+      }
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "before": {
+        "sha": "5d0e2cf23486ff6d12e1d828dee8aaf647ac33be",
+        "mode": "100644",
+        "type": "blob"
+      },
+      "after": {
+        "sha": "7fa268ec81d2412e73fb63ea436181624eaa4a0b",
+        "mode": "100644",
+        "type": "blob"
+      }
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "before": {
+        "sha": "87a1495bfbc208880c4c4236735a242788975049",
+        "mode": "100644",
+        "type": "blob"
+      },
+      "after": {
+        "sha": "275102267ac1d26b1562772d1f20659a78d430e9",
+        "mode": "100644",
+        "type": "blob"
+      }
+    }
+  ],
+  "missing": [],
+  "scoped_connector_trees": [
+    {
+      "prefix": ".atlas",
+      "sha": "444b296cce40bbea83476cc24d5f8fb1c273b409",
+      "truncated": false,
+      "entries": 7
+    },
+    {
+      "prefix": ".github",
+      "sha": "c17ae9ec7f7ccb285abf12327a8108943f7745cd",
+      "truncated": false,
+      "entries": 44
+    },
+    {
+      "prefix": ".orchestra",
+      "sha": "f856f94f6ee8dab5cb9d85962be1f0a5ea49935d",
+      "truncated": false,
+      "entries": 132
+    },
+    {
+      "prefix": "docs",
+      "sha": "88ca1ab27ad7fd787e8343e9d1311be57aedc7ec",
+      "truncated": false,
+      "entries": 520
+    },
+    {
+      "prefix": "script",
+      "sha": "e6a88f72ed147d1d13e2780036e88918a2913775",
+      "truncated": false,
+      "entries": 222
+    },
+    {
+      "prefix": "specs",
+      "sha": "d2f2e46d14ac84a9a5d998b1f290e5c320f3b1ed",
+      "truncated": false,
+      "entries": 170
+    },
+    {
+      "prefix": "modules",
+      "sha": "416565ff18107f20dec92437b246a60d0ce05671",
+      "truncated": false,
+      "entries": 10
+    },
+    {
+      "prefix": "modules/atlas",
+      "sha": "9d137dfa667628013f384e8beb3b868375f186eb",
+      "truncated": false,
+      "entries": 2668
+    },
+    {
+      "prefix": "modules/continuity",
+      "sha": "8e0b9abd313a2a03c7c38fc12dde92c955e4ca5e",
+      "truncated": false,
+      "entries": 20
+    },
+    {
+      "prefix": "modules/rag-studio",
+      "sha": "b3c213f134225083cb11ba68dae0a14cba9a2d10",
+      "truncated": false,
+      "entries": 36
+    }
+  ],
+  "method": "Compare all assigned baseline paths by path, Git blob SHA, mode and type against complete scoped trees fetched through GitHub connector.",
+  "coverage_limit": "Preservation, not semantic depth or absence of additional non-baseline files.",
+  "observation_note": "Whole-repository recursive GET failed twice with Transport closed. Non-recursive root and all required scoped trees succeeded, untruncated."
+}

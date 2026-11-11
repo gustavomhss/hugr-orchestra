@@ -1,0 +1,162 @@
+{
+  "schema": "s4-source-pins-integrity-receipt/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "state": "MECHANICAL_IDENTITY_CHECK_COMPLETED",
+  "created_at_utc": "2026-11-11T20:59:49.493142+00:00",
+  "files": [
+    {
+      "path": "connector/001-baseline-agents.json",
+      "bytes": 23415,
+      "sha256": "daac16e5e50422ea22c34d465c76a0421ec527ed0b9d1d54db91d230909bef58"
+    },
+    {
+      "path": "connector/002-native-runtime-delta.md.json",
+      "bytes": 17385,
+      "sha256": "4817781b5b3db2c9e0be4ed5ff37c291860a9b75fce307d06c5a8c7cffadda08"
+    },
+    {
+      "path": "connector/003-body-v2.md.json",
+      "bytes": 17364,
+      "sha256": "536dc5b184849e331546e786fa49a6194578a5e54cc5e1b2131a3d1e8ecd6296"
+    },
+    {
+      "path": "connector/004-body.md.json",
+      "bytes": 25589,
+      "sha256": "a6aeccdc6426cd4e2710d3e0229ac4d2c5e9c4d44b4a75626bc78604f11a4a2f"
+    },
+    {
+      "path": "connector/005-atlas-engine.md.json",
+      "bytes": 25649,
+      "sha256": "4b95daaf005300c0b98fcd3195393bc6890fb53ee21f7e71865705aa203d2463"
+    },
+    {
+      "path": "connector/006-atlas-host-genesis.md.json",
+      "bytes": 25125,
+      "sha256": "303de1521318f4a439270bd0c6f062d8a648112266c0e751ca9384e828377e4a"
+    },
+    {
+      "path": "connector/007-continuity-rag.md.json",
+      "bytes": 24887,
+      "sha256": "542edffe29df69cdd798af8fbf4ab7e721ee222974454c461017d56ec338a823"
+    },
+    {
+      "path": "connector/008-coverage-governance.md.json",
+      "bytes": 25670,
+      "sha256": "5ec3edad558649c0f5102b27add72c5a1ee9c192748a0c17fed70279cf09273b"
+    },
+    {
+      "path": "connector/009-runtime-release.json.json",
+      "bytes": 25094,
+      "sha256": "dffe67f854c004ca03328398b8d85b2234ee373ee6ef02a04d516d744b5f3ef5"
+    },
+    {
+      "path": "connector/010-receipt.json.json",
+      "bytes": 10502,
+      "sha256": "8f24d4f7192992d712a038ad79dc066064cf0b55f60cc9bf8946668bc1ef209b"
+    },
+    {
+      "path": "connector/011-r1-native-binding.json",
+      "bytes": 7965,
+      "sha256": "172d99604a034a078eabfb4fc191c33d93cba020fe2f80f680491c941f14d27c"
+    },
+    {
+      "path": "connector/012-genesis-native-format.ts.json",
+      "bytes": 19200,
+      "sha256": "9224eb4098a61580f1bd022c1cb15b591634d71d2d785fb710e02d0a251c4992"
+    },
+    {
+      "path": "connector/013-genesis-native-recovery.test.ts.json",
+      "bytes": 32757,
+      "sha256": "c157bb79ae68bede3cc9581f47f9b6b882a169d74598065ad47cbe9ce6019707"
+    },
+    {
+      "path": "connector/014-genesis-native-runtime.md.json",
+      "bytes": 14901,
+      "sha256": "e1c13405d962d19de073f1b95de8693ac3709240b1c4633d1cfe63dfc0b60538"
+    },
+    {
+      "path": "connector/015-genesis-native-io.ts.json",
+      "bytes": 6524,
+      "sha256": "0192e62f086306771fa4142047f53b75e1788522fd294ca4b4e1de47a80f5f43"
+    },
+    {
+      "path": "connector/016-genesis-native.ts.json",
+      "bytes": 17833,
+      "sha256": "c62d4d80a6d03ced817a17887276d4aa461e6a9fb7b3b3af56f2676eb1543afb"
+    },
+    {
+      "path": "connector/017-genesis-native.test.ts.json",
+      "bytes": 21656,
+      "sha256": "635a587fff61c9d94d26fdbbe5f28995ca0fadcbd9ee0dca860eebae938cf9c9"
+    },
+    {
+      "path": "connector/018-index.ts.json",
+      "bytes": 8420,
+      "sha256": "50a1ea9b8164ddf2cbac28fc0487e3f70468aa4c024b3038ce5063b5032ba230"
+    },
+    {
+      "path": "connector/019-genesis-native.ts.json",
+      "bytes": 4887,
+      "sha256": "add91d5254eff0994cc753cb2df4944668cdf70f790b159cd3bde582c0972ff7"
+    },
+    {
+      "path": "evidence-sources.json",
+      "bytes": 17834,
+      "sha256": "9be20508cb36d1530baad891dc74901d0535224b35d23e91f5ed59fd6bd99d36"
+    },
+    {
+      "path": "native-package.snapshot.json",
+      "bytes": 175960,
+      "sha256": "00e479d28eb3830c09722d4ad8629d751802d18ac84f9dfd85d93163c4952c92"
+    },
+    {
+      "path": "pin-worklist.json",
+      "bytes": 299503,
+      "sha256": "bb12dafaa0cb8285b3b29632ed86505907349f838fc6598b7807035c91126b5a"
+    },
+    {
+      "path": "pins.json",
+      "bytes": 485931,
+      "sha256": "af7d2de7e57e9451b8ced56e856c3039fb16fcdd6267a35d75e9fa668ccf0dd0"
+    },
+    {
+      "path": "request.md",
+      "bytes": 1829,
+      "sha256": "0410e0cdbbfcd6abd207dd892b4a69656fc7b2609a437883c9297e92359051a4"
+    },
+    {
+      "path": "response.md",
+      "bytes": 5071,
+      "sha256": "48865400b22c8fa1ffb5d648afaa8413f3289aff0720e25a30bb55bcdc7e19ef"
+    },
+    {
+      "path": "snapshot-capture.json",
+      "bytes": 721,
+      "sha256": "d346fda398892d5f69cf39fa052ce49e1c04f1d876a0c68fad5bde5dafe8a60c"
+    }
+  ],
+  "file_count": 26,
+  "total_bytes": 1341672,
+  "checks": {
+    "snapshot_sha256": "00e479d28eb3830c09722d4ad8629d751802d18ac84f9dfd85d93163c4952c92",
+    "snapshot_git_blob": "f9a583cab3232c3cbe7e0d2abf65e112551d0d06",
+    "snapshot_matches_c4a2992_named_map": true,
+    "artifact_count": 11,
+    "source_ref_occurrences": 278,
+    "unique_pins": 199,
+    "confirmed_associations": 199,
+    "direct_byte_equal_final_corpus": 199,
+    "unproven_associations": 0,
+    "unresolved_checks": 0,
+    "connector_calls": 19,
+    "connector_responses_preserved": 19,
+    "evidence_source_hashes_rechecked": 31,
+    "r2_substitution_performed": false,
+    "L4_added": false
+  },
+  "self_reference": "This receipt measures the preserved response and all other delivery files but does not hash itself.",
+  "product_executed": false,
+  "remote_writes": false,
+  "semantic_verdict": "NOT_ISSUED",
+  "layer_pass": "NOT_ISSUED"
+}

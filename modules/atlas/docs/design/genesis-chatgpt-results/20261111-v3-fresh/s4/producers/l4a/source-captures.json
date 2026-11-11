@@ -1,0 +1,103 @@
+{
+  "schema": "genesis-source-captures/v1",
+  "source_payload_commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+  "manifest_sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0",
+  "sources": [
+    {
+      "kind": "accepted_predecessor",
+      "key": "S4:L1:host-boundaries",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      "byte_length": 11972,
+      "local_copy": "inputs/host-boundaries.md"
+    },
+    {
+      "kind": "accepted_predecessor",
+      "key": "S4:L1:native-runtime-delta",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      "byte_length": 11980,
+      "local_copy": "inputs/native-runtime-delta.md"
+    },
+    {
+      "kind": "accepted_predecessor",
+      "key": "S4:L2:atlas-system",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+        "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      "byte_length": 7954,
+      "local_copy": "inputs/atlas-system.md"
+    },
+    {
+      "kind": "accepted_predecessor",
+      "key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "byte_length": 7949,
+      "local_copy": "inputs/continuity-rag-operations.md"
+    },
+    {
+      "kind": "accepted_predecessor",
+      "key": "S4:L3:system-flows",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+        "git_blob_sha": "b6201604037118ff8cc69a010db73709b284ffa0",
+        "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+      },
+      "byte_length": 8995,
+      "local_copy": "inputs/system-flows.md"
+    },
+    {
+      "kind": "bounded_auxiliary_source",
+      "source_ref": {
+        "commit": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+        "path": "modules/atlas/scripts/genesis-native.ts",
+        "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+        "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce"
+      },
+      "byte_length": 3004,
+      "local_copy": "inputs/genesis-native.ts",
+      "authorized_purpose": "CLI real; uso estático do candidato testado"
+    },
+    {
+      "kind": "bounded_auxiliary_source",
+      "source_ref": {
+        "commit": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+        "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21"
+      },
+      "byte_length": 13356,
+      "local_copy": "inputs/genesis-native-format.ts",
+      "authorized_purpose": "validateNativeReadQuery e validação de transporte"
+    },
+    {
+      "kind": "bounded_auxiliary_source",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/continuity/src/masking-rules.ts",
+        "git_blob_sha": "9b79f34f071c3748dca0b1eed1d9173fe05bc97f",
+        "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2"
+      },
+      "byte_length": 4423,
+      "local_copy": "inputs/masking-rules.ts",
+      "authorized_purpose": "Lista nominal de ferramentas protegidas e constantes; extensão progressiva restrita"
+    }
+  ]
+}

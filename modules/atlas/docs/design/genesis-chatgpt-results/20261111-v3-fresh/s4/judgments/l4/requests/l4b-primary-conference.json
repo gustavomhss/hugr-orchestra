@@ -1,0 +1,65 @@
+{
+  "schema": "s4-l4-primary-conference/v1",
+  "unit": "L4B",
+  "recorded_utc": "2026-11-11T20:53:17.427403+00:00",
+  "metadata_sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+  "input_manifest_sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0",
+  "mechanical_checks": "PASS",
+  "artifacts": [
+    {
+      "key": "S4:L4:maintenance",
+      "body": {
+        "path": "producers/l4b/maintenance.md",
+        "encoding": "utf-8",
+        "byte_length": 9478,
+        "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be"
+      },
+      "unique_H2": 7,
+      "source_refs": 11,
+      "file_inputs": 16,
+      "build_dependencies": [
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:native-runtime-delta",
+        "S4:L2:atlas-system",
+        "S4:L2:genesis-governance",
+        "S4:L2:continuity-rag-operations",
+        "S4:L3:system-flows"
+      ]
+    },
+    {
+      "key": "S4:L4:operational",
+      "body": {
+        "path": "producers/l4b/operational.md",
+        "encoding": "utf-8",
+        "byte_length": 9481,
+        "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7"
+      },
+      "unique_H2": 7,
+      "source_refs": 11,
+      "file_inputs": 16,
+      "build_dependencies": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:native-runtime-delta",
+        "S4:L2:atlas-system",
+        "S4:L2:genesis-governance",
+        "S4:L3:system-flows"
+      ]
+    }
+  ],
+  "literal_source_excerpts": 8,
+  "packets": [
+    {
+      "path": "s4/producers/l4b/review-packet-01.txt",
+      "bytes": 20252,
+      "sha256": "60eecf1d4282cd8f4119d7cd9b0b176f2b5e6950cd451701d9bca7f7797a1a07"
+    },
+    {
+      "path": "s4/producers/l4b/review-packet-02.txt",
+      "bytes": 29445,
+      "sha256": "950a435b8d9830103cfef01b1ef8444df29032e128d3d5e05efc4e112701f820"
+    }
+  ],
+  "primary_semantic_check": "Read bodies and driver/CLI against accepted predecessor material; only temporal qualification requested before freeze; no mandatory finding currently open. Independent review still required.",
+  "product_execution": false
+}

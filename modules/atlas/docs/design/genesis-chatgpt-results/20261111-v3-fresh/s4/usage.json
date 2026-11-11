@@ -44,7 +44,7 @@
     },
     {
       "stage": "WP-L4",
-      "status": "authorized after complete L3 acceptance; input manifest/dispatch being frozen"
+      "status": "all four native bodies frozen and primary checked; literal transport and same-judge evaluation pending"
     },
     {
       "stage": "consumers",
@@ -53,6 +53,11 @@
     {
       "stage": "final-two-judge-review",
       "status": "reserved;same-persistent-IDs"
+    },
+    {
+      "stage": "WP-SOURCE-PINS",
+      "status": "completed: 199 exact commit/path/blob associations and byte comparisons; L4 excluded",
+      "agent": "/root/review_courier"
     }
   ],
   "observable_attempts": [
@@ -359,6 +364,86 @@
       "exit_code": 0,
       "product_test": false,
       "receipt_sha256": "121a3c41f960246968fe81ed07f48fd0b50483df33bf6740e7ecf0e74db33b7a"
+    },
+    {
+      "operation": "WP-L4-production",
+      "agents": [
+        "/root/producer_l1a",
+        "/root/producer_runtime"
+      ],
+      "input_manifest_sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0",
+      "requests": [
+        {
+          "path": "dispatches/l4a.txt",
+          "sha256": "319d30c61bb84e70322e16a1135ad05085966f96cfa795c9c3476a3f5fe8d1ff"
+        },
+        {
+          "path": "dispatches/l4b.txt",
+          "sha256": "f208ee5a88e948c5fa450f1e6e8326778ecdcceef3e8e1ccc89c586f56a8e63e"
+        },
+        {
+          "path": "dispatches/l4a-steering.txt",
+          "sha256": "9b871239cd15f09b80a786c15a2456586f9ccf28fcb544caef5a756a92476407"
+        },
+        {
+          "path": "dispatches/l4b-steering.txt",
+          "sha256": "f21abb785f7d90be858d3fe75931d2c29dc11235acfc72e8f0d1b51784d11fe3"
+        }
+      ],
+      "status": "active; bounded pre-freeze steering on command CWD and temporal evidence",
+      "host_message_ids": "UNKNOWN",
+      "recorded_utc": "2026-11-11T20:52:13.785196+00:00"
+    },
+    {
+      "operation": "source-pin-reconciliation",
+      "agent": "/root/review_courier",
+      "snapshot_payload": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+      "status": "active; read-only connector/captured-byte association",
+      "product_execution": false,
+      "host_message_id": "UNKNOWN",
+      "recorded_utc": "2026-11-11T20:52:13.785196+00:00"
+    },
+    {
+      "operation": "L4B-frozen-and-literal-transport",
+      "producer": "/root/producer_runtime",
+      "metadata_sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+      "body_bytes": [
+        9478,
+        9481
+      ],
+      "transport_sends": 4,
+      "courier_ledger_sha256": "fc12ef91e63ffd992f960251c6feabcf727c39cc9ec6743328fa4f17cbab6c50",
+      "host_message_ids": "UNKNOWN",
+      "status": "awaiting L4A and principal close; no semantic decision yet",
+      "recorded_utc": "2026-11-11T21:02:01.688382+00:00"
+    },
+    {
+      "operation": "source-pin-reconciliation-completed",
+      "agent": "/root/review_courier",
+      "pins": 199,
+      "exact_connector_fetches": 19,
+      "unproven_associations": 0,
+      "pins_sha256": "af7d2de7e57e9451b8ced56e856c3039fb16fcdd6267a35d75e9fa668ccf0dd0",
+      "product_execution": false,
+      "recorded_utc": "2026-11-11T21:02:01.688382+00:00"
+    },
+    {
+      "operation": "L4A-frozen",
+      "producer": "/root/producer_l1a",
+      "bodies": {
+        "entry": {
+          "bytes": 4921,
+          "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+        },
+        "ownership": {
+          "bytes": 9489,
+          "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+        }
+      },
+      "metadata_sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+      "primary_steering": "CWD/purpose; bounded route balance; originals preserved",
+      "route_body_bytes_including_entry": 60752,
+      "recorded_utc": "2026-11-11T21:12:00.218857+00:00"
     }
   ],
   "native_input_tokens": "UNKNOWN",
@@ -371,13 +456,12 @@
   "historical_campaign_usage": "GLOBAL_UNRECONCILED_BY_ROOT;not_reset",
   "guarantee": "Finite visible native task queue and preserved outputs/decisions. No monetary cap, physical-attempt reservation enforcement or invisible retry telemetry claimed.",
   "pending_reservations": [
-    "One L3 producer after L2 acceptance; same two judges",
-    "Two complementary L4 producers after L3 acceptance; same two judges",
+    "L4 same-pair semantic review after four bodies frozen; original native producers completed",
     "Full native package exact binding by same two judges and actual governed publication",
     "One domain maintenance author, same two semantic and exact binding decisions; actual existing rebuild/reuse operations",
     "One fresh Atlas-only consumer; same two case evaluations",
     "Final two-judge evidence/matrix review; final payload and sealed handoff"
   ],
   "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero.",
-  "last_reconciled_utc": "2026-11-11T20:26:34.025061+00:00"
+  "last_reconciled_utc": "2026-11-11T21:12:00.218857+00:00"
 }

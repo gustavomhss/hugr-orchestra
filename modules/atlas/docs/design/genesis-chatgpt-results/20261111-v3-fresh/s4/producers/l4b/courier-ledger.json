@@ -1,0 +1,119 @@
+{
+  "schema": "s4-l4b-courier-ledger/v1",
+  "request": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l4b/transport-request.md",
+    "byte_length": 1083,
+    "sha256": "928ff35c53756d0c2869a8f5a147f34006b2184a48b091ae750bf580303e5944"
+  },
+  "operation": "collaboration.send_message",
+  "files": [
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/l4b/review-packet-01.txt",
+      "byte_length": 20252,
+      "sha256": "60eecf1d4282cd8f4119d7cd9b0b176f2b5e6950cd451701d9bca7f7797a1a07",
+      "utf8_roundtrip_exact": true
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/l4b/review-packet-02.txt",
+      "byte_length": 29445,
+      "sha256": "950a435b8d9830103cfef01b1ef8444df29032e128d3d5e05efc4e112701f820",
+      "utf8_roundtrip_exact": true
+    }
+  ],
+  "targets": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "expected_sends": 4,
+  "completed_sends": 4,
+  "records": [
+    {
+      "sequence": 1,
+      "target": "/root/judge_j1",
+      "operation": "collaboration.send_message",
+      "source_file": "/workspace/scratch/aff930d22ec7/s4/producers/l4b/review-packet-01.txt",
+      "source_byte_length": 20252,
+      "source_sha256": "60eecf1d4282cd8f4119d7cd9b0b176f2b5e6950cd451701d9bca7f7797a1a07",
+      "message_content": "Integral UTF-8 source file text, with no prefix or suffix.",
+      "visible_result": {
+        "kind": "empty_tool_response",
+        "text": ""
+      },
+      "returned_without_visible_error": true,
+      "message_id": "UNKNOWN",
+      "receiver_hash": "UNKNOWN",
+      "receiver_delivery_ack": "UNKNOWN"
+    },
+    {
+      "sequence": 2,
+      "target": "/root/judge_j2",
+      "operation": "collaboration.send_message",
+      "source_file": "/workspace/scratch/aff930d22ec7/s4/producers/l4b/review-packet-01.txt",
+      "source_byte_length": 20252,
+      "source_sha256": "60eecf1d4282cd8f4119d7cd9b0b176f2b5e6950cd451701d9bca7f7797a1a07",
+      "message_content": "Integral UTF-8 source file text, with no prefix or suffix.",
+      "visible_result": {
+        "kind": "empty_tool_response",
+        "text": ""
+      },
+      "returned_without_visible_error": true,
+      "message_id": "UNKNOWN",
+      "receiver_hash": "UNKNOWN",
+      "receiver_delivery_ack": "UNKNOWN"
+    },
+    {
+      "sequence": 3,
+      "target": "/root/judge_j1",
+      "operation": "collaboration.send_message",
+      "source_file": "/workspace/scratch/aff930d22ec7/s4/producers/l4b/review-packet-02.txt",
+      "source_byte_length": 29445,
+      "source_sha256": "950a435b8d9830103cfef01b1ef8444df29032e128d3d5e05efc4e112701f820",
+      "message_content": "Integral UTF-8 source file text, with no prefix or suffix.",
+      "visible_result": {
+        "kind": "empty_tool_response",
+        "text": ""
+      },
+      "returned_without_visible_error": true,
+      "message_id": "UNKNOWN",
+      "receiver_hash": "UNKNOWN",
+      "receiver_delivery_ack": "UNKNOWN"
+    },
+    {
+      "sequence": 4,
+      "target": "/root/judge_j2",
+      "operation": "collaboration.send_message",
+      "source_file": "/workspace/scratch/aff930d22ec7/s4/producers/l4b/review-packet-02.txt",
+      "source_byte_length": 29445,
+      "source_sha256": "950a435b8d9830103cfef01b1ef8444df29032e128d3d5e05efc4e112701f820",
+      "message_content": "Integral UTF-8 source file text, with no prefix or suffix.",
+      "visible_result": {
+        "kind": "empty_tool_response",
+        "text": ""
+      },
+      "returned_without_visible_error": true,
+      "message_id": "UNKNOWN",
+      "receiver_hash": "UNKNOWN",
+      "receiver_delivery_ack": "UNKNOWN"
+    }
+  ],
+  "receiver_hash": "UNKNOWN",
+  "judgment_content_read": false,
+  "frozen_files_modified": false,
+  "status": "FOUR_SEND_CALLS_COMPLETED",
+  "order_observed": [
+    "part01 -> /root/judge_j1",
+    "part01 -> /root/judge_j2",
+    "part02 -> /root/judge_j1",
+    "part02 -> /root/judge_j2"
+  ],
+  "same_frozen_source_text_used_for_both_targets_per_part": true,
+  "packet_headers_preserved_verbatim": true,
+  "receiver_side_hash_verification": "UNKNOWN; no receiver hash or message ID was exposed by the calls.",
+  "source_files_rechecked_after_send": true,
+  "frozen_artifact_set_rechecked_unchanged": true,
+  "limits": [
+    "The visible result of each send_message call was empty; no delivery acknowledgment, message ID or receiver digest is invented.",
+    "No judge response or judgment was requested or consulted; the principal owns closure and review instructions.",
+    "No reauthoring, product execution, Git, external remote operation or modification of frozen files occurred."
+  ]
+}

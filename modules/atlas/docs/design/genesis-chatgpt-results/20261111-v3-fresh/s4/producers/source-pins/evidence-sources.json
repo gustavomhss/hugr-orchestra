@@ -1,0 +1,374 @@
+{
+  "schema": "s4-source-pin-evidence-index/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sources": [
+    {
+      "id": "inventory.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/inventory.json",
+      "bytes": 711587,
+      "sha256": "3a24c33385bb1f302bf7136707461935378ce541f3fe15a0ff3a64c4be9c6877",
+      "kind": "existing_capture"
+    },
+    {
+      "id": "source-capture-receipt.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source-capture-receipt.json",
+      "bytes": 594072,
+      "sha256": "a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b",
+      "kind": "existing_capture"
+    },
+    {
+      "id": "boundary-capture-receipt.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/boundary-capture-receipt.json",
+      "bytes": 3482,
+      "sha256": "f814e8c99304ee3edd19bc56bde8283e2958752a3608f0eda7e560d14227c27d",
+      "kind": "existing_capture"
+    },
+    {
+      "id": "producers/l1a/protocol-captures.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/l1a/protocol-captures.json",
+      "bytes": 1536,
+      "sha256": "fee16dbd6fcd9838da99aadb954623d0987528a1cb5a3bfb101bcb85a89c690a",
+      "kind": "existing_capture"
+    },
+    {
+      "id": "publish/current-s4-tree-1b5a480.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-1b5a480.json",
+      "bytes": 45193,
+      "sha256": "db861621b92fe3eb777829348b4da092ab7585e08b2041cd0f91db0bd134b4c4",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "publish/current-s4-tree-21c3.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-21c3.json",
+      "bytes": 28434,
+      "sha256": "c3c947513c2f51938937eb8be1f962198139cfe0668ed76b07894a0ad866c6e0",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "publish/current-s4-tree-47eaa.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-47eaa.json",
+      "bytes": 40919,
+      "sha256": "d419eb6db087d89d28493bf29b66a1c43d3614336ef18ce28edb03c96ee31201",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "publish/current-s4-tree-7102.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-7102.json",
+      "bytes": 15484,
+      "sha256": "9d0f6903dd25a481b4627c6030e8174814dc4c0c6eb0e166f9ad9cc25390f316",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "publish/current-s4-tree-c4a2992.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-c4a2992.json",
+      "bytes": 50645,
+      "sha256": "d733acaae8a398aa1a9cb9fc21791c7b7be9081ba04088839be75c256c6e3fa5",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "publish/current-s4-tree-f3c1.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-f3c1.json",
+      "bytes": 40693,
+      "sha256": "1ec60616a6e6b6d389fd7b49fbd9335e237252e39882115a331582092bba6e54",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "publish/current-s4-tree-staged-driver-ci.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-staged-driver-ci.json",
+      "bytes": 45193,
+      "sha256": "db861621b92fe3eb777829348b4da092ab7585e08b2041cd0f91db0bd134b4c4",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "publish/current-s4-tree-staged-l3-accepted.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/publish/current-s4-tree-staged-l3-accepted.json",
+      "bytes": 50645,
+      "sha256": "d733acaae8a398aa1a9cb9fc21791c7b7be9081ba04088839be75c256c6e3fa5",
+      "kind": "existing_named_tree_map",
+      "selection_rule": "Use only the commit named by this map; staged maps and maps for other commits are not association evidence for a requested pin."
+    },
+    {
+      "id": "connector/001-baseline-agents.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/001-baseline-agents.json",
+      "bytes": 23415,
+      "sha256": "daac16e5e50422ea22c34d465c76a0421ec527ed0b9d1d54db91d230909bef58",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "AGENTS.md",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/002-native-runtime-delta.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/002-native-runtime-delta.md.json",
+      "bytes": 17385,
+      "sha256": "4817781b5b3db2c9e0be4ed5ff37c291860a9b75fce307d06c5a8c7cffadda08",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/003-body-v2.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/003-body-v2.md.json",
+      "bytes": 17364,
+      "sha256": "536dc5b184849e331546e786fa49a6194578a5e54cc5e1b2131a3d1e8ecd6296",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/004-body.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/004-body.md.json",
+      "bytes": 25589,
+      "sha256": "a6aeccdc6426cd4e2710d3e0229ac4d2c5e9c4d44b4a75626bc78604f11a4a2f",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/005-atlas-engine.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/005-atlas-engine.md.json",
+      "bytes": 25649,
+      "sha256": "4b95daaf005300c0b98fcd3195393bc6890fb53ee21f7e71865705aa203d2463",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/006-atlas-host-genesis.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/006-atlas-host-genesis.md.json",
+      "bytes": 25125,
+      "sha256": "303de1521318f4a439270bd0c6f062d8a648112266c0e751ca9384e828377e4a",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/007-continuity-rag.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/007-continuity-rag.md.json",
+      "bytes": 24887,
+      "sha256": "542edffe29df69cdd798af8fbf4ab7e721ee222974454c461017d56ec338a823",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/008-coverage-governance.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/008-coverage-governance.md.json",
+      "bytes": 25670,
+      "sha256": "5ec3edad558649c0f5102b27add72c5a1ee9c192748a0c17fed70279cf09273b",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/009-runtime-release.json.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/009-runtime-release.json.json",
+      "bytes": 25094,
+      "sha256": "dffe67f854c004ca03328398b8d85b2234ee373ee6ef02a04d516d744b5f3ef5",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/010-receipt.json.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/010-receipt.json.json",
+      "bytes": 10502,
+      "sha256": "8f24d4f7192992d712a038ad79dc066064cf0b55f60cc9bf8946668bc1ef209b",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "ref": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/011-r1-native-binding.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/011-r1-native-binding.json",
+      "bytes": 7965,
+      "sha256": "172d99604a034a078eabfb4fc191c33d93cba020fe2f80f680491c941f14d27c",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+        "ref": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/012-genesis-native-format.ts.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/012-genesis-native-format.ts.json",
+      "bytes": 19200,
+      "sha256": "9224eb4098a61580f1bd022c1cb15b591634d71d2d785fb710e02d0a251c4992",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "ref": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/013-genesis-native-recovery.test.ts.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/013-genesis-native-recovery.test.ts.json",
+      "bytes": 32757,
+      "sha256": "c157bb79ae68bede3cc9581f47f9b6b882a169d74598065ad47cbe9ce6019707",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "ref": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/014-genesis-native-runtime.md.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/014-genesis-native-runtime.md.json",
+      "bytes": 14901,
+      "sha256": "e1c13405d962d19de073f1b95de8693ac3709240b1c4633d1cfe63dfc0b60538",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/015-genesis-native-io.ts.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/015-genesis-native-io.ts.json",
+      "bytes": 6524,
+      "sha256": "0192e62f086306771fa4142047f53b75e1788522fd294ca4b4e1de47a80f5f43",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/016-genesis-native.ts.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/016-genesis-native.ts.json",
+      "bytes": 17833,
+      "sha256": "c62d4d80a6d03ced817a17887276d4aa461e6a9fb7b3b3af56f2676eb1543afb",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/017-genesis-native.test.ts.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/017-genesis-native.test.ts.json",
+      "bytes": 21656,
+      "sha256": "635a587fff61c9d94d26fdbbe5f28995ca0fadcbd9ee0dca860eebae938cf9c9",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/018-index.ts.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/018-index.ts.json",
+      "bytes": 8420,
+      "sha256": "50a1ea9b8164ddf2cbac28fc0487e3f70468aa4c024b3038ce5063b5032ba230",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/packages/knowledge/src/index.ts",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "encoding": "base64"
+      }
+    },
+    {
+      "id": "connector/019-genesis-native.ts.json",
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/connector/019-genesis-native.ts.json",
+      "bytes": 4887,
+      "sha256": "add91d5254eff0994cc753cb2df4944668cdf70f790b159cd3bde582c0972ff7",
+      "kind": "new_fixed_ref_connector_capture",
+      "tool": "mcp__codex_apps__github_fetch_file",
+      "request": {
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "path": "modules/atlas/scripts/genesis-native.ts",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "encoding": "base64"
+      }
+    }
+  ],
+  "map_scope_rules": {
+    "used_for_source_refs": {
+      "publish/current-s4-tree-47eaa.json": "47eaa5322102910289cb56e2e07e9d3536ba1926"
+    },
+    "used_for_snapshot": {
+      "publish/current-s4-tree-c4a2992.json": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c"
+    },
+    "other_maps": "Examined as metadata only; never used to infer a pin at a different or earlier commit."
+  },
+  "baseline_reuse": "Reused the already captured inventory/receipt; no bulk refetch of the 2220 baseline blobs."
+}

@@ -1,0 +1,258 @@
+{
+  "schema": "genesis-producer-recipe-v1",
+  "version": "l4a-v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "producer": "/root/producer_l1a",
+  "scope": "atlas-continuity-rag-genesis",
+  "layer": 4,
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/request.md",
+    "sha256": "319d30c61bb84e70322e16a1135ad05085966f96cfa795c9c3476a3f5fe8d1ff",
+    "byte_length": 4200
+  },
+  "steering_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/steering.md",
+    "sha256": "9b871239cd15f09b80a786c15a2456586f9ccf28fcb544caef5a756a92476407",
+    "byte_length": 457
+  },
+  "steering_message_id": "UNKNOWN",
+  "manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/input-manifest.json",
+    "sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0",
+    "byte_length": 26169
+  },
+  "source_use_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/source-use.json",
+    "sha256": "7d6e982825a5ac0ca6722a3022dd2726e6024b7caa2193f5f67c00c500cb91c9",
+    "byte_length": 23818
+  },
+  "capture_record_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/source-captures.json",
+    "sha256": "bf272507cb31af1bbe952fcfbdc537ad9d32f334f58d9140664f0a4dc49c2b6c",
+    "byte_length": 4523
+  },
+  "source_payload_commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "public_criteria": [
+    "AC-01",
+    "AC-03",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-6",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "outputs": [
+    {
+      "key": "S4:L4:entry",
+      "need": "entry",
+      "body_path": "producers/l4a/entry.md",
+      "body_sha256": "415a5c31d006fea281ad650f4774dffeab5d913b667976f0ff4977f10a2fdacd",
+      "body_limit": 5000,
+      "source_refs": [
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+          "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+          "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+        },
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+          "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+          "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+        },
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+          "git_blob_sha": "b6201604037118ff8cc69a010db73709b284ffa0",
+          "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+        },
+        {
+          "commit": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+          "path": "modules/atlas/scripts/genesis-native.ts",
+          "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+          "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce"
+        },
+        {
+          "commit": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+          "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+          "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+          "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21"
+        }
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+        "file:modules/atlas/scripts/genesis-native.ts",
+        "file:modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/steering.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/input-manifest.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/source-use.json"
+      ],
+      "build_dependencies": [
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:atlas-system",
+          "same_package": true
+        },
+        {
+          "key": "S4:L3:system-flows",
+          "same_package": true
+        }
+      ],
+      "navigation": [
+        "S4:L3:system-flows",
+        "S4:L2:atlas-system",
+        "S4:L2:genesis-governance",
+        "S4:L2:continuity-rag-operations",
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-engine",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:continuity-rag",
+        "S4:L1:coverage-governance",
+        "S4:L1:host-boundaries",
+        "S4:L1:native-runtime-delta",
+        "S4:L4:ownership",
+        "S4:L4:maintenance",
+        "S4:L4:operational"
+      ]
+    },
+    {
+      "key": "S4:L4:ownership",
+      "need": "ownership",
+      "body_path": "producers/l4a/ownership.md",
+      "body_sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+      "body_limit": 9500,
+      "source_refs": [
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+          "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+        },
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+          "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+          "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+        },
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+          "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+          "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+        },
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+          "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+          "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+        },
+        {
+          "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+          "git_blob_sha": "b6201604037118ff8cc69a010db73709b284ffa0",
+          "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/masking-rules.ts",
+          "git_blob_sha": "9b79f34f071c3748dca0b1eed1d9173fe05bc97f",
+          "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2"
+        }
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+        "file:modules/continuity/src/masking-rules.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/steering.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/input-manifest.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/source-use.json"
+      ],
+      "build_dependencies": [
+        {
+          "key": "S4:L1:host-boundaries",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:atlas-system",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:continuity-rag-operations",
+          "same_package": true
+        },
+        {
+          "key": "S4:L3:system-flows",
+          "same_package": true
+        }
+      ],
+      "navigation": [
+        "S4:L1:host-boundaries",
+        "S4:L1:native-runtime-delta",
+        "S4:L2:atlas-system",
+        "S4:L2:continuity-rag-operations",
+        "S4:L3:system-flows"
+      ]
+    }
+  ],
+  "producer_metadata": {
+    "model_id": "UNKNOWN",
+    "model_version": "UNKNOWN",
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  },
+  "shared_recipe_scope": "Uma receita e mapa comuns registram esta unidade de dois documentos. Mudança nesses arquivos pode afetar vínculos mecânicos de ambos; não cria dependência semântica de outro L4. Fontes e build dependencies são declaradas por artefato.",
+  "method": [
+    "Preservar pedido e steering literais; verificar/copy byte exato do manifesto fixado, sem abrir pareceres/oracle/consumer.",
+    "Capturar apenas os cinco predecessores usados e três fontes auxiliares autorizadas, conferindo bytes, SHA-256 e Git blob contra pins do manifesto.",
+    "Produzir entry curto com CLI/JSON reais e protocolo 2 index/12 read/62000 bytes, raso 6000 e read<=18000. Rotear todos os onze intermediários pelo catálogo, sem transformar navegação em build.",
+    "Produzir ownership com identidade/receipt/autoridade/currentness, fronteiras host/Session, recuperação Continuity, fonte/chunk e noteBytes, comparação/pipeline/prova RAG, implementação e limites de propriedade. Lista protegida somente de masking-rules.ts.",
+    "Aplicar steering: gravar JSONs de exemplo no CWD modules/atlas e indicar finalidade curta por rota.",
+    "Conferir H2 únicas, limites, citações, fontes/input/deps, forma estática dos três JSONs de query e soma do catálogo. Não chamar validadores/runtime do produto.",
+    "Preparar pacotes literais <=32000B cada, total alvo<=55000B, corpo e metadata uma vez e <=8000B de sustentação literal/locadores. Não enviar aos juízes."
+  ],
+  "delivery": {
+    "packets": [
+      "review-packet-01.txt",
+      "review-packet-02.txt"
+    ],
+    "part_limit_bytes": 32000,
+    "desired_total_limit_bytes": 55000,
+    "literal_support_limit_bytes": 8000,
+    "sent_to_judges": false,
+    "closure": "AGUARDAR FECHAMENTO DO PRINCIPAL"
+  },
+  "limits": [
+    "Sem teste/build/runtime/Git ou escrita remota.",
+    "Somente caminhos do manifesto e área própria lidos; nenhuma fonte bruta adicional.",
+    "Sem aceite, binding, publicação ou consumidor L4; refs semânticas/runtime desta produção ficam vazias."
+  ]
+}

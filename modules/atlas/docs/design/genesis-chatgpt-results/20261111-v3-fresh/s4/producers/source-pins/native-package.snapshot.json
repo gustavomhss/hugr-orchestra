@@ -1,0 +1,2888 @@
+{
+  "schema": "genesis-native-package/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S4",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+  },
+  "scope": "atlas-continuity-rag-genesis",
+  "package_state": "IN_PROGRESS",
+  "contract": {
+    "criteria": [
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-5",
+      "CC-3",
+      "GO-I2",
+      "GO-I3",
+      "GO-I5",
+      "GO-I7",
+      "GO-I8"
+    ],
+    "oracle_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l1a.json",
+      "sha256": "daddfd2171c59d210af9d39b9e489ea2e0e884bd6770c46e882290f12a9fd6cd"
+    }
+  },
+  "required_artifact_keys": [
+    "S4:L1:ownership-boundaries",
+    "S4:L1:atlas-engine",
+    "S4:L1:atlas-host-genesis",
+    "S4:L1:continuity-rag",
+    "S4:L1:coverage-governance",
+    "S4:L1:native-runtime-delta",
+    "S4:L1:host-boundaries",
+    "S4:L2:atlas-system",
+    "S4:L2:continuity-rag-operations",
+    "S4:L2:genesis-governance",
+    "S4:L3:system-flows",
+    "S4:L4:entry",
+    "S4:L4:ownership",
+    "S4:L4:maintenance",
+    "S4:L4:operational"
+  ],
+  "artifacts": [
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Atlas ownership identity, input observation, and publication boundaries",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "producers/l1a/body.md",
+        "encoding": "utf-8",
+        "byte_length": 17959,
+        "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "WP-L1A source-derived evidence authored by /root/producer_l1a for execution a2095d5a-1464-4c38-a222-6376974fc9c9; code pin 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol pin ee2521a5b966bd505cc95bd1c733e09e12f33531. Observed means static source inspection; intended, inferred, and unknown are explicit. No semantic approval, runtime binding, publication, or operational authority is asserted."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Evidence scope is the five inspected code/instruction files and the pinned protocol; this is not whole-Atlas, continuity, RAG, or whole-slice coverage.",
+        "Downstream validator, trust/policy, CAS canonicalizer, persistence, coherent-read, rebuild, rollback, and recovery implementations were not inspected in this unit; only referenced contracts and call sites are described.",
+        "No live runtime input versions, generic importer execution, publication/index/read receipt, product test, CI gate, or independent consumer evidence was produced here.",
+        "Independent semantic judgments and any later runtime transformation/binding judgments are pending; absence of those judgments does not turn source-backed claims into claims of acceptance."
+      ],
+      "evidence": [
+        "body.md Exact source register: source paths, line citations, Git blobs, and SHA-256 values at fixed pins.",
+        "Source evidence: ownership types T:3-152; host observer I:21-190; historical pilot H:1-158; package K:2-33; repository instructions A:156-205.",
+        "Protocol evidence: transport P:16-39,105-149; runtime R:30-65,74-127; principles C:18,24-35,52-68."
+      ],
+      "input_keys": [
+        "file:modules/atlas/packages/knowledge/src/ownership/types.ts",
+        "file:modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "file:modules/atlas/scripts/ownership-pilot.ts",
+        "file:modules/atlas/package.json",
+        "file:AGENTS.md",
+        "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "file:.orchestra/skills/execute-genesis/references/runtime.md",
+        "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+        "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+          "git_blob_sha": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+          "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+          "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/scripts/ownership-pilot.ts",
+          "git_blob_sha": "6d560596653d640b86f1f0111119340d47dce689",
+          "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/package.json",
+          "git_blob_sha": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4",
+          "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "AGENTS.md",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+          "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+          "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+          "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+        "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+        "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/response.md",
+        "sha256": "589317e9e30c9192f1edb208d7e298f9fbcb87ca5a2b660e8adacbc3cc9c7819"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+          "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+          "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L1:atlas-engine",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Atlas engine: identity, grounded knowledge, retrieval and memory",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "producers/l1b/atlas-engine.md",
+        "encoding": "utf-8",
+        "byte_length": 17987,
+        "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "WP-L1B source-derived evidence authored by /root/producer_l1a, with bounded continuity research by /root/producer_l1a/continuity_research, for execution a2095d5a-1464-4c38-a222-6376974fc9c9; source 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. Observed denotes static source inspection; documented intention, inference and unknown are distinguished. The complete path census proves population preservation, not full semantic understanding. No semantic approval, runtime binding, publication or operational authority is asserted. Metadata v2 follows the explicit correction request. Source refs identify effective semantic excerpts/contracts/helpers, not every classified population member. Population/envelope claims are bounded static evidence through the compact snapshot; origin refusal and generated parity limits remain. The original body producer request/response are preserved."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Selected consequential functions were inspected; uninspected engine branches, verifier/key families and callers retain explicit depth limits in coverage.json.",
+        "Reference models are not assumed to be shipped paths; full cross-language index soundness and end-to-end host integration remain outside these bounded claims.",
+        "No runtime, product test, benchmark, build, scanner or publication was executed; independent semantic review and runtime binding are separate pending evidence.",
+        "Native freshness covers selected semantic sources and compact static payload inputs only, not every preserved population file or whole-domain current ownership.",
+        "The eight refused/oversized origins remain in coverage and snapshot provenance; none is claimed currently observed. Historical .atlas counts use a derived static snapshot, not direct native reads.",
+        "Metadata v2 requires new independent correspondence/binding review. Source-copy materialization is explicitly multi-pin with observed_head=null; no prepare run is claimed."
+      ],
+      "evidence": [
+        "Unchanged body bytes and citations retain the source-derived claims; exact source_refs below are the effective semantic subset.",
+        "Semantic source/range and per-group justification: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json\", \"sha256\": \"f886a982678a214ddeeb795e9695356503643c96b10f04b008f11ab5c1eb1717\", \"byte_length\": 177641}",
+        "Compact static population/envelope evidence: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json\", \"sha256\": \"de3889c64a35cfb1e658387c4528736e67b99dc9a625f4523e230673c8677aac\", \"byte_length\": 15568}",
+        "Same-path observation plan and validity limits: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md\", \"sha256\": \"5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b\", \"byte_length\": 16817}",
+        "Correction request: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt\", \"sha256\": \"671cece49048054a22836db0c89114c32b885e8de3a1ba961d604c6752c079d5\", \"byte_length\": 1692}",
+        "Correction response: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-response.md\", \"sha256\": \"46a97ffb240b5f62d86ce9bfd8a96092677db3eb44d9ac2d0c3791ffc93fa445\", \"byte_length\": 1968}",
+        "Original full 2220-row coverage remains unchanged at SHA-256 9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759; it is historical provenance, not a native file input.",
+        "Public criteria remain QS-1/QS-2/QS-3/QS-5, CC-3, GO-I2/GO-I3/GO-I5/GO-I7/GO-I8; these are review targets, not verdicts."
+      ],
+      "input_keys": [
+        "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+        "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "file:.orchestra/skills/execute-genesis/references/runtime.md",
+        "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "file:AGENTS.md",
+        "file:modules/atlas/harness/gates/reference-model-guard.mjs",
+        "file:modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+        "file:modules/atlas/packages/adapter-io/src/memory-store.ts",
+        "file:modules/atlas/packages/adapter-io/src/orientation-store.ts",
+        "file:modules/atlas/packages/adapter-io/src/ownership-access.ts",
+        "file:modules/atlas/packages/contracts/src/index.ts",
+        "file:modules/atlas/packages/contracts/src/status.ts",
+        "file:modules/atlas/packages/contracts/src/tier.ts",
+        "file:modules/atlas/packages/grounding/src/drift.ts",
+        "file:modules/atlas/packages/grounding/src/freshness.ts",
+        "file:modules/atlas/packages/grounding/src/gate.ts",
+        "file:modules/atlas/packages/index/src/build.ts",
+        "file:modules/atlas/packages/index/src/coverage.ts",
+        "file:modules/atlas/packages/index/src/depgraph.ts",
+        "file:modules/atlas/packages/kernel/src/canonical.ts",
+        "file:modules/atlas/packages/kernel/src/encoder.ts",
+        "file:modules/atlas/packages/kernel/src/fold.ts",
+        "file:modules/atlas/packages/kernel/src/log.ts",
+        "file:modules/atlas/packages/kernel/src/store.ts",
+        "file:modules/atlas/packages/knowledge/src/lifecycle/emit.ts",
+        "file:modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+        "file:modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "file:modules/atlas/packages/knowledge/src/ownership/shape.ts",
+        "file:modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+        "file:modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+        "file:modules/atlas/packages/knowledge/src/write/authz.ts",
+        "file:modules/atlas/packages/knowledge/src/write/router.ts",
+        "file:modules/atlas/packages/memory/src/awareness.ts",
+        "file:modules/atlas/packages/memory/src/inject.ts",
+        "file:modules/atlas/packages/memory/src/kinds.ts",
+        "file:modules/atlas/packages/memory/src/orient.ts",
+        "file:modules/atlas/packages/memory/src/portable.ts",
+        "file:modules/atlas/packages/memory/src/rules.ts",
+        "file:modules/atlas/packages/persist/src/reconstruct.ts",
+        "file:modules/atlas/packages/persist/src/scrub.ts",
+        "file:modules/atlas/packages/persist/src/source.ts",
+        "file:modules/atlas/packages/persist/src/transcript-store.ts",
+        "file:modules/atlas/packages/retrieval/src/drop.ts",
+        "file:modules/atlas/packages/retrieval/src/host-context.ts",
+        "file:modules/atlas/packages/retrieval/src/offatlas.ts",
+        "file:modules/atlas/packages/retrieval/src/own-artifact.ts",
+        "file:modules/atlas/packages/retrieval/src/own-snapshot.ts",
+        "file:modules/atlas/packages/retrieval/src/own.ts",
+        "file:modules/atlas/packages/retrieval/src/pack.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/build_coverage.py",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/schema-constraint.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/build_metadata_v2.py"
+      ],
+      "source_refs": [
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+          "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+          "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+          "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "AGENTS.md",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+          "git_blob_sha": "be637ec605dd4ff37a996f85a97fe27545cd3c1c",
+          "sha256": "0e462c37c74813979e46237ac7ecf8ee5c2260f73c554c5c30400964fc2c69b4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+          "git_blob_sha": "0cf513c3b6ab9dabc25a2d4b92959a163bf588ee",
+          "sha256": "3ea8b76fa10fd4d067d422bd182f9d4cd8af0dfad7c65e41cb87f2e0ce2d4b07"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/memory-store.ts",
+          "git_blob_sha": "5a3ee6cf461f77f0f5f3fb3dc67228e45a3a906e",
+          "sha256": "f2d811206fb05f70d8900780a03c62662f330608e3573840957eb237139d4cde"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/orientation-store.ts",
+          "git_blob_sha": "bf0e9b0323ec95c93283819fe8d3d2f4661c9088",
+          "sha256": "27f97414f37bcb64e14170db03e9c5992c1a5b9a8f45d330679bcdd2a7bde51c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+          "git_blob_sha": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+          "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/contracts/src/index.ts",
+          "git_blob_sha": "d1b18f2a66e2e37b908cdb11d2cae8557dac8331",
+          "sha256": "b7e712dfc1d4d923913dcc230a395d897a11562a92b62929bbcdcac2eb3e19c1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/contracts/src/status.ts",
+          "git_blob_sha": "d4426aea275a9ee5505f7f392d93fd1edd251641",
+          "sha256": "d8ff443c2fb8dd6497177e1584d6597505a1986191b3d9370acdfbdb7b2dc1c8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/contracts/src/tier.ts",
+          "git_blob_sha": "ba94d9dfe1c05587a9782177f007523659071da5",
+          "sha256": "36a932254863157061ffdb6991d33416c0c98973f82a92ea3727417f78740232"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/grounding/src/drift.ts",
+          "git_blob_sha": "ae7f5eda9a7b777a3aa8e2e39dbbd97d499c77ab",
+          "sha256": "cd8266bf9d23f6f026f66268cc521682a84e14135f56178599c47a17d6314ca4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/grounding/src/freshness.ts",
+          "git_blob_sha": "9bb38be70d611afcf240d18b2f1a6be04c8a623d",
+          "sha256": "bfbfd207b741265c3a65224435ed19394e4fd251023d6ae8140d5f9e82074c8b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/grounding/src/gate.ts",
+          "git_blob_sha": "cb4dcd03de89de4e8f6ce5b9cfd7d708dd17ecd5",
+          "sha256": "248dd37330af32de5352636a119f9b868cd63b168f231de88d997f196e8ffaa9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/index/src/build.ts",
+          "git_blob_sha": "b39412f769f79a18f15b800c280c26f978ed4d84",
+          "sha256": "aa62bef2e9c4714ef122ce7f8ad6d844a50c6a995d4174425bbc3109a59dca9c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/index/src/coverage.ts",
+          "git_blob_sha": "565426fbc4836c16478e4877199bda338c7ded7f",
+          "sha256": "3616426904eb724ae41723c99b20d8371c9ea407f09bd287aadeeb58d40a58a9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/index/src/depgraph.ts",
+          "git_blob_sha": "95ff89788be6b4ea84d2d2c38fdd4f2d9b78377e",
+          "sha256": "1fdfc8ababd686e47fe70cf028e1f7b9950d080c014825e046bc4eb10e49fb45"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/kernel/src/canonical.ts",
+          "git_blob_sha": "fefcf3b44c6bbebe4c23b47001fd25510f5a6fde",
+          "sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/kernel/src/encoder.ts",
+          "git_blob_sha": "e6ab4f03ab3cc4c658a1455d555e1d868280cb67",
+          "sha256": "9fe7d781f1d2e70614419483e4abb51ebf036fd0420baef332b77dce5e4c07ad"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/kernel/src/fold.ts",
+          "git_blob_sha": "317e1f7cb418f83b5308930e20c22b43d86a8a45",
+          "sha256": "edf68f876386e6208c240ea908a8e716e33966f1bba2a06ba17841090e60dee8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/kernel/src/log.ts",
+          "git_blob_sha": "9a1b26966183e069c33487754928e5b2ab2fc072",
+          "sha256": "82d97746a125a5edfbe23687fff981c96d6b8e2f92fec871816a681594551651"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/kernel/src/store.ts",
+          "git_blob_sha": "d6fe64685aba959528ab4706f752fad81b789841",
+          "sha256": "7d07bc7c2cc3c2dab7b4af61956a3d9e693f039be9fa4a70e300c8a805c5dc9f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/lifecycle/emit.ts",
+          "git_blob_sha": "c561aff8ec8d6911d945e1b28edb2002c9d814f3",
+          "sha256": "7a4fb331460b8015a5dc230427c42b9777626dc698264335d3c6099203717990"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+          "git_blob_sha": "30f8390ca617aac48cdc02e3d819eb3ec543d405",
+          "sha256": "44a7eb3ef16839138356f6f3a448752f55bca5050d9ce8b42a705420cf6423c1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "git_blob_sha": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+          "git_blob_sha": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+          "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+          "git_blob_sha": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+          "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+          "git_blob_sha": "03f0305f096c8f5e412e82f7c876e062d5b7e7c7",
+          "sha256": "c0afa0bed3f21548d6b99a10183d2cffa6161cb5fcbdf4aa6f6c7cee41dbc6a1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/write/authz.ts",
+          "git_blob_sha": "3a30a2be040488cc1e359fb16df0ef9eee4e30f6",
+          "sha256": "4a42cf1042f0a05b348c6c25962e5c0c14c113caf6461bb0e0d29e7ee20b99cf"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+          "git_blob_sha": "9022c8d9fbf8009cc4d958215f6fab1a18ff6df1",
+          "sha256": "0e6274c74bf48923b16da816b4bc2b6544c6c4da0a94c317a40011b55e06a77c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/memory/src/awareness.ts",
+          "git_blob_sha": "1cb0e699913a3fc219a7b423a78b0074e6cc6a06",
+          "sha256": "b0a58bf1d576c80c00970849c1a523bec5bff121c5931cc7411a640a75c331bc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/memory/src/inject.ts",
+          "git_blob_sha": "a09149a0f4c6ec512e036f1a912feb8ccadedcf8",
+          "sha256": "1e79629a5837e8eee26f9efb1c49cdcffdc2af2fd80b215809885a8749b01c18"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/memory/src/kinds.ts",
+          "git_blob_sha": "9037f3682c929264ba0b1dd740dc4abdaffc2aa6",
+          "sha256": "8bcef2724e6813e5e4a0a89a0fe1e7a2a96ffcea75805d41b88285b075b6bcef"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/memory/src/orient.ts",
+          "git_blob_sha": "d32464a9bef5054aedae0aad5657f187aaa51e9b",
+          "sha256": "22332ab867cf4729d6000a9db454080a8b99d04ddd0fd4f0e4fa7c7c5664a7e5"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/memory/src/portable.ts",
+          "git_blob_sha": "665d8e6b39658e470f1ddf0dbb41efedbc460a1b",
+          "sha256": "c6eb18f310cfb2f24e18ad9c8215bf33c655c21055b1ac3f7760f9adbd78c1a9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/memory/src/rules.ts",
+          "git_blob_sha": "ec589cb70f06ee954d57e7960f7025de9b16117f",
+          "sha256": "5be8ba64c7bf51ecf8436e7c6605da909691904fd329feebdfd8a43dbd25433f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/persist/src/reconstruct.ts",
+          "git_blob_sha": "eb6e99190e08ab55f56a2f6569a9f18b00dfb99d",
+          "sha256": "30c0d67e808618c13163db1fe6f90c86c506792991da8a63ca6c42b860181626"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/persist/src/scrub.ts",
+          "git_blob_sha": "914d063628e8095bd96d0cab6dab4d76b0533eeb",
+          "sha256": "7b0546b71d861c65d205610be53a921ef37a3b0eff592b5c525efc577994de7b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/persist/src/source.ts",
+          "git_blob_sha": "43a349109b54db389d858f2f1d829b8624f3c842",
+          "sha256": "6d67ec2847f685a739b2f0766bf6b10d02f80164466325e075635fc2efd46a4d"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/persist/src/transcript-store.ts",
+          "git_blob_sha": "5683e9ce4ef960f029ea79a1e003981a5a07073b",
+          "sha256": "92adb94687e72f76c9270cf65d2a68132eae305ccff7e60df876f3ccba2a350a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/drop.ts",
+          "git_blob_sha": "af9bd743841bd390abfa7f876e427c0bf8d57fa0",
+          "sha256": "8652ec197040884563108f0478961642e592fdfdc5d7e9f5a1c7a44edd73f850"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+          "git_blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598",
+          "sha256": "c2a119e47de728839d10167cc8fd45bb74eb5502415f5b5162f56cae8d0c72ff"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/offatlas.ts",
+          "git_blob_sha": "db6ea4ada70ab03ef992b3014d6140b49869feed",
+          "sha256": "452b892ebc55a2ba961d321ab2eafc8c64017d678ccfa550810c1077f432b1f0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/own-artifact.ts",
+          "git_blob_sha": "45c4e72051a3557996c5c36f64beb9b8f0422fe5",
+          "sha256": "af8160ca92f9d467bd3340dbfd2c9fec3bd18fdf54315794f2e50414b7b72e0e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+          "git_blob_sha": "8affced0b807d94cb5776cc30cf69343e5abad2f",
+          "sha256": "07c9256761297aa36cf99317b04899776875ec020e12c6410842e1f03cc3d4b3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/own.ts",
+          "git_blob_sha": "081b09c0ca51426f8f78f0c6556cfc583a5dd54c",
+          "sha256": "8847c04f67b4d453f352223e51467ef13abd8fa2191b36ebee8d4bbb6e12627d"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/pack.ts",
+          "git_blob_sha": "cdd16a9d7719b174fd36f9ff1994c9ed8ca3ca90",
+          "sha256": "00e934967065ed6702c51f7969a27d375280aeef20346b0176471897f8b5a76c"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:continuity-rag",
+        "S4:L1:coverage-governance"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Atlas host composition, transports, publication and candidate Genesis",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "producers/l1b/atlas-host-genesis.md",
+        "encoding": "utf-8",
+        "byte_length": 17595,
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "WP-L1B source-derived evidence authored by /root/producer_l1a, with bounded continuity research by /root/producer_l1a/continuity_research, for execution a2095d5a-1464-4c38-a222-6376974fc9c9; source 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. Observed denotes static source inspection; documented intention, inference and unknown are distinguished. The complete path census proves population preservation, not full semantic understanding. No semantic approval, runtime binding, publication or operational authority is asserted. Metadata v2 follows the explicit correction request. Source refs identify effective semantic excerpts/contracts/helpers, not every classified population member. Population/envelope claims are bounded static evidence through the compact snapshot; origin refusal and generated parity limits remain. The original body producer request/response are preserved."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Uninspected verifier families, commit failure branches, UI port implementations and recovery variants remain semantic depth limits.",
+        "External Orchestra host invocation/authentication/privacy enforcement and generated-source parity were not established by execution.",
+        "This is source evidence of candidate/publication boundaries, not a generic native importer execution, independent semantic judgment, successful runtime binding or publication receipt.",
+        "Native freshness covers selected semantic sources and compact static payload inputs only, not every preserved population file or whole-domain current ownership.",
+        "The eight refused/oversized origins remain in coverage and snapshot provenance; none is claimed currently observed. Historical .atlas counts use a derived static snapshot, not direct native reads.",
+        "Metadata v2 requires new independent correspondence/binding review. Source-copy materialization is explicitly multi-pin with observed_head=null; no prepare run is claimed."
+      ],
+      "evidence": [
+        "Unchanged body bytes and citations retain the source-derived claims; exact source_refs below are the effective semantic subset.",
+        "Semantic source/range and per-group justification: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json\", \"sha256\": \"f886a982678a214ddeeb795e9695356503643c96b10f04b008f11ab5c1eb1717\", \"byte_length\": 177641}",
+        "Compact static population/envelope evidence: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json\", \"sha256\": \"de3889c64a35cfb1e658387c4528736e67b99dc9a625f4523e230673c8677aac\", \"byte_length\": 15568}",
+        "Same-path observation plan and validity limits: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md\", \"sha256\": \"5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b\", \"byte_length\": 16817}",
+        "Correction request: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt\", \"sha256\": \"671cece49048054a22836db0c89114c32b885e8de3a1ba961d604c6752c079d5\", \"byte_length\": 1692}",
+        "Correction response: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-response.md\", \"sha256\": \"46a97ffb240b5f62d86ce9bfd8a96092677db3eb44d9ac2d0c3791ffc93fa445\", \"byte_length\": 1968}",
+        "Original full 2220-row coverage remains unchanged at SHA-256 9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759; it is historical provenance, not a native file input.",
+        "Public criteria remain QS-1/QS-2/QS-3/QS-5, CC-3, GO-I2/GO-I3/GO-I5/GO-I7/GO-I8; these are review targets, not verdicts."
+      ],
+      "input_keys": [
+        "file:.github/workflows/atlas-genesis.yml",
+        "file:.orchestra/skills/atlas-ownership/SKILL.md",
+        "file:.orchestra/skills/atlas-usage/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+        "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "file:.orchestra/skills/execute-genesis/references/runtime.md",
+        "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "file:AGENTS.md",
+        "file:modules/atlas/boundary/package.json",
+        "file:modules/atlas/boundary/script/build.ts",
+        "file:modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+        "file:modules/atlas/harness/gates/reference-model-guard.mjs",
+        "file:modules/atlas/packages/adapter-io/src/compose.ts",
+        "file:modules/atlas/packages/adapter-io/src/governed-emit.ts",
+        "file:modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+        "file:modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+        "file:modules/atlas/packages/adapter-io/src/memory-store.ts",
+        "file:modules/atlas/packages/adapter-io/src/model-config.ts",
+        "file:modules/atlas/packages/adapter-io/src/orientation-store.ts",
+        "file:modules/atlas/packages/adapter-io/src/ownership-access.ts",
+        "file:modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "file:modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+        "file:modules/atlas/packages/adapter-io/src/policy.ts",
+        "file:modules/atlas/packages/adapter-io/src/read-access.ts",
+        "file:modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+        "file:modules/atlas/packages/adapter-io/src/store-provenance.ts",
+        "file:modules/atlas/packages/adapter-io/src/store.ts",
+        "file:modules/atlas/packages/cli/src/bin.ts",
+        "file:modules/atlas/packages/cli/src/cli.ts",
+        "file:modules/atlas/packages/cli/src/mine-proposer.ts",
+        "file:modules/atlas/packages/cli/src/mine-staging.ts",
+        "file:modules/atlas/packages/genesis/src/admit-harness.ts",
+        "file:modules/atlas/packages/genesis/src/extract.ts",
+        "file:modules/atlas/packages/genesis/src/run-controller.ts",
+        "file:modules/atlas/packages/genesis/src/seed.ts",
+        "file:modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "file:modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+        "file:modules/atlas/packages/knowledge/src/write/authz.ts",
+        "file:modules/atlas/packages/mcp-server/README.md",
+        "file:modules/atlas/packages/mcp-server/src/server.ts",
+        "file:modules/atlas/packages/tools/src/bands.ts",
+        "file:modules/atlas/packages/tools/src/handler.ts",
+        "file:modules/atlas/scripts/ownership-pilot.ts",
+        "file:modules/continuity/src/v2/archive.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/build_coverage.py",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/schema-constraint.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/build_metadata_v2.py"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".github/workflows/atlas-genesis.yml",
+          "git_blob_sha": "7415e40f8ab320e3f59be753b5ea8c7d82418429",
+          "sha256": "92e55662c5c89c1536ab0b15e088b0234e28c96da3fb254359b1ef04f2f8cb85"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+          "git_blob_sha": "72654ea24028de8f86a569a30fa9e5552eca611f",
+          "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".orchestra/skills/atlas-usage/SKILL.md",
+          "git_blob_sha": "2b14ae2e4d74dd0f3f7785dd9c86f27905d3c0e3",
+          "sha256": "5d010ffd2fb910dddfd7685820963ca310bd72d603d718c16f28ed1a090556d0"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+          "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+          "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+          "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "AGENTS.md",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/package.json",
+          "git_blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+          "git_blob_sha": "381b022ae8283e06eaecb78236c08ad2f3ad737f",
+          "sha256": "9190f0b7b3b25cfb75a4e2221408d8b472f8787c6de49cc0093d1658c87c2178"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+          "git_blob_sha": "be637ec605dd4ff37a996f85a97fe27545cd3c1c",
+          "sha256": "0e462c37c74813979e46237ac7ecf8ee5c2260f73c554c5c30400964fc2c69b4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "git_blob_sha": "6a8dacf0b8956979a49665c415f803b911c53138",
+          "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+          "git_blob_sha": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+          "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+          "git_blob_sha": "0cf513c3b6ab9dabc25a2d4b92959a163bf588ee",
+          "sha256": "3ea8b76fa10fd4d067d422bd182f9d4cd8af0dfad7c65e41cb87f2e0ce2d4b07"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+          "git_blob_sha": "c6d4314141dc0cf71e42e9dc70a91166f2e04d0d",
+          "sha256": "11831d4ccca67ded07159ae048fc9680d7f76660e6547bd32b9d2e9df61a78a6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/memory-store.ts",
+          "git_blob_sha": "5a3ee6cf461f77f0f5f3fb3dc67228e45a3a906e",
+          "sha256": "f2d811206fb05f70d8900780a03c62662f330608e3573840957eb237139d4cde"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/model-config.ts",
+          "git_blob_sha": "f8f50af6cda19aab82b8abf21621d9d7faeb05aa",
+          "sha256": "04fb3a30c01f4029cad39abcdb02854a31874b40b0badfc38db2b68dcb596ec9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/orientation-store.ts",
+          "git_blob_sha": "bf0e9b0323ec95c93283819fe8d3d2f4661c9088",
+          "sha256": "27f97414f37bcb64e14170db03e9c5992c1a5b9a8f45d330679bcdd2a7bde51c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+          "git_blob_sha": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+          "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+          "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+          "git_blob_sha": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+          "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+          "git_blob_sha": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "sha256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+          "git_blob_sha": "311b642473b15a5601503eced2256a6e5e3a5440",
+          "sha256": "d02628dc0f7217cbb20da1d0c0b6e86bea9a90284f550702b0e987cfde011daa"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+          "git_blob_sha": "16f8c5b0933c62c6f9269f7b9b69239821f62f05",
+          "sha256": "03f766ca2212717c99ef4c9bc7e0d25b6c61938a86653914271c235546d92f30"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+          "git_blob_sha": "6f7c46ecc16349553203a0c3da42d83cc6b0aaac",
+          "sha256": "2641a60a83e8fba0a0e8e92efcd6c33eaf8cd6670fc28f954096f475f8bc2fbe"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/store.ts",
+          "git_blob_sha": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+          "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/bin.ts",
+          "git_blob_sha": "3c51b3406560baa3f36833e2c69e5297585df462",
+          "sha256": "ef793b0a76b40abaa8cd1a8abcd6976e58762b6d748f002bd7a143012277f5c0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/cli.ts",
+          "git_blob_sha": "ea25a553d10089e13737e10b981e1763e730afe4",
+          "sha256": "cc2315114a071cfd20830c0e29d1530d8674b1a93c96085df31f7ab68ddd2ef9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/mine-proposer.ts",
+          "git_blob_sha": "a492b8add89fb7fc7b6fb60f33150964ce98c54d",
+          "sha256": "f530bfaeff0b0035bab63f94ff868becd417165dd4d0cce006bd9cd9864e0a9a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/mine-staging.ts",
+          "git_blob_sha": "8d694dfccceab8d83eec024609525af28b7c7846",
+          "sha256": "dd4fd24a16a4ac784fac235a95ea8489c45198711ded031da0680c38d8ec1c13"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/genesis/src/admit-harness.ts",
+          "git_blob_sha": "d75280e5cf3e75c93a90a1db5075c558a9cdde3f",
+          "sha256": "31a10ea9a5d69c6d1747ed5400401c1b0e21f7580de314f6e4b94813dd8a5dc5"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/genesis/src/extract.ts",
+          "git_blob_sha": "38ac7bc9437713e32d1442b66928282421384768",
+          "sha256": "4cfd8f06e0603a82bed4e9886f7efee685dd463ed09d53e6ee1deeda36bbaf3e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/genesis/src/run-controller.ts",
+          "git_blob_sha": "cbac32e400ff6a24ef78841704f7e367d053316b",
+          "sha256": "4ffa9a6daac128d430be98885e5f733a0fe576e87d02165f792ee5fb9bb5c098"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/genesis/src/seed.ts",
+          "git_blob_sha": "88653b3b2e6c191de03a46c442f3046c56172d26",
+          "sha256": "ce5c6484e24e4f026a2363fcd811f90c45d5ea301fa26faa0f82ff3add18c66c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "git_blob_sha": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+          "git_blob_sha": "03f0305f096c8f5e412e82f7c876e062d5b7e7c7",
+          "sha256": "c0afa0bed3f21548d6b99a10183d2cffa6161cb5fcbdf4aa6f6c7cee41dbc6a1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/write/authz.ts",
+          "git_blob_sha": "3a30a2be040488cc1e359fb16df0ef9eee4e30f6",
+          "sha256": "4a42cf1042f0a05b348c6c25962e5c0c14c113caf6461bb0e0d29e7ee20b99cf"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/mcp-server/README.md",
+          "git_blob_sha": "e6a314a6362010c0ae3f82c1e8a105367308912b",
+          "sha256": "4523c1fa7736b4ebff148993cf225b07fe9e043995202784bcbb66e43fa09475"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/mcp-server/src/server.ts",
+          "git_blob_sha": "7c53b24ae381ad4ed9e4cd96f112d936eedd8e18",
+          "sha256": "ca068371df248bb7a08eee8ecef9fc302a71af62aeefc85ed31021a6f131812c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/tools/src/bands.ts",
+          "git_blob_sha": "c93c44b7237669536b1146fad68ce32145772011",
+          "sha256": "4c391b8b8aa2c6b0217b1b67929ab02dc46321b4c1159104b32c8fd82a588c45"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/tools/src/handler.ts",
+          "git_blob_sha": "9b2f67a3e18dd0177074e3f18da4bc10d199c961",
+          "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/scripts/ownership-pilot.ts",
+          "git_blob_sha": "6d560596653d640b86f1f0111119340d47dce689",
+          "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/archive.ts",
+          "git_blob_sha": "138ccd42749b0fa259b4fb8b1b81c08fdeddb608",
+          "sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-engine",
+        "S4:L1:continuity-rag",
+        "S4:L1:coverage-governance"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Continuity recovery and RAG Studio document diagnostics",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "producers/l1b/continuity-rag.md",
+        "encoding": "utf-8",
+        "byte_length": 17429,
+        "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "WP-L1B source-derived evidence authored by /root/producer_l1a, with bounded continuity research by /root/producer_l1a/continuity_research, for execution a2095d5a-1464-4c38-a222-6376974fc9c9; source 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. Observed denotes static source inspection; documented intention, inference and unknown are distinguished. The complete path census proves population preservation, not full semantic understanding. No semantic approval, runtime binding, publication or operational authority is asserted. Metadata v2 follows the explicit correction request. Source refs identify effective semantic excerpts/contracts/helpers, not every classified population member. Population/envelope claims are bounded static evidence through the compact snapshot; origin refusal and generated parity limits remain. The original body producer request/response are preserved."
+      },
+      "validity": "supported",
+      "gaps": [
+        "RAG historical revision membership is not enforced by inspected search; ask and proof use different trace keys. Their full public linkage remains unestablished.",
+        "External Session/core wiring, archive visibility-to-export flag binding, durable RAG Store/transactions, transport validation and UI integration were not inspected.",
+        "Archive scrub coverage is limited to declared credential shapes; no runtime, scanner, PDF extraction, product test or generated parity gate was executed.",
+        "Native freshness covers selected semantic sources and compact static payload inputs only, not every preserved population file or whole-domain current ownership.",
+        "The eight refused/oversized origins remain in coverage and snapshot provenance; none is claimed currently observed. Historical .atlas counts use a derived static snapshot, not direct native reads.",
+        "Metadata v2 requires new independent correspondence/binding review. Source-copy materialization is explicitly multi-pin with observed_head=null; no prepare run is claimed."
+      ],
+      "evidence": [
+        "Unchanged body bytes and citations retain the source-derived claims; exact source_refs below are the effective semantic subset.",
+        "Semantic source/range and per-group justification: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json\", \"sha256\": \"f886a982678a214ddeeb795e9695356503643c96b10f04b008f11ab5c1eb1717\", \"byte_length\": 177641}",
+        "Compact static population/envelope evidence: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json\", \"sha256\": \"de3889c64a35cfb1e658387c4528736e67b99dc9a625f4523e230673c8677aac\", \"byte_length\": 15568}",
+        "Same-path observation plan and validity limits: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md\", \"sha256\": \"5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b\", \"byte_length\": 16817}",
+        "Correction request: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt\", \"sha256\": \"671cece49048054a22836db0c89114c32b885e8de3a1ba961d604c6752c079d5\", \"byte_length\": 1692}",
+        "Correction response: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-response.md\", \"sha256\": \"46a97ffb240b5f62d86ce9bfd8a96092677db3eb44d9ac2d0c3791ffc93fa445\", \"byte_length\": 1968}",
+        "Original full 2220-row coverage remains unchanged at SHA-256 9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759; it is historical provenance, not a native file input.",
+        "Public criteria remain QS-1/QS-2/QS-3/QS-5, CC-3, GO-I2/GO-I3/GO-I5/GO-I7/GO-I8; these are review targets, not verdicts."
+      ],
+      "input_keys": [
+        "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+        "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "file:.orchestra/skills/execute-genesis/references/runtime.md",
+        "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "file:AGENTS.md",
+        "file:docs/guides/rag-studio.md",
+        "file:docs/specs/rag-studio/ACCEPTANCE.md",
+        "file:docs/specs/rag-studio/CONTRACT.md",
+        "file:docs/specs/rag-studio/DESIGN.md",
+        "file:docs/specs/rag-studio/REQUIREMENTS.md",
+        "file:docs/specs/rag-studio/SPEC.md",
+        "file:docs/specs/rag-studio/WAVE.md",
+        "file:docs/specs/rag-studio/work-packages.md",
+        "file:modules/atlas/boundary/package.json",
+        "file:modules/atlas/boundary/script/build.ts",
+        "file:modules/atlas/packages/adapter-io/src/context-log.ts",
+        "file:modules/atlas/packages/adapter-io/src/durable-log.ts",
+        "file:modules/atlas/packages/adapter-io/src/layout.ts",
+        "file:modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+        "file:modules/atlas/packages/persist/src/scrub-scan.ts",
+        "file:modules/atlas/packages/persist/src/scrub-shapes.ts",
+        "file:modules/atlas/packages/persist/src/scrub.ts",
+        "file:modules/continuity/README.md",
+        "file:modules/continuity/package.json",
+        "file:modules/continuity/src/archive-search.ts",
+        "file:modules/continuity/src/masking-rules.ts",
+        "file:modules/continuity/src/v2/alias.ts",
+        "file:modules/continuity/src/v2/archive.ts",
+        "file:modules/continuity/src/v2/index.ts",
+        "file:modules/continuity/src/v2/masking.ts",
+        "file:modules/continuity/src/v2/strategy.ts",
+        "file:modules/continuity/src/v2/tools.ts",
+        "file:modules/continuity/test/v2-maintenance.test.ts",
+        "file:modules/continuity/test/v2-strategy.test.ts",
+        "file:modules/continuity/test/v2-tools.test.ts",
+        "file:modules/rag-studio/README.md",
+        "file:modules/rag-studio/package.json",
+        "file:modules/rag-studio/src/admit.ts",
+        "file:modules/rag-studio/src/ask.ts",
+        "file:modules/rag-studio/src/compare.ts",
+        "file:modules/rag-studio/src/context.ts",
+        "file:modules/rag-studio/src/embed-off.ts",
+        "file:modules/rag-studio/src/extract.ts",
+        "file:modules/rag-studio/src/guard.ts",
+        "file:modules/rag-studio/src/index.ts",
+        "file:modules/rag-studio/src/lights.ts",
+        "file:modules/rag-studio/src/orphan.ts",
+        "file:modules/rag-studio/src/parse.ts",
+        "file:modules/rag-studio/src/passes.ts",
+        "file:modules/rag-studio/src/prompt.ts",
+        "file:modules/rag-studio/src/proof.ts",
+        "file:modules/rag-studio/src/rechunk.ts",
+        "file:modules/rag-studio/src/reparse.ts",
+        "file:modules/rag-studio/src/report.ts",
+        "file:modules/rag-studio/src/revision.ts",
+        "file:modules/rag-studio/src/search.ts",
+        "file:modules/rag-studio/src/span.ts",
+        "file:modules/rag-studio/src/trace.ts",
+        "file:modules/rag-studio/test/acceptance.test.ts",
+        "file:modules/rag-studio/test/parse.test.ts",
+        "file:modules/rag-studio/test/proof.test.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/build_coverage.py",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/schema-constraint.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/build_metadata_v2.py"
+      ],
+      "source_refs": [
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+          "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+          "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+          "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "AGENTS.md",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/guides/rag-studio.md",
+          "git_blob_sha": "a0ca1ddfdc68f5731adec9ffec3767e711677cad",
+          "sha256": "acc567aeab0397965cc7ef048a666ffd07631b830ad44cb2b7ec2974a0713cfa"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/rag-studio/ACCEPTANCE.md",
+          "git_blob_sha": "896e861624738c0dfe3be9046c3f1d0f21639c1a",
+          "sha256": "4d1e01abb25b8b0ddbab0c5cda9384aae0b470d8fb06637ec7b11ee1e0a05315"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/rag-studio/CONTRACT.md",
+          "git_blob_sha": "360f9450aca3f290bfe23b62e33defe96d805064",
+          "sha256": "c88ddcb1a00d27e6a29b92afb20b428b7dca29350eea7312fd6aa2eb67d4f52e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/rag-studio/DESIGN.md",
+          "git_blob_sha": "7b4a3106e78f68e85ccc399169d6ec0133c60fd8",
+          "sha256": "38e058e302732aa65daaa31a20f2e0723b10278cba7a7907951d67a99c21bead"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/rag-studio/REQUIREMENTS.md",
+          "git_blob_sha": "f5ee046630fc3382f101e30c31fb571d228d9e90",
+          "sha256": "566eb3d7935b139b4422e569aa3494d87311d4b4b0b67f4018545ae467094a45"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/rag-studio/SPEC.md",
+          "git_blob_sha": "c15db58705bfc6cea2ddf5b4066de05ee8bc5701",
+          "sha256": "58d6ee79e20bcc10bdc8d312571dcd48b1aef49594a6302ff9983448e22fdadc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/rag-studio/WAVE.md",
+          "git_blob_sha": "ccb7439ad3a70b97793d4297aa497d1903448adb",
+          "sha256": "0534955e3f32bf588eaa6fc1a8085e8e263967af367dccc2db56e23013b15577"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/rag-studio/work-packages.md",
+          "git_blob_sha": "7271f50b79e77bd33a309f714f5f65bf5085b0d1",
+          "sha256": "76cfc21a34cc785ab0b41c9f00bcce71f5226de87957e1ccdf0860fbf148ba0e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/package.json",
+          "git_blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/context-log.ts",
+          "git_blob_sha": "1b0a9d09854e612f2271a6cc289fad307cd7b2da",
+          "sha256": "b1960b9f9230f8bf44a594a37e64900ded64ad0accf94ce9f4cd63d4d736cc9c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/durable-log.ts",
+          "git_blob_sha": "3f9a3bbfc381692d8b9bdae51d8a6564e050fdae",
+          "sha256": "8eddcd47971e4d5e717f03d2753edd45f0feba9400dd922e51e737162b7f34b5"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/layout.ts",
+          "git_blob_sha": "39c5b2a24ccdfe051846dc75c50496eebe1e8839",
+          "sha256": "686c591c2a19c391d35cea5857dc773dfa57c4cc3ce6509f3a02f2ec9fa99d72"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+          "git_blob_sha": "ea4b43772a976e9a2ae55cb46770d7811726a501",
+          "sha256": "f513da7f05ac4b65805aa200b8d0963b389faeb5769a91c73b95d58ea50d9e31"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/persist/src/scrub-scan.ts",
+          "git_blob_sha": "a5997105c9556f3fd99b32d6c5243d0c8c7be52d",
+          "sha256": "ba3db37c8924196e5f128c4fe53c5df24fb0e0bdd6e4ca6f6bdf3dd6ce1d4a5c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/persist/src/scrub-shapes.ts",
+          "git_blob_sha": "bad24a937b269c8679f5220bff6dd07c59541f14",
+          "sha256": "bcd776dceda68d391a8d98902fa628cbbc3b706bf2e692042b4d0aed8c0a047f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/persist/src/scrub.ts",
+          "git_blob_sha": "914d063628e8095bd96d0cab6dab4d76b0533eeb",
+          "sha256": "7b0546b71d861c65d205610be53a921ef37a3b0eff592b5c525efc577994de7b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/README.md",
+          "git_blob_sha": "b88849de23124fe819fd63d73325856eae5f3bfe",
+          "sha256": "b1d1b9e3ddd3c7e4f521ed1fcfe88865b9030da4f7c32c3a2d94f1f333774ba2"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/package.json",
+          "git_blob_sha": "bb466f5945a5cbe08473925bbf9f2eb351abe8e3",
+          "sha256": "f81d4c7950311726334b06e1726d97da3b92749bcbcb3a94748fd023c626efbe"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/archive-search.ts",
+          "git_blob_sha": "c90e61bd3d2e7afc9f4bc48105143cfc9f2eda31",
+          "sha256": "8d85fe6fda2c47a243307f25d279120bf473d81393194864d8fd5d94f2b610f8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/masking-rules.ts",
+          "git_blob_sha": "9b79f34f071c3748dca0b1eed1d9173fe05bc97f",
+          "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/alias.ts",
+          "git_blob_sha": "28ec09bedff87b22126c9005762ef91ad194212f",
+          "sha256": "b687eba96722bcfddb01d381865d82c477e960a6564691a823f1c7488990bde3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/archive.ts",
+          "git_blob_sha": "138ccd42749b0fa259b4fb8b1b81c08fdeddb608",
+          "sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/index.ts",
+          "git_blob_sha": "89e51c378a048c9b48e70da78c6e2479ebb0f96d",
+          "sha256": "8389f6d19d977e4403d2acc9c5e74c37b56ea3eb405bc03ae0a48751a6a53430"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/masking.ts",
+          "git_blob_sha": "88baf55f7ec6ccd34f9ef7fdb1770fdb9d0b9928",
+          "sha256": "661fede4e33ded28f660993632f6b99cde26b5678cb0eb6079c989e14692acc3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/strategy.ts",
+          "git_blob_sha": "95a8648eb828779cfcedbc32868fb178bcf03876",
+          "sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/tools.ts",
+          "git_blob_sha": "eca80f15d3c970659a0138cc0e82ad3914186429",
+          "sha256": "86e9f6677a2e3fa088cefeb85150e7b98befbd5a781a83da57a906985af086df"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/test/v2-maintenance.test.ts",
+          "git_blob_sha": "2b87cb547a1500a994c6b65ddae71067011f1f0d",
+          "sha256": "779520c5718f4db703b845d509be3c57bcf42c1a5e9b17b3ffe2ae6e3e1e6dd7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/test/v2-strategy.test.ts",
+          "git_blob_sha": "14b58009328d608b8b217e70db33f5dc9b3d5646",
+          "sha256": "294bcfcc0129ad05a7dbc6d72cae7c42fd58664d0f055bf510525e7555b9e3c9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/test/v2-tools.test.ts",
+          "git_blob_sha": "209c4e2d1db7efb730d89f666a6c22857b04eab0",
+          "sha256": "6fefe07d8706cefd75e62223d8df668c512009c02fa00e4a7de8d6d36f03c3f3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/README.md",
+          "git_blob_sha": "243550615fbd9c1f34f18eb215c47f0c0a38b6d6",
+          "sha256": "216bbf5ec6ebb921fb56bbe6b348f26a78655f735c4aa0600c9033971c9f863d"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/package.json",
+          "git_blob_sha": "f2cfc26cc9cabfc01c78160ea04ac6216733ff62",
+          "sha256": "07b99e3ef5b6d04707491e14185797902d0c1f6e34c773b2ca2d5fc52458d0f7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/admit.ts",
+          "git_blob_sha": "30d3beb66b79c99a18acb949ac2436d3458855ed",
+          "sha256": "1ea61a8352cc98d7fb6c2d51b6d20f1e59d7b99e37a06b453a8f1f5265661b06"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/ask.ts",
+          "git_blob_sha": "629f9ae2cda44f9a936e864d9f8f3148a362cc3c",
+          "sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/compare.ts",
+          "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+          "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/context.ts",
+          "git_blob_sha": "0fdf7227c4118e336c60ebabf8f0c509f04e5a9c",
+          "sha256": "f6d07d8da485a0e8119ec982b9a39b1ddfcf908673888c74f48ad69120fd17b6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/embed-off.ts",
+          "git_blob_sha": "fcfd29073ae0b2055179172ef840dedd4e7b88e8",
+          "sha256": "4b1ee32e29cd713ecf13ef7905a770f045530b05ba7f7bdcc1fbb1e9ed3715ba"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/extract.ts",
+          "git_blob_sha": "f1eaafe9993154469b5c0fae4697424ceabdc297",
+          "sha256": "b45b137f1a23432385312a6f5132a0622e68a31a83652c4a3efb69043f98a8d8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/guard.ts",
+          "git_blob_sha": "a6be72a98f7ccab6745fe196657332258c490047",
+          "sha256": "c1276e7628a49457ff8fb4343a6ae2c6d7bbf75e3082a2f9c50a9e3fc9f7660a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/index.ts",
+          "git_blob_sha": "65a2a882349415d4ebe57d166b1d335cc1d580d7",
+          "sha256": "703788df0a8690f4adc75ec4543cf0849d0a187687ed47fc60c7a1cec552066a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/lights.ts",
+          "git_blob_sha": "844e4cec7fadd18708333242fc0369b2b4c9a0af",
+          "sha256": "6b17d707c5f89f9510bd43f50d5b85dd4a4eac929769d208ca98feb5f6530b01"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/orphan.ts",
+          "git_blob_sha": "225917473e42b9dd1f8466228a4e545f53e9e4e4",
+          "sha256": "3f42247b482a9802ca6e3b0c1dfab2d7cd8266bb8a15bc23eaa3a18df31bd563"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/parse.ts",
+          "git_blob_sha": "9afa0c9ffe73d8673b69cb35c6c9de9ec51c4b8f",
+          "sha256": "dce01779f55bf89d58999ec3089c50f0205cdc3629668f9c7553dc9228237109"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/passes.ts",
+          "git_blob_sha": "0589151c893026cc8dd806b176a1c5d0c5d916f9",
+          "sha256": "1537a96d6089a1ba52e5fc1584b9222536ea0a103efa887e82f689cd4d8ec589"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/prompt.ts",
+          "git_blob_sha": "2cb61aee913092de9a5452124b8682028f84bdbb",
+          "sha256": "f2da0aa3b213596d59872fb75ade9c7abc517666f48e17d74665ed55ad5b73ad"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/proof.ts",
+          "git_blob_sha": "c5f37d7d6d096378146f7e32c82512399d21b8ec",
+          "sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/rechunk.ts",
+          "git_blob_sha": "445a40cc7e85eb74d0302f96bd1dc0683f4054a7",
+          "sha256": "63fac5e3c275b44df9b30625340a5b0d2bc3df30cf874f7109fb953a4313cb66"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/reparse.ts",
+          "git_blob_sha": "353768de7b40ffcd835a9eaea101771962d00421",
+          "sha256": "3b378c3cad88e9916449cd99672be4259a5926fe6c8c2b197f39bffba709a6cc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/report.ts",
+          "git_blob_sha": "68043ac7f176889b7007d39cbb2a622cde07531a",
+          "sha256": "4e9f7605c1cd4edd7796c823d4ff514323fb2cf336979fbd8bdbf3d2749a4291"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/revision.ts",
+          "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+          "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/search.ts",
+          "git_blob_sha": "8fa79755fcaeb8d16f3099e1265ab868cb70aaec",
+          "sha256": "d0021c6ef9f5747ea9f61664cfa2f0c0ad8a77373582b0195393b9bbfe395843"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/span.ts",
+          "git_blob_sha": "cca79e521803cd96af3b3936dfe75a9bcf6c52ce",
+          "sha256": "55db2c7eccc86b5440e7a6098e9779beeff82b3197b69dbb49fa67c9685ec464"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/trace.ts",
+          "git_blob_sha": "39c42039f59f3b0b947b45afbcb8cb9844ebe4ff",
+          "sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/test/acceptance.test.ts",
+          "git_blob_sha": "967ca5e8007f235d9b5de8dc1bee95185ebd2139",
+          "sha256": "03538a53af035fdf50a3100a86a2f8ef5370db0c93b05e6d002866350618a719"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/test/parse.test.ts",
+          "git_blob_sha": "de78364ab6fb2819891fd6411285e7227680c766",
+          "sha256": "b1565329f132f7944737efae026a98b33251f40abdd5e5eecd750397be2151e8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/test/proof.test.ts",
+          "git_blob_sha": "65ef6587ffd164840e6eef4f59cb10687df069be",
+          "sha256": "3a764006d0b4acd5d12cfd3f1d9d7a8ab9099fe5a4f7c88f93f6a867b1029196"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-engine",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:coverage-governance"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "S4 preserved population, automation, governance and historical evidence",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "producers/l1b/coverage-governance.md",
+        "encoding": "utf-8",
+        "byte_length": 17988,
+        "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "WP-L1B source-derived evidence authored by /root/producer_l1a, with bounded continuity research by /root/producer_l1a/continuity_research, for execution a2095d5a-1464-4c38-a222-6376974fc9c9; source 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. Observed denotes static source inspection; documented intention, inference and unknown are distinguished. The complete path census proves population preservation, not full semantic understanding. No semantic approval, runtime binding, publication or operational authority is asserted. Metadata v2 follows the explicit correction request. Source refs identify effective semantic excerpts/contracts/helpers, not every classified population member. Population/envelope claims are bounded static evidence through the compact snapshot; origin refusal and generated parity limits remain. The original body producer request/response are preserved."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Complete accounting of 2220 assigned paths is not a claim of complete code understanding; per-path depth is explicit.",
+        "Historical conversations and bulk generated data are preserved by origin; all tests/recovery variants and external host/CI enforcement were not semantically verified.",
+        "Eight preserved files encounter current observer limits. They were not omitted or labeled absent; any later runtime binding needs explicit compatible observation.",
+        "No new CI, local product test, runtime, deployment, publication or whole-domain completion is claimed.",
+        "Native freshness covers selected semantic sources and compact static payload inputs only, not every preserved population file or whole-domain current ownership.",
+        "The eight refused/oversized origins remain in coverage and snapshot provenance; none is claimed currently observed. Historical .atlas counts use a derived static snapshot, not direct native reads.",
+        "Metadata v2 requires new independent correspondence/binding review. Source-copy materialization is explicitly multi-pin with observed_head=null; no prepare run is claimed."
+      ],
+      "evidence": [
+        "Unchanged body bytes and citations retain the source-derived claims; exact source_refs below are the effective semantic subset.",
+        "Semantic source/range and per-group justification: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json\", \"sha256\": \"f886a982678a214ddeeb795e9695356503643c96b10f04b008f11ab5c1eb1717\", \"byte_length\": 177641}",
+        "Compact static population/envelope evidence: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json\", \"sha256\": \"de3889c64a35cfb1e658387c4528736e67b99dc9a625f4523e230673c8677aac\", \"byte_length\": 15568}",
+        "Same-path observation plan and validity limits: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md\", \"sha256\": \"5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b\", \"byte_length\": 16817}",
+        "Correction request: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt\", \"sha256\": \"671cece49048054a22836db0c89114c32b885e8de3a1ba961d604c6752c079d5\", \"byte_length\": 1692}",
+        "Correction response: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-response.md\", \"sha256\": \"46a97ffb240b5f62d86ce9bfd8a96092677db3eb44d9ac2d0c3791ffc93fa445\", \"byte_length\": 1968}",
+        "Original full 2220-row coverage remains unchanged at SHA-256 9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759; it is historical provenance, not a native file input.",
+        "Public criteria remain QS-1/QS-2/QS-3/QS-5, CC-3, GO-I2/GO-I3/GO-I5/GO-I7/GO-I8; these are review targets, not verdicts."
+      ],
+      "input_keys": [
+        "file:.github/workflows/atlas-genesis.yml",
+        "file:.github/workflows/atlas-guard.yml",
+        "file:.github/workflows/atlas-pilot.yml",
+        "file:.github/workflows/atlas-worklist.yml",
+        "file:.orchestra/skills/atlas-maintenance/SKILL.md",
+        "file:.orchestra/skills/atlas-ownership/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+        "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "file:.orchestra/skills/execute-genesis/references/runtime.md",
+        "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "file:AGENTS.md",
+        "file:modules/atlas/.github/workflows/ci.yml",
+        "file:modules/atlas/.github/workflows/release.yml",
+        "file:modules/atlas/boundary/script/build.ts",
+        "file:modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+        "file:modules/atlas/docs/adr/ADR-0011-the-model-is-an-operator-supplied-command.md",
+        "file:modules/atlas/docs/governance/policy-lock.md",
+        "file:modules/atlas/harness/README.md",
+        "file:modules/atlas/harness/gates/reference-model-guard.mjs",
+        "file:modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "file:modules/atlas/packages/retrieval/src/own-snapshot.ts",
+        "file:script/atlas-baseline.mjs",
+        "file:script/atlas-genesis/checkpoint-continuation-policy.mjs",
+        "file:script/atlas-genesis/checkpoint.mjs",
+        "file:script/atlas-genesis/index-reuse.mjs",
+        "file:script/atlas-genesis/judge.mjs",
+        "file:script/atlas-genesis/publish-plan.mjs",
+        "file:script/atlas-genesis/realdata-evaluate.mjs",
+        "file:script/atlas-genesis/secret-scan.mjs",
+        "file:specs/atlas-ui/mock/README.md",
+        "file:specs/atlas-ui/mock/extract.py",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/build_coverage.py",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/schema-constraint.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/build_metadata_v2.py"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".github/workflows/atlas-genesis.yml",
+          "git_blob_sha": "7415e40f8ab320e3f59be753b5ea8c7d82418429",
+          "sha256": "92e55662c5c89c1536ab0b15e088b0234e28c96da3fb254359b1ef04f2f8cb85"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".github/workflows/atlas-guard.yml",
+          "git_blob_sha": "97c2738c447c8cdb37389da612566e716654cc3b",
+          "sha256": "4c3c46ece2975bee6301f8865353edaf70f2dcf75df2a543b8fd8b733659dfd8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".github/workflows/atlas-pilot.yml",
+          "git_blob_sha": "faa85f4d265a85fa0ace743fb86433a1e8730318",
+          "sha256": "4933b81381b91a6732a6be5fc243c98f93ea0da74c6a9fe0645a990fb7fbaba0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".github/workflows/atlas-worklist.yml",
+          "git_blob_sha": "0d19e573c705b296d38de15e60224f4c182d4a1c",
+          "sha256": "166939f3ae43d5275da41c520c840d5d577ba65f99ba963818f1e41b1d834ea7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+          "git_blob_sha": "cc1f0fef978e0a0ca96b0388d90d55660a1f7f9e",
+          "sha256": "947c9a4b4756c62a9c26bc413dabb8444af3d9462439099b2f2e29c47fc8bde5"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+          "git_blob_sha": "72654ea24028de8f86a569a30fa9e5552eca611f",
+          "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+          "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+          "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+          "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "AGENTS.md",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/.github/workflows/ci.yml",
+          "git_blob_sha": "f4932c5df0f548fd504cdd0d493ffbf53b3f8ef1",
+          "sha256": "d46ff5f0c0231496dfd3d906aa64dd4a1a78885ee30437e49bec00cbb8663ece"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/.github/workflows/release.yml",
+          "git_blob_sha": "8d9e717c677bb61b49dbf4329348cdef124e5628",
+          "sha256": "6ca6f52f522178e50836f41978e59ac2f00ade2d0f78a40d49dbd00cba47acfc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+          "git_blob_sha": "381b022ae8283e06eaecb78236c08ad2f3ad737f",
+          "sha256": "9190f0b7b3b25cfb75a4e2221408d8b472f8787c6de49cc0093d1658c87c2178"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/adr/ADR-0011-the-model-is-an-operator-supplied-command.md",
+          "git_blob_sha": "50404b4af614f9aee1694c88e92aff6c3566264e",
+          "sha256": "541f8322bfd05b0d4516ec58455008774004da6179d8a6654569b7b436f54677"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/governance/policy-lock.md",
+          "git_blob_sha": "c1d43747cbcd2fa2e500243feeaa094056b6b9ba",
+          "sha256": "8e134498dc3d042f9637ac390d423111c01e770b4011fea0eafd7ecd91abbfc8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/harness/README.md",
+          "git_blob_sha": "245d641672331e9f41b03f6f6d22e4e9e3e10871",
+          "sha256": "5c55b34c8880aa2e6dabf1da13c9e0b9981824c54a8478366c89d2e287cb9fda"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+          "git_blob_sha": "be637ec605dd4ff37a996f85a97fe27545cd3c1c",
+          "sha256": "0e462c37c74813979e46237ac7ecf8ee5c2260f73c554c5c30400964fc2c69b4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+          "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+          "git_blob_sha": "8affced0b807d94cb5776cc30cf69343e5abad2f",
+          "sha256": "07c9256761297aa36cf99317b04899776875ec020e12c6410842e1f03cc3d4b3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-baseline.mjs",
+          "git_blob_sha": "a11a8f0e9fd73fc427f553aaa24ec735ef9db3a9",
+          "sha256": "4031c509579d9136a15331da96fd1834e9d976592771ffdcc83b36011637053e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/checkpoint-continuation-policy.mjs",
+          "git_blob_sha": "b34bea0c179d8417ca9a0682b44d538f7bd58af4",
+          "sha256": "0aecf95170acd5daaf86ff94a1eb21651e7d2bcc9f6e528725b82daa223375b6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/checkpoint.mjs",
+          "git_blob_sha": "a1180f6c594722f27eba2b2a8f169c22902b7d61",
+          "sha256": "5c30d134060915b32c0ae467b7ee5e6c7234202efe8e9aeac8979bef2ae257f7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/index-reuse.mjs",
+          "git_blob_sha": "b58a71d463f30507c6e7fad90a8a45c0f003c0f3",
+          "sha256": "7d7fb629e4ccecd44e90be9283a64fd188a33aa1abdb6d8ccec1f0914163130a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/judge.mjs",
+          "git_blob_sha": "644048161c51546b671c1a0386359f9c7091038d",
+          "sha256": "3390b2ecf00d1cfb4f78337c4f41d53892d4d0caf0c11b1bead0b6f2dcc0e577"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/publish-plan.mjs",
+          "git_blob_sha": "407189d76f343b7721fb72266130ef52ce96ba84",
+          "sha256": "e6fa446268c2351024f308708e0c6ee6ce3f25617ff06e6879a63149e67108c7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/realdata-evaluate.mjs",
+          "git_blob_sha": "9b56095bbd580b3d549fe4c160bbee52535bcc19",
+          "sha256": "b838625fcf6eb1c050b01f76d37caed9b3e76eabfefb1aa95a087688f6da12ac"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/secret-scan.mjs",
+          "git_blob_sha": "8da8d02b65063516d9a092af45a94d2828201bd8",
+          "sha256": "b4a598b8bc458a6c0d4b895d56cb6d23504407eb059a1e682440d21a57ad6d33"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "specs/atlas-ui/mock/README.md",
+          "git_blob_sha": "d9e1c78058494d400302e472cc6b79caa2f68a55",
+          "sha256": "0fd2333efe409ce83e4907a54257c7907ce6e7224710c2c378395e075856b29b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "specs/atlas-ui/mock/extract.py",
+          "git_blob_sha": "73be43f720f83659d6cc8306f12f8b8e4ef197c0",
+          "sha256": "48fce6c1d5f7a45b52be286095116c46ef198b814903868d9297674a337b27b3"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+        "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-engine",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:continuity-rag"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Fronteiras do host: Session, persistência RAG e entrada Atlas",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "producers/l1-boundary/body-v2.md",
+        "encoding": "utf-8",
+        "byte_length": 11972,
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      "source_refs": [
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+          "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+          "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+          "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "AGENTS.md",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/package.json",
+          "git_blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/review-answer.ts",
+          "git_blob_sha": "cbfe58cd0d65307d91cb5171981f330a97ffd89b",
+          "sha256": "d9f6d00a5abf557c3861ba24ed03c46961de8c1466588dc9c297584a59acade5"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+          "git_blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+          "sha256": "8560562009ce02522725630941c9fbd05dadceea64d09728ec32398641e8885f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/surface/review.ts",
+          "git_blob_sha": "7767aba8e29f78962c25dae5934328c24548de99",
+          "sha256": "b7e922af1b3df0613ef997539157067dbf9ed45e2581ae1a821bd7490e212fe9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/surface-mine.ts",
+          "git_blob_sha": "634b50b31754c9597865557ede58ad63c8b7d254",
+          "sha256": "03e7a1007a0858a4023bc715b3b74191686b7d6bc2af6f45fbb050da17deace1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/archive.ts",
+          "git_blob_sha": "138ccd42749b0fa259b4fb8b1b81c08fdeddb608",
+          "sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/index.ts",
+          "git_blob_sha": "89e51c378a048c9b48e70da78c6e2479ebb0f96d",
+          "sha256": "8389f6d19d977e4403d2acc9c5e74c37b56ea3eb405bc03ae0a48751a6a53430"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/strategy.ts",
+          "git_blob_sha": "95a8648eb828779cfcedbc32868fb178bcf03876",
+          "sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/continuity/src/v2/tools.ts",
+          "git_blob_sha": "eca80f15d3c970659a0138cc0e82ad3914186429",
+          "sha256": "86e9f6677a2e3fa088cefeb85150e7b98befbd5a781a83da57a906985af086df"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/admit.ts",
+          "git_blob_sha": "30d3beb66b79c99a18acb949ac2436d3458855ed",
+          "sha256": "1ea61a8352cc98d7fb6c2d51b6d20f1e59d7b99e37a06b453a8f1f5265661b06"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/ask.ts",
+          "git_blob_sha": "629f9ae2cda44f9a936e864d9f8f3148a362cc3c",
+          "sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/context.ts",
+          "git_blob_sha": "0fdf7227c4118e336c60ebabf8f0c509f04e5a9c",
+          "sha256": "f6d07d8da485a0e8119ec982b9a39b1ddfcf908673888c74f48ad69120fd17b6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/extract.ts",
+          "git_blob_sha": "f1eaafe9993154469b5c0fae4697424ceabdc297",
+          "sha256": "b45b137f1a23432385312a6f5132a0622e68a31a83652c4a3efb69043f98a8d8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/proof.ts",
+          "git_blob_sha": "c5f37d7d6d096378146f7e32c82512399d21b8ec",
+          "sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/reparse.ts",
+          "git_blob_sha": "353768de7b40ffcd835a9eaea101771962d00421",
+          "sha256": "3b378c3cad88e9916449cd99672be4259a5926fe6c8c2b197f39bffba709a6cc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/revision.ts",
+          "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+          "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/search.ts",
+          "git_blob_sha": "8fa79755fcaeb8d16f3099e1265ab868cb70aaec",
+          "sha256": "d0021c6ef9f5747ea9f61664cfa2f0c0ad8a77373582b0195393b9bbfe395843"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/trace.ts",
+          "git_blob_sha": "39c42039f59f3b0b947b45afbcb8cb9844ebe4ff",
+          "sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/package.json",
+          "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+          "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/atlas.ts",
+          "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+          "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/rag-studio/sql.ts",
+          "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+          "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session.ts",
+          "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+          "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session/compaction.ts",
+          "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+          "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session/runner/index.ts",
+          "git_blob_sha": "6da5d89f1fb9528d1d1bb53ac4a72d3aa3506845",
+          "sha256": "08188f1e93d6b49e27f1b02d227516f6b2cd61f8ebc2f831ab8e6903685af109"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session/runner/llm.ts",
+          "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+          "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/rag-studio.ts",
+          "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+          "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/schema/src/rag-studio.ts",
+          "git_blob_sha": "b553ee9dc72cbb7d87ff01eba7cb7608a5ab89df",
+          "sha256": "948d52ca2c846da8059bb297a8e564aa82e5cec5dc1edf97906eb010f71b9918"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/server/src/handlers/atlas.ts",
+          "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+          "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/server/src/handlers/rag-studio-session.ts",
+          "git_blob_sha": "42a0cb7a6250df1edc566fa0409dde0463f29639",
+          "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/server/src/handlers/rag-studio.ts",
+          "git_blob_sha": "b91a9e061bb8f818a34756ea7e26e9f27dace4a7",
+          "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e"
+        }
+      ],
+      "input_keys": [
+        "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+        "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "file:.orchestra/skills/execute-genesis/references/runtime.md",
+        "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "file:AGENTS.md",
+        "file:modules/atlas/boundary/package.json",
+        "file:modules/atlas/boundary/script/build.ts",
+        "file:modules/atlas/packages/adapter-io/src/review-answer.ts",
+        "file:modules/atlas/packages/adapter-io/src/surface/index.ts",
+        "file:modules/atlas/packages/adapter-io/src/surface/review.ts",
+        "file:modules/atlas/packages/cli/src/surface-mine.ts",
+        "file:modules/continuity/src/v2/archive.ts",
+        "file:modules/continuity/src/v2/index.ts",
+        "file:modules/continuity/src/v2/strategy.ts",
+        "file:modules/continuity/src/v2/tools.ts",
+        "file:modules/rag-studio/src/admit.ts",
+        "file:modules/rag-studio/src/ask.ts",
+        "file:modules/rag-studio/src/context.ts",
+        "file:modules/rag-studio/src/extract.ts",
+        "file:modules/rag-studio/src/proof.ts",
+        "file:modules/rag-studio/src/reparse.ts",
+        "file:modules/rag-studio/src/revision.ts",
+        "file:modules/rag-studio/src/search.ts",
+        "file:modules/rag-studio/src/trace.ts",
+        "file:packages/core/package.json",
+        "file:packages/core/src/atlas.ts",
+        "file:packages/core/src/rag-studio/sql.ts",
+        "file:packages/core/src/session.ts",
+        "file:packages/core/src/session/compaction.ts",
+        "file:packages/core/src/session/runner/index.ts",
+        "file:packages/core/src/session/runner/llm.ts",
+        "file:packages/protocol/src/groups/rag-studio.ts",
+        "file:packages/schema/src/rag-studio.ts",
+        "file:packages/server/src/handlers/atlas.ts",
+        "file:packages/server/src/handlers/rag-studio-session.ts",
+        "file:packages/server/src/handlers/rag-studio.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-response.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/source-provenance-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/inspection-register.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/integrity-receipt.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.diff",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/build_delivery_v2.py"
+      ],
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "Produção direta de WP-L1-BOUNDARY por /root/producer_l1a na execução a2095d5a-1464-4c38-a222-6376974fc9c9; fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38, protocolo ee2521a5b966bd505cc95bd1c733e09e12f33531. Evidência de inspeção estática com distinção de inferência, intenção e execução. Referências externas somente de leitura; população S4 permanece 2220. supported sustenta somente as afirmações limitadas do corpo; não declara aceite independente, integração, publicação ou autoridade de ratificação. Materialização multi-pin, observed_head=null, sem alegação de checkout único. Revisão v2 por correção primária explícita: default do SessionCompaction acrescentado a partir da mesma fonte; v1 preservada, sem novo parecer ou execução."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Instalação global de Continuity e implementação interna de SessionExecution/Store/History/projetor não foram capturadas; não se afirma integração completa, atomicidade da sessão ou recuperação após crash.",
+        "RAG mantém conflitos materiais entre trace de ask por revisionId e persistência/prova por questionId; contador recriado permite inferir reutilização de IDs. São constatações/inferências estáticas, sem reprodução executada.",
+        "Leitura RAG anterior ao gate, conservação de metadados sob arquivo indisponível e ausência de transação explícita do ciclo exigem cuidado; autorização e isolamento oferecidos externamente não foram demonstrados.",
+        "Middleware, autenticação e registro global das rotas/Location não foram capturados. Ator/token Atlas são contratos de domínio e não provam autenticação HTTP.",
+        "Imports do host apontam a bundles gerados; origem e receita foram examinadas, mas paridade integral de bytes não foi estabelecida. Dois passes de mineração não provam snapshot imutável entre chamadas de modelo.",
+        "Inspeção estática não é teste, CI, build, chamada externa ou integração executada; revisão independente, prepare/binding e recibos runtime permanecem pendentes."
+      ],
+      "evidence": [
+        "Correção primária: default SessionCompaction explícito em C:277–329; contribuição e instalação continuam distintas.",
+        "Corpo v2 com 57 localizadores em 31 fontes semânticas. Todos os 37 source_refs são exatamente os da v1.",
+        "Proveniência e correspondência semântica v2: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/source-provenance-v2.json\", \"sha256\": \"844642de83937264f6078c24d864ed301974b63ec4b5b633e0418ff399b7dc0d\", \"byte_length\": 38309}",
+        "Pedido literal de correção: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md\", \"sha256\": \"d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c\", \"byte_length\": 1082}",
+        "Diff textual delimitado: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.diff\", \"sha256\": \"35817e9cd6541bd3541e8f5b733ab7e26cab287d370c36c8b01c321dfb3ef6d8\", \"byte_length\": 4843}",
+        "Critérios públicos QS-1, QS-2, CC-3, CC-7, GO-I2, GO-I5, GO-I7, GO-I8 continuam alvos de avaliação, sem parecer acrescentado.",
+        "Navegação é somente consulta; censo de 2220, corpo e metadados v1 permanecem preservados."
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe-v2.json",
+        "sha256": "fa525df5574cd2953f1b6d5fb1a8ba9e71ad0b12f74bafc4283419bf9dfaf712"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:continuity-rag",
+        "S4:L1:coverage-governance"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md",
+        "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-response.md",
+        "sha256": "da170a0a301ad8bf4d70f3bf3b04a89f09fdb6d8a2292ae035d87fee598da411"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j1-response-v2.json",
+          "sha256": "424c8d13ce680b1522e5970ea99f4a049c975899ddf9fcbd48bea397009a0d49"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j2-response-v2.json",
+          "sha256": "33e8b837a0cda76bda59a4f972e62c3ec7beefad98c53db1c913e39ff6c36845"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Runtime nativo Genesis: base verificável do delta S4",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "bodies/native-runtime-delta.md",
+        "encoding": "utf-8",
+        "byte_length": 11980,
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "Descrição produzida a partir dos bytes exatos do adapter novo em v1/R1 e dos contratos/portas do baseline capturado. Commits candidatos informados pelo principal após escrita pelo conector. Julgamentos semânticos e binding reais ainda pendentes; este draft não concede autoridade de publicação."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Static account of the named baseline/v1/R1 sources; execution outcomes are held separately in candidate-specific receipts.",
+        "The runtime does not authenticate reviewer identities or prove commit membership by itself; external capture provenance and authorized operator attribution remain required.",
+        "One scope and same-package dependencies only; oversized/excluded origins remain bounded historical evidence, not native observations.",
+        "Recovery claims are limited to the named injection and one-writer/one-Worker control; no arbitrary power-loss, distributed concurrency or universal chronological producer fence is claimed."
+      ],
+      "evidence": [
+        "Exact source file hashes and Git blob identities are enumerated in source_refs; new runtime files are not attributed to baseline.",
+        "The primary reported connector commit R1 9a2be7fa2d0d54b0000657a0060cb0a200e04bb0, tree a7472b5a9f8bab6bcaaa6789a4b54b7aa3838d5e; candidate source pin is distinct from baseline.",
+        "Primary-reported R1 typecheck: bun typecheck --force, session 45697, completion f5b70f, exit 0. No local product tests were run by this producer.",
+        "NR1-01..04 are authored remote controls using existing disk/CAS/governed doors and explicitly synthetic fixture authority; no execution PASS is asserted.",
+        "Original visible R1 producer request and response are preserved by payload references; original R0 request and response are preserved byte-exact in provenance_refs.",
+        "AC-07/AC-10 and the G3 contract govern recovery claims; current controls do not claim generic chronology fencing, arbitrary process-crash durability, or distributed concurrency.",
+        "Primary source reconciliation v2 preserves the producer draft and binds the stronger recovery test to actual commit 673b90d82b8b888d5d0184d2e17dec6d5d1b05f1; the runtime documentation reference uses the actual committed v1 bytes.",
+        "Primary reconciliation v3 preserves v1/v2 and the two mandatory findings. Corrected NR1-04 main-call timestamps bind to actual commit a3f224843321f2c18fb9532ef275411c6a0f617e; body unchanged, new CI and same-judge reassessment required."
+      ],
+      "input_keys": [
+        "file:modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+        "file:modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "file:modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "file:modules/atlas/docs/design/genesis-native-runtime.md",
+        "file:modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+        "file:modules/atlas/packages/adapter-io/src/genesis-native.ts",
+        "file:modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+        "file:modules/atlas/packages/knowledge/src/index.ts",
+        "file:modules/atlas/scripts/genesis-native.ts",
+        "file:modules/atlas/packages/knowledge/src/ownership/types.ts",
+        "file:modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "file:modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "file:modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+        "file:modules/atlas/packages/adapter-io/src/governed-emit.ts",
+        "file:modules/atlas/packages/adapter-io/src/governed-emit-incumbent.ts",
+        "file:modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+        "file:modules/atlas/packages/adapter-io/src/policy.ts",
+        "file:modules/atlas/docs/design/genesis-ownership-plan.md",
+        "file:modules/atlas/docs/design/genesis-g3-recovery-contract.md",
+        "file:modules/atlas/scripts/ownership-pilot.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v3.json"
+      ],
+      "source_refs": [
+        {
+          "commit": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+          "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+          "git_blob_sha": "64d29d3e67dea3bb826be5960a5b9bbf6719edc0",
+          "sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+        },
+        {
+          "commit": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+          "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+          "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+          "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21"
+        },
+        {
+          "commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+          "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+          "git_blob_sha": "6afce21027c84af72c2e9e02bdda3142933c43a4",
+          "sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4"
+        },
+        {
+          "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+          "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+          "git_blob_sha": "18eee085d4afc46e0c2179a5cc60a1e8f90b5127",
+          "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec"
+        },
+        {
+          "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+          "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+          "git_blob_sha": "01a218ede3f71ef585fd280bc183e545f2a94321",
+          "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983"
+        },
+        {
+          "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+          "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+          "git_blob_sha": "f89413ad102fba2d2d56fbf65da14c4d7e5b6c90",
+          "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312"
+        },
+        {
+          "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+          "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+          "git_blob_sha": "6d23739f9e83abf47bef3f3bd9b4932085d84e18",
+          "sha256": "d0997dd5d07cd178eedb912af64623456f01fcfc7b467fa5f8c324db7018e665"
+        },
+        {
+          "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+          "path": "modules/atlas/packages/knowledge/src/index.ts",
+          "git_blob_sha": "275102267ac1d26b1562772d1f20659a78d430e9",
+          "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26"
+        },
+        {
+          "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+          "path": "modules/atlas/scripts/genesis-native.ts",
+          "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+          "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+          "git_blob_sha": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+          "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "git_blob_sha": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+          "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+          "git_blob_sha": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "sha256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+          "git_blob_sha": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+          "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/governed-emit-incumbent.ts",
+          "git_blob_sha": "ea45ea398dc1070d3709dadb1e742dc68fbd34c9",
+          "sha256": "c7b4d446e79a64c01f3d871b6b8f6f96579293e9ed593921524b8eed0d5e506e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+          "git_blob_sha": "e9c59d90819242087c1737108c2df689e1487f7f",
+          "sha256": "a838d4205ff1999627fbb14b8a1de25b91c897255332bd50a95e12799e6fb6c1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+          "git_blob_sha": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "sha256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+          "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-g3-recovery-contract.md",
+          "git_blob_sha": "508998c46060ffcd5eaeecdec6b068155c2b4999",
+          "sha256": "dc230ac5d0cdeaa5e4434b79f13ab6e849fbc6b9270b2b47316d30d4e957f9c4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/scripts/ownership-pilot.ts",
+          "git_blob_sha": "6d560596653d640b86f1f0111119340d47dce689",
+          "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v3.json",
+        "sha256": "39e8c03c32e1cd862836118cd3e51028e4c2ff88fbed5fb615c7032e8f24fb96"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-request.md",
+        "sha256": "89ecb99272363b0ec6c23b5ae945e477afbfcb66992775055ccdf9888d0d0035"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-response.md",
+        "sha256": "fb969863825b5e8e31f8e369516e78aafee5b7273505586e271ba21f71c47ad4"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+          "sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+          "sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440"
+        }
+      ],
+      "runtime_receipt_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ]
+    },
+    {
+      "key": "S4:L2:atlas-system",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Atlas: da evidência ao conhecimento servido",
+      "layer": 2,
+      "need": "component",
+      "body": {
+        "path": "producers/l2a/atlas-system.md",
+        "encoding": "utf-8",
+        "byte_length": 7954,
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "Síntese cumulativa autoral de /root/producer_l1a para a2095d5a-1464-4c38-a222-6376974fc9c9, sobre predecessores L1 aceitos no manifesto fixado 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca, payload commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Afirmações limitadas distinguem inspeção documentada, inferência, intenção e recibos históricos. Não houve reabertura da fonte bruta ou execução do produto; não há autoridade nova para publicar, ratificar ou atribuir aceite a esta L2."
+      },
+      "validity": "supported",
+      "gaps": [
+        "A síntese herda profundidade seletiva dos L1: ramos não examinados e comportamento completo do índice entre linguagens não são demonstrados.",
+        "Chamadas e contratos de host não provam autenticação HTTP nem instalação/composição externa completa; o boundary não transfere hooks de Session por proximidade.",
+        "O recibo CI descreve um candidato/run, um Worker/writer e seam de falha controlado; não prova concorrência universal, perda de energia ou paridade em outra revisão.",
+        "Inputs declarados e seus hashes não demonstram snapshot coerente de todo o repositório; indisponibilidade continua distinta de ausência e mudança.",
+        "Este corpo L2 ainda não tem aceitação semântica, binding, publicação ou consumo próprios; supported descreve sustentação limitada das afirmações."
+      ],
+      "evidence": [
+        "Relaciona responsabilidades do motor/host, identidades e observações com consequências para revisão, consumo e manutenção. Explica por que igualdade da prosa, presença em CAS, atualidade, autoridade e leitura publicada não se substituem.",
+        "Correspondência por fonte/seção e razões de dependência: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system-sources.json\", \"sha256\": \"b03797e41c6112f3d8a6c73acf92a88684f6a8efe3b3507339df26737e065c0f\", \"byte_length\": 9923}",
+        "Manifesto de predecessores aceitos preservado byte a byte: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json\", \"sha256\": \"00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca\", \"byte_length\": 12610}",
+        "Os recibos adicionais são fontes de fatos sobre suas execuções, não runtime_receipt_refs desta L2. Metadados não expostos: UNKNOWN."
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system-sources.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/primary-correction-request.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+          "git_blob_sha": "9a1c62e3f709832d7c45357e15e0bd5c4255c613",
+          "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+          "git_blob_sha": "43b593c9806daead7a6ed28d6cefac56d21387b7",
+          "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+          "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+          "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+          "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+          "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+          "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+        "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141"
+      },
+      "build_dependencies": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:atlas-engine",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:host-boundaries",
+          "same_package": true
+        }
+      ],
+      "navigation": [
+        "S4:L2:genesis-governance"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+        "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response-v2.md",
+        "sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Genesis: produção cumulativa, autoridade e uso",
+      "layer": 2,
+      "need": "component",
+      "body": {
+        "path": "producers/l2a/genesis-governance-v2.md",
+        "encoding": "utf-8",
+        "byte_length": 7971,
+        "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "Síntese cumulativa autoral de /root/producer_l1a para a2095d5a-1464-4c38-a222-6376974fc9c9, sobre predecessores L1 aceitos no manifesto fixado 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca, payload commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Afirmações limitadas distinguem inspeção documentada, inferência, intenção e recibos históricos. Não houve reabertura da fonte bruta ou execução do produto; não há autoridade nova para publicar, ratificar ou atribuir aceite a esta L2."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Censo preservado não equivale a leitura semântica de todos os ramos/arquivos históricos. As oito limitações de observação descritas no baseline não se tornam ausência.",
+        "Identidades declaradas e revisão estrutural do adapter não autenticam operador/reviewer nem conferem autorização de produção.",
+        "O delta nativo descrito é limitado a um pacote/scope; composição entre pacotes/scopes, migração geral e recuperação em toda falha continuam obrigações separadas.",
+        "runtime-release.json conserva uma amostra anterior e andamento histórico; seus bindings/capacidades não se transferem ao candidato CI posterior ou aos corpos L2.",
+        "Controles e fixtures não substituem julgamento independente ou consumidor real; os próprios semantic_review_refs e runtime_receipt_refs desta L2 continuam vazios.",
+        "Fila/tentativas lógicas, bytes e callbacks sintéticos não expõem modelo, tokens, custo ou tentativas físicas ocultas; UNKNOWN não é zero nem garantia financeira."
+      ],
+      "evidence": [
+        "Explica cobertura/profundidade nas receitas, dependências cumulativas, autoridade e leitura temporal dos recibos; acrescenta a distinção operacional entre fila/tentativas visíveis, telemetria não exposta e garantia financeira, sem converter bytes ou callbacks em cobrança.",
+        "Correspondência por fonte/seção e razões de dependência: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2-sources.json\", \"sha256\": \"0af4a4fa55285b22c7d2e4a26d427ffb648992a970782bd6cab1b56d58ec8129\", \"byte_length\": 10822}",
+        "Manifesto de predecessores aceitos preservado byte a byte: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json\", \"sha256\": \"00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca\", \"byte_length\": 12610}",
+        "Os recibos adicionais são fontes de fatos sobre suas execuções, não runtime_receipt_refs desta L2. Metadados não expostos: UNKNOWN."
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2-sources.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/primary-correction-request.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+          "git_blob_sha": "9a1c62e3f709832d7c45357e15e0bd5c4255c613",
+          "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+          "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+          "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+          "git_blob_sha": "cc92e66bd9036d099e9b227496a0503674fd61d2",
+          "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+          "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+          "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+          "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+          "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+          "git_blob_sha": "9344e06b86a1913178e101a640bae3c7f8252e11",
+          "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+        "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141"
+      },
+      "build_dependencies": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:coverage-governance",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        }
+      ],
+      "navigation": [
+        "S4:L2:atlas-system"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+        "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response-v2.md",
+        "sha256": "c7ec46aa88981e0bd44e06f526c7c361569e70bcc843ab13a3420a520b237e42"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Operar e manter Continuity e RAG",
+      "layer": 2,
+      "need": "component",
+      "body": {
+        "path": "producers/l2b/continuity-rag-operations-v2.md",
+        "encoding": "utf-8",
+        "byte_length": 7949,
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "Síntese cumulativa v2 de /root/producer_runtime, corrigida sob WP-L2B-P1 antes de avaliação independente. Base semântica: S4:L1:continuity-rag e S4:L1:host-boundaries aceitos em 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Leitura progressiva autorizada somente de revision.ts e compare.ts no baseline 1cde2ff7a71bcf7aecb5d030917b577165135d38, com manifesto v2 congelado antes da correção. Supported limita-se às afirmações estáticas sustentadas, não declara aceite, execução, binding ou publicação."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Nenhuma execução de produto nesta produção; controles citados pelas L1 não demonstram integração executada por esta L2.",
+        "Instalação global de Continuity e equivalência entre runner normal, execução hospedada e generate não são estabelecidas.",
+        "Atomicidade completa da Session e transação/concorrência do ciclo RAG carregar-operar-salvar não foram demonstradas.",
+        "Ligação ask/save/proof, contador de IDs e possível conservação de chunks após falha de leitura têm limites estáticos explícitos; não se alegou reprodução.",
+        "Busca RAG usa corpus atual; persistir membros da revisão não comprova replay histórico.",
+        "Validação numérica, autorização antes da extração e canonicalização de caminhos permanecem incompletas nas evidências aceitas.",
+        "Fidelidade do resumo, retenção/descarte do estado e ligação de visibilidade à exportação não estão demonstradas; scrubbing não cobre todo segredo.",
+        "A comparação exige snapshots iguais e uma única mudança, mas usa perguntas/corpus correntes e flags condicionados ao recorte/boundary; não demonstra equivalência geral de recuperação ou replay."
+      ],
+      "evidence": [
+        "S4:L1:continuity-rag@8a041ca66982dcc2b89aaed46ebe347cb3de57db; path=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md; sha256=2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38; git_blob_sha=3ad6a26291bcec638cc0ae4458ee467b889243f6",
+        "S4:L1:host-boundaries@8a041ca66982dcc2b89aaed46ebe347cb3de57db; path=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md; sha256=53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a; git_blob_sha=b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "Leitura progressiva WP-L2B-P1-01: 1cde2ff7a71bcf7aecb5d030917b577165135d38:modules/rag-studio/src/revision.ts; bytes=2701; sha256=7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0; git_blob_sha=e7354836a52a5c3f2c4bc76655268a9077d745d1",
+        "Leitura progressiva WP-L2B-P1-01: 1cde2ff7a71bcf7aecb5d030917b577165135d38:modules/rag-studio/src/compare.ts; bytes=2337; sha256=e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825; git_blob_sha=dc11b1ef55693955335c61b386dcca88410fd1e8",
+        "Manifesto v2 congelado: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json; sha256=180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a",
+        "Pedido original: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md; sha256=3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4",
+        "Correção: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md; sha256=87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333",
+        "Captura e uso v2: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/used-sources-v2.json; sha256=62ef54563ae13a048482485778e48d5ede200455147dc685be564cf6a61070a2"
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "file:modules/rag-studio/src/revision.ts",
+        "file:modules/rag-studio/src/compare.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/transport-contract.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+          "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+          "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+          "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/revision.ts",
+          "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+          "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/compare.ts",
+          "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+          "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+        "sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199"
+      },
+      "build_dependencies": [
+        {
+          "key": "S4:L1:continuity-rag",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:host-boundaries",
+          "same_package": true
+        }
+      ],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+        "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/response-v2.md",
+        "sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "S4:L3:system-flows",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Fluxos de dados, decisões e conhecimento na S4",
+      "layer": 3,
+      "need": "flow",
+      "body": {
+        "path": "producers/l3/system-flows-v3.md",
+        "encoding": "utf-8",
+        "byte_length": 8995,
+        "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "Síntese cumulativa autoral v3/L3-J1-01 de /root/producer_l1a, execução a2095d5a-1464-4c38-a222-6376974fc9c9. Mantém os três L2 e L1 H/N do manifesto fixado 4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54 e acrescenta somente HB §2 pelo adendo e6006c8b5ee34212b5bca4daf567b9f9c4f54260f67c29e91ed0971020f98bab; corpos aceitos identificados no payload 47eaa5322102910289cb56e2e07e9d3536ba1926. Separa inspeção herdada, inferência e execução histórica. Não autoriza executar receita, ratificar/publicar, autenticar identidades ou transferir bindings históricos."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Instalação global de Continuity, composição externa e autenticação não são demonstradas; chamadas Atlas fora de Session não herdam hooks por proximidade.",
+        "Atomicidade entre Session, arquivo Continuity, ciclo Store/SQL RAG e CAS/projeção Atlas não foi demonstrada; não há promoção ou invalidação comum sustentada entre os percursos.",
+        "Em RAG, falha de leitura pode conservar metadados/chunks antigos e não equivale à transição por conteúdo legível alterado. Ligação trace revisionId/prova questionId e risco inferido de seq permanecem limites; comparação/flags falsos não garantem replay ou recuperação equivalente.",
+        "Parada da reinterpretação por resultado completo validado igual é inferência condicional dos contratos; não dispensa observação, grafo, receipts/bindings afetados ou gates. Nenhum rebuild/retorno foi executado nesta entrega.",
+        "Sustentação herda leitura seletiva e limites do observador. Ausência, mudança e indisponibilidade não se colapsam nem se eliminam por censo/hash de transporte.",
+        "Controles N e CI reportado pelos L2 são delimitados a seus candidatos/condições; R2 é amostra L1A anterior. Não provam recuperação geral, concorrência universal, queda arbitrária/perda de energia ou autoridade desta L3.",
+        "L3 ainda sem aceite semântico, binding, publicação ou consumo próprios. Modelo/tokens/cobrança/tentativas físicas não expostos são UNKNOWN."
+      ],
+      "evidence": [
+        "Integra os percursos Session/Continuity, RAG/Store e Atlas/Genesis; conserva os contratos de propagação/receipt e recuperação/rollback da v2.",
+        "L3-J1-01: distingue metadados persistidos da fonte de texto/offsets persistidos nos chunks, condiciona noteBytes à mudança de conteúdo legível e preserva a distinção de falha de leitura. Mudança restrita à legenda HB e dois parágrafos RAG.",
+        "Mapa de fontes, capturas exatas e limites: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/source-use-v3.json\", \"sha256\": \"ce43c13f6710fe73039110da96b31012fb15aaaacf5eba36d7da37264c54e066\", \"byte_length\": 13632}",
+        "Extensão progressiva congelada: {\"payload_path\": \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-addendum-j1.json\", \"sha256\": \"e6006c8b5ee34212b5bca4daf567b9f9c4f54260f67c29e91ed0971020f98bab\", \"byte_length\": 1084}",
+        "Os seis predecessores usados são os aceitos autorizados pelo manifesto/pedido e adendo. Sem fonte bruta nova ou parecer integral; CI/R2 são herdados, não receipts desta L3."
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-p1.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-j1.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-manifest.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-addendum-j1.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/recipe-v3.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/source-use-v3.json"
+      ],
+      "source_refs": [
+        {
+          "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+          "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+          "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+        },
+        {
+          "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+          "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+          "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+        },
+        {
+          "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+          "git_blob_sha": "dd0a52ada6bbeec778721bf948e9a613573d2f64",
+          "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+        },
+        {
+          "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+          "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+          "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+        },
+        {
+          "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+          "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+          "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+        },
+        {
+          "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+          "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/recipe-v3.json",
+        "sha256": "89ff009dc4cf735637aa03d7bff37b7a80765bdcb50802fe036d718b7880d2a9"
+      },
+      "build_dependencies": [
+        {
+          "key": "S4:L2:atlas-system",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:continuity-rag-operations",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:genesis-governance",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:host-boundaries",
+          "same_package": true
+        }
+      ],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-j1.md",
+        "sha256": "f418c93ee9fb43758fd6204c89dbcd884e6dc8b480bf333f960e009ee554baa7"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/response-v3.md",
+        "sha256": "527ca890e8cafb3bfc5f49193d81955c0341fd3c49ad3129ae9b25edab259e1a"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j1-v3-response.json",
+          "sha256": "b8693d60a3ab93d1c03683d64732fad319f44c1ba1cb2df557b26e87c4056950"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j2-v3-response.json",
+          "sha256": "022e77caacb0353e5d34aacf9cc316dcdaa62963f4ab5e42e7b259b581d26d49"
+        }
+      ],
+      "runtime_receipt_refs": []
+    }
+  ],
+  "roots": {
+    "evidence": "S4:L1:ownership-boundaries",
+    "component": "S4:L2:atlas-system",
+    "flow": "S4:L3:system-flows"
+  },
+  "missing_required_artifact_keys": [
+    "S4:L4:entry",
+    "S4:L4:ownership",
+    "S4:L4:maintenance",
+    "S4:L4:operational"
+  ],
+  "known_limits": [
+    "All seven L1, three L2 and one L3 accepted by the two persistent judges; four L4 artifacts remain.",
+    "Full-package binding/publication, own maintenance, independent consumer and final acceptance remain open.",
+    "Common runtime gates passed for candidate 1b5a4801acfae03969f78ee766ca6f0b7d0f9013; driver has static and parse acceptance, no own operational proof yet."
+  ]
+}
