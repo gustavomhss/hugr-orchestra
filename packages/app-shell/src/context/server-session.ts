@@ -411,10 +411,11 @@ export function createServerSession(
     clearedMessageParts: new Set([...load.clearedMessageParts].filter((messageID) => messageID !== exclude)),
   })
 
+  const dropped = new Set<string>()
   const evict = (sessionIDs: string[]) => {
     if (sessionIDs.length === 0) return
-    const evicted = new Set(sessionIDs)
     sessionIDs.forEach((sessionID) => {
+      dropped.add(sessionID)
       generations.delete(sessionID)
       clearOptimistic(sessionID)
       requests.delete(sessionID)
@@ -870,9 +871,11 @@ export function createServerSession(
     !sameValue(data.part[part.messageID]?.find((item) => item.id === part.id), part)
 
   const hydrateV2Message = (sessionID: string, messageID: string) => {
+    const active = recovery.generation(sessionID)
     void sessionApi
       .message({ sessionID, messageID })
       .then((message) => {
+        if (generations.get(sessionID) !== active) return
         const current = data.session_message[sessionID] ?? []
         const messages = [...current.filter((item) => item.id !== message.id), message].sort(compareMessages)
         projectV2({ sessionID, messages, touched: [message.id], replace: true })
@@ -885,10 +888,19 @@ export function createServerSession(
     if (eventType === "session.next.subagent.models.changed") return
     if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
     const sessionID = event.data.sessionID
-    const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
-    if (reduction) {
-      projectV2(reduction)
-      if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
+    const status = executionStatus(event)
+    if (
+      !dropped.has(sessionID) ||
+      data.session_message[sessionID] !== undefined ||
+      status === "busy" ||
+      protectedSessions().has(sessionID)
+    ) {
+      const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
+      if (reduction) {
+        dropped.delete(sessionID)
+        projectV2(reduction)
+        if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
+      }
     }
 
     const info = data.info[sessionID]
@@ -903,11 +915,6 @@ export function createServerSession(
       })
     const usage = info && (sessionSelection(info, event) ?? sessionUsage(info, event))
     if (usage) remember(usage)
-    // if (event.type === "session.archived") {
-    //   if (info) remember({ ...info, time: { ...info.time, archived: event.created, updated: event.created } })
-    //   evict([sessionID])
-    // }
-    const status = executionStatus(event)
     if (status) setData("session_status", sessionID, reconcile({ type: status }))
     if (event.type === "session.retry.scheduled")
       setData("session_status", sessionID, {
