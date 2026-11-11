@@ -6,6 +6,8 @@ When the desktop app cannot start, it now says why instead of showing an empty w
 
 Orchestra starts its own local server when it opens. If that server exits, the start screen shows the reason at once, followed by the last lines the server printed (for example a database or permission error). A server that is still running but has not answered yet gets up to two minutes before the app gives up on it. Before, you only saw that the server could not be reached. A database written by a newer Orchestra is not retried: the message says to update the app, and the server is not started again.
 
+After a server has run for a minute, an unexpected exit starts a fresh restart attempt. Repeated early crashes use increasing delays and eventually stop retrying. Startup checks end when startup finishes or the app stops.
+
 The first launch after you install or update an unsigned build is slower: macOS scans the new server program before its first run, which can take about half a minute. Later launches skip that scan.
 
 The app limits Chromium's disk cache to 256 MiB. After verifying its current server program, it can remove verified older copies from its cache when the registered services are inactive. A running service, an unreadable registration or a cleanup failure leaves those copies in place. JavaScript and CSS debug maps are omitted from the installer; runtime source files, native resources and language packs are retained. Packaged stack traces may therefore refer to compiled positions.

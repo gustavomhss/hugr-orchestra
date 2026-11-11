@@ -47,7 +47,14 @@ export async function startOwnedServe(options: {
     ORCHESTRA_SERVER_USERNAME: "orchestra",
     ORCHESTRA_SERVER_PASSWORD: password,
   }
-  const state = { child: undefined as DesktopOmni.Spawned | undefined, stopping: false, killed: false, failures: 0, closed: undefined as Promise<void> | undefined }
+  const state = {
+    child: undefined as DesktopOmni.Spawned | undefined,
+    stopping: false,
+    killed: false,
+    failures: 0,
+    closed: undefined as Promise<void> | undefined,
+    restart: undefined as ReturnType<typeof setTimeout> | undefined,
+  }
   const recent: string[] = []
   const write = (stream: "stdout" | "stderr", line: string) => {
     recent.push(line)
@@ -106,11 +113,11 @@ export async function startOwnedServe(options: {
         options.logger.error("owned serve will not restart: the database is newer than this build", { url })
         return
       }
-      state.failures = Date.now() - startedAt > STABLE_AFTER ? 0 : state.failures + 1
+      state.failures = Date.now() - startedAt > STABLE_AFTER ? 1 : state.failures + 1
       const wait = BACKOFF[state.failures - 1]
       if (wait === undefined) return options.logger.error("owned serve crash loop; not restarting", { url })
       options.logger.log("owned serve restarting", { attempt: state.failures, wait })
-      setTimeout(() => {
+      state.restart = setTimeout(() => {
         if (!state.stopping) launch()
       }, wait).unref()
     }
@@ -131,12 +138,16 @@ export async function startOwnedServe(options: {
 
   options.logger.log("owned serve starting", { command: options.command, url })
   const first = launch()
+  const startup = new AbortController()
+  const deadline = setTimeout(() => startup.abort(new Error(`Owned serve not healthy within ${READY_TIMEOUT}ms`)), READY_TIMEOUT)
   const health = Promise.race([
-    poll(() => healthy(url, password)),
+    poll(() => healthy(url, password, startup.signal), startup.signal),
     first.exited.then(() => Promise.reject(new Error("Owned serve exited before its health check passed"))),
     first.failed,
-    delay(READY_TIMEOUT).then(() => Promise.reject(new Error(`Owned serve not healthy within ${READY_TIMEOUT}ms`))),
-  ]).catch((error: unknown) => {
+  ]).finally(() => {
+    clearTimeout(deadline)
+    startup.abort()
+  }).catch((error: unknown) => {
     // The renderer shows this message, so it carries what the server last said about why it did not come up.
     const reason = error instanceof Error ? error.message : String(error)
     throw new Error(recent.length ? `${reason}\n\nLast server output:\n${recent.join("\n")}` : reason)
@@ -144,6 +155,8 @@ export async function startOwnedServe(options: {
 
   const stop = async () => {
     state.stopping = true
+    startup.abort()
+    clearTimeout(state.restart)
     const child = state.child
     // Wait for "close", not "exit": the omni child still drains its output and reaps its tree after the exit, and the app
     // must not quit under that native work (on Windows it ends the process with a nonzero status). `state.child` is
@@ -173,18 +186,22 @@ export function sidecarMode(value: string | undefined) {
   return "owned" as const
 }
 
-async function healthy(url: string, password: string) {
+async function healthy(url: string, password: string, signal: AbortSignal) {
   return fetch(new URL("/api/health", url), {
     headers: { authorization: `Basic ${Buffer.from(`orchestra:${password}`).toString("base64")}` },
-    signal: AbortSignal.timeout(3000),
+    signal: AbortSignal.any([signal, AbortSignal.timeout(3000)]),
   }).then(
     (response) => response.ok,
     () => false,
   )
 }
 
-async function poll(check: () => Promise<boolean>) {
-  while (!(await check())) await delay(100)
+async function poll(check: () => Promise<boolean>, signal: AbortSignal) {
+  while (!signal.aborted) {
+    if (await check()) return
+    await delay(100, signal)
+  }
+  signal.throwIfAborted()
 }
 
 function forward(stream: Readable, write: (line: string) => void) {
@@ -213,6 +230,17 @@ function freePort() {
   })
 }
 
-function delay(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms))
+function delay(ms: number, signal?: AbortSignal) {
+  if (signal?.aborted) return Promise.reject(signal.reason)
+  return new Promise<void>((resolve, reject) => {
+    const abort = () => {
+      clearTimeout(timer)
+      reject(signal?.reason)
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", abort)
+      resolve()
+    }, ms)
+    signal?.addEventListener("abort", abort, { once: true })
+  })
 }
