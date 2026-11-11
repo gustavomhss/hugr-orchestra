@@ -17,7 +17,7 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 
 ## Never owns
 
-- The open project, `os.homedir()`, or a project filter. A selected project only projects Board and receives handoff.
+- The open project, `os.homedir()`, or a project filter. A selected project projects Board, receives handoff, and is the location key for legacy capability bindings. It is not the row owner.
 - Provider revocation. Disconnect removes the installation credential. It does not revoke the grant.
 - Sending on a read-only import. Slack OAuth messages, mail/Teams/Discord collection, feeds and calendar events do not send through Inbox.
 - Invented evidence: a human Slack message, a thread reply, a provider revocation, a new YouTube upload, or a GitHub notification that is not CI on the signed-in user's own pull.
@@ -35,7 +35,7 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 
 ## Invariants
 
-- One installation inbox. Two locations see the same rows. Adoption moves a non-install row onto `install` and drops a duplicate key, including a second Slack checkpoint.
+- One installation inbox. Stored rows are shared after adoption. Adoption moves a non-install row onto `install` and drops a duplicate key, including a second Slack checkpoint. Opening a location can still pull that location's legacy Slack bindings into the shared store.
 - Jira and GitLab sites are https origins: no user, no password, no query, no hash, no path.
 - GitHub CI is an item only when every related pull is the signed-in user's. A proof error fails the sync. A suite that also names someone else's pull is excluded.
 - Slack join, leave, topic, purpose, rename, archive and pin subtypes are not waiting items. Huddle, canvas and call are not items.
@@ -44,6 +44,6 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 
 ## Owner decisions
 
-- **2026-11-11.** Leftovers are not a go-live gate. The cut on `dev` (`adc623c0ac`) is the go-live cut. It does not certify missing samples and does not tag a release.
+- **2026-11-11.** Leftovers are not a go-live gate. The cut on `dev` (`adc623c0ac`) is the go-live cut. It does not certify missing samples and does not tag a release. The older "does not declare go-live" line in `docs/specs/one-box/closure-backlog.md` does not override this.
 - **2026-11-11.** There is no Astra loop on this surface. Do not send a pin out for a second model to judge.
 - **2026-11-11.** Release stays with the owner. Do not open a release PR, tag, or publish step from Inbox work.

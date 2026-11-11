@@ -8,11 +8,11 @@ Readers use [Inbox onboarding](inbox-onboarding.md), [Inbox operation](inbox-ope
 
 Inbox has one owner, the constant `install` in `packages/core/src/inbox/install.ts`. It is not the open project and not the user's home directory. The page must not fetch home and must not wait for a project before it lists messages.
 
-A selected project does two things only: it projects that repository's Board requests, and it is the handoff target. Handoff delivers ids. It creates a Maestro session only when the project id is not `global`.
+A selected project projects that repository's Board requests and is the handoff target. It is also the location key for legacy capability bindings: opening the page pulls those non-Discord bindings into the installation store. Handoff delivers ids. It creates a Maestro session only when the project id is not `global`.
 
 Older rows and hashed project credentials are adopted onto `install`. An unhashed legacy credential id is left alone. An installation credential the profile already holds is not overwritten.
 
-A provider error is a failed receipt. Do not catch a page into an empty list. Jira and GitLab accept only an https origin. GitHub CI is imported only when every related pull belongs to the signed-in user; a proof error fails the sync. Slack system subtypes (join, leave, topic, purpose, rename, archive, pin) are not items.
+A channel-page error fails `list`. Do not catch it into an empty list. Jira is the exception on open: `list` pulls it, catches the error, and writes the Jira receipt. Jira and GitLab accept only an https origin. GitHub CI is imported only when every related pull belongs to the signed-in user; a proof error fails the sync. Slack system subtypes (join, leave, topic, purpose, rename, archive, pin) are not items on the sync path.
 
 Disconnect removes the local credential. It does not revoke the provider grant. Do not add a background poll. Do not tag a release from this work. The owner cuts the release after `dev`.
 
@@ -31,9 +31,9 @@ Disconnect removes the local credential. It does not revoke the provider grant. 
 | Handoff | `packages/core/src/inbox/handoff.ts` |
 | Page | `packages/app-shell/src/orchestra/chapters/inbox/` |
 | Strings | `packages/app-shell/src/i18n/orchestra-chapters/inbox.ts` |
-| Ledger | `docs/specs/one-box/closure-backlog.md` |
+| Ledger | `docs/specs/one-box/closure-backlog.md`. The 2026-11-10 line that says the merge does not declare go-live is older than the 2026-11-11 owner decision. Do not revive it |
 
-Two Slack subtype lists exist. `source/slack.ts` filters the sync snapshot. The capability provider filters the channel page, and its list is shorter. Add a subtype to both, or a join notice comes back through the other door.
+Two Slack subtype lists exist. `source/slack.ts` filters the sync snapshot. The capability provider filters the channel page, and its list is shorter. Join is in both. `group_topic`, `group_purpose`, `group_name`, `group_archive`, `group_unarchive`, `bot_add` and `bot_remove` are only in the sync list, so a legacy binding can still import them. Add a subtype to both.
 
 Feed list, add, remove and sync go through `slackOperation`. That helper adopts rows and turns any typed error into `unavailable`. Do not assume a feed failure can surface a different reason without changing that helper.
 
@@ -45,7 +45,7 @@ Tests run on GitHub Actions, not on the maintainer's machine:
 bun run test:ci core test/inbox/service.test.ts test/inbox/inbox.test.ts test/inbox/account-isolation.test.ts test/inbox/slack-sync.test.ts
 ```
 
-Add `test/inbox/work-service-2.test.ts` and `test/inbox/location-migration.test.ts` when adoption or feeds move. Add `test/inbox/slack-auth.test.ts` when login moves. Name files. A directory is a substring filter and Bun will pick its own order.
+Add `test/inbox/work-service-2.test.ts` when feeds move. Add `test/inbox/slack-auth.test.ts` when login moves. `test/inbox/location-migration.test.ts` still expects the old migration to leave `owner` empty. It stays green if `adoptRows` is deleted, so it is not the adoption proof. That proof is `test/inbox/service.test.ts`. Name files. A directory is a substring filter and Bun will pick its own order.
 
 A Slack fixture signs in as `installOwner`. The old location JSON key will not match the service, and every sync fails as unavailable.
 

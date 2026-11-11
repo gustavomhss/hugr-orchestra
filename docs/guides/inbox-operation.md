@@ -21,11 +21,11 @@ Slack messages imported through **Connect Slack** are read-only. So are collecte
 
 ## Synchronize
 
-Nothing polls. Open **Sources** and synchronize the source you care about.
+Nothing polls. Open **Sources** and synchronize the source you care about. Opening the page is not that click, except for Jira and for a legacy Slack binding tied to the open folder.
 
-- An empty selection imports nothing.
+- An empty Slack or mail selection imports nothing. An empty GitHub repository list, GitLab project list, or PagerDuty service list imports the whole personal feed.
 - A failed sync keeps the previous rows. It is not an empty mailbox. Read the receipt: failed or rate-limited. Retry when it says you can. Do not delete the source to cure an outage.
-- One click is a bounded page. Continue when the panel says more pages remain.
+- One Slack click handles at most 20 pages. Continue when the panel says more pages remain.
 - Changing a filter does not delete rows already imported.
 
 ## Hand off and Board
@@ -48,7 +48,7 @@ Do not copy a token into a chat, a note, or a screenshot. A generation id is not
 
 | What you see | What it means |
 |---|---|
-| Page loads with no project | Normal. Board is the only part that needs a project. |
+| Page loads with no project | Normal. Board is absent. Handoff will not create a session. Stored messages are still there. |
 | Source saved, list empty | Scope is empty, the snapshot had nothing in window, or sync has not been pressed. |
 | Failed | The provider call failed. Previous rows remain. Not an empty account. |
 | Rate limited | Wait for the time shown. Another sync before then does not call the provider. |

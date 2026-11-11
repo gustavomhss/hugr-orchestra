@@ -25,12 +25,12 @@ Teams, Discord, GitLab, Trello, Sentry and PagerDuty can be stored as manual cre
 
 ## 3. Choose a scope, then synchronize
 
-Saving a credential does not import anything. Opening Inbox does not import anything.
+Saving a credential does not import Slack, mail, GitHub, a feed or a calendar. Opening Inbox lists what is already stored. It also pulls Jira, if that account is connected, and any legacy Slack binding for the open folder. It does not run **Synchronize** for you.
 
 1. Load the choices the provider returns.
-2. Select the conversations, folders, calendars or repositories you want. An empty Slack or mail selection imports nothing. That is the safe default.
+2. Select the conversations, folders or calendars you want. An empty Slack or mail selection imports nothing. That is the safe default. An empty GitHub repository list is not empty: it means every repository in your notification feed. GitLab and PagerDuty work the same way for an empty project or service list.
 3. Save the selection.
-4. Choose **Synchronize**. Slack calls this **Synchronize last 7 days**. One click imports a bounded page, not the whole history. **Continue synchronization** resumes after you close the dialog or restart the process.
+4. Choose **Synchronize**. Slack calls this **Synchronize last 7 days**. One click handles at most 20 pages, not the whole history. **Continue synchronization** resumes after you close the dialog or restart the process.
 
 The first feed sync remembers what is already in the feed and stays quiet. Only a later new entry becomes an item. Do not delete a YouTube or RSS subscription because the first sync showed nothing.
 

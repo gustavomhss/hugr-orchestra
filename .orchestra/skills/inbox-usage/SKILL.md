@@ -18,8 +18,8 @@ The design preview is `/orchestra/inbox?preview=inbox` in a development build. I
 1. **Sources** is the connection panel. **Credential saved** means stored, not verified.
 2. Slack is the browser sign-in. Finish it on the same computer as the server. The return address is `http://localhost:19877/inbox/slack/callback`. Remote-server login stays disabled.
 3. Mail, Calendar, GitHub, Linear, Jira and the deferred sources take a manual credential. Saving it does not collect.
-4. Load choices, select a scope, save, then **Synchronize**. An empty Slack or mail selection collects nothing.
-5. There is no background poll. Opening the page does not fetch provider history.
+4. Load choices, select a scope, save, then **Synchronize**. An empty Slack or mail selection collects nothing. An empty GitHub repository list, an empty GitLab project list, and an empty PagerDuty service list do not: those mean the whole personal feed.
+5. There is no background poll. Opening the page lists stored rows, pulls connected Jira, and pulls legacy Slack bindings for the open location. Slack OAuth, mail, GitHub, feeds and calendar wait for **Synchronize**.
 
 ## Read the result
 
