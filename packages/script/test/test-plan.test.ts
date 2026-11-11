@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
-import { balance, packageLanes, packageShards, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
+import { balance, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
 
 describe("test shard planner", () => {
   test("a platform's overhead scales its total before the shard count", () => {
@@ -69,11 +69,14 @@ describe("test shard planner", () => {
   test("core shards do not pile untimed files, and a multi-file bin stays under the step", () => {
     const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
     for (const platform of ["linux", "windows"] as const) {
-      const shards = packageShards(timings, "packages/core", platform)
-      const weights = weigh("packages/core", timings.files[`packages/core:${platform}`] ?? {}, timings.totals["packages/core"]?.[platform] ?? 0, 1)
-      const bins = balance(weights, shards)
+      const bins = plannedBins(timings, "packages/core", platform)
       expect(Math.max(...bins.map((bin) => bin.names.length))).toBeLessThanOrEqual(120)
       expect(bins.filter((bin) => bin.names.length > 1).every((bin) => bin.seconds <= 280)).toBe(true)
+      const bare = balance(
+        weigh("packages/core", timings.files[`packages/core:${platform}`] ?? {}, timings.totals["packages/core"]?.[platform] ?? 0),
+        packageShards(timings, "packages/core", platform),
+      )
+      expect(Math.max(...bare.map((bin) => bin.names.length))).toBeGreaterThan(120)
     }
   })
 

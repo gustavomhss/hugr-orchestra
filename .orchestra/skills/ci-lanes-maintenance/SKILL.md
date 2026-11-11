@@ -29,7 +29,7 @@ A `plan` job (Node 24, no install) runs `node packages/script/src/test-plan.ts p
 - `totals`: seconds per sharded package and OS. It sets the shard count.
 - `files`: seconds per test file, keyed `<package directory>:<os>`. A file with no entry weighs its size at the seconds-per-byte of the measured files, so a new file lands in some shard without any edit.
 
-The shipped `files` and `totals` come from one real run of all 487 core test files on each OS (seconds between a file's header line and the next one in the job log). On that run core took 1078 s on Linux and 1244 s on Windows. Linux overhead 1.7 and Windows overhead 1.6 scale those totals before the shard count. One file dominates Linux: `backend-toolkit-cli.test.ts` (the DataFusion build, about 320 s), so it gets a shard to itself (about 5.4 min of tests) and the other three take about 4.2 min each. If that build gets slower, split the test; a bigger shard count cannot help a single file.
+The shipped `files` and `totals` come from one real run of all 487 core test files on each OS (seconds between a file's header line and the next one in the job log). On that run core took 1078 s on Linux and 1244 s on Windows. Linux overhead 1.7 and Windows overhead 1.6 scale those totals before the shard count. One file dominates Linux: `backend-toolkit-cli.test.ts` (the DataFusion build, about 320 s), so it gets a shard to itself. A bigger shard count cannot help that file. If it gets slower, split the test.
 
 Per-file times are not in a normal lane's log: the core test script passes `--only-failures`. To measure without a cold dispatch, run `bun run test:ci core <every test file as ./path> --os both`, then read the two job logs with `gh run view --job <id> --log`.
 
