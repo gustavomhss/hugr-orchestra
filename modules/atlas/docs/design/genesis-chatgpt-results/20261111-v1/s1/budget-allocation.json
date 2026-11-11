@@ -1,42 +1,50 @@
 {
   "schema": "genesis-native-allocation/v1",
   "campaign": "20261111-v1",
-  "revision": "bootstrap-v2",
+  "revision": "bootstrap-v3-original-reconciliation",
   "state": "FROZEN_PREPARATION_ONLY",
   "unit": "native_logical_work_packet",
-  "total_limit": 48,
+  "total_limit": 52,
   "scope": "Independent inspection, inventory, contracts and initial review; no dependent ownership production released",
   "allocations": [
     {
       "session": "s1",
-      "limit": 16,
-      "partition_id": "bootstrap-v2/s1",
+      "limit": 20,
+      "partition_id": "bootstrap-v3-original-reconciliation/s1",
       "covered": [
         "preparation",
         "bounded technical review",
-        "preparation correction"
+        "preparation correction",
+        "original/resumed scope reconciliation",
+        "post-checkpoint accounting and handoff reconciliation"
       ],
       "reserved_for_correction": 2,
-      "carries_forward_partition": "bootstrap-v1/s1",
-      "carries_forward_all_usage_and_uncertainty": true
+      "carries_forward_partition": "bootstrap-v2/s1",
+      "carries_forward_all_usage_and_uncertainty": true,
+      "additional_units": 4,
+      "sizing": {
+        "known_committed_or_reserved": 16,
+        "protected_correction": 2,
+        "bounded_reconciliation": 2
+      }
     },
     {
       "session": "s2",
       "limit": 6,
-      "partition_id": "bootstrap-v2/s2",
+      "partition_id": "bootstrap-v3-original-reconciliation/s2",
       "covered": [
         "preparation",
         "bounded technical review",
         "preparation correction"
       ],
       "reserved_for_correction": 2,
-      "carries_forward_partition": "bootstrap-v1/s2",
+      "carries_forward_partition": "bootstrap-v2/s2",
       "carries_forward_all_usage_and_uncertainty": true
     },
     {
       "session": "s3",
       "limit": 10,
-      "partition_id": "bootstrap-v2/s3",
+      "partition_id": "bootstrap-v3-original-reconciliation/s3",
       "covered": [
         "preparation",
         "bounded technical review",
@@ -44,27 +52,27 @@
         "preparation reconciliation and bounded correction"
       ],
       "reserved_for_correction": 2,
-      "carries_forward_partition": "bootstrap-v1/s3",
+      "carries_forward_partition": "bootstrap-v2/s3",
       "carries_forward_all_usage_and_uncertainty": true,
       "additional_units": 4
     },
     {
       "session": "s4",
       "limit": 6,
-      "partition_id": "bootstrap-v2/s4",
+      "partition_id": "bootstrap-v3-original-reconciliation/s4",
       "covered": [
         "preparation",
         "bounded technical review",
         "preparation correction"
       ],
       "reserved_for_correction": 2,
-      "carries_forward_partition": "bootstrap-v1/s4",
+      "carries_forward_partition": "bootstrap-v2/s4",
       "carries_forward_all_usage_and_uncertainty": true
     },
     {
       "session": "s5",
       "limit": 10,
-      "partition_id": "bootstrap-v2/s5",
+      "partition_id": "bootstrap-v3-original-reconciliation/s5",
       "covered": [
         "preparation",
         "bounded technical review",
@@ -72,25 +80,16 @@
         "paired initial independent judge turns"
       ],
       "reserved_for_correction": 2,
-      "carries_forward_partition": "bootstrap-v1/s5",
+      "carries_forward_partition": "bootstrap-v2/s5",
       "carries_forward_all_usage_and_uncertainty": true,
       "additional_units": 4
     }
   ],
   "sizing": {
     "s1": [
-      "bootstrap/capabilities",
-      "tree census",
-      "product domains",
-      "infrastructure domains",
-      "economy seams",
-      "criteria catalogue",
-      "interfaces",
-      "reconciliation",
-      "technical review",
-      "4 corrections",
-      "2 handoff revisions",
-      "final ledger"
+      "16 known committed/reserved original and resumed packets",
+      "2 protected future correction packets",
+      "2 bounded scope/accounting reconciliation packets"
     ],
     "other_sessions": "4 independent preparation packets + 2 clarification/correction packets each"
   },
@@ -110,16 +109,46 @@
     "financial_cap": "NOT_ESTABLISHED",
     "enforcement": "COORDINATION_ONLY; product AC-08 remains open"
   },
-  "issued_at": "2026-11-11T14:52:57.305Z",
+  "issued_at": "2026-11-11",
   "supersedes": {
-    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "commit": "49a5eaa296b8f731d9c767e50e1cb738eeb060b0",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
-    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+    "sha256": "94b719f81e6e301527bc63b9a6edc873dd16a80037f7bbec160b8adc91fc6289"
   },
   "amendment": {
-    "reason": "S5-S1-02 requires both initial judges plus protected corrections; S3 preparation reconciliation requested by S5. Additive capacity only; no uncertain units released.",
-    "request_commit": "13289d8c4aa1bd82a128e171cbc042ba1827c76b",
-    "request_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/integration-feedback-004.json",
-    "acceptance": "Recipient records consumption of this exact revision before spending added units. No transfer from another session."
-  }
+    "reason": "Recovering three original follow-up reservations reveals 16 unique S1 packets against the previous S1 limit of 16, leaving no uncommitted protected correction capacity.",
+    "basis": {
+      "canonical_snapshot": "1d8bafdc5df6729ff5db363a72588fd57eb6a1c1",
+      "known_unique_packets": 16,
+      "ids": [
+        "s1-domain-platform-002",
+        "s1-domain-product-002",
+        "s1-domains-platform-001",
+        "s1-domains-product-001",
+        "s1-economy-001",
+        "s1-economy-audit-002",
+        "s1-finite-envelope-sizing-003",
+        "s1-interface-consistency-001",
+        "s1-interface-technical-review-003",
+        "s1-pilot-reuse-001",
+        "s1-pilot-reuse-comparison-003",
+        "s1-preparation-001",
+        "s1-resume-002",
+        "s1-scope-consolidation-001",
+        "s1-technical-delta-review-003",
+        "s1-technical-scope-review-002"
+      ],
+      "canonical_ledger_sha256": "9838c3beed1210c479842e784aa3115ca13a58c1b50f5e3a7b954b01364b0e0a",
+      "ordinary_and_protected_capacity_before": 16,
+      "protected_target": 2,
+      "uncommitted_capacity_before": 0,
+      "proposed_s1_limit": 20,
+      "formula": "observed committed/reserved packets + 2 protected correction packets + 2 bounded scope/accounting reconciliation packets",
+      "past_guarantee": "Earlier protected-capacity gap is preserved; prospective capacity does not retroactively prove admission or pre-forward enforcement."
+    },
+    "scope": "Prospective S1 preparation capacity only; other session limits are unchanged. The complete production/consumer envelope remains a separate successor proposal.",
+    "reconciliation": "All original and resumed attempt IDs remain charged once; no uncertainty is released, no historical preparation is renamed as correction, and the previous capacity gap remains evidence.",
+    "acceptance": "Recipients consume this exact new allocation before added work. A later full envelope must carry it forward, never add a parallel grant."
+  },
+  "issued_at_precision": "date; exact repository commit timestamp is authoritative"
 }
