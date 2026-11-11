@@ -234,10 +234,10 @@ jobs:
         # user namespace (run 40263348230), so every LIVE sandbox test failed. Move once the sandbox supports it.
         include: ${{ fromJSON(needs.plan.outputs.unit) }}
     runs-on: ${{ matrix.host }}
-    # Ten minutes inclusive of setup. A lane that sets matrix.budget keeps that job limit: the Windows libs
-    # lane is 15, and it does not run the plugin compile below. An unbudgeted Windows turbo job is 25, so
-    # that compile can finish outside the 8-minute test step (run 43066731722, windows core 4/7).
-    timeout-minutes: ${{ matrix.budget && 15 || (matrix.host == 'windows-latest' && matrix.turbo && 25 || 10) }}
+    # Ten minutes inclusive of setup. The Windows libs lane carries 15. A core shard does not compile
+    # @orchestra/plugin inside its test step: --only below. A prior build did not share that task's hash
+    # (run 43110315940, 161d38d05015607a then 5024d037fae2f9ef) and tsc ate the 8 minutes again.
+    timeout-minutes: ${{ matrix.budget || 10 }}
     defaults:
       run:
         shell: bash
@@ -364,14 +364,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-      # Windows tsc of @orchestra/plugin has taken longer than the 8-minute test step. Build it first on
-      # those jobs only. A lane with matrix.budget already has a longer test step and a job limit that
-      # cannot also hold this compile (Windows libs is 12 inside 15). The test step's Turbo cache replays it.
-      - name: Build Windows test dependencies
-        if: runner.os == 'Windows' && matrix.turbo && !matrix.budget
-        timeout-minutes: 12
-        run: bun turbo build --filter=@orchestra/plugin --filter=@orchestra/http-recorder
-
       # The job limit is 10 minutes with setup; a failed step still reaches the Turbo cache save. The Windows libs lane
       # ("other packages") carries its documented 12-minute step alongside its 15-minute job.
       - name: Run unit tests
@@ -425,7 +417,9 @@ jobs:
             # Through turbo, so each shard keeps its own cache entry: the file list is part of the task hash.
             # Not exec: the watcher file, when this shard has it, runs in a second process below.
             if [ -n "${files[0]:-}" ]; then
-              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core -- "${files[@]}" "${report[@]}"
+              # --only: core imports plugin and http-recorder from source. ^build would run plugin tsc, and that
+              # compile does not finish inside this step on Windows (run 43110315940).
+              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only -- "${files[@]}" "${report[@]}"
             fi
             if [ -n "${alone[0]:-}" ]; then
               echo "shard $PART runs ${alone[0]} in its own process"
@@ -433,7 +427,7 @@ jobs:
               if [ "$COLD" = "true" ]; then
                 alone_report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART-watcher.xml")
               fi
-              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core -- "${alone[@]}" "${alone_report[@]}"
+              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only -- "${alone[@]}" "${alone_report[@]}"
             fi
             exit 0
           fi

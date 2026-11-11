@@ -32,19 +32,16 @@ describe("test shard planner", () => {
     }
   })
 
-  test("the windows libs budget does not also run the plugin compile", () => {
+  test("a core shard does not compile plugin inside the timed test step", () => {
     const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
-    const step = workflow.split("- name: Build Windows test dependencies")[1]?.split("- name:")[0] ?? ""
-    const condition = step.match(/^\s*if: (.+)$/m)?.[1]
-    const libs = packageLanes("windows", "windows-latest").find((lane) => lane.part.endsWith("libs")) as {
-      budget?: number
-      turbo?: boolean
-    }
-    expect(libs.turbo).toBe(true)
-    expect(libs.budget).toBe(15)
-    // 12 minutes of compile plus the 12-minute test step do not fit in 15. The step must not run there.
-    expect(condition).toBe("runner.os == 'Windows' && matrix.turbo && !matrix.budget")
-    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 15 || (matrix.host == 'windows-latest' && matrix.turbo && 25 || 10) }}")
+    const step = workflow.split("- name: Run unit tests")[1]?.split("- name:")[0] ?? ""
+    const invocations = [...step.matchAll(/bun turbo test --filter=@orchestra\/core[^\n]*/g)].map((match) => match[0])
+    expect(invocations.length).toBe(2)
+    expect(invocations.every((line) => line.includes("--only"))).toBe(true)
+    expect(step).not.toContain("turbo build")
+    expect(workflow).not.toContain("Build Windows test dependencies")
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget || 10 }}")
   })
 
   test("shard count follows the measured time and the target", () => {
