@@ -4,6 +4,11 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Late events and pending message reads no longer restore an evicted idle transcript. Opening the session loads it normally; usage and status still update.
+- Changing content protection no longer hides a failed write. The switch stays where it was, and that failure is shown. Reading it when Flight Engineer opens no longer hides a failed read. The switch stays disabled, and that failure is shown.
+- Provider startup overlaps snapshot capture while tool writes wait for the original snapshot. Cancelling a turn also cancels a pending capture; undo retains its changed-file list.
+- Chromium's disk cache is capped at 256 MiB. Verified old CLI cache copies are removed only when registered services are inactive; uncertain or live services retain their files, and cleanup failures do not block startup. Packaged JS/CSS debug maps are omitted while runtime sources, native resources and locale packs are retained.
+- Hosted test dispatch no longer repeats a 30-minute wait for stale queue records. Recent or uncertain queue activity keeps the normal wait, and hosted test selection and results are unchanged.
 - A zoom the user asks for no longer hides a failed write. The factor stays where it was, and that failure is shown. A repeated failure in the same outage is logged, not toasted again.
 - Checking Flight Engineer readiness again, or reloading it after a permission request, no longer hides a failed read. The wait ends, and that failure is shown.
 - A failed permission reply is no longer silent. The prompt can be answered again, and the failure is shown.
