@@ -1,0 +1,46 @@
+{
+  "schema": "s4-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "unit": "WP-R0",
+  "frozen_before_producer": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "criteria": [
+    "QS-1",
+    "QS-2",
+    "CC-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "limits": {
+    "body_max_bytes": 18000
+  },
+  "cases": [
+    {
+      "id": "R0-1",
+      "expected": "Refuse traversal/symlink/non-UTF8/byte length or SHA mismatch; no normalization of reviewed body bytes"
+    },
+    {
+      "id": "R0-2",
+      "expected": "Refuse missing/duplicate required keys, invalid layer/need, missing source ref, unobserved source, cycle, wrong-scope dependency, unknown roots"
+    },
+    {
+      "id": "R0-3",
+      "expected": "New exact two judge binding evidence for candidate/contract/inputs/result with distinct nonhistorical host IDs; no synthesized semantic-to-binding PASS"
+    },
+    {
+      "id": "R0-4",
+      "expected": "Use existing disk CAS/types/observer/readers/governed emission; no policy fabrication or bypass, publication/reads HOLD without real authority"
+    },
+    {
+      "id": "R0-5",
+      "expected": "Keep .atlas, large inputs, partial materialization and external dependency limitations explicit; do not remove population to pass"
+    },
+    {
+      "id": "R0-6",
+      "expected": "Idempotent identities for unchanged inputs; recipe/input changes invalidate; navigation not build dependency; stale or incompatible rollback cannot read current"
+    }
+  ]
+}

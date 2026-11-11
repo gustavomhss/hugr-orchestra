@@ -12,8 +12,8 @@ Status: IN_PROGRESS. No completion or runtime acceptance claimed.
 
 | Unit | Need and output | Predecessor | State |
 | --- | --- | --- | --- |
-| WP-R0 | Native package validator/adapter using existing ownership ports; runtime release per demonstrated capability | fixed transport contract and baseline sources | READY |
-| WP-L1A | Exact evidence base and authority/input boundaries of Atlas ownership | frozen L1A oracle | READY |
+| WP-R0 | Native package validator/adapter using existing ownership ports; runtime release per demonstrated capability | fixed transport contract and baseline sources | IMPLEMENTED; TYPECHECK PASS; NATIVE PREPARE OBSERVED |
+| WP-L1A | Exact evidence base and authority/input boundaries of Atlas ownership | frozen L1A oracle | ACCEPTED BY J1 AND J2 |
 | WP-L1B | Complete 2220-entry census, classifications, source needs including continuity/RAG/specs/history | fixed partition | RUNNING |
 | WP-L1C | Remaining Atlas, continuity, RAG and Genesis evidence units | census and frozen per-unit oracle | PENDING |
 | WP-L2 | Local explanations across all component needs | accepted required L1 units | PENDING |
@@ -24,12 +24,17 @@ Status: IN_PROGRESS. No completion or runtime acceptance claimed.
 | WP-G | Package typecheck, scoped remote tests and required guards | changed candidate | PENDING |
 | WP-H | Exact two-judge decisions, corrections, usage reconciliation, sealed GitHub handoff | all own obligations | PENDING |
 
-All producers write disjoint local areas; primary integrates and publishes through GitHub with expected HEAD and force=false. Judges will be created with fresh contexts when first material is reviewable and retained for all deltas. Products tests follow root AGENTS.md and run only through permitted GitHub Actions route. No gh/login/GH_TOKEN. No PR/merge/production activation.
+All producers write disjoint local areas; primary integrates and publishes through GitHub with expected HEAD and force=false. Persistent fresh-context judge IDs: /root/judge_j1 and /root/judge_j2; both accepted the exact L1A body. Both remain the pair for all deltas. Products tests follow root AGENTS.md and run only through permitted GitHub Actions route. No gh/login/GH_TOKEN. No PR/merge/production activation.
 
 ## Source and runtime isolation
 
-Scratch work root: /workspace/scratch/aff930d22ec7/s4. Fetched source is a connector materialization, not yet a Git checkout. Source bytes and Git blob hashes will be verified; no fabricated baseline commit. Runtime state is separate per execution/case. Bun is not on PATH at bootstrap; available Node/Python/Git do not imply Bun compatibility. Transport and semantic PASS do not imply runtime binding or publication.
+Scratch work root: /workspace/scratch/aff930d22ec7/s4. Fetched source is a connector materialization, not yet a Git checkout. Source bytes and Git blob hashes will be verified; no fabricated baseline commit. Runtime state is separate per execution/case. Bun 1.3.14 installed in the isolated tools area; package typecheck passed. Actual native sample prepare succeeded; observed_head remains null. Transport and semantic PASS do not imply runtime binding or publication.
 
 ## Accounting
 
 Finite initial wave: one Atlas L1 producer and one runtime producer, followed by two persistent judges, corrections and an independent consumer. Native tokens, physical attempts and billing not exposed are UNKNOWN. Historical campaign usage remains GLOBAL_UNRECONCILED and is ROOT's reconciliation responsibility; this record does not reset it.
+
+
+## Runtime candidate progress
+
+The eight runtime files and scoped workflow gate are ready for a candidate commit. Real L1A native sample prepared as candidate e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284. Runtime binding, publication and reads remain open. Main native-package.json retains twelve missing required artifacts. All 2220 assigned paths are captured, with exact source hashes; L1B classification/knowledge remains in production.

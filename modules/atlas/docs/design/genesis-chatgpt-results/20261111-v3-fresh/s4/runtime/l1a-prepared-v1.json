@@ -1,0 +1,211 @@
+{
+  "schema": "genesis-native-prepared/v1",
+  "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+  "candidate": {
+    "kind": "genesis-native-candidate",
+    "version": 1,
+    "repo_root": "/workspace/scratch/aff930d22ec7/s4/candidate",
+    "observed_head": null,
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "scope": "atlas-continuity-rag-genesis",
+    "session": "S4",
+    "reference_commit_verification": "external-capture-evidence-required",
+    "transport": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/native-package.json",
+      "sha256": "44e018b5327e742b96d92690916f79dcf8eff67dd18d17c8cfa3d644b3297312",
+      "body": "ec5f88495c6626c6e563d7485b9b2f3cc263fca83200ad17c863866ea10e6b4f"
+    },
+    "implementation": {
+      "adapter": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "format": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "binding": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19"
+    },
+    "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+    "criteria": [
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-5",
+      "CC-3",
+      "GO-I2",
+      "GO-I3",
+      "GO-I5",
+      "GO-I7",
+      "GO-I8",
+      "runtime-import-binding"
+    ],
+    "references": [
+      {
+        "reference": {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        "body": "3585498d51ea14a376935dd52ca7f09466052f673fbb7824849edccf333d4112"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l1a.json",
+          "sha256": "daddfd2171c59d210af9d39b9e489ea2e0e884bd6770c46e882290f12a9fd6cd"
+        },
+        "body": "a31636dd81965a8ff1baf94a007b1df9fdcb152bbbdd1f563604c9f0bce4e7ec"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+          "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5"
+        },
+        "body": "004357aeb332e76c3e32822d4f7426c7201cf11f6145c5a1abb5a0401070f63a"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/response.md",
+          "sha256": "589317e9e30c9192f1edb208d7e298f9fbcb87ca5a2b660e8adacbc3cc9c7819"
+        },
+        "body": "6d14dc09e5e7f9586894ef2b32142e46c609904face6a2c927702100cef42816"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j1-response.md",
+          "sha256": "0c52867a7be59f93735b52c7a422b6a43329fac42a2128c251238d4e024b1e01"
+        },
+        "body": "77710db31c59242b0a06001132ca0cf8e95e5a91392ff986eb258aa9090f23fe"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j2-response.md",
+          "sha256": "b572b66e0d6172c4d67919918cda59dce6864972610fcbdf4da76a2c0f6a2319"
+        },
+        "body": "9b7a3e9ac418022242e454f60d4a6be414b6d00fdeb5b3545fe373f66b19cc41"
+      }
+    ],
+    "observations": [
+      {
+        "key": "file:modules/atlas/packages/knowledge/src/ownership/types.ts",
+        "version": "6673451b3f05cedd70b8be2f8c2a6d9b3afd4ca236a06f77683811a7342be8c5",
+        "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302"
+      },
+      {
+        "key": "file:modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "version": "cbd74fe1dbd8ba78b503ef1c8231187292d7a0f60b9aac214dccc0d55cab41ef",
+        "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+      },
+      {
+        "key": "file:modules/atlas/scripts/ownership-pilot.ts",
+        "version": "4910d16ccf8efc7a2ecf6d1cb44e4e9a8f2c6ffda0f0258cd3aafb0ab3f5b40b",
+        "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+      },
+      {
+        "key": "file:modules/atlas/package.json",
+        "version": "21cb37ec36f7b3f9fa7e502e7fb3721de3e14c09f5f7225b02ab432dbef0d78b",
+        "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605"
+      },
+      {
+        "key": "file:AGENTS.md",
+        "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a",
+        "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+      },
+      {
+        "key": "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "version": "92abbdae0d28c3b36afa049006e959a23347687de3f94c08896d74ea9af376f0",
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+      },
+      {
+        "key": "file:.orchestra/skills/execute-genesis/references/runtime.md",
+        "version": "d0f2bdc405bdb6f58fc01ffae4f3d04b6e5021dc3367a8b6e824e2ac2bd70b11",
+        "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+      },
+      {
+        "key": "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "version": "91e430da6f4c64e9f2f85852da85914bff8af70eb9406650a7ea2ce137deaed0",
+        "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+      },
+      {
+        "key": "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+        "version": "2513f03af02bc0a717e67563db00e206aec7c452340e404ebe1d7a82a02773af",
+        "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+      },
+      {
+        "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9",
+        "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+        "version": "216bd2360b335451573511f9c0e349a9d16f3ff3016412a97d8a16eab20ba2aa",
+        "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5"
+      }
+    ],
+    "entries": [
+      {
+        "key": "S4:L1:ownership-boundaries",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "S4:L1:ownership-boundaries",
+          "scope": "atlas-continuity-rag-genesis",
+          "title": "Atlas ownership identity, input observation, and publication boundaries",
+          "layer": 1,
+          "need": "evidence",
+          "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:modules/atlas/packages/knowledge/src/ownership/types.ts",
+            "version": "6673451b3f05cedd70b8be2f8c2a6d9b3afd4ca236a06f77683811a7342be8c5"
+          },
+          {
+            "key": "file:modules/atlas/packages/adapter-io/src/ownership-input.ts",
+            "version": "cbd74fe1dbd8ba78b503ef1c8231187292d7a0f60b9aac214dccc0d55cab41ef"
+          },
+          {
+            "key": "file:modules/atlas/scripts/ownership-pilot.ts",
+            "version": "4910d16ccf8efc7a2ecf6d1cb44e4e9a8f2c6ffda0f0258cd3aafb0ab3f5b40b"
+          },
+          {
+            "key": "file:modules/atlas/package.json",
+            "version": "21cb37ec36f7b3f9fa7e502e7fb3721de3e14c09f5f7225b02ab432dbef0d78b"
+          },
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/references/transport.md",
+            "version": "92abbdae0d28c3b36afa049006e959a23347687de3f94c08896d74ea9af376f0"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/references/runtime.md",
+            "version": "d0f2bdc405bdb6f58fc01ffae4f3d04b6e5021dc3367a8b6e824e2ac2bd70b11"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/references/principles.md",
+            "version": "91e430da6f4c64e9f2f85852da85914bff8af70eb9406650a7ea2ce137deaed0"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+            "version": "2513f03af02bc0a717e67563db00e206aec7c452340e404ebe1d7a82a02773af"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+            "version": "216bd2360b335451573511f9c0e349a9d16f3ff3016412a97d8a16eab20ba2aa"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "8510fd1ae1a96c4c65c5edbeff66395e1ae49f612480cafece41806aa669c7de"
+      }
+    ],
+    "roots": {
+      "evidence": "S4:L1:ownership-boundaries"
+    },
+    "required_artifact_keys": [
+      "S4:L1:ownership-boundaries"
+    ]
+  }
+}

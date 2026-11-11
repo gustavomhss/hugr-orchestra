@@ -16,7 +16,7 @@ export { isSemanticSlot } from "./types.js"
 export { readOwnership, indexOwnership } from "./ownership/read.js"
 export { planOwnershipUpdate } from "./ownership/update-plan.js"
 export type { OwnershipInputObservation, OwnershipUpdatePlan } from "./ownership/update-plan.js"
-export { isOwnershipManifest } from "./ownership/shape.js"
+export { isOwnershipManifest, isOwnershipNeed } from "./ownership/shape.js"
 export type * from "./ownership/types.js"
 export type * from "./types.js"
 
@@ -50,3 +50,4 @@ export * from "./ratify/fastpath.js" // KNOW-18 — auto-accept ONLY grounded∧
 // Campaign-6:
 export * from "./lifecycle/hits.js" // WP-6.18.KNOW — served-fact hits ledger + door-2 threshold calibration + decay/re-entry
 export * from "./retired.js" // R6 — `isRetired`: a fact whose CAS bytes say `authoring: SUPERSEDED` leaves every read
+

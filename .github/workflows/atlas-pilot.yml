@@ -26,7 +26,7 @@ jobs:
         run: npm ci
       - name: Typecheck Atlas
         working-directory: modules/atlas
-        run: npm run typecheck
+        run: bun typecheck
       - name: Grouped ownership and existing door regressions
         working-directory: modules/atlas
         run: |
@@ -35,6 +35,13 @@ jobs:
             packages/knowledge/test/ownership-update-plan.test.ts \
             packages/knowledge/test/fastpath-promotion-origin.test.ts \
             packages/adapter-io/test/ownership-publication.test.ts \
+            packages/adapter-io/test/genesis-native.test.ts \
+            packages/adapter-io/test/g3-recovery.test.ts \
+            packages/adapter-io/test/sidecar.test.ts \
+            packages/adapter-io/test/identity-schema.test.ts \
+            packages/adapter-io/test/store-provenance.test.ts \
+            packages/adapter-io/test/read-provenance-refusal.test.ts \
+            packages/adapter-io/test/migrate-layout.test.ts \
             packages/adapter-io/test/ownership-update.test.ts \
             packages/adapter-io/test/ownership-input.test.ts \
             packages/adapter-io/test/ownership-observe.test.ts \
@@ -152,6 +159,15 @@ jobs:
       - name: Generate Atlas boundary from the checked sources
         working-directory: modules/atlas/boundary
         run: bun run generate
+      - name: Check repository guards on the candidate
+        run: |
+          set +e
+          bun run check:guards --base origin/dev > modules/atlas/ownership-guards.log 2>&1
+          code=$?
+          set -e
+          cat modules/atlas/ownership-guards.log
+          GUARD_EXIT="$code" node --input-type=module -e 'import { writeFileSync } from "node:fs"; writeFileSync("modules/atlas/ownership-guards.json", JSON.stringify({ command: "bun run check:guards --base origin/dev", exitCode: Number(process.env.GUARD_EXIT), candidate: process.env.GITHUB_SHA }) + "\n")'
+          exit "$code"
       - name: Preserve exact gate and generated-boundary evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -160,5 +176,6 @@ jobs:
           if-no-files-found: error
           path: |
             modules/atlas/ownership-*.json
+            modules/atlas/ownership-guards.log
             modules/atlas/boundary/src/generated
           retention-days: 7
