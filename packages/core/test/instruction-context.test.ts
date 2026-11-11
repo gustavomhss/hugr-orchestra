@@ -401,6 +401,7 @@ it.live("refuses discovered AGENTS symlinks outside the physical project before 
           await fs.mkdir(project)
           await fs.mkdir(global)
           await fs.writeFile(external, "EXTERNAL_INSTRUCTION_SENTINEL")
+          await fs.writeFile(path.join(project, "rules.md"), "legitimate configured")
           await fs.writeFile(path.join(global, "AGENTS.md"), "legitimate global")
           await fs.symlink(external, path.join(project, "AGENTS.md"))
         })
@@ -421,6 +422,10 @@ it.live("refuses discovered AGENTS symlinks outside the physical project before 
           Effect.provide(
             instructionLayer({
               config: global,
+              entries: [new Config.Document({
+                type: "document", path: path.join(project, "orchestra.json"),
+                info: new Config.Info({ instructions: ["rules.md"] }),
+              })],
               filesystemLayer: observingFS,
               locationServiceLayer: Layer.succeed(
                 Location.Service,
@@ -433,8 +438,10 @@ it.live("refuses discovered AGENTS symlinks outside the physical project before 
         )
         const context = yield* load
         expect(readPaths).not.toContain(yield* Effect.promise(() => fs.realpath(external)))
-        const initial = yield* SystemContext.initialize(context).pipe(Effect.exit)
-        expect(Exit.isFailure(initial)).toBe(true)
+        const initial = yield* SystemContext.initialize(context)
+        expect(initial.baseline).toContain("legitimate global")
+        expect(initial.baseline).toContain("legitimate configured")
+        expect(initial.baseline).not.toContain("EXTERNAL_INSTRUCTION_SENTINEL")
         yield* Effect.promise(() => fs.rm(path.join(project, "AGENTS.md")))
         yield* Effect.promise(() => fs.writeFile(path.join(project, "AGENTS.md"), "project rules"))
         expect((yield* SystemContext.initialize(yield* load)).baseline).toContain("legitimate global")
