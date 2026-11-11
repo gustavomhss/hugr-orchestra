@@ -1,0 +1,91 @@
+{
+  "schema": "genesis-preparation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "attempt_id": "PREP-S2-03",
+  "agent": "/root/reuse_inventory",
+  "purpose": "read-only historical reuse compatibility inspection",
+  "status": "COMPLETED_PREPARATION",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "scope_revision": null,
+  "s1_envelope_ref": null,
+  "scope_limit": "preparation before dependent production; does not consume an invented production allocation",
+  "command": "python preparation/reuse/inspect_reuse.py",
+  "cwd": "/workspace/scratch/ea607dbcbf72",
+  "observed_exit_code": 0,
+  "summary": {
+    "historical_layers": 5,
+    "historical_manifest_bodies": 20,
+    "body_sha256_matches": 20,
+    "historical_review_files": 10,
+    "review_sha256_and_manifest_matches": 10,
+    "supplement_body_sha256_matches": true,
+    "supplement_review_sha256_matches": 2,
+    "corrected_bodies_sha256_matches": 2,
+    "source_correction_manifest_matches_prefreeze": true,
+    "historical_exact_candidate_import_approvals": true,
+    "atlas_producer_executed": false,
+    "tests_run": false,
+    "campaign_acceptance": false
+  },
+  "generated_at": "2026-11-11T14:11:02.365160+00:00",
+  "started_at": "UNKNOWN",
+  "logical_native_preparation_jobs": 1,
+  "new_ownership_production_jobs": 0,
+  "model_tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "external_model_api_calls_issued_by_this_task": 0,
+  "tests_run": false,
+  "github_writes": false,
+  "publication": false,
+  "files": [
+    {
+      "path": "request.txt",
+      "sha256": "7102b9e763e5c996f0385b44594ac0f01c57dd3199117c80683658e622165657",
+      "bytes": 1057
+    },
+    {
+      "path": "visible-response.md",
+      "sha256": "2dc30a9b81cbbf5a122659858ca938fcffa8234a2bbde33701a0ab8104185f3c",
+      "bytes": 5753
+    },
+    {
+      "path": "reuse-candidates.json",
+      "sha256": "d2331e3f83955a7441293583b80bccfaef25d5b3c065294342abc0fdf3e3cf25",
+      "bytes": 52905
+    },
+    {
+      "path": "integrity-summary.json",
+      "sha256": "cd8d0bd6b9dac99a991342828ad22444ae2c9fd62ab32a11ed5ec0908ae69f6b",
+      "bytes": 495
+    },
+    {
+      "path": "semantic-source-compatibility.json",
+      "sha256": "a36f2c5d60100875f63b81bee126c2e7e0690580c937ebd036ef1e6cdceafff8",
+      "bytes": 9200
+    },
+    {
+      "path": "supplement-source-compatibility.json",
+      "sha256": "3ef770cf4742a38da0669cec68efac1f54b94ccf613971d029340ea20d08004e",
+      "bytes": 1607
+    },
+    {
+      "path": "source-manifest.json",
+      "sha256": "dda0dc5baa9b716c41a564ce7f9ce35d32f1e55f1298ff9927b55d5a30e91721",
+      "bytes": 29628
+    },
+    {
+      "path": "inspect_reuse.py",
+      "sha256": "9e17184277de2082f6515a419767854cb7c7f9115d1d810c5a656df0d398213c",
+      "bytes": 9095
+    }
+  ],
+  "limitations": [
+    "Historical consumer source and oracle/answer bodies were not read",
+    "This agent was not an independent campaign judge",
+    "No Atlas path was executed by this inspection"
+  ]
+}

@@ -1,0 +1,107 @@
+[
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "AGENTS.md",
+    "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+    "blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+    "bytes": 16501
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "bytes": 28267
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+    "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108",
+    "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+    "bytes": 18420
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-seats.md",
+    "sha256": "5c7754fb9fb17c4626947fe233209091f0f48e99ef53f2609de16112d52250c1",
+    "blob": "9d59733348a0f999b73ffad47d89160501001ec5",
+    "bytes": 14360
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-integration-fit.md",
+    "sha256": "3094aa0613f116304866a1c838f8514df1696901aa99401c30e194c7c7e96ea8",
+    "blob": "1216badf0c0b7fa1a2bf7786b63d9bd532a4854a",
+    "bytes": 9978
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-update-plan-contract.md",
+    "sha256": "5f0eb376cd9d61b23550bebf639f9a4a312cda4f1750e1399a30e55afbaaf3b1",
+    "blob": "2729d2a77b1e96caf4ce0b4d6ece4a92b72cfc11",
+    "bytes": 11516
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+    "sha256": "12986515c4e38a54be7a3d5a14894402ecb05c09312f468d835c6c3ed71a1b45",
+    "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+    "bytes": 22329
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+    "sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a",
+    "blob": "fd0ec9be0fbbf1ca1674cbe02d6eac3d3d46fa99",
+    "bytes": 9744
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-recovery-worklist.md",
+    "sha256": "fd139e2b16a611f6865b176b270f563264b0233e416800cfdb53c11feb265e49",
+    "blob": "322e11e5722b55404a661cabf0a8791cc24a45b9",
+    "bytes": 169854
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-judges.md",
+    "sha256": "f7851eaf6a48016f9a8b45010c4cac871ae42495ff1966c417c4f589ce7c9e48",
+    "blob": "94346c139f7daa4cf1e42068964c5e84db17a3a8",
+    "bytes": 14259
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-economy-control-contract.md",
+    "sha256": "bccb68976c96d2c1d97dbd3523ca05121359507e2efac00467cd223dcfa830a5",
+    "blob": "47e6f617e92eb94e02c0c638ce35df3c269597d7",
+    "bytes": 5928
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-landing-plan.md",
+    "sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19",
+    "blob": "bd3b51bef5485e3b5c7a9e74686b92371e9bb6d4",
+    "bytes": 7248
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": ".orchestra/skills/atlas-usage/SKILL.md",
+    "sha256": "5d010ffd2fb910dddfd7685820963ca310bd72d603d718c16f28ed1a090556d0",
+    "blob": "2b14ae2e4d74dd0f3f7785dd9c86f27905d3c0e3",
+    "bytes": 4986
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+    "sha256": "947c9a4b4756c62a9c26bc413dabb8444af3d9462439099b2f2e29c47fc8bde5",
+    "blob": "cc1f0fef978e0a0ca96b0388d90d55660a1f7f9e",
+    "bytes": 24282
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+    "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e",
+    "blob": "72654ea24028de8f86a569a30fa9e5552eca611f",
+    "bytes": 8668
+  }
+]

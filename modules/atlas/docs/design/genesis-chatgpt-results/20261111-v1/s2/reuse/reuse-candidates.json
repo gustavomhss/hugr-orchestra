@@ -1,0 +1,1009 @@
+{
+  "schema": "genesis-preparation-reuse-inventory/v1",
+  "attempt_id": "PREP-S2-03",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "producer": "/root/reuse_inventory",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "status": "PREPARATION_ONLY",
+  "layers": [
+    {
+      "layer": "L1",
+      "legacy_manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341"
+      },
+      "acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2"
+      },
+      "historical_status": "ACCEPTED_FOR_L2_CONSTRUCTION_ONLY",
+      "historical_scope": "durable Session admission/default-runner promotion, frozen slice only",
+      "historical_source_revision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "predecessor_bindings": {},
+      "artifacts": [
+        {
+          "producer_role": "router-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+            "sha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db"
+          },
+          "expected_body_sha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e52900c2fffei7I13wOwnnqV4A",
+          "historical_producer_message": "msg_1ad997689001kuf3SX69eh1R4f",
+          "historical_prompt_sha256": "93ced143238e66c3c4577e192398234be290a771f3e6484c56bb21327ab18f21",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "path": "AGENTS.md",
+              "start": 207,
+              "end": 218,
+              "sha256": "0521df9823162d67b3dbc9b55e65c6313484a44b2dfe53c09a5d865323643cc1",
+              "gitBlob": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+            },
+            {
+              "path": "docs/specs/v2/session.md",
+              "start": 3,
+              "end": 50,
+              "sha256": "74591c418e05117ec67e7193345eb269737d5269fa9d35504096027104740cf2",
+              "gitBlob": "e3574b87bc3b12c0eca603f96821a16ec89399fc"
+            },
+            {
+              "path": "docs/specs/v2/session.md",
+              "start": 155,
+              "end": 185,
+              "sha256": "28398f1507f6d98b5eb5e19ce8bfd199531f1209a0ad18abc97ae31dc2603b1c",
+              "gitBlob": "e3574b87bc3b12c0eca603f96821a16ec89399fc"
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "router-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+            "sha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31"
+          },
+          "expected_body_sha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5290055fffeFW0E9uPaj6QeiI",
+          "historical_producer_message": "msg_1ad997a91001GX9lVt3QUtMwJQ",
+          "historical_prompt_sha256": "289dc557a9fd097906f3d0cb1c44ca5e9d81610968d64caa59dcfb2b1f85ab48",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "path": "packages/core/src/session.ts",
+              "start": 491,
+              "end": 517,
+              "sha256": "41a067c2e52a68f9c9e1bba9ab28f824c3e754ff6c8b2a176afddf5e3c098b0d",
+              "gitBlob": "402a192a69bcad6a4b08c695657e24ff5e335f93"
+            },
+            {
+              "path": "packages/core/src/session/sql.ts",
+              "start": 154,
+              "end": 181,
+              "sha256": "e0df4c878090a49a7d18740f90e008c6a5253ff77ac316023a289ee0490e4f71",
+              "gitBlob": "21b589483ae47f8d924cc58b8d2377525d381cc0"
+            },
+            {
+              "path": "packages/schema/src/session-input.ts",
+              "start": 12,
+              "end": 25,
+              "sha256": "3a0e4346898b2af1d4499751dc4dbdb96f9af927a3827cc886e582aec49273ee",
+              "gitBlob": "b024750506e151e7f14f559f979e5c52d46e3833"
+            },
+            {
+              "path": "packages/core/src/session/projector.ts",
+              "start": 283,
+              "end": 311,
+              "sha256": "8a749597b39abfc71727a77f9450afef787a7c7aa13cb830c8ae7184e0a7b4c4",
+              "gitBlob": "e5d7ca7d65d1da035a136557b08e2a264c788da5"
+            },
+            {
+              "path": "packages/core/src/session/execution.ts",
+              "start": 12,
+              "end": 38,
+              "sha256": "5e21504770bb4468575aab1085252ad94b5061e9f3ae7277ddaa3c43489ec152",
+              "gitBlob": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618"
+            },
+            {
+              "path": "packages/core/src/session/run-coordinator.ts",
+              "start": 10,
+              "end": 19,
+              "sha256": "537a7111c3b83fbb4455789bc291379ec62b67adcbea46ee3dc17c2493d54421",
+              "gitBlob": "526a1e28f6027d744a95f145159be9cc59109ac2"
+            },
+            {
+              "path": "packages/core/src/session/run-coordinator.ts",
+              "start": 83,
+              "end": 110,
+              "sha256": "c550336c395c1120bf2611d93dd522a79bf6a6c224472077193a3504bb376f32",
+              "gitBlob": "526a1e28f6027d744a95f145159be9cc59109ac2"
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+            "sha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460"
+          },
+          "expected_body_sha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e528ffc6effezxaZqYj4wfpkNa",
+          "historical_producer_message": "msg_1ad99840a001qx2w7sHAbONX5v",
+          "historical_prompt_sha256": "19ad7fb2ba77219181dee96a5df99f20e399a862df08ad2ad51634ba24fe71ed",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "path": "packages/core/src/session/input.ts",
+              "start": 24,
+              "end": 161,
+              "sha256": "6fe4353eceb3aef0c2bf808f49d1f942aef9eb790eadd2009d7426d01244ce47",
+              "gitBlob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2"
+            },
+            {
+              "path": "packages/core/src/session/input.ts",
+              "start": 200,
+              "end": 252,
+              "sha256": "9f9a40648c7b78e304e5be6dac15ca867146f16218e5f9ef325b6c4b52a8a020",
+              "gitBlob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2"
+            },
+            {
+              "path": "packages/core/src/session/input.ts",
+              "start": 291,
+              "end": 317,
+              "sha256": "a235b6852d9bff25e6ff5ac875aa2fea5b4f33327c282be13a77e6624cf09084",
+              "gitBlob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2"
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md",
+            "sha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee"
+          },
+          "expected_body_sha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e528feb66ffeDYXc34Eaa0WsBI",
+          "historical_producer_message": "msg_1ada18a77001C4ldjd02yFWBqb",
+          "historical_prompt_sha256": "e5c70b71741059277668a1995744944900b16c1d57d67edd7b42fce028641d24",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "path": "packages/core/src/session/input.ts",
+              "start": 318,
+              "end": 391,
+              "sha256": "d923cc938dad6dd65ffd3b9ac6d1af7d2edc0893f7715aea48ab39ba7956e01f",
+              "gitBlob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2"
+            },
+            {
+              "path": "packages/core/src/session/runner/llm.ts",
+              "start": 185,
+              "end": 239,
+              "sha256": "84f8ec787c09def605a10b4844b4fe31bc7fa328fb2c6871553d7a06f288be64",
+              "gitBlob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6"
+            },
+            {
+              "path": "packages/core/src/session/runner/llm.ts",
+              "start": 616,
+              "end": 642,
+              "sha256": "5a4df7e73af1b12c204975bd8fdf108bb259aaa746b6ffa40d684d3390c56d03",
+              "gitBlob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6"
+            },
+            {
+              "path": "packages/core/test/session-prompt.test.ts",
+              "start": 145,
+              "end": 165,
+              "sha256": "d23a5b76bfc43e09a773a167e8a9e9c33975ceefe9bf74a1b7459c81776f9340",
+              "gitBlob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82"
+            },
+            {
+              "path": "packages/core/test/session-prompt.test.ts",
+              "start": 254,
+              "end": 342,
+              "sha256": "fb687912b3a6104e7965b96763a125e49b788a0cf240f317076c42c05a4931d0",
+              "gitBlob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82"
+            },
+            {
+              "path": "packages/core/test/session-prompt.test.ts",
+              "start": 344,
+              "end": 404,
+              "sha256": "c319badb152592af701a26c981cf47b6d4d9ab5704209ad44dbd248e5eb9b88b",
+              "gitBlob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82"
+            },
+            {
+              "path": "packages/core/test/session-prompt.test.ts",
+              "start": 448,
+              "end": 518,
+              "sha256": "7980fd68c9c9f48f7ef99ba96f721f3fd4ecc3507a9cfcd0b0ec56bade683335",
+              "gitBlob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82"
+            },
+            {
+              "path": "packages/core/test/session-prompt.test.ts",
+              "start": 541,
+              "end": 586,
+              "sha256": "33202ee85e1d5844ed04d51630e3afcc1fa2e1326da0b2356af027eaa25f11e7",
+              "gitBlob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82"
+            },
+            {
+              "receipt": "historical-scoped-reconciliation",
+              "sha256": "a97aed6f24448270ab469a528b5cc94cb9dcb180ca3caa52d46401fd7a187881",
+              "path": "/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/genesis-ownership-reuse-704sv42b/reconciliation.json"
+            },
+            {
+              "path": "script/atlas-genesis/checkpoint-replay-source.json",
+              "sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+              "gitBlob": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+              "role": "historical-metadata-only"
+            },
+            {
+              "path": "script/atlas-genesis/checkpoint-continuation-proof.json",
+              "sha256": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b",
+              "gitBlob": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+              "role": "historical-metadata-only"
+            },
+            {
+              "path": "packages/core/src/session/runner/llm.ts",
+              "start": 240,
+              "end": 272,
+              "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+              "gitBlob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+              "sha256": "75c8d62556d8a40848bafcd13f36d568c8d71b4dc6e45278e8804d1ffeb2cbfc"
+            },
+            {
+              "path": "packages/core/src/session/runner/llm.ts",
+              "start": 427,
+              "end": 429,
+              "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+              "gitBlob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+              "sha256": "4c6658d7b231ef8c0b70535f0f7d78c6b0c548f57cba74f3a2fe68fc1f9bc75c"
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        }
+      ],
+      "reviews": [
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-1-review-v3.judgment.md",
+            "sha256": "8d625f0f1db3f3ecd8eac53b83e6654ab1e6090f5e9b05bc687a9d06ff27e7aa"
+          },
+          "judge": "terra-1",
+          "historical_session": "ses_e528fd6ffffekMvs6EMxxspiWI",
+          "historical_message": "msg_1ada569a4001waCgBh1jRYwwfU",
+          "expected_sha256": "8d625f0f1db3f3ecd8eac53b83e6654ab1e6090f5e9b05bc687a9d06ff27e7aa",
+          "sha256_matches": true,
+          "manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        },
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-2-review-v3.judgment.md",
+            "sha256": "ffefd0931af6121431ce271a9b2201d0ede5b65165d4e9c8ab68730fcbb6d123"
+          },
+          "judge": "terra-2",
+          "historical_session": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+          "historical_message": "msg_1ada5694a0018A7hAV6wsSo9DU",
+          "expected_sha256": "ffefd0931af6121431ce271a9b2201d0ede5b65165d4e9c8ab68730fcbb6d123",
+          "sha256_matches": true,
+          "manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        }
+      ]
+    },
+    {
+      "layer": "L2",
+      "legacy_manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "sha256": "daeaaa9a061e121b1fa215dd764052ac94e412bd68200940c50358ceb5f0b541"
+      },
+      "acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-acceptance.json",
+        "sha256": "be4abe2e2fa01952b2e913a3aeec974f7f5ee941e97e792e7cf6185c0e4b35b4"
+      },
+      "historical_status": "ACCEPTED_FOR_L3_CONSTRUCTION_ONLY",
+      "historical_scope": "four components of durable Session admission/default-runner promotion only",
+      "historical_source_revision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "predecessor_bindings": {
+        "acceptedL1ManifestID": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85"
+      },
+      "artifacts": [
+        {
+          "producer_role": "router-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+            "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05"
+          },
+          "expected_body_sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5254f59affea7aEpQ82UY9ypu",
+          "historical_producer_message": "msg_1adb05c17001VmX4couJHTZCVo",
+          "historical_prompt_sha256": "2998b58c1c9d69dd21d4a9988e6125b67881ffc1ef876a8bbeb57a8aa641118a",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "handle": "L1:authority",
+              "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+              "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:identity",
+              "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+              "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:entry-storage-execution",
+              "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+              "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:promotion-verification-reuse#evidence-register",
+              "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+              "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+              "mode": "exact-test-rows",
+              "ranges": [
+                "145-165",
+                "254-342",
+                "344-404",
+                "448-518",
+                "541-586"
+              ]
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "router-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+            "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53"
+          },
+          "expected_body_sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5254f3e7ffenxQguFMhNzkhcI",
+          "historical_producer_message": "msg_1adab25f70018YLflNOMFNoan2",
+          "historical_prompt_sha256": "d1d27684dbe69e4ed1d545d5dbb7d543f9a06835e464390947bb3c53d11d87a0",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "handle": "L1:authority",
+              "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+              "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:entry-storage-execution",
+              "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+              "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:identity",
+              "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+              "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:promotion-verification-reuse#evidence-register",
+              "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+              "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+              "mode": "exact-test-rows",
+              "ranges": [
+                "145-165",
+                "254-342",
+                "344-404",
+                "448-518",
+                "541-586"
+              ]
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+            "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5"
+          },
+          "expected_body_sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5254f240ffe8fhwtHqLmJpSlw",
+          "historical_producer_message": "msg_1adb05c2d001JMRo63ZO96jbfm",
+          "historical_prompt_sha256": "c82a40c83da4f0ab9540b892eba8e5f419be814f9f4ddd3dee22a01cdbd794ce",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "handle": "L1:authority",
+              "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+              "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:promotion-verification-reuse",
+              "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+              "file": "L1-luna-2-source-order-erratum.candidate.md",
+              "mode": "full-body"
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+            "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0"
+          },
+          "expected_body_sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5254f0b9ffe3l0avz4gGqA4kG",
+          "historical_producer_message": "msg_1adab264e001MMncBIL8uYvjeJ",
+          "historical_prompt_sha256": "bb63e813f8990e5aefe666fc31c3be366e99dfd4fdbd71b74286aaf4e1f71c37",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [
+            {
+              "handle": "L1:authority",
+              "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+              "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:entry-storage-execution",
+              "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+              "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+              "mode": "full-body"
+            },
+            {
+              "handle": "L1:promotion-verification-reuse#evidence-register",
+              "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+              "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+              "mode": "exact-test-rows",
+              "ranges": [
+                "145-165",
+                "254-342",
+                "344-404",
+                "448-518",
+                "541-586"
+              ]
+            }
+          ],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        }
+      ],
+      "reviews": [
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-terra-1-review-v4.judgment.md",
+            "sha256": "22c21590e30f12f97ec135ad6381e54da684d4f77e643a702dc1a2f4b9dda7aa"
+          },
+          "judge": "terra-1",
+          "historical_session": "ses_e528fd6ffffekMvs6EMxxspiWI",
+          "historical_message": "msg_1adb5a4aa001kPnBs6wNpSBEJs",
+          "expected_sha256": "22c21590e30f12f97ec135ad6381e54da684d4f77e643a702dc1a2f4b9dda7aa",
+          "sha256_matches": true,
+          "manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        },
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-terra-2-review-v4.judgment.md",
+            "sha256": "712a23163f3b8087e5a735cc07f0e053feab2d6a80fb28236c1d74e7653d2cba"
+          },
+          "judge": "terra-2",
+          "historical_session": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+          "historical_message": "msg_1adb5a4c10015tMp5ELaJQokbG",
+          "expected_sha256": "712a23163f3b8087e5a735cc07f0e053feab2d6a80fb28236c1d74e7653d2cba",
+          "sha256_matches": true,
+          "manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        }
+      ]
+    },
+    {
+      "layer": "L3",
+      "legacy_manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "sha256": "a5db8da373917d37e30ae203ba7accbfb75d7eb86e7d6ff5d9c7d447d4cf8c25"
+      },
+      "acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-acceptance.json",
+        "sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05"
+      },
+      "historical_status": "ACCEPTED_FOR_L4_CONSTRUCTION_ONLY",
+      "historical_scope": "default LLM runner Session-input integration research handoff; not production Atlas publication, held-out ownership acceptance, runtime execution proof or global AC-01..10",
+      "historical_source_revision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "predecessor_bindings": {
+        "acceptedL2ManifestID": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce"
+      },
+      "artifacts": [
+        {
+          "producer_role": "router-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+            "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5"
+          },
+          "expected_body_sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e522e670cffevt7hYiMn5hKHtI",
+          "historical_producer_message": "msg_1add1addb001NTCL5CXRrDWIxG",
+          "historical_prompt_sha256": "fb2e8c58c4b1f0a54c351fe070e28ce2dde7926d1dec77b10053e569badb5289",
+          "authorship": "producer body with explicit lead errata",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "router-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+            "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1"
+          },
+          "expected_body_sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e522e6692ffeytY5uSiMc8fWnb",
+          "historical_producer_message": "msg_1add1adfa001vJ3OCR1tHt85Z5",
+          "historical_prompt_sha256": "dd9a1554bd01ec01518a4ed5b5571a0d7f3963b5b888c6ad3f8613b6b410082f",
+          "authorship": "producer body with explicit lead errata",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+            "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db"
+          },
+          "expected_body_sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e522e6613ffeQXSUvsw8Hof2KG",
+          "historical_producer_message": "msg_1add1ae2c001Z7rsDEdTDoVV1M",
+          "historical_prompt_sha256": "26a8e4f59d47cc525d0c33720dd7249e74e3c5b41f1b702f9df4315e104bafa1",
+          "authorship": "producer body with explicit lead errata",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+            "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa"
+          },
+          "expected_body_sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e522e659affesjLnCSPMPS1wA2",
+          "historical_producer_message": "msg_1add1ae1a001sI5LPY0znCwjAl",
+          "historical_prompt_sha256": "ebc920a4cda70cff7d0154a095448a24c2261df59d85ecc6ac5caa4dac920ba6",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        }
+      ],
+      "reviews": [
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-1-review-v3.decision.json",
+            "sha256": "a5dbf7869c4bd7406e4d56a78566cd7bff037024cf5ccf7ebc7cc47a8090031a"
+          },
+          "judge": "terra-1",
+          "historical_session": "ses_e528fd6ffffekMvs6EMxxspiWI",
+          "historical_message": "msg_1add9d87c0010dsjWkZMjs22aG",
+          "expected_sha256": "a5dbf7869c4bd7406e4d56a78566cd7bff037024cf5ccf7ebc7cc47a8090031a",
+          "sha256_matches": true,
+          "manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        },
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-2-review-v3.decision.json",
+            "sha256": "f88b39abee8ace2303c1bb299cd11375f7dfdde9bf8a2529c3956df254c77b0d"
+          },
+          "judge": "terra-2",
+          "historical_session": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+          "historical_message": "msg_1add9d88e001p4cRav2hw9qTFm",
+          "expected_sha256": "f88b39abee8ace2303c1bb299cd11375f7dfdde9bf8a2529c3956df254c77b0d",
+          "sha256_matches": true,
+          "manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        }
+      ]
+    },
+    {
+      "layer": "L4",
+      "legacy_manifest_id": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+      "manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-manifest-v2.json",
+        "sha256": "1d59c3310353c9eea7718c0f2c942bfdd8cc3dff3d5d97244320cc8415303c79"
+      },
+      "acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-acceptance.json",
+        "sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481"
+      },
+      "historical_status": "ACCEPTED_RESEARCH_OWNERSHIP_ARTIFACTS_ONLY",
+      "historical_scope": "research ownership/maintenance artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+      "historical_source_revision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "predecessor_bindings": {
+        "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d"
+      },
+      "artifacts": [
+        {
+          "producer_role": "router-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-1.body.md",
+            "sha256": "81934f3761f25a91af54fb2ea614d76caa3aaa9be25c2570bde44190eb4b44cc"
+          },
+          "expected_body_sha256": "81934f3761f25a91af54fb2ea614d76caa3aaa9be25c2570bde44190eb4b44cc",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e52236275ffefDshzzMqFP1Z3j",
+          "historical_producer_message": "msg_1addcb16f001pDc0pr4e6DwfmL",
+          "historical_prompt_sha256": "f378d696073b1dacb99ff1d083db748690a68adf22c6af7bb97146c31fa9133d",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "router-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-2.lead-erratum-v2.md",
+            "sha256": "c88792a23c71ab9285e8b6ed8aa042f8a618e35faa15b5e7a1bf2899c73b85f3"
+          },
+          "expected_body_sha256": "c88792a23c71ab9285e8b6ed8aa042f8a618e35faa15b5e7a1bf2899c73b85f3",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e522361e9ffeB2cXT9qqXEZCiW",
+          "historical_producer_message": "msg_1addcb1590018XfItYuOF9Khz6",
+          "historical_prompt_sha256": "dd7e578ddddfb71e0f1e9a39eea0dff01da1be6380041b3bac34cf6c3160b0be",
+          "authorship": "explicit lead substantive derivative; original model/header derivative preserved",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-1",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-luna-1.body.md",
+            "sha256": "1bc995eda5f6dbc590d293629ec52ced8dec7db3b5a8e166e4916765de700d19"
+          },
+          "expected_body_sha256": "1bc995eda5f6dbc590d293629ec52ced8dec7db3b5a8e166e4916765de700d19",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5223615fffeTSdaJx9knugjlm",
+          "historical_producer_message": "msg_1addcb184001nuAvkebLHsvMNT",
+          "historical_prompt_sha256": "3cb28efebc7ec411f66144fbd2287abf378b1b87996fc0f1aab6a6f02c698627",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "luna-2",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-luna-2.lead-erratum-v2.md",
+            "sha256": "cadac626d91ac31ed52e4671352dfe83b5d64c42ef59e67f13f4a1aa98b6995b"
+          },
+          "expected_body_sha256": "cadac626d91ac31ed52e4671352dfe83b5d64c42ef59e67f13f4a1aa98b6995b",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e522360d9ffe6qMqCHPgtZt1GW",
+          "historical_producer_message": "msg_1addcb19a001YPAceuLHqEMVyE",
+          "historical_prompt_sha256": "5e66f2113bc168ce30052bdec9cdacbdc382b9d33c429890cd6d1a403862181b",
+          "authorship": "explicit lead substantive derivative; original model/header derivative preserved",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        }
+      ],
+      "reviews": [
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-terra-1-review-v2.decision.json",
+            "sha256": "e9723e4714830e3d124d633ebcf806638c43583f16e9455d774b00ea3064b984"
+          },
+          "judge": "terra-1",
+          "historical_session": "ses_e528fd6ffffekMvs6EMxxspiWI",
+          "historical_message": "msg_1ade1fd05001BtuTmVuDGtX991",
+          "expected_sha256": "e9723e4714830e3d124d633ebcf806638c43583f16e9455d774b00ea3064b984",
+          "sha256_matches": true,
+          "manifest_id": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        },
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-terra-2-review-v2.decision.json",
+            "sha256": "ba353985a7e01afb703ca0f1e84bbb8420cdb8c2a842b12f7dad0051c3f3b119"
+          },
+          "judge": "terra-2",
+          "historical_session": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+          "historical_message": "msg_1ade1fd3f0014m23KszkBAtlVe",
+          "expected_sha256": "ba353985a7e01afb703ca0f1e84bbb8420cdb8c2a842b12f7dad0051c3f3b119",
+          "sha256_matches": true,
+          "manifest_id": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        }
+      ]
+    },
+    {
+      "layer": "L4-sol",
+      "legacy_manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "manifest_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e"
+      },
+      "acceptance_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52"
+      },
+      "historical_status": "ACCEPTED_EXPANDED_RESEARCH_SKILL_CANDIDATES_ONLY",
+      "historical_scope": "bounded Session-input default-LLM-runner pilot: ownership, maintenance, normal operation/diagnosis and entry skills; NOT repository-wide ownership, installed skills, production Atlas readers/publication, runtime/consumer/held-out proof or global AC completion",
+      "historical_source_revision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "predecessor_bindings": {
+        "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+        "predecessorAcceptedL4ManifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+        "operationalSupplementAcceptanceManifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48"
+      },
+      "artifacts": [
+        {
+          "producer_role": "ownership",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-ownership.body.md",
+            "sha256": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679"
+          },
+          "expected_body_sha256": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5214426dffe5IKmrnggz46mNd",
+          "historical_producer_message": "msg_1adebe2bd001esIr26h64beccP",
+          "historical_prompt_sha256": "761c4a97a4e3035a7b1ab21a614684a15b09dd91c93a648718e8a2c64f00e1c3",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "maintenance",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-maintenance.body.md",
+            "sha256": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42"
+          },
+          "expected_body_sha256": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e521441cfffe27Bn8vikKs1GNz",
+          "historical_producer_message": "msg_1adebe339001NDNaB8p7K336Oa",
+          "historical_prompt_sha256": "c76ca90db8a3f0fa14567c146c8dc9633448b06ea2e7b177bb04c8ba1e12461b",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "operational",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational-remedy.body.md",
+            "sha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3"
+          },
+          "expected_body_sha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e52144128ffe6lgUFcNal3oci4",
+          "historical_producer_message": "msg_1adf323e20016r8H4EHYT2UUac",
+          "historical_prompt_sha256": "cb38a0d6eef07c4b235c1b342cc904e30a4938dbcfa1417bbe646f84943d19e3",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        },
+        {
+          "producer_role": "entry",
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-entry.body.md",
+            "sha256": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c"
+          },
+          "expected_body_sha256": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+          "body_sha256_matches": true,
+          "historical_producer_session": "ses_e5214408effe0RJmSqBl653RAI",
+          "historical_producer_message": "msg_1adebe300001o2e0vWEkvTpuSu",
+          "historical_prompt_sha256": "d25acbb9dff958d57aa54b84cb6b697bba2221b4d28cf7bdc4f688191d4751c0",
+          "authorship": "see preserved manifest and original body",
+          "input_bindings": [],
+          "disposition": "HISTORICAL_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+        }
+      ],
+      "reviews": [
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-1-review-v2.decision.json",
+            "sha256": "72941be199a0ee14e6e65fc758cb05af358464368546ddda5206557195ed8459"
+          },
+          "judge": "terra-1",
+          "historical_session": "ses_e528fd6ffffekMvs6EMxxspiWI",
+          "historical_message": "msg_1adf5265f0015RHiylCjMxx0NM",
+          "expected_sha256": "72941be199a0ee14e6e65fc758cb05af358464368546ddda5206557195ed8459",
+          "sha256_matches": true,
+          "manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        },
+        {
+          "reference": {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-2-review-v2.decision.json",
+            "sha256": "346c1adc73f6a675c1d5c498f3884089a7d4cd846ddbb700948a5ebe36f74386"
+          },
+          "judge": "terra-2",
+          "historical_session": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+          "historical_message": "msg_1adf528240011rx1BEiaYiy4x0",
+          "expected_sha256": "346c1adc73f6a675c1d5c498f3884089a7d4cd846ddbb700948a5ebe36f74386",
+          "sha256_matches": true,
+          "manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+          "manifest_id_matches": true,
+          "historical_verdict": "PASS",
+          "campaign_judgment": false
+        }
+      ]
+    }
+  ],
+  "operational_supplement": {
+    "legacy_manifest_id": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+    "manifest_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+      "sha256": "2b70007eeab09f8945611f7bd976ed8b8537c09d6ac04e0463271cd90a46c0d7"
+    },
+    "acceptance_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.acceptance.json",
+      "sha256": "dba7f32944890f8fae2715500659bf07c132b61fe7b434fd8df84dc0e785b72e"
+    },
+    "body_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+      "sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db"
+    },
+    "expected_body_sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+    "body_sha256_matches": true,
+    "reviews": [
+      {
+        "reference": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/OP-supplement-terra-1-v1.decision.json",
+          "sha256": "662f27cc959fc495b707bc63a1853cd0d4774c99e8c7054f91d59fb8bfbff67f"
+        },
+        "sha256_matches": true,
+        "historical_verdict": "PASS",
+        "identity_correction": false,
+        "campaign_judgment": false
+      },
+      {
+        "reference": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/OP-supplement-terra-2-v1-identity.decision.json",
+          "sha256": "6c2aebd20759f517230210504f03508c02350583f6c8715c813ab224770a1448"
+        },
+        "sha256_matches": true,
+        "historical_verdict": "PASS",
+        "identity_correction": true,
+        "campaign_judgment": false
+      }
+    ],
+    "historical_status": "ACCEPTED_SUPPLEMENT_FOR_DEPENDENT_OPERATIONAL_REVISION_ONLY"
+  },
+  "operational_source_correction": {
+    "historical_candidate_id": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+    "manifest_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-correction-manifest-v1.json",
+      "sha256": "f7a9b43ee3950b01b036f7744a4bc541dd10a1a5b83d1fcdb4ec6cc4b2ae0584"
+    },
+    "manifest_sha256_matches_prefreeze": true,
+    "prefreeze_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prefreeze-v2.json",
+      "sha256": "8a56296d43a4a03c2cd0714b0c8688a06c648f7e34a6de3dafe502dfdc1ccdc2"
+    },
+    "binding_approvals_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/binding-approvals-v2.json",
+      "sha256": "e59d0c68c825cc74507be9e477c81939c5e71958806fd26676d5d0fac12ab973"
+    },
+    "both_exact_candidate_import_approvals": true,
+    "historical_isolated_publication_receipt_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-native-v1.json",
+      "sha256": "137fab6c7e048a7b2a245f602808d96e11fb2637c2360f1f33c61d75e3936c2e"
+    },
+    "artifacts": [
+      {
+        "key": "L3-supplement:operational-interface",
+        "reference": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-operational-supplement-v1.body.md",
+          "sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c"
+        },
+        "body_sha256_matches": true,
+        "supersedes_original_body_sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "authorship": "lead-source-correction-not-original-producer",
+        "disposition": "HISTORICAL_CORRECTED_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+      },
+      {
+        "key": "L4:operational",
+        "reference": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-L4-sol-operational-remedy.body.md",
+          "sha256": "c037f40903c1ea9fa6f827df1183da3c24a60c5b7677edd342a2e8bf20293b74"
+        },
+        "body_sha256_matches": true,
+        "supersedes_original_body_sha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+        "authorship": "lead-source-correction-not-original-producer",
+        "disposition": "HISTORICAL_CORRECTED_INPUT_CANDIDATE_PENDING_CAMPAIGN_BINDING"
+      }
+    ],
+    "limits": [
+      "Historical isolated publication is not an execution by S2",
+      "No consumer responses or reserved answers were read",
+      "Import mapping approval is not global acceptance or S5 judgment"
+    ]
+  },
+  "limits": [
+    "This is provenance and compatibility inspection, not construction, an Atlas import/cache/rebuild run, or semantic acceptance",
+    "Source identity matches only the inspected 16 unique source files; no repository-wide membership or dependency-closure sufficiency is certified",
+    "All historical author/model/session and editorial-derivative identities remain historical",
+    "New scope, source authority, recipe, contracts and membership must be fixed by S1 and bound to S5 acceptance before dependent production",
+    "Historical acceptance statuses cannot satisfy the two native S5 judges for campaign 20261111-v1 automatically",
+    "Exact old producer response/receipt files outside the committed corpus were not fetched or reconstructed",
+    "Physical attempts, tokens and billing in this native inspection are UNKNOWN"
+  ]
+}

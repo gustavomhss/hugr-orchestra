@@ -1,0 +1,10 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "chunk_id": "af61df",
+    "wall_time_seconds": 0.157816503,
+    "exit_code": 128,
+    "original_token_count": 40,
+    "output": "/workspace/scratch/ea607dbcbf72/preparation/update/ownership-rebuild-boundaries-v2.patch:424: new blank line at EOF.\n+\nerror: 1 line adds whitespace errors.\n"
+  }
+}

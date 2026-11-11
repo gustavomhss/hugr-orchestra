@@ -1,0 +1,66 @@
+{
+  "schema": "genesis-root-preparation-correction/v1",
+  "attempt_id": "S2-PREP-ROOT-01",
+  "correction_id": "S2-ROOT-CORRECTION-01",
+  "linked_attempts": [
+    "PREP-S2-02",
+    "PREP-S2-04",
+    "PREP-S2-05"
+  ],
+  "authorship": "root editorial whitespace correction only; native authors original v1/v2 unchanged",
+  "reason": "Observed git apply --check --whitespace=error exit128 on v2: extra blank line at EOF of new fixture",
+  "preserved_previous": {
+    "path": "ownership-rebuild-boundaries-v2.patch",
+    "sha256": "a266d14c5728ec86e9d4be2249e791ea4daae53c7780767307af3d417462a405"
+  },
+  "patch": {
+    "path": "ownership-rebuild-boundaries-v3.patch",
+    "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d",
+    "bytes": 30068
+  },
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "before_sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+      "proposal_sha256": "f16c2b2d2d56d96bb941e21f246fa86ab4dd69445e457acd3299194906340e1d",
+      "guard_line_count": 364,
+      "v2_delta": "unchanged"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-rebuild-fixture.ts",
+      "before_sha256": null,
+      "proposal_sha256": "29ca323a66dcaeff26f4ed0f7b64379c83610d99d3dc8878f7e0516e9cf749fa",
+      "guard_line_count": 182,
+      "v2_delta": "remove one blank line at EOF"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild-boundaries.test.ts",
+      "before_sha256": null,
+      "proposal_sha256": "87326a40123d871afca112250f6318a4253f155a3568623501f0769700d05838",
+      "guard_line_count": 71,
+      "v2_delta": "unchanged"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "before_sha256": "e705e4061c9b0f245cb10ffafab30639399686bb18e1e5fe0e3ef9edef263cbd",
+      "proposal_sha256": "1c61e675cae0132964142118e035aa4336f9fd3d06c911953477fed194f14dc2",
+      "guard_line_count": 402,
+      "v2_delta": "unchanged"
+    }
+  ],
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "--whitespace=error",
+    "/workspace/scratch/ea607dbcbf72/preparation/update/ownership-rebuild-boundaries-v3.patch"
+  ],
+  "started_at": "2026-11-11T14:20:21.506128+00:00",
+  "ended_at": "2026-11-11T14:20:21.508809+00:00",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "applied_to_source": false,
+  "tests": "NOT_RUN",
+  "native_new_request": false
+}

@@ -1,0 +1,1 @@
+Assign correction new attempt identity PREP-S2-05, linked to PREP-S2-02 and review PREP-S2-04 (don't relabel original request; record amendment). S1 prep quota6 now published at11b5eaaf..., exactly covers root+3 initial+review+correction. No further inference requests/agents. Finish v2 receipt; root reviews mechanically/static within existing root task. Keep original v1.

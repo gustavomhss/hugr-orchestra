@@ -1,0 +1,83 @@
+{
+  "schema": "genesis-native-preparation-receipt/v1",
+  "task_id": "PREP-S2-02",
+  "native_task_name": "/root/update_fit",
+  "role": "technical-preparation-not-judge",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "execution_status": "COMPLETED_PREPARATION_ONLY",
+  "candidate_revision": null,
+  "completed_at": "2026-11-11T14:11:22.770469+00:00",
+  "started_at": "UNKNOWN",
+  "logical_preparation_requests": 1,
+  "ownership_production_requests": 0,
+  "judge_requests": 0,
+  "logical_usage_note": "One preparation delegation observed; zero ownership-production requests does not mean zero physical model work or free usage.",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "quota_allocation": null,
+  "source_files_blob_verified": 14,
+  "source_files_count": 14,
+  "operations": [
+    "GitHub connector pinned read-only fetches",
+    "local source materialization in assigned preparation directory",
+    "SHA-256 and Git blob identity verification",
+    "static source/test inspection",
+    "deterministic generation of unapplied patch and proposed tests"
+  ],
+  "test_status": "NOT_RUN",
+  "typecheck_status": "NOT_RUN",
+  "production_status": "NOT_RUN",
+  "github_mutations": false,
+  "shared_source_modified": false,
+  "patch_application_status": "NOT_APPLIED",
+  "independent_judgment": null,
+  "outputs": [
+    {
+      "path": "request-original.txt",
+      "bytes": 1141,
+      "sha256": "fa982e7b5d72fc85de84301cb54af4703d01d43dd7ebc9c53f41506c54c395e5"
+    },
+    {
+      "path": "response-original.md",
+      "bytes": 3827,
+      "sha256": "78faebef37452bc8e563a7fc6056b22ec565913bec51d225565fdae38794088d"
+    },
+    {
+      "path": "findings.md",
+      "bytes": 11470,
+      "sha256": "d77368600f97545cb75d182401b950e6e8042b6f00ed19f1fa0f496cf7dcd103"
+    },
+    {
+      "path": "oracle-proposal.json",
+      "bytes": 3512,
+      "sha256": "94416d3adea63c97054f1e4e531f95048bc046f16f0bd87ec3119ccb00365420"
+    },
+    {
+      "path": "ownership-rebuild-boundaries.patch",
+      "bytes": 6234,
+      "sha256": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677"
+    },
+    {
+      "path": "patch-metadata.json",
+      "bytes": 697,
+      "sha256": "70e62ea39805714b6c849597efcfbe36b5ad1bf750c4418b97d18333a2c7f77e"
+    },
+    {
+      "path": "source-manifest.json",
+      "bytes": 10476,
+      "sha256": "540f59735ca7f0e4abc6184f40a9ab5bbecd3eef6ecfcc71d8fe69475a3e83f3"
+    },
+    {
+      "path": "build-proposal.py",
+      "bytes": 6529,
+      "sha256": "3824b95d066cfa479c2c826752370c0002d5fc1742b8f1c9935cff930f0347f2"
+    }
+  ],
+  "blocking_dependencies": [
+    "S1 finite scope, source authority, criteria, file ownership and operational quota",
+    "S5 conflict clearance, exact candidate integration and two independent binding judgments",
+    "permitted CI run and real native capture/response/evaluation bridge"
+  ]
+}

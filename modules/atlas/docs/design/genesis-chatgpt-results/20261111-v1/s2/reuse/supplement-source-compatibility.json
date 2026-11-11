@@ -1,0 +1,38 @@
+[
+  {
+    "path": "packages/protocol/src/groups/session.ts",
+    "actual_sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+    "expected_sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+    "sha256_match": true
+  },
+  {
+    "path": "packages/server/src/handlers/session.ts",
+    "actual_sha256": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+    "expected_sha256": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+    "sha256_match": true
+  },
+  {
+    "path": "packages/schema/src/prompt-input.ts",
+    "actual_sha256": "f8c6363251babacd5dfc0c5e5e7413e0efd44bd6f56612a380286f61df23ba46",
+    "expected_sha256": "f8c6363251babacd5dfc0c5e5e7413e0efd44bd6f56612a380286f61df23ba46",
+    "sha256_match": true
+  },
+  {
+    "path": "packages/schema/src/session-input.ts",
+    "actual_sha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+    "expected_sha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+    "sha256_match": true
+  },
+  {
+    "path": "packages/schema/src/session-delivery.ts",
+    "actual_sha256": "6c711801312cf2512c46695e44dfcba86f0e9cf9b8485aed4b435adcdba23528",
+    "expected_sha256": "6c711801312cf2512c46695e44dfcba86f0e9cf9b8485aed4b435adcdba23528",
+    "sha256_match": true
+  },
+  {
+    "path": "packages/schema/src/session-event.ts",
+    "actual_sha256": "790f1b779fda44be41138208c7b855fcf2e5ab3ff84070307155d7025b6b855d",
+    "expected_sha256": "790f1b779fda44be41138208c7b855fcf2e5ab3ff84070307155d7025b6b855d",
+    "sha256_match": true
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+    "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+    "local": "/workspace/scratch/ea607dbcbf72/preparation/update/sources/modules__atlas__docs__design__genesis-global-completion-plan.md",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-global-completion-plan.md",
+    "source_ended_newline": true
+  },
+  {
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+    "blob": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+    "local": "/workspace/scratch/ea607dbcbf72/preparation/update/sources/modules__atlas__packages__knowledge__src__ownership__types.ts",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/types.ts",
+    "source_ended_newline": true
+  }
+]

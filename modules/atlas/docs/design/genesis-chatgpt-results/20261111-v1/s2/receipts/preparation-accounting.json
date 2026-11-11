@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-preparation-accounting/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "limit": 6,
+  "accounted_packets": 6,
+  "root_packets": 1,
+  "native_child_turns": 5,
+  "distinct_native_child_agents": 3,
+  "completed_child_turns": 5,
+  "root_state": "RUNNING",
+  "additional_packet_capacity": 0,
+  "production_requests": 0,
+  "binding_judgment_requests": 0,
+  "consumer_requests": 0,
+  "external_model_api_calls": 0,
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "pre_forward_enforcement_proven": false,
+  "ledger_file": "execution-ledger.jsonl",
+  "ledger_sha256": "267547253fcc2fafd0609c6b8a86006b70c7c19797213a912cf0763984f85c40"
+}

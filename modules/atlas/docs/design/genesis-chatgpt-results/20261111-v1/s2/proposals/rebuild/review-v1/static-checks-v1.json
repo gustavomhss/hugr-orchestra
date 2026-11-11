@@ -1,0 +1,13 @@
+{
+  "patch_sha256_expected": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677",
+  "patch_sha256_observed": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677",
+  "reviewed_patch_still_current": true,
+  "source_blobs_all_match": true,
+  "test_original_newlines": 574,
+  "test_added_lines": 35,
+  "test_candidate_newlines": 609,
+  "godfile_guard_count": 610,
+  "hard_cap": 600,
+  "guard_execution": "NOT_RUN",
+  "method": "static line arithmetic from exact diff and pinned guard source, not gate execution"
+}
