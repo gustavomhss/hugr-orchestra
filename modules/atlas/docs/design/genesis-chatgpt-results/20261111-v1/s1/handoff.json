@@ -1,0 +1,37 @@
+{
+  "schema": "genesis-session-handoff/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "handoff_sequence": 1,
+  "supersedes": null,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3"
+  },
+  "scope_revision": null,
+  "criteria_revision": null,
+  "state": "WORKING",
+  "attempt_id": "s1-preparation-001",
+  "dependencies": [],
+  "criteria_ref": null,
+  "receipts": [],
+  "patches": [],
+  "budget_allocation_ref": null,
+  "budget_ledger_ref": null,
+  "blockers": [
+    "Dependent production awaits full inventory, interfaces and derived allocation.",
+    "Native physical attempts, tokens and billing are not exposed."
+  ],
+  "next_action": "Reconcile complete Git tree; publish full scope/criteria/interfaces and quotas; request S5 review.",
+  "preparatory_files": [
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-contract.md",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl"
+  ],
+  "note": "References to this payload are added in the next handoff; no self-commit/hash claim."
+}

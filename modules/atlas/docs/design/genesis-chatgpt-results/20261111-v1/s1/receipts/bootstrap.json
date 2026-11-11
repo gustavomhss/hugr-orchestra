@@ -1,0 +1,43 @@
+{
+  "schema": "genesis-capabilities/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "observed_at": "2026-11-11T14:09:06.013020+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "branch_initial_head": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "connector": {
+    "read": "OBSERVED",
+    "create_branch": "OBSERVED",
+    "write_commit": "PENDING_VERIFICATION",
+    "workflow_dispatch": "NOT_EXPOSED in discovered GitHub tools"
+  },
+  "sandbox": {
+    "python": "3.12.14",
+    "node": "24.22.1",
+    "git": "2.52.0",
+    "npm": "11.9.0",
+    "bun": "NOT_FOUND",
+    "repository": "partial connector-materialized evidence; NOT a checkout"
+  },
+  "subagents": {
+    "slots_including_root": 4,
+    "source": "host tool instructions",
+    "spawn_observed": false
+  },
+  "tests": {
+    "policy": "GitHub Actions only; AGENTS.md",
+    "tests_run": false
+  },
+  "initial_tree_read": {
+    "recursive_root": "FAILED Transport closed; no completeness claimed",
+    "fallback": "subtree enumeration in progress"
+  },
+  "unknowns": [
+    "native token usage",
+    "billing",
+    "physical model retries",
+    "root turn provider attempt identity"
+  ],
+  "bootstrap_accounting": "The root turn began before an application reservation existed. Its preparation is recorded from the start as one retrospective packet with UNKNOWN physical use; this is not pre-forward enforcement."
+}

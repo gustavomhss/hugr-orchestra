@@ -1,0 +1,72 @@
+{
+  "schema": "genesis-criteria/v1",
+  "campaign": "20261111-v1",
+  "criteria": [
+    {
+      "criterion_id": "AC-01",
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "RUNNING",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation in progress. No semantic acceptance or product economic conformance is claimed."
+    },
+    {
+      "criterion_id": "AC-08",
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "RUNNING",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation in progress. No semantic acceptance or product economic conformance is claimed."
+    },
+    {
+      "criterion_id": "CC-1",
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "RUNNING",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation in progress. No semantic acceptance or product economic conformance is claimed."
+    },
+    {
+      "criterion_id": "CC-6",
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "RUNNING",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation in progress. No semantic acceptance or product economic conformance is claimed."
+    },
+    {
+      "criterion_id": "SC-4",
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "RUNNING",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation in progress. No semantic acceptance or product economic conformance is claimed."
+    },
+    {
+      "criterion_id": "DOD-5",
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "RUNNING",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation in progress. No semantic acceptance or product economic conformance is claimed."
+    }
+  ]
+}
