@@ -8,6 +8,7 @@ on:
     paths:
       - ".github/workflows/atlas-pilot.yml"
       - "modules/atlas/**"
+      - "!modules/atlas/docs/design/genesis-chatgpt-results/**"
 
 permissions:
   contents: read
