@@ -1,5 +1,7 @@
 # P2 — the backend specialist / Atlas factual execution-plan audit
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Basis and verdict
 
 - Date: 2026-10-04. Source inspection only; test cases below are inspected or proposed, never reported as executed.

@@ -1,5 +1,7 @@
 # P4 — Composer contract qualification plan
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Basis and scope
 
 - Read-only source research, 2026-10-04. Implementation proposals below require lead interface freeze; current runtime readiness unmeasured.

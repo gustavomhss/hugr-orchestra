@@ -1,5 +1,7 @@
 # Remove `packages/orchestra/src/storage/db.ts`
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Goal
 
 Remove all production usages of the legacy `packages/orchestra/src/storage/db.ts` module.

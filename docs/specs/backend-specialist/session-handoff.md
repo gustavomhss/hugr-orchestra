@@ -1,5 +1,7 @@
 # Session snapshot + handoff — the backend specialist
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Current state
 
 Read [acceptance.md](acceptance.md) first. It is the final acceptance record, updated at baseline `966c1af1ee` after #319 (`52441dd37c`) and #320 (`966c1af1ee`) merged. Public GitHub confirms both PRs merged. Remaining: a live-model observation of restore after compaction and the install channels (deferred to release, owner: last). No new 21/21 model campaign is planned. Static toolkit floors are accepted but do not qualify runtime behavior. Windows supports AppContainer shell execution and exact endpoint routes for pwsh/cmd; it does not provide general Windows loopback access or live Windows Cassandra proof, and psql/SQLx/PGLS plus unsupported LSP/workspace-formatter launches remain refused. Named project-config writes are guarded on Darwin, Linux and Windows (#313/#325); arbitrary denyPaths inside AppContainer write roots remain refused. Everything below this heading is historical context from earlier sessions. Where it disagrees with `acceptance.md`, `acceptance.md` wins. Earlier closure notes live in the Landing update of [session-resume-2026-10-08.md](session-resume-2026-10-08.md) and the earlier compaction checkpoint in [session-state-2026-10-08.md](session-state-2026-10-08.md).

@@ -1,5 +1,7 @@
 # Native Archie authoring — measured qualification
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Scope and source identity
 
 The owner corrected the active native member ID to `archie`, retaining the `upstream` profile. Current seat, assets, native discovery, Task attribution, Session settlement and Core receipt recognition use that identity without a `walt` alias. Historical receipts and immutable PlanRevision V1/V2 records retain their original identity.

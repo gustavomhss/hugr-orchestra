@@ -1,5 +1,7 @@
 # Maestro Arsenal port contract
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Source: TechLead `a68e7af92c7ed5aaf8b6574b7ad2f705fb38eeb5`.
 Host baseline: Orchestra `628f72404baaf1cd3f5adedf497e830e176503d9`.
 
