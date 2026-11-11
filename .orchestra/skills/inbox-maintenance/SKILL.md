@@ -30,7 +30,7 @@ What it owns: `inbox-ownership`. How a person runs it: `inbox-usage`. The human 
 
 - Row tables collapse on their real key, then the survivor is rewritten to `install`. A key already on `install` wins; the other row is deleted.
 - Slack keeps one checkpoint. The `install` row wins. If none exists, the first other row is moved and the rest are deleted.
-- Credential adoption copies the newest hashed `inbox.<source>.<sha256>` slot onto `inbox.<source>.<sha256(install)>`, then removes the hashed project slots. It does not touch an unhashed legacy id, and it does not overwrite an installation credential the profile itself holds.
+- Credential adoption copies the newest `inbox.<source>.<64 lowercase hex>` slot onto `inbox.<source>.<sha256(install)>`, then removes those hashed slots. It does not touch an unhashed legacy id or any other suffix, and it does not overwrite an installation credential the profile itself holds. The proof is the hashed-slot test in `test/inbox/service.test.ts`.
 - Tests that sign in through `SlackAuth` must use `installOwner`. The old `JSON.stringify([project, directory, workspace])` key will not be found.
 
 ## Tests

@@ -12,6 +12,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Credential } from "@orchestra/core/credential"
 import { Inbox, InboxHandoff } from "@orchestra/core/inbox"
+import { adoptCredentials, hashOwner, installOwner } from "../../src/inbox/install"
 import { InboxDraftTable, InboxEgressTable, InboxRowTable } from "../../src/inbox/sql"
 import { Location } from "@orchestra/core/location"
 import { Project, ProjectV2 } from "@orchestra/core/project"
@@ -140,6 +141,43 @@ describe("inbox service", () => {
         .run()
         .pipe(Effect.orDie)
       expect(yield* inbox.list()).toEqual([])
+    }),
+  )
+  it.effect("adopts a hashed project credential and leaves every other suffix", () =>
+    Effect.gen(function* () {
+      const credentials = yield* Credential.Service
+      const project = hashOwner("project-a")
+      const slot = IntegrationID.make(`inbox.mail.${hashOwner(installOwner)}`)
+      const hashed = yield* credentials.create({
+        integrationID: IntegrationID.make(`inbox.mail.${project}`),
+        value: { type: "key", key: "project-mail", metadata: { owner: "project-a" } },
+      })
+      const bare = yield* credentials.create({
+        integrationID: IntegrationID.make("inbox.mail"),
+        value: { type: "key", key: "bare-mail" },
+      })
+      const probe = yield* credentials.create({
+        integrationID: IntegrationID.make("inbox.mail.probe"),
+        value: { type: "key", key: "probe-mail" },
+      })
+      yield* adoptCredentials(credentials)
+      const stored = yield* credentials.all()
+      expect(stored.find((row) => row.integrationID === slot)?.value).toMatchObject({
+        type: "key",
+        key: "project-mail",
+        metadata: { owner: "install" },
+      })
+      expect(stored.some((row) => row.id === hashed.id)).toBe(false)
+      expect(yield* credentials.get(bare.id)).toMatchObject({ value: { type: "key", key: "bare-mail" } })
+      expect(yield* credentials.get(probe.id)).toMatchObject({ value: { type: "key", key: "probe-mail" } })
+      const kept = yield* credentials.create({
+        integrationID: IntegrationID.make(`inbox.mail.${hashOwner("project-kept")}`),
+        value: { type: "key", key: "kept-mail" },
+      })
+      yield* adoptCredentials(credentials)
+      const after = yield* credentials.all()
+      expect(after.find((row) => row.integrationID === slot)?.value).toMatchObject({ type: "key", key: "project-mail" })
+      expect(after.some((row) => row.id === kept.id)).toBe(true)
     }),
   )
 

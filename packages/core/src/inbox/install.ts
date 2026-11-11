@@ -111,7 +111,7 @@ function withOwner(value: Credential.Value, owner: string): Credential.Value {
   return { ...value, metadata: { ...value.metadata, owner } }
 }
 
-// Hashed project slots move to the installation slot. The unhashed legacy id is left alone.
+// A 64-hex project slot moves to the installation slot. An unhashed id, and any other suffix, is left alone.
 export function adoptCredentials(credentials: Credential.Interface) {
   return Effect.gen(function* () {
     const rows = yield* credentials.all()
@@ -123,6 +123,7 @@ export function adoptCredentials(credentials: Credential.Interface) {
       const legacy = []
       for (const row of rows) {
         if (!row.integrationID.startsWith(prefix) || row.integrationID === slot) continue
+        if (!/^[0-9a-f]{64}$/.test(row.integrationID.slice(prefix.length))) continue
         if (yield* credentials.inheritedFrom(row.id)) continue
         legacy.push(row)
       }

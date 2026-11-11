@@ -10,7 +10,7 @@ Inbox has one owner, the constant `install` in `packages/core/src/inbox/install.
 
 A selected project projects that repository's Board requests and is the handoff target. Opening the page does not pull that folder's legacy Slack bindings into the installation store. Handoff delivers ids. It creates a Maestro session only when the project id is not `global`.
 
-Older rows and hashed project credentials are adopted onto `install`. An unhashed legacy credential id is left alone. An installation credential the profile already holds is not overwritten.
+Older rows and hashed project credentials are adopted onto `install`. An unhashed legacy credential id, and any suffix that is not 64 lowercase hex, is left alone. An installation credential the profile already holds is not overwritten.
 
 `list` does not pull location-scoped channel bindings. Jira is the exception on open: `list` pulls it, catches the error, and writes the Jira receipt. Jira and GitLab accept only an https origin. GitHub CI is imported only when every related pull belongs to the signed-in user; a proof error fails the sync. Slack system subtypes are one function, `slackSystem`, used by the sync path and the channel page.
 
