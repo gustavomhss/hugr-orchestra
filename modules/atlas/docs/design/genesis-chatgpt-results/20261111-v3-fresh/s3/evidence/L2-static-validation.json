@@ -1,7 +1,7 @@
 {
   "schema": "s3-static-validation/v1",
   "unit": "L2-all",
-  "executed_at": "2026-11-11T18:34:00.000000+00:00",
+  "executed_at": "2026-11-11T18:44:23.945166+00:00",
   "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
   "oracle": {
     "path": "oracles/L2-all.json",
@@ -19,8 +19,9 @@
     {
       "key": "s3-l2-relay",
       "path": "bodies/l2-relay.md",
-      "byte_length": 6508,
-      "sha256": "db289b23c91e8e1dda820f81ed6c2b6a8ebb8844b3ba4d763fb549f363961b79"
+      "byte_length": 7235,
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "previous_sha256": "db289b23c91e8e1dda820f81ed6c2b6a8ebb8844b3ba4d763fb549f363961b79"
     },
     {
       "key": "s3-l2-integrations",
@@ -31,59 +32,53 @@
   ],
   "case_checks": [
     {
-      "case": "L2-A1",
-      "status": "PASS_STATIC",
+      "id": "L2-A1",
+      "result": "PASS_STATIC",
       "evidence": [
-        "bodies/l2-maestro.md §2"
-      ],
-      "observed": "Exact revision/context/policy/task binding, genuine immediate owner reply, child Session/permission snapshot, beforeTurn revalidation and mismatch HOLD are all explicit."
+        "l2-maestro.md §2 binds exact revision/context/policy/task, genuine immediate owner reply, seat/intent comparison, reservation child and permission snapshot, beforeTurn revalidation and HOLD on mismatch"
+      ]
     },
     {
-      "case": "L2-A2",
-      "status": "PASS_STATIC",
+      "id": "L2-A2",
+      "result": "PASS_STATIC",
       "evidence": [
-        "bodies/l2-maestro.md §3"
-      ],
-      "observed": "Membership and bytes, UTF-8/tree validation, generated virtual module, digest extraction, repo-only versus shipped content and authority separation are explicit."
+        "l2-maestro.md §3 covers membership and file bytes, UTF-8/regular/no symlink constraints, virtual module generation, SeatSkillRoot digest/cache, repo-only maintenance distinction and Maestro authority boundary"
+      ]
     },
     {
-      "case": "L2-B1",
-      "status": "PASS_STATIC",
+      "id": "L2-B1",
+      "result": "PASS_STATIC",
       "evidence": [
-        "bodies/l2-relay.md §§1–2"
-      ],
-      "observed": "Effect, disposition, receipt and state are separated; no rollback/exactly-once is claimed; safe recovery and workflow settlement limits are explicit."
+        "l2-relay.md §§1–2 separates effect, disposition, durable receipt and state application; refuses rollback/exactly-once claims; requires lock/state/ledger evidence before retry and governed settlement"
+      ]
     },
     {
-      "case": "L2-B2",
-      "status": "PASS_STATIC",
+      "id": "L2-B2",
+      "result": "PASS_STATIC",
       "evidence": [
-        "bodies/l2-relay.md §3"
-      ],
-      "observed": "Unique IDs, compiler/driver distinction, advisory judgement, blank output ambiguity, audit limits and fixture/source/generated distinctions are explicit."
+        "l2-relay.md §3 distinguishes intact/no-current-sprint not-run, broken-record comparison-not-run, and reachable unreadable/malformed sprint invalid; preserves compiler/driver distinction, advisory judges, blank stdout ambiguity, audit/current-artifact separation and cost null/UNKNOWN"
+      ]
     },
     {
-      "case": "L2-C1",
-      "status": "PASS_STATIC",
+      "id": "L2-C1",
+      "result": "PASS_STATIC",
       "evidence": [
-        "bodies/l2-integrations.md §2"
-      ],
-      "observed": "Catalog remains data-only, Agent/Task is refused, Orchestra child Session and per-tool authorization are preserved, and governed load is not broader authority."
+        "l2-integrations.md §2 keeps catalog data-only and qualification pending; refuses Claude Agent/Task; requires Orchestra child Session, authorize/execute gates and successful governed-skill load without treating exceptions as blanket authority"
+      ]
     },
     {
-      "case": "L2-C2",
-      "status": "PASS_STATIC",
+      "id": "L2-C2",
+      "result": "PASS_STATIC",
       "evidence": [
-        "bodies/l2-integrations.md §3"
-      ],
-      "observed": "Unknown actions are not automatically retried, stale-not-dispatched is bounded, real Dock transport is required, direct/MCP permissions differ, and Janitor is unavailable/read-only rather than clean/destructive."
+        "l2-integrations.md §3 distinguishes hooks from MCP, requires real desktop URL/token, blocks uncertain retries, limits stale-not-dispatched retry, treats scanner failure as unavailable and Janitor as read-only"
+      ]
     }
   ],
   "critical_error_scan": {
-    "normative prose treated as mechanical enforcement": "not_found",
-    "semantic acceptance invented as runtime proof": "not_found",
-    "omission of required family contracts": "not_found",
-    "navigation treated as rebuild dependency": "not_found"
+    "normative_prose_as_enforcement": "not_found",
+    "semantic_acceptance_as_runtime_proof": "not_found",
+    "required_family_omission": "not_found",
+    "navigation_as_rebuild_dependency": "not_found"
   },
   "size_limit": {
     "max_each": 14000,
@@ -91,8 +86,22 @@
   },
   "result": "PASS_STATIC_ONLY",
   "limitations": [
-    "This is deterministic/orchestrator validation, not either independent persistent judge decision.",
-    "It does not release L2 or authorize L3 under the campaign protocol.",
-    "No product runtime, CI, native import, binding, publication, index/read or independent consumer was executed by this validation."
+    "performed by the recovery principal, not either persistent independent semantic judge",
+    "does not release L2 for L3 under judging.md",
+    "does not prove runtime execution, CI, Atlas import, publication or consumer behavior",
+    "recovered findings were summary-only inputs; their original judge packets remain unavailable and the corrected bytes still require both persistent judges"
+  ],
+  "revision": 2,
+  "recovered_finding_checks": [
+    {
+      "id": "REC-JUDGE-RELAY-STATUS-01",
+      "result": "PASS_STATIC",
+      "evidence": "bodies/l2-relay.md §3 + evidence/recovery-source-excerpts.md"
+    },
+    {
+      "id": "REC-JUDGE-COST-01",
+      "result": "PASS_STATIC",
+      "evidence": "bodies/l2-relay.md §§2–3"
+    }
   ]
 }

@@ -49,7 +49,9 @@ Antes de editar, escreva: objetivo, fonte autoral, owner, consumers, tipo de are
 6. Rode audit/verify para a propriedade correspondente, lembrando que exit 0 não executa checks nem prova artefatos atuais.
 7. Verifique blank stdout consultando state/stderr/ledger; não o interprete sozinho.
 8. Não edite failing fixture/golden para apagar a divergência. Atualização de oracle exige mudança consciente do contrato e revisão dos casos.
-9. Registre tentativas, receipts e custos observados; ausentes ficam `UNKNOWN`.
+9. Registre tentativas, receipts e custos observados. Sem cost data, o audit usa `total: null` e a nota `not zero cost, unmeasured`; custo, billing e chamadas físicas ficam `UNKNOWN`, nunca zero por omissão.
+10. Execute checks pela porta do repositório. O suporte literal no `AGENTS.md` pinado é: **“Tests run on GitHub Actions, never on this machine.”** e o comando documentado é `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`. Para `modules/relay`, somente arquivos `.py` selecionam pytest; outros alvos usam Bun. Um run inexistente continua `NOT_RUN`.
+11. Registre o ID/URL/head SHA e resultado do run realmente observado; um guia, comando escrito ou status local não é CI verde.
 
 ## 6. Adicionar preset/capability asset
 

@@ -71,7 +71,8 @@ O processo pode morrer depois do efeito externo e antes de produzir disposição
 4. Classificar o resultado como `observed-applied`, `observed-not-applied`, `stale-not-dispatched`, `unknown-effect`, `corrupt` ou `unavailable`.
 5. Repetir automaticamente apenas se o contrato prova `not-dispatched` ou se a operação foi realmente emitida com chave idempotente válida. `unknown-effect` bloqueia repetição quando duplicação é perigosa.
 6. Em workflow governado, concluir pelo settlement do host. Audit/verify confirma apenas as propriedades que de fato verificou; não executa checks nem valida automaticamente os artefatos correntes.
-7. Preservar tentativa e lacunas. Custo, billing e número físico de chamadas continuam `UNKNOWN` quando não medidos.
+7. No oracle recheck, cadeia íntegra sem sprint atual resulta em `not-run`; sprint fornecido/descoberto que é ilegível, UTF-8 inválido, JSON malformado ou schema inválido resulta em `invalid`, nunca em `not-run`. Cadeia ou registros quebrados têm seu próprio `not-run` com motivo de comparação não executada. Nenhum desses estados fecha a WP.
+8. Preservar tentativa e lacunas. O audit usa `total: null` quando nenhum custo foi registrado: não é custo zero, é não medido. Billing, tokens e número físico de chamadas continuam `UNKNOWN`.
 
 ## 5. F4 — Dock retorna ação incerta e Janitor está indisponível
 

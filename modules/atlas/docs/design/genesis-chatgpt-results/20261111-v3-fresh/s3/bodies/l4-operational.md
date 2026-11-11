@@ -38,11 +38,12 @@ Stdout vazio é ambíguo. Verifique token/WP, state, lock, stderr, ledger/receip
 Quando plan comparison/recheck é exigida:
 
 - `ok` observado pode satisfazer a condição correspondente;
-- `not-run` é evidência ausente;
-- malformed/explicit invalid continua falha;
+- com cadeia íntegra, `not-run` significa que nenhum sprint atual foi fornecido/descoberto; cadeia ou registros quebrados produzem outro `not-run` com a nota de comparação não executada;
+- um sprint alcançável que não pode ser lido/decodificado ou cujo JSON/schema é malformado é `invalid`, **nunca** `not-run`;
+- `not-run` é evidência ausente e `invalid` é evidência negativa; nenhum fecha a WP;
 - fixture/golden divergente exige investigação do contrato, não edição para verde.
 
-Diferencie lifecycle/campos de Arm TS, shell, `relay-gate eval/check`, benchmark hook e wrapper LangGraph/Python. Exit code parecido não os torna equivalentes.
+Diferencie lifecycle/campos de Arm TS, shell, `relay-gate eval/check`, benchmark hook e wrapper LangGraph/Python. Exit code parecido não os torna equivalentes. Para CI, a instrução literal do baseline é **“Tests run on GitHub Actions, never on this machine.”**; use `bun run test:ci ...` e registre o run observado, não apenas o comando.
 
 ## 4. Relay: processo morreu depois de possível efeito
 
@@ -57,7 +58,7 @@ Diferencie lifecycle/campos de Arm TS, shell, `relay-gate eval/check`, benchmark
    - `corrupt/unavailable`: repare a evidência antes de agir.
 5. `release` de lock não reverte efeito nem prova exactly-once.
 6. Em workflow governado, conclua pelo settlement do host; `evaluate` isolado não o substitui.
-7. Custos/tentativas físicas não observados permanecem `UNKNOWN`.
+7. Se nenhum custo foi registrado, o relatório usa `total: null` e declara `not zero cost, unmeasured`; custos, billing e tentativas físicas permanecem `UNKNOWN`.
 
 ## 5. Dock sem canal ou ação incerta
 

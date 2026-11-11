@@ -1,7 +1,7 @@
 {
   "schema": "s3-static-validation/v1",
   "unit": "L3-L4-recovery-candidates",
-  "executed_at": "2026-11-11T18:38:49.241371+00:00",
+  "executed_at": "2026-11-11T18:44:23.945166+00:00",
   "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
   "oracles": [
     {
@@ -21,9 +21,10 @@
     {
       "key": "s3-l3-flows",
       "path": "bodies/l3-flows.md",
-      "byte_length": 10977,
-      "sha256": "fe0d8617ecb2039ef92d08b59c9e98974f1f3ee0166af57e281d56ef0552ff9b",
-      "state": "CANDIDATE_UNRELEASED"
+      "byte_length": 11409,
+      "sha256": "d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7",
+      "state": "CORRECTED_CANDIDATE_UNRELEASED",
+      "previous_sha256": "fe0d8617ecb2039ef92d08b59c9e98974f1f3ee0166af57e281d56ef0552ff9b"
     },
     {
       "key": "s3-l4-entry",
@@ -42,22 +43,24 @@
     {
       "key": "s3-l4-maintenance",
       "path": "bodies/l4-maintenance.md",
-      "byte_length": 6783,
-      "sha256": "2124c96e9f36c7860aacec3d89e5d6ca2ce744e3e5a9e55a754aeaeb9e78ae68",
-      "state": "CANDIDATE_UNRELEASED"
+      "byte_length": 7433,
+      "sha256": "31821e9ed5533a9e48fd590fad4bf94373c7a2241615e563038eb27c8b7d0cf8",
+      "state": "CORRECTED_CANDIDATE_UNRELEASED",
+      "previous_sha256": "2124c96e9f36c7860aacec3d89e5d6ca2ce744e3e5a9e55a754aeaeb9e78ae68"
     },
     {
       "key": "s3-l4-operational",
       "path": "bodies/l4-operational.md",
-      "byte_length": 6401,
-      "sha256": "6533af7e862236381678ba9cbcd70a5b4691e53615ea49b6ee3ad3acb6125add",
-      "state": "CANDIDATE_UNRELEASED"
+      "byte_length": 7014,
+      "sha256": "4f6a500ee4b575d9c06aa6c070ee8071f3b580c76c0f55da3871e567ebba7d81",
+      "state": "CORRECTED_CANDIDATE_UNRELEASED",
+      "previous_sha256": "6533af7e862236381678ba9cbcd70a5b4691e53615ea49b6ee3ad3acb6125add"
     }
   ],
   "size_limits": {
     "s3-l3-flows": {
       "limit": 18000,
-      "actual": 10977,
+      "actual": 11409,
       "within_limit": true
     },
     "s3-l4-entry": {
@@ -72,12 +75,12 @@
     },
     "s3-l4-maintenance": {
       "limit": 16000,
-      "actual": 6783,
+      "actual": 7433,
       "within_limit": true
     },
     "s3-l4-operational": {
       "limit": 16000,
-      "actual": 6401,
+      "actual": 7014,
       "within_limit": true
     }
   },
@@ -104,7 +107,7 @@
       "evidence": [
         "bodies/l3-flows.md §4"
       ],
-      "observed": "Effect/disposition/receipt/state cuts, no rollback/exactly-once, safe classification and settlement limits are explicit."
+      "observed": "Effect/disposition/receipt/state cuts, no rollback/exactly-once, safe classification, exact not-run versus invalid sprint semantics, null/UNKNOWN cost and settlement limits are explicit."
     },
     {
       "case": "L3-F4",
@@ -138,7 +141,7 @@
       "evidence": [
         "bodies/l4-maintenance.md §§2–8"
       ],
-      "observed": "Safe recipes identify sources, generated/cache surfaces, positive and negative checks and historical conflicts."
+      "observed": "Safe recipes identify sources, generated/cache surfaces, positive/negative checks, exact GitHub Actions procedure, unknown cost and historical conflicts."
     },
     {
       "case": "L4-P1",
@@ -146,7 +149,7 @@
       "evidence": [
         "bodies/l4-operational.md §§1–10"
       ],
-      "observed": "Diagnostics start with identity/state/receipts; unsafe retry, invented credentials and destructive cleanup are refused."
+      "observed": "Diagnostics start with identity/state/receipts; distinguish not-run from invalid, require observed CI, preserve UNKNOWN cost, and refuse unsafe retry/invented credentials/destructive cleanup."
     }
   ],
   "consumer_oracle_route_checks": [
@@ -220,10 +223,43 @@
     "historical intent presented as current implementation": "not_found",
     "runtime/CI/publication/consumer PASS invented": "not_found"
   },
-  "result": "PASS_STATIC_ONLY",
+  "result": "PASS_STATIC_ONLY_AFTER_CORRECTION",
   "limitations": [
     "This validation was performed by the recovery principal and is not either persistent independent judge.",
-    "L3 and L4 remain candidate-only because their predecessor acceptance preconditions are not currently satisfied.",
+    "Recovered findings were summary-only inputs; original full judge packets were unavailable.",
+    "L2, L3 and L4 remain unreleased until two persistent judges accept the corrected exact hashes in order.",
     "No runtime, CI, native import, binding, publication, Atlas read or isolated consumer execution was performed."
+  ],
+  "revision": 2,
+  "recovered_finding_checks": [
+    {
+      "id": "REC-JUDGE-RELAY-STATUS-01",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-relay.md §3",
+        "bodies/l3-flows.md §4",
+        "bodies/l4-operational.md §3",
+        "evidence/recovery-source-excerpts.md"
+      ]
+    },
+    {
+      "id": "REC-JUDGE-COST-01",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-relay.md §§2–3",
+        "bodies/l3-flows.md §4",
+        "bodies/l4-maintenance.md §5",
+        "bodies/l4-operational.md §4"
+      ]
+    },
+    {
+      "id": "REC-JUDGE-CI-01",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l4-maintenance.md §5",
+        "bodies/l4-operational.md §3",
+        "evidence/recovery-source-excerpts.md"
+      ]
+    }
   ]
 }

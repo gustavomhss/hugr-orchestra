@@ -40,7 +40,9 @@ O que foi estabelecido é limitado:
 - Judge com `blocking:false` é advisory. Falha semântica pode ser registrada sem bloquear avanço; maioria/independência não deve ser inferida do texto “independent auditor”.
 - `stdout` vazio é ambíguo. O hook pode ter concluído, recusado, escalado, falhado antes do JSON ou simplesmente não produzido texto. Consulte `arm state`, stderr e `relay verify`.
 - `relay verify`/audit exit 0 prova a integridade/consistência que o comando de audit realmente checou. Não executa os gates, não comprova artefatos atuais e não transforma `oracle_recheck.status=not-run` em `ok`.
-- Quando plan comparison/recheck é exigido, `not-run` é evidência ausente. Malformed ou invalid explícito continua falha.
+- A distinção do recheck é estrutural. Com cadeia íntegra e registros utilizáveis, `not-run` significa que nenhum sprint atual foi fornecido ou descoberto; para cadeia/registro quebrado há outro `not-run` com nota explícita de que a comparação não rodou. Depois que existe um path de sprint alcançável, falha de leitura, UTF-8, JSON ou schema é `invalid` — o próprio código fixa que sprint alcançável ilegível é “invalid, never not-run”.
+- Portanto, quando comparação do plano é exigida, `not-run` é evidência ausente e `invalid` é evidência negativa de sprint ilegível/malformado. Nenhum dos dois equivale a `ok`.
+- Custo ausente também não é zero: o audit retorna `total: null` e a nota `this run recorded no cost data — not zero cost, unmeasured`. Billing, tokens e tentativas continuam `UNKNOWN` sem medição.
 - YAML de profile é fonte e JSON vizinho é compilado; fixtures/goldens são exemplos e oracles agrupados. Não editar um failing golden para fabricar verde sem alterar conscientemente o contrato e seus casos.
 
 ## 4. Drivers não são intercambiáveis

@@ -1,7 +1,7 @@
 {
   "schema": "genesis-producer-receipt/v1",
   "unit": "L2-all-recovery",
-  "recorded_at": "2026-11-11T18:34:00.000000+00:00",
+  "recorded_at": "2026-11-11T18:44:23.945166+00:00",
   "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
   "producer": {
     "role": "recovery principal",
@@ -35,6 +35,11 @@
       "path": "bodies/l1-integrations.md",
       "git_blob_sha": "42800afbd5bdd0ca51c4e0eab136e9de31f7673f",
       "semantic_state": "accepted-by-original-persistent-pair"
+    },
+    {
+      "kind": "recovered-review-findings",
+      "path": "evidence/recovered-judge-findings.json",
+      "semantic_state": "summary-only-correction-input"
     }
   ],
   "outputs": [
@@ -47,8 +52,9 @@
     {
       "key": "s3-l2-relay",
       "path": "bodies/l2-relay.md",
-      "byte_length": 6508,
-      "sha256": "db289b23c91e8e1dda820f81ed6c2b6a8ebb8844b3ba4d763fb549f363961b79"
+      "byte_length": 7235,
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "previous_sha256": "db289b23c91e8e1dda820f81ed6c2b6a8ebb8844b3ba4d763fb549f363961b79"
     },
     {
       "key": "s3-l2-integrations",
@@ -64,5 +70,13 @@
     "paid_external_calls": 0
   },
   "acceptance": "NOT_JUDGED",
-  "note": "The reconstructed bodies are persisted for review. Principal authorship and PASS_STATIC_ONLY cannot substitute for two persistent independent judge decisions."
+  "note": "Corrected reconstruction persisted for renewed review. Principal authorship and PASS_STATIC_ONLY cannot substitute for two persistent independent judge decisions; no earlier acceptance is inherited.",
+  "revision": 2,
+  "corrections": [
+    {
+      "artifact": "s3-l2-relay",
+      "reason": "Recovered judge finding required exact not-run versus invalid sprint semantics and explicit null/UNKNOWN cost.",
+      "support": "evidence/recovery-source-excerpts.md"
+    }
+  ]
 }

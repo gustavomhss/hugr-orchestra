@@ -1,6 +1,6 @@
 {
   "schema": "s3-recovery-review-queue/v1",
-  "recorded_at": "2026-11-11T18:38:49.241371+00:00",
+  "recorded_at": "2026-11-11T18:44:23.945166+00:00",
   "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "persistent_judge_roles": [
@@ -26,11 +26,18 @@
       ],
       "support": [
         "evidence/L2-static-validation.json",
-        "receipts/L2-all/recovery-producer.json"
+        "receipts/L2-all/recovery-producer.json",
+        "evidence/recovered-judge-findings.json",
+        "evidence/recovery-source-excerpts.md"
       ],
       "required_outcome": "two independent ACCEPT decisions on exact candidate hashes",
       "on_failure": "correct candidates, persist new immutable revisions and re-run both judges",
-      "unlocks": "L3 review"
+      "unlocks": "L3 review",
+      "candidate_hashes": {
+        "s3-l2-maestro": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e",
+        "s3-l2-relay": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+        "s3-l2-integrations": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3"
+      }
     },
     {
       "order": 2,
@@ -42,7 +49,10 @@
       "required_precondition": "L2-all accepted by both persistent judges",
       "required_outcome": "two independent ACCEPT decisions on exact candidate hash",
       "on_failure": "correct candidate and re-run both judges",
-      "unlocks": "L4 review"
+      "unlocks": "L4 review",
+      "candidate_hashes": {
+        "s3-l3-flows": "d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7"
+      }
     },
     {
       "order": 3,
@@ -58,7 +68,13 @@
       "required_precondition": "L3-flows accepted by both persistent judges",
       "required_outcome": "two independent ACCEPT decisions for every exact candidate hash",
       "on_failure": "correct affected candidate set and re-run both judges",
-      "unlocks": "native package finalization and runtime import/binding/publication/index/read/consumer"
+      "unlocks": "native package finalization and runtime import/binding/publication/index/read/consumer",
+      "candidate_hashes": {
+        "s3-l4-entry": "43dfa1d4d82c7072c911f8e28e6abecce9686f0dea1be7d19077f3d2c27de871",
+        "s3-l4-ownership": "6c27da488bf8a376b0153150b59584766abd2a8c420910ec9ed542b8c2d4bfa3",
+        "s3-l4-maintenance": "31821e9ed5533a9e48fd590fad4bf94373c7a2241615e563038eb27c8b7d0cf8",
+        "s3-l4-operational": "4f6a500ee4b575d9c06aa6c070ee8071f3b580c76c0f55da3871e567ebba7d81"
+      }
     },
     {
       "order": 4,
@@ -80,5 +96,11 @@
     "physical_calls": "UNKNOWN",
     "cost": "UNKNOWN"
   },
-  "status": "WAITING_FOR_INDEPENDENT_JUDGES"
+  "status": "WAITING_FOR_INDEPENDENT_JUDGES_ON_CORRECTED_BYTES",
+  "revision": 2,
+  "recovered_findings": {
+    "packet": "evidence/recovered-judge-findings.json",
+    "source_excerpts": "evidence/recovery-source-excerpts.md",
+    "status": "CORRECTED_PENDING_REVIEW"
+  }
 }
