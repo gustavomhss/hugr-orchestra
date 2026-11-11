@@ -17,7 +17,7 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 
 ## Never owns
 
-- The open project, `os.homedir()`, or a project filter. A selected project projects Board and receives handoff. It is not the row owner. Opening the page does not pull that folder's legacy Slack bindings.
+- The open project, `os.homedir()`, or a project filter. A selected project projects Board and receives handoff. It is not the row owner. Opening the page does not pull that folder's legacy Slack bindings. An empty or missing folder still lists stored rows; it does not project Board and does not hand off.
 - Provider revocation. Disconnect removes the installation credential. It does not revoke the grant.
 - Sending on a read-only import. Slack OAuth messages, mail/Teams/Discord collection, feeds and calendar events do not send through Inbox.
 - Invented evidence: a human Slack message, a thread reply, a provider revocation, a new YouTube upload, or a GitHub notification that is not CI on the signed-in user's own pull.

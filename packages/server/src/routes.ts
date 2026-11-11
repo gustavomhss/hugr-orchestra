@@ -39,6 +39,7 @@ import { handlers } from "./handlers"
 import { authorizationLayer } from "./middleware/authorization"
 import { schemaErrorLayer } from "./middleware/schema-error"
 import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
+import { layer as inboxLocationLayer } from "./inbox-location"
 import { layer as locationLayer } from "./location"
 import { WebUi } from "./web-ui"
 import { sessionLocationLayer } from "./middleware/session-location"
@@ -128,6 +129,7 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(handlers),
     Layer.provide(merged.references),
     Layer.provide(sessionLocationLayer),
+    Layer.provide(inboxLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(authorizationLayer),
     Layer.provide(capabilityAuthorizationLayer),

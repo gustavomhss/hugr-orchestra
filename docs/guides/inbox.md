@@ -2,6 +2,7 @@
 
 Open **Inbox** in the main navigation. It is separate from Flight Engineer and does not need a meeting running.
 It does not follow the open project. Messages, credentials and drafts live in this installation's database.
+Opening Inbox still lists them when no project is selected or the selected folder is missing.
 
 First connection: [Inbox onboarding](inbox-onboarding.md). Day to day: [Inbox operation](inbox-operation.md).
 Changing the code: [Inbox maintenance](inbox-maintenance.md).
@@ -173,8 +174,8 @@ snapshot as a new connection; deduplication is within a connection, not an unver
 
 ### Project Board
 
-When a project is open, Inbox also projects that repository's local Board requests: open
-questions, intake cards requiring manual acceptance, and held deliveries in Review. Without an open project, that projection is absent. It does not start Board
+When a project folder is open and present, Inbox also projects that repository's local Board requests: open
+questions, intake cards requiring manual acceptance, and held deliveries in Review. Without an open project, or when that folder is missing, that projection is absent and stored rows still list. It does not start Board
 runners, refresh GitHub, approve work or answer a question. Use **Open decision/approval** to act on the Board.
 Questions that are answered or withdrawn, projects that are archived, and cards no longer requiring approval
 leave Inbox attention on the next refresh of that same project; their imported history is retained. Opening

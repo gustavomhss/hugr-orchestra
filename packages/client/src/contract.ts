@@ -7,6 +7,11 @@ class LocationMiddleware extends HttpApiMiddleware.Service<LocationMiddleware>()
   { error: InvalidRequestError },
 ) {}
 
+class InboxLocationMiddleware extends HttpApiMiddleware.Service<InboxLocationMiddleware>()(
+  "@orchestra/client/InboxLocationMiddleware",
+  { error: InvalidRequestError },
+) {}
+
 class SessionLocationMiddleware extends HttpApiMiddleware.Service<SessionLocationMiddleware>()(
   "@orchestra/client/SessionLocationMiddleware",
   { error: [InvalidRequestError, SessionNotFoundError] },
@@ -14,6 +19,7 @@ class SessionLocationMiddleware extends HttpApiMiddleware.Service<SessionLocatio
 
 export const ClientApi = makeDefaultApi({
   locationMiddleware: LocationMiddleware,
+  inboxLocationMiddleware: InboxLocationMiddleware,
   sessionLocationMiddleware: SessionLocationMiddleware,
 })
 

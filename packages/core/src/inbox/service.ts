@@ -26,7 +26,10 @@ import {
 import { Credential } from "../credential"
 import { Database } from "../database/database"
 import { makeLocationNode } from "../effect/app-node"
+import { Global } from "../global"
 import { Location } from "../location"
+import { ProjectV2 } from "../project"
+import { AbsolutePath } from "../schema"
 import { door } from "./door"
 import { InboxAccountTable, InboxCalendarTable, InboxRowTable } from "./sql"
 import { reconcileCalendar } from "./calendar"
@@ -122,7 +125,9 @@ export interface HandoffInterface {
 
 export class HandoffService extends Context.Service<HandoffService, HandoffInterface>()("@orchestra/v2/InboxHandoff") {}
 
-export const layer = (options: { workTransport?: Options; feedTransport?: Options } = {}) =>
+export const layer = (
+  options: { workTransport?: Options; feedTransport?: Options; projectBoard?: boolean } = {},
+) =>
   Layer.effect(
     Service,
     Effect.gen(function* () {
@@ -131,6 +136,8 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
       const credentials = yield* Credential.Service
       const slack = yield* SlackAuth.Service
       const owner = installOwner
+      // Home and a missing folder have no project board to reconcile. Projecting one would archive the wrong rows.
+      const projectBoard = options.projectBoard !== false
       yield* adoptCredentials(credentials)
       const lock = Semaphore.makeUnsafe(1)
       const sync = makeSlackSync({
@@ -261,14 +268,16 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                   .pipe(Effect.orDie)
               }
               const remote = acquired.items
-              const board = yield* boardItems(database.db, location).pipe(Effect.orDie)
-              const previousBoard = yield* database.db
-                .select({ id: InboxRowTable.list_id })
-                .from(InboxRowTable)
-                .where(and(eq(InboxRowTable.owner, owner), eq(InboxRowTable.source, "board")))
-                .limit(1)
-                .all()
-                .pipe(Effect.orDie)
+              const board = projectBoard ? yield* boardItems(database.db, location).pipe(Effect.orDie) : []
+              const previousBoard = projectBoard
+                ? yield* database.db
+                    .select({ id: InboxRowTable.list_id })
+                    .from(InboxRowTable)
+                    .where(and(eq(InboxRowTable.owner, owner), eq(InboxRowTable.source, "board")))
+                    .limit(1)
+                    .all()
+                    .pipe(Effect.orDie)
+                : []
               const pulled = [...channels, ...remote, ...board]
               const jiraSynced = jira?.connected === true && !waiting && acquired.error === undefined
               if (pulled.length > 0 || previousBoard.length > 0 || jiraSynced)
@@ -281,15 +290,17 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                       for (const item of pulled) store.upsert(item)
                       // Only this location's resolved requests leave attention. Another project's row is absent
                       // from this projection and must stay waiting.
-                      const scope = yield* boardScope(tx, location)
-                      saved.rows
-                        .filter(
-                          (row) =>
-                            row.source === "board" &&
-                            scope.has(row.externalId) &&
-                            !board.some((item) => item.externalId === row.externalId),
-                        )
-                        .forEach((row) => store.archive(row.listId))
+                      if (projectBoard) {
+                        const scope = yield* boardScope(tx, location)
+                        saved.rows
+                          .filter(
+                            (row) =>
+                              row.source === "board" &&
+                              scope.has(row.externalId) &&
+                              !board.some((item) => item.externalId === row.externalId),
+                          )
+                          .forEach((row) => store.archive(row.listId))
+                      }
                       yield* save(tx, owner, store.snapshot())
                       if (!jiraSynced) return
                       const receipt = jiraReceipt(owner, undefined, finished)
@@ -687,6 +698,38 @@ export const node = makeLocationNode({
   layer: layer(),
   deps: [Database.node, Location.node, Credential.node, SlackAuth.node],
 })
+
+// Installation store for a request that names no mounted project. Board is not projected. Handoff does not create a session.
+export function unmounted(database: Database.Interface, credentials: Credential.Interface) {
+  const directory = AbsolutePath.make(Global.Path.data)
+  const location = {
+    directory,
+    project: { id: ProjectV2.ID.global, directory },
+  }
+  return Effect.acquireRelease(
+    Effect.sync(() => SlackAuth.make(credentials)),
+    (auth) => Effect.promise(() => auth.close()),
+  ).pipe(
+    Effect.map((slack) =>
+      Layer.mergeAll(
+        Layer.succeed(Location.Service, location),
+        Layer.succeed(HandoffService, {
+          handoff: () => Effect.fail(new InboxError({ reason: "unavailable" })),
+        }),
+        layer({ projectBoard: false }).pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(Database.Service, database),
+              Layer.succeed(Credential.Service, credentials),
+              Layer.succeed(SlackAuth.Service, slack),
+              Layer.succeed(Location.Service, location),
+            ),
+          ),
+        ),
+      ),
+    ),
+  )
+}
 
 function jiraReceipt(owner: string, error: unknown, now: number) {
   const limited = error instanceof Failure && (error.rateLimited || error.status === 429) ? error : undefined
