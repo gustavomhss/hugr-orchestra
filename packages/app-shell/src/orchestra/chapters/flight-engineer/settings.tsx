@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/language"
 import { MxBadge, MxToggle } from "../kit"
 import { accelerator } from "./model"
 import { Keys, mac, Note } from "./parts"
+import { settleProtectionWrite } from "./protection"
 import type { useFlight } from "./run"
 
 type Flight = ReturnType<typeof useFlight>
@@ -76,9 +77,24 @@ export function FlightSettings(props: { flight: Flight }) {
       void props.flight.readiness()
     })
 
-  const protect = async (value: boolean) => {
-    await seat()?.setContentProtection(value)
-    props.flight.setProtection(value)
+  let protectionWrite = 0
+  const protect = (value: boolean) => {
+    const started = ++protectionWrite
+    const current = seat()
+    if (!current) return
+    setStore("problem", undefined)
+    void settleProtectionWrite({
+      write: current.setContentProtection(value),
+      current: () => started === protectionWrite,
+      apply: () => {
+        props.flight.setProtection(value)
+        setStore("problem", undefined)
+      },
+      report: (error) => {
+        console.error(error)
+        setStore("problem", t("orchestra.flightEngineer.settings.failed"))
+      },
+    })
   }
 
   // While recording, the next key combination becomes the accelerator.
@@ -115,7 +131,7 @@ export function FlightSettings(props: { flight: Flight }) {
       <Show when={store.problem}>
         <Note tone="bad">{store.problem}</Note>
       </Show>
-      <Show when={props.flight.store.readinessFailed}>
+      <Show when={props.flight.store.readinessFailed || props.flight.store.protectionFailed}>
         <Note tone="bad">{t("common.requestFailed")}</Note>
       </Show>
 

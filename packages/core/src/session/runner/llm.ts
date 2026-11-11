@@ -9,7 +9,7 @@ import {
   type ProviderErrorEvent,
   type ToolCall,
 } from "@orchestra/llm"
-import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Effect, Fiber, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
@@ -237,7 +237,18 @@ const layer = Layer.effect(
       })
       if (model && request && (yield* compaction.compactIfNeeded({ sessionID: session.id, entries, model, request })))
         return yield* Effect.die(continueAfterCompaction(currentStep))
-      const startSnapshot = yield* snapshots.capture()
+      // Capture overlaps the provider stream. A host can write during authorize, so that path still joins first.
+      // The provider path joins before the first write and again at step end, so the file list revert uses is not dropped.
+      let captured = Option.none<Snapshot.ID | undefined>()
+      const captureFiber = yield* snapshots.capture().pipe(
+        Effect.tap((snapshot) => Effect.sync(() => { captured = Option.some(snapshot) })),
+        Effect.forkChild,
+      )
+      // A pending capture must be cancellable. An already captured snapshot stays available to masked accounting.
+      const snapshotReady = Effect.suspend(() => Option.isSome(captured)
+        ? Effect.succeed(captured.value)
+        : Fiber.join(captureFiber).pipe(Effect.interruptible))
+      const startSnapshot = host ? yield* snapshotReady : undefined
       const publisher = createLLMEventPublisher(events, {
         sessionID: session.id,
         agent: agent.id,
@@ -247,6 +258,7 @@ const layer = Layer.effect(
           ...(session.model?.variant === undefined ? {} : { variant: session.model.variant }),
         },
         snapshot: startSnapshot,
+        snapshotReady: host ? undefined : snapshotReady,
       })
       const withPublication = Semaphore.makeUnsafe(1).withPermit
       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
@@ -518,11 +530,12 @@ const layer = Layer.effect(
           }
           const stepSettlement = publisher.stepSettlement()
           if (stepSettlement && !publisher.hasProviderError()) {
+            const started = startSnapshot ?? (yield* snapshotReady)
             const endSnapshot = yield* snapshots.capture()
             const files =
-              startSnapshot && endSnapshot
+              started && endSnapshot
                 ? yield* snapshots
-                    .files({ from: startSnapshot, to: endSnapshot })
+                    .files({ from: started, to: endSnapshot })
                     .pipe(Effect.catch(() => Effect.succeed(undefined)))
                 : undefined
             yield* withPublication(
