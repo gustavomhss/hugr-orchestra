@@ -71,5 +71,5 @@ export function validateNativeBinding(value: unknown, prepared: PreparedNativePa
       if (!expected || entry.result !== expected.artifact.result || entry.inputs !== expected.inputs_id) throw new Error(`native-binding-entry-drift: ${key}`)
     }
   }
-  return binding as unknown as NativeBinding
+  return value as NativeBinding
 }
