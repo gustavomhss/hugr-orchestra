@@ -1,0 +1,6 @@
+{
+  "oracle_path": "oracles/l1.json",
+  "sha256": "01689e1afd57acd85eb0fbdb967e8853821e38a5a21c52994882eeb68d07d42f",
+  "frozen_at": "2026-11-11T16:24:54.415843+00:00",
+  "before_producer_dispatch": true
+}

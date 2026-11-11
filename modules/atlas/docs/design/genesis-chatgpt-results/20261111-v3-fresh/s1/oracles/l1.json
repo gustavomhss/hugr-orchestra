@@ -1,0 +1,52 @@
+{
+  "schema": "genesis-s1-oracle/v1",
+  "frozen_at": "2026-11-11T16:24:54.415843+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "layer": 1,
+  "units": [
+    "S1-L1-A",
+    "S1-L1-B",
+    "S1-L1-C"
+  ],
+  "cases": [
+    {
+      "id": "L1-FIDELITY",
+      "question": "Can every material fact be traced to bytes captured at the source pin?",
+      "expected": "Commit/blob/hash and source excerpts agree; distinguish source reads from executions; no runtime success inferred from code."
+    },
+    {
+      "id": "L1-POPULATION",
+      "question": "Does every assigned entry have an honest depth/disposition?",
+      "expected": "2236 unique entries, path hash 67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889; generated/test/fixture/support rows do not imply individual semantic review; each family retains an explicit follow-up need."
+    },
+    {
+      "id": "L1-SESSION",
+      "question": "Does baseline support crash recovery, queue and exact-retry claims?",
+      "expected": "AGENTS mandates durable admission separate from wake, admit-only resume:false, exact retry matching session/prompt/delivery, safe-boundary steer and idle queue, process-local ownership and no automatic crash continuation. Source discrepancies must stay visible."
+    },
+    {
+      "id": "L1-ARCH",
+      "question": "Which packages are contract authorities and generated clients?",
+      "expected": "Schema feeds Core/Protocol then Server; Client runtime may depend on Schema/Protocol, never Core/Server; SDK composes; public Protocol/HttpApi changes require client generation; no direct generated edits."
+    },
+    {
+      "id": "L1-RUNTIME",
+      "question": "Can provider/tool/runtime support be treated uniformly?",
+      "expected": "Do not equate provider event stream, external execution host and Orchestra tools. Enforce one explicit provider-turn stream, governed tools and process spawning boundaries; document unavailable details as gaps."
+    }
+  ],
+  "public_criteria": [
+    "QS-1",
+    "QS-2",
+    "QS-4",
+    "QS-5",
+    "CC-1",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "reserved": true
+}
