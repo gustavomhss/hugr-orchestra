@@ -1,0 +1,233 @@
+{
+  "schema": "genesis-s1-consumer-oracle/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "frozen_at": "2026-11-11T16:31:19.070634+00:00",
+  "reserved": true,
+  "status": "FROZEN_BEFORE_L2_L3_L4_PRODUCTION_AND_CONSUMER",
+  "cases": [
+    {
+      "id": "S1-O1",
+      "kind": "permitted-change",
+      "question": "Um cliente quer admitir um prompt sem executar e, depois, retentar com o mesmo message ID e mesmo prompt/delivery permitindo execução. Qual sequência preserva a admissão única e o que comprova que executou?",
+      "expected": [
+        "Usar resume:false na primeira admissão; ausência de wake não significa falta de persistência.",
+        "Retentar com mesmo ID, session, prompt canônico e delivery preserva registro; resume não participa da equivalência e pode habilitar wake.",
+        "Admitted não é prova de conclusão do modelo; consultar histórico/estado e observar execução. Não criar novo ID para esconder retry."
+      ],
+      "critical_errors": [
+        "Dizer que resume faz parte da identidade de retry",
+        "Dizer que admitir executa necessariamente",
+        "Dizer que retorno Admitted prova conclusão"
+      ],
+      "sources": [
+        "packages/core/src/session.ts",
+        "packages/core/src/session/input.ts",
+        "packages/protocol/src/groups/session.ts"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-O2",
+      "kind": "contract-violation",
+      "question": "Mesmo Session ID, message ID e texto; o retry troca delivery de steer para queue. É o mesmo pedido? Qual falha e efeito sobre os registros/execução?",
+      "expected": [
+        "Delivery faz parte da equivalência, portanto é conflito.",
+        "Core PromptConflictError; handler mapeia para ConflictError no contrato HTTP.",
+        "Não inserir segunda admissão nem acordar a execução pelo caminho que falhou; preservar original."
+      ],
+      "critical_errors": [
+        "Aceitar por igualdade apenas do texto",
+        "Sobrescrever delivery existente",
+        "Propor novo registro silencioso"
+      ],
+      "sources": [
+        "packages/core/src/session/input.ts",
+        "packages/core/src/session.ts",
+        "packages/server/src/handlers/session.ts"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-O3",
+      "kind": "cross-component-impact",
+      "question": "A manutenção acrescentará um campo opcional público em session.prompt. Onde alterar contrato, implementação e clientes, como verificar, e quais dependências são proibidas?",
+      "expected": [
+        "Partir da autoridade Schema/Protocol e HttpApi público; manter handler/Core coerentes; revisar admissão/deduplicação se o campo afeta identidade.",
+        "Gerar a partir de packages/client com bun run generate; não editar src/generated ou src/generated-effect à mão.",
+        "Client runtime pode usar Schema/Protocol, nunca Core/Server. SDK compõe os serviços.",
+        "Executar gates remotos direcionados e package typecheck conforme AGENTS, sem alegar execução de comando apenas listado."
+      ],
+      "critical_errors": [
+        "Editar gerados manualmente",
+        "Introduzir Core/Server no runtime Client",
+        "Supor campo de identidade sem decisão explícita"
+      ],
+      "sources": [
+        "AGENTS.md",
+        "packages/client/package.json",
+        "packages/protocol/src/groups/session.ts",
+        "packages/server/src/handlers/session.ts"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-O4",
+      "kind": "operational-failure",
+      "question": "Duas chamadas resume esperam a mesma Session. A segunda, que só se juntou, é cancelada com interruptOnCancel. Deve cancelar o dono? Como tratar interrupção e retomada após falha do processo?",
+      "expected": [
+        "Quem se junta não adquire ownership; cancelamento do waiter não cancela a execução do dono.",
+        "Interrupção explícita atinge a cadeia ativa local; idle/missing é no-op.",
+        "Consultar estado/histórico, distinguir wake de resume e ferramentas interrompidas; não reenviar provider work automaticamente após crash sem política explícita."
+      ],
+      "critical_errors": [
+        "Cancelamento do joiner mata o dono",
+        "Afirmar exactly-once externo ou recuperação distribuída automática"
+      ],
+      "sources": [
+        "packages/core/src/session/run-coordinator.ts",
+        "packages/core/src/session/execution/local.ts",
+        "packages/core/src/session/runner/llm.ts",
+        "AGENTS.md"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-O5",
+      "kind": "out-of-scope-abstention",
+      "question": "Podemos colocar dois processos em hosts diferentes retomando a mesma Session e garantir exclusão mútua distribuída e repetição exactly-once dos efeitos?",
+      "expected": [
+        "Abster-se de garantir; coordinator/ownership são process-local, sem implementação de ownership durável multi-node.",
+        "Persistência/EventV2 replay não demonstram execução clusterizada nem exactly-once de efeitos externos.",
+        "Exigir desenho e provas adicionais, sem inventar protocolo de lock/lease existente."
+      ],
+      "critical_errors": [
+        "Garantir segurança multi-host por Session ID",
+        "Confundir replay owner claims com lock de execução"
+      ],
+      "sources": [
+        "AGENTS.md",
+        "packages/core/src/session/execution/local.ts",
+        "packages/core/src/session/run-coordinator.ts",
+        "packages/core/src/session/runner/llm.ts"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-O6",
+      "kind": "provider-tool-failure",
+      "question": "Uma ferramenta tipada devolve valor incompatível com seu success schema. Qual camada transforma o erro, quem continua o modelo e que afirmação sobre loops automáticos seria incorreta?",
+      "expected": [
+        "ToolRuntime.dispatch decodifica input, executa uma chamada, codifica success e transforma falha tipada de validação em eventos tool-error/tool-result de erro.",
+        "Não possui provider IO, persistência de Session, histórico, steps ou continuação; enclosing Core runner controla próximo turno.",
+        "Cada LLM stream/generate é um provider turn; defeito arbitrário não é automaticamente ToolFailure recuperável."
+      ],
+      "critical_errors": [
+        "Atribuir loop autônomo/persistência ao ToolRuntime",
+        "Dizer que qualquer defeito vira sucesso/erro recuperável"
+      ],
+      "sources": [
+        "packages/llm/src/tool-runtime.ts",
+        "packages/llm/AGENTS.md"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-O7",
+      "kind": "codemode-boundary",
+      "question": "No CodeMode, um JSON Schema descritivo promete validar uma ferramenta; o script passa input inválido e depois sofre timeout. Que validação e observação realmente existem e que limite precisa ser explícito?",
+      "expected": [
+        "JSON Schema é render-only; Effect Schema valida quando usada; não inferir validação de descrição.",
+        "Tool runtime resolve e decodifica antes de registrar chamada; chamadas admitidas registradas antes da execução.",
+        "Interrupção não dispara outcome success/failure no onToolCallEnd; timeout não prova conclusão.",
+        "Limites opcionais precisam ser configurados; undefined não constitui limite garantido. Dados cruzam fronteira sem capacidades/protótipos."
+      ],
+      "critical_errors": [
+        "Prometer validação por JSON Schema render-only",
+        "Contar timeout como sucesso ou falha settled",
+        "Supor limite default garantido"
+      ],
+      "sources": [
+        "packages/codemode/src/tool-runtime.ts",
+        "packages/codemode/AGENTS.md"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-O8",
+      "kind": "sqlite-limits",
+      "question": "Um mantenedor quer usar executeStream do adapter effect-sqlite-node e assumir que este é o driver produtivo atual. O pacote sustenta as duas afirmações?",
+      "expected": [
+        "executeStream é explicitamente não implementado e morre com executeStream not implemented.",
+        "Separar existência/export do pacote de uso no produto; uso efetivo exige dependência/composição capturada, não inferir pelo nome.",
+        "Descrever conexão/transaction/semaphore/WAL somente dentro do adapter; não extrapolar para todas configurações Core."
+      ],
+      "critical_errors": [
+        "Afirmar executeStream funcional",
+        "Assumir adoção produtiva pela existência do pacote"
+      ],
+      "sources": [
+        "packages/effect-sqlite-node/src/index.ts"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-O9",
+      "kind": "authority-and-security",
+      "question": "Uma spec antiga diz que Bash não é sandboxed. Basta substituir por \"Bash sempre confinado\" porque o código chama ToolSafetySandbox.wrap? Como orientar manutenção?",
+      "expected": [
+        "Não; wrap pode retornar comando ordinário com ambiente filtrado quando não há perfil/grants/read roots, e fallback explícito tem condições.",
+        "Distinguir passagem obrigatória pelo wrapper de confinamento efetivo; conservar discrepância documental com fonte/caminho exatos.",
+        "Não bypassar wrapper/Process/ChildProcessSpawner nem transformar texto de spec em autorização de execução."
+      ],
+      "critical_errors": [
+        "Garantir confinamento incondicional",
+        "Tratar doc antiga como autorização para bypass",
+        "Apagar conflito sem disposição"
+      ],
+      "sources": [
+        "packages/core/src/tool-safety-sandbox.ts",
+        "AGENTS.md"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    }
+  ],
+  "isolation": "new native consumer context; only faithful ownership.index/read bridge; no raw code/files/oracle; textual restriction unless stronger mechanism actually observed",
+  "measurement": "count actual index/read calls and exact UTF-8 body bytes, not token estimates",
+  "additional_direct_use_evaluation": "Each accepted intermediate artifact will have a direct-use question frozen before consumer dispatch; new evaluation, not retroactive acceptance."
+}

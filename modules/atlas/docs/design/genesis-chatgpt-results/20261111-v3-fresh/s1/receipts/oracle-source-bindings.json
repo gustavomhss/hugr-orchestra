@@ -1,0 +1,72 @@
+[
+  {
+    "path": "packages/core/src/session/input.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+    "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+    "byte_length": 13624
+  },
+  {
+    "path": "packages/core/src/session.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+    "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+    "byte_length": 34126
+  },
+  {
+    "path": "packages/core/src/session/execution/local.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+    "sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97",
+    "byte_length": 2471
+  },
+  {
+    "path": "packages/core/src/session/run-coordinator.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+    "sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+    "byte_length": 5893
+  },
+  {
+    "path": "packages/core/src/session/runner/llm.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+    "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+    "byte_length": 39006
+  },
+  {
+    "path": "packages/core/src/session/runner/turn-transition.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "28ddfe07de4b563ca8da3fb059f0ef2503c26f7c",
+    "sha256": "4f74956447d31c26c7973bd2ba2499445c683594e87c4c88dd0313a630d5f113",
+    "byte_length": 743
+  },
+  {
+    "path": "packages/server/src/handlers/session.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb",
+    "sha256": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+    "byte_length": 27133
+  },
+  {
+    "path": "packages/protocol/src/groups/session.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "5830f50001c8dc01227a920f04276054c0e29570",
+    "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+    "byte_length": 29273
+  },
+  {
+    "path": "packages/schema/src/session.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "8319d3369ebf6ac5952dd390b3ff8844e995b280",
+    "sha256": "79fb348dc00ce9e06fc01fb595df8c05730bb3cbdd604b55c7b57e6d8321cdfa",
+    "byte_length": 1672
+  },
+  {
+    "path": "packages/client/package.json",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha": "4cd0244e98ff18b5e65d3c2808196705095b6691",
+    "sha256": "ef573a29ebca082018b27e72dcaf96771daa9286d5ce8537b56d4f12126ab881",
+    "byte_length": 1006
+  }
+]

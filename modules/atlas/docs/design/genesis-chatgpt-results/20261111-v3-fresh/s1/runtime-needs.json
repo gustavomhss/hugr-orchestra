@@ -1,0 +1,53 @@
+{
+  "schema": "genesis-s1-runtime-needs/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "orchestra.s1",
+  "state": "AWAITING_S4_RELEASE",
+  "required_capabilities": [
+    "native-import",
+    "ownership.index",
+    "ownership.read",
+    "rebuild/reuse using declared build dependencies",
+    "domain-local impact controls"
+  ],
+  "first_release_query": {
+    "branch": "genesis-fresh-s4",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "result": "404 NOT_FOUND; initial observation, not final impossibility"
+  },
+  "oversized_population_files": [
+    {
+      "path": "packages/client/src/generated/types.ts",
+      "size": 462732,
+      "sha": "fca4633666a639d550065312a13e48c6ce221d12"
+    },
+    {
+      "path": "packages/codemode/test/fixtures/opencode-v2-openapi.json",
+      "size": 637024,
+      "sha": "934b22e389f4ae86039967dd8134d750780b025c"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "size": 266885,
+      "sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c"
+    }
+  ],
+  "constraints": [
+    "Do not omit oversized population entries to pass observation",
+    "Source claims that require file bytes must retain their input and hold if observer cannot bind",
+    "Generated/fixture support can have justified group depth; membership alone does not establish content freshness",
+    "No parallel Atlas implementation by S1",
+    "Product tests only in GitHub Actions per baseline AGENTS",
+    "No workflow dispatch tool exposed in GitHub catalog; workflow collection fetch rejected by tool URL policy",
+    "Bun absent in executor PATH; Node/Python available"
+  ],
+  "known_consumer_requirements": [
+    "shallow routine",
+    "deep maintenance",
+    "contract violation",
+    "cross-component change",
+    "operational failure",
+    "out-of-scope abstention",
+    "direct useful intermediate reads"
+  ]
+}
