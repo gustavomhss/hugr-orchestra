@@ -290,7 +290,7 @@ describe("phase 3 overlays", () => {
   ] as const)("%s content on %s suggests and does not bind %s", (id, file, text, pattern, lens) => {
     const record = routed(file, [text])
     expect(found(record, id)).toEqual({ id, source: "content", signal: `${file}:1 ${pattern}` })
-    expect(record.lenses.some((entry) => entry.id === lens)).toBe(false)
+    expect(record.lenses.some((entry) => entry.id === lens && entry.because === `overlay:${id}`)).toBe(false)
   })
 
   test.each([

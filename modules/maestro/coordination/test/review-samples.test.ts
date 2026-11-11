@@ -5,6 +5,7 @@ import { SessionStore } from "@orchestra/core/session"
 import { ReviewCandidatesV2 } from "../src/v2/workflow/review-candidates"
 import { reorderDiff, sliceDiff } from "../src/v2/workflow/review-diff"
 import { ReviewFanoutV2 } from "../src/v2/workflow/review-fanout"
+import { ReviewFanoutSupportV2 } from "../src/v2/workflow/review-fanout-support"
 import { ReviewResultV2 } from "../src/v2/governance/review-result"
 import { ENTRY, candidate, fenced, item } from "./fixture/lucy-fanout-data"
 import { brief, dataBlock, harness, run } from "./fixture/lucy-fanout"
@@ -59,6 +60,7 @@ test("a built Deep clone fans out two scoped sessions per lens and slice under t
   run((directory) =>
     Effect.gen(function* () {
       const h = yield* harness(directory, "sampledeep")
+      const replies = new Map<string, string>()
       let active = 0
       let peak = 0
       const port: ReviewFanoutV2.Port = {
@@ -68,7 +70,7 @@ test("a built Deep clone fans out two scoped sessions per lens and slice under t
           return Effect.gen(function* () {
             active += 1
             peak = Math.max(peak, active)
-            return yield* h.port.run(sessionID, text, turn)
+            return yield* h.port.run(sessionID, text, turn).pipe(Effect.tap((reply) => Effect.sync(() => { replies.set(sessionID, reply) })))
           }).pipe(
             Effect.tap(() => Effect.promise(() => Promise.resolve())),
             Effect.ensuring(Effect.sync(() => {
@@ -129,7 +131,9 @@ test("a built Deep clone fans out two scoped sessions per lens and slice under t
       expect(second).toContain("Sample 2 of 2")
       expect(first).not.toContain("Sample 2 of 2")
       expect(second).not.toContain("Sample 1 of 2")
-      expect(second).not.toContain("```review-lens")
+      const firstReply = replies.get(bound[0].sessionID)
+      if (!firstReply) throw new Error("first hunt reply missing")
+      expect(second).not.toContain(firstReply)
       expect(second).not.toContain(bound[0].sessionID)
       expect(rulesText(first)).toBe(rulesText(second))
       expect(namedBlock(first, "analyzer items for correctness-logic")).toBe(
@@ -263,7 +267,7 @@ test("a slice id cannot collide with another sample's child session", () =>
   run((directory) => Effect.gen(function* () {
     const h = yield* harness(directory, "sampleidentity")
     const ids: string[] = []
-    const entry = ReviewResultV2.parseEntry(ENTRY.split("\n").slice(1, -1).join("\n"))
+    const entry = ReviewResultV2.parseEntry(ReviewFanoutSupportV2.block(ENTRY, ReviewFanoutV2.TAGS.entry))
     if (!entry || entry.status !== "eligible") throw new Error("entry fixture missing")
     const port: ReviewFanoutV2.Port = {
       ...h.port,
