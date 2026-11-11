@@ -2,30 +2,61 @@
   "schema": "genesis-session-handoff/v1",
   "campaign": "20261111-v1",
   "session": "s1",
-  "handoff_sequence": 1,
-  "supersedes": null,
+  "handoff_sequence": 2,
+  "supersedes": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+    "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+  },
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "candidate_revision": null,
   "protocol_revision": {
     "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
     "path": ".orchestra/skills/execute-genesis/SKILL.md",
-    "sha256": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3"
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
   },
   "scope_revision": null,
-  "criteria_revision": null,
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
   "state": "WORKING",
   "attempt_id": "s1-preparation-001",
   "dependencies": [],
-  "criteria_ref": null,
-  "receipts": [],
+  "criteria_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria.json",
+    "sha256": "e9cd6623f88434d4ec6c2a0a22f2c76a80bf1dd222bfcfa08de3db39c1e13be5"
+  },
+  "receipts": [
+    {
+      "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/tree-reconciliation.json",
+      "sha256": "ac8299a50a23554bf42319c1483d9ed1de3054174c2ea7b08021c357811c1485"
+    },
+    {
+      "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap-binding-correction.json",
+      "sha256": "4565b9188978dc8ce69e209c58677f8e71bdb8aaaa59a47556407ca582da77ea"
+    }
+  ],
   "patches": [],
-  "budget_allocation_ref": null,
-  "budget_ledger_ref": null,
+  "budget_allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "budget_ledger_ref": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl",
+    "sha256": "0192aa4428be56fb995d431ba22e900ba849966deace7e8fcff16b3fd86cdf09"
+  },
   "blockers": [
     "Dependent production awaits full inventory, interfaces and derived allocation.",
     "Native physical attempts, tokens and billing are not exposed."
   ],
-  "next_action": "Reconcile complete Git tree; publish full scope/criteria/interfaces and quotas; request S5 review.",
+  "next_action": "Complete domain needs/flows and publish inventory/interfaces plus formula-derived full allocation for S2-S5. S5 may consume this complete 50-row criterion catalogue now; no semantic inventory acceptance is claimed.",
   "preparatory_files": [
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap.json",
@@ -33,5 +64,23 @@
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria.json",
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl"
   ],
-  "note": "References to this payload are added in the next handoff; no self-commit/hash claim."
+  "note": "Protocol hash corrected with an immutable erratum; all references now pin already-published bytes. Scope still awaits the semantic domain mapping.",
+  "population": {
+    "git_entries": 16710,
+    "blobs": 14442,
+    "directories": 2268,
+    "tree_hash_mismatches": 0,
+    "semantic_inventory": "IN_PROGRESS",
+    "criteria": 50,
+    "unowned_criteria": 0
+  },
+  "dependency_observations": [
+    {
+      "session": "s5",
+      "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+      "handoff_sequence": 1,
+      "state": "BLOCKED",
+      "validation": "campaign/session/source/protocol match; no review yet; scope/criteria/quota not consumed at that observation"
+    }
+  ]
 }
