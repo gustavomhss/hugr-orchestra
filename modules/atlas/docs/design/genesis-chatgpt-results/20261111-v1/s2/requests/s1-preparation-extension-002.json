@@ -4,7 +4,7 @@
   "session": "s2",
   "id": "S2-S1-PREP-002",
   "state": "OPEN",
-  "recorded_at": "2026-11-11T14:57:59.018486+00:00",
+  "recorded_at": "2026-11-11T15:18:32.957188+00:00",
   "current_allocation_ref": {
     "commit": "49a5eaa296b8f731d9c767e50e1cb738eeb060b0",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
@@ -17,7 +17,7 @@
   "additional_units": 3,
   "units": [
     {
-      "purpose": "Independent technical review of native importer v3 and explicit historical body lane",
+      "purpose": "Independent technical review of native importer v4, explicit historical lane, author/judge guard and 14 prepared CI cases",
       "quantity": 1
     },
     {
@@ -37,9 +37,16 @@
   "billing": "UNKNOWN",
   "physical_attempts": "UNKNOWN",
   "evidence_paths": [
-    "proposals/native-importer/native-importer-v3.patch",
-    "proposals/native-importer/proposal-manifest-v3.json",
-    "receipts/proposal-build-v3-initial.json"
+    "proposals/native-importer/native-importer-v4.patch",
+    "proposals/native-importer/proposal-manifest-v4.json",
+    "proposals/native-importer/root-corrections-v4.json"
   ],
-  "acceptance": "S2 consumes bootstrap-v2 exactly and carries forward all six prior packets. Additional requests will be reserved only after an applicable S1 revision."
+  "acceptance": "S2 consumes bootstrap-v2 exactly and carries forward all six prior packets. Additional requests will be reserved only after an applicable S1 revision.",
+  "request_revision": 2,
+  "updates": {
+    "commit": "025d69ac66a551968b38965085ba4b66b95dcf53",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/requests/s1-preparation-extension-002.json",
+    "sha256": "014df383b4aac6de4d45e97db7b7ae2967380946187325d60fa55fc9ea58cfa9"
+  },
+  "current_observation": "At S1 ab70a68882b249e2d7501f22f975b1a38924fc7a, bootstrap-v2/s2 remains six units; no additional child turn has been dispatched."
 }

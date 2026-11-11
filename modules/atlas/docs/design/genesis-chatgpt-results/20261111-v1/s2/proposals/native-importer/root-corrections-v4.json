@@ -1,0 +1,70 @@
+{
+  "schema": "genesis-root-correction/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "attempt_id": "S2-PREP-ROOT-01",
+  "author": "/root",
+  "classification": "AUTHOR_TECHNICAL_CORRECTION_NOT_INDEPENDENT_ACCEPTANCE",
+  "before_patch": {
+    "commit": "025d69ac66a551968b38965085ba4b66b95dcf53",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/native-importer/native-importer-v3.patch",
+    "sha256": "0309caccf2d03f796fd5076ff7d4267c3a0b26b6198908ef4f68664cf3b36eec"
+  },
+  "after_patch": {
+    "path": "native-importer-v4.patch",
+    "sha256": "4285179743adcf84dceaf802b82beda3a0fed16fb7aa26ef1462175f2dd4cb7b",
+    "bytes": 88241
+  },
+  "findings": [
+    {
+      "id": "S2-HIST-LIMITS-01",
+      "observation": "Historical helper omitted manifest limits, comparison limits and corrected-body limitations from the new result gaps. Originals were preserved but the reader-facing result could drop these constraints.",
+      "source_evidence": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+          "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52",
+          "field": "comparisonLimits",
+          "value": "New model AND expanded operational scope; not a controlled model-only quality experiment."
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+          "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e",
+          "field": "limits",
+          "value": "research ownership/maintenance/operational artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-correction-manifest-v1.json",
+          "sha256": "f7a9b43ee3950b01b036f7744a4bc541dd10a1a5b83d1fcdb4ec6cc4b2ae0584",
+          "field": "limitation",
+          "value": "candidate derivatives; NEW complementary review/approval required"
+        }
+      ],
+      "change": "Union these fields into result gaps, preserving original strings and deduplicating exact values.",
+      "regression_cases": [
+        "HI-01",
+        "HI-05"
+      ]
+    },
+    {
+      "id": "S2-AUTHOR-JUDGE-01",
+      "observation": "The native preparation boundary accepted a submission whose producer agentId was one of the two appointed current reviewer IDs. The caller was responsible for appointment, but no executable guard rejected this role collision.",
+      "change": "Return ownership-review before preserving/accepting a producer output whose agentId is J1 or J2.",
+      "regression_cases": [
+        "NI-07"
+      ]
+    }
+  ],
+  "compile_correction": {
+    "initial_receipt": "receipts/importer-v4-typecheck.json",
+    "initial_exit_code": 2,
+    "reason": "New tests initially imported Bun types absent from this Vitest package and accessed unknown CAS values without narrowing.",
+    "corrected_receipt": "receipts/importer-v4-typecheck-corrected.json",
+    "corrected_exit_code": 0
+  },
+  "tests": "NOT_RUN",
+  "independent_technical_review": "PENDING_S1_ALLOCATION",
+  "s5_acceptance": "NOT_REQUESTED; no current full layer exists"
+}

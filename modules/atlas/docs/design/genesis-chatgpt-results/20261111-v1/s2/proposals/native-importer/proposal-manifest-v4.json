@@ -1,0 +1,156 @@
+{
+  "schema": "genesis-native-importer-proposal/v4",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "author": "/root; resumed S2-PREP-ROOT-01 coordinator task",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "state": "PROPOSAL_NOT_INTEGRATED",
+  "supersedes": {
+    "commit": "025d69ac66a551968b38965085ba4b66b95dcf53",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/native-importer/native-importer-v3.patch",
+    "sha256": "0309caccf2d03f796fd5076ff7d4267c3a0b26b6198908ef4f68664cf3b36eec"
+  },
+  "patch": {
+    "path": "native-importer-v4.patch",
+    "sha256": "4285179743adcf84dceaf802b82beda3a0fed16fb7aa26ef1462175f2dd4cb7b",
+    "bytes": 88241
+  },
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-historical-import.ts",
+      "action": "add",
+      "before_sha256": null,
+      "sha256": "214e1a9874bc9765136a10b45cad614cd4afeb93126941cee7374a7dd8cc4719",
+      "bytes": 16529,
+      "guard_line_count": 207
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+      "action": "add",
+      "before_sha256": null,
+      "sha256": "9d916f45935dd62e4a3d988d45740a94df6832f77383f8bdfaec860fe8211aee",
+      "bytes": 35761,
+      "guard_line_count": 455
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-native-fixture.ts",
+      "action": "add",
+      "before_sha256": null,
+      "sha256": "6352cc4a8926de3ae345b53c3570c6e82aa6aded9b737bd76a2cacf60a5b8fde",
+      "bytes": 11390,
+      "guard_line_count": 133
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-historical-import.test.ts",
+      "action": "add",
+      "before_sha256": null,
+      "sha256": "2920eb9fac603766fc9d6867518069216a03c2788cb959745fed86e4b5d99073",
+      "bytes": 4942,
+      "guard_line_count": 68
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-native-import.test.ts",
+      "action": "add",
+      "before_sha256": null,
+      "sha256": "4d8881972f1a21d2694388f08ead0f9ec41e4afa83010eebe3f1a685cca5dce6",
+      "bytes": 7538,
+      "guard_line_count": 108
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "action": "modify",
+      "before_sha256": "783af31127c5192e5d38f3f875b1c4bb2181335466eaa387355c50b5aec8f1b5",
+      "sha256": "71b74c6a2d79ceed99fc94e35542ac1dbdcbe86118cb72cdbf909f113e30a45d",
+      "bytes": 5644,
+      "guard_line_count": 53
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-native-import.ts",
+      "action": "add",
+      "before_sha256": null,
+      "sha256": "4af07b74ce7afd04e613e980667b846440b4a3ca24ce4b89db5e87e70941b2ab",
+      "bytes": 8583,
+      "guard_line_count": 120
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "--whitespace=error",
+        "/workspace/scratch/ea607dbcbf72/preparation/importer/native-importer-v4.patch"
+      ],
+      "cwd": "/workspace/scratch/ea607dbcbf72/orchestra",
+      "started_at": "2026-11-11T15:14:49.914817+00:00",
+      "ended_at": "2026-11-11T15:14:49.918602+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+        "build",
+        "modules/atlas/scripts/ownership-native-import.ts",
+        "--target=bun",
+        "--outfile",
+        "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/ownership-native-import-v4.bundle.js"
+      ],
+      "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build",
+      "started_at": "2026-11-11T15:14:49.918613+00:00",
+      "ended_at": "2026-11-11T15:14:49.945092+00:00",
+      "exit_code": 0,
+      "stdout": "Bundled 65 modules in 24ms\n\n  ownership-native-import-v4.bundle.js  109.22 KB  (entry point)\n\n",
+      "stderr": ""
+    }
+  ],
+  "typecheck": {
+    "schema": "genesis-proposal-compile/v1",
+    "candidate_revision": null,
+    "correction": "Use existing Vitest types; assertions receive unknown CAS values without unsafe property access. Original failed compile receipt preserved.",
+    "command": [
+      "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+      "run",
+      "typecheck"
+    ],
+    "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+    "started_at": "2026-11-11T15:13:33.186021+00:00",
+    "ended_at": "2026-11-11T15:13:35.442686+00:00",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "$ tsc -b\n",
+    "tests": "NOT_RUN",
+    "scope": "detached proposal preview only"
+  },
+  "new_ci_cases": {
+    "native": [
+      "NI-01",
+      "NI-02",
+      "NI-03",
+      "NI-04",
+      "NI-05",
+      "NI-06",
+      "NI-07",
+      "NI-08"
+    ],
+    "historical": [
+      "HI-01",
+      "HI-02",
+      "HI-03",
+      "HI-04",
+      "HI-05",
+      "HI-06"
+    ]
+  },
+  "tests": "NOT_RUN; CI only",
+  "native_production": "NOT_RUN",
+  "historical_import_execution": "NOT_RUN",
+  "binding_judgments": [],
+  "shared_code_changed": false,
+  "original_checkout_clean": true,
+  "scope": "Detached preview contains native v4 plus rebuild v3. Typecheck compiles implementation and new test sources; it does not execute tests."
+}

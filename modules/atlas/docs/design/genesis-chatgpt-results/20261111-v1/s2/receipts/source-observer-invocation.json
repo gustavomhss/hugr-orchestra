@@ -1,0 +1,20 @@
+{
+  "schema": "genesis-operational-invocation/v1",
+  "purpose": "Read-only readiness of all baseline source files through the real pinned Atlas observer",
+  "argv": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "/workspace/scratch/ea607dbcbf72/preparation/observe_source_readiness.ts",
+    "/workspace/scratch/ea607dbcbf72/orchestra",
+    "/workspace/scratch/ea607dbcbf72/preparation/receipts/full-source-availability-before.json",
+    "/workspace/scratch/ea607dbcbf72/preparation/receipts"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72",
+  "started_at": "2026-11-11T15:16:07.242820+00:00",
+  "ended_at": "2026-11-11T15:16:18.370389+00:00",
+  "exit_code": 0,
+  "stdout": "{\"source_blobs_observed\":14442,\"totals\":{\"present\":14356,\"absent\":2,\"unavailable\":84},\"non_present_count\":86,\"results_sha256\":\"9486218f7b172e4c68b7b672dd34765f0081fb2c9673a8c76197ba64e0300047\"}\n",
+  "stderr": "",
+  "candidate_revision": null,
+  "tests": "NOT_RUN",
+  "native_production": "NOT_RUN"
+}

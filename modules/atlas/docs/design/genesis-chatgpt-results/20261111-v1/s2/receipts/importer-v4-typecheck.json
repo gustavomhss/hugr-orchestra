@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-proposal-compile/v1",
+  "candidate_revision": null,
+  "proposal": "native-importer-v4 including explicit historical-limits and author/judge separation fixes plus 14 CI regression cases",
+  "files": [
+    "modules/atlas/scripts/ownership-native-import.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-native-import.test.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-historical-import.test.ts",
+    "modules/atlas/packages/adapter-io/src/ownership-historical-import.ts",
+    "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+    "modules/atlas/packages/adapter-io/test/fixtures/ownership-native-fixture.ts",
+    "modules/atlas/packages/knowledge/src/index.ts"
+  ],
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T15:13:10.204453+00:00",
+  "ended_at": "2026-11-11T15:13:13.009081+00:00",
+  "exit_code": 2,
+  "stdout": "test/ownership-historical-import.test.ts(1,40): error TS2307: Cannot find module 'bun:test' or its corresponding type declarations.\ntest/ownership-native-import.test.ts(1,40): error TS2307: Cannot find module 'bun:test' or its corresponding type declarations.\ntest/ownership-native-import.test.ts(26,52): error TS2339: Property 'kind' does not exist on type '{}'.\ntest/ownership-native-import.test.ts(47,55): error TS2339: Property 'kind' does not exist on type '{}'.\n",
+  "stderr": "$ tsc -b\n",
+  "tests": "NOT_RUN; GitHub Actions required",
+  "original_checkout_modified": false,
+  "scope": "detached preview with rebuild-v3"
+}

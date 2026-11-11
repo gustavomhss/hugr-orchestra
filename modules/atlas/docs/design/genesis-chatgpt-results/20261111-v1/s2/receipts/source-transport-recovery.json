@@ -1,0 +1,54 @@
+{
+  "schema": "genesis-source-transport-recovery/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "recovered": [
+    {
+      "path": "script/atlas-genesis/checkpoint-replay-source.json",
+      "blob": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+      "bytes": 2005,
+      "sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+      "tool": "github_fetch_blob",
+      "result": "VERIFIED_AND_MATERIALIZED"
+    }
+  ],
+  "binary_failures": [
+    {
+      "path": "docs/images/readme/atlas-graph-dark.png",
+      "blob": "da79e78f0beca8f16084ca9fbc1e77a183ee6357",
+      "tool": "github_fetch_blob",
+      "error": {
+        "error": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0x89 in position 0: invalid start byte",
+        "error_code": "UNKNOWN"
+      }
+    },
+    {
+      "path": "docs/images/readme/atlas-graph-light.png",
+      "blob": "ab30cbfddee439c2a2ffeeb5b64287debfef778f",
+      "tool": "github_fetch_blob",
+      "error": {
+        "error": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0x89 in position 0: invalid start byte",
+        "error_code": "UNKNOWN"
+      }
+    },
+    {
+      "blob": "da79e78f0beca8f16084ca9fbc1e77a183ee6357",
+      "tool": "github_fetch git/blobs URL",
+      "error": {
+        "error": "HTTPError: 400: GitHub Fetch only accepts UTF-8 text. (Response: None)",
+        "error_code": "INVALID_ARGUMENT"
+      }
+    },
+    {
+      "blob": "ab30cbfddee439c2a2ffeeb5b64287debfef778f",
+      "tool": "github_fetch git/blobs URL",
+      "error": {
+        "error": "HTTPError: 400: GitHub Fetch only accepts UTF-8 text. (Response: None)",
+        "error_code": "INVALID_ARGUMENT"
+      }
+    }
+  ],
+  "total_unique_missing_blobs_recovered": 411,
+  "unresolved_unique_blobs": 2,
+  "files_observed_by_real_runtime": 14442,
+  "reserved_consumer_bodies_emitted_to_model": false
+}

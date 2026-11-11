@@ -1,0 +1,972 @@
+{
+  "schema": "genesis-source-observer-readiness/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_head_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "entry_point": "observeOwnershipInput(repo, file:key) from pinned ownership-input.ts",
+  "started_at": "2026-11-11T15:16:07.348Z",
+  "finished_at": "2026-11-11T15:16:18.355Z",
+  "real_fs_seams": true,
+  "injection_seams_used": false,
+  "source_blobs_observed": 14442,
+  "totals": {
+    "present": 14356,
+    "absent": 2,
+    "unavailable": 84
+  },
+  "non_present": [
+    {
+      "key": "file:.atlas/members/orch/memory/logbook.jsonl",
+      "blob": "06c5367191e1152715e6712393e54e48439a932a",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1908,
+      "metadataExplanation": "path includes prohibited .atlas component",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:.atlas/project/board.jsonl",
+      "blob": "f9a3f49ca801090e16c871b99383797679e2640b",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 57364,
+      "metadataExplanation": "path includes prohibited .atlas component",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:.atlas/project/orientation.jsonl",
+      "blob": "3396235bb7e04fad7a72fecfbd3b4cce5379695e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 2592,
+      "metadataExplanation": "path includes prohibited .atlas component",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:apps/desktop/icons/beta/icon.icns",
+      "blob": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 461956,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:apps/desktop/icons/dev/icon.icns",
+      "blob": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 461956,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:apps/desktop/icons/prod/icon.icns",
+      "blob": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 461956,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:apps/desktop/src/renderer/splash/comet.mp4",
+      "blob": "d45661fe5d5488fd937b6faf0be4d38e90a7a8e1",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1010559,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:bun.lock",
+      "blob": "6139ce6e65ec428fc3ef92f0787be0d8b32db6e3",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 489909,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/atlas-graph-dark.png",
+      "blob": "da79e78f0beca8f16084ca9fbc1e77a183ee6357",
+      "observed": {
+        "kind": "absent"
+      },
+      "gitMode": "100644",
+      "bytes": null,
+      "metadataExplanation": "not materialized",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/atlas-graph-light.png",
+      "blob": "ab30cbfddee439c2a2ffeeb5b64287debfef778f",
+      "observed": {
+        "kind": "absent"
+      },
+      "gitMode": "100644",
+      "bytes": null,
+      "metadataExplanation": "not materialized",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/atlas-ledger-dark.png",
+      "blob": "c2bb139873dda96bb01f9984a5b18d5c16926294",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 259938,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/atlas-ledger-light.png",
+      "blob": "d0bc8e16b96c0148d46a2c9f6007d7e07b28a583",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 281135,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/claude-mode-dark.png",
+      "blob": "532528ab6c050556667717e67c98c1aeebda4d06",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 261115,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/claude-mode-light.png",
+      "blob": "d95cac4507bb3dbc9783f5290032d86aee44c140",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 281178,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/context-savings.png",
+      "blob": "f872165e506edfa488ef60e868638c975118be33",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 359505,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/flow-dark.png",
+      "blob": "6242bbea7c520106718eaaae26116a3c61d79296",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 346584,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/flow-light.png",
+      "blob": "1cc1d222b8852e18a80474fb82ce78a5c9081e65",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 369005,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/home-dashboard.png",
+      "blob": "77e652fd2800adc6b59a5f2c2e5fc0229d13c15e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 336437,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/lean-dark.png",
+      "blob": "d4e638bb8e6a7ff2b016ef2f8af5b6235c3c8819",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 258280,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/lean-light.png",
+      "blob": "efeb287c2f90cb1026fdfea59ffdf04ca42653d8",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 265662,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/omni-light.png",
+      "blob": "361c24a3d07063604f02721bde587c8b7ea75338",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 260525,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/pipeline-dark.png",
+      "blob": "47bbbd99a118407375f41cc89b34ca5c02a2f06a",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 270128,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/pipeline-light.png",
+      "blob": "649921e7a5fc9ff5c5b31998ddd278b63abe0ddf",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 289861,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/relay-dark.png",
+      "blob": "edcc19324932d353a544ef98b5143d6bf202871e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 262459,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/relay-light.png",
+      "blob": "66233caa1083cfcfa95fa845959791d0a564f71e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 280540,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/settings-providers-claude-mode.png",
+      "blob": "3424a77f4fd5c2dfed19ebbc0e3b4262745c3aba",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 365491,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/workflow-canvas-dark.png",
+      "blob": "ebb1b10e79d367512a1ba5edcee8863b354f6850",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 725105,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/images/readme/workflow-canvas-light.png",
+      "blob": "9915dea91fa63ec9bf15e2b9ce0c4d6167689dcc",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 925594,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/specs/projects-board/mocks/v5.jpg",
+      "blob": "5ee9cf2a67f66ef375ab8a5960eccea902f890b9",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 414243,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/specs/projects-board/mocks/v6-epic.jpg",
+      "blob": "b562b2ca6a3634e6904792f8f20be2ee06a5d866",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 376121,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/specs/projects-board/mocks/v6-inbox.jpg",
+      "blob": "29221ce3bd0bdeb28fa71542f10a76e53c51fbca",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 324962,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/specs/projects-board/mocks/v6-issue.jpg",
+      "blob": "2de282155caf6dacaf58af4ae5e9a70654d10249",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 334652,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/specs/projects-board/mocks/v7-money.jpg",
+      "blob": "59dcd9224ae93e5a71942f7c723255850ea2f55c",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 267793,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/specs/projects-board/mocks/v7-proof.jpg",
+      "blob": "303b580e1e6f982de95913b6bd66498146da4db0",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 357684,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:docs/specs/projects-board/mocks/v7-watch.jpg",
+      "blob": "50ac46e6cce9e72751bbfb3031be37ce576fcb41",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 358073,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:modules/atlas/boundary/src/generated/mine.js",
+      "blob": "e3d5fed3e80881e6389c4de426b0f16df76ed6f3",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 397146,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:modules/atlas/boundary/src/generated/surface.js",
+      "blob": "5d0e2cf23486ff6d12e1d828dee8aaf647ac33be",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 557017,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-a/.atlas/index.scip",
+      "blob": "fb0440a117f6f0fb456bae516d3c39ab3f2da20e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1936,
+      "metadataExplanation": "path includes prohibited .atlas component",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-b/.atlas/index.scip",
+      "blob": "44f83d3715b186998a077fff51f3ec88e8ca7641",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 2011,
+      "metadataExplanation": "path includes prohibited .atlas component",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/assets/Inter.ttf",
+      "blob": "e31b51e3e9388ae61767c692885e5d77ff7b5346",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 874708,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/assets/JetBrainsMonoNerdFontMono-Regular.woff2",
+      "blob": "02a57c6f500a61edf5cc451f23e76bd92a034f2a",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1060580,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/abby-santurbane.jpg",
+      "blob": "a26d284ce420d646fdca0b07b41e35b90619eead",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 799641,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/aleksandra-khaprenko.jpg",
+      "blob": "bcbd56f4b9c54d4b84a6370df94def7eaf6af50e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 785728,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/alessandro-russo.jpg",
+      "blob": "f85945f06f4bbb9dac74c9fd494d5592d113efd8",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 743017,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/andy-kennedy.jpg",
+      "blob": "55264a9db8ebdf884bb25656be39d31c0412a710",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 399040,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/artem-kniaz.jpg",
+      "blob": "cb40a2ffed99c6e9fef2f1a48c6852de6770573a",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 633410,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/ashkan-forouzani.jpg",
+      "blob": "92fc6d66455a2d0dcea59c74be3c112f7a5758e5",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 991115,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/daniele-levis-pelusi.jpg",
+      "blob": "89bcd6bf2e08653dd0d0ee09a7cb9555e78262b8",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 281633,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/daniil-silantev.jpg",
+      "blob": "8dad438e974874ce9b6609201c89b6f5155bd1ec",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 475107,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/decry-yae.jpg",
+      "blob": "1b123ca7ca6e4e88f0813763afcc4e543ad98a00",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 523842,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/digital-reach.jpg",
+      "blob": "c6ae01d0ff6c93996baae16f2d164730b440c6ae",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 371421,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/dunes-2.jpg",
+      "blob": "44d13f6d7d1b1e4b59272558e359dc91f279c9cc",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 609375,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/dunes.jpg",
+      "blob": "069bc15d4633c44925b2b4ccafe3746fecc00c8e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 606304,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/f-cary-snyder.jpg",
+      "blob": "39b615bd6a66bf3b3074a4e528965ae5a6fb5fe6",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 531947,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/fernando-jorge.jpg",
+      "blob": "7f62dbd40d4d4af6bc2ee131cc1a0a5413843601",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 447920,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/gareth-david.jpg",
+      "blob": "82900675f5ca33800f6c723af4981e68f109c640",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 693244,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/jeremy-thomas.jpg",
+      "blob": "b57874d9588edafb7e49b042d80956b3a5f6870a",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 830229,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/jonatan-pie.jpg",
+      "blob": "b70a30abfd20a5f522e6899dd710a60e27d00e46",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 435611,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/jr-korpa.jpg",
+      "blob": "2afbb3dace33aa672789c2b603fd1a13adc105e9",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 489374,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/jude-infantini.jpg",
+      "blob": "1778450ef3fbbbea747ca27a0299b58ab2f49108",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1267366,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/leo-visions.jpg",
+      "blob": "24218ce6daac8383620c90b6a92235efb635de11",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 495613,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/leo.jpg",
+      "blob": "16995eb8b4d1fcee324fb52480c4a63b0be128fe",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 455431,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/nasa-2.jpg",
+      "blob": "590ab7abe2bcf2b62532df81bbc9b200020a41d5",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 282032,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/nathan-dumlao.jpg",
+      "blob": "ea1e2b0140c75be95fa5742a591f2ce2878850d4",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 679717,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/osman-rana.jpg",
+      "blob": "38bd344b573618f27a6ae1c064c36a32e18d6021",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 961062,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/photo-1.jpg",
+      "blob": "0382ca31a8a422db93705a1ee26717722acafdb2",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1009426,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/photo-2.jpg",
+      "blob": "2c5a37e8d03aaed5f4f6c1208a1f81edf5443799",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 648904,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/photo-3.jpg",
+      "blob": "cef1123a7170155f2b087468e8c4178d3615bffc",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 790208,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/photo-4.jpg",
+      "blob": "a25d878a7f8f7facd6f2ddbf08f2550340524e88",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 815780,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/ryan-hutton.jpg",
+      "blob": "57adb0869bbf8ac36d8d0cd922f66fcc3a2814a6",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 476355,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/scott-rodgerson.jpg",
+      "blob": "e27d13fb97ae55b0845db36dec0a0aea2a7fcfce",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 771360,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/sergey-pesterev.jpg",
+      "blob": "fbe67357193b78acd41f32b5601ed645f10b5ce8",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 474372,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/storm.jpg",
+      "blob": "4acfb5bd1ab234fb31aee65d6e22d094b7b0c966",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 551964,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/sumner-mahaffey.jpg",
+      "blob": "8cdabe2c67f0f418f9201ad53e0571d4bf92e7c7",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 392343,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/sydney-rae.jpg",
+      "blob": "ae45b760d9727bf6d146094394119cd7f38e7245",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 668734,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/public/orchestra/wallpapers/trevor-mckinnon.jpg",
+      "blob": "005d91ddafd24a7f26a4260fdc4e97b20dfd3548",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 300862,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/app-shell/src/custom-elements.d.ts",
+      "blob": "e4ea0d6cebdad58ea12fc08dd7a3f732cdb45f8f",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "120000",
+      "bytes": 33,
+      "metadataExplanation": "Git symlink",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/client/src/generated/types.ts",
+      "blob": "fca4633666a639d550065312a13e48c6ce221d12",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 462732,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/codemode/test/fixtures/opencode-v2-openapi.json",
+      "blob": "934b22e389f4ae86039967dd8134d750780b025c",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 637024,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "blob": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 266885,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/ui/src/assets/fonts/Inter.ttf",
+      "blob": "e31b51e3e9388ae61767c692885e5d77ff7b5346",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 874708,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/ui/src/assets/fonts/JetBrainsMonoNerdFontMono-Regular.woff2",
+      "blob": "02a57c6f500a61edf5cc451f23e76bd92a034f2a",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1060580,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/ui/src/components/file-icons/sprite.svg",
+      "blob": "619b2b58cace6ed6d84b0f37c20b1c6e7b8b0ce0",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 943958,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:packages/ui/src/components/provider-icons/sprite.svg",
+      "blob": "c8099d7ad1bac04b243a93af3a344e4ff9112f7e",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 281569,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:schema/tui.json",
+      "blob": "9250e2ec0c6e433ade0d5a172e8156087022f217",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 1131057,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    },
+    {
+      "key": "file:specs/atlas-ui/mock/data-real.js",
+      "blob": "80c2198b2eed5e25567cb99c7a102cab17265ab6",
+      "observed": {
+        "kind": "unavailable"
+      },
+      "gitMode": "100644",
+      "bytes": 2302009,
+      "metadataExplanation": "file exceeds observer's 256000-byte ceiling",
+      "explanationLimit": "Metadata diagnosis only; the real observer returns the tri-state result, not this explanation."
+    }
+  ],
+  "results_sha256": "9486218f7b172e4c68b7b672dd34765f0081fb2c9673a8c76197ba64e0300047",
+  "results_bytes": 3294022,
+  "production": "NOT_RUN",
+  "semantic_scope": "NOT_FROZEN",
+  "tests": "NOT_RUN",
+  "model_calls": 0,
+  "interpretation": "Operational source-readiness audit. A present version proves capturable bytes, not semantic authority or coverage. No refused path was replaced by empty content or silently excluded from campaign scope."
+}

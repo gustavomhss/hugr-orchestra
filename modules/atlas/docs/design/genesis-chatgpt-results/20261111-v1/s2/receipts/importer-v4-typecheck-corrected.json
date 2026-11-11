@@ -1,0 +1,18 @@
+{
+  "schema": "genesis-proposal-compile/v1",
+  "candidate_revision": null,
+  "correction": "Use existing Vitest types; assertions receive unknown CAS values without unsafe property access. Original failed compile receipt preserved.",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T15:13:33.186021+00:00",
+  "ended_at": "2026-11-11T15:13:35.442686+00:00",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "$ tsc -b\n",
+  "tests": "NOT_RUN",
+  "scope": "detached proposal preview only"
+}

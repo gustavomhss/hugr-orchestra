@@ -1,0 +1,55 @@
+{
+  "schema": "genesis-source-materialization/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "actual_head_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "started_at": "2026-11-11T15:08:17.308916+00:00",
+  "finished_at": "2026-11-11T15:08:18.730143+00:00",
+  "invocation": {
+    "argv": [
+      "git",
+      "sparse-checkout",
+      "set",
+      "--no-cone",
+      "--stdin"
+    ],
+    "cwd": "/workspace/scratch/ea607dbcbf72/orchestra",
+    "stdin": "/*\n!/docs/images/readme/atlas-graph-dark.png\n!/docs/images/readme/atlas-graph-light.png\n",
+    "environment_controls": {
+      "GIT_NO_LAZY_FETCH": "1"
+    },
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "expected_protocol_files": 14453,
+  "verified_protocol_files": 14451,
+  "verified_source_files": 14440,
+  "expected_source_files": 14442,
+  "hash_mismatches": [],
+  "gaps": [
+    {
+      "path": "docs/images/readme/atlas-graph-dark.png",
+      "blob": "da79e78f0beca8f16084ca9fbc1e77a183ee6357",
+      "reason": "Connector fetch_file returned empty content for large binary; fetch_blob and fetch reject non-UTF8 binary; not materialized."
+    },
+    {
+      "path": "docs/images/readme/atlas-graph-light.png",
+      "blob": "ab30cbfddee439c2a2ffeeb5b64287debfef778f",
+      "reason": "Connector fetch_file returned empty content for large binary; fetch_blob and fetch reject non-UTF8 binary; not materialized."
+    }
+  ],
+  "all_nonbinary_source_files_available": true,
+  "whole_checkout_complete": false,
+  "whole_semantic_scope_accepted": false,
+  "source_checks_sha256": "c734879662f9ce11af67f8bee81a34ef848b71186cf986da9fa8934ef243b42b",
+  "source_checks_bytes": 3211148,
+  "source_checks_file": "whole-source-file-hashes.json",
+  "original_worktree_clean_before": true,
+  "original_worktree_clean_after": true,
+  "transported_missing_blobs": 411,
+  "transport_disposition": "The two binary documentation images remain explicit missing sources, not zero-byte placeholders. Source packs requiring them must wait or receive an explicit S1 disposition. No source exclusion has been inferred.",
+  "consumer_isolation": "Transport and hashing did not emit reserved consumer bodies or answer keys to model context.",
+  "tests": "NOT_RUN"
+}
