@@ -20,3 +20,5 @@ For current implementation, start with the owning package below and search for t
 | Native process infrastructure | `native/omni/` |
 
 These are current navigation entries, not retrospective verification of a historical result. A test file, source reference or newer implementation does not replace the run receipt and SHA recorded by a qualification document.
+
+Historical [Omni handoff](../../native/omni/HANDOFF.md), [Omni integration plan](../../native/omni/docs/ux/WP10-orchestra-integration.md), [migration reference](../../native/omni/skills/omni-migrate/references/orchestra.md) and [Nix readiness record](../../nix/W5-readiness.md) also retain their original pre-split source citations. Use the current owners above when navigating their implementation; the original records remain unchanged.
