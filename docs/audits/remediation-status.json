@@ -1,0 +1,598 @@
+{
+  "schema_version": 1,
+  "implementation_base": "74bfb2f4474e3c8a2657af6730edbfd90504816c",
+  "integration_branch": "audit-remediation",
+  "pull_request_policy": "single PR targeting dev",
+  "benchmark_before": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43109842284",
+    "verdict": "success",
+    "tests_passed": 6
+  },
+  "findings": [
+    {
+      "id": "E1",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E2",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E3",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E4",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E5",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E6",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E7",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E8",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E9",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E10",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E11",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E12",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E13",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E14",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "E15",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "G1",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "G2",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H1",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H2",
+      "severity": "P1",
+      "owner": "security",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H3",
+      "severity": "P2",
+      "owner": "security",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H4",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H5",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H6",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H7",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H8",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H9",
+      "severity": "P2",
+      "owner": "security",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H10",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H11",
+      "severity": "P1",
+      "owner": "security",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H12",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H13",
+      "severity": "P1",
+      "owner": "security",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "H14",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L1",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L2",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L3",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L4",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L5",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L6",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L7",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L8",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L9",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L10",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "L11",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M1",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M2",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M3",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M4",
+      "severity": "P3",
+      "owner": "desktop",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M5",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M6",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M7",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M8",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M9",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M10",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M11",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M12",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M13",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M14",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "M15",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "N1",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "N2",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "T1",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "T2",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "T3",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "X1",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "X2",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    },
+    {
+      "id": "X3",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "planned_unverified",
+      "runtime_reproduced": false,
+      "commits": [],
+      "evidence": []
+    }
+  ]
+}
