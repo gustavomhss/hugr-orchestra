@@ -1,0 +1,76 @@
+{
+  "schema": "genesis-native-preparation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "agent": "/root/rollback_readers",
+  "attempt_id": "s3-prep-rollback-001",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "preparation_status": "COMPLETED",
+  "execution_status": "NOT_RUN",
+  "semantic_acceptance": "INDETERMINATE",
+  "scope_revision": null,
+  "budget_allocation_ref": null,
+  "actual_work": [
+    "Fetched 21 pinned source/protocol files using GitHub connector",
+    "Verified exact UTF-8 bytes against all 21 Git blob IDs",
+    "Inspected current/historical reader and rollback write path",
+    "Prepared seven scenario shapes",
+    "Prepared one conservative shared-code patch with a mechanical regression; patch not applied",
+    "git apply --check succeeded against exact baseline materialization; patch remains unapplied"
+  ],
+  "product_processes": [],
+  "reader_processes": [],
+  "tests_run": [],
+  "ci_runs": [],
+  "github_writes": [],
+  "shared_code_edits": [],
+  "external_model_calls": [],
+  "native_physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "blocking_dependencies": [
+    "S1 scope/criteria/quota handoff at exact commit",
+    "S2 accepted candidate and required independent control at exact commit",
+    "S5 serial integration and exact candidate for verification",
+    "S5 independent judge receipts"
+  ],
+  "outputs": [
+    {
+      "path": "inspection-summary.md",
+      "sha256": "38a0b92973c22ea1d865504d8acf05bd64f63326d94ec004d4dbe27b4dba0597",
+      "bytes": 7860
+    },
+    {
+      "path": "cases-readers.json",
+      "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e",
+      "bytes": 12986
+    },
+    {
+      "path": "source-receipts.json",
+      "sha256": "b99d8b53e12fb6620d79f1b8bca93f816e87429531cb562c2d3760afdbfdd022",
+      "bytes": 10827
+    },
+    {
+      "path": "proposals/rollback-activation-refusal.patch",
+      "sha256": "590ecbf74b8a8cbb856904d5aa350a08dfce6ec0c8eb69d5b31de781ba81ec73",
+      "bytes": 2818
+    },
+    {
+      "path": "proposals/proposal.json",
+      "sha256": "91b0ef9e45e01afce644411b0b058e5dfdd114cd2bb7870d901f3ba1904def2b",
+      "bytes": 6691
+    }
+  ],
+  "static_checks": [
+    {
+      "command": "git apply --check /workspace/scratch/8acc6027a42c/agents/rollback_readers/proposals/rollback-activation-refusal.patch",
+      "working_directory": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "scope": "Patch applicability only against exact materialized baseline files; no application, runtime, test or acceptance."
+    }
+  ]
+}

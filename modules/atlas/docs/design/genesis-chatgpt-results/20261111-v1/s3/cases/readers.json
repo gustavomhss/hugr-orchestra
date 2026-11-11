@@ -1,0 +1,279 @@
+{
+  "schema": "genesis-recovery-prepared-cases/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "agent": "/root/rollback_readers",
+  "attempt_id": "s3-prep-rollback-001",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "scope_revision": null,
+  "budget_allocation_ref": null,
+  "s2_handoff_ref": null,
+  "s5_integrated_candidate": null,
+  "population_covered": 0,
+  "population_total": null,
+  "coverage_note": "Seven prepared scenario shapes; no product execution, no scope/manifest acceptance, no completed coverage.",
+  "cases": [
+    {
+      "id": "S3-R01",
+      "title": "Compatible rollback to exact retained carrier",
+      "criteria": [
+        "AC-07",
+        "AC-10",
+        "CC-5",
+        "SC-5"
+      ],
+      "purpose": "Require actual reactivation/readback, and distinguish a retained-CAS no-op from success.",
+      "prerequisites": [
+        "S1 accepted scope/closure and S3 quota",
+        "S2 two independently accepted exact manifests A and B compatible with the same current input/contract set",
+        "S5 integrated governed reactivation contract, or execute the existing route as a recorded failing baseline",
+        "Governed isolated policy/actor/ratification and real reader process"
+      ],
+      "steps": [
+        "Publish A through the governed door and record its exact carrier/manifest and ready readback.",
+        "Publish distinct B at the same place with accepted bindings, and record ready B.",
+        "Attempt exact A through the same governed door, including the exact-retained authored path and promoted claim-receipt path if the candidate uses them.",
+        "Read from a separately composed process and record selected manifest, carrier, artifact, result, receipt and projection state."
+      ],
+      "required_result": "A rollback claimed successful must return a ready current read bound to A, with exact compatible closure. Otherwise record a named refusal and preserve B; refusal does not close compatible rollback.",
+      "source_inference": "The baseline DEDUP route can report emitted:true while retaining B; the promoted receipt path can additionally make the representative/claim receipt inconsistent. NOT REPRODUCED.",
+      "planned_regression": "The proposed patch regression expects ownership-activation-not-applied for retained A and keeps B unchanged. This fixes truthful refusal only.",
+      "source_paths": [
+        "modules/atlas/packages/knowledge/src/write/upsert.ts",
+        "modules/atlas/packages/knowledge/src/write/router.ts",
+        "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+        "modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+        "modules/atlas/packages/adapter-io/src/ownership-attachment.ts"
+      ],
+      "state": "PREPARED",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "observed_result": null,
+      "reader_process": null,
+      "run_id": null,
+      "raw_outputs": []
+    },
+    {
+      "id": "S3-R02",
+      "title": "Incompatible rollback refuses current source/contract bindings",
+      "criteria": [
+        "AC-07",
+        "AC-10",
+        "CC-5",
+        "SC-5"
+      ],
+      "prerequisites": [
+        "Frozen accepted A and current B/source/input revisions",
+        "Exact declared input selected from the S2 closure; prefer a non-anchor input when isolating attachment currentness",
+        "Real governed entry point, policy and process reader"
+      ],
+      "steps": [
+        "Record accepted A's source/recipe/membership/contract bindings and the currently published state.",
+        "Change the required input in the isolated source target, preserving the recorded original bytes.",
+        "Attempt A through the existing governed door and capture the actual gate/refusal, without historical activation.",
+        "Read the current projection and verify no source-incompatible A body is served as current."
+      ],
+      "required_result": "Named refused emit/check outcome with unchanged serving state; current read returns a compatible complete generation or HOLD. ownership-input-changed/unavailable are the current-reader outcomes for corresponding input states; earlier truth refusal must be recorded honestly if it fires first.",
+      "source_paths": [
+        "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+        "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "modules/atlas/packages/knowledge/src/ownership/read.ts"
+      ],
+      "state": "PREPARED",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "observed_result": null,
+      "reader_process": null,
+      "run_id": null,
+      "raw_outputs": []
+    },
+    {
+      "id": "S3-R03",
+      "title": "Published stale generation read as explicit history",
+      "criteria": [
+        "AC-07",
+        "CC-5",
+        "SC-5"
+      ],
+      "prerequisites": [
+        "S2 accepted generation actually published through the governed door",
+        "Declared source drift recorded and active current read observed HOLD",
+        "Pinned host/CLI surface preserving raw OwnershipRead fields"
+      ],
+      "steps": [
+        "Call the actual governed current reader for the published stale generation, retaining its HOLD output.",
+        "Call the same real reader with historical:true and a frozen byte limit.",
+        "Capture the complete consumed output and check the historical flag and exact manifest/result/receipt references.",
+        "Call current read again; do not publish or reactivate the history."
+      ],
+      "required_result": "Historical result ready with historical:true and exact historical binding, while current still refuses stale inputs. All non-currentness checks remain active. Selecting an arbitrary old manifest is not provided by baseline OwnershipQuery.",
+      "query_shape": {
+        "scope": null,
+        "need": null,
+        "maxBytes": null,
+        "historical": true
+      },
+      "source_paths": [
+        "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+        "modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "modules/atlas/packages/knowledge/src/ownership/types.ts"
+      ],
+      "state": "PREPARED",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "observed_result": null,
+      "reader_process": null,
+      "run_id": null,
+      "raw_outputs": []
+    },
+    {
+      "id": "S3-R04",
+      "title": "History preserves integrity, review and dependency refusals",
+      "criteria": [
+        "AC-07",
+        "AC-09",
+        "CC-5",
+        "SC-5"
+      ],
+      "prerequisites": [
+        "S3-R03 exact baseline",
+        "Owned isolated target and preserved original bytes",
+        "Frozen required closure mutations with object digests"
+      ],
+      "variants": [
+        "missing required object",
+        "wrong-kind or invalid closed shape",
+        "digest-mismatched object",
+        "review bound to another input/result",
+        "required dependency result mismatch",
+        "blocked validity"
+      ],
+      "steps": [
+        "Apply one frozen fault at a time only to owned isolated CAS data; do not directly publish a projection.",
+        "Call the real reader with historical:true and retain the full refusal.",
+        "Restore only the owned exact original bytes and verify the known-good labelled historical control."
+      ],
+      "required_result": "HOLD with the corresponding real named refusal; historical mode never authorizes missing/forged/blocked/dependency-incompatible knowledge.",
+      "source_paths": [
+        "modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "modules/atlas/packages/knowledge/src/ownership/shape.ts"
+      ],
+      "state": "PREPARED",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "observed_result": null,
+      "reader_process": null,
+      "run_id": null,
+      "raw_outputs": []
+    },
+    {
+      "id": "S3-R05",
+      "title": "Local required-object corruption preserves an independent scope",
+      "criteria": [
+        "AC-09",
+        "CC-5",
+        "SC-5"
+      ],
+      "prerequisites": [
+        "S1 independent scope pair with explicit disjoint required artifact/input closures",
+        "S2 accepted and actually published manifests for both scopes",
+        "Frozen CAS object file/bytes and root identities from the real disk store"
+      ],
+      "steps": [
+        "Observe both scopes ready through actual readers.",
+        "Corrupt or remove one required CAS object used only by scope A, retaining its exact original bytes and hash.",
+        "Read A and B from a separately composed process and retain outputs with manifests and checked closures.",
+        "Restore owned bytes and renew only the affected read observations."
+      ],
+      "required_result": "A holds on the damaged required closure. B remains ready with unchanged bindings and body bytes. Navigation to A alone must not create a build dependency. If B shares the corrupted required authority, it is not an independent control.",
+      "source_paths": [
+        "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+        "modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "modules/atlas/packages/knowledge/src/ownership/shape.ts"
+      ],
+      "state": "PREPARED",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "observed_result": null,
+      "reader_process": null,
+      "run_id": null,
+      "raw_outputs": []
+    },
+    {
+      "id": "S3-R06",
+      "title": "Shared manifest corruption holds all dependent reads",
+      "criteria": [
+        "AC-09",
+        "CC-5",
+        "SC-5"
+      ],
+      "prerequisites": [
+        "Frozen manifest shared by at least two needed roots and exact dependency mapping",
+        "An independently governed valid scope only if it does not depend on the corrupted manifest/authority",
+        "Owned isolated target with preserved bytes"
+      ],
+      "steps": [
+        "Observe ready outputs from every selected root depending on the manifest.",
+        "Damage the exact referenced manifest CAS object without replacing its reference or writing a serving projection.",
+        "Read each dependent root and the independent control through real readers.",
+        "Capture the original, damaged and restored object bytes/digests and responses."
+      ],
+      "required_result": "Each dependent read holds due to the malformed/missing/integrity-invalid manifest; a truly independent scope stays readable. No success inferred from opening some projection.",
+      "source_paths": [
+        "modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+        "modules/atlas/packages/adapter-io/src/ownership-access.ts"
+      ],
+      "state": "PREPARED",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "observed_result": null,
+      "reader_process": null,
+      "run_id": null,
+      "raw_outputs": []
+    },
+    {
+      "id": "S3-R07",
+      "title": "Historical request cannot bypass untrusted-store refusal",
+      "criteria": [
+        "AC-07",
+        "AC-09",
+        "CC-5",
+        "SC-5"
+      ],
+      "prerequisites": [
+        "S4 actual host provenance classification at a pinned candidate",
+        "Owned isolated store and explicit trusted/untrusted controls",
+        "S1/S2 scope and generation bindings"
+      ],
+      "steps": [
+        "Record the trusted labelled historical control.",
+        "Exercise the actual host condition that yields tracked-staging or failed read reproof in the isolated target; do not substitute a fake refusal object as host evidence.",
+        "Request historical:true at the intended user-facing reader and retain raw output.",
+        "Confirm no raw sidecar or low-level CAS read is substituted to satisfy the request."
+      ],
+      "required_result": "The governed reader refuses as ownership-untrusted or the actual corresponding host refusal before returning knowledge; historical mode grants no bypass.",
+      "source_paths": [
+        "modules/atlas/packages/adapter-io/src/read-access.ts",
+        "modules/atlas/packages/adapter-io/src/ownership-access.ts"
+      ],
+      "state": "PREPARED",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "observed_result": null,
+      "reader_process": null,
+      "run_id": null,
+      "raw_outputs": []
+    }
+  ],
+  "integration_hooks": [
+    {
+      "owner": "durable_resume",
+      "subject": "failed rebuild after source drift and physical sidecar fallback",
+      "oracle": "Even if the disk layer opens an earlier readable projection, the current ownership reader must return a compatible complete accepted closure or HOLD; stale old knowledge must not be served as current.",
+      "status": "PREPARED_NOT_RUN"
+    }
+  ]
+}

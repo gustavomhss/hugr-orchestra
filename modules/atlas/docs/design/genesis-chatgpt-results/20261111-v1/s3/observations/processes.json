@@ -1,0 +1,13 @@
+{
+  "schema": "genesis-s3-process-observations/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "candidate_revision": null,
+  "execution_status": "NOT_RUN",
+  "product_processes": [],
+  "reader_responses": [],
+  "activation_results": [],
+  "resume_results": [],
+  "rollback_results": [],
+  "reason": "Exact S1 scope/allocation and S2 candidate/accepted manifests were not available. Environment preparation and source inspection are recorded separately and are not recovery observations."
+}

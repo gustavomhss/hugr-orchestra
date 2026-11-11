@@ -1,0 +1,21 @@
+{
+  "sourceFiles": 252,
+  "sourceMismatches": 0,
+  "edges": 1073,
+  "unresolved": 0,
+  "unresolvedSpecifiers": [],
+  "declaredDistMissing": [
+    "@atlas/kernel",
+    "@atlas/contracts",
+    "@atlas/knowledge",
+    "@atlas/index",
+    "@atlas/tools",
+    "@atlas/grounding",
+    "@atlas/retrieval",
+    "@atlas/genesis",
+    "@atlas/memory",
+    "@atlas/persist"
+  ],
+  "remainingDeleted": 501,
+  "otherWorktreeChanges": []
+}

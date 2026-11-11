@@ -11,38 +11,74 @@
       "attempt_id": "s3-prep-root-001",
       "agent": "/root",
       "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
-      "status": "RUNNING",
+      "status": "COMPLETED_PREPARATION_PACKAGE_WITH_DEPENDENCY_BLOCKERS",
       "production_or_judgment_request": false,
       "reserved_campaign_units": null,
-      "usage": "UNKNOWN"
+      "usage": "UNKNOWN",
+      "logical_units_observed": 1,
+      "reservation_timing": "PRE_ENVELOPE_PREPARATION_RECORDED; not proof of campaign pre-forward enforcement"
     },
     {
       "attempt_id": "s3-prep-activation-001",
       "agent": "/root/activation",
       "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
-      "status": "RUNNING",
+      "status": "COMPLETED_VISIBLE_OUTPUT",
       "production_or_judgment_request": false,
       "reserved_campaign_units": null,
-      "usage": "UNKNOWN"
+      "usage": "UNKNOWN",
+      "logical_units_observed": 1,
+      "reservation_timing": "PRE_ENVELOPE_PREPARATION_RECORDED; not proof of campaign pre-forward enforcement"
     },
     {
       "attempt_id": "s3-prep-durable-001",
       "agent": "/root/durable_resume",
       "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
-      "status": "RUNNING",
+      "status": "COMPLETED_VISIBLE_OUTPUT",
       "production_or_judgment_request": false,
       "reserved_campaign_units": null,
-      "usage": "UNKNOWN"
+      "usage": "UNKNOWN",
+      "output_path": "agents/durable_resume/durable-findings.md",
+      "logical_units_observed": 1,
+      "reservation_timing": "PRE_ENVELOPE_PREPARATION_RECORDED; not proof of campaign pre-forward enforcement"
     },
     {
       "attempt_id": "s3-prep-rollback-001",
       "agent": "/root/rollback_readers",
       "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
-      "status": "RUNNING",
+      "status": "COMPLETED_VISIBLE_OUTPUT",
       "production_or_judgment_request": false,
       "reserved_campaign_units": null,
-      "usage": "UNKNOWN"
+      "usage": "UNKNOWN",
+      "logical_units_observed": 1,
+      "reservation_timing": "PRE_ENVELOPE_PREPARATION_RECORDED; not proof of campaign pre-forward enforcement"
+    },
+    {
+      "attempt_id": "s3-prep-runtime-001",
+      "agent": "/root/durable_resume",
+      "phase": "pre-envelope environment preparation explicitly permitted by runtime.md",
+      "status": "COMPLETED_VISIBLE_OUTPUT",
+      "production_or_judgment_request": false,
+      "reserved_campaign_units": null,
+      "usage": "UNKNOWN",
+      "reserved_at": "2026-11-11T14:11:17.772092+00:00",
+      "logical_units_observed": 1,
+      "reservation_timing": "PRE_ENVELOPE_PREPARATION_RECORDED; not proof of campaign pre-forward enforcement"
     }
   ],
-  "historical_reservations": "Untouched; unresolved work is not zero or auto-retry authorization"
+  "historical_reservations": "Untouched; unresolved work is not zero or auto-retry authorization",
+  "observed_allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "allocation_validation": "Observed exact bootstrap-v1 preparation allocation only. Parent handoff protocol hash mismatches; full execution binding is not accepted.",
+  "observed_s3_limit": 6,
+  "observed_s3_correction_reserve": 2,
+  "preparation_packets_observed": 5,
+  "production_requests": 0,
+  "judgment_requests": 0,
+  "consumer_requests": 0,
+  "reconciliation_required": "Four initial preparation packets plus one environment preparation follow-up preceded consumption of S1 allocation. Five is below total six; the fifth is not silently reclassified as a reserved correction. S1 must reconcile the partition. No further native agent task is dispatched here.",
+  "financial_cap": "NOT_ESTABLISHED",
+  "remaining_quota_claim": null
 }

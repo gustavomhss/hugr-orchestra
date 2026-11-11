@@ -1,0 +1,105 @@
+{
+  "schema": "genesis-s3-prepared-cases/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "attempt_id": "s3-prep-durable-001",
+  "preparer": "/root/durable_resume",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "execution_status": "NOT_RUN",
+  "prerequisite_status": "Awaiting exact S1 inventory/allocation and S2 accepted candidate/importer bindings through S5.",
+  "cases": [
+    {
+      "id": "S3-RESUME-01",
+      "name": "Interruption after a durably persisted produced body before evaluation completes",
+      "preconditions": [
+        "S1 attempt reservation and exact source/input/recipe/contract identities are durably linked.",
+        "S2 native producer's original response is durably available with exact response bytes; no synthetic acceptance.",
+        "A valid currently served baseline exists through the real governed door."
+      ],
+      "interruption_point": "After native production response and result CAS bytes are durable, before evaluation has completed and before any activation.",
+      "actions": [
+        "Record pre-interruption process ID, candidate/source identities, response/result hashes and reservation.",
+        "Interrupt the owned process and preserve its exit/signal and uncensored non-secret outputs.",
+        "Start a new process using the existing adapter's restore entry point returned by S2/S5.",
+        "Reconcile durable original response and uncertain evaluation request before any further inference; never repeat the producer to reconstruct missing provenance.",
+        "Perform authorized evaluation only after reservation/uncertainty reconciliation; activate only if complete accepted manifest passes governed check and emit.",
+        "Use the public runtime reader in a separate process and record returned identities or HOLD."
+      ],
+      "required_observations": [
+        "Original producer result bytes unchanged.",
+        "No second production request for the completed identity.",
+        "Unresolved evaluation stays UNCERTAIN until evidence resolves it; retry, if explicitly admitted, is a new attempt.",
+        "A CAS body without complete reviews/receipt is never treated as publishable.",
+        "Current reader stays on a compatible accepted manifest or HOLD throughout."
+      ],
+      "baseline_gap": "ownership-rebuild.ts puts body/result before evaluate, but it has no durable completion/address/cursor input. A HOLD does not return those refs or calls. Native importer must provide actual restore behavior.",
+      "observed_process_results": null,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "id": "S3-RESUME-02",
+      "name": "Interruption after one reviewed artifact changes result and before a dependent artifact finishes",
+      "preconditions": [
+        "Freeze accepted baseline manifest with required edge B -> A.",
+        "Choose a real S1 scope and source drift for which S2's actual recipe changes A's result.",
+        "S1 quota/reservation covers only the actual needed work and evaluator requests."
+      ],
+      "interruption_point": "After A's body/result/reviews/receipt/artifact are durable and before B completion or final candidate activation.",
+      "actions": [
+        "Record all completed identities and the exact interruption point from the running process.",
+        "Interrupt and record exit/signal without deleting the isolated store.",
+        "Resume in a distinct process through the candidate's real completion-selection API.",
+        "Revalidate completed A against current source, recipe, contract, required results and reviews.",
+        "Reuse matching completion A without invoking its producer again; complete only B and remaining affected work.",
+        "Construct and validate the complete final candidate; use check and atlas-emit for isolated activation.",
+        "Obtain actual independent reader trace."
+      ],
+      "required_observations": [
+        "A's original completion and reviews survive process death and are selected by stable identity.",
+        "Producer invocation counts and IDs demonstrate zero new work for completed A.",
+        "B receives A's current result.",
+        "No incomplete partial manifest is served.",
+        "Uncertain attempts/reservations remain unreleased unless reconciled.",
+        "Final reader's required closure is coherent and tied to the final manifest."
+      ],
+      "baseline_gap": "A new invocation of rebuildOwnershipUpdate only accepts a baseline manifest. Its in-memory candidateArtifacts/calls/newResults do not survive interruption. Passing its partial manifest is insufficient when B still binds the old A result: planOwnershipUpdate historically validates all entries and readOwnership still checks dependency bindings.",
+      "observed_process_results": null,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "id": "S3-REBUILD-FAIL-01",
+      "name": "Real source drift followed by failed rebuild cannot serve stale current knowledge",
+      "preconditions": [
+        "Exact S1 requested closure plus a truly independent scope are frozen.",
+        "S2 accepted baseline and actual recipe/evaluator are bound.",
+        "Both initial current reads are observed ready via runtime.ownership.read in the isolated target."
+      ],
+      "failure_point": "After an actual required source edit is observed, cause the real rebuild path to return blocked/HOLD or terminate at its declared failure seam; do not replace the production recipe with a fixed fake success.",
+      "actions": [
+        "Capture source bytes/version and baseline published manifest before drift.",
+        "Apply the isolated source edit and record the new observed version.",
+        "Invoke the actual rebuild/update entry point and capture raw output, exit/signal and any durable partial completions.",
+        "Query the affected current closure from a separate process using runtime.ownership.read.",
+        "Query the independent control scope with its unchanged source/dependency closure.",
+        "Issue historical:true explicitly only via the public reader and preserve its returned historical label."
+      ],
+      "required_observations": [
+        "Affected current closure returns HOLD with actual reason/evidence; never old stale ready.",
+        "Unchanged independent scope remains ready if no shared mandatory authority/manifest is corrupt.",
+        "Rebuild failure does not activate an incomplete manifest.",
+        "Explicit historical access remains trust gated and visibly historical.",
+        "Attempts with unknown forwarding/result retain UNCERTAIN reservation."
+      ],
+      "baseline_gap": "readOwnership checks current input equality, and rebuildOwnershipUpdate returns HOLD for blocked output/evaluation or may propagate thrown errors, but the entire drift -> failed real rebuild -> separate composed reader sequence has not been run here.",
+      "observed_process_results": null,
+      "execution_status": "NOT_RUN"
+    }
+  ],
+  "no_claims": [
+    "No test or operational recovery scenario was executed by this preparation.",
+    "No global or local recovery PASS is assigned.",
+    "Historical G3-01/02/03 dispositions are imported unchanged, not rerun/rejudged.",
+    "The original unresolved historical request is not settled by this preparation."
+  ]
+}

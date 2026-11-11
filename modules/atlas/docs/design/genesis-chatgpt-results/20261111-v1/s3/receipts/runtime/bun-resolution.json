@@ -1,0 +1,15 @@
+{
+  "attempt_id": "s3-prep-runtime-001",
+  "operation": "Bun package resolution only",
+  "command": [
+    "/workspace/scratch/8acc6027a42c/runtime/bin/bun",
+    "/workspace/scratch/8acc6027a42c/runtime/resolve-packages.mjs"
+  ],
+  "start_utc": "2026-11-11T14:14:42.206470+00:00",
+  "end_utc": "2026-11-11T14:14:42.220139+00:00",
+  "exit_code": 0,
+  "script_sha256": "83be780d2de6ad2c30992ece1c882428507554c5fb2e0677e349ce3a41fa51d9",
+  "stdout_sha256": "3040cdfd86f7e51a9952774c843eb576909f52e904e34e1a4ab9d7badbebd557",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "product_modules_evaluated": false
+}

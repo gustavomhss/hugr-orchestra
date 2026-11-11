@@ -1,0 +1,26 @@
+{
+  "schema": "genesis-encoded-evidence/v1",
+  "note": "Original bootstrap receipt and raw byte identities are preserved. Large static import inventories are losslessly compressed; logical relative paths in the original receipt resolve through this map. No product output or failed attempt is discarded.",
+  "files": [
+    {
+      "logical_path": "receipts/runtime/import-closure.json",
+      "stored_path": "receipts/runtime/import-closure.json.gz",
+      "encoding": "gzip",
+      "original_sha256": "8c3859aa439f5b5ce99c62af235e4a0e661dfe396a49ed0f58e668635b64d813",
+      "original_bytes": 414532,
+      "stored_sha256": "df1004687e5599e4684f435da6939fa6a32f839aba3813c987475ed4edf2712b",
+      "stored_bytes": 35880,
+      "restore": "gzip decompression; verify original digest before consuming"
+    },
+    {
+      "logical_path": "receipts/runtime/import-closure-2.json",
+      "stored_path": "receipts/runtime/import-closure-2.json.gz",
+      "encoding": "gzip",
+      "original_sha256": "edf031fff45eb27c170ba289bc250d45c1adc010773c24167d7f8d78197d05cb",
+      "original_bytes": 381791,
+      "stored_sha256": "3402ab85d0533aa683a1223b647f33704a1f5802ac8115fa63256baf335337aa",
+      "stored_bytes": 35056,
+      "restore": "gzip decompression; verify original digest before consuming"
+    }
+  ]
+}

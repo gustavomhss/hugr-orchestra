@@ -1,0 +1,1235 @@
+{
+  "attempt_id": "s3-prep-runtime-001",
+  "timestamp_utc": "2026-11-11T14:12:37.753148+00:00",
+  "verified_imports": [
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose-enriched.md",
+      "blob": "f8202dd0dcc221bd215bdd960ef321c88310cbe3",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/prompts/propose-enriched.md",
+      "sha256": "7e54ca10f7c74f944a5a4b899cba02f6b91f7d5d3e0275333f9668254deb2776"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose-semantic.md",
+      "blob": "1908dbd61c3d89f2fb6a3af7c045a41902dd08db",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/prompts/propose-semantic.md",
+      "sha256": "43aa12697d2b2a079d85a33944c18c2f4def47f75afe8dec985febd503cfa7a6"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose.md",
+      "blob": "3cb28531f718616b851c9bd380fda5d15e2a40a0",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/prompts/propose.md",
+      "sha256": "33b591a3a7e928f04f01ed14d6422324d3e8fba3f3c7fce0d6184e189b2380b7"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "blob": "e9c59d90819242087c1737108c2df689e1487f7f",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "sha256": "a838d4205ff1999627fbb14b8a1de25b91c897255332bd50a95e12799e6fb6c1"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "blob": "6a8dacf0b8956979a49665c415f803b911c53138",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/compose.ts",
+      "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/git-history.ts",
+      "blob": "c0715d4daf78ec72be6094aa1b1bfcf3694049fb",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/git-history.ts",
+      "sha256": "9d62e93f8cad8d732b03a8e324d63195ca744351510047a10506110a25f808b1"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "blob": "596d534ebb7da03dbef6002abf1dd3e398003cbf",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-identity.ts",
+      "blob": "36106e3402ef5ed79e0db84e32556500a7d85d2e",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/governed-emit-identity.ts",
+      "sha256": "15a366b8f67456b4162b0b1c8d7f5a8e712fa5a489e23df75804cf2c3903c2c0"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-promote.ts",
+      "blob": "d108e256f27f07a4429faa32bd00c51040fa11a7",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/governed-promote.ts",
+      "sha256": "15db8cbd288427ad7b05ea906f231f9993418f5c79f8c7153b88481a5af5d6e8"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/index.ts",
+      "blob": "f3d724fb81062d3d1c726fb8863a9d2ea8744231",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/index.ts",
+      "sha256": "48007a15351581ac0eb7d70c032c5615d78aafeec3c1809d773e25c367bc4e35"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/llm-command-failure.ts",
+      "blob": "693a56f8703365ad0368f0174efd95906d3f525c",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/llm-command-failure.ts",
+      "sha256": "1742585f3b57c45519bb4930b5cf42d752c4379216d983bb517944ef45af10fc"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/llm.ts",
+      "blob": "b3cda38ea6b4c22c25ab3f9d7a1a81342865e895",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/llm.ts",
+      "sha256": "44c071b98e422d6d17397bb54bf571145bba48724d1a7ad9e29eef17b14c7fe6"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/open-questions-source.ts",
+      "blob": "a0bc6d8951de631c4d0d821b73d01dc7668fad10",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/open-questions-source.ts",
+      "sha256": "22201166fd85b8cf65117f4ce2bff3715ca8d267f67bfb0e0336e1af37fef532"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/propose-template.ts",
+      "blob": "9ed9bdde7a9dc36bb46be4167c5c5879e565d0c1",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/propose-template.ts",
+      "sha256": "58ab80cf6cdd2a4b28e40ee8ba17c31fdf70fcdb22f075fd6d71322ad93ec5d5"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/run-git.ts",
+      "blob": "18e94c77d4c5e34319a81f4007d2187ebb5f3d67",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/run-git.ts",
+      "sha256": "be7b78a1c3a2e84ba0d9b9b6c09e24d984948264f04173649dc30ed13bee0120"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/wire.ts",
+      "blob": "bcfdc8e49684a7e4d29a57e16d60247677e6301f",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/src/wire.ts",
+      "sha256": "9a9982cf312157cfb8e621eced5c2e0221105f86711dc21edeaf2df423cd1f31"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts",
+      "blob": "d88907755983ea62c28a1171f057867bcb91d939",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts",
+      "sha256": "699ddc97978a71b35d9365e7bb5868b81e85a294ea9921f684b23e6cf8eaa900"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts",
+      "blob": "4fceca3fcf8b7782abf6b00e5880581516a11433",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/g3-recovery.test.ts",
+      "sha256": "7cd08bd938eead4486ce6a467f03e0f7565f92588ab80cdf0851f5eace85adb3"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/git-history-selected-szz.test.ts",
+      "blob": "7895904a4d0dacac8f0eb617d862dae1b4aa89a9",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/git-history-selected-szz.test.ts",
+      "sha256": "c0afc0b9187fcd9217865c0d71efac24ed2274086193594a4bdccf4f1246c511"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/git-history.test.ts",
+      "blob": "c709e67dcbe826bfab3706f7dc046b60fb70c4ea",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/git-history.test.ts",
+      "sha256": "1c477d00f2e752c90e35d9cc1c6b6fd1d0e31b46fbf8b6aafcd8286fd0f20d3d"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/governed-promote-claims.test.ts",
+      "blob": "8b75766c6851c46c50754b5724cbeb196aa2e7c4",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/governed-promote-claims.test.ts",
+      "sha256": "cd31bafe57726adcb937ddd38154d646ad3c8505c3508bcc332f59bc937dd060"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "sha256": "8d687cb301f038b51f8bec0c50dff789f08d9e6596a72ea0c3e17dd5e8a82d85"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/llm-command-client.test.ts",
+      "blob": "d194587ef3b7fbfc3deda1d769f5a973b2ccb876",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/llm-command-client.test.ts",
+      "sha256": "24555b825e12d44ede335e721dfcc82cdd5853a5884ea4196bf2d9dbcbca352e"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/llm-multifact.test.ts",
+      "blob": "1ca1c61d3ddd00cfcb1f56b240e84a8dae00d5ea",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/llm-multifact.test.ts",
+      "sha256": "8a724476f6bd0855ee0d26b745692bf5c78cc808f43333a00e5d21e992fa2b32"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/llm-semantic-parser.test.ts",
+      "blob": "14c977c53b4e373eaa6d1bf295e8a30bceb88074",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/llm-semantic-parser.test.ts",
+      "sha256": "4279d098cc57a2efb1ff48efb95ea9dc125e56b4c8f418923c428d8f61c6f141"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/open-questions-source.test.ts",
+      "blob": "58a7347a6468a737e7729a28fe67f7f602b7b69d",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/open-questions-source.test.ts",
+      "sha256": "a96dfc173d2a02b5669a5637251711674dc588e8ac8103762b887bd8f2f2a1fa"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "blob": "20d7347dbb6651e568b132a014dfd44367b64621",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "sha256": "38bd2fe5f8b0b2b0e8b21822547af64edf7284f686a17fa813945a5798197a64"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "blob": "0f46c41f52f51ef9e72ff3f3ba8559d05b049e81",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "sha256": "7379976cc4705b6061f01f0ae59df2bf15d05bb2e01e9a3fc860adecd5a53535"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "sha256": "e705e4061c9b0f245cb10ffafab30639399686bb18e1e5fe0e3ef9edef263cbd"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "sha256": "2e04205a3fd17dbf85d8e15b4b77ed3180e6bd8d204df7fd672ba7562892993c"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-arms.ts",
+      "blob": "f9c5fa8b72845f33113c8c1e76376f0ba313b42f",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine-arms.ts",
+      "sha256": "5a4c5c8c0e31f2ddc4d3f8a7267bfce743b672a5d6dfcbd3c0b0056154c7fc3d"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-decide.ts",
+      "blob": "243a33c2eb2f5014de0672fc87d0c7c47dd1e34a",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine-decide.ts",
+      "sha256": "aeb272ae2022c3e1ac8bb053a207d9eafa67025ec664c17f568a69ad0e85d638"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-evidence.ts",
+      "blob": "1ea1aabc88ddcfee0aeb9620491c64bee9fcd24a",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine-evidence.ts",
+      "sha256": "5ddf0673542c33f311ed1015622bfaa252c229d119f09ad2055e00c0bb798c86"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-pool.ts",
+      "blob": "243743528531c336e27faf9cf4f8dbe3aa024ebe",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine-pool.ts",
+      "sha256": "492b8e50c3639baff7cf1ddc026b8046dab526c7abaa42bd309ae5fdd1abeea1"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-progress.ts",
+      "blob": "04d45a87bf1e7b06cf18b236984b1edd494a0aa4",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine-progress.ts",
+      "sha256": "141ca2c82537b351709972b71a91014405bdb2d82a3b59a07639abb57385bdcd"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-render.ts",
+      "blob": "f52bb5eb70eacc466a7a978f3307b4840e947c6b",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine-render.ts",
+      "sha256": "f8d0230cba9241e34ffd8f28fa563ed22d5b1226dbd963a28bc2fddab29204ee"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-worker.ts",
+      "blob": "4d5c8c4ba12da4c998fda514368dc4e1ebbeb797",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine-worker.ts",
+      "sha256": "884832dae0fa096e81488208c0f3a210b2939474a4a88c8b6ba9deb5258bbb1b"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine.ts",
+      "blob": "91484d2600ae33114e711451481c0957c06a53ad",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/mine.ts",
+      "sha256": "bf4e57a75c3641a1fbd16d1666cb964355322246ea9625433938ad5199b35a2a"
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/surface-mine.ts",
+      "blob": "634b50b31754c9597865557ede58ad63c8b7d254",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/src/surface-mine.ts",
+      "sha256": "03e7a1007a0858a4023bc715b3b74191686b7d6bc2af6f45fbb050da17deace1"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-arms-render.test.ts",
+      "blob": "3973f5e420a36eccc6fa6a1cd23d608c4dce87c5",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-arms-render.test.ts",
+      "sha256": "6a818a8bc6f11b68ec534b80f6774921616eeaaf1fbac51226cffafc05a9e0a1"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-claim-evidence.test.ts",
+      "blob": "c3a86b1e6dc6893d630d7e123f8087b2314fada4",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-claim-evidence.test.ts",
+      "sha256": "c6f393460b1d85589688efd46c994e94da8d2d14b52785293343f9afbd17d3fa"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-coverage-render.test.ts",
+      "blob": "b95bfcb4dfc68b10f97fcf18e26db291af5a7227",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-coverage-render.test.ts",
+      "sha256": "291bf7de9be7ed6c7c70d86d0a052ee142cec50fc9c7045edeac3c8e0e32aca2"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-deferred-signals.test.ts",
+      "blob": "abd2e4c1c092bc78a05f234f2dcf6fc47259a0fa",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-deferred-signals.test.ts",
+      "sha256": "1f58833376b09c1b56bb049059423c6acdeb67ae4df9b6be380e459b64dc1f74"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-failure-evidence.test.ts",
+      "blob": "42a00746b5f8879e20efcd6574482b1e03bf9d07",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-failure-evidence.test.ts",
+      "sha256": "d06afed3a36fc1b276dd795f8e152589e68bd6e6c1a69e320ed0497ede0aed32"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-multifact-worker.test.ts",
+      "blob": "b614d9d3a2346a5bfc3e79ac8d40029ed6e7913c",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-multifact-worker.test.ts",
+      "sha256": "aeab846e53b87d339461a79d1373e54781f03b6cea1034cc0dfe215510d65e08"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-multifact.test.ts",
+      "blob": "f8c2e01b5c615d3a55e3e774a8a8ed40fd397ce4",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-multifact.test.ts",
+      "sha256": "22c93b601d449b253d517e717b798ccb7bfdc896e10a9bd0fbf37e6e14304793"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-render-seeded-count.test.ts",
+      "blob": "ee45cc4ce204b9fb7eec1ea259284b4aa5160a64",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-render-seeded-count.test.ts",
+      "sha256": "75b2572be715af96e4a22a8a2ca156861057a92052d1e9ef818ae7c903d0bbb9"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/mine-staged-metrics.test.ts",
+      "blob": "1564bd4324b260939896b2ca939bbec265f9351f",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/mine-staged-metrics.test.ts",
+      "sha256": "78bce9003064d8b6fabdec37ec7402fd6b52eb318308f00b72ce9ce92d0a2614"
+    },
+    {
+      "path": "modules/atlas/packages/cli/test/surface-mine.test.ts",
+      "blob": "9a10a60527aedfde326272cce31cf7ee9def1f45",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/cli/test/surface-mine.test.ts",
+      "sha256": "494c8cad86c47d51aac556e4cd5108792772dfc6cff53a6319b2cd43e2d64660"
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts",
+      "blob": "f34048a7a4cc8f5eb09a744d71269a1f55f745fe",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts",
+      "sha256": "b43865177220521831d9608f455be513b90cda30a7298b219d90a8e1f19e19fd"
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/test/s14-mine.blackbox.test.ts",
+      "blob": "e48211354b3686338c7b33e5447e39bf9be633d2",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/e2e-blackbox/test/s14-mine.blackbox.test.ts",
+      "sha256": "1124809aaef4dbde88c39e3994f0e39da2710f05f21baac18d56f224fedf3cbb"
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts",
+      "blob": "1bf6e673a2ed779ac86bdc149c19f2574c1cfef9",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts",
+      "sha256": "b32bcda5ce93333b1c800cd3f3159aabdb33f5b30d00174ea14879d6ab9eb25b"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/coverage.ts",
+      "blob": "1a334eb1b017b8a774cfad92115e542a79d05df1",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/src/coverage.ts",
+      "sha256": "3ed00476db3f8955b9dcf31f3dba2532df58e143aa1f48451650fd2bc4a719e3"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/drive.ts",
+      "blob": "bd103844f3faa52361997aeb1e54e41c376fd521",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/src/drive.ts",
+      "sha256": "1877fb69c42be0a9ac51c4471673eacb49bfea99a58e05c09cd717c658600d90"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/extract.ts",
+      "blob": "38ac7bc9437713e32d1442b66928282421384768",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/src/extract.ts",
+      "sha256": "4cfd8f06e0603a82bed4e9886f7efee685dd463ed09d53e6ee1deeda36bbaf3e"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/open-questions.ts",
+      "blob": "4a2bad132c12158534f61e64eb1d9a3496b286fe",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/src/open-questions.ts",
+      "sha256": "eb2e67ad8653ff6b0dfdda2dac3c27086fc3bd259766d3b2b21487018193c29c"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/rank.ts",
+      "blob": "7123acfe64f7774bb03f7d33aab16a5b0f52dd4b",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/src/rank.ts",
+      "sha256": "a50bd3a64dc93a0c97e07a57a2f19884e014fbe750c41183f2556fdb2a9f38b3"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/run-controller.ts",
+      "blob": "cbac32e400ff6a24ef78841704f7e367d053316b",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/src/run-controller.ts",
+      "sha256": "4ffa9a6daac128d430be98885e5f733a0fe576e87d02165f792ee5fb9bb5c098"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/types.ts",
+      "blob": "fddcbe579056fe66251e1fc98e50856fcc09269d",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/src/types.ts",
+      "sha256": "611cc56fb242368f2786d79d850c78e78efb561a462ea7fcc73d72e2b4325e00"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/test/coverage-ledger.test.ts",
+      "blob": "0e57630ce613f36caf9dd295909785c91261217c",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/test/coverage-ledger.test.ts",
+      "sha256": "2e8471ba7171f0a9cf5dab82f8adaaa991bb0fbad6b09d6e4d7ec53bdb6cc43e"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/test/deferred-signals.test.ts",
+      "blob": "59ced848d90145cc0cc5c0506bd0878299e30741",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/test/deferred-signals.test.ts",
+      "sha256": "a9f76eec96337686633489cf1b94c5b9ff49a3e6f1b3e494d9abe6cc2e8378a8"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/test/multifact-extract.test.ts",
+      "blob": "fc70b837ae3f6da95a871f3ffaa5f80b549430e9",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/test/multifact-extract.test.ts",
+      "sha256": "7939e119b6b3319fef4f17c4e3a5f352bd436d2ac15e3a52c802dae2e7e8919e"
+    },
+    {
+      "path": "modules/atlas/packages/genesis/test/open-questions.test.ts",
+      "blob": "8da41a7f15be5077f1ee9f107c8d76957c4dd3ec",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/genesis/test/open-questions.test.ts",
+      "sha256": "3d5adcabf9a2ac54d1e971e464ab3ed8c3cc6f416369fd9fdec5129f33bc41d4"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "blob": "87a1495bfbc208880c4c4236735a242788975049",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/src/index.ts",
+      "sha256": "783af31127c5192e5d38f3f875b1c4bb2181335466eaa387355c50b5aec8f1b5"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/fastpath.ts",
+      "blob": "6d449b62a8980e1c5d0d8119e695164a59d5de47",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/src/ratify/fastpath.ts",
+      "sha256": "18c75b70c472ff2fa196d2490d3c3a954d2750f5aa837c4369e6bfd2607c013a"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/types.ts",
+      "blob": "d1b7997ea8cbb066cff511e6dc90ffa9e7994b6e",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/src/types.ts",
+      "sha256": "0fc2b91027af352fd4b77a1aa715ce6eb53b6d93a5835c5311c53ca8c7f518fc"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/claim-evidence.ts",
+      "blob": "1b49b91d07adc7223222edee529c46c7212b1dac",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/src/write/claim-evidence.ts",
+      "sha256": "cafcac9acd499881cb6a079d587ae4b39130593982da91cd6587bb387938371e"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/projection-types.ts",
+      "blob": "82d5d2200b0f805fc42e8c34f1e0c1d1875a7c80",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/src/write/projection-types.ts",
+      "sha256": "4fc40ad703dc9ea47e3f2afd88eb08895bc5332f5c5e17d21d58cd6cac46cd1d"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/claim-evidence-carrier.test.ts",
+      "blob": "5f759488b31b0a93917e8bc5f5426eca4a8f9962",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/test/claim-evidence-carrier.test.ts",
+      "sha256": "5463eb156f987ebeefaf3df7353c7daa5d0b0fd7d986e8300635b5a29beaf531"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/fastpath-promotion-origin.test.ts",
+      "blob": "8d84676d4ce0eb40001698a9b40af4076f286877",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/test/fastpath-promotion-origin.test.ts",
+      "sha256": "accba1d9cc6866f1033db571a98314ce168c372fa18abe2f00c8064f01bc4a1d"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+      "blob": "37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+      "sha256": "8fce8f842be7d4c3641e9a9cb744579e9d52a25155e2d0448619ced5e969ff9b"
+    },
+    {
+      "path": "modules/atlas/scripts/genesis-index-scope.mjs",
+      "blob": "8b26c21c7249be05a4cdfd452813b61414f8e174",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/scripts/genesis-index-scope.mjs",
+      "sha256": "56df52156d670d2b9112692c7c70b536ac73c00d78bcd27debeb0264e434cbab"
+    },
+    {
+      "path": "modules/atlas/scripts/genesis-index-scope.node-test.mjs",
+      "blob": "838017a7ad654d4e278756e999843c659fe4602d",
+      "origin": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/scripts/genesis-index-scope.node-test.mjs",
+      "sha256": "c79e0d568d89a15b9aec9598638a1adb7f40797114f029ef61f58fb3199641fb"
+    }
+  ],
+  "dependency_source": "/workspace/scratch/ea607dbcbf72/orchestra/modules/atlas/node_modules",
+  "dependency_target": "/workspace/scratch/8acc6027a42c/repository/modules/atlas/node_modules",
+  "package_json_equal": true,
+  "package_lock_equal": true,
+  "package_lock_sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f",
+  "installed_versions_checked": [
+    {
+      "package": "node_modules/@bufbuild/protobuf",
+      "version": "2.12.1",
+      "integrity_from_lock": "sha512-BvAMfS6LrgZiryOAZ4pBYucu4wG/Ei/9o9DZ9akbREnMLbPJiom2i8b9C8IsKErQoiKqVhrerzt3kOT/RrzLHg=="
+    },
+    {
+      "package": "node_modules/@c4312/scip",
+      "version": "0.1.0",
+      "integrity_from_lock": "sha512-V1VIq3rB1tIj7n3NHIg+VgbKEYl75O+yM30GD4K5wQgdgC7taOsJU7itQdMvtkKhyCWHHuR3WZ0ijUUqPELR3g=="
+    },
+    {
+      "package": "node_modules/@hono/node-server",
+      "version": "2.1.5",
+      "integrity_from_lock": "sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q=="
+    },
+    {
+      "package": "node_modules/@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "integrity_from_lock": "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw=="
+    },
+    {
+      "package": "node_modules/@modelcontextprotocol/sdk",
+      "version": "1.32.0",
+      "integrity_from_lock": "sha512-8BviX/hK4Gd2eL1KdTwm0gfl4d3wdoErW0Jd00h6nomUAtk6IJk5vwQJc6kfWtJTzN5OEV/lgIiJKI8fiDGAlA=="
+    },
+    {
+      "package": "node_modules/@noble/hashes",
+      "version": "1.8.0",
+      "integrity_from_lock": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="
+    },
+    {
+      "package": "node_modules/@oxc-project/types",
+      "version": "0.156.0",
+      "integrity_from_lock": "sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw=="
+    },
+    {
+      "package": "node_modules/@rolldown/binding-linux-x64-gnu",
+      "version": "1.2.16",
+      "integrity_from_lock": "sha512-TNKhgE3uJTsTzatUSSYt0Kgo+Oa2uSlSjz4r1aEIea7HX6ULBym4fAlYUhG1i6pjNf2njfCUAfKwr6C3E9Xg1w=="
+    },
+    {
+      "package": "node_modules/@rolldown/binding-linux-x64-musl",
+      "version": "1.2.16",
+      "integrity_from_lock": "sha512-7chXdpjXZ8qG0+mIxECN3cT9kvhZ3/oZhMX6Pp876P7CDrIy8nJswva6Mq357JR7eYXfuskwZxMeV1SzoZdHrA=="
+    },
+    {
+      "package": "node_modules/@rolldown/pluginutils",
+      "version": "1.0.1",
+      "integrity_from_lock": "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="
+    },
+    {
+      "package": "node_modules/@standard-schema/spec",
+      "version": "1.1.0",
+      "integrity_from_lock": "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="
+    },
+    {
+      "package": "node_modules/@types/chai",
+      "version": "5.2.3",
+      "integrity_from_lock": "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA=="
+    },
+    {
+      "package": "node_modules/@types/deep-eql",
+      "version": "4.0.2",
+      "integrity_from_lock": "sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw=="
+    },
+    {
+      "package": "node_modules/@types/estree",
+      "version": "1.0.10",
+      "integrity_from_lock": "sha512-lTyOMnOcmRBzdCv6/4zUZCrEhV0xrqQiUZBZtVcbmLHBXKLnN8q89v/wKRF/Q0HbwVsqbIG3o5HDoFl9sduM+g=="
+    },
+    {
+      "package": "node_modules/@types/node",
+      "version": "26.1.1",
+      "integrity_from_lock": "sha512-nxAkRSVkN1Y0JC1W8ky/fTfkGsMmcrRsbx+3XoZE+rMOX71kLYTV7fLXpqud1GpbpP5TuffXFqfX7fH2GgZREw=="
+    },
+    {
+      "package": "node_modules/@vitest/expect",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-vFlTt+YEu9WBpNjdGayNmlMVzrWPi1+sv853/7t2FU7hpO5gAFBKHzQmkCq5Xjpr+evegF2994LQT3hF3mRlqQ=="
+    },
+    {
+      "package": "node_modules/@vitest/mocker",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-fKShNpKZzupWZuY0z7egydvL0sqW4INEZBEExMBMAa6izlENEVHwoXgdaTCaBZ5fwlr4xf2o1wXC83n9RpO+NA=="
+    },
+    {
+      "package": "node_modules/@vitest/pretty-format",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-XW9O8+Mxx4VpCtkYdMJLZQQwsVryP9wk7cPKDxtXFfwSak6yRh5+2fep/Y0XF/ElBvJHq8bcYdi6aeuai0opZA=="
+    },
+    {
+      "package": "node_modules/@vitest/runner",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-NKlVKCr5QnCe8jijdMnmkpHHU+WTqiLFR6G0pHji9uRjXK9xJl1k1nTw6F3pOOj2PDcsDt2GKQMI7wIsaT491w=="
+    },
+    {
+      "package": "node_modules/@vitest/snapshot",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-ko1y1Qgb/slzQ9mr+b89Cuqud8WG1TKtsPD8r7ZUBdvVOGt85Af2HwCqHujrhwJq95hs/9RM7fcAPg57o1vlzw=="
+    },
+    {
+      "package": "node_modules/@vitest/spy",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-RGq9x4JNGNTZHEJxvN0oSiJjeSCExm0n2gZKKJZHY9cX5AVA6M7VJILBT3ZJ/tJ/0J9uWT7fETV9/btoi//vSg=="
+    },
+    {
+      "package": "node_modules/@vitest/utils",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-Q3awXrwOfEV+qc3WmO5ONyE0yO7Q1gQ9/oyHxGLZ/pl7N3NO/ZztqQwKLuwMkV+CA1JYSIeO3gkHnRDIo4AVaA=="
+    },
+    {
+      "package": "node_modules/accepts",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng=="
+    },
+    {
+      "package": "node_modules/ajv",
+      "version": "8.20.0",
+      "integrity_from_lock": "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="
+    },
+    {
+      "package": "node_modules/ajv-formats",
+      "version": "3.0.1",
+      "integrity_from_lock": "sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ=="
+    },
+    {
+      "package": "node_modules/assertion-error",
+      "version": "2.0.1",
+      "integrity_from_lock": "sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA=="
+    },
+    {
+      "package": "node_modules/body-parser",
+      "version": "2.4.0",
+      "integrity_from_lock": "sha512-Ifk1KcLrxaGt1occQagQNFNNOqRt1LFuehEnHHzB8Z6cRgIxRU1TBaiIsUiCdA+gy5PL7Y1IX31DNKkRmxtXjQ=="
+    },
+    {
+      "package": "node_modules/body-parser/node_modules/content-type",
+      "version": "2.1.0",
+      "integrity_from_lock": "sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag=="
+    },
+    {
+      "package": "node_modules/bytes",
+      "version": "3.1.2",
+      "integrity_from_lock": "sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg=="
+    },
+    {
+      "package": "node_modules/call-bind-apply-helpers",
+      "version": "1.0.2",
+      "integrity_from_lock": "sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ=="
+    },
+    {
+      "package": "node_modules/call-bound",
+      "version": "1.0.4",
+      "integrity_from_lock": "sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg=="
+    },
+    {
+      "package": "node_modules/chai",
+      "version": "6.3.0",
+      "integrity_from_lock": "sha512-XWAtwJ6OHO+tj0EKCs0Y2UamnyOxseZWltU4x2U2wh8g4AigdjwvtUjvLP2tqkA/avxHEtzxNaqGq/YGNwckKg=="
+    },
+    {
+      "package": "node_modules/content-disposition",
+      "version": "1.1.0",
+      "integrity_from_lock": "sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g=="
+    },
+    {
+      "package": "node_modules/content-type",
+      "version": "1.0.5",
+      "integrity_from_lock": "sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA=="
+    },
+    {
+      "package": "node_modules/convert-source-map",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg=="
+    },
+    {
+      "package": "node_modules/cookie",
+      "version": "0.7.2",
+      "integrity_from_lock": "sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w=="
+    },
+    {
+      "package": "node_modules/cookie-signature",
+      "version": "1.2.2",
+      "integrity_from_lock": "sha512-D76uU73ulSXrD1UXF4KE2TMxVVwhsnCgfAyTg9k8P6KGZjlXKrOLe4dJQKI3Bxi5wjesZoFXJWElNWBjPZMbhg=="
+    },
+    {
+      "package": "node_modules/cors",
+      "version": "2.8.6",
+      "integrity_from_lock": "sha512-tJtZBBHA6vjIAaF6EnIaq6laBBP9aq/Y3ouVJjEfoHbRBcHBAHYcMh/w8LDrk2PvIMMq8gmopa5D4V8RmbrxGw=="
+    },
+    {
+      "package": "node_modules/cross-spawn",
+      "version": "7.0.6",
+      "integrity_from_lock": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA=="
+    },
+    {
+      "package": "node_modules/debug",
+      "version": "4.4.3",
+      "integrity_from_lock": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="
+    },
+    {
+      "package": "node_modules/depd",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw=="
+    },
+    {
+      "package": "node_modules/detect-libc",
+      "version": "2.1.2",
+      "integrity_from_lock": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ=="
+    },
+    {
+      "package": "node_modules/dunder-proto",
+      "version": "1.0.1",
+      "integrity_from_lock": "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A=="
+    },
+    {
+      "package": "node_modules/ee-first",
+      "version": "1.1.1",
+      "integrity_from_lock": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
+    },
+    {
+      "package": "node_modules/encodeurl",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg=="
+    },
+    {
+      "package": "node_modules/es-define-property",
+      "version": "1.0.1",
+      "integrity_from_lock": "sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g=="
+    },
+    {
+      "package": "node_modules/es-errors",
+      "version": "1.3.0",
+      "integrity_from_lock": "sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw=="
+    },
+    {
+      "package": "node_modules/es-module-lexer",
+      "version": "2.3.2",
+      "integrity_from_lock": "sha512-poHGpORABojJJucnV9KbOavETW8lBVnphkW77ER5/BQ5Fz7oXSoCNek7IH3vR5nRjdsEz926ibFYX8KtLQmdyw=="
+    },
+    {
+      "package": "node_modules/es-object-atoms",
+      "version": "1.1.2",
+      "integrity_from_lock": "sha512-HWcBoN6NileqtSydK2FqHbS/LoDd2pqrnQHLyJzBj4kOp/ky2MWMN694xOfkK8/SnUsW2DH7EfyVlydKCsm1Zw=="
+    },
+    {
+      "package": "node_modules/escape-html",
+      "version": "1.0.3",
+      "integrity_from_lock": "sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow=="
+    },
+    {
+      "package": "node_modules/estree-walker",
+      "version": "3.0.3",
+      "integrity_from_lock": "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g=="
+    },
+    {
+      "package": "node_modules/etag",
+      "version": "1.8.1",
+      "integrity_from_lock": "sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg=="
+    },
+    {
+      "package": "node_modules/eventsource",
+      "version": "3.0.7",
+      "integrity_from_lock": "sha512-CRT1WTyuQoD771GW56XEZFQ/ZoSfWid1alKGDYMmkt2yl8UXrVR4pspqWNEcqKvVIzg6PAltWjxcSSPrboA4iA=="
+    },
+    {
+      "package": "node_modules/eventsource-parser",
+      "version": "3.1.0",
+      "integrity_from_lock": "sha512-kJezFj9YFAMLeORyi7aCLxLbD5/qWMQnoMVlVPyHIll7lgRJCc3JVln9Vgl9nwQi0YkMnhdGTMNn7CkRRAptMg=="
+    },
+    {
+      "package": "node_modules/expect-type",
+      "version": "1.4.0",
+      "integrity_from_lock": "sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA=="
+    },
+    {
+      "package": "node_modules/express",
+      "version": "5.2.1",
+      "integrity_from_lock": "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw=="
+    },
+    {
+      "package": "node_modules/express-rate-limit",
+      "version": "8.6.0",
+      "integrity_from_lock": "sha512-XKJXDsASUOo0LLtFwW5hCcQGH0N4WQc/Rn8/Pvoia+TJFOkkFPvrtW9lZOeeNcxQJspvOIERMwiRLsVFlhHEkA=="
+    },
+    {
+      "package": "node_modules/fast-check",
+      "version": "3.23.2",
+      "integrity_from_lock": "sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A=="
+    },
+    {
+      "package": "node_modules/fast-deep-equal",
+      "version": "3.1.3",
+      "integrity_from_lock": "sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q=="
+    },
+    {
+      "package": "node_modules/fast-uri",
+      "version": "3.1.9",
+      "integrity_from_lock": "sha512-hS/0Wt3Ya043oKXs0sIxrMpKQITXhMLIrVAKKXi4gozGC9v7YRWVnXIZzjNPTO02M9BdxLCWqK1yRXgNziVyJQ=="
+    },
+    {
+      "package": "node_modules/fdir",
+      "version": "6.5.0",
+      "integrity_from_lock": "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg=="
+    },
+    {
+      "package": "node_modules/finalhandler",
+      "version": "2.1.1",
+      "integrity_from_lock": "sha512-S8KoZgRZN+a5rNwqTxlZZePjT/4cnm0ROV70LedRHZ0p8u9fRID0hJUZQpkKLzro8LfmC8sx23bY6tVNxv8pQA=="
+    },
+    {
+      "package": "node_modules/forwarded",
+      "version": "0.2.0",
+      "integrity_from_lock": "sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow=="
+    },
+    {
+      "package": "node_modules/fresh",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A=="
+    },
+    {
+      "package": "node_modules/function-bind",
+      "version": "1.1.2",
+      "integrity_from_lock": "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA=="
+    },
+    {
+      "package": "node_modules/get-intrinsic",
+      "version": "1.3.0",
+      "integrity_from_lock": "sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ=="
+    },
+    {
+      "package": "node_modules/get-proto",
+      "version": "1.0.1",
+      "integrity_from_lock": "sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g=="
+    },
+    {
+      "package": "node_modules/gopd",
+      "version": "1.2.0",
+      "integrity_from_lock": "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg=="
+    },
+    {
+      "package": "node_modules/has-symbols",
+      "version": "1.1.0",
+      "integrity_from_lock": "sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ=="
+    },
+    {
+      "package": "node_modules/hasown",
+      "version": "2.0.4",
+      "integrity_from_lock": "sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A=="
+    },
+    {
+      "package": "node_modules/hono",
+      "version": "4.13.14",
+      "integrity_from_lock": "sha512-yhRLQ21U6qa9Hsu2N7Qcbh8tE+WKEcoErjIo56LeSGiGXGp9sA7UpE86Ui9uexb61KakiGwuHMn2QdV7w6i6kQ=="
+    },
+    {
+      "package": "node_modules/http-errors",
+      "version": "2.0.1",
+      "integrity_from_lock": "sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ=="
+    },
+    {
+      "package": "node_modules/iconv-lite",
+      "version": "0.7.3",
+      "integrity_from_lock": "sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ=="
+    },
+    {
+      "package": "node_modules/inherits",
+      "version": "2.0.4",
+      "integrity_from_lock": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
+    },
+    {
+      "package": "node_modules/ip-address",
+      "version": "10.7.5",
+      "integrity_from_lock": "sha512-t2v0rkILYv9WXmSL7TpAaU3HXgaFYOPUcH3QHgwQ++gpJuH3bqyMy4Fvt/DJCTKwzH3Cf+bAp5W/mFL39KPLzA=="
+    },
+    {
+      "package": "node_modules/ipaddr.js",
+      "version": "1.9.1",
+      "integrity_from_lock": "sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g=="
+    },
+    {
+      "package": "node_modules/is-promise",
+      "version": "4.0.0",
+      "integrity_from_lock": "sha512-hvpoI6korhJMnej285dSg6nu1+e6uxs7zG3BYAm5byqDsgJNWwxzM6z6iZiAgQR4TJ30JmBTOwqZUw3WlyH3AQ=="
+    },
+    {
+      "package": "node_modules/isexe",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="
+    },
+    {
+      "package": "node_modules/jose",
+      "version": "6.2.3",
+      "integrity_from_lock": "sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw=="
+    },
+    {
+      "package": "node_modules/json-schema-traverse",
+      "version": "1.0.0",
+      "integrity_from_lock": "sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug=="
+    },
+    {
+      "package": "node_modules/json-schema-typed",
+      "version": "8.0.2",
+      "integrity_from_lock": "sha512-fQhoXdcvc3V28x7C7BMs4P5+kNlgUURe2jmUT1T//oBRMDrqy1QPelJimwZGo7Hg9VPV3EQV5Bnq4hbFy2vetA=="
+    },
+    {
+      "package": "node_modules/lightningcss",
+      "version": "1.33.0",
+      "integrity_from_lock": "sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA=="
+    },
+    {
+      "package": "node_modules/lightningcss-linux-x64-gnu",
+      "version": "1.33.0",
+      "integrity_from_lock": "sha512-ar+Ju7LmcN0Jo4FpL4hpFybwNG9/3A/Br5KW2n2jyODg3MEZXaDYADdemoNS+BDNfMgKvylJLj4S5tyRActuAg=="
+    },
+    {
+      "package": "node_modules/lightningcss-linux-x64-musl",
+      "version": "1.33.0",
+      "integrity_from_lock": "sha512-RYiYbkokw0trfKqqzfF55lginwEPrD3OJDfTuJzFs1MK6iFnDenaz1fqLLtX4ITG3OktJQXOeTaw1awrBAlZPw=="
+    },
+    {
+      "package": "node_modules/magic-string",
+      "version": "0.30.21",
+      "integrity_from_lock": "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="
+    },
+    {
+      "package": "node_modules/math-intrinsics",
+      "version": "1.1.0",
+      "integrity_from_lock": "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g=="
+    },
+    {
+      "package": "node_modules/media-typer",
+      "version": "1.1.0",
+      "integrity_from_lock": "sha512-aisnrDP4GNe06UcKFnV5bfMNPBUw4jsLGaWwWfnH3v02GnBuXX2MCVn5RbrWo0j3pczUilYblq7fQ7Nw2t5XKw=="
+    },
+    {
+      "package": "node_modules/merge-descriptors",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-Snk314V5ayFLhp3fkUREub6WtjBfPdCPY1Ln8/8munuLuiYhsABgBVWsozAG+MWMbVEvcdcpbi9R7ww22l9Q3g=="
+    },
+    {
+      "package": "node_modules/mime-db",
+      "version": "1.54.0",
+      "integrity_from_lock": "sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ=="
+    },
+    {
+      "package": "node_modules/mime-types",
+      "version": "3.0.2",
+      "integrity_from_lock": "sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A=="
+    },
+    {
+      "package": "node_modules/ms",
+      "version": "2.1.3",
+      "integrity_from_lock": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
+    },
+    {
+      "package": "node_modules/nanoid",
+      "version": "3.3.20",
+      "integrity_from_lock": "sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ=="
+    },
+    {
+      "package": "node_modules/negotiator",
+      "version": "1.0.0",
+      "integrity_from_lock": "sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg=="
+    },
+    {
+      "package": "node_modules/node-addon-api",
+      "version": "8.9.0",
+      "integrity_from_lock": "sha512-ekZMeaaIzSQTSpr7X2X3iJM7lTzgnx8ahAG9pJfT/7+14mlEM8ZYQ9cgCDvSSRbReFK0oHli3WrZdCiRsgAT9Q=="
+    },
+    {
+      "package": "node_modules/node-gyp-build",
+      "version": "4.8.4",
+      "integrity_from_lock": "sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ=="
+    },
+    {
+      "package": "node_modules/object-assign",
+      "version": "4.1.1",
+      "integrity_from_lock": "sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg=="
+    },
+    {
+      "package": "node_modules/object-inspect",
+      "version": "1.13.4",
+      "integrity_from_lock": "sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew=="
+    },
+    {
+      "package": "node_modules/obug",
+      "version": "2.2.1",
+      "integrity_from_lock": "sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q=="
+    },
+    {
+      "package": "node_modules/on-finished",
+      "version": "2.4.1",
+      "integrity_from_lock": "sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg=="
+    },
+    {
+      "package": "node_modules/once",
+      "version": "1.4.0",
+      "integrity_from_lock": "sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w=="
+    },
+    {
+      "package": "node_modules/parseurl",
+      "version": "1.3.3",
+      "integrity_from_lock": "sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ=="
+    },
+    {
+      "package": "node_modules/path-key",
+      "version": "3.1.1",
+      "integrity_from_lock": "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q=="
+    },
+    {
+      "package": "node_modules/path-to-regexp",
+      "version": "8.4.2",
+      "integrity_from_lock": "sha512-qRcuIdP69NPm4qbACK+aDogI5CBDMi1jKe0ry5rSQJz8JVLsC7jV8XpiJjGRLLol3N+R5ihGYcrPLTno6pAdBA=="
+    },
+    {
+      "package": "node_modules/pathe",
+      "version": "2.0.3",
+      "integrity_from_lock": "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w=="
+    },
+    {
+      "package": "node_modules/picocolors",
+      "version": "1.1.1",
+      "integrity_from_lock": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="
+    },
+    {
+      "package": "node_modules/picomatch",
+      "version": "4.0.7",
+      "integrity_from_lock": "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA=="
+    },
+    {
+      "package": "node_modules/pkce-challenge",
+      "version": "5.0.1",
+      "integrity_from_lock": "sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ=="
+    },
+    {
+      "package": "node_modules/postcss",
+      "version": "8.5.32",
+      "integrity_from_lock": "sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g=="
+    },
+    {
+      "package": "node_modules/proxy-addr",
+      "version": "2.0.8",
+      "integrity_from_lock": "sha512-5nnx0yGyVUcY6t9RnWcARWtwT9F1D8O9rt08htPvnd49W1IgZtmLkhu9WfMzQj1cFxjHIO6connUNVW5k7AVyQ=="
+    },
+    {
+      "package": "node_modules/pure-rand",
+      "version": "6.1.0",
+      "integrity_from_lock": "sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA=="
+    },
+    {
+      "package": "node_modules/qs",
+      "version": "6.17.0",
+      "integrity_from_lock": "sha512-5LK5BZ2XDHMvcUJaf0CQ5HL3aVgKbpklvByC7qLSxYkfE8COEEbJg5xCHWCTqzqi0Gs4Jn5Mv5v3R38W6edscA=="
+    },
+    {
+      "package": "node_modules/range-parser",
+      "version": "1.3.0",
+      "integrity_from_lock": "sha512-hek2mFQpPuI4E1BBKrSto+BU3e3x4xuarsbiwr3+lf7p44juvFMV0XFWQAP3xUyqXA4RrXLIoaSUGbSt056ZMw=="
+    },
+    {
+      "package": "node_modules/raw-body",
+      "version": "3.0.2",
+      "integrity_from_lock": "sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA=="
+    },
+    {
+      "package": "node_modules/require-from-string",
+      "version": "2.0.2",
+      "integrity_from_lock": "sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw=="
+    },
+    {
+      "package": "node_modules/rolldown",
+      "version": "1.2.16",
+      "integrity_from_lock": "sha512-bWvlMpFKiTfDKfnK7FC2MPgPeWCf/Kpwsq49ApdW+FQaBZb6O6dZ4MAPbPUjp7hYQrw/RobqCzn64BRrQecGHw=="
+    },
+    {
+      "package": "node_modules/router",
+      "version": "2.2.0",
+      "integrity_from_lock": "sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ=="
+    },
+    {
+      "package": "node_modules/safer-buffer",
+      "version": "2.1.2",
+      "integrity_from_lock": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
+    },
+    {
+      "package": "node_modules/send",
+      "version": "1.2.1",
+      "integrity_from_lock": "sha512-1gnZf7DFcoIcajTjTwjwuDjzuz4PPcY2StKPlsGAQ1+YH20IRVrBaXSWmdjowTJ6u8Rc01PoYOGHXfP1mYcZNQ=="
+    },
+    {
+      "package": "node_modules/serve-static",
+      "version": "2.2.1",
+      "integrity_from_lock": "sha512-xRXBn0pPqQTVQiC8wyQrKs2MOlX24zQ0POGaj0kultvoOCstBQM5yvOhAVSUwOMjQtTvsPWoNCHfPGwaaQJhTw=="
+    },
+    {
+      "package": "node_modules/setprototypeof",
+      "version": "1.2.0",
+      "integrity_from_lock": "sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw=="
+    },
+    {
+      "package": "node_modules/shebang-command",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA=="
+    },
+    {
+      "package": "node_modules/shebang-regex",
+      "version": "3.0.0",
+      "integrity_from_lock": "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A=="
+    },
+    {
+      "package": "node_modules/side-channel",
+      "version": "1.1.1",
+      "integrity_from_lock": "sha512-6x6dK6zJdpTzF4sQeNYxwtvBzf6Eg4GtlesS94HOvTudUeyK2WXAaIfmDgsyslYrRBeFIlsi54AYsFGUuhmvrQ=="
+    },
+    {
+      "package": "node_modules/side-channel-list",
+      "version": "1.0.1",
+      "integrity_from_lock": "sha512-mjn/0bi/oUURjc5Xl7IaWi/OJJJumuoJFQJfDDyO46+hBWsfaVM65TBHq2eoZBhzl9EchxOijpkbRC8SVBQU0w=="
+    },
+    {
+      "package": "node_modules/side-channel-map",
+      "version": "1.0.1",
+      "integrity_from_lock": "sha512-VCjCNfgMsby3tTdo02nbjtM/ewra6jPHmpThenkTYh8pG9ucZ/1P8So4u4FGBek/BjpOVsDCMoLA/iuBKIFXRA=="
+    },
+    {
+      "package": "node_modules/side-channel-weakmap",
+      "version": "1.0.2",
+      "integrity_from_lock": "sha512-WPS/HvHQTYnHisLo9McqBHOJk2FkHO/tlpvldyrnem4aeQp4hai3gythswg6p01oSoTl58rcpiFAjF2br2Ak2A=="
+    },
+    {
+      "package": "node_modules/siginfo",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g=="
+    },
+    {
+      "package": "node_modules/source-map-js",
+      "version": "1.2.2",
+      "integrity_from_lock": "sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw=="
+    },
+    {
+      "package": "node_modules/stackback",
+      "version": "0.0.2",
+      "integrity_from_lock": "sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw=="
+    },
+    {
+      "package": "node_modules/statuses",
+      "version": "2.0.2",
+      "integrity_from_lock": "sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw=="
+    },
+    {
+      "package": "node_modules/std-env",
+      "version": "4.3.0",
+      "integrity_from_lock": "sha512-OtU/EgQ1kIm5KwqQpBC6ZEMXrZRui11w8zgfTWp8cdO9B8OaPsbA8bTHO2P+HNo1VlUTGMVBwPhydu6poeXiag=="
+    },
+    {
+      "package": "node_modules/tinybench",
+      "version": "2.9.0",
+      "integrity_from_lock": "sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg=="
+    },
+    {
+      "package": "node_modules/tinyexec",
+      "version": "1.3.1",
+      "integrity_from_lock": "sha512-GCvB3aoys96IuDFBMcTB46JOR6mdMtAToqwiW8JlWhsoh1mhHi/xn9ss/Dg7N555GiJyEt2qzoG/NHCwM6h1EA=="
+    },
+    {
+      "package": "node_modules/tinyglobby",
+      "version": "0.2.17",
+      "integrity_from_lock": "sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g=="
+    },
+    {
+      "package": "node_modules/tinyrainbow",
+      "version": "3.2.0",
+      "integrity_from_lock": "sha512-LgO3D9yZJjApUiuUfl9iFAwrtaX4+lok3wJIqttGoKCHlWUqHqbQpnxCf82L8FjgKsh4iGo78hqJwgL8F6To2A=="
+    },
+    {
+      "package": "node_modules/toidentifier",
+      "version": "1.0.1",
+      "integrity_from_lock": "sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA=="
+    },
+    {
+      "package": "node_modules/tree-sitter-javascript",
+      "version": "0.23.1",
+      "integrity_from_lock": "sha512-/bnhbrTD9frUYHQTiYnPcxyHORIw157ERBa6dqzaKxvR/x3PC4Yzd+D1pZIMS6zNg2v3a8BZ0oK7jHqsQo9fWA=="
+    },
+    {
+      "package": "node_modules/tree-sitter-typescript",
+      "version": "0.23.2",
+      "integrity_from_lock": "sha512-e04JUUKxTT53/x3Uq1zIL45DoYKVfHH4CZqwgZhPg5qYROl5nQjV+85ruFzFGZxu+QeFVbRTPDRnqL9UbU4VeA=="
+    },
+    {
+      "package": "node_modules/type-is",
+      "version": "2.1.0",
+      "integrity_from_lock": "sha512-faYHw0anBbc/kWF3zFTEnxSFOAGUX9GFbOBthvDdLsIlEoWOFOtS0zgCiQYwIskL9iGXZL3kAXD8OoZ4GmMATA=="
+    },
+    {
+      "package": "node_modules/type-is/node_modules/content-type",
+      "version": "2.0.0",
+      "integrity_from_lock": "sha512-j/O/d7GcZCyNl7/hwZAb606rzqkyvaDctLmckbxLzHvFBzTJHuGEdodATcP3yIRoDrLHkIATJuvzbFlp/ki2cQ=="
+    },
+    {
+      "package": "node_modules/typescript",
+      "version": "5.9.3",
+      "integrity_from_lock": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="
+    },
+    {
+      "package": "node_modules/undici-types",
+      "version": "8.3.0",
+      "integrity_from_lock": "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ=="
+    },
+    {
+      "package": "node_modules/unpipe",
+      "version": "1.0.0",
+      "integrity_from_lock": "sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ=="
+    },
+    {
+      "package": "node_modules/vary",
+      "version": "1.1.2",
+      "integrity_from_lock": "sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg=="
+    },
+    {
+      "package": "node_modules/vite",
+      "version": "8.3.5",
+      "integrity_from_lock": "sha512-z1YpjieJ9g0ebTmQpLBv/oq9E3F9EIlOe+7LahW8SrE3LTiG3udBRUXQOlYXP9b+IC2q2phHeVxj9xGlw34OEQ=="
+    },
+    {
+      "package": "node_modules/vitest",
+      "version": "4.1.12",
+      "integrity_from_lock": "sha512-5eWdz2yb3ajxWF3C8C4TjkXl7FGm3n2E/VlazALrQHzK7nYMSGFnCZto0bbPNl77AwkOZVLk0YnBAejUu0NiWA=="
+    },
+    {
+      "package": "node_modules/web-tree-sitter",
+      "version": "0.23.2",
+      "integrity_from_lock": "sha512-BMZtm7sKtnmTGO7L4pcFOBidVlBxL+aUxm0O5yr3nKf5Fqz8RyvTOSjWFtqmzScyak/YFq9f5PSMRdhg2WXAJQ=="
+    },
+    {
+      "package": "node_modules/which",
+      "version": "2.0.2",
+      "integrity_from_lock": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA=="
+    },
+    {
+      "package": "node_modules/why-is-node-running",
+      "version": "2.3.0",
+      "integrity_from_lock": "sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w=="
+    },
+    {
+      "package": "node_modules/wrappy",
+      "version": "1.0.2",
+      "integrity_from_lock": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ=="
+    },
+    {
+      "package": "node_modules/zod",
+      "version": "4.6.7",
+      "integrity_from_lock": "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=="
+    },
+    {
+      "package": "node_modules/zod-to-json-schema",
+      "version": "3.25.2",
+      "integrity_from_lock": "sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA=="
+    }
+  ],
+  "mismatches": [],
+  "versions": {
+    "node": {
+      "exit_code": 0,
+      "stdout": "v24.22.1\n",
+      "stderr": ""
+    },
+    "npm": {
+      "exit_code": 0,
+      "stdout": "11.9.0\n",
+      "stderr": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm.\n"
+    },
+    "git": {
+      "exit_code": 0,
+      "stdout": "git version 2.52.0\n",
+      "stderr": ""
+    },
+    "python": {
+      "exit_code": 0,
+      "stdout": "Python 3.12.14\n",
+      "stderr": ""
+    }
+  },
+  "dependency_limit": "Local dependency bytes copied; lock version compatibility checked. No registry tarball integrity re-download or attestation claimed."
+}

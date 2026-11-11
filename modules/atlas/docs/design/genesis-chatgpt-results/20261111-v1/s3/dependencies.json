@@ -1,0 +1,80 @@
+{
+  "schema": "genesis-s3-dependency-validation/v1",
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T14:16:16.624Z",
+  "dependencies": [
+    {
+      "session": "s1",
+      "consumed_for_inspection": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+      },
+      "handoff_blob": "6f5ab32575006b170eba1a87c2c0c854f4ec005c",
+      "declared_state": "WORKING",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "session": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": false,
+        "scope_present": false,
+        "candidate_present": false
+      },
+      "protocol_sha256_declared": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "accepted_as_execution_dependency": false,
+      "reason": "Scope, production allocation and candidate remain unavailable; S1 also has a protocol digest mismatch."
+    },
+    {
+      "session": "s2",
+      "consumed_for_inspection": {
+        "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+        "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df"
+      },
+      "handoff_blob": "a03c5b3ec78b275505f7d66463ba1de76f7af698",
+      "declared_state": "WORKING",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "session": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": true,
+        "scope_present": false,
+        "candidate_present": false
+      },
+      "protocol_sha256_declared": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "accepted_as_execution_dependency": false,
+      "reason": "Working preparation checkpoint; candidate_revision is null and no accepted layer manifest/restore path is delivered."
+    },
+    {
+      "session": "s4",
+      "consumed_for_inspection": {
+        "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad"
+      },
+      "declared_state": "BLOCKED",
+      "protocol_digest_matches": true,
+      "accepted_as_execution_dependency": false,
+      "reason": "Preparation checkpoint without integrated candidate or binding judgments. This is not receiver acknowledgment of the final S3 package."
+    },
+    {
+      "session": "s5",
+      "consumed_for_inspection": {
+        "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+        "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00"
+      },
+      "declared_state": "BLOCKED",
+      "protocol_digest_matches": true,
+      "accepted_as_execution_dependency": false,
+      "reason": "Preparation checkpoint without integrated candidate or binding judgments. This is not receiver acknowledgment of the final S3 package."
+    }
+  ],
+  "polling": "Finite discovery completed. New branches are material information, but these pinned checkpoints do not release dependent execution."
+}

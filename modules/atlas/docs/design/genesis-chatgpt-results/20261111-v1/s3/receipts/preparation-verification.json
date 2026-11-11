@@ -1,0 +1,38 @@
+{
+  "schema": "genesis-s3-preparation-verification/v1",
+  "source_blob_checks": {
+    "records": 68,
+    "unique_commit_paths": 47,
+    "mismatches": 0
+  },
+  "patch_context_check": {
+    "command": "git apply --check proposals/rollback-activation-refusal.patch",
+    "cwd_kind": "exact baseline source materialization",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "product_tests_run": false,
+    "patch_applied": false
+  },
+  "native_preparation_agents": [
+    "/root/activation",
+    "/root/durable_resume",
+    "/root/rollback_readers"
+  ],
+  "runtime_followup_agent": "/root/durable_resume",
+  "product_process_observations": 0,
+  "reader_observations": 0,
+  "note": "Source hashes and patch application-context checks are preparation checks, not recovery tests or CI green.",
+  "assembly_attempts": [
+    {
+      "status": "FAILED",
+      "operation": "Read source file for manifest consolidation",
+      "error": "FileNotFoundError for agents/activation/source/AGENTS.md",
+      "resolution": "Inspected actual source paths; activation records use baseline/ and protocol/ subdirectories."
+    },
+    {
+      "status": "COMPLETED",
+      "operation": "Consolidate the actual materialized source bytes after correcting the path mapping"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "schema": "genesis-recovery-cases-preparation/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "agent": "/root/activation",
+  "attempt_id": "s3-prep-activation-001",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "scope_revision": null,
+  "criteria_revision": null,
+  "budget_allocation_ref": null,
+  "scope_population": null,
+  "input_freeze": "NOT_FROZEN_DEPENDENCIES_MISSING",
+  "execution_status": "NOT_RUN",
+  "verdict": "INDETERMINATE",
+  "common_preconditions": [
+    "Validated immutable S1 handoff, inventory, criteria and applicable allocation",
+    "Validated immutable S2 handoff and S5-integrated candidate when shared code changed",
+    "Real S2 bodies, completions and manifest closure with applicable S5 decisions; no synthetic acceptance",
+    "Isolated target with real Git/input/index/policy capabilities and declared writer authority",
+    "Faithful runtime dependencies and execution route allowed by AGENTS.md",
+    "S1-defined coherence unit, queries and independent control with verified dependency separation"
+  ],
+  "cases": [
+    {
+      "id": "S3-ACT-01",
+      "title": "Failure after durable generation before governed activation",
+      "criteria": ["AC-07", "CC-5", "SC-5"],
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "writer_entry": "S2 real prepare/production adapter, then createGovernedEmit.emit through the governed runtime",
+      "reader_entry": "composeRuntime(target).ownership.read(query) in a separate process",
+      "failure_point": "Observed durable candidate completion, before governed emit begins; no side effects in commitProjection decide",
+      "required_observations": [
+        "Accepted source/contract/input/recipe bindings and exact candidate manifest identity",
+        "Previous current selection and current input identities",
+        "Durable completion bytes and digest before interruption",
+        "Owned writer PID, observed stage, exit status or signal",
+        "Independent reader PID and unmodified outputs before and after interruption",
+        "Preserved uncertain attempt/reservation state when completion stage cannot be established"
+      ],
+      "oracle": [
+        "An un-emitted candidate never becomes current merely because CAS bytes exist",
+        "Each READY response resolves to the previously published compatible generation",
+        "If that generation is no longer compatible or no publication exists, a real HOLD is preserved",
+        "No direct projection write, synthetic review, or automatic repeat of an uncertain producer attempt"
+      ],
+      "result": null,
+      "raw_outputs": [],
+      "blockers": ["Common preconditions are not supplied to this preparation task"]
+    },
+    {
+      "id": "S3-ACT-02",
+      "title": "Separate reader during governed generation activation",
+      "criteria": ["AC-07", "AC-09", "CC-5", "SC-5"],
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "writer_entry": "Governed runtime emission of candidate B; commitProjection remains the actual sidecar door",
+      "reader_entry": "composeRuntime(target).ownership.read(query) in a distinct persistent process",
+      "coherence_unit": null,
+      "manifest_a": null,
+      "manifest_b": null,
+      "independent_control": null,
+      "required_observations": [
+        "Exact permitted manifest/result/body tuples and required closures for A and B",
+        "Reader readiness and a complete initial observation before publication starts",
+        "Writer and reader PIDs, bounded read window, raw emit result and raw reader sequence",
+        "Readback identifying B after publication; emitted:true alone does not satisfy this",
+        "Current input versions and disposition of the verified independent control"
+      ],
+      "oracle": [
+        "Every READY response belongs entirely to one compatible permitted manifest",
+        "A HOLD includes the actual reason/evidence returned by the product",
+        "No response combines artifact/result/body bindings from distinct generations",
+        "Changing generations between separate read calls is recorded, not misclassified as within-call mixing",
+        "No cross-scope atomicity is inferred from a single-scope read"
+      ],
+      "result": null,
+      "raw_outputs": [],
+      "blockers": ["Common preconditions are not supplied to this preparation task"]
+    },
+    {
+      "id": "S3-ACT-03",
+      "title": "Activation refuses a missing required candidate blob",
+      "criteria": ["AC-07", "AC-09", "CC-5", "SC-5"],
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "writer_entry": "Actual governed runtime emission of the exact S2 carrier/manifest",
+      "reader_entry": "Product ownership access in a distinct process",
+      "fault": "Remove only an owned isolated CAS copy of a required artifact/body/receipt after preserving original bytes and digest",
+      "required_observations": [
+        "Complete pre-fault candidate and its applicable S5 review bindings",
+        "Exact removed object path/hash and preserved original bytes",
+        "Unmodified output of the actual emission refusal",
+        "Projection selection and reader output after refusal",
+        "Owned-resource and restoration receipt; original campaign artifacts remain intact"
+      ],
+      "oracle": [
+        "The incomplete candidate does not become the selected current manifest",
+        "The governed door emits a real refusal and does not authorize a direct projection fallback",
+        "The prior selection is READY only if compatible with current inputs; otherwise HOLD",
+        "Fault injection does not fabricate acceptance and does not mutate another session or production resource"
+      ],
+      "result": null,
+      "raw_outputs": [],
+      "blockers": ["Common preconditions are not supplied to this preparation task"]
+    }
+  ]
+}

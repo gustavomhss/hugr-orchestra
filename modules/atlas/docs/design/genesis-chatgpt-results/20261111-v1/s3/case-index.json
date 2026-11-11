@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-s3-case-index/v1",
+  "campaign": "20261111-v1",
+  "scope_revision": null,
+  "candidate_revision": null,
+  "total_scenario_shapes": 13,
+  "groups": {
+    "readers.json": 7,
+    "activation.json": 3,
+    "durable-resume.json": 3
+  },
+  "executed": 0,
+  "accepted": 0,
+  "repo_wide_population": "NOT_FROZEN_BY_CONSUMED_S1_HANDOFF",
+  "coverage_claim": "Preparation only; scenario count is not domain or accepted-artifact coverage."
+}

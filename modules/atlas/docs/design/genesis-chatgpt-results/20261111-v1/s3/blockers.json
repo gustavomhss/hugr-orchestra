@@ -1,0 +1,96 @@
+{
+  "schema": "genesis-s3-blockers/v1",
+  "campaign": "20261111-v1",
+  "blockers": [
+    {
+      "id": "S3-B01",
+      "dependency": "s1",
+      "status": "INCOMPLETE_HANDOFF",
+      "operation": "Bind finite required scope, independent control, criteria and production allocation",
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "evidence": "scope_revision and criteria_revision are null; allocation is FROZEN_PREPARATION_ONLY",
+      "affected": [
+        "AC-07",
+        "AC-09",
+        "AC-10",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B02",
+      "dependency": "s2/s5",
+      "status": "CANDIDATE_UNAVAILABLE",
+      "operation": "Execute accepted general native generation, restore and governed activation",
+      "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+      "evidence": "S2 candidate_revision is null; no accepted manifest or executable restore binding delivered",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B03",
+      "dependency": "runtime",
+      "status": "SOURCE_AND_DEPENDENCIES_PREPARED_RUNTIME_EXPORTS_UNBUILT",
+      "operation": "Load exact-candidate Atlas exports",
+      "evidence": "Bun resolves external dependencies but @atlas workspace dist exports return ERR_MODULE_NOT_FOUND; 501 unrelated worktree paths remain absent",
+      "affected": [
+        "AC-07",
+        "DOD-4"
+      ]
+    },
+    {
+      "id": "S3-B04",
+      "dependency": "s5",
+      "status": "INTEGRATION_AND_JUDGMENTS_PENDING",
+      "operation": "Apply shared patch serially, return exact candidate, run affected proofs and receive both judgments",
+      "evidence": "No integrated code candidate or judgment was consumed",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5",
+        "DOD-6"
+      ]
+    },
+    {
+      "id": "S3-B05",
+      "dependency": "ci",
+      "status": "DISPATCH_CAPABILITY_NOT_EXPOSED",
+      "operation": "Execute Atlas vitest/typecheck through repository-prescribed workflows",
+      "evidence": "GitHub tools expose Actions GET and reruns, no workflow dispatch; no shell credentials are assumed",
+      "affected": [
+        "DOD-4"
+      ]
+    },
+    {
+      "id": "S3-B06",
+      "dependency": "s1",
+      "status": "BINDING_MISMATCH",
+      "operation": "Validate protocol digest of S1 handoff",
+      "expected_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "declared_sha256": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "evidence": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+      },
+      "affected": [
+        "AC-07",
+        "DOD-5"
+      ]
+    },
+    {
+      "id": "S3-B07",
+      "dependency": "s1",
+      "status": "PREPARATION_PARTITION_RECONCILIATION",
+      "operation": "Reconcile five observed preparation packets against bootstrap 4 preparation + 2 correction sizing",
+      "evidence": "Observed total 5 is below total limit 6, but additional environment preparation is not silently a correction or a pre-forward reservation",
+      "affected": [
+        "AC-08 contribution",
+        "DOD-5"
+      ]
+    }
+  ]
+}

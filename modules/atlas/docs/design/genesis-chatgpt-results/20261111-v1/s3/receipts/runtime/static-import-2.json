@@ -1,0 +1,16 @@
+{
+  "attempt_id": "s3-prep-runtime-001",
+  "operation": "static-import-closure-2",
+  "corrects": "static-import-initial-failure.json",
+  "command": [
+    "node",
+    "runtime/inspect-imports.cjs"
+  ],
+  "cwd": "/workspace/scratch/8acc6027a42c",
+  "start_utc": "2026-11-11T14:13:58.185174+00:00",
+  "end_utc": "2026-11-11T14:13:59.018702+00:00",
+  "exit_code": 0,
+  "script_sha256": "fabd518950ae4c29bd34571624bbbd0fbc53ba64c00f9309456b639ae86f2c47",
+  "stdout_sha256": "e1d0fa6b88f8b31e143590c54db8c087dde859a0fbcfeb6fb1202c2e3b504829",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
