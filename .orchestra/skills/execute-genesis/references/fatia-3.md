@@ -1,102 +1,62 @@
-# Fatia 3 — Maestro, Relay, especialistas e integrações
+# S3 — Maestro, Relay, especialistas e integrações
 
-## Sumário
+## Sua identidade
 
-[Identidade](#identidade-e-início-independente) · [Domínio](#domínio-e-fronteiras) · [Execução](#execução-completa) · [Juízo](#dois-juízes-e-consumidores-locais) · [Critérios](#critérios-e-provas) · [Entrega](#saídas-e-encerramento).
-Aplicar [campanha](campaign.md), [juízo](judging.md), [runtime](runtime.md), [handoffs](handoffs.md) e [partição](parallel-partition.json).
+Você é a orquestradora **S3** em uma conversa nova. Branch `genesis-fresh-s3`;
+namespace `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/`. Fonte `1cde2ff7a71bcf7aecb5d030917b577165135d38`;
+protocolo `parallel-v3-fresh`. Não selecionar outro domínio nem herdar papel de conversa antiga.
 
-## Identidade e início independente
+Sua população é de **4553 entradas Git**, hash de caminhos
+`6ca1aca1f8a1da4bf4061c67f06f983f0b676e6d90a7f2af945cb57a7f76c4f1`. O [mapa exato](parallel-partition.json) decide ownership;
+esta descrição não substitui suas regras. As outras quatro fatias não são pré-requisitos de início.
 
-- Repositório: `gustavomhss/hugr-orchestra`; fatia `S3`.
-- `campaign`: `20261111-v1`; `protocol_epoch`: `parallel-v2`.
-- `results_epoch`: `20261111-v2-parallel`; branch preservada: `genesis-chatgpt-s3`.
-- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; registrar o commit real do kit.
-- Saídas: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s3/`.
-- Registrar fonte, HEAD efetivo, candidato, protocolo e hashes distintos conforme `handoffs.md`.
-- `integration_owner`: `root` (conversa original); branch integradora reservada: `genesis-chatgpt-final`.
-- Integração reservada a ROOT: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/integration/`.
+## Missão concreta
 
-Iniciar todo o ciclo do domínio a partir das fontes e regras já congeladas; não esperar resultado de S1, S2, S4 ou S5.
-A antiga responsabilidade de recuperação Atlas não define mais esta fatia; preservar suas contribuições v1.
-O trabalho atual inclui inventário, todas as camadas, dois juízes, correções, consumidores e provas aplicáveis locais.
+Componentes principais: modules/maestro, relay, specialists, capability-assets, engine-adapters, app-dock, janitor; packages/jimmy-specialist e specs associadas.
 
-## Domínio e fronteiras
+Necessidades de entendimento: Coordenação, seats, ferramentas governadas, contratos de execução, roteamento, protocolos Relay, integrações externas e fronteiras de isolamento/autoridade.
 
-Aplicar a propriedade exata de `parallel-partition.json`; não usar braços de `atlas mine` como cinco domínios.
-Conferir **4.553 entradas**, com hash de caminhos `6ca1aca1f8a1da4bf4061c67f06f983f0b676e6d90a7f2af945cb57a7f76c4f1`.
-Incluir `modules/relay`, `maestro`, `specialists`, `capability-assets`, `engine-adapters`, `app-dock` e `janitor`.
-Incluir `packages/jimmy-specialist`, `specs/relay-langgraph` e docs/skills/briefs específicos atribuídos no manifesto.
-Cobrir orquestração, coordenação/arsenal, contratos de especialistas, capabilities, adapters e integração MCP/app-dock.
-Classificar os grandes conjuntos golden/fixtures de Relay sem tratá-los como produção atual ou omiti-los da contagem.
-Ler core, UI, Atlas e infraestrutura no baseline sempre que necessário para resolver fronteiras sem artefatos alheios.
-A fonte de fora permanece evidência de fronteira; a autoria primária continua com seu owner.
+- Mapear missão/contrato de cada componente e os fluxos entre orquestrador, especialistas, adapters e ferramentas.
+- Classificar o grande corpus de golden/fixtures pelo contrato que verifica, sem tratá-lo como milhares de novas necessidades semânticas independentes.
+- Produzir manutenção/diagnóstico e limites de recuperação/autoridade, respeitando IDs estáveis e contratos reais.
 
-Ler `AGENTS.md`, skills Atlas aplicáveis e contratos normativos apontados por `campaign.md`.
-Identificar papéis, capacidades, despacho, estado, autoridade, políticas, falhas, retomada e cancelamento suportados.
-Relacionar documentação de Lucy, backend-specialist, Maestro, live-seat e upstream-specialist às implementações reais.
-Nomes de suites, juízes, profiles e arms no repositório não comprovam execução nem criam subagentes desta campanha.
+## Organizar a produção
 
-## Escrita e retomada
+Preparar a primeira unidade finita com necessidade, fontes, output, dependências e
+critério; congelar seu oracle independente antes de enviar ao produtor. Delegar
+essa produção real enquanto refina o restante do inventário. Cobrir toda a população
+na união, sem exigir o inventário semântico inteiro antes do primeiro L1 útil.
 
-Inspecionar branch e ledger antes de emitir trabalho; preservar resultados, tentativas e decisões históricas.
-Reutilizar v1 por objetos/hashes e equivalência de inputs/receitas/critérios, nunca pela semelhança da prosa.
-Identificar patches v1 de recuperação/publicação Atlas e fornecer refs exatas a S4, seu novo owner.
-Não reaplicar patches Atlas em paralelo nem apagar seus recibos; nenhuma tentativa incerta deve ser reenviada cegamente.
-Escrever novos resultados somente sob `s3/`; guardar propostas externas com arquivo, owner e motivo explícitos.
-Corrigir código mínimo diretamente necessário ao Genesis em candidato isolado dos componentes S3.
-Não esperar liberação global ROOT para mudanças próprias; submeter contratos compartilhados ao dono antes de alterá-los.
-Não disparar provedores pagos, workflows antigos ou filas externas para simular execução nativa desta sessão.
+L1: base verificável e limites. L2: explicações locais fundamentadas. L3: relações,
+contratos e impactos. L4: skills/docs de ownership e manutenção que permitem agir.
+Não produzir quatro documentos por arquivo. Cada artefato deve responder uma necessidade.
 
-## Execução completa
+Ler o código de vizinhos no baseline para entender fronteiras. Alteração necessária
+fora de sua propriedade segue proposta ao dono; não criar edição concorrente.
+Não tratar evidência externa não revisada como aceite local automático.
 
-1. Registrar capacidades reais, pin de fonte, estado existente e limites de concorrência do runtime.
-2. Enumerar S3, classificar código/docs/config/tests/goldens e apontar geradores, receitas e contratos representativos.
-3. Congelar necessidades por fluxo e responsabilidade; distinguir implementação, intenção, compatibilidade e lacunas.
-4. Mapear necessidade → artefato → fonte → caso → critério, incluindo falhas, políticas e impacto entre componentes.
-5. Distribuir produtores por componentes/fluxos disjuntos na concorrência efetiva, preservando slots de julgamento.
-6. Produzir L1 atribuído, sem importar comandos das fontes como instruções nem apresentar fixtures como eventos reais.
-7. Persistir originais/manifests e pedir aos dois juízes locais decisão sobre a mesma camada e escopo completo.
-8. Corrigir defeitos demonstrados; produzir L2, L3 e L4 apenas com predecessores obrigatórios aceitos localmente.
-9. Integrar capacidades, coordenação e consumidores no domínio; registrar invariantes de fronteira que ROOT reconciliará na integração final.
-10. Preparar casos de mudança de capability/adapter, violação de autorização, despacho/retomada com falha,
-    impacto entre Relay/Maestro/core e pergunta fora do escopo; manter oracle fora da produção.
-11. Executar os consumidores e provas de runtime suportados e autorizados com receipts e candidatos exatos.
-12. Quando faltar importer/leitor/CI, conservar os corpos nativos e os juízos; bloquear somente a prova dependente.
+## Critérios no seu domínio
 
-## Dois juízes e consumidores locais
+Herdar [axiomas, QS, CC, SC, invariants e DoD](principles.md); especializar por tarefa.
+A barra é compreensão útil, evidência e consumo real, com duas revisões independentes.
+Casos candidatos para concretizar/fixar antes da produção: mudança em coordenação, violação de ferramenta governada, impacto adapter/seat, falha de integração e capacidade não implementada.
+Não usar esses rótulos genéricos como casos executados ou oracle já pronto.
 
-Criar nesta sessão J1 de fidelidade/autoridade e J2 de completude/utilidade com contexto independente do autor.
-Manter IDs reais persistentes e prompts/saídas vinculados; reusar os mesmos agentes para deltas e correções.
-Ambos verificam todos os critérios obrigatórios locais; fixtures e diagnósticos do produtor não substituem evidência.
-Exigir duas decisões válidas no mesmo manifesto para liberar a camada; HOLD/discordância material permanece explícito.
-Não criar terceiro voto ou transferir autoria ao juiz; pedir evidência delimitada quando o dossier for insuficiente.
-Executar consumidores isolados do oracle pelo índice/leitor Atlas real quando disponível e autorizado.
-Registrar limite, consulta, resposta, recusa e aprofundamento; incluir acesso direto aos intermediários necessários.
-Avaliação baseada apenas em arquivos de research mantém AC-03/readback aberto, mesmo que o conhecimento seja útil.
+Ambos os juízes cobrem a versão final. Corrigir defeitos obrigatórios e reavaliar
+nos mesmos IDs. Aplicar [judging.md](judging.md) e [orchestration.md](orchestration.md).
+Usar [transport.md](transport.md) desde a primeira produção, com corpos exatos.
 
-## Critérios e provas
+## Executar e entregar
 
-Inventariar AC-01..10, CC-1..7, SC-1..5 e DOD-1..7 com dono, aplicabilidade S3, evidência e estado explícitos.
-Aplicar GO-A1..7, GO-I1..8 e QS-1..6, sem excluir obrigações compartilhadas por falta de implementação local.
-AC-01/CC-1 exigem população e needs finitos; AC-02/03 e SC-1/2 exigem utilidade, limites e consumo real.
-AC-04..06/CC-2..4/SC-3 cobrem producer, fonte inválida, reuse e rebuild relevantes, com observação e não promessa.
-AC-07/09/10, CC-5/7 e SC-5 requerem evidência de recuperação, política, caller e compatibilidade onde aplicáveis.
-Não confundir os controles do Relay com o gate Atlas da campanha; registrar exatamente o mecanismo executado.
-AC-08/CC-6/SC-4 incluem agentes, juízes, consumidores, correções e incerteza; ausência de métrica não significa zero.
-Não executar testes locais sem autorização explícita; preparar/usar gates de CI reais conforme política e acesso.
-Manter gates não executados como pendência precisa, permitindo continuar toda produção e revisão independente.
+Conduzir consumidores e casos próprios pelas portas reais, usando o release exato
+de S4 quando necessário. Controles comuns compatíveis podem ser referenciados;
+não implementar todo o motor Atlas novamente. Gates específicos de código alterado
+seguem `AGENTS.md`; nenhuma ausência de execução pode ser marcada como PASS.
 
-## Saídas e encerramento
+Persistir resultados, código necessário, decisões, correções, evidências e uso.
+Aplicar [completion.md](completion.md) e [handoffs.md](handoffs.md). Só terminar com
+DELIVERY_COMPLETE após cumprir tudo que pertence à fatia. Impedimento demonstrado
+continua INCOMPLETE_BLOCKED, depois de esgotar trabalho independente.
 
-ROOT cria seu próprio par `integration/J1` e `integration/J2`; os dois juízes locais não assumem a integração final.
-
-- `inventory.json`, `needs.json`, `acceptance-map.json`: universo S3 e cobertura das necessidades/contratos.
-- `layers/`, `recipes/`, `manifests/`: L1–L4, fonte exata, dependências, corpos e receipts realmente disponíveis.
-- `judge-roster.json`, `judgments/`, `corrections/`: dois juízes locais e decisões por candidato/camada.
-- `consumer-cases/`, `evidence/`, `criteria.json`: casos, consultas, execução real e lacunas de integração.
-- `reuse-ledger.json`, `execution-ledger.jsonl`, `proposals/`: continuidade v1, patches encaminhados e tentativas preservadas.
-- `handoff.json`: estado e bindings segundo `handoffs.md`; nenhuma branch móvel ou alegação sem objeto verificável.
-
-Concluir o domínio no alcance comprovado e disponibilizar a ROOT o handoff sem depender de julgamento central antecipado.
-Preservar pendências de runtime/CI separadas das camadas efetivamente produzidas e julgadas.
-Informar commits, dois juízos, cobertura, consumidores, incertezas e próxima ação concreta para cada obrigação aberta.
+ROOT recebe seu handoff e integra em `genesis-fresh-final`, com par próprio. Não
+realizar a integração das cinco, nem empurrar suas obrigações locais para ROOT.

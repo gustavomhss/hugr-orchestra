@@ -1,115 +1,54 @@
-# Integração final na conversa original
+# Integração final de ROOT
 
-## Responsável e limites
+ROOT atua na conversa original por atribuição expressa do proprietário. As cinco
+sessões produzem seus domínios completos; S5 não é integradora nem aprovadora inicial.
 
-O proprietário atribuiu a integração final a ROOT, nesta conversa. As cinco sessões
-S1–S5 são orquestradoras de domínios, cada uma com produção e dois juízes locais.
-ROOT não substitui as entregas dessas sessões nem impõe autorização inicial.
+- Campanha: `20261111-v1`; protocolo: `parallel-v3-fresh`; execução: `20261111-v3-fresh`.
+- Branch de integração: `genesis-fresh-final`.
+- Namespace: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/`.
+- Par independente próprio: `integration/J1` e `integration/J2`, com IDs novos reais.
 
-| Campo | Valor |
-| --- | --- |
-| `integration_owner` | `root` |
-| Campanha lógica | `20261111-v1` |
-| Protocolo | `parallel-v2` |
-| Epoch de resultados | `20261111-v2-parallel` |
-| Branch | `genesis-chatgpt-final` |
-| Namespace | `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/integration/` |
-| Juízes próprios | `integration/J1`, `integration/J2` |
+## Receber e fixar
 
-Criar a branch somente ao iniciar o trabalho de integração, sem resetar uma existente.
-Confirmar seu HEAD antes de cada atualização e usar lease; nenhum force-push.
-Não confundir a revisão deste kit de instruções com a futura integração do Genesis.
+Ler as branches `genesis-fresh-s1` até `genesis-fresh-s5`, selecionar handoffs selados
+por SHA e verificar payload/hashes, origem, execução, domínio, critérios e decisões.
+Registrar commits selecionados; um avanço de HEAD não troca automaticamente inputs.
+Um checkpoint pode ajudar preparação, mas não vira entrega completa do domínio.
 
-## Receber entregas sem perseguir branches móveis
+Conferir a união de 14.442 entradas e as necessidades/fluxos, classificações e
+exclusões. Reconciliar alterações reais do candidato e provas afetadas. Verificar
+dependências de build e navegação separadamente. Cobertura estrutural não prova
+suficiência semântica. Não herdar PASS do piloto como aceite da união.
 
-1. Consultar `genesis-chatgpt-s1` até `genesis-chatgpt-s5` e os namespaces v2. Ler
-   o HEAD atual e selecionar handoffs selados com commits e hashes exatos.
-2. Verificar migração, continuidade de v1, partição, 50 critérios, artefatos L1–L4,
-   julgamentos, correções, consumidores, gates, código e accounting de cada fatia.
-3. Aplicar [completion.md](completion.md). Um handoff intermediário, plano ou
-   aceite semântico sem operação não é entrega completa. Integrar preparação
-   possível sem converter itens bloqueados em concluídos.
-4. Congelar `selected-inputs.json`: sessão, branch observada, handoff e selo, fonte,
-   candidato, artefatos, hashes, avaliações, dependências e gaps aceitos como gaps.
-   Avanço posterior da branch não muda silenciosamente os inputs da integração.
-5. Se uma revisão nova for necessária, registrar a substituição, o motivo e os
-   artefatos/decisões dependentes que precisam de revalidação. Preservar os anteriores.
+## Integrar e executar
 
-O trabalho de preparação da antiga S5 é reutilizável: rubric, casos, fila de seis
-propostas, recibos e inventários. Suas cópias importadas de S1/S3 podem estar antigas;
-validar contra as fontes selecionadas. Não declarar juízes antigos inexistentes
-como executados nem assumir que `apply --check` aplicou patches ou testou produto.
+Montar candidato isolado com os patches e artefatos exatos. Resolver conflitos por
+proprietário, sem sobrescrever snapshots inteiros ou fazer merge cego de latest.
+Usar o release real de S4; verificar que input/binding/reader atendem aos cinco
+domínios. Aplicar regras de store isolado, governança e testes em [runtime.md](runtime.md).
 
-## Montar e verificar o candidato integrado
+Reutilizar provas locais compatíveis, executar controles faltantes ou invalidados
+pelo delta e os casos transversais. Cobrir consumo Atlas-only, navegação progressiva,
+impacto entre domínios, cache/rebuild, coerência, falhas, retomada, rollback, histórico,
+preservação e recusas necessárias. Não repetir verificações independentes por rotina.
 
-Conferir a união da partição: todas as 14.442 entradas do baseline atribuídas uma
-vez, classificações e necessidades sem lacunas. Reconciliar mudanças reais de fonte
-no candidato, com novos hashes e análise de impacto. Cobertura estrutural não é
-suficiência semântica; fluxos transversais precisam de artefatos e casos próprios.
+Reconciliar ledgers novos e segmentos históricos v1/v2, sem exigir que as cinco
+conversas novas recuperem handles antigos. Manter tentativas/uso desconhecidos como
+tais. Limite lógico não prova admissão financeira; AC-08 permanece aberto onde sua
+garantia não foi demonstrada. Não chamar esse limite de conformidade implementada.
 
-Reconciliar patches de produto por arquivo/proprietário e dependências. Aplicar em
-candidato isolado, preservando o significado e a proveniência de cada mudança.
-Resolver conflitos reais sem substituir trabalho de outra branch por um snapshot
-inteiro. Registrar a árvore, fonte, receita e identidade do candidato executado.
+## Julgar e entregar
 
-O importer/runtime de S4 deve ter evidência real de construção e governança. Confirmar
-que atende aos cinco domínios, sem substituir identidades/reviewer IDs históricos
-para forçar aprovação. Preparar uma geração coerente com manifestos de artefatos
-exatos, mantendo stores de experimento separados do store servido em produção.
+Criar dois juízes independentes com `fork_turns: none`, sem autoria da união. Aplicar
+[judging.md](judging.md): mesmo pacote, corpos/evidência, critério fixo, correções e
+reavaliação dos mesmos IDs. Não reutilizar pares locais como se fossem o par final,
+nem inferir PASS global da soma de cinco aprovações.
 
-Verificar dependências de build e navegação separadamente. Detectar ciclos de build,
-bindings incompatíveis, origem ausente, autoridade divergente, artefatos requeridos
-faltantes e leituras misturadas. Não usar igualdade de texto como equivalência total.
+Aplicar [principles.md](principles.md) e [completion.md](completion.md) à integração.
+Entregar evidência e decisões dos 50 IDs, candidato, commits selecionados, execução,
+gates, economia e limitações. Distinguir GLOBAL_REVIEW_READY, aceite humano, landing
+e ativação. Não atribuir aceite do dono nem fazer publicação/merge como efeito colateral.
 
-## Executar integração e consumidores
-
-Executar pelos pontos de entrada reais, conforme [runtime.md](runtime.md):
-
-- Leitura Atlas-only e navegação progressiva, com casos mantidos fora da produção.
-- Mudança permitida, violação, impacto entre componentes, falha e abstenção fora do escopo.
-- Cache/reúso, seleção independente de afetados e rebuild após mudanças relevantes.
-- Publicação isolada, leitura concorrente, interrupção, retomada e HOLD coerentes.
-- Rollback compatível, histórico rotulado, isolamento de domínios e corrupção compartilhada.
-- Preservação, migração, recusa de produtor antigo e fronteiras geradas.
-- Gates de produto e CI exigidos, identificando candidato, execução e resultado reais.
-
-Reaproveitar controles locais compatíveis pela identidade exata; não repetir tudo
-por rotina. Executar os controles que faltam para a união ou que um delta invalidou.
-Não converter gates indisponíveis em PASS. Testes seguem `AGENTS.md`; um build local
-não equivale a testes remotos ou proteção efetiva de branch.
-
-Reconciliar o ledger único a partir dos logs particionados e dos recibos v1/v2.
-Deduplicar somente pela identidade demonstrada da mesma tentativa, conservar
-reservas incertas e separar tarefas lógicas de tentativas físicas/tokens/cobrança.
-Relatar garantias reais e limites de AC-08, nunca custo zero por falta de telemetria.
-
-## Julgar a união e corrigir
-
-Criar dois juízes independentes persistentes com `fork_turns: none`; nenhum pode
-ter produzido o candidato/artefato que julga. Congelar o mesmo pacote para ambos,
-com critérios [criteria.json](criteria.json), decisões locais e novas provas.
-Ambos verificam todos os critérios globais aplicáveis, em lotes com cobertura total.
-
-O par de uma fatia não substitui o par da integração. Não somar cinco aprovações
-locais para inferir aceitação global. Não usar terceiro juiz para desfazer veto.
-Corrigir cada finding obrigatório pelo responsável apropriado, formar revisão nova
-e reapresentar o delta aos mesmos juízes. Mudanças de fonte invalidam decisões
-dependentes; decisões independentes podem ser reutilizadas com binding explícito.
-
-## Fechar sem pular obrigações
-
-ROOT também segue a rotina de [orchestration.md](orchestration.md) e a condição de
-[completion.md](completion.md). Continuar até entregar a integração inteira; não
-parar ao abrir fila, delegar, resolver só o primeiro conflito ou obter um primeiro PASS.
-
-Persistir pacote revisável com inputs selecionados, fonte/candidato, artefatos,
-resultados operacionais, critérios, dois juízos, correções, accounting e limitações.
-Separar `GLOBAL_REVIEW_READY`, aceite humano, landing e ativação. DOD-7 não é um
-aceite que ROOT possa dar em nome do dono. Não fazer merge, PR ou ativação em produção
-como efeito colateral de preparar a união; apresentar o resultado concreto quando
-uma ação humana específica for de fato a única dependência restante.
-
-Se uma barreira externa impedir uma obrigação, persistir `INCOMPLETE_BLOCKED`,
-operação tentada, capacidade/autoridade ausente, evidência e próximo passo mínimo.
-Continuar o trabalho independente. Não declarar a integração entregue enquanto
-obrigação executável ou correção obrigatória continuar aberta.
+Continuar até cumprir as obrigações de integração. Impedimento material comprovado
+permanece INCOMPLETE_BLOCKED, com próximo passo concreto e todo trabalho independente
+executado. Uma revisão desta skill não é execução ou aceite do Genesis.

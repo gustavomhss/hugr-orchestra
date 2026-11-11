@@ -1,792 +1,235 @@
 {
-  "schema": "genesis-parallel-criteria/v2",
+  "schema": "genesis-parallel-criteria/v3",
   "campaign": "20261111-v1",
-  "protocol_epoch": "parallel-v2",
+  "protocol_epoch": "parallel-v3-fresh",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "normative_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
   "normative_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
   "criterion_count": 50,
-  "global_integration_owner": "root",
-  "rules": [
-    "Read the normative criterion at the pinned source; this register is an assignment, not replacement text.",
-    "Every session records an evidence-backed disposition for all 50 IDs, with both local judges reviewing applicable obligations.",
-    "NOT_APPLICABLE requires a scope-based reason, never missing implementation, missing evidence or an inconvenient gate.",
-    "DEFERRED_TO_INTEGRATION names an exact global-only obligation, root as owner and dependency; it cannot move local work to root.",
-    "S4 supplies shared Atlas implementation evidence; each domain owns its real usage evidence.",
-    "Local dispositions do not waive a global criterion. Root and its two independent judges review the exact integrated union.",
-    "A request for evidence remains HOLD until resolved; UNASSESSED is an initialization state, never a delivered verdict.",
-    "Separate local_status from global_status. DEFERRED_TO_INTEGRATION may only describe the exact global_complement; a missing local importer, consumer, runtime proof or CI gate remains local HOLD."
+  "domain_owners": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
   ],
-  "criteria": [
-    {
-      "id": "GO-A1",
-      "source_line": 52,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-A2",
-      "source_line": 53,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-A3",
-      "source_line": 54,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-A4",
-      "source_line": 55,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-A5",
-      "source_line": 56,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-A6",
-      "source_line": 57,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-A7",
-      "source_line": 58,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I1",
-      "source_line": 120,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I2",
-      "source_line": 121,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I3",
-      "source_line": 122,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I4",
-      "source_line": 123,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I5",
-      "source_line": 124,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I6",
-      "source_line": 125,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I7",
-      "source_line": 126,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "GO-I8",
-      "source_line": 127,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-01",
-      "source_line": 138,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-02",
-      "source_line": 139,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-03",
-      "source_line": 140,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-04",
-      "source_line": 141,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-05",
-      "source_line": 142,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-06",
-      "source_line": 143,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-07",
-      "source_line": 144,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-08",
-      "source_line": 145,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-09",
-      "source_line": 146,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "AC-10",
-      "source_line": 147,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "CC-1",
-      "source_line": 159,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "CC-2",
-      "source_line": 160,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "CC-3",
-      "source_line": 161,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "CC-4",
-      "source_line": 162,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "CC-5",
-      "source_line": 163,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "CC-6",
-      "source_line": 164,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "CC-7",
-      "source_line": 165,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "SC-1",
-      "source_line": 169,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "SC-2",
-      "source_line": 170,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "SC-3",
-      "source_line": 171,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "SC-4",
-      "source_line": 172,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "SC-5",
-      "source_line": 173,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": "S4",
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "QS-1",
-      "source_line": 180,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "QS-2",
-      "source_line": 181,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "QS-3",
-      "source_line": 182,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "QS-4",
-      "source_line": 183,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "QS-5",
-      "source_line": 184,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "QS-6",
-      "source_line": 185,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "DOD-1",
-      "source_line": 223,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "DOD-2",
-      "source_line": 224,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "DOD-3",
-      "source_line": 225,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "DOD-4",
-      "source_line": 226,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "DOD-5",
-      "source_line": 227,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "DOD-6",
-      "source_line": 228,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    },
-    {
-      "id": "DOD-7",
-      "source_line": 229,
-      "local_disposition_required_from": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
-      ],
-      "local_evidence_owner": "the session for its own domain",
-      "global_evidence_owner": "root",
-      "shared_atlas_mechanism_owner": null,
-      "initial_verdict": "UNASSESSED"
-    }
-  ],
-  "allowed_local_status": [
+  "global_evidence_owner": "root",
+  "common_atlas_runtime_owner": "S4",
+  "principles_are_guidance_not_per_item_document_requirements": true,
+  "per_task": "Inherit principles; specialize applicable IDs and evidence without copying all laws.",
+  "completion": "One evidence-backed disposition matrix covers all 50 IDs; separate local obligation from global complement.",
+  "local_status": [
     "PASS",
     "FIX-FIRST",
     "HOLD",
     "NOT_APPLICABLE"
   ],
-  "global_complement_status": [
-    "UNASSESSED",
+  "global_status": [
     "DEFERRED_TO_INTEGRATION",
     "PASS",
     "HOLD"
   ],
-  "disposition_fields": [
-    "local_obligation",
-    "local_status",
-    "local_evidence",
-    "global_complement",
-    "global_status",
-    "global_owner"
+  "not_applicable_rule": "Scope reason with review; never missing time, tool or evidence.",
+  "criteria": [
+    {
+      "id": "GO-A1",
+      "source_line": 52
+    },
+    {
+      "id": "GO-A2",
+      "source_line": 53
+    },
+    {
+      "id": "GO-A3",
+      "source_line": 54
+    },
+    {
+      "id": "GO-A4",
+      "source_line": 55
+    },
+    {
+      "id": "GO-A5",
+      "source_line": 56
+    },
+    {
+      "id": "GO-A6",
+      "source_line": 57
+    },
+    {
+      "id": "GO-A7",
+      "source_line": 58
+    },
+    {
+      "id": "GO-I1",
+      "source_line": 120
+    },
+    {
+      "id": "GO-I2",
+      "source_line": 121
+    },
+    {
+      "id": "GO-I3",
+      "source_line": 122
+    },
+    {
+      "id": "GO-I4",
+      "source_line": 123
+    },
+    {
+      "id": "GO-I5",
+      "source_line": 124
+    },
+    {
+      "id": "GO-I6",
+      "source_line": 125
+    },
+    {
+      "id": "GO-I7",
+      "source_line": 126
+    },
+    {
+      "id": "GO-I8",
+      "source_line": 127
+    },
+    {
+      "id": "AC-01",
+      "source_line": 138
+    },
+    {
+      "id": "AC-02",
+      "source_line": 139
+    },
+    {
+      "id": "AC-03",
+      "source_line": 140
+    },
+    {
+      "id": "AC-04",
+      "source_line": 141
+    },
+    {
+      "id": "AC-05",
+      "source_line": 142
+    },
+    {
+      "id": "AC-06",
+      "source_line": 143
+    },
+    {
+      "id": "AC-07",
+      "source_line": 144
+    },
+    {
+      "id": "AC-08",
+      "source_line": 145
+    },
+    {
+      "id": "AC-09",
+      "source_line": 146
+    },
+    {
+      "id": "AC-10",
+      "source_line": 147
+    },
+    {
+      "id": "CC-1",
+      "source_line": 159
+    },
+    {
+      "id": "CC-2",
+      "source_line": 160
+    },
+    {
+      "id": "CC-3",
+      "source_line": 161
+    },
+    {
+      "id": "CC-4",
+      "source_line": 162
+    },
+    {
+      "id": "CC-5",
+      "source_line": 163
+    },
+    {
+      "id": "CC-6",
+      "source_line": 164
+    },
+    {
+      "id": "CC-7",
+      "source_line": 165
+    },
+    {
+      "id": "SC-1",
+      "source_line": 169
+    },
+    {
+      "id": "SC-2",
+      "source_line": 170
+    },
+    {
+      "id": "SC-3",
+      "source_line": 171
+    },
+    {
+      "id": "SC-4",
+      "source_line": 172
+    },
+    {
+      "id": "SC-5",
+      "source_line": 173
+    },
+    {
+      "id": "QS-1",
+      "source_line": 180
+    },
+    {
+      "id": "QS-2",
+      "source_line": 181
+    },
+    {
+      "id": "QS-3",
+      "source_line": 182
+    },
+    {
+      "id": "QS-4",
+      "source_line": 183
+    },
+    {
+      "id": "QS-5",
+      "source_line": 184
+    },
+    {
+      "id": "QS-6",
+      "source_line": 185
+    },
+    {
+      "id": "DOD-1",
+      "source_line": 223
+    },
+    {
+      "id": "DOD-2",
+      "source_line": 224
+    },
+    {
+      "id": "DOD-3",
+      "source_line": 225
+    },
+    {
+      "id": "DOD-4",
+      "source_line": 226
+    },
+    {
+      "id": "DOD-5",
+      "source_line": 227
+    },
+    {
+      "id": "DOD-6",
+      "source_line": 228
+    },
+    {
+      "id": "DOD-7",
+      "source_line": 229
+    }
   ]
 }

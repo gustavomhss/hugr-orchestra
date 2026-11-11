@@ -324,5 +324,5 @@
   },
   "workload_note": "Counts are tracked Git entries, not effort estimates. Relay has a large test/fixture corpus; app-shell and UI have substantial assets and localization. Do not split semantic packages or APIs solely to equalize counts.",
   "read_boundary_policy": "Every session may read any baseline source as boundary evidence immediately. Ownership determines primary extraction and per-session output writes; it does not gate reads or require another session artifact.",
-  "write_boundary_policy": "The map assigns source analysis and Genesis artifact ownership. Each session writes only its own campaign namespace and isolated candidate; necessary product changes follow the source owner and repository instructions. ROOT in the original conversation owns final cross-domain integration on genesis-chatgpt-final after collecting the five judged deliveries. The map alone does not authorize broad source rewrites or canonical Atlas store publication."
+  "write_boundary_policy": "Each domain owns source analysis and its Genesis artifacts. The orchestrator alone writes its genesis-fresh-sN branch; producers use isolated local areas. Necessary product changes follow path ownership and repository instructions. ROOT owns final integration on genesis-fresh-final. This map does not authorize broad source rewrites or production Atlas activation."
 }
