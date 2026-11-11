@@ -1,0 +1,1 @@
+{"package":"app","packageSelector":"packages/app","directory":"packages/app-shell","runner":"bun","args":["./src/orchestra/chapters/flight-engineer/protection.test.ts","--timeout","120000"],"env":{}}
