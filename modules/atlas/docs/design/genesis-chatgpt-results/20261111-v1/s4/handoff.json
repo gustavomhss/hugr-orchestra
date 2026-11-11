@@ -2,11 +2,11 @@
   "schema": "genesis-session-handoff/v1",
   "campaign": "20261111-v1",
   "session": "s4",
-  "handoff_sequence": 2,
+  "handoff_sequence": 3,
   "supersedes": {
-    "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+    "commit": "23ed2fd41ade0807c9517ad47efd380dbccfc3f0",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
-    "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad"
+    "sha256": "83e6c3f2a442dec3a43651db79dc59bcb58ff3d1b213834bdf5c02c981a4e26d"
   },
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "candidate_revision": null,
@@ -20,36 +20,46 @@
     "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-host-migracao.md",
     "sha256": "89e691e05102a7b0d6443d2bc0d2cdc77c4ce63421bf380151ccf6f406fa457f"
   },
-  "work_head_before_handoff": "c5b3ab44e9198adef233ac73e4cc3a7c7f681c25",
+  "work_head_before_handoff": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
   "evidence_revision": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
   "scope_revision": null,
-  "criteria_revision": null,
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
   "state": "BLOCKED",
   "attempt_id": "S4-PREP-ROOT-001",
   "phase": "INDEPENDENT_PREPARATION_COMPLETE_DEPENDENT_INTEGRATION_NOT_RUN",
-  "recorded_at": "2026-11-11 14:31:25 UTC",
+  "recorded_at": "2026-11-11 14:37:13 UTC",
   "dependencies": [
     {
       "session": "s1",
       "consumed_handoff": {
-        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
-        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
       },
-      "handoff_sequence": 1,
+      "handoff_sequence": 2,
       "handoff_state": "WORKING",
       "campaign_matches": true,
       "session_matches": true,
       "source_matches": true,
       "protocol_commit_matches": true,
-      "protocol_sha256_declared": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "protocol_sha256_declared": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
       "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
-      "protocol_sha256_matches": false,
+      "protocol_sha256_matches": true,
       "scope_revision": null,
       "candidate_revision": null,
       "binding_judgments_observed": [],
       "usable_for_dependent_integration": false,
-      "reason": "No scope/interface freeze or exact integrated candidate in this handoff; S1 also has a protocol hash mismatch."
+      "reason": "Protocol hash corrected and 50-row catalog mechanically matched. Full semantic inventory, interfaces and production allocation remain unavailable.",
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "resolved_previous_request": "S4-DEP-S1-HASH-001"
     },
     {
       "session": "s2",
@@ -98,12 +108,12 @@
     {
       "session": "s5",
       "consumed_handoff": {
-        "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+        "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
-        "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00"
+        "sha256": "e24973d9472d3abb48a634424919daf02731f70bb145ff2a021efd50433f98f1"
       },
-      "handoff_sequence": 1,
-      "handoff_state": "BLOCKED",
+      "handoff_sequence": 3,
+      "handoff_state": "WORKING",
       "campaign_matches": true,
       "session_matches": true,
       "source_matches": true,
@@ -115,13 +125,19 @@
       "candidate_revision": null,
       "binding_judgments_observed": [],
       "usable_for_dependent_integration": false,
-      "reason": "candidate_revision is null; preparation handoff is not an executable implementation or binding judgment."
+      "reason": "Preparation-only handoff has no integrated candidate or binding decisions; it still consumes the initial S4 checkpoint, not the submitted evidence package.",
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "s4_consumed_commit": "2333f13d2a9de1336723865ae1552f8f5666a15c"
     }
   ],
   "criteria_ref": {
-    "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
-    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/criteria.json",
-    "sha256": "2b7279a8c95f873973931a4290da6acd9c010dc1abcb09cd64515dc102fbbd51"
+    "commit": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/criteria-v2.json",
+    "sha256": "b08149d78070b5483397374bd6cb6298722b57e6227e049a7a8d770afd68b990"
   },
   "package_manifest_ref": {
     "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
@@ -178,6 +194,21 @@
       "commit": "c5b3ab44e9198adef233ac73e4cc3a7c7f681c25",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/git-preservation.json",
       "sha256": "9e061a960ac9130d65dbe5583a2f559246bcdc968d3cc32e7c3bde4ecc387e90"
+    },
+    {
+      "commit": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/post-submission-dependencies.json",
+      "sha256": "24b3008f138363cf207ccbbf70b009a2c42e583b39b204b726c95c0296bedc33"
+    },
+    {
+      "commit": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/correction-dispositions-v2.json",
+      "sha256": "029e1006dd658c5c665995a676ee4814ac251dffafcd80eebb9d66989496c2b2"
+    },
+    {
+      "commit": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/supplement-manifest-v2.json",
+      "sha256": "01b4a50a863a176e1f7671507081f6dc0849da279e29503d6e3aa9fde44595de"
     }
   ],
   "patches": [
@@ -265,7 +296,12 @@
     "historical_original_responses_verified": 103,
     "historical_original_cas_verified": 365,
     "historical_original_claims_retained": 272,
-    "complete_repo_wide_coverage": false
+    "complete_repo_wide_coverage": false,
+    "s1_catalog_rows_mechanically_matched": 50,
+    "s4_owned_or_supporting_criteria_covered": 30,
+    "additional_authorization_boundary_criteria": [
+      "DOD-7"
+    ]
   },
   "capabilities": {
     "github_read_write": "OBSERVED_ON_S4_BRANCH",
@@ -287,13 +323,15 @@
   },
   "judgments": {
     "s5_handoff_ref": {
-      "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+      "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
-      "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00"
+      "sha256": "e24973d9472d3abb48a634424919daf02731f70bb145ff2a021efd50433f98f1"
     },
     "binding_decisions": [],
     "status": "NOT_RECEIVED",
-    "authors_are_not_judges": true
+    "authors_are_not_judges": true,
+    "latest_s4_package_consumption": "NOT_OBSERVED",
+    "latest_s4_consumed_by_s5": "2333f13d2a9de1336723865ae1552f8f5666a15c"
   },
   "submission": {
     "to": "s5",
@@ -303,29 +341,24 @@
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/package-manifest.json",
       "sha256": "7d6fc0b56fac7930911320654caeb3be8dea882d8d952641a68697918d4bc3a0"
     },
-    "request": "Consume exact references, route S1 hash correction to its owner, integrate the three proposals serially only with the S1 contract and exact S2/S3 candidates, return concrete findings and same-version judgments. This package does not request a PASS for unexecuted product criteria."
+    "request": "Consume the exact package and supplement references; integrate the three proposals serially only with the complete S1 scope/interface contract and exact S2/S3 candidates; return concrete findings and both same-version judgments. The received criterion catalog is mechanically matched, not semantically accepted. No PASS for unexecuted product criteria is requested.",
+    "supplement": {
+      "commit": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/supplement-manifest-v2.json",
+      "sha256": "01b4a50a863a176e1f7671507081f6dc0849da279e29503d6e3aa9fde44595de"
+    }
   },
   "blockers": [
     {
       "id": "S4-B-S1-SCOPE",
       "operation": "Bind every Orchestra domain/flow to current inputs, host readers and preserved objects",
-      "reason": "Consumed S1 handoff has scope_revision and criteria_revision null; execution contract releases preparation only",
+      "reason": "S1 protocol metadata and criterion catalog are now verified, but scope_revision remains null and the execution contract/allocation releases preparation only; semantic inventory and interfaces are incomplete.",
       "affects": [
         "AC-09",
         "AC-10",
         "CC-5",
         "CC-7"
       ]
-    },
-    {
-      "id": "S4-B-S1-HASH",
-      "operation": "Validate S1 protocol binding",
-      "reason": "Declared SHA-256 differs from the Git-blob-verified protocol file; exact values are in correction-requests.json",
-      "evidence": {
-        "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/correction-requests.json",
-        "sha256": "cc728a2c48b19cb9bf2997c39d3dc5fec46cf7e97235252e433c441014a9d905"
-      }
     },
     {
       "id": "S4-B-CANDIDATES",
@@ -366,5 +399,19 @@
     "Old-producer remains INDETERMINATE; source citations, schema checks or missing-token refusal are not equivalent proof.",
     "No production activation, PR, merge, force-push, other-session branch write or historical resource cleanup occurred."
   ],
-  "next_action": "S1 repairs metadata and freezes production inventory/interfaces; S2/S3 publish real candidates; S5 supplies one exact integrated revision and findings. Run the affected prepared cases through permitted CI and governed isolated entry points, recheck preserved state, and bind both S5 judgments to that same revision. No automatic work after this session ends is implied."
+  "next_action": "S1 freezes production inventory/interfaces and allocation; S2/S3 publish real candidates; S5 supplies one exact serially integrated revision and applicable findings. Run the affected prepared cases through permitted CI and governed isolated entry points, recheck preserved state, and bind both S5 judgments to that same revision. No automatic work after this session ends is implied.",
+  "supplemental_evidence_revision": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
+  "resolved_blockers": [
+    {
+      "id": "S4-B-S1-HASH",
+      "request_id": "S4-DEP-S1-HASH-001",
+      "resolution": "RESOLVED_BY_OWNER_SUCCESSOR",
+      "evidence": {
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+      }
+    }
+  ],
+  "snapshot_semantics": "The original package and receipts remain immutable observations of their recorded pins. This handoff and supplement supersede current S1/S5 dependency status without rewriting those earlier observations."
 }
