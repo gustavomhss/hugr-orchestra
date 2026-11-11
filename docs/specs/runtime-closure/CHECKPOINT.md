@@ -1,5 +1,7 @@
 # Runtime-closure integration checkpoint — 2026-10-08
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 The later 2026-10-09 Task observation first-rejection measurement, exact-source Core/Orchestra results and failed-lane-only Windows x64 native repair are recorded in [SNAPSHOT-QUALIFICATION.md](./SNAPSHOT-QUALIFICATION.md). Those scoped results do not close the milestone.
 
 The owner-corrected native Archie identity, successful ordinary native authoring run, exact original output/host receipts and remaining producer/landing failures are recorded in [ARCHIE-QUALIFICATION.md](./ARCHIE-QUALIFICATION.md). That execution uses the explicit read-only legacy account consumer and does not qualify operational Orchestra OAuth consent or the broader Runtime milestone.

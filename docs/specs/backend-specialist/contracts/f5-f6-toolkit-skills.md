@@ -1,5 +1,7 @@
 # The backend specialist frozen interface contracts F5 and F6 (draft for LEAD-0 freeze)
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: draft normative text, 2026-10-05. Source basis: Orchestra worktree `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin` at HEAD `d11d8652aa`. This is read-only analysis. Nothing here was installed, built, tested or run. Paths written `S/...` are relative to that worktree. `T` = `packages/backend-specialist-toolkit`, `C` = `packages/backend-specialist`, `E` = the separate evaluator checkout, as defined in `docs/specs/backend-specialist/execution-plan.md` §4.
 
 Normative keywords: MUST, MUST NOT, SHOULD, MAY. **[existing]** marks a mechanism already in source at HEAD, with its anchor. **[required-new: WP]** marks a mechanism that does not exist yet and names the WP that owns building it. Neither contract adds features to the skill loader.

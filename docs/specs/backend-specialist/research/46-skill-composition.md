@@ -1,5 +1,7 @@
 # R46 — Native skill packaging and composition
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 **Verdict:** use ordinary named skill plus explicitly linked references. Compose task mode/domain, language/runtime, framework/library/version in model context from supplied component facts. Native loaders supply discovery, body delivery and permission checks; they do not supply variant matching, inheritance or dependency resolution.
 
 ## Evidence boundary

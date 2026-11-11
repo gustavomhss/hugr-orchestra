@@ -1,5 +1,7 @@
 # The backend specialist charter (system prompt) — draft v2
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: draft for owner review, 2026-10-05. Not installed. `packages/orchestra/src/agent/prompt/backend.txt` stays unchanged until H1 lands, together with the H5 result decoder and the backend-specialist-only profile. v2 applies a cold review of v1 (verdict FIX-FIRST, 25 findings; all high and medium findings applied; see the change log at the end).
 
 v3a (2026-10-06): one bullet added under Checks and honesty after the backend-bench run (amendment A5: Claude opus 8/9 → 8/9, sonnet 7/9 → 8/9, no new role violations or false claims; n = 1 per cell). The open-weight tail (v3b) is not adopted: its write-path rule did not hold on free models, so missing write paths and repairs without diagnosis must be enforced by the host (packet write roots in the ToolSafety profile), not by prose.

@@ -1,5 +1,7 @@
 # Maestro transfer gate repair
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Current identity correction: active upstream ID `archie`, profile `upstream`, assets `modules/specialists/archie`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Procedure quotations and raw pins below remain immutable historical receipts. Parent owns active-source naming and new pin freeze; old pins are not renamed-file proof or a second accepted digest.
 
 Category: **REPAIR + STRENGTHENING**. Applies to local orientation integration on `maestro-transfer`,

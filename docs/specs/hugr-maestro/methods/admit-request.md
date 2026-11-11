@@ -1,5 +1,7 @@
 # Method: Admit Request
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: proposed V2 method. ID: `admit-request`. Deterministic policy kernel exists at
 `packages/orchestra/src/maestro/admit-request.ts`; durable trigger/record/replay remains unimplemented. Composition:
 M1 Frame + M2 Ground.

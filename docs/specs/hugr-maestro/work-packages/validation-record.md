@@ -2,6 +2,8 @@
 
 # WP: ValidationRecord And Lucy Receipt
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Target: `maestro-dev` at `e87a1223b4`. Consumer: Wave 2 authorization and Wave 3 governed Task. This packet creates no PlanRevision record and does not make Task dispatchable.
 
 ## Definition of Done
