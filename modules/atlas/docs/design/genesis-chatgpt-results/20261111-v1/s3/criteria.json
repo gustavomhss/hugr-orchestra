@@ -1,0 +1,183 @@
+{
+  "schema": "genesis-session-criteria/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "rows": [
+    {
+      "criterion_id": "G3",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+        "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108"
+      },
+      "owner": "s3",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "AC-07",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "AC-09",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "AC-10",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "CC-5",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "SC-3",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "SC-5",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "DOD-2",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "DOD-3",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "DOD-4",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    },
+    {
+      "criterion_id": "DOD-6",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "owner": "s3 contributor; primary per campaign matrix",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Preparation is active. S1 inventory/allocation and S2 exact candidate/manifest unavailable. No execution or recovery acceptance inferred."
+    }
+  ]
+}

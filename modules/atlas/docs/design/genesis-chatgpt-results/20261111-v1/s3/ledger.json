@@ -1,0 +1,48 @@
+{
+  "schema": "genesis-s3-logical-ledger/v1",
+  "campaign": "20261111-v1",
+  "allocation_ref": null,
+  "operational_enforcement_proven": false,
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "entries": [
+    {
+      "attempt_id": "s3-prep-root-001",
+      "agent": "/root",
+      "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
+      "status": "RUNNING",
+      "production_or_judgment_request": false,
+      "reserved_campaign_units": null,
+      "usage": "UNKNOWN"
+    },
+    {
+      "attempt_id": "s3-prep-activation-001",
+      "agent": "/root/activation",
+      "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
+      "status": "RUNNING",
+      "production_or_judgment_request": false,
+      "reserved_campaign_units": null,
+      "usage": "UNKNOWN"
+    },
+    {
+      "attempt_id": "s3-prep-durable-001",
+      "agent": "/root/durable_resume",
+      "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
+      "status": "RUNNING",
+      "production_or_judgment_request": false,
+      "reserved_campaign_units": null,
+      "usage": "UNKNOWN"
+    },
+    {
+      "attempt_id": "s3-prep-rollback-001",
+      "agent": "/root/rollback_readers",
+      "phase": "pre-envelope preparation explicitly permitted by handoffs.md",
+      "status": "RUNNING",
+      "production_or_judgment_request": false,
+      "reserved_campaign_units": null,
+      "usage": "UNKNOWN"
+    }
+  ],
+  "historical_reservations": "Untouched; unresolved work is not zero or auto-retry authorization"
+}

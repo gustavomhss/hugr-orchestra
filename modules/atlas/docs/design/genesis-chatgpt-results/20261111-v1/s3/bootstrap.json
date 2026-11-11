@@ -1,0 +1,90 @@
+{
+  "schema": "genesis-s3-bootstrap/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "observed_at": "2026-11-11T14:09:47.639152+00:00",
+  "source_anchor_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_sha": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "branch": "genesis-chatgpt-s3",
+  "branch_created_from": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "source_read_transport": "GitHub connector",
+  "github_read": "OBSERVED",
+  "github_write": "OBSERVED branch creation",
+  "sandbox_execution": "OBSERVED shell and version commands",
+  "runtime": {
+    "git": "2.52.0",
+    "node": "v24.22.1",
+    "python": "3.12.14",
+    "bun_on_path": false
+  },
+  "subagents": {
+    "host_total_slots": 4,
+    "active_children": [
+      "/root/activation",
+      "/root/durable_resume",
+      "/root/rollback_readers"
+    ],
+    "assignments_disjoint": true
+  },
+  "repository_test_policy": "AGENTS.md requires tests on GitHub Actions; no tests run locally",
+  "process_observations": [],
+  "generation_observations": [],
+  "claims": {
+    "recovery_demonstrated": false,
+    "production_activated": false,
+    "native_model_api_used": false,
+    "external_model_api_used": false
+  },
+  "blockers": [
+    {
+      "id": "S3-B01",
+      "dependency": "s1",
+      "status": "MISSING",
+      "operation": "Freeze repo-wide required closure, independent control and logical allocation before dependent execution",
+      "evidence": "GET git/ref/heads/genesis-chatgpt-s1 returned 404; no handoff consumed",
+      "affected": [
+        "AC-07",
+        "AC-09",
+        "AC-10",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B02",
+      "dependency": "s2",
+      "status": "MISSING",
+      "operation": "Consume exact candidate, recipes, durable completions, approved manifest and governed authority before activation/readback",
+      "evidence": "GET git/ref/heads/genesis-chatgpt-s2 returned 404; no handoff consumed",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B03",
+      "dependency": "runtime",
+      "status": "PREPARING",
+      "operation": "Locate/install Bun and verify complete isolated checkout",
+      "evidence": "Bun absent from PATH; Node v24.22.1, Python 3.12.14 and git 2.52.0 observed",
+      "affected": [
+        "AC-07"
+      ]
+    },
+    {
+      "id": "S3-B04",
+      "dependency": "s5",
+      "status": "PENDING",
+      "operation": "Receive serial shared-file candidate and two independent judgments",
+      "evidence": "s5 ref observed at protocol commit; no judgments consumed",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5",
+        "DOD-6"
+      ]
+    }
+  ]
+}

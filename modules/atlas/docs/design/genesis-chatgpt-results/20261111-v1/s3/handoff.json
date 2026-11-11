@@ -1,0 +1,109 @@
+{
+  "schema": "genesis-session-handoff/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "handoff_sequence": 1,
+  "supersedes": null,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "scope_revision": null,
+  "criteria_revision": null,
+  "state": "WORKING",
+  "phase": "DEPENDENCY-BLOCKED PREPARATION",
+  "attempt_id": "s3-prep-root-001",
+  "dependencies": [
+    {
+      "session": "s1",
+      "ref_observation": "MISSING_404",
+      "consumed_handoff": null
+    },
+    {
+      "session": "s2",
+      "ref_observation": "MISSING_404",
+      "consumed_handoff": null
+    },
+    {
+      "session": "s4",
+      "ref_observation": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "consumed_handoff": null
+    },
+    {
+      "session": "s5",
+      "ref_observation": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "consumed_handoff": null
+    }
+  ],
+  "criteria_ref": null,
+  "receipts": [],
+  "patches": [],
+  "budget_allocation_ref": null,
+  "budget_ledger_ref": null,
+  "blockers": [
+    {
+      "id": "S3-B01",
+      "dependency": "s1",
+      "status": "MISSING",
+      "operation": "Freeze repo-wide required closure, independent control and logical allocation before dependent execution",
+      "evidence": "GET git/ref/heads/genesis-chatgpt-s1 returned 404; no handoff consumed",
+      "affected": [
+        "AC-07",
+        "AC-09",
+        "AC-10",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B02",
+      "dependency": "s2",
+      "status": "MISSING",
+      "operation": "Consume exact candidate, recipes, durable completions, approved manifest and governed authority before activation/readback",
+      "evidence": "GET git/ref/heads/genesis-chatgpt-s2 returned 404; no handoff consumed",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B03",
+      "dependency": "runtime",
+      "status": "PREPARING",
+      "operation": "Locate/install Bun and verify complete isolated checkout",
+      "evidence": "Bun absent from PATH; Node v24.22.1, Python 3.12.14 and git 2.52.0 observed",
+      "affected": [
+        "AC-07"
+      ]
+    },
+    {
+      "id": "S3-B04",
+      "dependency": "s5",
+      "status": "PENDING",
+      "operation": "Receive serial shared-file candidate and two independent judgments",
+      "evidence": "s5 ref observed at protocol commit; no judgments consumed",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5",
+        "DOD-6"
+      ]
+    }
+  ],
+  "preparation_paths": [
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/bootstrap.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/criteria.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/ledger.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/dependency-observations.json"
+  ],
+  "delivery_targets": [
+    "s4",
+    "s5"
+  ],
+  "next_action": "Finish independent source inspection and runtime bootstrap; freeze exact S1/S2 handoffs before dependent execution. Later handoff will bind this preparation by immutable commit and digest."
+}
