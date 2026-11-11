@@ -98,6 +98,8 @@ const layer = Layer.effectDiscard(
           fs.resolve,
         ),
       )
+      // Discovery finds lexical names, but a tracked symlink may resolve to a host file outside the project.
+      if ([...discovered].some((path) => !contains(stop, path))) return SystemContext.unavailable
       const configured = yield* configuredInstructions
       const paths = Array.dedupe([yield* fs.resolve(join(global.config, "AGENTS.md")), ...discovered, ...configured.paths])
       const files = yield* Effect.forEach(
