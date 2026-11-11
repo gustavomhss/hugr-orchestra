@@ -8,6 +8,7 @@ import { SessionV2 } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { ProcessProvenance } from "@orchestra/core/process-provenance"
 import { executeTool, settleTool, toolDefinitions } from "./lib/tool"
 import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, SchemaGetter, SchemaIssue, Scope } from "effect"
 import { testEffect } from "./lib/effect"
@@ -60,6 +61,33 @@ const make = (permission?: string) => {
 }
 
 describe("ToolRegistry", () => {
+  it.effect("captures invocation provenance for subprocesses only inside the executing tool", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      yield* registry.register({
+        observe_provenance: Tool.make({
+          description: "Observe the executing invocation",
+          input: Schema.Struct({}),
+          output: Schema.Unknown,
+          execute: () => Effect.gen(function* () {
+            const current = yield* ProcessProvenance.Current
+            const readOwner = yield* ProcessProvenance.Owner
+            return current ? { ...current, owner: yield* readOwner } : null
+          }),
+        }),
+      })
+      expect(yield* ProcessProvenance.Current).toBeUndefined()
+      const settlement = yield* settleTool(registry, {
+        ...identity, sessionID,
+        call: { type: "tool-call", name: "observe_provenance", id: "call-provenance", input: {} },
+      })
+      expect(settlement.output?.structured).toEqual({
+        owner: "",
+        sessionID, agentID: identity.agent, tool: "observe_provenance", callID: "call-provenance",
+      })
+      expect(yield* ProcessProvenance.Current).toBeUndefined()
+    }),
+  )
   it.effect("filters disabled tools with edit aliases and ordered wildcard precedence", () =>
     Effect.gen(function* () {
       const service = yield* ToolRegistry.Service

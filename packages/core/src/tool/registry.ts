@@ -7,6 +7,7 @@ import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
 import { SessionMessage } from "../session/message"
 import { SessionSchema } from "../session/schema"
+import { SessionStore } from "../session/store"
 import type { ModelV2 } from "../model"
 import { ToolOutputStore } from "../tool-output-store"
 import { Wildcard } from "../util/wildcard"
@@ -22,6 +23,7 @@ import { ToolSafetyOutput } from "../tool-safety-output"
 import { LeanOutput } from "./lean-output"
 import { LeanSummary } from "./lean-summary"
 import { ToolModelCapture } from "./model-capture"
+import { ProcessProvenance } from "../process-provenance"
 
 export type ExecuteInput = {
   readonly sessionID: SessionSchema.ID
@@ -87,6 +89,7 @@ const registryLayer = Layer.effect(
     const native = yield* NativeBinding
     const capturedProfile = yield* ToolSafety.RuntimeProfile
     const profileLoader = yield* ToolSafety.RuntimeProfileLoader
+    const sessions = Option.getOrUndefined(yield* Effect.serviceOption(SessionStore.Service))
     type Registration = { readonly identity: object; readonly tool: AnyTool }
     const local = new Map<string, Array<{ readonly token: object; readonly registration: Registration }>>()
     const fatalToolCause = (cause: Cause.Cause<ToolFailure>) => Effect.failCause(Cause.fromReasons<never>(
@@ -131,7 +134,22 @@ const registryLayer = Layer.effect(
             assistantMessageID: input.assistantMessageID,
             toolCallID: input.call.id,
             model: input.model,
-          }).pipe(Effect.exit)
+          }).pipe(
+            Effect.provideService(ProcessProvenance.Current, {
+              sessionID: input.sessionID,
+              agentID: input.agent,
+              tool: input.call.name,
+              callID: input.call.id,
+            }),
+            // Read through the captured store at spawn time; metadata failures leave the owner empty.
+            Effect.provideService(ProcessProvenance.Owner, sessions
+              ? sessions.get(input.sessionID).pipe(
+                  Effect.map((session) => session?.title ?? ""),
+                  Effect.catchCauseIf((cause) => !Cause.hasInterrupts(cause), () => Effect.succeed("")),
+                )
+              : Effect.succeed("")),
+            Effect.exit,
+          )
           if (Exit.isFailure(attempted)) {
             // A declared tool failure may be projected; a mixed Cause must retain its defects/interruption.
             if (!attempted.cause.reasons.every((reason) => reason._tag === "Fail" && reason.error instanceof ToolFailure))
@@ -323,7 +341,7 @@ export function whollyDisabled(actions: string | ReadonlyArray<string>, rules: P
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node],
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, SessionStore.node],
 })
 
 /** Native host composition replacements: captures real Location/Event services while constructing the registry. */

@@ -30,6 +30,8 @@ import { OmniAdoption } from "./omni-adoption"
 import { OmniBackground } from "./omni-background"
 import { drain } from "./omni-output"
 import { Shell } from "./shell"
+import { ActivityMonitor } from "./activity-monitor"
+import { ProcessProvenance } from "./process-provenance"
 
 // The output pump and the drain grace live in omni-output.ts.
 export { DRAIN_GRACE_MS } from "./omni-output"
@@ -140,6 +142,9 @@ const start = Effect.fnUntraced(function* (
 ) {
   const opts = command.options
   const run = program(command)
+  const provenance = yield* ProcessProvenance.Current
+  const readOwner = yield* ProcessProvenance.Owner
+  const owner = yield* readOwner
   const policy = yield* GapPolicy
   const maxRssBytes = yield* MemoryCap
   const adoptable = yield* Effect.serviceOption(OmniAdoption.Service)
@@ -176,6 +181,7 @@ const start = Effect.fnUntraced(function* (
           maxRssBytes,
           stdin: kind(stdinCfg.stream) === "ignore" ? "closed" : "pipe",
         })
+        ActivityMonitor.observe(child, run.file, owner, provenance)
         // Claimed now, synchronously, so no output is ever kept under omni's no-consumer budget.
         const output = drain(child.output[Symbol.asyncIterator](), {
           policy,
