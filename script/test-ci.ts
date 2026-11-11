@@ -27,6 +27,7 @@ import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, workflowRun } from "./test-ci-upload.ts"
+import { shouldWaitForRunners } from "./test-ci-queue.ts"
 import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request.ts"
 import { resolveTestPackage } from "./test-ci-package.ts"
 import { testPathsAt } from "./test-ci-paths.ts"
@@ -276,7 +277,7 @@ async function waitForRunners() {
   const deadline = Date.now() + 30 * 60_000
   for (let announced = false; Date.now() < deadline; announced = true) {
     const queued: { total_count: number } = await api("GET", `repos/${repo}/actions/runs?status=queued&per_page=1`)
-    if (queued.total_count === 0) return
+    if (!shouldWaitForRunners(queued)) return
     if (!announced)
       console.log(`test-ci: ${queued.total_count} workflow runs are waiting for runners; waiting for room`)
     await Bun.sleep(30_000)
