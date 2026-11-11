@@ -13,7 +13,7 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 - Hashed source credentials for that same installation slot. The unhashed legacy id is left alone.
 - Explicit acquisition and the account receipt (`synced`, `failed`, `rate_limited`). A pull error is a failure, not an empty list.
 - Local triage: archive, mark read, remind, pane draft. None of those sends.
-- Board projection of the open project's local owner requests, and handoff of item ids to Maestro when that project is a repository.
+- Board projection of the open project's local owner requests, and handoff of item ids to Maestro when that project is a repository. Resolving a request archives only that project's row.
 
 ## Never owns
 

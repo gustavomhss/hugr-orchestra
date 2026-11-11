@@ -35,7 +35,7 @@ import { open } from "./store"
 import { known, load, loadPeople, save } from "./persist"
 import { SlackAuth } from "./slack-auth"
 import { makeSlackSync } from "./slack-sync"
-import { boardItems } from "./board"
+import { boardItems, boardScope } from "./board"
 import { makeFeedSync } from "./feed-sync"
 import type { DoorInput, Item, Person, Pulled } from "./types"
 
@@ -277,10 +277,15 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                       const people = yield* loadPeople(tx)
                       const store = open(people, saved, () => `in_${randomUUID()}`)
                       for (const item of pulled) store.upsert(item)
-                      // Resolved/withdrawn owner requests leave attention; imported history is retained.
+                      // Only this location's resolved requests leave attention. Another project's row is absent
+                      // from this projection and must stay waiting.
+                      const scope = yield* boardScope(tx, location)
                       saved.rows
                         .filter(
-                          (row) => row.source === "board" && !board.some((item) => item.externalId === row.externalId),
+                          (row) =>
+                            row.source === "board" &&
+                            scope.has(row.externalId) &&
+                            !board.some((item) => item.externalId === row.externalId),
                         )
                         .forEach((row) => store.archive(row.listId))
                       yield* save(tx, owner, store.snapshot())

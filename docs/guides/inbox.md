@@ -177,7 +177,8 @@ When a project is open, Inbox also projects that repository's local Board reques
 questions, intake cards requiring manual acceptance, and held deliveries in Review. Without an open project, that projection is absent. It does not start Board
 runners, refresh GitHub, approve work or answer a question. Use **Open decision/approval** to act on the Board.
 Questions that are answered or withdrawn, projects that are archived, and cards no longer requiring approval
-leave Inbox attention on the next refresh; their imported history is retained. A later edit of the same request
+leave Inbox attention on the next refresh of that same project; their imported history is retained. Opening
+Inbox on another project, or with no project, does not close them. A later edit of the same request
 updates the stored text in place and does not reopen read or archived attention. Board references never join an
 address-book contact or commitment.
 Owner decisions cannot be handed back to Maestro, even through a direct handoff API request.

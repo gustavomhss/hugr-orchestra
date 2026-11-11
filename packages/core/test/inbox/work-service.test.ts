@@ -3,6 +3,7 @@ import { Effect } from "effect"
 import { eq } from "drizzle-orm"
 import { Board } from "@orchestra/schema/board"
 import { BoardIssueTable, BoardProjectTable, BoardQuestionTable } from "../../src/board/sql"
+import { InboxRowTable } from "../../src/inbox/sql"
 import { ProjectTable } from "../../src/project/sql"
 import { directory, fixture, location } from "./work-service-fixture"
 
@@ -116,5 +117,76 @@ fixture(
       yield* db.update(BoardProjectTable).set({ status: "archived" }).where(eq(BoardProjectTable.id, project)).run()
       expect((yield* inbox.list()).every((entry) => !entry.waiting)).toBe(true)
       expect(calls).toHaveLength(0)
+    }),
+)
+
+fixture(
+  "opening this location does not close another project's board attention",
+  ({ inbox, db }) =>
+    Effect.gen(function* () {
+      yield* db
+        .insert(ProjectTable)
+        .values({ id: location.project.id, worktree: directory, sandboxes: [] })
+        .onConflictDoNothing()
+        .run()
+      const project = Board.ProjectID.create()
+      const foreign = Board.ProjectID.create()
+      const foreignQuestion = Board.QuestionID.create()
+      yield* db
+        .insert(BoardProjectTable)
+        .values([
+          {
+            id: project,
+            key: "HERE",
+            name: "Here",
+            goal: "This repo",
+            repo_project_id: location.project.id,
+            status: "active",
+            github_state: "off",
+            next_issue_number: 1,
+            next_epic_number: 1,
+          },
+          {
+            id: foreign,
+            key: "ELSE",
+            name: "Elsewhere",
+            goal: "Other repo",
+            status: "active",
+            github_state: "off",
+            next_issue_number: 1,
+            next_epic_number: 1,
+          },
+        ])
+        .run()
+      yield* db
+        .insert(BoardQuestionTable)
+        .values({
+          id: foreignQuestion,
+          project_id: foreign,
+          text: "Still open elsewhere",
+          options: [],
+          recommended: "",
+          blocking: true,
+          status: "open",
+        })
+        .run()
+      yield* db
+        .insert(InboxRowTable)
+        .values({
+          owner: "install",
+          source: "board",
+          external_id: `question:${foreignQuestion}`,
+          list_id: "in_foreign",
+          actor: "ELSE",
+          snippet: "Still open elsewhere",
+          thread_id: foreignQuestion,
+          reply: false,
+          open: true,
+        })
+        .run()
+      const kept = (yield* inbox.list()).find((item) => item.externalId === `question:${foreignQuestion}`)
+      expect(kept?.waiting).toBe(true)
+      yield* db.update(BoardProjectTable).set({ status: "archived" }).where(eq(BoardProjectTable.id, foreign)).run()
+      expect((yield* inbox.list()).find((item) => item.id === kept?.id)?.waiting).toBe(true)
     }),
 )
