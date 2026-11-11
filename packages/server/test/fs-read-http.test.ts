@@ -128,3 +128,24 @@ it.live("fs.read serves a file and answers the declared 400 for a path it cannot
     }
   }),
 )
+
+it.live("fs.read isolates untrusted HTML and SVG with sandbox headers and intact bytes", () =>
+  Effect.gen(function* () {
+    const tmp = yield* Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    )
+    const directory = yield* Effect.promise(() => fs.realpath(tmp.path))
+    for (const [file, content] of [
+      ["untrusted-page.html", '<script>document.title = "untrusted"</script>'],
+      ["untrusted.svg", '<svg xmlns="http://www.w3.org/2000/svg"><script>document.title = "untrusted"</script></svg>'],
+    ]) {
+      yield* Effect.promise(() => fs.writeFile(path.join(directory, file), content))
+      const served = yield* read(file, directory)
+      expect(served.status).toBe(200)
+      expect(served.headers["content-security-policy"]).toBe("sandbox")
+      expect(served.headers["x-content-type-options"]).toBe("nosniff")
+      expect(yield* served.text).toBe(content)
+    }
+  }),
+)
