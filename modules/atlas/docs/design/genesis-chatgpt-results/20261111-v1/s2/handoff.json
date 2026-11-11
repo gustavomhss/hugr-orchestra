@@ -2,11 +2,11 @@
   "schema": "genesis-session-handoff/v1",
   "campaign": "20261111-v1",
   "session": "s2",
-  "handoff_sequence": 3,
+  "handoff_sequence": 4,
   "supersedes": {
-    "commit": "973cd9951cc09e3dc8b403eb99c277e13d169f66",
+    "commit": "31d026856043e985b64fc2389979c74d08c49b88",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
-    "sha256": "ef8cb2216ed458378b1c75978c473fd8e9c0bf63612222d45a300445c9f9c07a"
+    "sha256": "4f006483d1ad8ee0181c9bda22613f87076232d653f02288deeac6da50684a1c"
   },
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "candidate_revision": null,
@@ -30,7 +30,7 @@
   "state": "BLOCKED",
   "phase": "INDEPENDENT_PREPARATION_COMPLETE_DEPENDENT_PRODUCTION_BLOCKED",
   "attempt_id": "20261111-v1-s2-preparation-01",
-  "recorded_at": "2026-11-11T14:33:28.637148+00:00",
+  "recorded_at": "2026-11-11 14:35:01 UTC",
   "dependencies": [
     {
       "session": "s1",
@@ -55,20 +55,29 @@
     },
     {
       "session": "s5",
-      "observed_at": "2026-11-11 14:24:53 UTC",
-      "consumed_commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+      "observed_at": "2026-11-11 14:35:01 UTC",
+      "consumed_commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
       "handoff_ref": {
-        "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+        "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
-        "sha256": "3c14f1033c0387e6ddf76f857a2d88d67db53519ff538940a83cfab7277b6558"
+        "sha256": "e24973d9472d3abb48a634424919daf02731f70bb145ff2a021efd50433f98f1"
       },
-      "handoff_sequence": 2,
+      "handoff_sequence": 3,
       "state": "WORKING",
       "scope_revision": null,
-      "criteria_revision": null,
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
       "candidate_revision": null,
       "protocol_binding_valid": true,
-      "dependent_production_released": false
+      "dependent_production_released": false,
+      "remaining_s5_blockers": [
+        "S1 complete semantic inventory, needs/artifacts/cases and interface freeze not yet published; 50-row catalog now received and mechanically matched.",
+        "S5 bootstrap allocation needs at least 7 units for 3 observed prep packets + 2 initial judges + 2 protected corrections; currently 6.",
+        "S2-S4 checkpoints contain no executable integrated candidate, producer layer, recovery or host result."
+      ]
     }
   ],
   "resolved_blockers": [
@@ -394,7 +403,21 @@
       0
     ],
     "shared_code_changed": false,
-    "ci_runs": []
+    "ci_runs": [],
+    "previous_handoff_readback": {
+      "commit": "31d026856043e985b64fc2389979c74d08c49b88",
+      "sha256": "4f006483d1ad8ee0181c9bda22613f87076232d653f02288deeac6da50684a1c",
+      "git_blob": "e7d10c63a0ce4b5bedff8028eac69a0c9ea1c6b4",
+      "matches_local": true
+    },
+    "payload_readback_receipt_sha256": "1839d8ed8412dbbab324a495b5e37504ea5f0a6fc4a8b6badd20b40125ddb8a2",
+    "last_dependency_head_observation": {
+      "observed_at": "2026-11-11 14:35:01 UTC",
+      "s1": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "s5": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
+      "s1_scope_still_unavailable": true,
+      "s5_integrated_candidate_still_unavailable": true
+    }
   },
   "blockers": [
     {
@@ -420,5 +443,6 @@
   ],
   "next_action": "S1 publishes the complete semantic inventory, authority, frozen interfaces/file ownership and applicable production quota. S5 resolves shared proposals and pins the integrated implementation, reviewer pair/epoch and contract. S2 then completes historical reuse fit, executes the native producer/importer and controls, delivers the whole L1 manifest, and advances only after both S5 acceptances. No new native packet is available under bootstrap-v1/s2.",
   "local_dod_complete": false,
-  "global_completion_claim": false
+  "global_completion_claim": false,
+  "supersession_reason": "S5 sequence 3 arrived during final readback. Exact protocol/catalog bindings now match, but scope, quota and integrated implementation remain unavailable. No new model packet or dependent production was issued."
 }
