@@ -13,6 +13,8 @@
     "typecheck": "tsgo --noEmit"
   },
   "exports": {
+    "./process-provenance": "./src/process-provenance.ts",
+    "./activity-monitor": "./src/activity-monitor.ts",
     "./account": "./src/account.ts",
     "./account/sql": "./src/account/sql.ts",
     "./actions": "./src/actions.ts",
