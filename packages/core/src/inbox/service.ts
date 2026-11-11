@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto"
 import { Clock, Context, Effect, Layer, Schema, Semaphore } from "effect"
 import { Inbox as InboxSchema } from "@orchestra/schema/inbox"
 import { pull as channelPull, release as channelRelease } from "./channel"
+import { adoptCredentials, adoptRows, installOwner } from "./install"
 import {
   accounts,
   collectWork,
@@ -129,7 +130,8 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
       const location = yield* Location.Service
       const credentials = yield* Credential.Service
       const slack = yield* SlackAuth.Service
-      const owner = JSON.stringify([location.project.id, location.directory, location.workspaceID ?? null])
+      const owner = installOwner
+      yield* adoptCredentials(credentials)
       const lock = Semaphore.makeUnsafe(1)
       const sync = makeSlackSync({
         db: database.db,
@@ -145,7 +147,10 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
           }),
       })
       const slackOperation = <A, E>(operation: Effect.Effect<A, E>) =>
-        lock.withPermit(operation).pipe(Effect.mapError(() => new InboxError({ reason: "unavailable" })))
+        adoptRows(database.db).pipe(
+          Effect.andThen(lock.withPermit(operation)),
+          Effect.mapError(() => new InboxError({ reason: "unavailable" })),
+        )
       const feeds = makeFeedSync({
         db: database.db,
         owner,
@@ -223,9 +228,7 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
         list: () =>
           lock.withPermit(
             Effect.gen(function* () {
-              const channels = yield* channelPull(database.db, location, credentials).pipe(
-                Effect.catch(() => Effect.succeed([])),
-              )
+              const channels = yield* channelPull(database.db, location, credentials)
               const started = yield* Clock.currentTimeMillis
               const jira = (yield* accounts(credentials, owner)).find((account) => account.source === "jira")
               const cooling = yield* database.db

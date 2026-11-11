@@ -6,6 +6,18 @@ import { Failure, decode, type RPC } from "../../channel/http"
 import type { Acquisition, Message, Read, Send, Update } from "../../channel/schema"
 
 export const endpoint = "https://slack.com/api"
+const systemSlack = (subtype: string | undefined) =>
+  subtype === "channel_join" ||
+  subtype === "channel_leave" ||
+  subtype === "channel_topic" ||
+  subtype === "channel_purpose" ||
+  subtype === "channel_name" ||
+  subtype === "channel_archive" ||
+  subtype === "channel_unarchive" ||
+  subtype === "group_join" ||
+  subtype === "group_leave" ||
+  subtype === "pinned_item" ||
+  subtype === "unpinned_item"
 const ChannelID = Schema.String.check(Schema.isPattern(/^[CGD][A-Z0-9]{1,63}(?![\s\S])/))
 const Timestamp = Schema.String.check(Schema.isPattern(/^[0-9]{1,20}\.[0-9]{1,10}(?![\s\S])/))
 export const Resource = Schema.Struct({ channelID: ChannelID,
@@ -14,6 +26,7 @@ export const Resource = Schema.Struct({ channelID: ChannelID,
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 const RemoteMessage = Schema.Struct({ ts: Timestamp, text: Schema.String,
   user: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  subtype: Schema.optionalKey(Schema.String),
   thread_ts: Schema.optionalKey(Timestamp),
   reactions: Schema.optionalKey(Schema.Array(Schema.Struct({ name: Schema.String, users: Schema.Array(Schema.String) }))),
 })
@@ -90,7 +103,7 @@ export const make = Effect.fn("CapabilitySlack.make")(function* (rpc: RPC, resou
     if (value.has_more && !next && !messageID) return yield* new Failure({ reason: "invalid_response" })
     if (next && next === cursor) return yield* new Failure({ reason: "invalid_response" })
     return { channelID: target.channelID, messages: value.messages.filter((message) =>
-      messageID || !threadID || message.ts !== threadID).map(project),
+      !systemSlack(message.subtype) && (messageID || !threadID || message.ts !== threadID)).map(project),
       hasMore: !!value.has_more || !!next, ...(next ? { cursor: next } : {}),
     } satisfies Acquisition
   })

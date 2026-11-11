@@ -40,7 +40,7 @@ export const pull = Effect.fn("InboxChannel.pull")(function* (
   // Discord acquisition now uses explicit, connection-bound Inbox selection and durable sync receipts.
   const pages = yield* Effect.forEach(
     targets.filter((target) => target.provider !== "discord"),
-    (target) => page(credentials, target).pipe(Effect.catch(() => Effect.succeed([]))),
+    (target) => page(credentials, target),
   )
   return pages.flat()
 })

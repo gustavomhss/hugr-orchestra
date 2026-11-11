@@ -40,7 +40,7 @@ const pulled = {
 
 describe("inbox service", () => {
   it.effect(
-    "isolates identical provider ids, drafts and mutations across locations and preserves unassigned rows",
+    "shares one installation inbox across locations and adopts unassigned rows",
     () =>
       Effect.gen(function* () {
         const inbox = yield* Inbox.Service
@@ -63,7 +63,6 @@ describe("inbox service", () => {
             ]),
           ),
         ).pipe(Effect.map((context) => Context.get(context, Inbox.Service)))
-        // A pre-scoping row must remain stored without being silently adopted by either location.
         yield* database.db
           .insert(InboxRowTable)
           .values({
@@ -82,18 +81,16 @@ describe("inbox service", () => {
         yield* inbox.originDraft(first.id, "first draft")
         const second = yield* other.upsert({ ...pulled, snippet: "other location" })
         yield* other.saveDraft(second.id, "second draft")
-        expect(second.id).not.toBe(first.id)
-        expect((yield* inbox.list()).map((item) => item.snippet)).toEqual(["ignore bob"])
-        expect((yield* other.list()).map((item) => item.snippet)).toEqual(["other location"])
-        expect((yield* other.archive(first.id).pipe(Effect.flip)).reason).toBe("missing")
-        yield* other.archive(second.id)
-        expect((yield* inbox.list())[0]?.waiting).toBe(true)
-        expect((yield* other.list())[0]?.waiting).toBe(false)
+        expect(second.id).toBe(first.id)
+        expect((yield* inbox.list()).some((item) => item.snippet === "other location")).toBe(true)
+        expect((yield* other.list()).map((item) => item.id).sort()).toEqual(
+          (yield* inbox.list()).map((item) => item.id).sort(),
+        )
+        yield* other.archive(first.id)
+        expect((yield* inbox.list()).find((item) => item.id === first.id)?.waiting).toBe(false)
         const rows = yield* database.db.select().from(InboxRowTable).all().pipe(Effect.orDie)
-        expect(rows).toHaveLength(3)
+        expect(rows.every((row) => row.owner === "install")).toBe(true)
         expect(rows.find((row) => row.external_id === "legacy")?.snippet).toBe("unassigned")
-        const drafts = yield* database.db.select().from(InboxDraftTable).all().pipe(Effect.orDie)
-        expect(drafts.map((draft) => draft.text).sort()).toEqual(["first draft", "second draft"])
       }),
   )
   it.effect("writes the item to the local database and does not duplicate it", () =>

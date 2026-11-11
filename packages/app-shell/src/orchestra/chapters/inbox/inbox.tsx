@@ -1,6 +1,6 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { Icon } from "@orchestra/ui/icon"
-import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
@@ -67,30 +67,14 @@ export default function Inbox(props: ChapterPageProps) {
     waiting: shown(store.items, "waiting", store.source, store.query, store.kind).length,
     all: shown(store.items, "all", store.source, store.query, store.kind).length,
   }))
-  // The inbox belongs to the installation, not the project selected in the sidebar.
-  const [installDirectory, setInstallDirectory] = createSignal("")
-  const directory = () => (preview ? props.directory : installDirectory())
+  // Storage is the installation inbox. A selected project only scopes Board projection and handoff.
+  const directory = () => props.directory
   const location = () => ({ directory: directory() })
   const refresh = () => setStore("revision", (value) => value + 1)
 
   createEffect(() => {
-    if (preview) return
-    const controller = new AbortController()
-    onCleanup(() => controller.abort())
-    void sdk()
-      .orchestra.location.paths({ signal: controller.signal })
-      .then((result) => {
-        if (!controller.signal.aborted) setInstallDirectory(result.home)
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setStore({ failed: true, loading: false })
-      })
-  })
-
-  createEffect(() => {
-    const current = directory()
+    directory()
     store.revision
-    if (!current && !preview) return
     const controller = new AbortController()
     onCleanup(() => controller.abort())
     setStore({ loading: true, failed: false })
@@ -100,7 +84,7 @@ export default function Inbox(props: ChapterPageProps) {
         if (!controller.signal.aborted) setStore({ items, loading: false })
         return
       }
-      const result = await api().list({ location: { directory: current } }, { signal: controller.signal })
+      const result = await api().list({ location: location() }, { signal: controller.signal })
       if (!controller.signal.aborted) setStore({ items: result.data, loading: false })
     })().catch(() => !controller.signal.aborted && setStore({ loading: false, failed: true }))
   })
@@ -169,7 +153,6 @@ export default function Inbox(props: ChapterPageProps) {
               class="inbox-icon-button"
               aria-label={t("orchestra.inbox.sources")}
               title={t("orchestra.inbox.sources")}
-              disabled={!directory() && !preview}
               onClick={() =>
                 dialog.show(() => (
                   <InboxConnections
@@ -197,16 +180,7 @@ export default function Inbox(props: ChapterPageProps) {
           </div>
         }
       >
-        <Show
-          when={directory() || preview}
-          fallback={
-            <div class="inbox-empty">
-              <InboxMark />
-              <h2>{t(store.failed ? "orchestra.inbox.failed" : "orchestra.inbox.loading")}</h2>
-            </div>
-          }
-        >
-          <Show when={preview}>
+        <Show when={preview}>
             <div class="inbox-preview-note">
               <span>{t("orchestra.inbox.designPreview")}</span>
               {t("orchestra.inbox.previewBody")}
@@ -454,7 +428,6 @@ export default function Inbox(props: ChapterPageProps) {
               )}
             </Show>
           </div>
-        </Show>
       </MxPage>
     </div>
   )

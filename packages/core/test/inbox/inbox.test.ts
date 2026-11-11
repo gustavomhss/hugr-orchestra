@@ -357,6 +357,22 @@ describe("inbox", () => {
     const proved = provenCi(notes, "ada", evidence)
     const items = githubItems(notes, "ada", proved)
     expect(items.map((item) => item.externalId)).toEqual(["own", "suite", "review"])
+    const mixed = {
+      pulls: evidence.pulls,
+      suites: {
+        "/repos/a/b/check-suites/4": {
+          pull_requests: [
+            { url: "https://api.github.com/repos/a/b/pulls/2" },
+            { url: "https://api.github.com/repos/a/b/pulls/9" },
+          ],
+        },
+      },
+      commits: evidence.commits,
+    }
+    expect(githubItems(notes, "ada", provenCi(notes, "ada", mixed)).map((item) => item.externalId)).toEqual([
+      "own",
+      "review",
+    ])
     expect(items.find((item) => item.externalId === "own")).toMatchObject({
       actor: "a/b",
       threadId: "https://api.github.com/repos/a/b/pulls/2",

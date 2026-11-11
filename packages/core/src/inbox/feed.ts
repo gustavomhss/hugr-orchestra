@@ -257,7 +257,7 @@ export const fetchFeed = Effect.fn("InboxFeed.fetch")(function* (
                   new Failure({
                     reason: "http",
                     status,
-                    ...(status === 429
+                    ...((status === 429 || ((status === 403 || status === 503) && res.headers["retry-after"]))
                       ? { rateLimited: true, retryAfterMs: retryAfter(res.headers["retry-after"]) }
                       : {}),
                   }),

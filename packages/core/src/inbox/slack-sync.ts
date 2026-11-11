@@ -5,6 +5,7 @@ import type { Database } from "../database/database"
 import type { SlackAuth } from "./slack-auth"
 import { decode, Failure, type Request } from "../capability/channel/http"
 import { InboxSlackTable } from "./sql"
+import { slackSystem } from "./source/slack"
 import type { Pulled } from "./types"
 
 const Job = Schema.Struct({
@@ -39,6 +40,7 @@ const Message = Schema.Struct({
   text: Schema.optionalKey(Schema.String),
   user: Schema.optionalKey(Schema.String),
   bot_id: Schema.optionalKey(Schema.String),
+  subtype: Schema.optionalKey(Schema.String),
   thread_ts: Schema.optionalKey(Schema.String),
   reply_count: Schema.optionalKey(Schema.Int),
 })
@@ -221,7 +223,7 @@ export function makeSlackSync(input: {
             ]
             if (jobs.length > 2000) return yield* new Failure({ reason: "response_limit" })
             const items = page.messages
-              .filter((message) => message.text && (message.user || message.bot_id))
+              .filter((message) => message.text && (message.user || message.bot_id) && !slackSystem(message.subtype))
               .map(
                 (message): Pulled => ({
                   source: "slack",

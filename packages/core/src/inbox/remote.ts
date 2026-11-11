@@ -21,6 +21,13 @@ import type { Pulled, SourceKind } from "./types"
 type AccountSource = Inbox.AccountSource
 
 const transport = { timeoutMs: 10_000, maxResponseBytes: 256 * 1024 }
+
+export function httpsOrigin(input: string) {
+  if (!URL.canParse(input)) return
+  const url = new URL(input)
+  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/") return
+  return url
+}
 const integrationOf = {
   calendar: "inbox.calendar",
   mail: "inbox.mail",
@@ -179,10 +186,8 @@ export const collectWork = Effect.fn("InboxRemote.collectWork")(function* (
   if (source === "gitlab") {
     const configuration = yield* gitlabConfiguration(credentials, owner)
     const origin = saved.site || "https://gitlab.com"
-    if (!URL.canParse(origin)) return yield* new Failure({ reason: "invalid_response" })
-    const url = new URL(origin)
-    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/")
-      return yield* new Failure({ reason: "invalid_response" })
+    const url = httpsOrigin(origin)
+    if (!url) return yield* new Failure({ reason: "invalid_response" })
     const items = yield* gitlabTodos(
       (input) => requestWithMetadata(url.origin, `Bearer ${saved.token}`, input, options),
       url.origin,
@@ -648,12 +653,12 @@ function read(
         yield* assignedIssues((input) => request("https://api.linear.app", saved.token, input, options)),
       )
     }
-    const site = saved.site
     // Missing site or email is a configuration failure, not an empty mailbox. Returning [] here is
     // indistinguishable from a genuine empty search and hides the acquisition from the account receipt.
+    const site = httpsOrigin(saved.site ?? "")
     if (!site || !saved.email) return yield* new Failure({ reason: "invalid_response" })
     const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
-    return workItems("jira", yield* search((input) => request(site, `Basic ${basic}`, input, transport)))
+    return workItems("jira", yield* search((input) => request(site.origin, `Basic ${basic}`, input, transport)))
   })
 }
 
@@ -732,11 +737,11 @@ function postFor(
       ),
     )
   }
-  if (!saved.site) return Effect.fail(new Error("unavailable"))
-  if (!saved.email) return Effect.fail(new Error("unavailable"))
+  const site = httpsOrigin(saved.site ?? "")
+  if (!site || !saved.email) return Effect.fail(new Error("unavailable"))
   const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
   return request(
-    saved.site,
+    site.origin,
     `Basic ${basic}`,
     {
       method: "POST",

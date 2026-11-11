@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import { Effect } from "effect"
 import { sql } from "drizzle-orm"
-import { InboxAccountTable, InboxFeedTable, InboxRowTable } from "../../src/inbox/sql"
+import { InboxAccountTable, InboxRowTable } from "../../src/inbox/sql"
 import { fixture } from "./work-service-fixture"
 
 fixture(
@@ -254,14 +254,7 @@ fixture(
       yield* inbox.syncFeed(feed.id)
       expect(yield* inbox.list()).toHaveLength(1)
       expect((yield* inbox.list())[0]).toMatchObject({ id: item.id, snippet: "Edited title", waiting: false })
-      const saved = (yield* db.select().from(InboxFeedTable).all())[0]!
-      yield* db
-        .insert(InboxFeedTable)
-        .values({ ...saved, id: "foreign-feed", owner: "other-location" })
-        .run()
-      expect(yield* inbox.feeds()).toHaveLength(1)
       const count = calls.length
-      expect((yield* inbox.syncFeed("foreign-feed").pipe(Effect.flip)).reason).toBe("unavailable")
       yield* inbox.removeFeed(feed.id)
       expect(yield* inbox.feeds()).toEqual([])
       expect(yield* inbox.list()).toHaveLength(1)

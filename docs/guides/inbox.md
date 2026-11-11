@@ -1,7 +1,7 @@
 # Inbox
 
 Open **Inbox** in the main navigation. It is separate from Flight Engineer and does not need a meeting running.
-It does not follow the open project. Items live in this installation's local database.
+It does not follow the open project. Messages, credentials and drafts live in this installation's database.
 
 ## Find your next move
 
@@ -133,9 +133,9 @@ credential, not the Slack installation or provider grant. Revoke provider author
 Remote-server login is not supported by this loopback flow; the button is disabled for non-loopback server URLs.
 The configuration token used by a maintainer to register the app is never an end user's runtime credential.
 
-Inbox messages, drafts and egress are isolated by project/directory/workspace. Existing rows from before this
-isolation remain in the database under an unassigned owner; Orchestra does not guess which project owns them or
-silently display them in every project. There is not yet a UI to assign those legacy records to a project.
+Inbox messages, drafts and credentials belong to this installation, not to the project open in the sidebar.
+Older rows stored under a project or with no owner are moved into that installation inbox. Disconnect removes
+the installation credential. It does not revoke the provider grant.
 
 ### Mail, Teams and Discord collection
 
@@ -170,8 +170,8 @@ snapshot as a new connection; deduplication is within a connection, not an unver
 
 ### Project Board
 
-Opening Inbox projects local owner requests from Board projects linked to the selected repository: open
-questions, intake cards requiring manual acceptance, and held deliveries in Review. It does not start Board
+When a project is open, Inbox also projects that repository's local Board requests: open
+questions, intake cards requiring manual acceptance, and held deliveries in Review. Without an open project, that projection is absent. It does not start Board
 runners, refresh GitHub, approve work or answer a question. Use **Open decision/approval** to act on the Board.
 Questions that are answered or withdrawn, projects that are archived, and cards no longer requiring approval
 leave Inbox attention on the next refresh; their imported history is retained. A later edit of the same request
