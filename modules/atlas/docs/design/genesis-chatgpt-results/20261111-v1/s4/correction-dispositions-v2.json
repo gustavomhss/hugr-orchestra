@@ -1,0 +1,31 @@
+{
+  "schema": "genesis-correction-dispositions/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "recorded_at": "2026-11-11 14:35:04 UTC",
+  "dispositions": [
+    {
+      "request_id": "S4-DEP-S1-HASH-001",
+      "former_blocker": "S4-B-S1-HASH",
+      "state": "RESOLVED_BY_OWNER_SUCCESSOR",
+      "evidence": {
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+      },
+      "correct_protocol_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "meaning": "Protocol metadata corrected; this does not accept inventory, implementation, migration or CI."
+    }
+  ],
+  "binding_s5_decisions_received": [],
+  "s5_latest_observation": {
+    "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+    "sha256": "e24973d9472d3abb48a634424919daf02731f70bb145ff2a021efd50433f98f1"
+  },
+  "preserve_previous_request": {
+    "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/correction-requests.json",
+    "sha256": "cc728a2c48b19cb9bf2997c39d3dc5fec46cf7e97235252e433c441014a9d905"
+  }
+}
