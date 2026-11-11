@@ -40,4 +40,13 @@ describe("toolkit", () => {
       'Unknown target "amiga"',
     )
   })
+
+  test("prefetch accepts an explicit review pin without changing the default backend selection", async () => {
+    const result = await run(prefetch({ engines: ["jscpd"], target: Option.none(), json: true }) as never)
+    expect(JSON.parse(result.out)).toEqual([expect.objectContaining({ engine: "jscpd", status: "unsupported", reason: "test-host" })])
+    expect(String(result.error)).toContain("backend toolkit prefetch failed:")
+    const defaults = await run(prefetch({ engines: [], target: Option.none(), json: true }) as never)
+    expect(JSON.parse(defaults.out).some((state: { engine: string }) => state.engine === "jscpd")).toBe(false)
+  })
+
 })
