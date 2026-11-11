@@ -64,6 +64,7 @@ const steps = [
   // Bun runs Orchestra (the TUI's server runs in a Bun Worker): its contract and the WP-H hardening are fast-gate steps.
   { name: "TS contract (bun)", cmd: npx("bun@1", "bindings/node/test/contract.mjs") },
   { name: "TS hardening (bun)", cmd: npx("bun@1", "bindings/node/test/hardening.mjs") },
+  { name: "tree identity (bun)", cmd: npx("bun@1", "test", "bindings/node/test/tree-identity.test.ts") },
 
   // Release only.
   { name: "musl supervisor", on: ["linux"], release: true, cmd: ["cargo", "build", "--release", "-p", "omni-supervisor", "--target", "x86_64-unknown-linux-musl"] },

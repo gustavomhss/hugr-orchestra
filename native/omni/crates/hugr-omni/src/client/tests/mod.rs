@@ -13,6 +13,7 @@ mod identity;
 mod ledger;
 mod lifetime;
 mod lookup;
+mod tree_id;
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]

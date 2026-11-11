@@ -38,6 +38,10 @@ enum Cause {
 }
 
 impl Life {
+    pub(super) fn tree_id(&self) -> String {
+        self.tree.tree_id()
+    }
+
     pub(super) fn new(tree: Tree) -> Life {
         Life {
             tree,

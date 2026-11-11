@@ -38,6 +38,7 @@ type PtyOption = true | { cols?: number; rows?: number };   // default 80 x 24
 
 interface Child extends AsyncDisposable {       // what pipe and PTY children share
   readonly pid: number;
+  readonly treeId: string;                     // opaque host-local tree identity (amendment below)
   readonly output: AsyncIterable<Chunk>;        // single consumer (see §4)
   lines(): AsyncIterable<Line>;                 // line view of the same single consumer
   readonly droppedBytes: { stdout: number; stderr: number };   // pty output counts as stdout
@@ -73,7 +74,7 @@ class OmniError extends Error {
 
 run · spawn · cwd · environment (`env`, `inheritEnv`) · terminal (`pty`, `resize`) · timeout · grace ·
 cancellation · stdin (`input` for run; `stdin: "pipe"`, `write`, `closeStdin` for spawn) · output limit ·
-text vs bytes · output (`output`, `lines`, `mergeStderr`, `droppedBytes`) · Child (`pid`, `wait`, `stop`, `processes`) ·
+text vs bytes · output (`output`, `lines`, `mergeStderr`, `droppedBytes`) · Child (`pid`, `treeId`, `wait`, `stop`, `processes`) ·
 Exit / RunResult · OmniError.
 
 ## 3. Starting a process
@@ -218,7 +219,8 @@ Exit / RunResult · OmniError.
   `spawn()` → `PipeChild`, `spawn_pty()` → `PtyChild` (both deref to `Child`), `run().await` → `Result<RunOutput, Error>`;
   `Error` with `code()` (`ErrorCode`, `#[non_exhaustive]`) and `result()`; cancellation via `cancel_on(token)` →
   `Err(e)` with `e.code() == ErrorCode::Aborted` and the partial output in `e.result()`; `output()` and `lines()` each
-  claim the single consumer; `processes().await` → `Vec<ProcessInfo>`. Python: `processes()` → `list[ProcessInfo]`
+  claim the single consumer; `tree_id()` → `String` exposes the same opaque tree identity;
+  `processes().await` → `Vec<ProcessInfo>`. Python: `processes()` → `list[ProcessInfo]`
   (`pid`, `parent_pid`, `name`).
   **`Drop` force-kills the tree immediately and does not block**; reaping runs on a dedicated thread, not on
   the tokio runtime, so it also works after the runtime shut down (INV-16).
@@ -285,3 +287,15 @@ program is started, not what it receives.
   lines; a fixture receives `"a b" c\"d %PATH% x&y` as four arguments; each refusal) and
   `C-SPAWN-02.verbatim-unix.json` (Linux, macOS: refused). The C-SPAWN-02 item covers it: arguments arrive as the
   caller wrote them, here as a command line, and the library interprets no metacharacter.
+
+## Amendment: native tree identity (lead-approved, 2026-11-11)
+
+`Child.treeId` (Rust `Child::tree_id()`) is an opaque, host-local identity available for both pipe and PTY children.
+It renders the existing supervisor generation and tree id as decimal u64 strings separated by `:`, preserving
+every digit without JavaScript number conversion. Consumers treat the complete string as opaque. It is unique
+within one native host process across supervisor generations, not across host restarts.
+
+Reading it performs no I/O and changes no output, stdin or lifecycle state. It remains stable after root exit
+and after stop. It is not a PID, authorization or control token, and the supervisor generation does not confirm
+current membership, paths or dirty state for an action. This adds no wire-protocol version or message change.
+The integration contract is Orchestra `docs/specs/activity/NATIVE-IDENTITY.md`.
