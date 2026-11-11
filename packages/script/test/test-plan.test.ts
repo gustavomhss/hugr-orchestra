@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
 import { balance, packageLanes, packageShards, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
 
 describe("test shard planner", () => {
@@ -57,6 +58,20 @@ describe("test shard planner", () => {
     const weights = weigh("packages/core", { "test/session-runner.test.ts": 60 }, 1200)
     expect(weights.find((entry) => entry.name === "test/session-runner.test.ts")?.weight).toBe(60)
     expect(weights.every((entry) => entry.weight > 0)).toBe(true)
+  })
+
+  test("a zero measurement does not stay zero when a floor is set", () => {
+    const weights = weigh("packages/core", { "test/session-runner.test.ts": 0 }, 1200, 1)
+    expect(weights.find((entry) => entry.name === "test/session-runner.test.ts")?.weight).toBe(1)
+    expect(weights.every((entry) => entry.weight >= 1)).toBe(true)
+  })
+
+  test("windows core does not pile untimed files into one shard", () => {
+    const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const shards = packageShards(timings, "packages/core", "windows")
+    const weights = weigh("packages/core", timings.files["packages/core:windows"] ?? {}, timings.totals["packages/core"]?.windows ?? 0, 1)
+    const bins = balance(weights, shards)
+    expect(Math.max(...bins.map((bin) => bin.names.length))).toBeLessThanOrEqual(120)
   })
 
   test("reads per-file times from Bun's JUnit suites and ignores describe blocks", () => {
