@@ -32,6 +32,7 @@ function stub(
     history?: (waits: number) => unknown[]
     stream?: unknown[]
     permissions?: unknown[]
+    promptError?: string
     waitMs?: number
     forkTo?: string
   } = {},
@@ -50,6 +51,8 @@ function stub(
     if (generic === "POST /session") return Response.json({ data: session("ses_1") })
     if (generic === "GET /session/:id") return Response.json({ data: session(route.split("/")[2]) })
     if (generic === "POST /session/:id/fork") return Response.json({ data: session(options.forkTo ?? "ses_fork") })
+    if ((generic === "POST /session/:id/prompt" || generic === "POST /session/:id/command") && options.promptError)
+      return Response.json({ _tag: "ConflictError", message: options.promptError }, { status: 409 })
     if (generic === "POST /session/:id/prompt" || generic === "POST /session/:id/command")
       return Response.json({
         data: {
@@ -138,6 +141,17 @@ describe("run", () => {
       expect(s.calls.find((call) => call.route === "POST /session/ses_1/prompt")?.body).toMatchObject({
         prompt: { text: "hello" },
       })
+    } finally {
+      s.server.stop(true)
+    }
+  })
+
+  test("reports a declared client submit failure as a failed run", async () => {
+    const s = stub({ promptError: "submit refused" })
+    try {
+      const result = await exec(s.url, { json: true })
+      expect(result.ok).toBe(false)
+      expect(JSON.parse(result.out).data.message).toBe("submit refused")
     } finally {
       s.server.stop(true)
     }

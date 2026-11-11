@@ -63,6 +63,33 @@ describe("turn lifecycle", () => {
     },
   )
 
+  test("normalizes a declared client submit failure while preserving its cause and cleanup", async () => {
+    const state = { polls: 0 }
+    const server = stubServer((request) => {
+      const url = new URL(request.url)
+      if (url.pathname.endsWith("/history")) return Response.json({ data: [], hasMore: false })
+      if (url.pathname.endsWith("/event")) return new Response("", { headers: { "content-type": "text/event-stream" } })
+      if (url.pathname === "/api/permission/request") { state.polls++; return Response.json({ location: {}, data: [] }) }
+      return Response.json({ _tag: "ConflictError", message: "submit refused" }, { status: 409 })
+    })
+    const client = Orchestra.make({ baseUrl: clientUrl(server) })
+    try {
+      const failure = await runTurn(client, {
+        sessionID: "ses_1", submit: (signal) => client.sessions.prompt({ sessionID: "ses_1", prompt: { text: "hello" } }, { signal }),
+        onEvent: () => {}, onPermission: async () => "reject",
+      }).catch((error: unknown) => error)
+      expect(failure).toBeInstanceOf(Error)
+      if (!(failure instanceof Error)) throw new Error("Expected a normalized turn failure")
+      expect(failure.message).toBe("submit refused")
+      expect(failure.cause).toMatchObject({ _tag: "ConflictError", message: "submit refused" })
+      const stopped = state.polls
+      await Bun.sleep(450)
+      expect(state.polls).toBe(stopped)
+    } finally {
+      server.stop(true)
+    }
+  })
+
   test("caller abort cancels an outstanding wait and the submit receives the linked signal", async () => {
     const controller = new AbortController()
     const state: { signal?: AbortSignal } = {}
