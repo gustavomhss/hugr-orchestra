@@ -1,0 +1,16 @@
+Preserved task-relevant messages from principal /root to producer /root/producer_a.
+
+MESSAGE — common scope and completeness
+Set every artifact.scope to orchestra.s1 (one common package scope); stable key s1.core.* is fine. Keep local body paths bodies/*.md in your fragment; principal rewrites to unique producers/a/bodies paths when packaging. Parent AGENTS beyond root: packages root has no AGENTS entry, docs tree will be checked; only Core nested tool/AGENTS known. Do not weaken completeness to filename classification: flag substantive families needing deeper source read. All 2236 population hashes verified and branch claimed f6cc045d3b255dac0e2d37fe1eacbf102ece1cdf. Continue.
+
+MESSAGE — exact source evidence
+For upcoming tool-free judges, also produce review-evidence.md with decisive exact source excerpts (path, blob, line spans) covering substantive claims in each L1 body. Keep excerpts compact and exact; not a link-only list. This supports existing fidelity criterion, no new semantic task. Preserve real observed conflict if applicable, with both sides.
+
+MESSAGE — review logistics
+Next review logistics only: after your final L1 outputs, I will freeze copies/hashes and create persistent tool-free judges. To avoid routing huge body text through root twice, I may ask you to transmit your frozen dossier verbatim to both judge handles via collaboration.followup_task; you remain producer/transporter, never judge, and will not receive reserved oracle. Do not dispatch yet. Keep review-evidence compact but sufficient per body and include an artifact→excerpt map.
+
+MESSAGE — compact review projection
+For judges preserve full evidence archive but also produce review-evidence-compact.md with decisive exact source spans and artifact→excerpt mapping; target ~40–60KB for 16 bodies if sufficient, not an arbitrary cap. Avoid repeated boilerplate/full-file dumps; retain key branches showing limits/conflicts. We can supply targeted missing evidence on request. Do not transmit until I verify/freeze.
+
+MESSAGE — steering provenance
+Before final freeze, preserve all task-relevant steering messages in request-steering.txt (including common scope, evidence and compact projection requests); bind that as recipe supplement if needed. Initial request.txt remains unchanged. This closes provenance for actual instructions used; no need to paste complete conversation history.

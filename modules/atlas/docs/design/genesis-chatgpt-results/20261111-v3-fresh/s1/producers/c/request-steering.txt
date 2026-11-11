@@ -1,0 +1,17 @@
+Message from /root:
+Use common scope orchestra.s1 for all artifacts; your proposed stable s1.runtime.*.l1 keys and producers/c/bodies paths are fine. No need environment probing further. All 2236 paths/hash verified; branch claimed f6cc045d3b255dac0e2d37fe1eacbf102ece1cdf. Preserve genuine source gaps; classification-only support must not imply semantic acceptance.
+
+Message from /root:
+Also deliver review-evidence.md: compact exact source excerpts with path/blob/line spans supporting each L1 body for tool-free judges. Evidence must be original bytes/excerpts, not links only. Existing fidelity requirement. Include key interpreter/SQLite/provider/HTTP recorder refusal boundaries; no new semantic scope.
+
+Message from /root:
+Review logistics: after principal freezes and verifies L1, I may ask you to transport your exact frozen body/evidence dossier verbatim to both persistent tool-free judge handles via collaboration.followup_task. You remain producer/transporter, never judge, no reserved oracle access. Do not dispatch yet. Ensure review-evidence has compact artifact→excerpt mapping and actual exact source snippets.
+
+Message from /root:
+Preserve full ~97KB evidence archive. For judge delivery also make review-evidence-compact.md containing decisive exact source spans for bounded claims, approximately 25–40KB if sufficient (not a completeness cap). Avoid repeated context, fixture payloads or full manifest sections when narrow code proves it; artifact→excerpt map stays. Original source/full evidence remain intact. No judge transmission yet; final hashes after this economic projection.
+
+Message from /root:
+Before final freeze, preserve task-relevant steering in request-steering.txt alongside unchanged initial request.txt, including common scope/evidence/compact projection instructions; bind recipe supplement or recipe.md to actual instructions used. No full conversation history needed.
+
+Message from /root:
+The ~52KB compact evidence observed is acceptable if decisive spans remain. Stop optional shrinking; finish exact bindings/checks and deliver. We need judge review next; size guidance is not an extra gate.

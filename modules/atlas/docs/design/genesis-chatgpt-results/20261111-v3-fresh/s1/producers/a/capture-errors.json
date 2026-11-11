@@ -1,0 +1,13 @@
+{
+  "schema": "genesis-source-observation-errors/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "attempts": [
+    {"path": "packages/core/src/tool/apply_patch.ts", "result": "GitHub connector 404", "disposition": "Producer spelling error; actual assigned source packages/core/src/tool/apply-patch.ts was captured and read. No claim that the implementation was absent."},
+    {"path": "packages/core/src/rag-studio/studio.ts", "result": "GitHub connector 404", "disposition": "Producer guessed a nonexistent path; actual assigned Core family member packages/core/src/rag-studio/sql.ts was captured and read. No empty-family inference."},
+    {"path": "packages/core/src/permission/ruleset.ts", "result": "GitHub connector 404", "disposition": "Producer guessed a nonexistent path; assigned permission family contains saved.ts and sql.ts alongside the actual permission.ts root. Root policy implementation was captured and read. No empty-policy inference."}
+  ],
+  "local_bookkeeping_retries": [
+    {"observation": "An early attempt to pass a large capture payload as a shell argument exceeded the argument limit.", "resolution": "Used structured apply_patch to write the capture payload, then decoded exact base64 bytes with the bookkeeping script. This was not a product execution."},
+    {"observation": "Some combined source outputs were truncated by tool output budgets.", "resolution": "Targeted source-range reads followed for decisive claims; no full-file read or test result is inferred from a truncated response."}
+  ]
+}

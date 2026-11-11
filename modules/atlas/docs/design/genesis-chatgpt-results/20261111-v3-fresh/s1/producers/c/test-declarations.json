@@ -1,0 +1,4632 @@
+[
+  {
+    "path": "packages/codemode/test/codemode.test.ts",
+    "line_count": 1163,
+    "declarations": [
+      {
+        "line": 12,
+        "text": "describe(\"CodeMode host failure boundary\", () => {"
+      },
+      {
+        "line": 13,
+        "text": "test(\"preserves explicit safe tool failures\", async () => {"
+      },
+      {
+        "line": 29,
+        "text": "test(\"sanitizes unknown host failures and defects\", async () => {"
+      },
+      {
+        "line": 51,
+        "text": "test(\"sanitizes invalid host output\", async () => {"
+      },
+      {
+        "line": 69,
+        "text": "test(\"sanitizes host output that throws while being copied\", async () => {"
+      },
+      {
+        "line": 96,
+        "text": "test(\"caught tool failures are Error values in-program\", async () => {"
+      },
+      {
+        "line": 123,
+        "text": "test(\"propagates host interruption instead of returning a diagnostic\", async () => {"
+      },
+      {
+        "line": 146,
+        "text": "describe(\"CodeMode tool-call observation\", () => {"
+      },
+      {
+        "line": 147,
+        "text": "test(\"reports the tools actually invoked with decoded input\", async () => {"
+      },
+      {
+        "line": 167,
+        "text": "expect(calls).toStrictEqual([{ index: 0, name: \"context.lookup\", input: { query: \"deployment failure\" } }])"
+      },
+      {
+        "line": 170,
+        "text": "test(\"observes settled calls with outcome and duration\", async () => {"
+      },
+      {
+        "line": 171,
+        "text": "const events: Array<{ phase: string; index: number; name: string; outcome?: string; message?: string }> = []"
+      },
+      {
+        "line": 183,
+        "text": "events.push({ phase: \"start\", index: call.index, name: call.name })"
+      },
+      {
+        "line": 191,
+        "text": "name: call.name,"
+      },
+      {
+        "line": 204,
+        "text": "{ phase: \"start\", index: 0, name: \"context.lookup\" },"
+      },
+      {
+        "line": 205,
+        "text": "{ phase: \"end\", index: 0, name: \"context.lookup\", outcome: \"success\" },"
+      },
+      {
+        "line": 206,
+        "text": "{ phase: \"start\", index: 0, name: \"context.lookup\" },"
+      },
+      {
+        "line": 207,
+        "text": "{ phase: \"end\", index: 0, name: \"context.lookup\", outcome: \"failure\", message: \"Lookup refused\" },"
+      },
+      {
+        "line": 212,
+        "text": "describe(\"CodeMode console capture\", () => {"
+      },
+      {
+        "line": 213,
+        "text": "test(\"captures console output as bounded result logs\", async () => {"
+      },
+      {
+        "line": 217,
+        "text": "const returned = console.log(\"Thread info:\", { name: \"Demo\", count: 2 })"
+      },
+      {
+        "line": 233,
+        "text": "test(\"keeps logs captured before failures\", async () => {"
+      },
+      {
+        "line": 247,
+        "text": "test(\"prints NaN and Infinity literally instead of the JSON null\", async () => {"
+      },
+      {
+        "line": 263,
+        "text": "test(\"renders sandbox values nested inside logged containers\", async () => {"
+      },
+      {
+        "line": 281,
+        "text": "test(\"console formatting is total: cycles and opaque references render as markers\", async () => {"
+      },
+      {
+        "line": 298,
+        "text": "test(\"console.table renders sandbox value cells\", async () => {"
+      },
+      {
+        "line": 312,
+        "text": "test(\"captures console.dir and console.table output\", async () => {"
+      },
+      {
+        "line": 318,
+        "text": "{ name: \"Kit\", count: 1, hidden: \"x\" },"
+      },
+      {
+        "line": 319,
+        "text": "{ name: \"Olive\", count: 2, hidden: \"y\" }"
+      },
+      {
+        "line": 335,
+        "text": "describe(\"CodeMode output budget\", () => {"
+      },
+      {
+        "line": 336,
+        "text": "test(\"absent maxOutputBytes means no truncation at all\", async () => {"
+      },
+      {
+        "line": 350,
+        "text": "test(\"truncates an oversized result value with a marker instead of failing\", async () => {"
+      },
+      {
+        "line": 369,
+        "text": "test(\"keeps leading logs within the remaining budget and marks the cut\", async () => {"
+      },
+      {
+        "line": 389,
+        "text": "test(\"does not mark results within the budget\", async () => {"
+      },
+      {
+        "line": 407,
+        "text": "describe(\"CodeMode schema flexibility\", () => {"
+      },
+      {
+        "line": 408,
+        "text": "test(\"accepts render-only JSON Schema input and omitted output\", async () => {"
+      },
+      {
+        "line": 440,
+        "text": "test(\"renders JSON Schema outputs and $defs references\", async () => {"
+      },
+      {
+        "line": 471,
+        "text": "test(\"Effect Schema output without an input transform still renders unknown when omitted\", async () => {"
+      },
+      {
+        "line": 486,
+        "text": "describe(\"CodeMode public contract\", () => {"
+      },
+      {
+        "line": 496,
+        "text": "test(\"keeps one-shot and reusable execution equivalent\", async () => {"
+      },
+      {
+        "line": 509,
+        "text": "test(\"inlines a COMPLETE small catalog and keeps search registered but unadvertised\", async () => {"
+      },
+      {
+        "line": 546,
+        "text": "test(\"renders bracket notation for tool names that are not JavaScript identifiers\", async () => {"
+      },
+      {
+        "line": 597,
+        "text": "test(\"instructions use markdown sections with placeholder-only call forms\", () => {"
+      },
+      {
+        "line": 649,
+        "text": "test(\"the language section describes the restricted runtime without overclaiming\", () => {"
+      },
+      {
+        "line": 666,
+        "text": "test(\"zero tools keep minimal sections and the no-tools notice\", () => {"
+      },
+      {
+        "line": 677,
+        "text": "test(\"uses one ranked search returning complete definitions for large catalogs\", async () => {"
+      },
+      {
+        "line": 728,
+        "text": "expect(result.toolCalls).toStrictEqual([{ name: \"$codemode.search\" }])"
+      },
+      {
+        "line": 749,
+        "text": "runtime.execute(`return await tools.$codemode.describe({ path: \"thread.uploadFile\" })`),"
+      },
+      {
+        "line": 755,
+        "text": "test(\"search defaults to 10 results and resolves exact tool paths\", async () => {"
+      },
+      {
+        "line": 803,
+        "text": "test(\"scopes search to one namespace and browses it alphabetically\", async () => {"
+      },
+      {
+        "line": 850,
+        "text": "test(\"matches input parameter names and partial-word substrings\", async () => {"
+      },
+      {
+        "line": 862,
+        "text": "input: Schema.Struct({ name: Schema.String }),"
+      },
+      {
+        "line": 892,
+        "text": "test(\"a plural query term matches singular-only tool text\", async () => {"
+      },
+      {
+        "line": 905,
+        "text": "misc: { rename: simple(\"Rename the workspace\") },"
+      },
+      {
+        "line": 933,
+        "text": "test(\"empty query lists everything alphabetically by path\", async () => {"
+      },
+      {
+        "line": 980,
+        "text": "test(\"inlines round-robin across namespaces so one expensive namespace cannot starve the rest\", () => {"
+      },
+      {
+        "line": 1018,
+        "text": "test(\"charges inline JSDoc against the catalog token budget\", () => {"
+      },
+      {
+        "line": 1042,
+        "text": "test(\"decodes tool input and output before exposing either side\", async () => {"
+      },
+      {
+        "line": 1060,
+        "text": "expect(success).toStrictEqual({ ok: true, value: 42, toolCalls: [{ name: \"math.double\" }] })"
+      },
+      {
+        "line": 1070,
+        "text": "test(\"returns JSON-safe data and normalizes undefined to null\", async () => {"
+      },
+      {
+        "line": 1084,
+        "text": "test(\"rejects invalid configuration and discovery limits\", async () => {"
+      },
+      {
+        "line": 1115,
+        "text": "test(\"enforces the tool-call limit as a diagnostic\", async () => {"
+      },
+      {
+        "line": 1121,
+        "text": "test(\"timeoutMs and maxToolCalls have no defaults: absent means unlimited\", async () => {"
+      },
+      {
+        "line": 1144,
+        "text": "test(\"the timeout interrupts a busy loop without any operation budget\", async () => {"
+      },
+      {
+        "line": 1160,
+        "text": "test(\"reserves the discovery namespace\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/codemode/test/enumeration.test.ts",
+    "line_count": 159,
+    "declarations": [
+      {
+        "line": 37,
+        "text": "describe(\"Object.keys over tool references\", () => {"
+      },
+      {
+        "line": 38,
+        "text": "test(\"enumerates top-level namespaces (the transcript program)\", async () => {"
+      },
+      {
+        "line": 47,
+        "text": "test(\"enumerates tool names at a nested namespace\", async () => {"
+      },
+      {
+        "line": 51,
+        "text": "test(\"a callable tool is a leaf and enumerates as []\", async () => {"
+      },
+      {
+        "line": 55,
+        "text": "test(\"the internal discovery namespace enumerates its callable surface\", async () => {"
+      },
+      {
+        "line": 59,
+        "text": "test(\"an unknown namespace is an UnknownTool error pointing at the discovery idioms\", async () => {"
+      },
+      {
+        "line": 66,
+        "text": "test(\"Object.values/entries on a tool reference explain the working idioms\", async () => {"
+      },
+      {
+        "line": 79,
+        "text": "describe(\"Object.keys over arrays\", () => {"
+      },
+      {
+        "line": 80,
+        "text": "test(\"returns index strings, like JS\", async () => {"
+      },
+      {
+        "line": 85,
+        "text": "test(\"objects keep their own enumerable keys\", async () => {"
+      },
+      {
+        "line": 89,
+        "text": "test(\"non-object inputs still fail clearly\", async () => {"
+      },
+      {
+        "line": 95,
+        "text": "describe(\"for...in\", () => {"
+      },
+      {
+        "line": 96,
+        "text": "test(\"iterates own enumerable keys of a plain object with break/continue\", async () => {"
+      },
+      {
+        "line": 110,
+        "text": "test(\"iterates index strings over arrays\", async () => {"
+      },
+      {
+        "line": 123,
+        "text": "test(\"supports let declarations and bare identifiers\", async () => {"
+      },
+      {
+        "line": 140,
+        "text": "test(\"enumerates namespaces and tools from the callable tool tree\", async () => {"
+      },
+      {
+        "line": 152,
+        "text": "test(\"unsupported values fail with a hint at for...of and Object.keys\", async () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/codemode/test/openapi.test.ts",
+    "line_count": 960,
+    "declarations": [
+      {
+        "line": 29,
+        "text": "const toolAt = (tools: unknown, name: string) =>"
+      },
+      {
+        "line": 63,
+        "text": "describe(\"OpenAPI.fromSpec\", () => {"
+      },
+      {
+        "line": 64,
+        "text": "test(\"covers a representative API from generation through execution\", async () => {"
+      },
+      {
+        "line": 70,
+        "text": "JSON.stringify({ id: \"user-2\", name: \"Grace\", email: \"grace@example.test\", role: \"admin\" }),"
+      },
+      {
+        "line": 78,
+        "text": "return json({ id: \"user-1\", name: \"Ada\", email: \"ada@example.test\", role: \"member\" })"
+      },
+      {
+        "line": 111,
+        "text": "expect(inputTypeScript(create)).toBe('{ name: string; email: string; role?: \"admin\" | \"member\" }')"
+      },
+      {
+        "line": 130,
+        "text": "name: \"Grace\","
+      },
+      {
+        "line": 148,
+        "text": "user: { id: \"user-1\", name: \"Ada\" },"
+      },
+      {
+        "line": 149,
+        "text": "created: { id: \"user-2\", name: \"Grace\" },"
+      },
+      {
+        "line": 166,
+        "text": "expect(client.requests[1]!.body).toEqual({ name: \"Grace\", email: \"grace@example.test\", role: \"admin\" })"
+      },
+      {
+        "line": 177,
+        "text": "test(\"converts representative orchestra operations into the expected tool shape\", async () => {"
+      },
+      {
+        "line": 222,
+        "text": "test(\"preserves operation path sanitization and collision handling\", () => {"
+      },
+      {
+        "line": 241,
+        "text": "test(\"synthesizes flat operation IDs from methods and paths\", () => {"
+      },
+      {
+        "line": 267,
+        "text": "test(\"lets operation parameters override matching path parameters\", () => {"
+      },
+      {
+        "line": 275,
+        "text": "parameters: [{ name: \"limit\", in: \"query\", schema: { type: \"string\" } }],"
+      },
+      {
+        "line": 278,
+        "text": "parameters: [{ name: \"limit\", in: \"query\", required: true, schema: { type: \"number\" } }],"
+      },
+      {
+        "line": 292,
+        "text": "test(\"normalizes OpenAPI 3.0 schemas with Effect\", () => {"
+      },
+      {
+        "line": 304,
+        "text": "name: \"value\","
+      },
+      {
+        "line": 326,
+        "text": "test(\"preserves schema-local definitions alongside component definitions\", () => {"
+      },
+      {
+        "line": 359,
+        "text": "test(\"documents that the orchestra fixture is unauthenticated\", async () => {"
+      },
+      {
+        "line": 373,
+        "text": "test(\"exposes real orchestra operations through CodeMode discovery\", async () => {"
+      },
+      {
+        "line": 401,
+        "text": "test(\"invokes real orchestra path parameters and JSON request bodies\", async () => {"
+      },
+      {
+        "line": 433,
+        "text": "test(\"serializes deep-object query parameters from the orchestra fixture\", async () => {"
+      },
+      {
+        "line": 447,
+        "text": "test(\"serializes supported simple and form parameter shapes\", async () => {"
+      },
+      {
+        "line": 458,
+        "text": "{ name: \"keys\", in: \"path\", required: true, schema: { type: \"array\", items: { type: \"string\" } } },"
+      },
+      {
+        "line": 459,
+        "text": "{ name: \"tags\", in: \"query\", style: \"form\", explode: false, schema: { type: \"array\" } },"
+      },
+      {
+        "line": 460,
+        "text": "{ name: \"filter\", in: \"query\", style: \"form\", explode: true, schema: { type: \"object\" } },"
+      },
+      {
+        "line": 461,
+        "text": "{ name: \"nullable\", in: \"query\", required: true, schema: { type: [\"string\", \"null\"] } },"
+      },
+      {
+        "line": 462,
+        "text": "{ name: \"constructor\", in: \"query\", schema: { type: \"string\" } },"
+      },
+      {
+        "line": 463,
+        "text": "{ name: \"meta\", in: \"header\", style: \"simple\", explode: true, schema: { type: \"object\" } },"
+      },
+      {
+        "line": 500,
+        "text": "test(\"skips unsupported parameter encodings and malformed security\", () => {"
+      },
+      {
+        "line": 510,
+        "text": "parameters: [{ name: \"session\", in: \"cookie\", schema: { type: \"string\" } }],"
+      },
+      {
+        "line": 517,
+        "text": "parameters: [{ name: \"query\", in: \"query\", allowReserved: true, schema: { type: \"string\" } }],"
+      },
+      {
+        "line": 524,
+        "text": "parameters: [{ name: \"query\", in: \"query\", style: 42, schema: { type: \"string\" } }],"
+      },
+      {
+        "line": 544,
+        "text": "test(\"fails closed on prototype-named missing security schemes\", () => {"
+      },
+      {
+        "line": 554,
+        "text": "test(\"resolves bearer authentication without exposing it as input\", async () => {"
+      },
+      {
+        "line": 583,
+        "text": "name: \"bearer\","
+      },
+      {
+        "line": 597,
+        "text": "test(\"applies authentication carriers without prototype or collision loss\", async () => {"
+      },
+      {
+        "line": 609,
+        "text": "authenticated([{ key: [] }], { key: { type: \"apiKey\", in: \"query\", name: \"__proto__\" } }).tools,"
+      },
+      {
+        "line": 619,
+        "text": "first: { type: \"apiKey\", in: \"header\", name: \"x-key\" },"
+      },
+      {
+        "line": 620,
+        "text": "second: { type: \"apiKey\", in: \"header\", name: \"x-key\" },"
+      },
+      {
+        "line": 629,
+        "text": "const cookie = authenticated([{ key: [] }], { key: { type: \"apiKey\", in: \"cookie\", name: \"session\" } })"
+      },
+      {
+        "line": 640,
+        "text": "cookie: { type: \"apiKey\", in: \"cookie\", name: \"session\" },"
+      },
+      {
+        "line": 655,
+        "text": "test(\"honors server precedence and rejects ambiguous base URLs\", async () => {"
+      },
+      {
+        "line": 676,
+        "text": "test(\"resolves chained response refs before detecting unsupported transports\", () => {"
+      },
+      {
+        "line": 694,
+        "text": "test(\"resolves response schemas before detecting binary output\", () => {"
+      },
+      {
+        "line": 713,
+        "text": "test(\"validates composite parameters before resolving auth\", async () => {"
+      },
+      {
+        "line": 721,
+        "text": "parameters: [{ name: \"filter\", in: \"query\", style: \"form\", explode: true, schema: { type: \"object\" } }],"
+      },
+      {
+        "line": 744,
+        "text": "test(\"preserves JSON media types and rejects unencodable bodies\", async () => {"
+      },
+      {
+        "line": 763,
+        "text": "await Effect.runPromise(tool.run({ body: { name: \"updated\" } }).pipe(Effect.provide(client.layer)))"
+      },
+      {
+        "line": 772,
+        "text": "test(\"rejects oversized and malformed JSON responses\", async () => {"
+      },
+      {
+        "line": 787,
+        "text": "test(\"keeps non-JSON responses raw and unions every success output\", async () => {"
+      },
+      {
+        "line": 802,
+        "text": "test(\"fails missing required parameters before auth and network\", async () => {"
+      },
+      {
+        "line": 817,
+        "text": "test(\"prefixes cross-location collisions and reconstructs the HTTP request\", async () => {"
+      },
+      {
+        "line": 836,
+        "text": "{ name: \"id\", in: \"path\", required: true, schema: { type: \"string\" } },"
+      },
+      {
+        "line": 837,
+        "text": "{ name: \"id\", in: \"query\", required: true, schema: { type: \"string\" } },"
+      },
+      {
+        "line": 838,
+        "text": "{ name: \"path_id\", in: \"query\", schema: { type: \"string\" } },"
+      },
+      {
+        "line": 839,
+        "text": "{ name: \"id\", in: \"header\", required: true, schema: { type: \"string\" } },"
+      },
+      {
+        "line": 896,
+        "text": "test(\"keeps bodies nested when flattening would lose schema semantics\", () => {"
+      },
+      {
+        "line": 911,
+        "text": "properties: { name: { type: \"string\" } },"
+      },
+      {
+        "line": 923,
+        "text": "allOf: [{ type: \"object\", properties: { name: { type: \"string\" } }, required: [\"name\"] }],"
+      },
+      {
+        "line": 931,
+        "text": "properties: { name: { type: \"string\" } },"
+      },
+      {
+        "line": 958,
+        "text": "expect(inputTypeScript(optional)).toBe(\"{ body?: { name: string } }\")"
+      }
+    ]
+  },
+  {
+    "path": "packages/codemode/test/parity.test.ts",
+    "line_count": 425,
+    "declarations": [
+      {
+        "line": 25,
+        "text": "describe(\"H2: string property access reads as undefined (not a throw)\", () => {"
+      },
+      {
+        "line": 26,
+        "text": "test(\"unknown property on a string is undefined\", async () => {"
+      },
+      {
+        "line": 31,
+        "text": "test(\"optional chaining + fallback on a string does not throw\", async () => {"
+      },
+      {
+        "line": 35,
+        "text": "test(\"the real MCP pattern: result is a JSON string, defensive read falls through\", async () => {"
+      },
+      {
+        "line": 42,
+        "text": "test(\"unknown property on a number is undefined\", async () => {"
+      },
+      {
+        "line": 46,
+        "text": "test(\"supported string methods still work\", async () => {"
+      },
+      {
+        "line": 52,
+        "text": "describe(\"H3: array property access reads as undefined (not a throw)\", () => {"
+      },
+      {
+        "line": 53,
+        "text": "test(\"unknown property on an array is undefined\", async () => {"
+      },
+      {
+        "line": 58,
+        "text": "test(\"optional chaining on an array does not throw\", async () => {"
+      },
+      {
+        "line": 62,
+        "text": "test(\"unknown property reads stay undefined for methods CodeMode does not implement\", async () => {"
+      },
+      {
+        "line": 66,
+        "text": "test(\"supported array methods and indexing still work\", async () => {"
+      },
+      {
+        "line": 73,
+        "text": "describe(\"H6: object spread of null/undefined is a no-op\", () => {"
+      },
+      {
+        "line": 74,
+        "text": "test(\"spreading null is a no-op\", async () => {"
+      },
+      {
+        "line": 78,
+        "text": "test(\"spreading an absent argument merges cleanly\", async () => {"
+      },
+      {
+        "line": 82,
+        "text": "test(\"spreading a real object still works\", async () => {"
+      },
+      {
+        "line": 86,
+        "text": "test(\"spreading an array into an object still errors\", async () => {"
+      },
+      {
+        "line": 92,
+        "text": "describe(\"H4: typeof on an undeclared identifier is 'undefined'\", () => {"
+      },
+      {
+        "line": 93,
+        "text": "test(\"feature-detection guard does not throw\", async () => {"
+      },
+      {
+        "line": 97,
+        "text": "test(\"typeof of a declared binding is unaffected\", async () => {"
+      },
+      {
+        "line": 102,
+        "text": "test(\"referencing an undeclared identifier outside typeof still throws\", async () => {"
+      },
+      {
+        "line": 108,
+        "text": "describe(\"H1: NaN/Infinity flow as intermediates and normalize to null at the boundary\", () => {"
+      },
+      {
+        "line": 109,
+        "text": "test(\"guards run instead of the program crashing on a transient NaN\", async () => {"
+      },
+      {
+        "line": 117,
+        "text": "test(\"a non-finite value becomes null when it leaves the sandbox\", async () => {"
+      },
+      {
+        "line": 125,
+        "text": "test(\"NaN and Infinity are usable identifiers and inspectable in-sandbox\", async () => {"
+      },
+      {
+        "line": 134,
+        "text": "test(\"copyOut normalizes non-finite numbers to null (the shared return + tool-arg boundary)\", () => {"
+      },
+      {
+        "line": 144,
+        "text": "describe(\"Error values and instanceof\", () => {"
+      },
+      {
+        "line": 145,
+        "text": "test(\"new Error carries name/message and is instanceof Error\", async () => {"
+      },
+      {
+        "line": 153,
+        "text": "test(\"Error without new behaves like new Error\", async () => {"
+      },
+      {
+        "line": 166,
+        "text": "test(\"specific error types are instanceof themselves and Error, not each other\", async () => {"
+      },
+      {
+        "line": 175,
+        "text": "test(\"thrown errors keep instanceof through try/catch\", async () => {"
+      },
+      {
+        "line": 182,
+        "text": "test(\"interpreter runtime failures are caught as Error values\", async () => {"
+      },
+      {
+        "line": 187,
+        "text": "test(\"caught failures carry the constructor name the real-JS failure would have\", async () => {"
+      },
+      {
+        "line": 218,
+        "text": "test(\"diagnostics without a specific real-JS analogue are named plain Error\", async () => {"
+      },
+      {
+        "line": 225,
+        "text": "test(\"Promise.allSettled rejection reasons are Error values\", async () => {"
+      },
+      {
+        "line": 234,
+        "text": "test(\"non-error thrown values are not instanceof Error\", async () => {"
+      },
+      {
+        "line": 239,
+        "text": "test(\"plain data is never instanceof Error\", async () => {"
+      },
+      {
+        "line": 247,
+        "text": "test(\"error values still serialize as plain { name, message } data\", async () => {"
+      },
+      {
+        "line": 248,
+        "text": "expect(await value(`return new Error(\"m\")`)).toEqual({ name: \"Error\", message: \"m\" })"
+      },
+      {
+        "line": 253,
+        "text": "test(\"spreading an error loses the brand, like losing the prototype in JS\", async () => {"
+      },
+      {
+        "line": 255,
+        "text": "expect(await value(`const e = new Error(\"m\"); return { ...e }`)).toEqual({ name: \"Error\", message: \"m\" })"
+      },
+      {
+        "line": 258,
+        "text": "test(\"typeof Error is function; an unknown instanceof right-hand side is a catchable error\", async () => {"
+      },
+      {
+        "line": 266,
+        "text": "describe(\"array methods: splice, fill, copyWithin, keys/values/entries\", () => {"
+      },
+      {
+        "line": 267,
+        "text": "test(\"splice removes in place and returns the removed elements\", async () => {"
+      },
+      {
+        "line": 274,
+        "text": "test(\"splice inserts new elements at the cut\", async () => {"
+      },
+      {
+        "line": 282,
+        "text": "test(\"splice with one argument removes to the end; negative start counts back\", async () => {"
+      },
+      {
+        "line": 293,
+        "text": "test(\"splice rejects inserting a container into itself\", async () => {"
+      },
+      {
+        "line": 299,
+        "text": "test(\"fill overwrites a range and returns the mutated array\", async () => {"
+      },
+      {
+        "line": 304,
+        "text": "test(\"copyWithin copies a range in place\", async () => {"
+      },
+      {
+        "line": 308,
+        "text": "test(\"keys/values/entries return arrays usable with for...of and spread\", async () => {"
+      },
+      {
+        "line": 322,
+        "text": "describe(\"string methods: localeCompare, normalize, trim aliases\", () => {"
+      },
+      {
+        "line": 323,
+        "text": "test(\"localeCompare orders strings for sorting\", async () => {"
+      },
+      {
+        "line": 328,
+        "text": "test(\"normalize applies unicode normalization forms\", async () => {"
+      },
+      {
+        "line": 334,
+        "text": "test(\"an invalid normalize form is a clear catchable error\", async () => {"
+      },
+      {
+        "line": 338,
+        "text": "test(\"trimLeft/trimRight alias trimStart/trimEnd\", async () => {"
+      },
+      {
+        "line": 344,
+        "text": "describe(\"compound assignment matches its binary operator\", () => {"
+      },
+      {
+        "line": 354,
+        "text": "test(\"sandbox Date += concatenates its string form, like d = d + 1\", async () => {"
+      },
+      {
+        "line": 359,
+        "text": "test(\"sandbox Date numeric compound ops use its time value\", async () => {"
+      },
+      {
+        "line": 368,
+        "text": "test(\"string += object/array matches x = x + obj\", async () => {"
+      },
+      {
+        "line": 375,
+        "text": "test(\"compound assignment through a member target coerces the same way\", async () => {"
+      },
+      {
+        "line": 384,
+        "text": "test(\"numeric and string compound operators sweep identically to their expansions\", async () => {"
+      },
+      {
+        "line": 407,
+        "text": "describe(\"H5: builtin coercion functions work as array callbacks\", () => {"
+      },
+      {
+        "line": 408,
+        "text": "test(\"filter(Boolean) drops falsy values\", async () => {"
+      },
+      {
+        "line": 412,
+        "text": "test(\"map(String) coerces each element\", async () => {"
+      },
+      {
+        "line": 416,
+        "text": "test(\"arrow callbacks still work (no regression)\", async () => {"
+      },
+      {
+        "line": 421,
+        "text": "test(\"a non-callable callback is still rejected\", async () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/codemode/test/promise.test.ts",
+    "line_count": 456,
+    "declarations": [
+      {
+        "line": 77,
+        "text": "describe(\"first-class promise values\", () => {"
+      },
+      {
+        "line": 78,
+        "text": "test(\"an un-awaited tool call starts eagerly, in call order, before any await\", async () => {"
+      },
+      {
+        "line": 96,
+        "text": "test(\"awaiting the same promise twice settles once and never re-runs the call\", async () => {"
+      },
+      {
+        "line": 106,
+        "text": "expect(result.toolCalls).toStrictEqual([{ name: \"host.sleepy\" }])"
+      },
+      {
+        "line": 109,
+        "text": "test(\"await of a non-promise value is a passthrough no-op\", async () => {"
+      },
+      {
+        "line": 116,
+        "text": "test(\"returning an un-awaited tool call resolves it (async-function return semantics)\", async () => {"
+      },
+      {
+        "line": 120,
+        "text": "test(\"typeof a promise is 'object', and console.log renders it sensibly\", async () => {"
+      },
+      {
+        "line": 132,
+        "text": "test(\"an awaited failure is catchable exactly like a synchronous throw\", async () => {"
+      },
+      {
+        "line": 146,
+        "text": "test(\"a fire-and-forget call completes before the execution ends\", async () => {"
+      },
+      {
+        "line": 160,
+        "text": "test(\"a never-awaited failing call surfaces as an unhandled-rejection diagnostic\", async () => {"
+      },
+      {
+        "line": 172,
+        "text": "describe(\"promises at data boundaries\", () => {"
+      },
+      {
+        "line": 173,
+        "text": "test(\"returning an un-awaited promise inside data is a clear await-hinting diagnostic\", async () => {"
+      },
+      {
+        "line": 180,
+        "text": "test(\"passing an un-awaited promise as a tool argument is a clear diagnostic\", async () => {"
+      },
+      {
+        "line": 186,
+        "text": "test(\"JSON.stringify of a promise is a diagnostic, not '{}'\", async () => {"
+      },
+      {
+        "line": 192,
+        "text": "test(\"operators reject promise operands\", async () => {"
+      },
+      {
+        "line": 198,
+        "text": "describe(\"Promise.all over arbitrary arrays\", () => {"
+      },
+      {
+        "line": 199,
+        "text": "test(\"mixes promises and plain values, preserving order\", async () => {"
+      },
+      {
+        "line": 207,
+        "text": "test(\"accepts arrays built beforehand, passed as identifiers, and spread elements\", async () => {"
+      },
+      {
+        "line": 220,
+        "text": "test(\"runs items.map tool calls in parallel\", async () => {"
+      },
+      {
+        "line": 235,
+        "text": "test(\"caps live tool-call concurrency at the fixed internal constant (8)\", async () => {"
+      },
+      {
+        "line": 251,
+        "text": "test(\"resolves the empty array\", async () => {"
+      },
+      {
+        "line": 255,
+        "text": "test(\"rejects with the first failure, catchable in-program\", async () => {"
+      },
+      {
+        "line": 268,
+        "text": "test(\"a non-collection argument is a clear error\", async () => {"
+      },
+      {
+        "line": 273,
+        "text": "test(\"exceeding maxToolCalls inside Promise.all is a ToolCallLimitExceeded diagnostic\", async () => {"
+      },
+      {
+        "line": 282,
+        "text": "describe(\"Promise.allSettled\", () => {"
+      },
+      {
+        "line": 283,
+        "text": "test(\"reports fulfilled and rejected outcomes with catch-normalized reasons\", async () => {"
+      },
+      {
+        "line": 295,
+        "text": "{ status: \"rejected\", reason: { name: \"Error\", message: \"Lookup refused\" } },"
+      },
+      {
+        "line": 297,
+        "text": "{ status: \"rejected\", reason: { name: \"Error\", message: \"boom\" } },"
+      },
+      {
+        "line": 301,
+        "text": "test(\"never rejects for program-level failures\", async () => {"
+      },
+      {
+        "line": 311,
+        "text": "describe(\"Promise.race\", () => {"
+      },
+      {
+        "line": 312,
+        "text": "test(\"first settlement wins and losers are interrupted\", async () => {"
+      },
+      {
+        "line": 327,
+        "text": "test(\"awaiting an interrupted loser afterwards is a catchable program failure\", async () => {"
+      },
+      {
+        "line": 346,
+        "text": "test(\"a rejection can win the race\", async () => {"
+      },
+      {
+        "line": 359,
+        "text": "test(\"a plain value wins over pending promises\", async () => {"
+      },
+      {
+        "line": 367,
+        "text": "test(\"an empty race is a clear error instead of hanging\", async () => {"
+      },
+      {
+        "line": 373,
+        "text": "describe(\"Promise.resolve / Promise.reject\", () => {"
+      },
+      {
+        "line": 374,
+        "text": "test(\"resolve wraps plain values and passes promises through\", async () => {"
+      },
+      {
+        "line": 380,
+        "text": "test(\"reject produces a promise whose await throws the reason\", async () => {"
+      },
+      {
+        "line": 394,
+        "text": "describe(\"timeout interruption of forked calls\", () => {"
+      },
+      {
+        "line": 395,
+        "text": "test(\"the execution timeout interrupts in-flight forked fibers\", async () => {"
+      },
+      {
+        "line": 414,
+        "text": "test(\"the timeout also interrupts calls inside Promise.all\", async () => {"
+      },
+      {
+        "line": 427,
+        "text": "describe(\"unsupported promise surface\", () => {"
+      },
+      {
+        "line": 428,
+        "text": "test(\".then/.catch/.finally give a clear await-instead error\", async () => {"
+      },
+      {
+        "line": 437,
+        "text": "test(\"other property reads on a promise hint at the missing await\", async () => {"
+      },
+      {
+        "line": 444,
+        "text": "test(\"unknown Promise statics list what is available\", async () => {"
+      },
+      {
+        "line": 450,
+        "text": "test(\"new Promise(...) points at tool calls instead\", async () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/codemode/test/rejection.ts",
+    "line_count": 19,
+    "declarations": []
+  },
+  {
+    "path": "packages/codemode/test/signature.test.ts",
+    "line_count": 449,
+    "declarations": [
+      {
+        "line": 37,
+        "text": "describe(\"pretty signature rendering\", () => {"
+      },
+      {
+        "line": 38,
+        "text": "test(\"described fields get JSDoc comments; undescribed and untagged fields get none\", () => {"
+      },
+      {
+        "line": 63,
+        "text": "test(\"compact mode output is unchanged by the pretty machinery\", () => {"
+      },
+      {
+        "line": 71,
+        "text": "test(\"nested objects recurse with increasing indent and their own JSDoc\", () => {"
+      },
+      {
+        "line": 98,
+        "text": "test(\"Effect Schema annotations become JSDoc on input and output fields\", () => {"
+      },
+      {
+        "line": 107,
+        "text": "test(\"constraints TypeScript cannot express surface as JSDoc tags\", () => {"
+      },
+      {
+        "line": 133,
+        "text": "test(\"skips an unserializable default rather than emitting a broken tag\", () => {"
+      },
+      {
+        "line": 141,
+        "text": "test(\"neutralizes */ inside descriptions so nothing closes the comment early\", () => {"
+      },
+      {
+        "line": 150,
+        "text": "test(\"multiline descriptions become *-prefixed blocks with blank edges trimmed\", () => {"
+      },
+      {
+        "line": 163,
+        "text": "test(\"stays total on cyclic $refs and pathological nesting in both modes\", () => {"
+      },
+      {
+        "line": 166,
+        "text": "$defs: { Node: { type: \"object\", properties: { child: { $ref: \"#/$defs/Node\" }, name: { type: \"string\" } } } },"
+      },
+      {
+        "line": 180,
+        "text": "test(\"intersects ref and union siblings instead of discarding them\", () => {"
+      },
+      {
+        "line": 197,
+        "text": "{ type: \"object\", properties: { name: { type: \"string\" } }, required: [\"name\"] },"
+      },
+      {
+        "line": 201,
+        "text": ").toBe(\"({ name: string } | { count: number }) & { common: boolean }\")"
+      },
+      {
+        "line": 212,
+        "text": "properties: { name: { type: \"string\" } },"
+      },
+      {
+        "line": 218,
+        "text": "describe(\"non-identifier property names render as quoted keys\", () => {"
+      },
+      {
+        "line": 234,
+        "text": "test(\"compact rendering quotes non-identifier keys and leaves identifiers bare\", () => {"
+      },
+      {
+        "line": 240,
+        "text": "test(\"pretty rendering quotes non-identifier keys and keeps their JSDoc\", () => {"
+      },
+      {
+        "line": 255,
+        "text": "test(\"JSON Schema input and output signatures of a tool both quote\", () => {"
+      },
+      {
+        "line": 271,
+        "text": "test(\"Effect Schema structs with non-identifier field names quote too\", () => {"
+      },
+      {
+        "line": 282,
+        "text": "describe(\"union schemas render every alternative\", () => {"
+      },
+      {
+        "line": 283,
+        "text": "test(\"anyOf with a number branch keeps sibling alternatives\", () => {"
+      },
+      {
+        "line": 291,
+        "text": "test(\"nullable numeric unions keep null\", () => {"
+      },
+      {
+        "line": 299,
+        "text": "test(\"tool input and output signatures preserve numeric unions\", () => {"
+      },
+      {
+        "line": 315,
+        "text": "test(\"allOf renders intersections with parenthesized union members\", () => {"
+      },
+      {
+        "line": 322,
+        "text": "test(\"allOf does not discard an unresolved constraint\", () => {"
+      },
+      {
+        "line": 341,
+        "text": "describe(\"JSDoc signatures in catalogs and search results\", () => {"
+      },
+      {
+        "line": 353,
+        "text": "test(\"a raw JSON Schema (MCP-style) tool's result signature carries field JSDoc and tags\", async () => {"
+      },
+      {
+        "line": 380,
+        "text": "test(\"an annotated Effect Schema tool's result signature carries field JSDoc (exact-path lookup too)\", async () => {"
+      },
+      {
+        "line": 399,
+        "text": "test(\"the inline catalog uses the same JSDoc signatures\", async () => {"
+      },
+      {
+        "line": 411,
+        "text": "describe(\"non-identifier tool paths\", () => {"
+      },
+      {
+        "line": 426,
+        "text": "test(\"inline catalog uses bracket notation for dashed tool names\", () => {"
+      },
+      {
+        "line": 438,
+        "text": "test(\"search results return callable bracket-notation paths and signatures\", async () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/codemode/test/stdlib.test.ts",
+    "line_count": 715,
+    "declarations": [
+      {
+        "line": 22,
+        "text": "describe(\"Date\", () => {"
+      },
+      {
+        "line": 23,
+        "text": "test(\"Date.now() returns a number\", async () => {"
+      },
+      {
+        "line": 27,
+        "text": "test(\"epoch construction and ISO rendering\", async () => {"
+      },
+      {
+        "line": 31,
+        "text": "test(\"string parsing round-trips\", async () => {"
+      },
+      {
+        "line": 36,
+        "text": "test(\"date arithmetic and comparison use the time value\", async () => {"
+      },
+      {
+        "line": 42,
+        "text": "test(\"UTC getters read calendar components\", async () => {"
+      },
+      {
+        "line": 50,
+        "text": "test(\"invalid dates yield NaN times, guardable in-sandbox\", async () => {"
+      },
+      {
+        "line": 55,
+        "text": "test(\"toISOString on an invalid date is a catchable error\", async () => {"
+      },
+      {
+        "line": 61,
+        "text": "test(\"template interpolation renders the ISO form\", async () => {"
+      },
+      {
+        "line": 65,
+        "text": "test(\"dates serialize to ISO strings at the boundary, direct and nested\", async () => {"
+      },
+      {
+        "line": 74,
+        "text": "test(\"coercions: Number is the time, String is ISO, Boolean is true\", async () => {"
+      },
+      {
+        "line": 80,
+        "text": "test(\"sorting dates with a numeric comparator\", async () => {"
+      },
+      {
+        "line": 89,
+        "text": "test(\"new Date(year, month, day) accepts component form\", async () => {"
+      },
+      {
+        "line": 95,
+        "text": "test(\"typeof and unknown properties are forgiving\", async () => {"
+      },
+      {
+        "line": 101,
+        "text": "describe(\"RegExp\", () => {"
+      },
+      {
+        "line": 102,
+        "text": "test(\"literal test\", async () => {"
+      },
+      {
+        "line": 103,
+        "text": "expect(await value(`return /ab+c/.test(\"xabbbc\")`)).toBe(true)"
+      },
+      {
+        "line": 104,
+        "text": "expect(await value(`return /ab+c/.test(\"nope\")`)).toBe(false)"
+      },
+      {
+        "line": 107,
+        "text": "test(\"exec exposes captures and index\", async () => {"
+      },
+      {
+        "line": 118,
+        "text": "test(\"named groups read through\", async () => {"
+      },
+      {
+        "line": 124,
+        "text": "test(\"global exec advances lastIndex across calls\", async () => {"
+      },
+      {
+        "line": 135,
+        "text": "test(\"string match: non-global carries index, global lists all matches\", async () => {"
+      },
+      {
+        "line": 141,
+        "text": "test(\"matchAll materializes match arrays with captures\", async () => {"
+      },
+      {
+        "line": 145,
+        "text": "test(\"replace and replaceAll with patterns and $1 substitution\", async () => {"
+      },
+      {
+        "line": 152,
+        "text": "test(\"function replacers receive captures, offsets, input, and named groups\", async () => {"
+      },
+      {
+        "line": 179,
+        "text": "test(\"function replacers support string searches, zero-length matches, and result coercion\", async () => {"
+      },
+      {
+        "line": 188,
+        "text": "test(\"function replacers can await effectful tool calls\", async () => {"
+      },
+      {
+        "line": 213,
+        "text": "test(\"replaceAll without the g flag is a catchable error\", async () => {"
+      },
+      {
+        "line": 217,
+        "text": "test(\"split and search accept patterns\", async () => {"
+      },
+      {
+        "line": 223,
+        "text": "test(\"new RegExp constructs from strings; invalid patterns are catchable\", async () => {"
+      },
+      {
+        "line": 224,
+        "text": "expect(await value(`return new RegExp(\"a+\", \"i\").test(\"AAA\")`)).toBe(true)"
+      },
+      {
+        "line": 229,
+        "text": "test(\"invalid patterns fail with actionable messages\", async () => {"
+      },
+      {
+        "line": 243,
+        "text": "test(\"missing g-flag errors say how to fix the call\", async () => {"
+      },
+      {
+        "line": 248,
+        "text": "test(\"a non-pattern argument names the expected shapes\", async () => {"
+      },
+      {
+        "line": 254,
+        "text": "test(\"source and flags properties read through\", async () => {"
+      },
+      {
+        "line": 262,
+        "text": "test(\"regexes serialize to {} at the boundary, like JSON\", async () => {"
+      },
+      {
+        "line": 267,
+        "text": "test(\"template interpolation renders the literal form\", async () => {"
+      },
+      {
+        "line": 272,
+        "text": "describe(\"URL and URI helpers\", () => {"
+      },
+      {
+        "line": 273,
+        "text": "test(\"encodes and decodes complete URIs and URI components\", async () => {"
+      },
+      {
+        "line": 296,
+        "text": "test(\"resolves and mutates URLs with linked search parameters\", async () => {"
+      },
+      {
+        "line": 308,
+        "text": "pathname: url.pathname,"
+      },
+      {
+        "line": 324,
+        "text": "pathname: \"/items/a%20b\","
+      },
+      {
+        "line": 333,
+        "text": "test(\"URLSearchParams supports records, pairs, mutation, callbacks, and materialization\", async () => {"
+      },
+      {
+        "line": 369,
+        "text": "test(\"URL parsing failures are catchable and values use native JSON forms\", async () => {"
+      },
+      {
+        "line": 394,
+        "text": "test(\"distinguishes omitted URL arguments from explicit undefined\", async () => {"
+      },
+      {
+        "line": 431,
+        "text": "describe(\"Map\", () => {"
+      },
+      {
+        "line": 432,
+        "text": "test(\"get/set/has/size with chaining\", async () => {"
+      },
+      {
+        "line": 442,
+        "text": "test(\"object keys use identity\", async () => {"
+      },
+      {
+        "line": 453,
+        "text": "test(\"construction from entry pairs and another Map\", async () => {"
+      },
+      {
+        "line": 464,
+        "text": "test(\"keys/values/entries return arrays\", async () => {"
+      },
+      {
+        "line": 480,
+        "text": "test(\"Object.fromEntries(map) and Array.from(map)\", async () => {"
+      },
+      {
+        "line": 485,
+        "text": "test(\"for...of iterates [key, value] pairs with destructuring\", async () => {"
+      },
+      {
+        "line": 497,
+        "text": "test(\"spread produces entry pairs\", async () => {"
+      },
+      {
+        "line": 501,
+        "text": "test(\"forEach passes (value, key)\", async () => {"
+      },
+      {
+        "line": 512,
+        "text": "test(\"delete and clear\", async () => {"
+      },
+      {
+        "line": 525,
+        "text": "test(\"counting idiom: grouped tallies\", async () => {"
+      },
+      {
+        "line": 536,
+        "text": "test(\"maps serialize to {} at the boundary, like JSON\", async () => {"
+      },
+      {
+        "line": 541,
+        "text": "test(\"console.log renders map contents for debugging\", async () => {"
+      },
+      {
+        "line": 548,
+        "text": "describe(\"Set\", () => {"
+      },
+      {
+        "line": 549,
+        "text": "test(\"add/has/delete/size with chaining\", async () => {"
+      },
+      {
+        "line": 560,
+        "text": "test(\"dedupe idiom: [...new Set(items)]\", async () => {"
+      },
+      {
+        "line": 564,
+        "text": "test(\"construction from strings and other Sets\", async () => {"
+      },
+      {
+        "line": 569,
+        "text": "test(\"SameValueZero: NaN is findable\", async () => {"
+      },
+      {
+        "line": 573,
+        "text": "test(\"for...of iterates values\", async () => {"
+      },
+      {
+        "line": 583,
+        "text": "test(\"sets serialize to {} at the boundary, like JSON\", async () => {"
+      },
+      {
+        "line": 588,
+        "text": "describe(\"stdlib integration\", () => {"
+      },
+      {
+        "line": 589,
+        "text": "test(\"typeof reports constructors as functions and never throws\", async () => {"
+      },
+      {
+        "line": 596,
+        "text": "test(\"negation works on any value\", async () => {"
+      },
+      {
+        "line": 601,
+        "text": "test(\"object spread of sandbox values is a no-op, like JS\", async () => {"
+      },
+      {
+        "line": 605,
+        "text": "test(\"dates inside Map values survive in-sandbox reads\", async () => {"
+      },
+      {
+        "line": 614,
+        "text": "test(\"instanceof recognizes the stdlib value types\", async () => {"
+      },
+      {
+        "line": 629,
+        "text": "test(\"realistic pipeline: parse, extract with regex, dedupe, count by day\", async () => {"
+      },
+      {
+        "line": 647,
+        "text": "describe(\"sandbox values at intra-sandbox checkpoints\", () => {"
+      },
+      {
+        "line": 648,
+        "text": "test(\"Object.values/entries keep Dates usable\", async () => {"
+      },
+      {
+        "line": 655,
+        "text": "test(\"Object.assign keeps Maps usable\", async () => {"
+      },
+      {
+        "line": 661,
+        "text": "test(\"object and array spread keep sandbox values usable\", async () => {"
+      },
+      {
+        "line": 673,
+        "text": "test(\"Array.from over arrays keeps nested sandbox values usable\", async () => {"
+      },
+      {
+        "line": 677,
+        "text": "test(\"regexes stay callable through Object.values\", async () => {"
+      },
+      {
+        "line": 678,
+        "text": "expect(await value(`return Object.values({ r: /ab+/ })[0].test(\"abb\")`)).toBe(true)"
+      },
+      {
+        "line": 681,
+        "text": "test(\"Object.* helpers see sandbox values as empty objects, never internals\", async () => {"
+      },
+      {
+        "line": 689,
+        "text": "test(\"the host boundary still serializes JSON forms: results, JSON.stringify, and tool arguments\", async () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/test/sqlite.test.ts",
+    "line_count": 172,
+    "declarations": [
+      {
+        "line": 16,
+        "text": "name: text().notNull(),"
+      },
+      {
+        "line": 21,
+        "text": "effect.pipe(Effect.provide(SqliteClient.layer({ filename: \":memory:\", disableWAL: true })), Effect.scoped),"
+      },
+      {
+        "line": 40,
+        "text": "test(\"selects rows through Effect-yieldable query builders\", async () => {"
+      },
+      {
+        "line": 44,
+        "text": "yield* db.insert(users).values({ name: \"Ada\" })"
+      },
+      {
+        "line": 46,
+        "text": "expect(yield* db.select().from(users)).toEqual([{ id: 1, name: \"Ada\" }])"
+      },
+      {
+        "line": 52,
+        "text": "test(\"commits successful transactions\", async () => {"
+      },
+      {
+        "line": 57,
+        "text": "yield* db.transaction((tx) => tx.insert(users).values({ name: \"Grace\" }), { behavior: \"immediate\" })"
+      },
+      {
+        "line": 59,
+        "text": "expect(yield* db.select().from(users)).toEqual([{ id: 1, name: \"Grace\" }])"
+      },
+      {
+        "line": 64,
+        "text": "test(\"rolls back failed transactions\", async () => {"
+      },
+      {
+        "line": 73,
+        "text": ".values({ name: \"Linus\" })"
+      },
+      {
+        "line": 83,
+        "text": "test(\"rolls back explicit transaction rollback\", async () => {"
+      },
+      {
+        "line": 92,
+        "text": ".values({ name: \"Barbara\" })"
+      },
+      {
+        "line": 102,
+        "text": "test(\"preserves failed transaction begin errors\", async () => {"
+      },
+      {
+        "line": 118,
+        "text": ".transaction((tx) => tx.insert(users).values({ name: \"Blocked\" }), { behavior: \"immediate\" })"
+      },
+      {
+        "line": 133,
+        "text": "test(\"supports returning and rejects empty update sets\", async () => {"
+      },
+      {
+        "line": 138,
+        "text": "const inserted = yield* db.insert(users).values({ name: \"Ada\" }).returning({ id: users.id, name: users.name })"
+      },
+      {
+        "line": 139,
+        "text": "expect(inserted).toEqual([{ id: 1, name: \"Ada\" }])"
+      },
+      {
+        "line": 141,
+        "text": "const updated = yield* db.update(users).set({ name: \"Grace\" }).where(eq(users.id, 1)).returning()"
+      },
+      {
+        "line": 142,
+        "text": "expect(updated).toEqual([{ id: 1, name: \"Grace\" }])"
+      },
+      {
+        "line": 147,
+        "text": "expect(() => db.update(users).set({ name: undefined })).toThrow(\"No values to set\")"
+      },
+      {
+        "line": 152,
+        "text": "test(\"runs migrations once and records migration metadata\", async () => {"
+      },
+      {
+        "line": 163,
+        "text": "expect(yield* db.all<{ name: string }>(sql`select name from migrated_users`)).toEqual([{ name: \"Margaret\" }])"
+      },
+      {
+        "line": 164,
+        "text": "expect(yield* db.all<{ name: string | null }>(sql`select name from __drizzle_migrations`)).toEqual(["
+      },
+      {
+        "line": 165,
+        "text": "{ name: \"20240101000000_create_migrated_users\" },"
+      }
+    ]
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/test/transaction-causes.test.ts",
+    "line_count": 292,
+    "declarations": [
+      {
+        "line": 21,
+        "text": "Effect.provide(SqliteClient.layer({ filename: \":memory:\", disableWAL: true })),"
+      },
+      {
+        "line": 61,
+        "text": "test(\"positive commit and ordinary rollback preserve results and reuse writer\", async () => {"
+      },
+      {
+        "line": 77,
+        "text": "test.each(["
+      },
+      {
+        "line": 104,
+        "text": "test(\"deep nested rollback tries every RELEASE after real root rollback removed savepoints\", async () => {"
+      },
+      {
+        "line": 121,
+        "text": "test(\"real deferred foreign-key COMMIT failure rolls back rows and releases writer\", async () => {"
+      },
+      {
+        "line": 135,
+        "text": "test(\"nested commit succeeds; failed RELEASE preserves each equal cleanup SQL reason\", async () => {"
+      },
+      {
+        "line": 181,
+        "text": "test(\"fatal mixed COMMIT, ROLLBACK and scope-close exits all survive in order\", async () => {"
+      },
+      {
+        "line": 216,
+        "text": "test(\"real failed BEGIN closes reserve scope with its SQL failure before close defect\", async () => {"
+      },
+      {
+        "line": 238,
+        "text": "test.each([\"reserve\", \"begin\", \"body\", \"success\"] as const)(\"%s exit closes lease once and joins scope-close failure\", async (phase) => {"
+      },
+      {
+        "line": 263,
+        "text": "test(\"external interruption waits for masked rollback and scope-close completion\", async () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/adapter.test.ts",
+    "line_count": 171,
+    "declarations": [
+      {
+        "line": 109,
+        "text": "describe(\"llm route\", () => {"
+      },
+      {
+        "line": 110,
+        "text": "it.effect(\"stream and generate use the route pipeline\", () =>"
+      },
+      {
+        "line": 128,
+        "text": "it.effect(\"selects routes by model route value\", () =>"
+      },
+      {
+        "line": 139,
+        "text": "it.effect(\"builds models from configured routes\", () =>"
+      },
+      {
+        "line": 149,
+        "text": "it.effect(\"does not register duplicate route ids globally\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/auth-options.types.ts",
+    "line_count": 168,
+    "declarations": []
+  },
+  {
+    "path": "packages/llm/test/auth.test.ts",
+    "line_count": 103,
+    "declarations": [
+      {
+        "line": 26,
+        "text": "describe(\"Auth\", () => {"
+      },
+      {
+        "line": 27,
+        "text": "it.effect(\"renders a config credential as bearer auth\", () =>"
+      },
+      {
+        "line": 39,
+        "text": "it.effect(\"falls back between credential sources before rendering\", () =>"
+      },
+      {
+        "line": 52,
+        "text": "it.effect(\"composes header auth in sequence\", () =>"
+      },
+      {
+        "line": 64,
+        "text": "it.effect(\"renders a direct secret as a custom header\", () =>"
+      },
+      {
+        "line": 73,
+        "text": "it.effect(\"renders bearer auth into a custom header\", () =>"
+      },
+      {
+        "line": 82,
+        "text": "it.effect(\"falls back between full auth values\", () =>"
+      },
+      {
+        "line": 95,
+        "text": "it.effect(\"can intentionally leave auth untouched\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/cache-policy.test.ts",
+    "line_count": 262,
+    "declarations": [
+      {
+        "line": 31,
+        "text": "describe(\"applyCachePolicy\", () => {"
+      },
+      {
+        "line": 32,
+        "text": "it.effect(\"undefined cache resolves to 'auto' (the recommended default)\", () =>"
+      },
+      {
+        "line": 51,
+        "text": "it.effect(\"'auto' marks the last tool, last system part, and latest user message on Anthropic\", () =>"
+      },
+      {
+        "line": 57,
+        "text": "tools: [{ name: \"t1\", description: \"t1\", inputSchema: { type: \"object\", properties: {} } }],"
+      },
+      {
+        "line": 68,
+        "text": "tools: [{ name: \"t1\", cache_control: { type: \"ephemeral\" } }],"
+      },
+      {
+        "line": 82,
+        "text": "it.effect(\"'auto' is a no-op on OpenAI (implicit caching protocol)\", () =>"
+      },
+      {
+        "line": 101,
+        "text": "it.effect(\"'auto' is a no-op on Gemini (out-of-band caching protocol)\", () =>"
+      },
+      {
+        "line": 118,
+        "text": "it.effect(\"'auto' on Bedrock emits cachePoint markers in the right places\", () =>"
+      },
+      {
+        "line": 124,
+        "text": "tools: [{ name: \"t1\", description: \"t1\", inputSchema: { type: \"object\", properties: {} } }],"
+      },
+      {
+        "line": 132,
+        "text": "tools: [{ toolSpec: { name: \"t1\" } }, { cachePoint: { type: \"default\" } }],"
+      },
+      {
+        "line": 144,
+        "text": "it.effect(\"'none' disables auto placement even when manual hints exist\", () =>"
+      },
+      {
+        "line": 150,
+        "text": "tools: [{ name: \"t1\", description: \"t1\", inputSchema: { type: \"object\", properties: {} } }],"
+      },
+      {
+        "line": 157,
+        "text": "tools: [{ name: \"t1\", cache_control: undefined }],"
+      },
+      {
+        "line": 163,
+        "text": "it.effect(\"granular object form: tools-only marks just tools\", () =>"
+      },
+      {
+        "line": 169,
+        "text": "tools: [{ name: \"t1\", description: \"t1\", inputSchema: { type: \"object\", properties: {} } }],"
+      },
+      {
+        "line": 176,
+        "text": "tools: [{ name: \"t1\", cache_control: { type: \"ephemeral\" } }],"
+      },
+      {
+        "line": 182,
+        "text": "it.effect(\"auto policy preserves manual CacheHints on other parts\", () =>"
+      },
+      {
+        "line": 202,
+        "text": "it.effect(\"ttlSeconds in the policy flows through to wire markers\", () =>"
+      },
+      {
+        "line": 219,
+        "text": "it.effect(\"messages: { tail: 2 } marks the last 2 message boundaries\", () =>"
+      },
+      {
+        "line": 237,
+        "text": "it.effect(\"'latest-assistant' marks the last assistant message\", () =>"
+      },
+      {
+        "line": 254,
+        "text": "test(\"returns the same request reference when policy is a no-op (pure function)\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/continuation-scenarios.ts",
+    "line_count": 104,
+    "declarations": [
+      {
+        "line": 31,
+        "text": "name: \"get_weather\","
+      },
+      {
+        "line": 80,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_weather_1\", name: \"get_weather\", input: { city: \"Paris\" } })]),"
+      },
+      {
+        "line": 85,
+        "text": "Message.tool(ToolResultPart.make({ id: \"call_weather_1\", name: \"get_weather\", result: { temperature: 22 } })),"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/endpoint.test.ts",
+    "line_count": 58,
+    "declarations": [
+      {
+        "line": 17,
+        "text": "describe(\"Endpoint\", () => {"
+      },
+      {
+        "line": 18,
+        "text": "test(\"appends a static path to the model's baseURL\", () => {"
+      },
+      {
+        "line": 27,
+        "text": "test(\"endpoint query params are appended to the rendered URL\", () => {"
+      },
+      {
+        "line": 42,
+        "text": "test(\"path may be a function of the validated body\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/executor.test.ts",
+    "line_count": 458,
+    "declarations": [
+      {
+        "line": 75,
+        "text": "describe(\"RequestExecutor\", () => {"
+      },
+      {
+        "line": 76,
+        "text": "it.effect(\"classifies context overflow responses\", () =>"
+      },
+      {
+        "line": 94,
+        "text": "it.effect(\"does not classify generic HTTP 413 payload errors as context overflow\", () =>"
+      },
+      {
+        "line": 105,
+        "text": "it.effect(\"does not classify ordinary invalid requests as context overflow\", () =>"
+      },
+      {
+        "line": 116,
+        "text": "it.effect(\"returns redacted diagnostics for retryable rate limits\", () =>"
+      },
+      {
+        "line": 163,
+        "text": "it.effect(\"honors current redacted header names in diagnostics\", () =>"
+      },
+      {
+        "line": 177,
+        "text": "it.effect(\"extracts OpenAI-style rate-limit diagnostics\", () =>"
+      },
+      {
+        "line": 214,
+        "text": "it.effect(\"extracts Anthropic-style rate-limit diagnostics\", () =>"
+      },
+      {
+        "line": 251,
+        "text": "it.effect(\"retries retryable status responses before returning the stream\", () =>"
+      },
+      {
+        "line": 268,
+        "text": "it.effect(\"marks 504 and 529 status responses retryable\", () =>"
+      },
+      {
+        "line": 298,
+        "text": "it.effect(\"does not retry non-retryable status responses and truncates large bodies\", () =>"
+      },
+      {
+        "line": 318,
+        "text": "it.effect(\"redacts common secret fields in response bodies\", () =>"
+      },
+      {
+        "line": 339,
+        "text": "it.effect(\"redacts echoed request secret values in response bodies\", () =>"
+      },
+      {
+        "line": 358,
+        "text": "it.effect(\"honors Retry-After delta seconds before retrying\", () =>"
+      },
+      {
+        "line": 388,
+        "text": "it.effect(\"uses exponential jittered delay when retry-after is absent\", () =>"
+      },
+      {
+        "line": 428,
+        "text": "it.effect(\"does not retry after a successful response reaches stream parsing\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/exports.test.ts",
+    "line_count": 76,
+    "declarations": [
+      {
+        "line": 17,
+        "text": "describe(\"public exports\", () => {"
+      },
+      {
+        "line": 18,
+        "text": "test(\"root exposes app-facing runtime APIs\", () => {"
+      },
+      {
+        "line": 26,
+        "text": "test(\"route barrel exposes route-authoring APIs\", () => {"
+      },
+      {
+        "line": 31,
+        "text": "test(\"provider barrels expose user-facing facades\", () => {"
+      },
+      {
+        "line": 69,
+        "text": "test(\"protocol barrels expose supported low-level routes\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/generate-object.test.ts",
+    "line_count": 184,
+    "declarations": [
+      {
+        "line": 29,
+        "text": "describe(\"Tool.make (dynamic JSON Schema)\", () => {"
+      },
+      {
+        "line": 30,
+        "text": "test(\"forwards JSON Schema and description through toDefinitions\", () => {"
+      },
+      {
+        "line": 47,
+        "text": "test(\"execute receives the raw input untouched\", async () => {"
+      },
+      {
+        "line": 64,
+        "text": "describe(\"LLM.generateObject\", () => {"
+      },
+      {
+        "line": 65,
+        "text": "it.effect(\"forces a synthetic tool call and decodes the input\", () =>"
+      },
+      {
+        "line": 90,
+        "text": "expect(bodies[0].tool_choice).toEqual({ type: \"function\", function: { name: \"generate_object\" } })"
+      },
+      {
+        "line": 95,
+        "text": "function: { name: \"generate_object\" },"
+      },
+      {
+        "line": 109,
+        "text": "it.effect(\"accepts a raw JSON Schema and returns the input untouched\", () =>"
+      },
+      {
+        "line": 127,
+        "text": "properties: { name: { type: \"string\" }, age: { type: \"number\" } },"
+      },
+      {
+        "line": 132,
+        "text": "expect(response.object).toEqual({ name: \"Ada\", age: 30 })"
+      },
+      {
+        "line": 135,
+        "text": "properties: { name: { type: \"string\" }, age: { type: \"number\" } },"
+      },
+      {
+        "line": 141,
+        "text": "it.effect(\"fails when the model does not call the synthetic tool\", () =>"
+      },
+      {
+        "line": 161,
+        "text": "it.effect(\"fails with a decode error when the tool input does not match the schema\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/lib/effect.ts",
+    "line_count": 50,
+    "declarations": [
+      {
+        "line": 23,
+        "text": "const effect = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>"
+      },
+      {
+        "line": 24,
+        "text": "test(name, () => run(value, testLayer), opts)"
+      },
+      {
+        "line": 26,
+        "text": "effect.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>"
+      },
+      {
+        "line": 27,
+        "text": "test.only(name, () => run(value, testLayer), opts)"
+      },
+      {
+        "line": 29,
+        "text": "effect.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>"
+      },
+      {
+        "line": 30,
+        "text": "test.skip(name, () => run(value, testLayer), opts)"
+      },
+      {
+        "line": 32,
+        "text": "const live = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>"
+      },
+      {
+        "line": 33,
+        "text": "test(name, () => run(value, liveLayer), opts)"
+      },
+      {
+        "line": 35,
+        "text": "live.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>"
+      },
+      {
+        "line": 36,
+        "text": "test.only(name, () => run(value, liveLayer), opts)"
+      },
+      {
+        "line": 38,
+        "text": "live.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>"
+      },
+      {
+        "line": 39,
+        "text": "test.skip(name, () => run(value, liveLayer), opts)"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/lib/http.ts",
+    "line_count": 98,
+    "declarations": []
+  },
+  {
+    "path": "packages/llm/test/lib/openai-chunks.ts",
+    "line_count": 27,
+    "declarations": [
+      {
+        "line": 23,
+        "text": "export const toolCallChunk = (id: string, name: string, args: string, index = 0) =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/lib/sse.ts",
+    "line_count": 17,
+    "declarations": []
+  },
+  {
+    "path": "packages/llm/test/lib/tool-runtime.ts",
+    "line_count": 146,
+    "declarations": [
+      {
+        "line": 62,
+        "text": "Message.tool({ id: call.id, name: call.name, result: dispatched.result }),"
+      },
+      {
+        "line": 97,
+        "text": "name: event.name,"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/llm.test.ts",
+    "line_count": 199,
+    "declarations": [
+      {
+        "line": 10,
+        "text": "describe(\"llm constructors\", () => {"
+      },
+      {
+        "line": 11,
+        "text": "test(\"builds canonical schema classes from ergonomic input\", () => {"
+      },
+      {
+        "line": 28,
+        "text": "test(\"updates requests without spreading schema class instances\", () => {"
+      },
+      {
+        "line": 46,
+        "text": "test(\"keeps request options separate from route defaults\", () => {"
+      },
+      {
+        "line": 72,
+        "text": "test(\"updates canonical requests from the request datatype\", () => {"
+      },
+      {
+        "line": 87,
+        "text": "test(\"updates canonical models from the model datatype\", () => {"
+      },
+      {
+        "line": 111,
+        "text": "test(\"carries model defaults and compatibility through route model selection\", () => {"
+      },
+      {
+        "line": 134,
+        "text": "test(\"builds tool choices from names and tools\", () => {"
+      },
+      {
+        "line": 135,
+        "text": "const tool = ToolDefinition.make({ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } })"
+      },
+      {
+        "line": 138,
+        "text": "expect(ToolChoice.make(\"lookup\")).toEqual(new ToolChoice({ type: \"tool\", name: \"lookup\" }))"
+      },
+      {
+        "line": 139,
+        "text": "expect(ToolChoice.named(\"required\")).toEqual(new ToolChoice({ type: \"tool\", name: \"required\" }))"
+      },
+      {
+        "line": 140,
+        "text": "expect(ToolChoice.make(tool)).toEqual(new ToolChoice({ type: \"tool\", name: \"lookup\" }))"
+      },
+      {
+        "line": 143,
+        "text": "test(\"builds tool choice modes from reserved strings\", () => {"
+      },
+      {
+        "line": 160,
+        "text": "test(\"builds assistant tool calls and tool result messages\", () => {"
+      },
+      {
+        "line": 161,
+        "text": "const call = ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } })"
+      },
+      {
+        "line": 162,
+        "text": "const result = ToolResultPart.make({ id: \"call_1\", name: \"lookup\", result: { temperature: 72 } })"
+      },
+      {
+        "line": 166,
+        "text": "{ type: \"tool-result\", id: \"call_1\", name: \"lookup\", result: { type: \"json\", value: { temperature: 72 } } },"
+      },
+      {
+        "line": 170,
+        "text": "test(\"builds chronological text-only system updates separately from the initial system prompt\", () => {"
+      },
+      {
+        "line": 189,
+        "text": "test(\"extracts output text from response events\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/openai-response-format.test.ts",
+    "line_count": 341,
+    "declarations": [
+      {
+        "line": 29,
+        "text": "const format = { type: \"json_schema\", name: \"response\", strict: true, schema }"
+      },
+      {
+        "line": 30,
+        "text": "const tool = ToolDefinition.make({ name: \"lookup\", description: \"Look up evidence\", inputSchema: { type: \"object\" } })"
+      },
+      {
+        "line": 59,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 77,
+        "text": "describe(\"OpenAI Responses native JSON format\", () => {"
+      },
+      {
+        "line": 87,
+        "text": "it.effect(`HTTP encoder retains strict format with verbosity ${verbosity}`, () =>"
+      },
+      {
+        "line": 102,
+        "text": "it.effect(`WebSocket encoder retains strict format with verbosity ${verbosity}`, () =>"
+      },
+      {
+        "line": 142,
+        "text": "it.effect(`plain and alias wires stay unchanged for ${responseFormat?.type} / ${verbosity}`, () =>"
+      },
+      {
+        "line": 178,
+        "text": "it.effect(`canonical format rejects ${JSON.stringify(malformed)}`, () =>"
+      },
+      {
+        "line": 189,
+        "text": "it.effect(\"provider HTTP 400 keeps existing InvalidRequest path without retry\", () =>"
+      },
+      {
+        "line": 238,
+        "text": "it.effect("
+      },
+      {
+        "line": 276,
+        "text": "it.effect(`${transport} normal JSON keeps ${reason} finish without provider error`, () =>"
+      },
+      {
+        "line": 301,
+        "text": "it.effect(\"malformed provider frame keeps InvalidProviderOutput classifier\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/prepare.test.ts",
+    "line_count": 178,
+    "declarations": [
+      {
+        "line": 15,
+        "text": "describe(\"request option precedence\", () => {"
+      },
+      {
+        "line": 16,
+        "text": "test(\"deep-merges provider option records and replaces arrays, primitives, and null\", () => {"
+      },
+      {
+        "line": 47,
+        "text": "it.effect(\"prepares bodies with route defaults, model defaults, and call options in order\", () =>"
+      },
+      {
+        "line": 85,
+        "text": "it.effect(\"applies model HTTP defaults before request HTTP overlays\", () =>"
+      },
+      {
+        "line": 139,
+        "text": "it.effect(\"rejects raw body overlays for protocol-owned roots\", () =>"
+      },
+      {
+        "line": 159,
+        "text": "it.effect(\"uses model output limits after route limits and before call maxTokens\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider-error.test.ts",
+    "line_count": 30,
+    "declarations": [
+      {
+        "line": 4,
+        "text": "describe(\"provider error classification\", () => {"
+      },
+      {
+        "line": 5,
+        "text": "test(\"classifies provider token limit messages as context overflow\", () => {"
+      },
+      {
+        "line": 21,
+        "text": "test(\"does not classify rate limits as context overflow\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider.types.ts",
+    "line_count": 41,
+    "declarations": []
+  },
+  {
+    "path": "packages/llm/test/provider/anthropic-messages-cache.recorded.test.ts",
+    "line_count": 52,
+    "declarations": [
+      {
+        "line": 39,
+        "text": "describe(\"Anthropic Messages cache recorded\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/anthropic-messages.recorded.test.ts",
+    "line_count": 45,
+    "declarations": [
+      {
+        "line": 18,
+        "text": "ToolCallPart.make({ id: \"call_1\", name: weatherToolName, input: { city: \"Paris\" } }),"
+      },
+      {
+        "line": 21,
+        "text": "Message.tool({ id: \"call_1\", name: weatherToolName, result: { temperature: \"72F\" } }),"
+      },
+      {
+        "line": 24,
+        "text": "tools: [{ name: weatherToolName, description: \"Get weather\", inputSchema: { type: \"object\", properties: {} } }],"
+      },
+      {
+        "line": 35,
+        "text": "describe(\"Anthropic Messages sad-path recorded\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/anthropic-messages.test.ts",
+    "line_count": 895,
+    "declarations": [
+      {
+        "line": 44,
+        "text": "describe(\"Anthropic Messages route\", () => {"
+      },
+      {
+        "line": 45,
+        "text": "it.effect(\"prepares Anthropic Messages target\", () =>"
+      },
+      {
+        "line": 60,
+        "text": "it.effect(\"lowers chronological system updates natively for Claude Opus 4.8 with cache hints\", () =>"
+      },
+      {
+        "line": 85,
+        "text": "it.effect(\"lowers chronological system updates to wrapped user text for unsupported Anthropic models\", () =>"
+      },
+      {
+        "line": 112,
+        "text": "it.effect(\"rejects non-text chronological system update content before send\", () =>"
+      },
+      {
+        "line": 128,
+        "text": "it.effect(\"falls back for unsupported native chronological system update placement\", () =>"
+      },
+      {
+        "line": 171,
+        "text": "it.effect(\"rejects a system update between a local tool call and its result\", () =>"
+      },
+      {
+        "line": 178,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: {} })]),"
+      },
+      {
+        "line": 180,
+        "text": "Message.tool({ id: \"call_1\", name: \"lookup\", result: \"Done.\" }),"
+      },
+      {
+        "line": 190,
+        "text": "it.effect(\"prepares tool call and tool result messages\", () =>"
+      },
+      {
+        "line": 198,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } })]),"
+      },
+      {
+        "line": 199,
+        "text": "Message.tool({ id: \"call_1\", name: \"lookup\", result: { forecast: \"sunny\" } }),"
+      },
+      {
+        "line": 211,
+        "text": "content: [{ type: \"tool_use\", id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } }],"
+      },
+      {
+        "line": 223,
+        "text": "it.effect(\"lowers image tool-result content as structured image blocks\", () =>"
+      },
+      {
+        "line": 231,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"read\", input: { filePath: \"shot.png\" } })]),"
+      },
+      {
+        "line": 234,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 253,
+        "text": "it.effect(\"lowers single-image tool-result content as a structured image block\", () =>"
+      },
+      {
+        "line": 260,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"screenshot\", input: {} })]),"
+      },
+      {
+        "line": 263,
+        "text": "name: \"screenshot\","
+      },
+      {
+        "line": 278,
+        "text": "it.effect(\"rejects non-image media in tool-result content with a clear error\", () =>"
+      },
+      {
+        "line": 285,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"fetch\", input: {} })]),"
+      },
+      {
+        "line": 288,
+        "text": "name: \"fetch\","
+      },
+      {
+        "line": 302,
+        "text": "it.effect(\"prepares the composed native continuation request\", () =>"
+      },
+      {
+        "line": 332,
+        "text": "content: [{ type: \"tool_use\", id: \"call_weather_1\", name: \"get_weather\", input: { city: \"Paris\" } }],"
+      },
+      {
+        "line": 342,
+        "text": "expect(prepared.body.tools).toEqual([expect.objectContaining({ name: \"get_weather\" })])"
+      },
+      {
+        "line": 346,
+        "text": "it.effect(\"lowers preserved Anthropic reasoning signature metadata\", () =>"
+      },
+      {
+        "line": 365,
+        "text": "it.effect(\"parses text, reasoning, and usage stream fixtures\", () =>"
+      },
+      {
+        "line": 410,
+        "text": "it.effect(\"assembles streamed tool call input\", () =>"
+      },
+      {
+        "line": 414,
+        "text": "{ type: \"content_block_start\", index: 0, content_block: { type: \"tool_use\", id: \"call_1\", name: \"lookup\" } },"
+      },
+      {
+        "line": 422,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 439,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 447,
+        "text": "{ type: \"tool-input-start\", id: \"call_1\", name: \"lookup\" },"
+      },
+      {
+        "line": 448,
+        "text": "{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: '{\"query\"' },"
+      },
+      {
+        "line": 449,
+        "text": "{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: ':\"weather\"}' },"
+      },
+      {
+        "line": 450,
+        "text": "{ type: \"tool-input-end\", id: \"call_1\", name: \"lookup\", providerMetadata: undefined },"
+      },
+      {
+        "line": 454,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 470,
+        "text": "it.effect(\"emits provider-error events for mid-stream provider errors\", () =>"
+      },
+      {
+        "line": 484,
+        "text": "it.effect(\"classifies prompt-too-long provider errors\", () =>"
+      },
+      {
+        "line": 507,
+        "text": "it.effect(\"falls back to error type when no message is present\", () =>"
+      },
+      {
+        "line": 517,
+        "text": "it.effect(\"falls back to a stable default when error payload is absent\", () =>"
+      },
+      {
+        "line": 527,
+        "text": "it.effect(\"fails HTTP provider errors before stream parsing\", () =>"
+      },
+      {
+        "line": 545,
+        "text": "it.effect(\"decodes server_tool_use + web_search_tool_result as provider-executed events\", () =>"
+      },
+      {
+        "line": 552,
+        "text": "content_block: { type: \"server_tool_use\", id: \"srvtoolu_abc\", name: \"web_search\" },"
+      },
+      {
+        "line": 577,
+        "text": "tools: [{ name: \"web_search\", description: \"Web search\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 585,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 593,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 603,
+        "text": "it.effect(\"decodes web_search_tool_result_error as provider-executed error result\", () =>"
+      },
+      {
+        "line": 610,
+        "text": "content_block: { type: \"server_tool_use\", id: \"srvtoolu_x\", name: \"web_search\" },"
+      },
+      {
+        "line": 628,
+        "text": "tools: [{ name: \"web_search\", description: \"Web search\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 636,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 643,
+        "text": "it.effect(\"round-trips provider-executed assistant content into server tool blocks\", () =>"
+      },
+      {
+        "line": 655,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 662,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 679,
+        "text": "{ type: \"server_tool_use\", id: \"srvtoolu_abc\", name: \"web_search\", input: { query: \"effect 4\" } },"
+      },
+      {
+        "line": 694,
+        "text": "it.effect(\"rejects round-trip for unknown server tool names\", () =>"
+      },
+      {
+        "line": 705,
+        "text": "name: \"future_server_tool\","
+      },
+      {
+        "line": 718,
+        "text": "it.effect(\"continues a conversation with user image content\", () =>"
+      },
+      {
+        "line": 766,
+        "text": "it.effect(\"maps ttlSeconds >= 3600 to cache_control ttl: '1h'\", () =>"
+      },
+      {
+        "line": 782,
+        "text": "it.effect(\"emits cache_control on tool definitions and tool-result blocks\", () =>"
+      },
+      {
+        "line": 789,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 797,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: {} })]),"
+      },
+      {
+        "line": 800,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 809,
+        "text": "tools: [{ name: \"lookup\", cache_control: { type: \"ephemeral\" } }],"
+      },
+      {
+        "line": 812,
+        "text": "{ role: \"assistant\", content: [{ type: \"tool_use\", id: \"call_1\", name: \"lookup\" }] },"
+      },
+      {
+        "line": 822,
+        "text": "it.effect(\"drops cache_control breakpoints past the 4-per-request cap\", () =>"
+      },
+      {
+        "line": 848,
+        "text": "it.effect(\"spends breakpoint budget on tools before system before messages\", () =>"
+      },
+      {
+        "line": 856,
+        "text": "name: \"t1\","
+      },
+      {
+        "line": 862,
+        "text": "name: \"t2\","
+      },
+      {
+        "line": 868,
+        "text": "name: \"t3\","
+      },
+      {
+        "line": 874,
+        "text": "name: \"t4\","
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/bedrock-converse-cache.recorded.test.ts",
+    "line_count": 54,
+    "declarations": [
+      {
+        "line": 44,
+        "text": "describe(\"Bedrock Converse cache recorded\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/bedrock-converse.test.ts",
+    "line_count": 744,
+    "declarations": [
+      {
+        "line": 72,
+        "text": "describe(\"Bedrock Converse route\", () => {"
+      },
+      {
+        "line": 73,
+        "text": "it.effect(\"prepares Converse target with system, inference config, and messages\", () =>"
+      },
+      {
+        "line": 86,
+        "text": "it.effect(\"passes topK through additionalModelRequestFields as top_k\", () =>"
+      },
+      {
+        "line": 99,
+        "text": "it.effect(\"omits additionalModelRequestFields when topK is unset\", () =>"
+      },
+      {
+        "line": 106,
+        "text": "it.effect(\"lowers chronological system updates to wrapped user text in order\", () =>"
+      },
+      {
+        "line": 123,
+        "text": "it.effect(\"prepares tool config with toolSpec and toolChoice\", () =>"
+      },
+      {
+        "line": 129,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 143,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 157,
+        "text": "it.effect(\"lowers assistant tool-call + tool-result message history\", () =>"
+      },
+      {
+        "line": 165,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"tool_1\", name: \"lookup\", input: { query: \"weather\" } })]),"
+      },
+      {
+        "line": 166,
+        "text": "Message.tool({ id: \"tool_1\", name: \"lookup\", result: { forecast: \"sunny\" } }),"
+      },
+      {
+        "line": 177,
+        "text": "content: [{ toolUse: { toolUseId: \"tool_1\", name: \"lookup\", input: { query: \"weather\" } } }],"
+      },
+      {
+        "line": 196,
+        "text": "it.effect(\"lowers image content in tool-result messages\", () =>"
+      },
+      {
+        "line": 204,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"tool_1\", name: \"screenshot\", input: {} })]),"
+      },
+      {
+        "line": 207,
+        "text": "name: \"screenshot\","
+      },
+      {
+        "line": 226,
+        "text": "content: [{ toolUse: { toolUseId: \"tool_1\", name: \"screenshot\", input: {} } }],"
+      },
+      {
+        "line": 245,
+        "text": "it.effect(\"decodes text-delta + messageStop + metadata usage from binary event stream\", () =>"
+      },
+      {
+        "line": 272,
+        "text": "it.effect(\"assembles streamed tool call input\", () =>"
+      },
+      {
+        "line": 280,
+        "text": "start: { toolUse: { toolUseId: \"tool_1\", name: \"lookup\" } },"
+      },
+      {
+        "line": 290,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 295,
+        "text": "{ type: \"tool-call\", id: \"tool_1\", name: \"lookup\", input: { query: \"weather\" } },"
+      },
+      {
+        "line": 299,
+        "text": "{ type: \"tool-input-delta\", id: \"tool_1\", name: \"lookup\", text: '{\"query\"' },"
+      },
+      {
+        "line": 300,
+        "text": "{ type: \"tool-input-delta\", id: \"tool_1\", name: \"lookup\", text: ':\"weather\"}' },"
+      },
+      {
+        "line": 306,
+        "text": "it.effect(\"decodes reasoning deltas\", () =>"
+      },
+      {
+        "line": 320,
+        "text": "it.effect(\"preserves streamed reasoning signatures for continuation lowering\", () =>"
+      },
+      {
+        "line": 358,
+        "text": "it.effect(\"emits provider-error for throttlingException\", () =>"
+      },
+      {
+        "line": 374,
+        "text": "it.effect(\"classifies input-too-long validation exceptions\", () =>"
+      },
+      {
+        "line": 391,
+        "text": "it.effect(\"rejects requests with no auth path\", () =>"
+      },
+      {
+        "line": 405,
+        "text": "it.effect(\"signs requests with SigV4 when AWS credentials are provided (deterministic plumbing check)\", () =>"
+      },
+      {
+        "line": 422,
+        "text": "it.effect(\"emits cachePoint markers after system, user-text, and assistant-text with cache hints\", () =>"
+      },
+      {
+        "line": 455,
+        "text": "it.effect(\"does not emit cachePoint when no cache hint is set\", () =>"
+      },
+      {
+        "line": 465,
+        "text": "it.effect(\"lowers image media into Bedrock image blocks\", () =>"
+      },
+      {
+        "line": 502,
+        "text": "it.effect(\"base64-encodes Uint8Array image bytes\", () =>"
+      },
+      {
+        "line": 524,
+        "text": "it.effect(\"lowers document media into Bedrock document blocks with format and name\", () =>"
+      },
+      {
+        "line": 532,
+        "text": "{ type: \"media\", mediaType: \"application/pdf\", data: \"UERGREFUQQ==\", filename: \"report.pdf\" },"
+      },
+      {
+        "line": 545,
+        "text": "{ document: { format: \"pdf\", name: \"report.pdf\", source: { bytes: \"UERGREFUQQ==\" } } },"
+      },
+      {
+        "line": 547,
+        "text": "{ document: { format: \"csv\", name: \"document.csv\", source: { bytes: \"Q1NWREFUQQ==\" } } },"
+      },
+      {
+        "line": 555,
+        "text": "it.effect(\"rejects unsupported image media types\", () =>"
+      },
+      {
+        "line": 569,
+        "text": "it.effect(\"rejects unsupported document media types\", () =>"
+      },
+      {
+        "line": 575,
+        "text": "messages: [Message.user([{ type: \"media\", mediaType: \"application/x-tar\", data: \"x\", filename: \"a.tar\" }])],"
+      },
+      {
+        "line": 583,
+        "text": "it.effect(\"maps ttlSeconds >= 3600 to cachePoint ttl: '1h'\", () =>"
+      },
+      {
+        "line": 600,
+        "text": "it.effect(\"appends cachePoint after marked tool definitions and tool-result blocks\", () =>"
+      },
+      {
+        "line": 606,
+        "text": "tools: [{ name: \"lookup\", description: \"lookup\", inputSchema: { type: \"object\", properties: {} }, cache }],"
+      },
+      {
+        "line": 609,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: {} })]),"
+      },
+      {
+        "line": 610,
+        "text": "Message.tool({ id: \"call_1\", name: \"lookup\", result: { temp: 72 }, cache }),"
+      },
+      {
+        "line": 618,
+        "text": "tools: [{ toolSpec: { name: \"lookup\" } }, { cachePoint: { type: \"default\" } }],"
+      },
+      {
+        "line": 632,
+        "text": "it.effect(\"drops cachePoint markers past the 4-per-request cap\", () =>"
+      },
+      {
+        "line": 687,
+        "text": "describe(\"Bedrock Converse recorded\", () => {"
+      },
+      {
+        "line": 726,
+        "text": "{ type: \"tool-call\", name: weatherToolName, input: { city: \"Paris\" } },"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/cloudflare.test.ts",
+    "line_count": 230,
+    "declarations": [
+      {
+        "line": 21,
+        "text": "describe(\"Cloudflare\", () => {"
+      },
+      {
+        "line": 22,
+        "text": "it.effect(\"prepares AI Gateway models through the OpenAI-compatible Chat protocol\", () =>"
+      },
+      {
+        "line": 48,
+        "text": "it.effect(\"posts to the derived gateway endpoint with bearer auth\", () =>"
+      },
+      {
+        "line": 86,
+        "text": "it.effect(\"defaults AI Gateway id to default when omitted or blank\", () =>"
+      },
+      {
+        "line": 98,
+        "text": "it.effect(\"supports authenticated AI Gateway plus upstream provider auth\", () =>"
+      },
+      {
+        "line": 128,
+        "text": "it.effect(\"allows a fully configured baseURL override\", () =>"
+      },
+      {
+        "line": 144,
+        "text": "it.effect(\"prepares direct Workers AI models through the OpenAI-compatible Chat protocol\", () =>"
+      },
+      {
+        "line": 169,
+        "text": "it.effect(\"posts direct Workers AI requests to the account endpoint with bearer auth\", () =>"
+      },
+      {
+        "line": 204,
+        "text": "it.effect(\"supports direct Workers AI token aliases through auth config\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/gemini-cache.recorded.test.ts",
+    "line_count": 48,
+    "declarations": [
+      {
+        "line": 35,
+        "text": "describe(\"Gemini cache recorded\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/gemini.test.ts",
+    "line_count": 584,
+    "declarations": [
+      {
+        "line": 26,
+        "text": "describe(\"Gemini route\", () => {"
+      },
+      {
+        "line": 27,
+        "text": "it.effect(\"prepares Gemini target\", () =>"
+      },
+      {
+        "line": 39,
+        "text": "it.effect(\"lowers chronological system updates to wrapped user text in order\", () =>"
+      },
+      {
+        "line": 55,
+        "text": "it.effect(\"prepares multimodal user input and tool history\", () =>"
+      },
+      {
+        "line": 63,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 68,
+        "text": "toolChoice: { type: \"tool\", name: \"lookup\" },"
+      },
+      {
+        "line": 74,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } })]),"
+      },
+      {
+        "line": 75,
+        "text": "Message.tool({ id: \"call_1\", name: \"lookup\", result: { forecast: \"sunny\" } }),"
+      },
+      {
+        "line": 88,
+        "text": "parts: [{ functionCall: { name: \"lookup\", args: { query: \"weather\" } } }],"
+      },
+      {
+        "line": 93,
+        "text": "{ functionResponse: { name: \"lookup\", response: { name: \"lookup\", content: '{\"forecast\":\"sunny\"}' } } },"
+      },
+      {
+        "line": 101,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 113,
+        "text": "it.effect(\"continues image tool results as inline vision input without base64 text\", () =>"
+      },
+      {
+        "line": 119,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_image\", name: \"read\", input: { path: \"pixel.png\" } })]),"
+      },
+      {
+        "line": 122,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 127,
+        "text": "{ type: \"file\", uri: \"data:image/png;base64,AAECAw==\", mime: \"image/png\", name: \"pixel.png\" },"
+      },
+      {
+        "line": 136,
+        "text": "{ role: \"model\", parts: [{ functionCall: { name: \"read\", args: { path: \"pixel.png\" } } }] },"
+      },
+      {
+        "line": 142,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 143,
+        "text": "response: { name: \"read\", content: \"Image read successfully\" },"
+      },
+      {
+        "line": 154,
+        "text": "it.effect(\"strips matching data URLs to raw base64 inlineData\", () =>"
+      },
+      {
+        "line": 163,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 177,
+        "text": "{ functionResponse: { name: \"read\", response: { name: \"read\", content: \"\" } } },"
+      },
+      {
+        "line": 190,
+        "text": "it.effect(`rejects ${name}`, () =>"
+      },
+      {
+        "line": 199,
+        "text": "it.effect(\"rejects oversized image input\", () =>"
+      },
+      {
+        "line": 217,
+        "text": "it.effect(\"omits tools when tool choice is none\", () =>"
+      },
+      {
+        "line": 224,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 235,
+        "text": "it.effect(\"sanitizes integer enums, dangling required, untyped arrays, and scalar object keys\", () =>"
+      },
+      {
+        "line": 244,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 252,
+        "text": "name: { type: \"string\", properties: { ignored: { type: \"string\" } }, required: [\"ignored\"] },"
+      },
+      {
+        "line": 271,
+        "text": "name: { type: \"string\" },"
+      },
+      {
+        "line": 282,
+        "text": "it.effect(\"parses text, reasoning, and usage stream fixtures\", () =>"
+      },
+      {
+        "line": 365,
+        "text": "it.effect(\"preserves thoughtSignature for reasoning and tool-call continuation\", () =>"
+      },
+      {
+        "line": 375,
+        "text": "{ functionCall: { name: \"lookup\", args: { query: \"weather\" } }, thoughtSignature: \"tool_sig\" },"
+      },
+      {
+        "line": 384,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 414,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 427,
+        "text": "{ functionCall: { name: \"lookup\", args: { query: \"weather\" } }, thoughtSignature: \"tool_sig\" },"
+      },
+      {
+        "line": 434,
+        "text": "it.effect(\"emits streamed tool calls and maps finish reason\", () =>"
+      },
+      {
+        "line": 441,
+        "text": "parts: [{ functionCall: { name: \"lookup\", args: { query: \"weather\" } } }],"
+      },
+      {
+        "line": 450,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 467,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 478,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 493,
+        "text": "it.effect(\"assigns unique ids to multiple streamed tool calls\", () =>"
+      },
+      {
+        "line": 501,
+        "text": "{ functionCall: { name: \"lookup\", args: { query: \"weather\" } } },"
+      },
+      {
+        "line": 502,
+        "text": "{ functionCall: { name: \"lookup\", args: { query: \"news\" } } },"
+      },
+      {
+        "line": 511,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 516,
+        "text": "{ type: \"tool-call\", id: \"tool_0\", name: \"lookup\", input: { query: \"weather\" } },"
+      },
+      {
+        "line": 517,
+        "text": "{ type: \"tool-call\", id: \"tool_1\", name: \"lookup\", input: { query: \"news\" } },"
+      },
+      {
+        "line": 523,
+        "text": "it.effect(\"maps length and content-filter finish reasons\", () =>"
+      },
+      {
+        "line": 545,
+        "text": "it.effect(\"leaves total usage undefined when component counts are missing\", () =>"
+      },
+      {
+        "line": 556,
+        "text": "it.effect(\"fails invalid stream events\", () =>"
+      },
+      {
+        "line": 569,
+        "text": "it.effect(\"rejects unsupported assistant media content\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/golden.recorded.test.ts",
+    "line_count": 223,
+    "declarations": [
+      {
+        "line": 71,
+        "text": "name: \"OpenAI Chat gpt-4o-mini\","
+      },
+      {
+        "line": 78,
+        "text": "name: \"OpenAI Responses gpt-5.5\","
+      },
+      {
+        "line": 93,
+        "text": "name: \"OpenAI Responses WebSocket gpt-4.1-mini\","
+      },
+      {
+        "line": 101,
+        "text": "name: \"Anthropic Haiku 4.5\","
+      },
+      {
+        "line": 109,
+        "text": "name: \"Anthropic Opus 4.7\","
+      },
+      {
+        "line": 121,
+        "text": "name: \"Gemini 2.5 Flash\","
+      },
+      {
+        "line": 133,
+        "text": "name: \"xAI Grok 3 Mini\","
+      },
+      {
+        "line": 140,
+        "text": "name: \"xAI Grok 4.3\","
+      },
+      {
+        "line": 148,
+        "text": "name: \"Cloudflare AI Gateway Workers AI Llama 3.1 8B\","
+      },
+      {
+        "line": 156,
+        "text": "name: \"Cloudflare AI Gateway Workers AI GPT OSS 20B Tools\","
+      },
+      {
+        "line": 164,
+        "text": "name: \"Cloudflare Workers AI Llama 3.1 8B\","
+      },
+      {
+        "line": 172,
+        "text": "name: \"Cloudflare Workers AI GPT OSS 20B Tools\","
+      },
+      {
+        "line": 180,
+        "text": "name: \"DeepSeek Chat\","
+      },
+      {
+        "line": 187,
+        "text": "name: \"TogetherAI Llama 3.3 70B\","
+      },
+      {
+        "line": 194,
+        "text": "name: \"Groq Llama 3.3 70B\","
+      },
+      {
+        "line": 201,
+        "text": "name: \"OpenRouter gpt-4o-mini\","
+      },
+      {
+        "line": 208,
+        "text": "name: \"OpenRouter gpt-5.5\","
+      },
+      {
+        "line": 216,
+        "text": "name: \"OpenRouter Claude Opus 4.7\","
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/openai-chat.test.ts",
+    "line_count": 674,
+    "declarations": [
+      {
+        "line": 31,
+        "text": "describe(\"OpenAI Chat route\", () => {"
+      },
+      {
+        "line": 32,
+        "text": "it.effect(\"prepares OpenAI Chat payload\", () =>"
+      },
+      {
+        "line": 54,
+        "text": "it.effect(\"lowers chronological system updates to escaped user wrappers in order\", () =>"
+      },
+      {
+        "line": 77,
+        "text": "it.effect(\"replays canonical reasoning as OpenAI-compatible reasoning_content\", () =>"
+      },
+      {
+        "line": 95,
+        "text": "it.effect(\"maps OpenAI provider options to Chat options\", () =>"
+      },
+      {
+        "line": 110,
+        "text": "it.effect(\"adds native query params to the Chat Completions URL\", () =>"
+      },
+      {
+        "line": 130,
+        "text": "it.effect(\"uses Azure api-key header for static OpenAI Chat keys\", () =>"
+      },
+      {
+        "line": 156,
+        "text": "it.effect(\"applies serializable HTTP overlays after payload lowering\", () =>"
+      },
+      {
+        "line": 190,
+        "text": "it.effect(\"prepares assistant tool-call and tool-result messages\", () =>"
+      },
+      {
+        "line": 198,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } })]),"
+      },
+      {
+        "line": 199,
+        "text": "Message.tool({ id: \"call_1\", name: \"lookup\", result: { forecast: \"sunny\" } }),"
+      },
+      {
+        "line": 215,
+        "text": "function: { name: \"lookup\", arguments: encodeJson({ query: \"weather\" }) },"
+      },
+      {
+        "line": 227,
+        "text": "it.effect(\"preserves structured tool errors for the model\", () =>"
+      },
+      {
+        "line": 234,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"bash\", input: {} })]),"
+      },
+      {
+        "line": 235,
+        "text": "Message.tool({ id: \"call_1\", name: \"bash\", resultType: \"error\", result: error }),"
+      },
+      {
+        "line": 248,
+        "text": "it.effect(\"continues image tool results as vision input without base64 text\", () =>"
+      },
+      {
+        "line": 254,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_image\", name: \"read\", input: { path: \"pixel.png\" } })]),"
+      },
+      {
+        "line": 257,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 262,
+        "text": "{ type: \"file\", uri: \"data:image/png;base64,AAECAw==\", mime: \"image/png\", name: \"pixel.png\" },"
+      },
+      {
+        "line": 278,
+        "text": "function: { name: \"read\", arguments: encodeJson({ path: \"pixel.png\" }) },"
+      },
+      {
+        "line": 292,
+        "text": "it.effect(\"orders parallel tool responses before one aggregated vision message\", () =>"
+      },
+      {
+        "line": 299,
+        "text": "ToolCallPart.make({ id: \"call_1\", name: \"read\", input: {} }),"
+      },
+      {
+        "line": 300,
+        "text": "ToolCallPart.make({ id: \"call_2\", name: \"read\", input: {} }),"
+      },
+      {
+        "line": 308,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 317,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 342,
+        "text": "it.effect(\"aggregates consecutive tool images with a following system update\", () =>"
+      },
+      {
+        "line": 350,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 358,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 383,
+        "text": "it.effect(\"appends system updates without replacing multipart user content\", () =>"
+      },
+      {
+        "line": 411,
+        "text": "it.effect(`rejects ${name}`, () =>"
+      },
+      {
+        "line": 420,
+        "text": "it.effect(\"rejects oversized image input\", () =>"
+      },
+      {
+        "line": 438,
+        "text": "it.effect(\"prepares raw and data URL image media as vision input\", () =>"
+      },
+      {
+        "line": 465,
+        "text": "it.effect(\"lowers reasoning-only assistant history\", () =>"
+      },
+      {
+        "line": 479,
+        "text": "it.effect(\"parses text and usage stream fixtures\", () =>"
+      },
+      {
+        "line": 529,
+        "text": "it.effect(\"parses OpenAI-compatible reasoning content deltas\", () =>"
+      },
+      {
+        "line": 555,
+        "text": "it.effect(\"assembles streamed tool call input\", () =>"
+      },
+      {
+        "line": 560,
+        "text": "tool_calls: [{ index: 0, id: \"call_1\", function: { name: \"lookup\", arguments: '{\"query\"' } }],"
+      },
+      {
+        "line": 567,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 573,
+        "text": "{ type: \"tool-input-start\", id: \"call_1\", name: \"lookup\", providerMetadata: undefined },"
+      },
+      {
+        "line": 574,
+        "text": "{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: '{\"query\"' },"
+      },
+      {
+        "line": 575,
+        "text": "{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: ':\"weather\"}' },"
+      },
+      {
+        "line": 576,
+        "text": "{ type: \"tool-input-end\", id: \"call_1\", name: \"lookup\", providerMetadata: undefined },"
+      },
+      {
+        "line": 580,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 591,
+        "text": "it.effect(\"does not finalize streamed tool calls without a finish reason\", () =>"
+      },
+      {
+        "line": 596,
+        "text": "tool_calls: [{ index: 0, id: \"call_1\", function: { name: \"lookup\", arguments: '{\"query\"' } }],"
+      },
+      {
+        "line": 601,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 610,
+        "text": "{ type: \"tool-input-start\", id: \"call_1\", name: \"lookup\", providerMetadata: undefined },"
+      },
+      {
+        "line": 611,
+        "text": "{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: '{\"query\"' },"
+      },
+      {
+        "line": 612,
+        "text": "{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: ':\"weather\"}' },"
+      },
+      {
+        "line": 619,
+        "text": "it.effect(\"fails on malformed stream events\", () =>"
+      },
+      {
+        "line": 628,
+        "text": "it.effect(\"surfaces transport errors that occur mid-stream\", () =>"
+      },
+      {
+        "line": 639,
+        "text": "it.effect(\"fails HTTP provider errors before stream parsing\", () =>"
+      },
+      {
+        "line": 657,
+        "text": "it.effect(\"short-circuits the upstream stream when the consumer takes a prefix\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/openai-compatible-chat.test.ts",
+    "line_count": 238,
+    "declarations": [
+      {
+        "line": 52,
+        "text": "describe(\"OpenAI-compatible Chat route\", () => {"
+      },
+      {
+        "line": 53,
+        "text": "it.effect(\"prepares generic Chat target\", () =>"
+      },
+      {
+        "line": 57,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 81,
+        "text": "function: { name: \"lookup\", description: \"Lookup data\", parameters: { type: \"object\" } },"
+      },
+      {
+        "line": 93,
+        "text": "it.effect(\"provides model helpers for compatible provider families\", () =>"
+      },
+      {
+        "line": 128,
+        "text": "it.effect(\"matches AI SDK compatible basic request body fixture\", () =>"
+      },
+      {
+        "line": 146,
+        "text": "it.effect(\"matches AI SDK compatible tool request body fixture\", () =>"
+      },
+      {
+        "line": 154,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 162,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } })]),"
+      },
+      {
+        "line": 163,
+        "text": "Message.tool({ id: \"call_1\", name: \"lookup\", result: { forecast: \"sunny\" } }),"
+      },
+      {
+        "line": 179,
+        "text": "function: { name: \"lookup\", arguments: '{\"query\":\"weather\"}' },"
+      },
+      {
+        "line": 189,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 195,
+        "text": "tool_choice: { type: \"function\", function: { name: \"lookup\" } },"
+      },
+      {
+        "line": 202,
+        "text": "it.effect(\"posts to the configured compatible endpoint and parses text usage\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/openai-responses-cache.recorded.test.ts",
+    "line_count": 47,
+    "declarations": [
+      {
+        "line": 36,
+        "text": "describe(\"OpenAI Responses cache recorded\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/openai-responses.test.ts",
+    "line_count": 1472,
+    "declarations": [
+      {
+        "line": 42,
+        "text": "describe(\"OpenAI Responses route\", () => {"
+      },
+      {
+        "line": 43,
+        "text": "it.effect(\"prepares OpenAI Responses target\", () =>"
+      },
+      {
+        "line": 61,
+        "text": "it.effect(\"lowers semantic service tier options\", () =>"
+      },
+      {
+        "line": 72,
+        "text": "it.effect(\"omits unsupported semantic service tiers\", () =>"
+      },
+      {
+        "line": 82,
+        "text": "it.effect(\"flattens top-level object unions in function schemas\", () =>"
+      },
+      {
+        "line": 88,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 117,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 135,
+        "text": "it.effect(\"lowers chronological system updates to escaped user wrappers in order\", () =>"
+      },
+      {
+        "line": 161,
+        "text": "it.effect(\"prepares OpenAI Responses WebSocket target\", () =>"
+      },
+      {
+        "line": 178,
+        "text": "it.effect(\"streams OpenAI Responses over WebSocket\", () =>"
+      },
+      {
+        "line": 233,
+        "text": "it.effect(\"fails immediately when WebSocket is already closed\", () =>"
+      },
+      {
+        "line": 245,
+        "text": "it.effect(\"adds native query params to the Responses URL\", () =>"
+      },
+      {
+        "line": 267,
+        "text": "it.effect(\"uses Azure api-key header for static OpenAI Responses keys\", () =>"
+      },
+      {
+        "line": 295,
+        "text": "it.effect(\"loads OpenAI default auth from Effect Config\", () =>"
+      },
+      {
+        "line": 316,
+        "text": "it.effect(\"lets explicit auth override OpenAI default API key auth\", () =>"
+      },
+      {
+        "line": 339,
+        "text": "it.effect(\"prepares function call and function output input items\", () =>"
+      },
+      {
+        "line": 347,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } })]),"
+      },
+      {
+        "line": 348,
+        "text": "Message.tool({ id: \"call_1\", name: \"lookup\", result: { forecast: \"sunny\" } }),"
+      },
+      {
+        "line": 357,
+        "text": "{ type: \"function_call\", call_id: \"call_1\", name: \"lookup\", arguments: '{\"query\":\"weather\"}' },"
+      },
+      {
+        "line": 371,
+        "text": "it.effect(\"preserves structured tool errors for the model\", () =>"
+      },
+      {
+        "line": 382,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"bash\", input: { command: \"sleep 10\" } })]),"
+      },
+      {
+        "line": 385,
+        "text": "name: \"bash\","
+      },
+      {
+        "line": 397,
+        "text": "it.effect(\"keeps primitive tool errors as plain text\", () =>"
+      },
+      {
+        "line": 403,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"bash\", input: {} })]),"
+      },
+      {
+        "line": 404,
+        "text": "Message.tool({ id: \"call_1\", name: \"bash\", resultType: \"error\", result: 503 }),"
+      },
+      {
+        "line": 413,
+        "text": "it.effect(\"keeps non-JSON tool errors as plain text\", () =>"
+      },
+      {
+        "line": 419,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"bash\", input: {} })]),"
+      },
+      {
+        "line": 420,
+        "text": "Message.tool({ id: \"call_1\", name: \"bash\", resultType: \"error\", result: new Error(\"boom\") }),"
+      },
+      {
+        "line": 431,
+        "text": "it.effect(\"lowers image tool-result content as structured input_image items\", () =>"
+      },
+      {
+        "line": 439,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"read\", input: { filePath: \"shot.png\" } })]),"
+      },
+      {
+        "line": 442,
+        "text": "name: \"read\","
+      },
+      {
+        "line": 460,
+        "text": "it.effect(\"lowers single-image tool-result content as structured input_image array\", () =>"
+      },
+      {
+        "line": 467,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"screenshot\", input: {} })]),"
+      },
+      {
+        "line": 470,
+        "text": "name: \"screenshot\","
+      },
+      {
+        "line": 484,
+        "text": "it.effect(\"rejects non-image media in tool-result content with a clear error\", () =>"
+      },
+      {
+        "line": 491,
+        "text": "Message.assistant([ToolCallPart.make({ id: \"call_1\", name: \"fetch\", input: {} })]),"
+      },
+      {
+        "line": 494,
+        "text": "name: \"fetch\","
+      },
+      {
+        "line": 507,
+        "text": "it.effect(\"prepares the composed native continuation request\", () =>"
+      },
+      {
+        "line": 534,
+        "text": "{ type: \"function_call\", call_id: \"call_weather_1\", name: \"get_weather\", arguments: '{\"city\":\"Paris\"}' },"
+      },
+      {
+        "line": 545,
+        "text": "expect(prepared.body.tools).toEqual([expect.objectContaining({ type: \"function\", name: \"get_weather\" })])"
+      },
+      {
+        "line": 549,
+        "text": "it.effect(\"maps OpenAI provider options to Responses options\", () =>"
+      },
+      {
+        "line": 574,
+        "text": "it.effect(\"accepts the full ResponseIncludable union\", () =>"
+      },
+      {
+        "line": 596,
+        "text": "it.effect(\"filters unknown includable values out of the include array\", () =>"
+      },
+      {
+        "line": 613,
+        "text": "it.effect(\"treats an explicit empty include as no include at all\", () =>"
+      },
+      {
+        "line": 623,
+        "text": "it.effect(\"treats an all-invalid include as no include at all\", () =>"
+      },
+      {
+        "line": 633,
+        "text": "it.effect(\"omits include when no include is set\", () =>"
+      },
+      {
+        "line": 643,
+        "text": "it.effect(\"requests encrypted reasoning by default for GPT-5 reasoning models\", () =>"
+      },
+      {
+        "line": 662,
+        "text": "it.effect(\"lets callers opt out of the GPT-5 default include\", () =>"
+      },
+      {
+        "line": 676,
+        "text": "it.effect(\"request OpenAI provider options override route defaults\", () =>"
+      },
+      {
+        "line": 694,
+        "text": "it.effect(\"parses text and usage stream fixtures\", () =>"
+      },
+      {
+        "line": 757,
+        "text": "it.effect(\"parses reasoning summary stream fixtures\", () =>"
+      },
+      {
+        "line": 789,
+        "text": "it.effect(\"preserves encrypted reasoning metadata for continuation\", () =>"
+      },
+      {
+        "line": 821,
+        "text": "it.effect(\"streams each reasoning summary part as a separate block\", () =>"
+      },
+      {
+        "line": 876,
+        "text": "it.effect(\"closes reasoning summary parts when storage is not disabled\", () =>"
+      },
+      {
+        "line": 911,
+        "text": "it.effect(\"continues a stateless reasoning conversation\", () =>"
+      },
+      {
+        "line": 971,
+        "text": "it.effect(\"preserves assistant content order around reasoning items\", () =>"
+      },
+      {
+        "line": 1009,
+        "text": "it.effect(\"references stored reasoning items by id\", () =>"
+      },
+      {
+        "line": 1031,
+        "text": "it.effect(\"references stored provider-executed hosted tool results by id\", () =>"
+      },
+      {
+        "line": 1040,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 1048,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 1067,
+        "text": "it.effect(\"joins streamed summary blocks into one continuation reasoning item\", () =>"
+      },
+      {
+        "line": 1104,
+        "text": "it.effect(\"skips non-persisted reasoning ids without encrypted state\", () =>"
+      },
+      {
+        "line": 1142,
+        "text": "it.effect(\"assembles streamed function call input\", () =>"
+      },
+      {
+        "line": 1147,
+        "text": "item: { type: \"function_call\", id: \"item_1\", call_id: \"call_1\", name: \"lookup\", arguments: \"\" },"
+      },
+      {
+        "line": 1157,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 1165,
+        "text": "tools: [{ name: \"lookup\", description: \"Lookup data\", inputSchema: { type: \"object\" } }],"
+      },
+      {
+        "line": 1183,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 1189,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 1195,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 1201,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 1207,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 1223,
+        "text": "it.effect(\"decodes web_search_call as provider-executed tool-call + tool-result\", () =>"
+      },
+      {
+        "line": 1245,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 1253,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 1262,
+        "text": "it.effect(\"decodes code_interpreter_call as provider-executed events with code input\", () =>"
+      },
+      {
+        "line": 1282,
+        "text": "name: \"code_interpreter\","
+      },
+      {
+        "line": 1291,
+        "text": "name: \"code_interpreter\","
+      },
+      {
+        "line": 1299,
+        "text": "it.effect(\"lowers user image content\", () =>"
+      },
+      {
+        "line": 1318,
+        "text": "it.effect(\"rejects unsupported user media content\", () =>"
+      },
+      {
+        "line": 1332,
+        "text": "it.effect(\"emits provider-error events for mid-stream provider errors\", () =>"
+      },
+      {
+        "line": 1346,
+        "text": "it.effect(\"falls back to error code when no message is present\", () =>"
+      },
+      {
+        "line": 1356,
+        "text": "it.effect(\"falls back to error code when message is empty\", () =>"
+      },
+      {
+        "line": 1370,
+        "text": "it.effect(\"surfaces response.failed details from response.error\", () =>"
+      },
+      {
+        "line": 1390,
+        "text": "it.effect(\"surfaces response.failed code when no nested message is present\", () =>"
+      },
+      {
+        "line": 1407,
+        "text": "it.effect(\"surfaces error event details even when they arrive nested under response.error\", () =>"
+      },
+      {
+        "line": 1435,
+        "text": "it.effect(\"falls back to a stable default when both error and response are absent\", () =>"
+      },
+      {
+        "line": 1445,
+        "text": "it.effect(\"falls back to a stable default when response.failed has no error payload\", () =>"
+      },
+      {
+        "line": 1455,
+        "text": "it.effect(\"fails HTTP provider errors before stream parsing\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/provider/openrouter.test.ts",
+    "line_count": 56,
+    "declarations": [
+      {
+        "line": 8,
+        "text": "describe(\"OpenRouter\", () => {"
+      },
+      {
+        "line": 9,
+        "text": "it.effect(\"prepares OpenRouter models through the OpenAI-compatible Chat route\", () =>"
+      },
+      {
+        "line": 31,
+        "text": "it.effect(\"applies OpenRouter payload options from the model helper\", () =>"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/recorded-golden.ts",
+    "line_count": 97,
+    "declarations": [
+      {
+        "line": 24,
+        "text": "readonly name: string"
+      },
+      {
+        "line": 69,
+        "text": "describe(`${target.name} recorded`, () => {"
+      },
+      {
+        "line": 76,
+        "text": "cassette: input.cassette,"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/recorded-ledger.test.ts",
+    "line_count": 20,
+    "declarations": [
+      {
+        "line": 10,
+        "text": "test(\"the unrecorded ledger names only cassettes that do not exist, each with a reason\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/recorded-runner.ts",
+    "line_count": 109,
+    "declarations": [
+      {
+        "line": 35,
+        "text": "readonly cassetteExists: (cassette: string) => boolean"
+      },
+      {
+        "line": 37,
+        "text": "readonly cassette: string"
+      },
+      {
+        "line": 48,
+        "text": "name: string,"
+      },
+      {
+        "line": 66,
+        "text": "return test.skip(name, () => {}, testOptions)"
+      },
+      {
+        "line": 71,
+        "text": "return test.skip(name, () => {}, testOptions)"
+      },
+      {
+        "line": 75,
+        "text": "if (!input.cassetteExists(cassette)) return test.skip(name, () => {}, testOptions)"
+      },
+      {
+        "line": 76,
+        "text": "return test(name, () => {"
+      },
+      {
+        "line": 81,
+        "text": "return test(name, () => {"
+      },
+      {
+        "line": 82,
+        "text": "throw new Error(`${cassette} has no cassette: record it with RECORD=true, or ledger it in unrecorded in recorded-utils.ts`)"
+      },
+      {
+        "line": 98,
+        "text": "const effect = <A, E2>(name: string, body: RecordedBody<A, E2, R>, testOptions?: number | TestOptions) =>"
+      },
+      {
+        "line": 102,
+        "text": "name: string,"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/recorded-scenarios.ts",
+    "line_count": 531,
+    "declarations": [
+      {
+        "line": 35,
+        "text": "name: weatherToolName,"
+      },
+      {
+        "line": 115,
+        "text": "...dispatched.map(([call, result]) => Message.tool({ id: call.id, name: call.name, result: result.result })),"
+      },
+      {
+        "line": 154,
+        "text": "{ type: \"tool-call\", id: expect.any(String), name: weatherToolName, input: { city: \"Paris\" } },"
+      },
+      {
+        "line": 167,
+        "text": "expect(toolCalls[0]).toMatchObject({ type: \"tool-call\", name: weatherToolName, input: { city: \"Paris\" } })"
+      },
+      {
+        "line": 173,
+        "text": "name: weatherToolName,"
+      },
+      {
+        "line": 221,
+        "text": "readonly toolCall?: { readonly name: string; readonly input: unknown }"
+      },
+      {
+        "line": 242,
+        "text": "name: string,"
+      },
+      {
+        "line": 268,
+        "text": "{ type: \"tool-call\", id: expect.any(String), name: expected.name, input: expected.input },"
+      },
+      {
+        "line": 384,
+        "text": "Message.assistant([{ type: \"tool-call\", id: \"call_screenshot_1\", name: screenshotToolName, input: {} }]),"
+      },
+      {
+        "line": 387,
+        "text": "name: screenshotToolName,"
+      },
+      {
+        "line": 397,
+        "text": "name: screenshotToolName,"
+      },
+      {
+        "line": 507,
+        "text": "name: event.name,"
+      },
+      {
+        "line": 516,
+        "text": "name: event.name,"
+      },
+      {
+        "line": 523,
+        "text": "summary.push({ type: \"tool-error\", name: event.name, message: event.message })"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/recorded-test.ts",
+    "line_count": 94,
+    "declarations": []
+  },
+  {
+    "path": "packages/llm/test/recorded-utils.ts",
+    "line_count": 95,
+    "declarations": [
+      {
+        "line": 11,
+        "text": "export const envList = (name: string) =>"
+      },
+      {
+        "line": 34,
+        "text": "readonly name: string"
+      },
+      {
+        "line": 35,
+        "text": "readonly cassette: string"
+      },
+      {
+        "line": 93,
+        "text": "name: string,"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/recorded-websocket.ts",
+    "line_count": 26,
+    "declarations": [
+      {
+        "line": 9,
+        "text": "cassette: string,"
+      },
+      {
+        "line": 17,
+        "text": "name: cassette,"
+      },
+      {
+        "line": 20,
+        "text": "cassette: cassetteService,"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/response.test.ts",
+    "line_count": 98,
+    "declarations": [
+      {
+        "line": 7,
+        "text": "describe(\"LLMResponse reducer\", () => {"
+      },
+      {
+        "line": 8,
+        "text": "test(\"assembles interleaved reasoning and text with end metadata\", () => {"
+      },
+      {
+        "line": 45,
+        "text": "test(\"preserves partial content without completing a failed stream\", () => {"
+      },
+      {
+        "line": 52,
+        "text": "test(\"does not complete ended content without a terminal finish\", () => {"
+      },
+      {
+        "line": 63,
+        "text": "test(\"uses terminal usage when present and keeps prior usage when finish omits it\", () => {"
+      },
+      {
+        "line": 77,
+        "text": "test(\"assembles tool-call content only after the completed tool call event\", () => {"
+      },
+      {
+        "line": 79,
+        "text": "LLMEvent.toolInputStart({ id: \"call_1\", name: \"lookup\" }),"
+      },
+      {
+        "line": 80,
+        "text": "LLMEvent.toolInputDelta({ id: \"call_1\", name: \"lookup\", text: '{\"query\"' }),"
+      },
+      {
+        "line": 88,
+        "text": "LLMEvent.toolInputDelta({ id: \"call_1\", name: \"lookup\", text: ':\"weather\"}' }),"
+      },
+      {
+        "line": 89,
+        "text": "LLMEvent.toolInputEnd({ id: \"call_1\", name: \"lookup\" }),"
+      },
+      {
+        "line": 90,
+        "text": "LLMEvent.toolCall({ id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } }),"
+      },
+      {
+        "line": 95,
+        "text": "{ type: \"tool-call\", id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } },"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/route.test.ts",
+    "line_count": 43,
+    "declarations": [
+      {
+        "line": 5,
+        "text": "describe(\"Route.with\", () => {"
+      },
+      {
+        "line": 6,
+        "text": "test(\"merges endpoint query and header defaults while replacing auth and id\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/schema.test.ts",
+    "line_count": 86,
+    "declarations": [
+      {
+        "line": 17,
+        "text": "describe(\"llm schema\", () => {"
+      },
+      {
+        "line": 18,
+        "text": "test(\"decodes a minimal request\", () => {"
+      },
+      {
+        "line": 34,
+        "text": "test(\"accepts custom route ids\", () => {"
+      },
+      {
+        "line": 46,
+        "text": "test(\"rejects invalid event type\", () => {"
+      },
+      {
+        "line": 50,
+        "text": "test(\"finish constructors accept usage input\", () => {"
+      },
+      {
+        "line": 55,
+        "text": "test(\"content part tagged union exposes guards\", () => {"
+      },
+      {
+        "line": 61,
+        "text": "describe(\"LLM.Usage\", () => {"
+      },
+      {
+        "line": 62,
+        "text": "test(\"subtractTokens clamps non-sensical breakdowns to zero\", () => {"
+      },
+      {
+        "line": 73,
+        "text": "test(\"sumTokens returns undefined only when every input is undefined\", () => {"
+      },
+      {
+        "line": 80,
+        "text": "test(\"visibleOutputTokens clamps reasoning > output to zero\", () => {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/tool-runtime.test.ts",
+    "line_count": 818,
+    "declarations": [
+      {
+        "line": 57,
+        "text": "describe(\"LLMClient tools\", () => {"
+      },
+      {
+        "line": 58,
+        "text": "it.effect(\"uses the registered model route when adding runtime tools\", () =>"
+      },
+      {
+        "line": 75,
+        "text": "it.effect(\"sends tool-call history and request options on the follow-up request\", () =>"
+      },
+      {
+        "line": 117,
+        "text": "tool_calls: [{ id: \"call_1\", type: \"function\", function: { name: \"get_weather\" } }],"
+      },
+      {
+        "line": 127,
+        "text": "it.effect(\"dispatches a tool call, appends results, and resumes streaming\", () =>"
+      },
+      {
+        "line": 145,
+        "text": "name: \"get_weather\","
+      },
+      {
+        "line": 153,
+        "text": "it.effect(\"projects encoded typed tool success into canonical model content\", () =>"
+      },
+      {
+        "line": 169,
+        "text": "LLMEvent.toolCall({ id: \"call_projected\", name: \"projected\", input: { prefix: \"count\" } }),"
+      },
+      {
+        "line": 178,
+        "text": "name: \"projected\","
+      },
+      {
+        "line": 186,
+        "text": "it.effect(\"uses the narrow default projection for encoded typed success\", () =>"
+      },
+      {
+        "line": 202,
+        "text": "(yield* ToolRuntime.dispatch({ text }, LLMEvent.toolCall({ id: \"call_text\", name: \"text\", input: {} }))).output,"
+      },
+      {
+        "line": 205,
+        "text": "(yield* ToolRuntime.dispatch({ json }, LLMEvent.toolCall({ id: \"call_json\", name: \"json\", input: {} }))).output,"
+      },
+      {
+        "line": 210,
+        "text": "it.effect(\"can retain model media while redacting duplicated structured payloads\", () =>"
+      },
+      {
+        "line": 225,
+        "text": "LLMEvent.toolCall({ id: \"call_image\", name: \"image\", input: {} }),"
+      },
+      {
+        "line": 235,
+        "text": "it.effect(\"models canonical tool files with URIs\", () =>"
+      },
+      {
+        "line": 257,
+        "text": "it.effect(\"preserves canonical tool file URIs\", () =>"
+      },
+      {
+        "line": 295,
+        "text": "it.effect(\"settles projected URL files as canonical tool results\", () =>"
+      },
+      {
+        "line": 307,
+        "text": "LLMEvent.toolCall({ id: \"call_remote\", name: \"remote\", input: {} }),"
+      },
+      {
+        "line": 322,
+        "text": "it.effect(\"derives typed output schemas and preserves dynamic output schemas\", () =>"
+      },
+      {
+        "line": 341,
+        "text": "it.effect(\"preserves content tool results from dynamic tools\", () =>"
+      },
+      {
+        "line": 368,
+        "text": "name: \"screenshot\","
+      },
+      {
+        "line": 380,
+        "text": "it.effect(\"does not mistake dynamic tool output fields for dispatcher state\", () =>"
+      },
+      {
+        "line": 391,
+        "text": "LLMEvent.toolCall({ id: \"call_1\", name: \"eventful\", input: {} }),"
+      },
+      {
+        "line": 398,
+        "text": "name: \"eventful\","
+      },
+      {
+        "line": 406,
+        "text": "it.effect(\"executes tool calls for one step without looping by default\", () =>"
+      },
+      {
+        "line": 425,
+        "text": "it.effect(\"passes tool call context to execute\", () =>"
+      },
+      {
+        "line": 450,
+        "text": "expect(context).toEqual({ id: \"call_ctx\", name: \"contextual\" })"
+      },
+      {
+        "line": 454,
+        "text": "it.effect(\"can expose tool schemas without executing tool calls\", () =>"
+      },
+      {
+        "line": 471,
+        "text": "it.effect(\"preserves provider metadata when folding streamed assistant content into follow-up history\", () =>"
+      },
+      {
+        "line": 488,
+        "text": "content_block: { type: \"tool_use\", id: \"call_1\", name: \"get_weather\" },"
+      },
+      {
+        "line": 526,
+        "text": "{ type: \"tool_use\", id: \"call_1\", name: \"get_weather\", input: { city: \"Paris\" } },"
+      },
+      {
+        "line": 535,
+        "text": "it.effect(\"replays encrypted OpenAI reasoning items with tool outputs\", () =>"
+      },
+      {
+        "line": 560,
+        "text": "name: \"get_weather\","
+      },
+      {
+        "line": 571,
+        "text": "name: \"get_weather\","
+      },
+      {
+        "line": 602,
+        "text": "{ type: \"function_call\", call_id: \"call_1\", name: \"get_weather\" },"
+      },
+      {
+        "line": 609,
+        "text": "it.effect(\"emits tool-error for unknown tools so the model can self-correct\", () =>"
+      },
+      {
+        "line": 624,
+        "text": "expect(toolError).toMatchObject({ type: \"tool-error\", id: \"call_1\", name: \"missing_tool\" })"
+      },
+      {
+        "line": 629,
+        "text": "name: \"missing_tool\","
+      },
+      {
+        "line": 635,
+        "text": "it.effect(\"emits tool-error when the LLM input fails the parameters schema\", () =>"
+      },
+      {
+        "line": 650,
+        "text": "expect(toolError).toMatchObject({ type: \"tool-error\", id: \"call_1\", name: \"get_weather\" })"
+      },
+      {
+        "line": 655,
+        "text": "it.effect(\"emits tool-error when the handler returns a ToolFailure\", () =>"
+      },
+      {
+        "line": 670,
+        "text": "expect(toolError).toMatchObject({ type: \"tool-error\", id: \"call_1\", name: \"get_weather\" })"
+      },
+      {
+        "line": 676,
+        "text": "it.effect(\"stops when the model finishes without requesting more tools\", () =>"
+      },
+      {
+        "line": 701,
+        "text": "it.effect(\"respects maxSteps and stops the loop\", () =>"
+      },
+      {
+        "line": 725,
+        "text": "it.effect(\"does not dispatch provider-executed tool calls\", () =>"
+      },
+      {
+        "line": 737,
+        "text": "content_block: { type: \"server_tool_use\", id: \"srvtoolu_abc\", name: \"web_search\" },"
+      },
+      {
+        "line": 781,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 790,
+        "text": "it.effect(\"dispatches multiple tool calls in one step concurrently\", () =>"
+      },
+      {
+        "line": 797,
+        "text": "{ index: 0, id: \"c1\", function: { name: \"get_weather\", arguments: '{\"city\":\"Paris\"}' } },"
+      },
+      {
+        "line": 798,
+        "text": "{ index: 1, id: \"c2\", function: { name: \"get_weather\", arguments: '{\"city\":\"Tokyo\"}' } },"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/tool-schema-projection.test.ts",
+    "line_count": 117,
+    "declarations": [
+      {
+        "line": 9,
+        "text": "describe(\"tool schema projections\", () => {"
+      },
+      {
+        "line": 10,
+        "text": "test(\"moonshot strips $ref siblings and converts tuple arrays to a schema object\", () => {"
+      },
+      {
+        "line": 30,
+        "text": "test(\"gemini handles numeric enums, dangling required fields, untyped arrays, and scalar object keys\", () => {"
+      },
+      {
+        "line": 38,
+        "text": "name: { type: \"string\", properties: { ignored: { type: \"string\" } }, required: [\"ignored\"] },"
+      },
+      {
+        "line": 47,
+        "text": "name: { type: \"string\" },"
+      },
+      {
+        "line": 52,
+        "text": "test(\"openai keeps one flat object top-level schema\", () => {"
+      },
+      {
+        "line": 77,
+        "text": "it.effect(\"applies model compatibility before protocol projection\", () =>"
+      },
+      {
+        "line": 88,
+        "text": "name: \"lookup\","
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/tool-stream.test.ts",
+    "line_count": 99,
+    "declarations": [
+      {
+        "line": 9,
+        "text": "describe(\"ToolStream\", () => {"
+      },
+      {
+        "line": 10,
+        "text": "it.effect(\"starts from OpenAI-style deltas and finalizes parsed input\", () =>"
+      },
+      {
+        "line": 16,
+        "text": "{ id: \"call_1\", name: \"lookup\", text: '{\"query\"' },"
+      },
+      {
+        "line": 25,
+        "text": "{ type: \"tool-input-start\", id: \"call_1\", name: \"lookup\" },"
+      },
+      {
+        "line": 26,
+        "text": "{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: '{\"query\"' },"
+      },
+      {
+        "line": 28,
+        "text": "expect(second.events).toEqual([{ type: \"tool-input-delta\", id: \"call_1\", name: \"lookup\", text: ':\"weather\"}' }])"
+      },
+      {
+        "line": 32,
+        "text": "{ type: \"tool-input-end\", id: \"call_1\", name: \"lookup\" },"
+      },
+      {
+        "line": 33,
+        "text": "{ type: \"tool-call\", id: \"call_1\", name: \"lookup\", input: { query: \"weather\" } },"
+      },
+      {
+        "line": 39,
+        "text": "it.effect(\"fails appendExisting when the provider skipped the tool start\", () =>"
+      },
+      {
+        "line": 48,
+        "text": "it.effect(\"uses final input override without losing accumulated deltas\", () =>"
+      },
+      {
+        "line": 52,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 60,
+        "text": "{ type: \"tool-input-end\", id: \"call_1\", name: \"lookup\" },"
+      },
+      {
+        "line": 61,
+        "text": "{ type: \"tool-call\", id: \"call_1\", name: \"lookup\", input: { query: \"final\" } },"
+      },
+      {
+        "line": 67,
+        "text": "it.effect(\"preserves providerExecuted and clears all tools\", () =>"
+      },
+      {
+        "line": 71,
+        "text": "name: \"lookup\","
+      },
+      {
+        "line": 76,
+        "text": "name: \"web_search\","
+      },
+      {
+        "line": 85,
+        "text": "{ type: \"tool-input-end\", id: \"call_1\", name: \"lookup\" },"
+      },
+      {
+        "line": 86,
+        "text": "{ type: \"tool-call\", id: \"call_1\", name: \"lookup\", input: {} },"
+      },
+      {
+        "line": 87,
+        "text": "{ type: \"tool-input-end\", id: \"call_2\", name: \"web_search\" },"
+      },
+      {
+        "line": 91,
+        "text": "name: \"web_search\","
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/tool.types.ts",
+    "line_count": 40,
+    "declarations": [
+      {
+        "line": 37,
+        "text": "ToolRuntime.dispatch({ executable }, { type: \"tool-call\", id: \"call_1\", name: \"executable\", input: { city: \"Paris\" } })"
+      }
+    ]
+  },
+  {
+    "path": "tooling/http-recorder/test/record-replay.test.ts",
+    "line_count": 879,
+    "declarations": [
+      {
+        "line": 14,
+        "text": "const seedCassetteDirectory = (directory: string, name: string, interactions: ReadonlyArray<Interaction>) =>"
+      },
+      {
+        "line": 40,
+        "text": "name: string,"
+      },
+      {
+        "line": 64,
+        "text": "describe(\"http-recorder\", () => {"
+      },
+      {
+        "line": 65,
+        "text": "test(\"redacts sensitive URL query parameters\", () => {"
+      },
+      {
+        "line": 75,
+        "text": "test(\"redacts URL credentials\", () => {"
+      },
+      {
+        "line": 81,
+        "text": "test(\"applies custom URL redaction after built-in redaction\", () => {"
+      },
+      {
+        "line": 91,
+        "text": "test(\"redacts sensitive headers when allow-listed\", () => {"
+      },
+      {
+        "line": 113,
+        "text": "test(\"redacts error requests without retaining headers, params, or body\", () => {"
+      },
+      {
+        "line": 127,
+        "text": "test(\"detects secret-looking values without returning the secret\", () => {"
+      },
+      {
+        "line": 155,
+        "text": "test(\"detects secret-looking values inside metadata\", () => {"
+      },
+      {
+        "line": 165,
+        "text": "test(\"redacts configured and common sensitive JSON fields\", () => {"
+      },
+      {
+        "line": 185,
+        "text": "test(\"extends default header redaction and allow lists\", () => {"
+      },
+      {
+        "line": 210,
+        "text": "test(\"records WebSocket frames in observed client/server order\", async () => {"
+      },
+      {
+        "line": 262,
+        "text": "test(\"WebSocket replay preserves causal frame ordering\", async () => {"
+      },
+      {
+        "line": 312,
+        "text": "test(\"the public socket decorator replays a provided Effect socket\", async () => {"
+      },
+      {
+        "line": 359,
+        "text": "test(\"WebSocket replay runs message handlers concurrently\", async () => {"
+      },
+      {
+        "line": 402,
+        "text": "test(\"WebSocket replay rejects close with unconsumed events\", async () => {"
+      },
+      {
+        "line": 442,
+        "text": "test(\"failed WebSocket runs do not write complete cassettes\", async () => {"
+      },
+      {
+        "line": 474,
+        "text": "test(\"WebSocket replay preserves binary frame kinds across reconnects\", async () => {"
+      },
+      {
+        "line": 538,
+        "text": "test(\"replay returns recorded responses in order for identical requests\", async () => {"
+      },
+      {
+        "line": 549,
+        "text": "test(\"replay reports cursor exhaustion when more requests are made than recorded\", async () => {"
+      },
+      {
+        "line": 560,
+        "text": "test(\"replay validates each recorded request in order\", async () => {"
+      },
+      {
+        "line": 572,
+        "text": "test(\"concurrent replay claims each interaction once\", async () => {"
+      },
+      {
+        "line": 585,
+        "text": "test(\"replays when the cassette exists\", async () => {"
+      },
+      {
+        "line": 604,
+        "text": "test(\"forces replay when CI=true even if cassette is missing\", async () => {"
+      },
+      {
+        "line": 624,
+        "text": "test(\"mismatch diagnostics show redacted request differences against the expected interaction\", async () => {"
+      },
+      {
+        "line": 641,
+        "text": "test(\"records to disk when the cassette is missing\", async () => {"
+      },
+      {
+        "line": 660,
+        "text": "test(\"records concurrent requests in request-start order\", async () => {"
+      },
+      {
+        "line": 681,
+        "text": "const request = (name: string) =>"
+      },
+      {
+        "line": 705,
+        "text": "test(\"returns the live response while persisting its redacted snapshot\", async () => {"
+      },
+      {
+        "line": 731,
+        "text": "test(\"reconstructs responses with null-body statuses\", async () => {"
+      },
+      {
+        "line": 751,
+        "text": "test(\"records and replays arbitrary binary responses without changing bytes\", async () => {"
+      },
+      {
+        "line": 780,
+        "text": "test(\"UnsafeCassetteError fails the request when a recording would write a known secret\", async () => {"
+      },
+      {
+        "line": 797,
+        "text": "test(\"failed memory appends leave cassette state unchanged\", async () => {"
+      },
+      {
+        "line": 819,
+        "text": "test(\"concurrent file appends preserve every interaction\", async () => {"
+      },
+      {
+        "line": 845,
+        "text": "test(\"rejects cassette paths outside the recordings directory\", () => {"
+      },
+      {
+        "line": 851,
+        "text": "test(\"Cassette.list enumerates recorded cassette names\", async () => {"
+      }
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "scope": "captured assigned baseline source blobs, not semantic acceptance",
+  "groups": {
+    "b": {
+      "assigned_source_blobs_verified": 290,
+      "out_of_population_captures": 1,
+      "mismatches": []
+    },
+    "c": {
+      "assigned_source_blobs_verified": 284,
+      "out_of_population_captures": 1,
+      "mismatches": []
+    },
+    "a": {
+      "assigned_source_blobs_verified": 77,
+      "out_of_population_captures": 1,
+      "mismatches": []
+    }
+  }
+}

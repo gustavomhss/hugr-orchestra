@@ -1,0 +1,1185 @@
+[
+  {
+    "id": "C01",
+    "artifact_keys": [
+      "s1.runtime.llm_turns.l1"
+    ],
+    "title": "Compile/prepare and terminal finish boundary",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/route/client.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "5f064512f9ff1b449137778440eb0fd6b86c8131",
+        "source_sha256": "d5dea2096bdab9ef55e1d9593d5eb5e05adf0c7c873b5cfc8671b73b322e37c1",
+        "line_start": 341,
+        "line_end": 390,
+        "byte_length": 1808,
+        "sha256": "1c7c43321327f29d8c056968819d1ec57fe38f98e8f5130efde1cc41cdb1471f"
+      }
+    ]
+  },
+  {
+    "id": "C02",
+    "artifact_keys": [
+      "s1.runtime.llm_turns.l1"
+    ],
+    "title": "Dynamic schema identity versus Effect codecs",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/tool.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "11ed9854ca38a9ef648705d1091aaa35e1660da0",
+        "source_sha256": "5a15723f7efb2d01c49fff1fd510cd72ece0c7544a89b37622f4c6c151ff5103",
+        "line_start": 165,
+        "line_end": 196,
+        "byte_length": 1294,
+        "sha256": "132f36c297776e836740edfa89648e193e7390779d3ad0ec0db0d23ec1ccd2a5"
+      }
+    ]
+  },
+  {
+    "id": "C03",
+    "artifact_keys": [
+      "s1.runtime.llm_turns.l1"
+    ],
+    "title": "One-call dispatch and mapped tool failures",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/tool-runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "d69bbb9d478ca532a1481e8d7502c8e5c2b55dc6",
+        "source_sha256": "da324a868e54e4f884ca4255ea8d8e34ee080d05daef0afbf11aebe3bdc18e1f",
+        "line_start": 22,
+        "line_end": 61,
+        "byte_length": 1777,
+        "sha256": "3747d48ae40d5b6e3f001921c645eaa0e1265442fb99436c3a8a043b1932703a"
+      }
+    ]
+  },
+  {
+    "id": "C04",
+    "artifact_keys": [
+      "s1.runtime.llm_turns.l1"
+    ],
+    "title": "Forced structured-object tool and decode refusal",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/llm.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "e4781d8608b0185c500866aae20fda8335640550",
+        "source_sha256": "974e8bbab37e712bc58df24f76db9f3d66faf00929ad0782d3ca16db4451c2a7",
+        "line_start": 110,
+        "line_end": 142,
+        "byte_length": 1220,
+        "sha256": "4d4c58140e17632edee208947295cf87fe814bc84f43f78cbe27d74345091d18"
+      }
+    ]
+  },
+  {
+    "id": "C05",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "title": "Protocol-owned overlay refusal and auth order",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/route/transport/http.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "acc52c6ea173c28f92247b0fd31d58ea688df7e5",
+        "source_sha256": "7f956da303ff5d0532498901845ee0e64a26fa78dd25697b229d3855c9483dd7",
+        "line_start": 31,
+        "line_end": 42,
+        "byte_length": 231,
+        "sha256": "a9026431e47853a4f9ecd179052f612c8af910736aa2dc1787df20eea89cf450"
+      },
+      {
+        "path": "packages/llm/src/route/transport/http.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "acc52c6ea173c28f92247b0fd31d58ea688df7e5",
+        "source_sha256": "7f956da303ff5d0532498901845ee0e64a26fa78dd25697b229d3855c9483dd7",
+        "line_start": 59,
+        "line_end": 85,
+        "byte_length": 1054,
+        "sha256": "e5ef95aac6b7f5912987d84ec8719db46310cd536b358f3dd1d67d8e523ea836"
+      },
+      {
+        "path": "packages/llm/src/route/transport/http.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "acc52c6ea173c28f92247b0fd31d58ea688df7e5",
+        "source_sha256": "7f956da303ff5d0532498901845ee0e64a26fa78dd25697b229d3855c9483dd7",
+        "line_start": 88,
+        "line_end": 105,
+        "byte_length": 719,
+        "sha256": "c0e56ac91b292880a72b1186edb1d3823b0f7393339e94b11e2723d042756c43"
+      }
+    ]
+  },
+  {
+    "id": "C06",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "title": "Retryable and nonretryable error classes",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/schema/errors.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "072e4e83892890ba48b25e45eb3cd2592afc9f86",
+        "source_sha256": "a1b34b20c32343aeece5d0da5e93896f7b1102b7a2cf4e1b65609d982ba5b159",
+        "line_start": 74,
+        "line_end": 131,
+        "byte_length": 1717,
+        "sha256": "b1694b866675409c364e25c7720f5f8623762aeca05df84ceca1a3c3e0083ce7"
+      },
+      {
+        "path": "packages/llm/src/route/executor.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+        "source_sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+        "line_start": 355,
+        "line_end": 364,
+        "byte_length": 419,
+        "sha256": "6ccd2640a5c96059626dc48c9cea3563616c398accb5ce67d6159fec4c6e3ba7"
+      }
+    ]
+  },
+  {
+    "id": "C07",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "title": "Text-only escaped chronological update fallback",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/protocols/shared.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c14f52faccd472ae0f68f1a272a03d9e1310167c",
+        "source_sha256": "4d2bb4018b1bae0559474a7ad1ea679c9030f1277f7fb3f1cc4388579048c976",
+        "line_start": 104,
+        "line_end": 148,
+        "byte_length": 1988,
+        "sha256": "ba56b7f405c43d12dbf204e1158ce78e072fbadae9f3cf46223b5b1e323867d7"
+      }
+    ]
+  },
+  {
+    "id": "C08",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "title": "Anthropic model/placement and pending-tool boundary",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/protocols/anthropic-messages.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1c0dcd32a4332261a1361010f2f314cbda4fda54",
+        "source_sha256": "7f9480cf92848569c0825726490582e1d627810fa46a58c3c474828cc65d0dd6",
+        "line_start": 342,
+        "line_end": 395,
+        "byte_length": 2403,
+        "sha256": "80d5a6c94516fe1b83d4ff3b5b35bc31373cadb1e898da10b2eba6109acfc4b8"
+      },
+      {
+        "path": "packages/llm/src/protocols/anthropic-messages.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1c0dcd32a4332261a1361010f2f314cbda4fda54",
+        "source_sha256": "7f9480cf92848569c0825726490582e1d627810fa46a58c3c474828cc65d0dd6",
+        "line_start": 408,
+        "line_end": 422,
+        "byte_length": 939,
+        "sha256": "ebb2a3ceaded3cfc8fb383b79fe84468db55d6c829fc04bb7311f2d28a20eb55"
+      }
+    ]
+  },
+  {
+    "id": "C09",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "title": "Responses structured-output refusal",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/protocols/openai-responses.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503",
+        "source_sha256": "3f097c0228e1d579c602569292b443459dc802bc8b9f10387e66c0c67beda46e",
+        "line_start": 911,
+        "line_end": 919,
+        "byte_length": 441,
+        "sha256": "1a8c754bd2a5fb34ca819b62ed2a11bfdc5d27d8fac27d5d0d97bf8894dd52e4"
+      }
+    ]
+  },
+  {
+    "id": "C10",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1"
+    ],
+    "title": "Missing WebSocket service refuses the transport",
+    "excerpts": [
+      {
+        "path": "packages/llm/src/route/transport/websocket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "edb8aafa28922cbe1dda18c28367e0b3487297b7",
+        "source_sha256": "faf505cee9cb136244b6dd36db4209770243028f0fbd48bb2463e4b694a3a6e9",
+        "line_start": 240,
+        "line_end": 259,
+        "byte_length": 755,
+        "sha256": "1925b134518cbde49a6cd4b2a6787d985f03c9f215a4a6127979a566a0b85125"
+      }
+    ]
+  },
+  {
+    "id": "C11",
+    "artifact_keys": [
+      "s1.runtime.llm_providers.l1",
+      "s1.runtime.guides_intent.l1"
+    ],
+    "title": "Guide distinguishes model-layer implementation and Core routing",
+    "excerpts": [
+      {
+        "path": "docs/guides/models.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1acc49061d975b65c05cb2c194cd612b802914d8",
+        "source_sha256": "5821a5ac3a5cc3090224989a2b94e32d80b55f4dbc6f3b296272b63e32c8d399",
+        "line_start": 7,
+        "line_end": 16,
+        "byte_length": 459,
+        "sha256": "8c1f668c2a789bc75b55d46d52fe60b27b6cf290e705e47a87bc7886bfa101a7"
+      }
+    ]
+  },
+  {
+    "id": "C12",
+    "artifact_keys": [
+      "s1.runtime.llm_recording.l1"
+    ],
+    "title": "Recording/replay skip and failure decisions",
+    "excerpts": [
+      {
+        "path": "packages/llm/test/recorded-runner.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "49d44f554628b887d14f8a4141f8b53ce19f3a64",
+        "source_sha256": "948936a73c0cc7d455c71fba1cf65cd7b019ec46ef3f6394bda5fce7d7315ad4",
+        "line_start": 48,
+        "line_end": 101,
+        "byte_length": 2165,
+        "sha256": "d01cd5b7edb6e83d015685d8277b3602d580fd4a2642364c82c3d4e8241a3696"
+      }
+    ]
+  },
+  {
+    "id": "C13",
+    "artifact_keys": [
+      "s1.runtime.llm_recording.l1"
+    ],
+    "title": "Unrecorded ledger rationale and examples",
+    "excerpts": [
+      {
+        "path": "packages/llm/test/recorded-utils.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1c135ee695029626a5f06329c652231d7840481d",
+        "source_sha256": "b9646ce6055c37762760fe72a0b719ebc18f1eb3dd287e23618e0c850d97184d",
+        "line_start": 51,
+        "line_end": 90,
+        "byte_length": 2508,
+        "sha256": "177f801d9e9f7c4fd8673d998496b16f1633da974475d79ce6861b1dff11f8d2"
+      }
+    ]
+  },
+  {
+    "id": "C14",
+    "artifact_keys": [
+      "s1.runtime.llm_recording.l1"
+    ],
+    "title": "LLM fixture adapter uses internal recorder API",
+    "excerpts": [
+      {
+        "path": "packages/llm/test/recorded-websocket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "7da0ae3ba35f97eae8303b2662300d760acf9fd3",
+        "source_sha256": "f8effb3b935f690827339ddfd3adfdf059bea3e2a19d11094c0ea3e23ef42245",
+        "line_start": 1,
+        "line_end": 26,
+        "byte_length": 1063,
+        "sha256": "f8effb3b935f690827339ddfd3adfdf059bea3e2a19d11094c0ea3e23ef42245"
+      }
+    ]
+  },
+  {
+    "id": "C15",
+    "artifact_keys": [
+      "s1.runtime.plugin.l1"
+    ],
+    "title": "Host binding, agent identity and metadata contract",
+    "excerpts": [
+      {
+        "path": "packages/plugin/src/tool.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cdf9a933f496db2a00907a4f388220715aec0097",
+        "source_sha256": "62423741f0e96fece2e8292e724774717c16f6cdc9ffbfcf1dd3a37d261a2c3c",
+        "line_start": 3,
+        "line_end": 42,
+        "byte_length": 1574,
+        "sha256": "aee824009309162e7588cabce8035ffd1fdc18be7098bb7b67bcf864d45a9c1b"
+      },
+      {
+        "path": "packages/plugin/src/tool.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cdf9a933f496db2a00907a4f388220715aec0097",
+        "source_sha256": "62423741f0e96fece2e8292e724774717c16f6cdc9ffbfcf1dd3a37d261a2c3c",
+        "line_start": 68,
+        "line_end": 75,
+        "byte_length": 218,
+        "sha256": "2d68f65b549f951dcd91c1e1e6582049f4fea8c10282046b99fff16a5602afa9"
+      }
+    ]
+  },
+  {
+    "id": "C16",
+    "artifact_keys": [
+      "s1.runtime.plugin.l1"
+    ],
+    "title": "Current context and scoped registration signatures",
+    "excerpts": [
+      {
+        "path": "packages/plugin/src/v2/effect/context.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "9089334ee3bb2d0f909877acea0f85d145577930",
+        "source_sha256": "fdfb91252f21fc9bed98a3dc3e9d8d6a4650272bbad687989a0acf8c459c406c",
+        "line_start": 12,
+        "line_end": 22,
+        "byte_length": 386,
+        "sha256": "37cc6a894e2aea09a18c163ab63f48a9eb84efd140fe7b0092dbad4b3aebb764"
+      },
+      {
+        "path": "packages/plugin/src/v2/effect/registration.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "dfe5626397645e9fbefd793d9f6b4a48974a36c0",
+        "source_sha256": "5f12992aee537e74e4ed49d82d5c0c7b4f7fd2c2131e319fdee9dfe83cea91a0",
+        "line_start": 1,
+        "line_end": 15,
+        "byte_length": 379,
+        "sha256": "5f12992aee537e74e4ed49d82d5c0c7b4f7fd2c2131e319fdee9dfe83cea91a0"
+      }
+    ]
+  },
+  {
+    "id": "C17",
+    "artifact_keys": [
+      "s1.runtime.plugin.l1"
+    ],
+    "title": "TUI compatibility and distinct client capability",
+    "excerpts": [
+      {
+        "path": "packages/plugin/src/tui.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "df0eec88398ab435191810dc5e651b746561c512",
+        "source_sha256": "cdc7bc32e189f2924c79e587729458f7c39bac7d3be08b30637b7cf09e9a6d28",
+        "line_start": 92,
+        "line_end": 121,
+        "byte_length": 823,
+        "sha256": "5a97bfc2fc85e56fdfc4784819e6ae31179e3f2086e77e184b2b169e938d6f28"
+      },
+      {
+        "path": "packages/plugin/src/tui.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "df0eec88398ab435191810dc5e651b746561c512",
+        "source_sha256": "cdc7bc32e189f2924c79e587729458f7c39bac7d3be08b30637b7cf09e9a6d28",
+        "line_start": 647,
+        "line_end": 671,
+        "byte_length": 731,
+        "sha256": "4afa7783be38c1ebc5036ac4eaffd00977564650d611ee2bfcda5e98fa818997"
+      }
+    ]
+  },
+  {
+    "id": "C18",
+    "artifact_keys": [
+      "s1.runtime.plugin.l1"
+    ],
+    "title": "V2 target plan is not current API documentation",
+    "excerpts": [
+      {
+        "path": "packages/plugin/src/v2/effect/PLAN.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "889e8d056b5bdedaeec259c9f5976783c54ad789",
+        "source_sha256": "ea6fd6bce86efaf9f0d6976b0a6562b1ce62c37f60281a8cc72d22d73b0c28fb",
+        "line_start": 1,
+        "line_end": 16,
+        "byte_length": 965,
+        "sha256": "655f226d1a662c5759c7f5d2047ae4fbde498c52ee284adfa930c915e059a0ac"
+      }
+    ]
+  },
+  {
+    "id": "C19",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "title": "Limits have no defaults and invalid configuration throws",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/codemode.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "14782d7c8aaed7b4647e64f6631459bdd4684a64",
+        "source_sha256": "3879f24437731883f423bf249e8cf13a4fda3f14a354fc42ab390877c53d7d0d",
+        "line_start": 119,
+        "line_end": 142,
+        "byte_length": 1108,
+        "sha256": "c709fff954d94054c2a8c035e87041adf1f03864760c50753bd017080b1c2a50"
+      }
+    ]
+  },
+  {
+    "id": "C20",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "title": "Effect validation versus render-only JSON Schema",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/tool.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "6c6863f99dcf7e659a4e1a2b582095694404e39c",
+        "source_sha256": "e297f881d51f281d21376ce58cd30909aa0e69f8ec1b722334c09834d6f6a1bd",
+        "line_start": 3,
+        "line_end": 8,
+        "byte_length": 349,
+        "sha256": "9d51368503544a13e7ca94e348485ad9b6ecc66caa72e557057a8035f73a9dfe"
+      },
+      {
+        "path": "packages/codemode/src/tool.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "6c6863f99dcf7e659a4e1a2b582095694404e39c",
+        "source_sha256": "e297f881d51f281d21376ce58cd30909aa0e69f8ec1b722334c09834d6f6a1bd",
+        "line_start": 62,
+        "line_end": 68,
+        "byte_length": 558,
+        "sha256": "62a9362ab3dee41cdad1b1a351e7adabfb47eea01cf62fc10751bde9e62b16d5"
+      }
+    ]
+  },
+  {
+    "id": "C21",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "title": "Plain-object, cycle and blocked-property refusal",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/tool-runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "f4ccc61d4c49a4f7572906559e5a4e2a11acdec9",
+        "source_sha256": "4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20",
+        "line_start": 268,
+        "line_end": 293,
+        "byte_length": 896,
+        "sha256": "b7486fa62d97a099a090992d95a21a591597c916ca875afa7f72a81e112367cb"
+      }
+    ]
+  },
+  {
+    "id": "C22",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "title": "Supervised calls, abandoned promises and fixed concurrency",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 692,
+        "line_end": 740,
+        "byte_length": 2369,
+        "sha256": "22dfb7840014ef64e08bd0d034fd3ebb1efaae45d639884c46f120e3a390d1d5"
+      },
+      {
+        "path": "packages/codemode/src/stdlib/promise.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "d0b442ccf74f2230e0e8cbe060b0be86a120ce6a",
+        "source_sha256": "ba9f90a9bb9c37feefbbc26b4cc28f259224a26fea193840162841d6fbe89609",
+        "line_start": 1,
+        "line_end": 6,
+        "byte_length": 293,
+        "sha256": "ba9f90a9bb9c37feefbbc26b4cc28f259224a26fea193840162841d6fbe89609"
+      }
+    ]
+  },
+  {
+    "id": "C23",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "title": "Host interruption and sanitized failure",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/tool-runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "f4ccc61d4c49a4f7572906559e5a4e2a11acdec9",
+        "source_sha256": "4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20",
+        "line_start": 143,
+        "line_end": 150,
+        "byte_length": 366,
+        "sha256": "bb958aa24852c5761cccc19e4312e40702511a563079281945d88fbf37448b71"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3394,
+        "line_end": 3406,
+        "byte_length": 452,
+        "sha256": "57336d18d32488bd64c3a49db998dcbe59253e3f2fe1f21cdb90562ebc59e99a"
+      }
+    ]
+  },
+  {
+    "id": "C24",
+    "artifact_keys": [
+      "s1.runtime.codemode.l1"
+    ],
+    "title": "Output payload truncation and added explanatory markers",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3420,
+        "line_end": 3438,
+        "byte_length": 995,
+        "sha256": "b88ed2999bfedfe9d25029c7674535931b6bf04301644434b10c6567ccbfea36"
+      },
+      {
+        "path": "packages/codemode/src/interpreter/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "093f577765100e95597919986f606010fd82066e",
+        "source_sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053",
+        "line_start": 3445,
+        "line_end": 3465,
+        "byte_length": 758,
+        "sha256": "aba6ebc9592326edc16e4559ffec7e995f2d8176914ce6125235f74ad37db4b8"
+      }
+    ]
+  },
+  {
+    "id": "C25",
+    "artifact_keys": [
+      "s1.runtime.codemode_openapi.l1"
+    ],
+    "title": "Unsupported parameter encoding and invalid base URL",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/openapi/spec.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d",
+        "source_sha256": "48840fc9c5426a199e18c4136aebc4a693bd4d6c71d78249ea0f9b9468b15ea8",
+        "line_start": 128,
+        "line_end": 154,
+        "byte_length": 1854,
+        "sha256": "d35429c1f15e4f11a1d7187998908679099f2434d121804b7659951e86da695e"
+      },
+      {
+        "path": "packages/codemode/src/openapi/spec.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d",
+        "source_sha256": "48840fc9c5426a199e18c4136aebc4a693bd4d6c71d78249ea0f9b9468b15ea8",
+        "line_start": 428,
+        "line_end": 440,
+        "byte_length": 685,
+        "sha256": "a8a2be83206a84f0fca45117c1b4456c1e9381b7666521dfdd2fb4ba7602e594"
+      }
+    ]
+  },
+  {
+    "id": "C26",
+    "artifact_keys": [
+      "s1.runtime.codemode_openapi.l1"
+    ],
+    "title": "Host security alternatives and path refusals",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/openapi/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "source_sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d",
+        "line_start": 116,
+        "line_end": 153,
+        "byte_length": 1429,
+        "sha256": "e21cf6e89a7a9863d40942c2cb63b0bb2601adaa6700107679b9142a0061a7fd"
+      },
+      {
+        "path": "packages/codemode/src/openapi/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "source_sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d",
+        "line_start": 210,
+        "line_end": 225,
+        "byte_length": 692,
+        "sha256": "d5064d2e68478c8f9abfb367878daef3ea95bfd0826228cd5e047e8a0fe564dc"
+      }
+    ]
+  },
+  {
+    "id": "C27",
+    "artifact_keys": [
+      "s1.runtime.codemode_openapi.l1"
+    ],
+    "title": "Response body cap before and during reading",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/openapi/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "source_sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d",
+        "line_start": 9,
+        "line_end": 9,
+        "byte_length": 46,
+        "sha256": "e55908ef94ec6b294f5f048069d669f54bdf80cac78ca00de89d2f15b767ea45"
+      },
+      {
+        "path": "packages/codemode/src/openapi/runtime.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "source_sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d",
+        "line_start": 290,
+        "line_end": 326,
+        "byte_length": 1706,
+        "sha256": "cb090bcfa81383d09e2d6dea1b49e72c63821158eff24542567b65b5ed3c90cb"
+      }
+    ]
+  },
+  {
+    "id": "C28",
+    "artifact_keys": [
+      "s1.runtime.codemode_openapi.l1"
+    ],
+    "title": "Documented unresolved OpenAPI boundaries",
+    "excerpts": [
+      {
+        "path": "packages/codemode/src/openapi/TODO.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cbcfe81a68c8df2fa7aae622ddf2997e3ab29433",
+        "source_sha256": "fd764b43f04fb0137b51ce7a5465408303bd4eeb007dacc8ced6fe0bfd4869fa",
+        "line_start": 1,
+        "line_end": 19,
+        "byte_length": 1213,
+        "sha256": "fd764b43f04fb0137b51ce7a5465408303bd4eeb007dacc8ced6fe0bfd4869fa"
+      }
+    ]
+  },
+  {
+    "id": "C29",
+    "artifact_keys": [
+      "s1.runtime.effect_sqlite.l1"
+    ],
+    "title": "Transaction connection and cleanup control flow",
+    "excerpts": [
+      {
+        "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "e7b9d6b32cd835bdf54d70ba39e92a5839f26968",
+        "source_sha256": "4fa29583a6cbd148a5a8699dfd96d87944b2b04a559335c461a6e3635d7d9cf1",
+        "line_start": 149,
+        "line_end": 196,
+        "byte_length": 2628,
+        "sha256": "9018c398410376943aae3a4549177c488777c7e2cd2d52aff864a69bedec65e3"
+      }
+    ]
+  },
+  {
+    "id": "C30",
+    "artifact_keys": [
+      "s1.runtime.effect_sqlite.l1"
+    ],
+    "title": "Preserve every original and cleanup failure reason",
+    "excerpts": [
+      {
+        "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "e7b9d6b32cd835bdf54d70ba39e92a5839f26968",
+        "source_sha256": "4fa29583a6cbd148a5a8699dfd96d87944b2b04a559335c461a6e3635d7d9cf1",
+        "line_start": 237,
+        "line_end": 247,
+        "byte_length": 672,
+        "sha256": "71166a3ecb34c0675c3330841cda0ad498a74861816219383b6547aa15a0a1a4"
+      }
+    ]
+  },
+  {
+    "id": "C31",
+    "artifact_keys": [
+      "s1.runtime.effect_sqlite.l1"
+    ],
+    "title": "Journal matching and unmatched-row refusal",
+    "excerpts": [
+      {
+        "path": "packages/effect-drizzle-sqlite/src/up-migrations/sqlite.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "2887c66bed735cd812d885953335d8f99c6dad2a",
+        "source_sha256": "d4ac9eaf56892c0b18d66918da22412e3b2a96eac3ddb9433db619a328798828",
+        "line_start": 59,
+        "line_end": 90,
+        "byte_length": 1131,
+        "sha256": "35ad55aaa3cf6cd35bb6c445158a126c367ce1c2dad66fd726bf0c66160fb23f"
+      }
+    ]
+  },
+  {
+    "id": "C32",
+    "artifact_keys": [
+      "s1.runtime.effect_sqlite.l1"
+    ],
+    "title": "Migration init refusal and transactional execution",
+    "excerpts": [
+      {
+        "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/session.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "15a56f2ca7d9fe73a1fdaaa244d3430fb74cd965",
+        "source_sha256": "54648e442841965faa98f12948903d3805207412d338bedbe460e27034114d82",
+        "line_start": 452,
+        "line_end": 489,
+        "byte_length": 1246,
+        "sha256": "9927db39f3261591fe1fcf81d992f062519ea78fcd1fd112aa1b5413345099f6"
+      }
+    ]
+  },
+  {
+    "id": "C33",
+    "artifact_keys": [
+      "s1.runtime.effect_sqlite.l1"
+    ],
+    "title": "Node constructor, unsupported stream and documented usage limit",
+    "excerpts": [
+      {
+        "path": "packages/effect-sqlite-node/src/index.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "fe8d67b91b7c8a9fc977eba61f14de94db22fabf",
+        "source_sha256": "61aabb392d528e09553383961a52a4055dbcdbbde01c1a19ed608abddf1ae679",
+        "line_start": 59,
+        "line_end": 70,
+        "byte_length": 439,
+        "sha256": "359fffbd5ef364795779a38a7da107a4cdc313c8dff68854abfaea09b53f6133"
+      },
+      {
+        "path": "packages/effect-sqlite-node/src/index.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "fe8d67b91b7c8a9fc977eba61f14de94db22fabf",
+        "source_sha256": "61aabb392d528e09553383961a52a4055dbcdbbde01c1a19ed608abddf1ae679",
+        "line_start": 113,
+        "line_end": 121,
+        "byte_length": 307,
+        "sha256": "6bce7b7b925a01bfdb3f0eacd130805ea5683fee63f1f49a7872c8768af28b47"
+      },
+      {
+        "path": "packages/effect-sqlite-node/README.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "5b1aa3d802989d35580a1f9fc970d9a3b3958892",
+        "source_sha256": "1cbb59b5444a8836281356a9371dea7512e69691830ce6e1e361549b18d790b6",
+        "line_start": 3,
+        "line_end": 13,
+        "byte_length": 605,
+        "sha256": "78e8f3e964d4d7a205d9ec0e0f3ee3511485e6446932c58e651f7cfb206f8e12"
+      }
+    ]
+  },
+  {
+    "id": "C34",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "title": "Auto-mode and unused-interaction exception",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/recorder.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c58afde4633ce7c77939650dce276b8710fe6955",
+        "source_sha256": "0a5127e617a6c1c2175600318fe22ab7c1188659c277f4cfc16c36809a9d6a76",
+        "line_start": 6,
+        "line_end": 18,
+        "byte_length": 412,
+        "sha256": "a7754c18cf377c60719c857b9b9a98784c35daaaf50d3a6d27326571362bd0ed"
+      },
+      {
+        "path": "tooling/http-recorder/src/recorder.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c58afde4633ce7c77939650dce276b8710fe6955",
+        "source_sha256": "0a5127e617a6c1c2175600318fe22ab7c1188659c277f4cfc16c36809a9d6a76",
+        "line_start": 35,
+        "line_end": 58,
+        "byte_length": 1005,
+        "sha256": "eb9985f9ec4b43b4ace9f7bd07b2cf4d3ab94a1ac7f22aa970129940b04da4ef"
+      }
+    ]
+  },
+  {
+    "id": "C35",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "title": "Replay delegates exact sequential matching",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/internal-effect.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "6b886311a99548188be8ab4086dc30be49bf6846",
+        "source_sha256": "06b7522ec87f00c79ea9045e3570921de90ef910c740e7c757faf12836fa1c2d",
+        "line_start": 156,
+        "line_end": 178,
+        "byte_length": 1084,
+        "sha256": "2b660ab6b580940f5d9a491a82493f8500549a9bb29a678c49ef46e3b1454f16"
+      }
+    ]
+  },
+  {
+    "id": "C36",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1",
+      "s1.runtime.llm_recording.l1"
+    ],
+    "title": "Internal executor separates server/client event lists",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/websocket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "869cd3bf90e0df8140eb2e708e0728d197415311",
+        "source_sha256": "cb0ba77ff4b848cab63e7df6a033c12baa0ee96f67b49126b3692eb87965f772",
+        "line_start": 138,
+        "line_end": 169,
+        "byte_length": 1647,
+        "sha256": "1aca488ea808578f3cbe445c7cb6d88638be6e3ac222cdc06fc43e647d0ee8d1"
+      }
+    ]
+  },
+  {
+    "id": "C37",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "title": "Lexical path and prewrite secret refusal",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/cassette.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cefc3fbc703db1f8e4dceb1cf9249f900dadd08a",
+        "source_sha256": "e023331feff17778547ae4d42387ce9a7147ddc40e01b2464b7fddc8ea4ae4f0",
+        "line_start": 41,
+        "line_end": 49,
+        "byte_length": 506,
+        "sha256": "aee669cba54260df2a4cbb21fd6a730f7ddfbd923cc845e2feb8fcde37dc18cf"
+      },
+      {
+        "path": "tooling/http-recorder/src/cassette.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "cefc3fbc703db1f8e4dceb1cf9249f900dadd08a",
+        "source_sha256": "e023331feff17778547ae4d42387ce9a7147ddc40e01b2464b7fddc8ea4ae4f0",
+        "line_start": 104,
+        "line_end": 121,
+        "byte_length": 1199,
+        "sha256": "1a0e33d82ad5797b7685eb2a0fc3ff6bfd37d0629749939965b519790fa546f1"
+      }
+    ]
+  },
+  {
+    "id": "C38",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "title": "Public replay advances through interleaved traffic",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/src/socket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c7486db4aa29bc88bd48eaa17890286670cb575d",
+        "source_sha256": "92a6e20bdf6d056f0bcbbc861b508db62a5accc5a8c0659f140b15dad5086228",
+        "line_start": 74,
+        "line_end": 108,
+        "byte_length": 1239,
+        "sha256": "2eff487d671511a22e62f1e57ef0c314e2e361c5f128b9b3b2d8e3c559e788f0"
+      },
+      {
+        "path": "tooling/http-recorder/src/socket.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "c7486db4aa29bc88bd48eaa17890286670cb575d",
+        "source_sha256": "92a6e20bdf6d056f0bcbbc861b508db62a5accc5a8c0659f140b15dad5086228",
+        "line_start": 236,
+        "line_end": 244,
+        "byte_length": 461,
+        "sha256": "cc6b1e0d9deeffb7f7b4c0701a2277ba90539ad273a07a2c500bc068ac73c95b"
+      }
+    ]
+  },
+  {
+    "id": "C39",
+    "artifact_keys": [
+      "s1.runtime.http_recorder.l1"
+    ],
+    "title": "Pack removes internal export and rewrites public paths",
+    "excerpts": [
+      {
+        "path": "tooling/http-recorder/script/pack.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "746d7aaebd8af9117eebed109689d6751b87f1a4",
+        "source_sha256": "faa507f536a28130f49010ad52e88aafbc0e32017a3d644d1e4765e8461addd6",
+        "line_start": 16,
+        "line_end": 28,
+        "byte_length": 433,
+        "sha256": "31562c73e56aef10cd3de991a72501ece0534b52f900a3d39514df6468276251"
+      }
+    ]
+  },
+  {
+    "id": "C40",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1"
+    ],
+    "title": "Global-only project trust and API path refusal are guide claims",
+    "excerpts": [
+      {
+        "path": "docs/guides/mcp-project-trust.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "da47586309cc0c24ca4b7427b358c3706b648a46",
+        "source_sha256": "712b0e470369f8a261b91d2ae96991fee0dfdcfca221fd66f2ff79aa2a58a9e1",
+        "line_start": 3,
+        "line_end": 14,
+        "byte_length": 941,
+        "sha256": "e484a6adde5ad46c152ca6c11e269d12f2690760744c551416f42748588cca0a"
+      },
+      {
+        "path": "docs/guides/mcp-project-trust.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "da47586309cc0c24ca4b7427b358c3706b648a46",
+        "source_sha256": "712b0e470369f8a261b91d2ae96991fee0dfdcfca221fd66f2ff79aa2a58a9e1",
+        "line_start": 48,
+        "line_end": 60,
+        "byte_length": 631,
+        "sha256": "e42138781f6e88ef9a41702a8ace3757d2979cb38d81162a792811abefdf845e"
+      }
+    ]
+  },
+  {
+    "id": "C41",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1"
+    ],
+    "title": "Permission reply and client-state persistence distinctions",
+    "excerpts": [
+      {
+        "path": "docs/guides/permissions.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "4ece5d1d331da22ad5d67441e01f6ccef6717eb8",
+        "source_sha256": "3617f418e1f8e8c32f7c9c5eacdcfebc8f255a406ec2b227a86342a7b5a569e1",
+        "line_start": 13,
+        "line_end": 29,
+        "byte_length": 1221,
+        "sha256": "4f439c4fba4151c4429657ec5e4a3ec29365b12b4636a8d8eae1dee90f06a4ca"
+      }
+    ]
+  },
+  {
+    "id": "C42",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1"
+    ],
+    "title": "Database backup intent and refusal",
+    "excerpts": [
+      {
+        "path": "docs/guides/database-backups.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a661c599a3519440fd8d990bf1d48d21d3885467",
+        "source_sha256": "a1e33b9ab1fd151fb706b7d3d8f6d9e830b065491f91d568981249e992d1f629",
+        "line_start": 1,
+        "line_end": 24,
+        "byte_length": 897,
+        "sha256": "572f2c4b18637a281067faa52d475f5b1f94145ef03ca1b6e38730f688195f79"
+      }
+    ]
+  },
+  {
+    "id": "C43",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1"
+    ],
+    "title": "Credential storage and decryption-failure intent",
+    "excerpts": [
+      {
+        "path": "docs/guides/credentials.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "9e6c450c0a51ac92c9adc5852db920b575f2150a",
+        "source_sha256": "a0c4d1888c597f5f4ab95a36c64f4d4f897f1a6fbdcb232263c382763d2e2c2d",
+        "line_start": 9,
+        "line_end": 17,
+        "byte_length": 792,
+        "sha256": "d8631cfffbb7f7412b869923bf5edb27d84acec2d7d5ff4f9832f77b7378085b"
+      },
+      {
+        "path": "docs/guides/credentials.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "9e6c450c0a51ac92c9adc5852db920b575f2150a",
+        "source_sha256": "a0c4d1888c597f5f4ab95a36c64f4d4f897f1a6fbdcb232263c382763d2e2c2d",
+        "line_start": 28,
+        "line_end": 35,
+        "byte_length": 719,
+        "sha256": "3aaa71be315790a2ed1e10d0d83a7bb0064fa319adc2bbbee41d03b2221b2748"
+      }
+    ]
+  },
+  {
+    "id": "C44",
+    "artifact_keys": [
+      "s1.runtime.guides_intent.l1"
+    ],
+    "title": "Behavior plugins differ from code authoring package",
+    "excerpts": [
+      {
+        "path": "docs/guides/plugins.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "4a271a325f679e25a990e51f89ea0009d8c48131",
+        "source_sha256": "4cdd834146b9d9a9a6dfecfde22a25cddd9f08a04e82cf5de2edf704e020ff34",
+        "line_start": 1,
+        "line_end": 14,
+        "byte_length": 1031,
+        "sha256": "21061eeca9c09d235e51d32f9d6e3fd460757e6ce8c9ece14ef6bb6bc3c58922"
+      },
+      {
+        "path": "docs/guides/plugins.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "4a271a325f679e25a990e51f89ea0009d8c48131",
+        "source_sha256": "4cdd834146b9d9a9a6dfecfde22a25cddd9f08a04e82cf5de2edf704e020ff34",
+        "line_start": 27,
+        "line_end": 31,
+        "byte_length": 529,
+        "sha256": "4ce64116d4a1e0eedacb76601b508b5cc55661ea3fca1c0e03e8e015cf1ef77a"
+      }
+    ]
+  },
+  {
+    "id": "C45",
+    "artifact_keys": [
+      "s1.runtime.maintenance_intent.l1"
+    ],
+    "title": "Root test-execution authority",
+    "excerpts": [
+      {
+        "path": "AGENTS.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+        "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+        "line_start": 158,
+        "line_end": 166,
+        "byte_length": 2359,
+        "sha256": "ca9a57e354268945a159d0986e50c0e604c709fdb777c54fc984da83a1168659"
+      }
+    ]
+  },
+  {
+    "id": "C46",
+    "artifact_keys": [
+      "s1.runtime.maintenance_intent.l1"
+    ],
+    "title": "Historical phase-card baseline and commands",
+    "excerpts": [
+      {
+        "path": "docs/architecture/phase-plans/70-90-briefs/FAC-PLUGIN.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "0184770b62c7e569adc4757bec75a168eb3da00b",
+        "source_sha256": "432c412302afee982a151d55955602f24bbf2c9b008031deedd822f1a72a1239",
+        "line_start": 7,
+        "line_end": 19,
+        "byte_length": 1173,
+        "sha256": "9be52439fc964a4af2e6b8fd6a66d5f080dd162b5a5fd2047194151e8bfa9bac"
+      }
+    ]
+  },
+  {
+    "id": "C47",
+    "artifact_keys": [
+      "s1.runtime.maintenance_intent.l1"
+    ],
+    "title": "Removal spec separates completion labels from old inventory",
+    "excerpts": [
+      {
+        "path": "docs/specs/storage/remove-orchestra-db.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "85fdbfcf3d21d1d708be632dc4471fe145deadb5",
+        "source_sha256": "984679f16782781d728a4564a1df4863472aae7c2cef777b9416f8ed64f7e9a9",
+        "line_start": 43,
+        "line_end": 63,
+        "byte_length": 997,
+        "sha256": "a46b70ffe6900a562e3634899fd6cc75b58996406f568e03d19d620d22ad81c6"
+      }
+    ]
+  },
+  {
+    "id": "C48",
+    "artifact_keys": [
+      "s1.runtime.maintenance_intent.l1"
+    ],
+    "title": "Deferred database constraints and reported landed indexes",
+    "excerpts": [
+      {
+        "path": "docs/specs/database/integrity-followups.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "23e4f2a883b42894f8cd2cfa929377acc246df16",
+        "source_sha256": "de59e7ad05a9a323631de4ddfb8cd49125c2f4bbd0362aeb886f21d85389358b",
+        "line_start": 1,
+        "line_end": 8,
+        "byte_length": 522,
+        "sha256": "3aed76bdb838bea33e63420e5c2b1eef6a793b63aec70b2a57f8e1f2b19a7a81"
+      }
+    ]
+  },
+  {
+    "id": "C49",
+    "artifact_keys": [
+      "s1.runtime.maintenance_intent.l1"
+    ],
+    "title": "Exact config schema root, plugin entry and current property names",
+    "excerpts": [
+      {
+        "path": "schema/config.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+        "source_sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "line_start": 1,
+        "line_end": 4,
+        "byte_length": 109,
+        "sha256": "80e43edc1b9ca0dc0ac5f1ec0741047f1bcdd98eafabb0a4e3b49f39705efa4a"
+      },
+      {
+        "path": "schema/config.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+        "source_sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "line_start": 536,
+        "line_end": 554,
+        "byte_length": 373,
+        "sha256": "90cc55120b715341c50a53ae5869cd7df7cc2feb6512033d81ffc03ff47b7e74"
+      },
+      {
+        "path": "schema/config.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+        "source_sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "line_start": 1205,
+        "line_end": 1217,
+        "byte_length": 341,
+        "sha256": "596753c78642862430b2afa9deb6b1dc82038e6cbe6d47ab8e6984e7b4b59d7d"
+      },
+      {
+        "path": "schema/config.json",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+        "source_sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "line_start": 1240,
+        "line_end": 1246,
+        "byte_length": 112,
+        "sha256": "6fc4246e444670e5202d4df1613937856f8289fcdfd88378bee33bbb44b3e8d0"
+      }
+    ]
+  }
+]

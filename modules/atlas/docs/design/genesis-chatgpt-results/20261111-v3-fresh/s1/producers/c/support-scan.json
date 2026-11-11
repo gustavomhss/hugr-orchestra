@@ -1,0 +1,1440 @@
+[
+  {
+    "path": "packages/llm/script/recording-cost-report.ts",
+    "lines": 250,
+    "structural_excerpt": [
+      {
+        "line": 4,
+        "text": "const RECORDINGS_DIR = path.resolve(import.meta.dir, \"..\", \"test\", \"fixtures\", \"recordings\")"
+      },
+      {
+        "line": 5,
+        "text": "const MODELS_DEV_URL = \"https://models.dev/api.json\""
+      },
+      {
+        "line": 34,
+        "text": "const isRecord = (value: unknown): value is JsonRecord =>"
+      },
+      {
+        "line": 37,
+        "text": "const asNumber = (value: unknown) => (typeof value === \"number\" && Number.isFinite(value) ? value : 0)"
+      },
+      {
+        "line": 39,
+        "text": "const asString = (value: unknown) => (typeof value === \"string\" ? value : undefined)"
+      },
+      {
+        "line": 41,
+        "text": "const readJson = async (file: string) => JSON.parse(await Bun.file(file).text()) as unknown"
+      },
+      {
+        "line": 43,
+        "text": "const walk = async (dir: string): Promise<ReadonlyArray<string>> =>"
+      },
+      {
+        "line": 46,
+        "text": "      const file = path.join(dir, entry.name)"
+      },
+      {
+        "line": 57,
+        "text": "const providerFromUrl = (url: string) => {"
+      },
+      {
+        "line": 70,
+        "text": "const providerAliases: Record<string, ReadonlyArray<string>> = {"
+      },
+      {
+        "line": 82,
+        "text": "const modelAliases = (model: string) => ["
+      },
+      {
+        "line": 93,
+        "text": "const pricingFor = (models: JsonRecord, provider: string, model: string) => {"
+      },
+      {
+        "line": 94,
+        "text": "  for (const providerID of providerAliases[provider] ?? [provider]) {"
+      },
+      {
+        "line": 95,
+        "text": "    const providerEntry = models[providerID]"
+      },
+      {
+        "line": 97,
+        "text": "    for (const modelID of modelAliases(model)) {"
+      },
+      {
+        "line": 98,
+        "text": "      const modelEntry = providerEntry.models[modelID]"
+      },
+      {
+        "line": 106,
+        "text": "const estimateCost = (usage: Usage, pricing: Pricing | undefined) => {"
+      },
+      {
+        "line": 118,
+        "text": "const emptyUsage = (): Usage => ({"
+      },
+      {
+        "line": 127,
+        "text": "const addUsage = (a: Usage, b: Usage): Usage => ({"
+      },
+      {
+        "line": 136,
+        "text": "const usageFromObject = (usage: unknown): Usage => {"
+      },
+      {
+        "line": 138,
+        "text": "  const promptDetails = isRecord(usage.prompt_tokens_details) ? usage.prompt_tokens_details : {}"
+      },
+      {
+        "line": 139,
+        "text": "  const completionDetails = isRecord(usage.completion_tokens_details) ? usage.completion_tokens_details : {}"
+      },
+      {
+        "line": 140,
+        "text": "  const inputDetails = isRecord(usage.input_tokens_details) ? usage.input_tokens_details : {}"
+      },
+      {
+        "line": 141,
+        "text": "  const outputDetails = isRecord(usage.output_tokens_details) ? usage.output_tokens_details : {}"
+      },
+      {
+        "line": 142,
+        "text": "  const cacheWriteTokens = asNumber(promptDetails.cache_write_tokens) + asNumber(inputDetails.cache_write_tokens)"
+      },
+      {
+        "line": 153,
+        "text": "const jsonPayloads = (body: string) =>"
+      },
+      {
+        "line": 168,
+        "text": "const usageFromResponseBody = (body: string) =>"
+      },
+      {
+        "line": 180,
+        "text": "const modelFromRequest = (request: unknown) => {"
+      },
+      {
+        "line": 182,
+        "text": "  const requestBody = asString(request.body)"
+      },
+      {
+        "line": 185,
+        "text": "    const body = JSON.parse(requestBody) as unknown"
+      },
+      {
+        "line": 193,
+        "text": "const rowFor = (models: JsonRecord, file: string, cassette: unknown): Row | undefined => {"
+      },
+      {
+        "line": 195,
+        "text": "  const first = cassette.interactions.find(isRecord)"
+      },
+      {
+        "line": 197,
+        "text": "  const provider = providerFromUrl(asString(first.request.url) ?? \"\")"
+      },
+      {
+        "line": 198,
+        "text": "  const model = modelFromRequest(first.request)"
+      },
+      {
+        "line": 199,
+        "text": "  const usage = cassette.interactions.filter(isRecord).reduce<Usage>((total, interaction) => {"
+      },
+      {
+        "line": 201,
+        "text": "    const responseBody = asString(interaction.response.body)"
+      },
+      {
+        "line": 205,
+        "text": "  const priced = pricingFor(models, provider, model)"
+      },
+      {
+        "line": 216,
+        "text": "const money = (value: number) => (value === 0 ? \"$0.000000\" : `$${value.toFixed(6)}`)"
+      },
+      {
+        "line": 217,
+        "text": "const tokens = (value: number) => value.toLocaleString(\"en-US\")"
+      },
+      {
+        "line": 219,
+        "text": "const models = (await (await fetch(MODELS_DEV_URL)).json()) as JsonRecord"
+      },
+      {
+        "line": 220,
+        "text": "const rows = ("
+      },
+      {
+        "line": 228,
+        "text": "const totals = rows.reduce("
+      },
+      {
+        "line": 245,
+        "text": "for (const row of rows.toSorted((a, b) => b.reportedCost + b.estimatedCost - (a.reportedCost + a.estimatedCost))) {"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/script/setup-recording-env.ts",
+    "lines": 542,
+    "structural_excerpt": [
+      {
+        "line": 1,
+        "text": "#!/usr/bin/env bun"
+      },
+      {
+        "line": 28,
+        "text": "const PROVIDERS: ReadonlyArray<Provider> = ["
+      },
+      {
+        "line": 223,
+        "text": "const args = process.argv.slice(2)"
+      },
+      {
+        "line": 224,
+        "text": "const hasFlag = (name: string) => args.includes(name)"
+      },
+      {
+        "line": 225,
+        "text": "const option = (name: string) => {"
+      },
+      {
+        "line": 226,
+        "text": "  const index = args.indexOf(name)"
+      },
+      {
+        "line": 231,
+        "text": "const envPath = path.resolve(process.cwd(), option(\"--env\") ?? \".env.local\")"
+      },
+      {
+        "line": 232,
+        "text": "const checkOnly = hasFlag(\"--check\")"
+      },
+      {
+        "line": 233,
+        "text": "const providerOption = option(\"--providers\")"
+      },
+      {
+        "line": 234,
+        "text": "const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY)"
+      },
+      {
+        "line": 236,
+        "text": "const envNames = Array.from(new Set(PROVIDERS.flatMap((provider) => provider.vars.map((item) => item.name))))"
+      },
+      {
+        "line": 238,
+        "text": "const providersForOption = (value: string | undefined) => {"
+      },
+      {
+        "line": 243,
+        "text": "  const ids = new Set("
+      },
+      {
+        "line": 252,
+        "text": "const chooseProviders = async () => {"
+      },
+      {
+        "line": 257,
+        "text": "const catchMissingFile = (error: PlatformError.PlatformError) => {"
+      },
+      {
+        "line": 262,
+        "text": "const readEnvFile = Effect.fn(\"RecordingEnv.readFile\")(function* () {"
+      },
+      {
+        "line": 263,
+        "text": "  const fileSystem = yield* FileSystem.FileSystem"
+      },
+      {
+        "line": 267,
+        "text": "const readConfigString = (provider: ConfigProvider.ConfigProvider, name: string) =>"
+      },
+      {
+        "line": 277,
+        "text": "const parseEnv = Effect.fn(\"RecordingEnv.parseEnv\")(function* (contents: string) {"
+      },
+      {
+        "line": 278,
+        "text": "  const provider = ConfigProvider.fromDotEnvContents(contents)"
+      },
+      {
+        "line": 286,
+        "text": "const quote = (value: string) => JSON.stringify(value)"
+      },
+      {
+        "line": 288,
+        "text": "const status = (name: string, fileEnv: Env) => {"
+      },
+      {
+        "line": 290,
+        "text": "  if (process.env[name]) return \"shell\""
+      },
+      {
+        "line": 294,
+        "text": "const statusLine = (provider: Provider, fileEnv: Env) =>"
+      },
+      {
+        "line": 299,
+        "text": "      const value = status(item.name, fileEnv)"
+      },
+      {
+        "line": 300,
+        "text": "      const suffix = item.optional ? \" optional\" : \"\""
+      },
+      {
+        "line": 305,
+        "text": "const printStatus = (providers: ReadonlyArray<Provider>, fileEnv: Env) => {"
+      },
+      {
+        "line": 309,
+        "text": "const exitIfCancel = <A>(value: A | symbol): A => {"
+      },
+      {
+        "line": 315,
+        "text": "const upsertEnv = (contents: string, values: Env) => {"
+      },
+      {
+        "line": 316,
+        "text": "  const names = Object.keys(values)"
+      },
+      {
+        "line": 317,
+        "text": "  const seen = new Set<string>()"
+      },
+      {
+        "line": 318,
+        "text": "  const lines = contents.split(/\\r?\\n/).map((line) => {"
+      },
+      {
+        "line": 319,
+        "text": "    const match = line.match(/^\\s*(?:export\\s+)?([A-Za-z_][A-Za-z0-9_]*)\\s*=/)"
+      },
+      {
+        "line": 324,
+        "text": "  const missing = names.filter((name) => !seen.has(name))"
+      },
+      {
+        "line": 326,
+        "text": "  const prefix = lines.join(\"\\n\").trimEnd()"
+      },
+      {
+        "line": 327,
+        "text": "  const block = ["
+      },
+      {
+        "line": 335,
+        "text": "const providerRequiredStatus = (provider: Provider, fileEnv: Env) => {"
+      },
+      {
+        "line": 336,
+        "text": "  const required = requiredVars(provider)"
+      },
+      {
+        "line": 342,
+        "text": "const requiredVars = (provider: Provider) => provider.vars.filter((item) => !item.optional)"
+      },
+      {
+        "line": 344,
+        "text": "const promptVars = (provider: Provider) => provider.vars.filter((item) => !item.optional || item.secret === false)"
+      },
+      {
+        "line": 346,
+        "text": "const processEnv = (): Env =>"
+      },
+      {
+        "line": 347,
+        "text": "  Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined))"
+      },
+      {
+        "line": 349,
+        "text": "const envValue = (env: Env, names: ReadonlyArray<string>) => names.map((name) => env[name]).find(Boolean) ?? \"\""
+      },
+      {
+        "line": 351,
+        "text": "const envWithValues = (fileEnv: Env, values: Env): Env => ({"
+      },
+      {
+        "line": 357,
+        "text": "const responseError = Effect.fn(\"RecordingEnv.responseError\")(function* ("
+      },
+      {
+        "line": 361,
+        "text": "  const body = yield* response.text.pipe(Effect.catch(() => Effect.succeed(\"\")))"
+      },
+      {
+        "line": 365,
+        "text": "const executeRequest = Effect.fn(\"RecordingEnv.executeRequest\")(function* ("
+      },
+      {
+        "line": 368,
+        "text": "  const http = yield* HttpClient.HttpClient"
+      },
+      {
+        "line": 372,
+        "text": "const validateBearer = (url: string, token: Redacted.Redacted<string>, headers: Record<string, string> = {}) =>"
+      },
+      {
+        "line": 378,
+        "text": "const validateChat = (input: {"
+      },
+      {
+        "line": 396,
+        "text": "const validateBedrock = (env: Env) =>"
+      },
+      {
+        "line": 398,
+        "text": "    const request = yield* Effect.promise(() =>"
+      },
+      {
+        "line": 415,
+        "text": "const validateProvider = Effect.fn(\"RecordingEnv.validateProvider\")(function* (provider: Provider, env: Env) {"
+      },
+      {
+        "line": 424,
+        "text": "const validateProviders = Effect.fn(\"RecordingEnv.validateProviders\")(function* ("
+      },
+      {
+        "line": 428,
+        "text": "  const spinner = prompts.spinner()"
+      },
+      {
+        "line": 430,
+        "text": "  const results = yield* Effect.forEach("
+      },
+      {
+        "line": 447,
+        "text": "const writeEnvFile = Effect.fn(\"RecordingEnv.writeFile\")(function* (contents: string) {"
+      },
+      {
+        "line": 448,
+        "text": "  const fileSystem = yield* FileSystem.FileSystem"
+      },
+      {
+        "line": 453,
+        "text": "const prompt = <A>(run: () => Promise<A | symbol>) => Effect.promise(run).pipe(Effect.map(exitIfCancel))"
+      },
+      {
+        "line": 455,
+        "text": "const chooseConfigurableProviders = Effect.fn(\"RecordingEnv.chooseConfigurableProviders\")(function* ("
+      },
+      {
+        "line": 459,
+        "text": "  const configurable = providers.filter((provider) => requiredVars(provider).length > 0)"
+      },
+      {
+        "line": 460,
+        "text": "  const selected = yield* prompt<ReadonlyArray<string>>(() =>"
+      },
+      {
+        "line": 478,
+        "text": "const promptEnvVar = (item: Provider[\"vars\"][number]) =>"
+      },
+      {
+        "line": 480,
+        "text": "    const input = {"
+      },
+      {
+        "line": 490,
+        "text": "const promptProviderValues = Effect.fn(\"RecordingEnv.promptProviderValues\")(function* ("
+      },
+      {
+        "line": 493,
+        "text": "  const values: Env = {}"
+      },
+      {
+        "line": 494,
+        "text": "  for (const provider of providers) {"
+      },
+      {
+        "line": 496,
+        "text": "    for (const item of promptVars(provider)) {"
+      },
+      {
+        "line": 498,
+        "text": "      const value = yield* promptEnvVar(item)"
+      },
+      {
+        "line": 505,
+        "text": "const main = Effect.fn(\"RecordingEnv.main\")(function* () {"
+      },
+      {
+        "line": 507,
+        "text": "  const contents = yield* readEnvFile()"
+      },
+      {
+        "line": 508,
+        "text": "  const fileEnv = yield* parseEnv(contents)"
+      },
+      {
+        "line": 509,
+        "text": "  const providers = yield* Effect.promise(() => chooseProviders())"
+      },
+      {
+        "line": 520,
+        "text": "  const selectedProviders = yield* chooseConfigurableProviders(providers, fileEnv)"
+      },
+      {
+        "line": 521,
+        "text": "  const values = yield* promptProviderValues(selectedProviders)"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/example/call-sites.md",
+    "lines": 591,
+    "structural_excerpt": [
+      {
+        "line": 1,
+        "text": "# LLM Call Site Sketches"
+      },
+      {
+        "line": 7,
+        "text": "## Conversation Summary"
+      },
+      {
+        "line": 24,
+        "text": "## Final Guide: Routes Execute, Providers Organize"
+      },
+      {
+        "line": 26,
+        "text": "Do not introduce a first-class `Deployment` abstraction unless it gains real"
+      },
+      {
+        "line": 43,
+        "text": "`HttpTransport.sseJson` should be a reusable immutable value. Use a function only"
+      },
+      {
+        "line": 132,
+        "text": "   - plain object/function facade over one or more routes"
+      },
+      {
+        "line": 159,
+        "text": "## Provider Facade Shape"
+      },
+      {
+        "line": 176,
+        "text": "export const OpenAI = {"
+      },
+      {
+        "line": 195,
+        "text": "const configureOpenAI = (input: OpenAIConfig = {}) =>"
+      },
+      {
+        "line": 206,
+        "text": "export const OpenAI = configureOpenAI()"
+      },
+      {
+        "line": 221,
+        "text": "## Ideal Call Sites"
+      },
+      {
+        "line": 227,
+        "text": "const openAIProvider = ProviderID.make(\"openai\")"
+      },
+      {
+        "line": 229,
+        "text": "const openAIResponses = Route.make({"
+      },
+      {
+        "line": 241,
+        "text": "const openAIChat = Route.make({"
+      },
+      {
+        "line": 253,
+        "text": "const openAIResponsesWebSocket = openAIResponses.with({"
+      },
+      {
+        "line": 258,
+        "text": "const openAIConfig = (input: OpenAIConfig) => ({"
+      },
+      {
+        "line": 267,
+        "text": "const configureOpenAI = (input: OpenAIConfig = {}) => {"
+      },
+      {
+        "line": 268,
+        "text": "  const responses = openAIResponses.with(openAIConfig(input))"
+      },
+      {
+        "line": 269,
+        "text": "  const responsesWebSocket = openAIResponsesWebSocket.with(openAIConfig(input))"
+      },
+      {
+        "line": 270,
+        "text": "  const chat = openAIChat.with(openAIConfig(input))"
+      },
+      {
+        "line": 282,
+        "text": "export const OpenAI = configureOpenAI()"
+      },
+      {
+        "line": 288,
+        "text": "const deepSeekProvider = ProviderID.make(\"deepseek\")"
+      },
+      {
+        "line": 290,
+        "text": "const deepseekChat = openAIChat.with({"
+      },
+      {
+        "line": 299,
+        "text": "const configureDeepSeek = (input: OpenAICompatibleConfig = {}) => {"
+      },
+      {
+        "line": 300,
+        "text": "  const route = deepseekChat.with({"
+      },
+      {
+        "line": 312,
+        "text": "export const DeepSeek = {"
+      },
+      {
+        "line": 322,
+        "text": "const deepseek = DeepSeek.configure({"
+      },
+      {
+        "line": 329,
+        "text": "const model = deepseek.model(\"deepseek-chat\")"
+      },
+      {
+        "line": 335,
+        "text": "const response ="
+      },
+      {
+        "line": 364,
+        "text": "const azureProvider = ProviderID.make(\"azure\")"
+      },
+      {
+        "line": 366,
+        "text": "const azureResponses = openAIResponses.with({"
+      },
+      {
+        "line": 372,
+        "text": "const configureAzure = (input: AzureConfig = {}) => {"
+      },
+      {
+        "line": 373,
+        "text": "  const route = azureResponses.with({"
+      },
+      {
+        "line": 394,
+        "text": "export const Azure = configureAzure()"
+      },
+      {
+        "line": 396,
+        "text": "const azure = Azure.configure({"
+      },
+      {
+        "line": 401,
+        "text": "const model = azure.responses(\"my-deployment\")"
+      },
+      {
+        "line": 415,
+        "text": "const cloudflareProvider = ProviderID.make(\"cloudflare-ai-gateway\")"
+      },
+      {
+        "line": 417,
+        "text": "const cloudflareOpenAIChat = openAIChat.with({"
+      },
+      {
+        "line": 423,
+        "text": "const configureCloudflareAIGateway = (input: CloudflareAIGatewayConfig) => {"
+      },
+      {
+        "line": 424,
+        "text": "  const route = cloudflareOpenAIChat.with({"
+      },
+      {
+        "line": 438,
+        "text": "export const CloudflareAIGateway = {"
+      },
+      {
+        "line": 443,
+        "text": "const gateway = CloudflareAIGateway.configure({"
+      },
+      {
+        "line": 450,
+        "text": "const model = gateway.model(\"openai/gpt-4o\")"
+      },
+      {
+        "line": 462,
+        "text": "const model ="
+      },
+      {
+        "line": 476,
+        "text": "## Competitive Shape"
+      },
+      {
+        "line": 498,
+        "text": "## What This Removes"
+      },
+      {
+        "line": 517,
+        "text": "## Implementation Todo"
+      },
+      {
+        "line": 575,
+        "text": "## Open Questions"
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/example/tutorial.ts",
+    "lines": 255,
+    "structural_excerpt": [
+      {
+        "line": 6,
+        "text": "/**"
+      },
+      {
+        "line": 17,
+        "text": "const apiKey = Config.redacted(\"OPENAI_API_KEY\")"
+      },
+      {
+        "line": 19,
+        "text": "// 1. Pick a model. The provider helper records provider identity, protocol"
+      },
+      {
+        "line": 20,
+        "text": "// choice, capabilities, deployment options, authentication, and defaults."
+      },
+      {
+        "line": 21,
+        "text": "const model = OpenAI.configure({"
+      },
+      {
+        "line": 29,
+        "text": "// 2. Build a provider-neutral request. This is useful when reusing one request"
+      },
+      {
+        "line": 30,
+        "text": "// across generate and stream examples."
+      },
+      {
+        "line": 31,
+        "text": "//"
+      },
+      {
+        "line": 32,
+        "text": "// Options can live on both the configured route/provider facade and the request:"
+      },
+      {
+        "line": 33,
+        "text": "//"
+      },
+      {
+        "line": 34,
+        "text": "//   - `generation`: common controls such as max tokens, temperature, topP/topK,"
+      },
+      {
+        "line": 35,
+        "text": "//     penalties, seed, and stop sequences."
+      },
+      {
+        "line": 36,
+        "text": "//   - `providerOptions`: namespaced provider-native behavior. For example,"
+      },
+      {
+        "line": 37,
+        "text": "//     OpenAI cache keys and store behavior, Anthropic thinking, Gemini thinking"
+      },
+      {
+        "line": 38,
+        "text": "//     config, or OpenRouter routing/reasoning."
+      },
+      {
+        "line": 39,
+        "text": "//   - `http`: last-resort serializable overlays for final request body, headers,"
+      },
+      {
+        "line": 40,
+        "text": "//     and query params. Prefer typed `providerOptions` when a field is stable."
+      },
+      {
+        "line": 41,
+        "text": "//"
+      },
+      {
+        "line": 42,
+        "text": "// Route/provider options are defaults. Request options override them for this call."
+      },
+      {
+        "line": 43,
+        "text": "const request = LLM.request({"
+      },
+      {
+        "line": 53,
+        "text": "// `http` is intentionally not needed for normal calls. This shows the shape for"
+      },
+      {
+        "line": 54,
+        "text": "// newly released provider fields before they deserve a typed provider option."
+      },
+      {
+        "line": 55,
+        "text": "const rawOverlayExample = LLM.request({"
+      },
+      {
+        "line": 65,
+        "text": "// 3. `generate` sends the request and collects the event stream into one"
+      },
+      {
+        "line": 66,
+        "text": "// response object. `response.text` is the collected text output."
+      },
+      {
+        "line": 67,
+        "text": "const generateOnce = Effect.gen(function* () {"
+      },
+      {
+        "line": 68,
+        "text": "  const response = yield* LLM.generate(request)"
+      },
+      {
+        "line": 75,
+        "text": "// 4. `stream` exposes provider output as common `LLMEvent`s for UIs that want"
+      },
+      {
+        "line": 76,
+        "text": "// incremental text, reasoning, tool input, usage, or finish events."
+      },
+      {
+        "line": 77,
+        "text": "const streamText = LLM.stream(request).pipe("
+      },
+      {
+        "line": 87,
+        "text": "// 5. Tools are typed with Effect Schema. Provider turns remain explicit:"
+      },
+      {
+        "line": 88,
+        "text": "// advertise definitions on the request, stream one turn, dispatch local calls,"
+      },
+      {
+        "line": 89,
+        "text": "// then persist/build follow-up history in the enclosing product flow."
+      },
+      {
+        "line": 90,
+        "text": "const tools = {"
+      },
+      {
+        "line": 93,
+        "text": "    parameters: Schema.Struct({ city: Schema.String }),"
+      },
+      {
+        "line": 94,
+        "text": "    success: Schema.Struct({ forecast: Schema.String }),"
+      },
+      {
+        "line": 99,
+        "text": "const streamWithTools = Effect.gen(function* () {"
+      },
+      {
+        "line": 100,
+        "text": "  const request = LLM.request({"
+      },
+      {
+        "line": 106,
+        "text": "  const events = Array.from(yield* LLM.stream(request).pipe(Stream.runCollect))"
+      },
+      {
+        "line": 107,
+        "text": "  for (const event of events) {"
+      },
+      {
+        "line": 111,
+        "text": "    const dispatched = yield* ToolRuntime.dispatch(tools, event)"
+      },
+      {
+        "line": 116,
+        "text": "    const followUp = LLM.updateRequest(request, {"
+      },
+      {
+        "line": 127,
+        "text": "// 6. `generateObject` is the structured-output helper. It forces a synthetic"
+      },
+      {
+        "line": 128,
+        "text": "// tool call internally, so the same call site works across providers instead of"
+      },
+      {
+        "line": 129,
+        "text": "// depending on provider-specific JSON mode flags."
+      },
+      {
+        "line": 130,
+        "text": "const WeatherReport = Schema.Struct({"
+      },
+      {
+        "line": 131,
+        "text": "  city: Schema.String,"
+      },
+      {
+        "line": 132,
+        "text": "  forecast: Schema.String,"
+      },
+      {
+        "line": 133,
+        "text": "  highFahrenheit: Schema.Number,"
+      },
+      {
+        "line": 136,
+        "text": "const generateStructuredObject = Effect.gen(function* () {"
+      },
+      {
+        "line": 137,
+        "text": "  const response = yield* LLM.generateObject({"
+      },
+      {
+        "line": 149,
+        "text": "// If the shape is only known at runtime, pass raw JSON Schema instead. The"
+      },
+      {
+        "line": 150,
+        "text": "// `.object` type is `unknown`; callers that need static types should validate it."
+      },
+      {
+        "line": 151,
+        "text": "const generateDynamicObject = LLM.generateObject({"
+      },
+      {
+        "line": 164,
+        "text": "// -----------------------------------------------------------------------------"
+      },
+      {
+        "line": 165,
+        "text": "// Part 2: provider composition with a fake provider"
+      },
+      {
+        "line": 166,
+        "text": "// -----------------------------------------------------------------------------"
+      },
+      {
+        "line": 168,
+        "text": "// A protocol is the provider-native API shape: common request -> body, response"
+      },
+      {
+        "line": 169,
+        "text": "// frames -> common events. This fake one turns text prompts into a JSON body"
+      },
+      {
+        "line": 170,
+        "text": "// and treats every SSE frame as output text."
+      },
+      {
+        "line": 171,
+        "text": "const FakeBody = Schema.Struct({"
+      },
+      {
+        "line": 172,
+        "text": "  model: Schema.String,"
+      },
+      {
+        "line": 173,
+        "text": "  input: Schema.String,"
+      },
+      {
+        "line": 175,
+        "text": "type FakeBody = Schema.Schema.Type<typeof FakeBody>"
+      },
+      {
+        "line": 177,
+        "text": "const FakeProtocol = Protocol.make<FakeBody, string, string, void>({"
+      },
+      {
+        "line": 194,
+        "text": "    event: Schema.String,"
+      },
+      {
+        "line": 201,
+        "text": "// An route is the runnable binding for that protocol. It adds the deployment"
+      },
+      {
+        "line": 202,
+        "text": "// axes that the protocol deliberately does not know: URL, auth, and framing."
+      },
+      {
+        "line": 203,
+        "text": "const FakeAdapter = Route.make({"
+      },
+      {
+        "line": 212,
+        "text": "// A provider module exports a configured facade. Configuration happens before"
+      },
+      {
+        "line": 213,
+        "text": "// model selection; model selectors accept ids only."
+      },
+      {
+        "line": 214,
+        "text": "const FakeEcho = {"
+      },
+      {
+        "line": 222,
+        "text": "// `LLMClient.prepare` is the lower-level inspection hook: it compiles through"
+      },
+      {
+        "line": 223,
+        "text": "// body conversion, validation, endpoint, auth, and HTTP construction without"
+      },
+      {
+        "line": 224,
+        "text": "// sending anything over the network."
+      },
+      {
+        "line": 225,
+        "text": "const inspectFakeProvider = Effect.gen(function* () {"
+      },
+      {
+        "line": 226,
+        "text": "  const prepared = yield* LLMClient.prepare("
+      },
+      {
+        "line": 238,
+        "text": "// Provide the LLM runtime and the HTTP request executor once. Keep one path"
+      },
+      {
+        "line": 239,
+        "text": "// enabled at a time so the tutorial can demonstrate generate, prepare, stream,"
+      },
+      {
+        "line": 240,
+        "text": "// or tool-loop behavior without spending tokens on every example."
+      },
+      {
+        "line": 241,
+        "text": "const requestExecutorLayer = RequestExecutor.fetchLayer"
+      },
+      {
+        "line": 242,
+        "text": "const llmDeps = Layer.mergeAll(requestExecutorLayer, WebSocketExecutor.layer)"
+      },
+      {
+        "line": 243,
+        "text": "const llmClientLayer = LLMClient.layer.pipe(Layer.provide(llmDeps))"
+      },
+      {
+        "line": 245,
+        "text": "const program = Effect.gen(function* () {"
+      }
+    ]
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/examples/basic.ts",
+    "lines": 92,
+    "structural_excerpt": [
+      {
+        "line": 10,
+        "text": "const users = sqliteTable(\"users\", {"
+      },
+      {
+        "line": 17,
+        "text": "const makeDatabase = EffectDrizzleSqlite.makeWithDefaults()"
+      },
+      {
+        "line": 20,
+        "text": "const sqliteLayer = SqliteClient.layer({ filename: \":memory:\", disableWAL: true })"
+      },
+      {
+        "line": 22,
+        "text": "class Database extends Context.Service<Database, DatabaseShape>()(\"@orchestra/example/Database\") {"
+      },
+      {
+        "line": 26,
+        "text": "class UserStoreError extends Schema.TaggedErrorClass<UserStoreError>()(\"UserStoreError\", {"
+      },
+      {
+        "line": 27,
+        "text": "  message: Schema.String,"
+      },
+      {
+        "line": 28,
+        "text": "  cause: Schema.optional(Schema.Defect()),"
+      },
+      {
+        "line": 31,
+        "text": "const mapStoreError = (message: string) => (cause: unknown) => new UserStoreError({ message, cause })"
+      },
+      {
+        "line": 40,
+        "text": "class UserStore extends Context.Service<UserStore, UserStoreShape>()(\"@orchestra/example/UserStore\") {"
+      },
+      {
+        "line": 44,
+        "text": "      const db = yield* Database"
+      },
+      {
+        "line": 80,
+        "text": "const program = Effect.gen(function* () {"
+      },
+      {
+        "line": 81,
+        "text": "  const userStore = yield* UserStore"
+      },
+      {
+        "line": 90,
+        "text": "const rows = await Effect.runPromise(program.pipe(Effect.provide(UserStore.layer)))"
+      }
+    ]
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/internal/drizzle-utils.ts",
+    "lines": 127,
+    "structural_excerpt": [
+      {
+        "line": 1,
+        "text": "/* oxlint-disable */"
+      },
+      {
+        "line": 15,
+        "text": "const TableSymbol = ("
+      },
+      {
+        "line": 21,
+        "text": "export function getTableColumnsRuntime(table: SQLiteTable) {"
+      },
+      {
+        "line": 25,
+        "text": "export function getViewSelectedFieldsRuntime(view: SQLiteViewBase) {"
+      },
+      {
+        "line": 29,
+        "text": "export function jitCompatCheck(isEnabled: boolean | undefined) {"
+      },
+      {
+        "line": 38,
+        "text": "export function orderSelectedFields<TColumn extends Column>("
+      },
+      {
+        "line": 43,
+        "text": "    const path = pathPrefix ? [...pathPrefix, name] : [name]"
+      },
+      {
+        "line": 52,
+        "text": "export function mapUpdateSet<TTable extends SQLiteTable>(table: TTable, values: SQLiteUpdateSetSource<TTable>) {"
+      },
+      {
+        "line": 53,
+        "text": "  const entries = Object.entries(values).filter(([, value]) => value !== undefined)"
+      },
+      {
+        "line": 54,
+        "text": "  if (entries.length === 0) throw new Error(\"No values to set\")"
+      },
+      {
+        "line": 64,
+        "text": "export function mapResultRow("
+      },
+      {
+        "line": 69,
+        "text": "  const nullifyMap: Record<string, string | false> = {}"
+      },
+      {
+        "line": 70,
+        "text": "  const result: Record<string, unknown> = {}"
+      },
+      {
+        "line": 73,
+        "text": "    const decoder = ("
+      },
+      {
+        "line": 84,
+        "text": "    const rawValue = row[columnIndex]"
+      },
+      {
+        "line": 85,
+        "text": "    const value = rawValue === null ? null : decoder.mapFromDriverValue(rawValue)"
+      },
+      {
+        "line": 86,
+        "text": "    const objectName = column.path[0]"
+      },
+      {
+        "line": 99,
+        "text": "      const tableName = getTableName(getColumnTable(column.field))"
+      },
+      {
+        "line": 116,
+        "text": "export function getTableLikeName(table: SQLiteTable | Subquery | SQLiteViewBase | SQL) {"
+      },
+      {
+        "line": 127,
+        "text": "export type { JoinNullability }"
+      }
+    ]
+  },
+  {
+    "path": "packages/codemode/src/tool-schema.ts",
+    "lines": 301,
+    "structural_excerpt": [
+      {
+        "line": 4,
+        "text": "const isEffectSchema = (schema: SchemaType): schema is Schema.Decoder<unknown> & Schema.Top => Schema.isSchema(schema)"
+      },
+      {
+        "line": 6,
+        "text": "const renderLiteral = (value: unknown): string => JSON.stringify(value) ?? \"unknown\""
+      },
+      {
+        "line": 8,
+        "text": "/**"
+      },
+      {
+        "line": 12,
+        "text": "export const identifierSegment = /^[A-Za-z_$][A-Za-z0-9_$]*$/"
+      },
+      {
+        "line": 14,
+        "text": "/** Renders a property name as a valid TS object key: bare when an identifier, quoted otherwise. */"
+      },
+      {
+        "line": 15,
+        "text": "const renderKey = (name: string): string => (identifierSegment.test(name) ? name : JSON.stringify(name))"
+      },
+      {
+        "line": 17,
+        "text": "const effectNumberSentinel = (schema: JsonSchema) =>"
+      },
+      {
+        "line": 23,
+        "text": "const intersection = (members: ReadonlyArray<string>): string => {"
+      },
+      {
+        "line": 24,
+        "text": "  const concrete = members.filter((member) => member !== \"unknown\")"
+      },
+      {
+        "line": 30,
+        "text": "/**"
+      },
+      {
+        "line": 35,
+        "text": "const MAX_RENDER_DEPTH = 8"
+      },
+      {
+        "line": 43,
+        "text": "const hasUnresolvedRef = ("
+      },
+      {
+        "line": 50,
+        "text": "  const nextVisited = new Set([...visited, schema])"
+      },
+      {
+        "line": 52,
+        "text": "    const segment = schema.$ref.match(/^#\\/(?:\\$defs|definitions)\\/([^/]+)$/)?.[1]"
+      },
+      {
+        "line": 53,
+        "text": "    const name = segment === undefined ? undefined : JsonPointer.unescapeToken(segment)"
+      },
+      {
+        "line": 67,
+        "text": "/**"
+      },
+      {
+        "line": 71,
+        "text": "const docTags = (schema: JsonSchema): Array<string> => {"
+      },
+      {
+        "line": 72,
+        "text": "  const tags: Array<string> = []"
+      },
+      {
+        "line": 76,
+        "text": "      const rendered = JSON.stringify(schema.default)"
+      },
+      {
+        "line": 88,
+        "text": "/**"
+      },
+      {
+        "line": 95,
+        "text": "const jsdoc = (description: string | undefined, tags: ReadonlyArray<string>, pad: string): string => {"
+      },
+      {
+        "line": 96,
+        "text": "  const lines = [...(description === undefined ? [] : description.split(\"\\n\")), ...tags].map((line) =>"
+      },
+      {
+        "line": 103,
+        "text": "  const body = lines.map((line) => `${pad} *${line === \"\" ? \"\" : ` ${line}`}`).join(\"\\n\")"
+      },
+      {
+        "line": 107,
+        "text": "const renderSchema = ("
+      },
+      {
+        "line": 114,
+        "text": "  const nested ="
+      },
+      {
+        "line": 119,
+        "text": "    const segment = schema.$ref.match(/^#\\/(?:\\$defs|definitions)\\/([^/]+)$/)?.[1]"
+      },
+      {
+        "line": 120,
+        "text": "    const name = segment === undefined ? undefined : JsonPointer.unescapeToken(segment)"
+      },
+      {
+        "line": 127,
+        "text": "  if (schema.const !== undefined) return renderLiteral(schema.const)"
+      },
+      {
+        "line": 129,
+        "text": "  const alternatives = schema.anyOf ?? schema.oneOf"
+      },
+      {
+        "line": 140,
+        "text": "    // An empty Schema.Struct({}) emits `anyOf: [{ type: \"object\" }, { type: \"array\" }]`"
+      },
+      {
+        "line": 151,
+        "text": "    const members = alternatives.map((item) => renderSchema(item, nested, depth + 1, seen))"
+      },
+      {
+        "line": 159,
+        "text": "    const members = schema.allOf.map((item) => renderSchema(item, nested, depth + 1, seen))"
+      },
+      {
+        "line": 172,
+        "text": "    const required = new Set(schema.required ?? [])"
+      },
+      {
+        "line": 173,
+        "text": "    const properties = Object.entries(schema.properties ?? {})"
+      },
+      {
+        "line": 174,
+        "text": "    const additional = schema.additionalProperties"
+      },
+      {
+        "line": 175,
+        "text": "    const indexType ="
+      },
+      {
+        "line": 177,
+        "text": "    const field = ([name, value]: readonly [string, JsonSchema]) =>"
+      },
+      {
+        "line": 181,
+        "text": "      const fields = properties.map(field)"
+      },
+      {
+        "line": 188,
+        "text": "    const pad = \"  \".repeat(depth + 1)"
+      },
+      {
+        "line": 189,
+        "text": "    const lines = properties.map("
+      },
+      {
+        "line": 198,
+        "text": "export const toTypeScript = (schema: Schema.Top, decoded = false, pretty = false): string => {"
+      },
+      {
+        "line": 200,
+        "text": "    const visible = decoded ? Schema.toType(schema) : schema"
+      },
+      {
+        "line": 201,
+        "text": "    const document = Schema.toJsonSchemaDocument(visible) as {"
+      },
+      {
+        "line": 211,
+        "text": "/** Renders a raw JSON Schema document as a TypeScript type string. */"
+      },
+      {
+        "line": 212,
+        "text": "export const jsonSchemaToTypeScript = (schema: JsonSchema, pretty = false): string => {"
+      },
+      {
+        "line": 220,
+        "text": "/** One input property of a tool, extracted best-effort from its input schema. */"
+      },
+      {
+        "line": 221,
+        "text": "export type InputProperty = {"
+      },
+      {
+        "line": 227,
+        "text": "/**"
+      },
+      {
+        "line": 234,
+        "text": "export const inputProperties = <R>(definition: Definition<R>): Array<InputProperty> => {"
+      },
+      {
+        "line": 236,
+        "text": "    const document = isEffectSchema(definition.input)"
+      },
+      {
+        "line": 237,
+        "text": "      ? (Schema.toJsonSchemaDocument(definition.input) as {"
+      },
+      {
+        "line": 245,
+        "text": "    const definitions = document.definitions ?? {}"
+      },
+      {
+        "line": 248,
+        "text": "      const segment = schema.$ref.match(/^#\\/(?:\\$defs|definitions)\\/([^/]+)$/)?.[1]"
+      },
+      {
+        "line": 249,
+        "text": "      const name = segment === undefined ? undefined : JsonPointer.unescapeToken(segment)"
+      },
+      {
+        "line": 250,
+        "text": "      const resolved = name === undefined ? undefined : definitions[name]"
+      },
+      {
+        "line": 254,
+        "text": "    const required = new Set(schema.required ?? [])"
+      },
+      {
+        "line": 265,
+        "text": "/**"
+      },
+      {
+        "line": 270,
+        "text": "export const inputTypeScript = <R>(definition: Definition<R>, pretty = false): string =>"
+      },
+      {
+        "line": 275,
+        "text": "/**"
+      },
+      {
+        "line": 279,
+        "text": "export const outputTypeScript = <R>(definition: Definition<R>, pretty = false): string =>"
+      },
+      {
+        "line": 286,
+        "text": "/**"
+      },
+      {
+        "line": 290,
+        "text": "export const decodeInput = <R>(definition: Definition<R>, value: unknown): unknown =>"
+      },
+      {
+        "line": 291,
+        "text": "  isEffectSchema(definition.input) ? Schema.decodeUnknownSync(definition.input)(value) : value"
+      },
+      {
+        "line": 293,
+        "text": "/**"
+      },
+      {
+        "line": 298,
+        "text": "export const decodeOutput = <R>(definition: Definition<R>, value: unknown): unknown =>"
+      },
+      {
+        "line": 300,
+        "text": "    ? Schema.decodeUnknownSync(definition.output)(value)"
+      }
+    ]
+  }
+]

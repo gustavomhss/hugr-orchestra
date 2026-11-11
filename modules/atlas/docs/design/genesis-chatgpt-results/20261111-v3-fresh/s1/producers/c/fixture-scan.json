@@ -1,0 +1,165 @@
+[
+  {
+    "path": "packages/codemode/test/fixtures/openapi-happy-path.json",
+    "root_keys": [
+      "openapi",
+      "info",
+      "servers",
+      "security",
+      "paths",
+      "components"
+    ],
+    "version": null,
+    "interaction_count": 0
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages/streams-text.json",
+    "root_keys": [
+      "version",
+      "metadata",
+      "interactions"
+    ],
+    "version": 1,
+    "interaction_count": 1,
+    "interactions": [
+      {
+        "request_method": "POST",
+        "response_status": 200,
+        "request_keys": [
+          "method",
+          "url",
+          "headers",
+          "body"
+        ],
+        "response_keys": [
+          "status",
+          "headers",
+          "body"
+        ]
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/bedrock-converse/streams-text.json",
+    "root_keys": [
+      "version",
+      "metadata",
+      "interactions"
+    ],
+    "version": 1,
+    "interaction_count": 1,
+    "interactions": [
+      {
+        "request_method": "POST",
+        "response_status": 200,
+        "request_keys": [
+          "method",
+          "url",
+          "headers",
+          "body"
+        ],
+        "response_keys": [
+          "status",
+          "headers",
+          "body",
+          "bodyEncoding"
+        ]
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/gemini/streams-text.json",
+    "root_keys": [
+      "version",
+      "metadata",
+      "interactions"
+    ],
+    "version": 1,
+    "interaction_count": 1,
+    "interactions": [
+      {
+        "request_method": "POST",
+        "response_status": 200,
+        "request_keys": [
+          "method",
+          "url",
+          "headers",
+          "body"
+        ],
+        "response_keys": [
+          "status",
+          "headers",
+          "body"
+        ]
+      }
+    ]
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-chat/streams-text.json",
+    "root_keys": [
+      "version",
+      "metadata",
+      "interactions"
+    ],
+    "version": 1,
+    "interaction_count": 1,
+    "interactions": [
+      {
+        "request_method": "POST",
+        "response_status": 200,
+        "request_keys": [
+          "method",
+          "url",
+          "headers",
+          "body"
+        ],
+        "response_keys": [
+          "status",
+          "headers",
+          "body"
+        ]
+      }
+    ]
+  },
+  {
+    "path": "tooling/http-recorder/test/fixtures/recordings/record-replay/multi-step.json",
+    "root_keys": [
+      "version",
+      "interactions"
+    ],
+    "version": 1,
+    "interaction_count": 2,
+    "interactions": [
+      {
+        "request_method": "POST",
+        "response_status": 200,
+        "request_keys": [
+          "method",
+          "url",
+          "headers",
+          "body"
+        ],
+        "response_keys": [
+          "status",
+          "headers",
+          "body"
+        ]
+      },
+      {
+        "request_method": "POST",
+        "response_status": 200,
+        "request_keys": [
+          "method",
+          "url",
+          "headers",
+          "body"
+        ],
+        "response_keys": [
+          "status",
+          "headers",
+          "body"
+        ]
+      }
+    ]
+  }
+]

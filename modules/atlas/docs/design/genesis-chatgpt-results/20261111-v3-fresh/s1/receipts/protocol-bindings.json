@@ -1,0 +1,93 @@
+[
+  {
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+    "byte_length": 8143
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/principles.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+    "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+    "byte_length": 6010
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+    "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+    "byte_length": 3987
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/fresh-start.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+    "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+    "byte_length": 4983
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+    "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+    "byte_length": 4408
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/judging.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+    "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+    "byte_length": 5787
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+    "byte_length": 8478
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f",
+    "sha256": "c8ade6470889a801b000583cfbb8f121482ec9ba1f2c4c72c539513723801d07",
+    "byte_length": 13725
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+    "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+    "byte_length": 10217
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/completion.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+    "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+    "byte_length": 4497
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+    "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+    "byte_length": 6282
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+    "sha256": "b3cb6324c348ca3fbe92ccf73b2a5e17d36d0822aa3cddeec84c0a9bb2a907bb",
+    "byte_length": 4842
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+    "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+    "byte_length": 4001
+  }
+]

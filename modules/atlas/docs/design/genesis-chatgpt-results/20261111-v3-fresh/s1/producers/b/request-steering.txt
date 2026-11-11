@@ -1,0 +1,3 @@
+Set artifact.scope orchestra.s1 for the common package; stable s1.api.* keys retained. Keep fragment local bodies/*.md, principal maps to producers/b/bodies. No packages/AGENTS.md exists in baseline packages tree. Root AGENTS plus schema nested applies; no additional instruction found so far. Continue substantive evidence production and full family disposition; inventory-only never semantic acceptance.
+
+Also prepare review-evidence.md, compact exact pinned source excerpts (path/blob/line spans) sufficient to assess each L1 body. Judges are tool-free and must receive actual evidence, not links alone. Existing fidelity criterion; no new semantic scope. Keep generated authority/package dependency excerpts explicit.

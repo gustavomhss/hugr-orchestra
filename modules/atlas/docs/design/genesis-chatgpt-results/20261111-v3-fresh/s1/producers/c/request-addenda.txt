@@ -1,0 +1,5 @@
+Message from /root:
+Use common scope orchestra.s1 for all artifacts; your proposed stable s1.runtime.*.l1 keys and producers/c/bodies paths are fine. No need environment probing further. All 2236 paths/hash verified; branch claimed f6cc045d3b255dac0e2d37fe1eacbf102ece1cdf. Preserve genuine source gaps; classification-only support must not imply semantic acceptance.
+
+Message from /root:
+Also deliver review-evidence.md: compact exact source excerpts with path/blob/line spans supporting each L1 body for tool-free judges. Evidence must be original bytes/excerpts, not links only. Existing fidelity requirement. Include key interpreter/SQLite/provider/HTTP recorder refusal boundaries; no new semantic scope.

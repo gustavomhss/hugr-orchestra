@@ -17,9 +17,9 @@
 
 | Unidade | Responsabilidade | Saída | Dependências | Estado |
 | --- | --- | --- | --- | --- |
-| S1-L1-A | Core, sessões, contexto, ferramentas e suporte | Base observada e disposição integral do grupo A | Fonte fixada/oracle L1 | PENDING |
-| S1-L1-B | Schema, Protocol, Server, Client, SDK e codegen | Base observada e disposição integral do grupo B | Fonte fixada/oracle L1 | PENDING |
-| S1-L1-C | LLM, plugin, codemode, SQLite, guides/skills e suporte restante | Base observada e disposição integral do grupo C | Fonte fixada/oracle L1 | PENDING |
+| S1-L1-A | Core, sessões, contexto, ferramentas e suporte | Base observada e disposição integral do grupo A | Fonte fixada/oracle L1 | RUNNING |
+| S1-L1-B | Schema, Protocol, Server, Client, SDK e codegen | Base observada e disposição integral do grupo B | Fonte fixada/oracle L1 | RUNNING |
+| S1-L1-C | LLM, plugin, codemode, SQLite, guides/skills e suporte restante | Base observada e disposição integral do grupo C | Fonte fixada/oracle L1 | RUNNING |
 | S1-L2 | Entendimento local das três áreas; fechar gaps próprios | Corpos locais fundamentados | L1 integral aceito pelos dois juízes | PENDING |
 | S1-L3 | Fluxos integrados e contratos/impacto | Corpos relacionais e dependências | L2 integral aceito pelos dois juízes | PENDING |
 | S1-L4 | Ownership e manutenção, mudança/falha/abstenção | Runbooks operacionais | L3 integral aceito pelos dois juízes | PENDING |
@@ -33,3 +33,7 @@ Aplicar GO-A1..7, QS-1..6, CC-1..7, SC-1..5, GO-I1..8 e DOD-1..7 conforme princ�
 ## Uso e limitações
 
 Tokens, tentativas físicas e custo não expostos: UNKNOWN. Histórico de 20261111-v1: GLOBAL_UNRECONCILED, preservado para ROOT; não zerado. Sem chamada paga externa. Este registro não conclui nenhuma camada nem a entrega.
+
+## Atualização durante L1
+
+Três produtores nativos reais: `/root/producer_a`, `/root/producer_b`, `/root/producer_c` (handles canônicos retornados; nenhum UUID opaco de agente foi exposto). Ver ledger. Oracle de consumo v1 congelado antes de L2–L4 em commit `96c2b5d9d8da9bed454bf35f53f1789e748821cc`. A consulta inicial ao release S4 retornou 404; isso retém apenas as provas dependentes. Limites de observação de três arquivos grandes preservados em runtime-needs.json. Corpos L1 em produção; ainda sem liberação de camada.

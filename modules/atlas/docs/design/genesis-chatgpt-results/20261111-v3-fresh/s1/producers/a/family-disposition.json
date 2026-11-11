@@ -1,0 +1,1260 @@
+{
+  "schema": "genesis-family-disposition/v1",
+  "scope": "orchestra.s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "families": [
+    {
+      "family": "actions",
+      "population_count": 155,
+      "artifact_keys": [
+        "s1.core.automation"
+      ],
+      "read_source_paths": [
+        "packages/core/src/actions.ts",
+        "packages/core/src/actions/contract.ts",
+        "packages/core/src/actions/operations.ts"
+      ],
+      "kinds": {
+        "implementation": 83,
+        "test_code": 59,
+        "test_fixture": 5,
+        "test_support": 8
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/actions/authoring/base.ts",
+        "packages/core/src/actions/authoring/github.ts",
+        "packages/core/src/actions/authoring/gitlab.ts",
+        "packages/core/src/actions/authoring/index.ts",
+        "packages/core/src/actions/authoring/input.ts",
+        "packages/core/src/actions/authoring/lint.ts",
+        "packages/core/src/actions/authoring/remote.ts",
+        "packages/core/src/actions/authoring/schedule.ts",
+        "packages/core/src/actions/binding.ts",
+        "packages/core/src/actions/cursor.ts",
+        "packages/core/src/actions/error.ts",
+        "packages/core/src/actions/github/catalog.ts",
+        "packages/core/src/actions/github/commands.ts",
+        "packages/core/src/actions/github/commands/common.ts",
+        "packages/core/src/actions/github/commands/inputs.ts",
+        "packages/core/src/actions/github/commands/job.ts",
+        "packages/core/src/actions/github/commands/run.ts",
+        "packages/core/src/actions/github/commands/workflow.ts",
+        "packages/core/src/actions/github/index.ts",
+        "packages/core/src/actions/github/jobs.ts",
+        "packages/core/src/actions/github/native.ts",
+        "packages/core/src/actions/github/runs.ts",
+        "packages/core/src/actions/gitlab/catalog.ts",
+        "packages/core/src/actions/gitlab/commands.ts",
+        "packages/core/src/actions/gitlab/commands/inputs.ts",
+        "packages/core/src/actions/gitlab/commands/jobs.ts",
+        "packages/core/src/actions/gitlab/commands/launch.ts",
+        "packages/core/src/actions/gitlab/commands/merge-request.ts",
+        "packages/core/src/actions/gitlab/commands/native.ts",
+        "packages/core/src/actions/gitlab/commands/runs.ts",
+        "packages/core/src/actions/gitlab/commands/shared.ts",
+        "packages/core/src/actions/gitlab/index.ts",
+        "packages/core/src/actions/gitlab/jobs.ts",
+        "packages/core/src/actions/gitlab/native.ts",
+        "packages/core/src/actions/gitlab/runs.ts",
+        "packages/core/src/actions/operations/outcome.ts",
+        "packages/core/src/actions/operations/readback.ts",
+        "packages/core/src/actions/operations/sql.ts",
+        "packages/core/src/actions/operations/storage.ts",
+        "packages/core/src/actions/output/artifacts.ts",
+        "packages/core/src/actions/output/download.ts",
+        "packages/core/src/actions/output/headers.ts",
+        "packages/core/src/actions/output/index.ts",
+        "packages/core/src/actions/output/mutations.ts",
+        "packages/core/src/actions/output/native.ts",
+        "packages/core/src/actions/output/signed.ts",
+        "packages/core/src/actions/output/target.ts",
+        "packages/core/src/actions/output/version.ts",
+        "packages/core/src/actions/readback.ts",
+        "packages/core/src/actions/resources.ts",
+        "packages/core/src/actions/resources/caches.ts",
+        "packages/core/src/actions/resources/config-common.ts",
+        "packages/core/src/actions/resources/config-deployment-review.ts",
+        "packages/core/src/actions/resources/config-environment-github.ts",
+        "packages/core/src/actions/resources/config-environment-gitlab.ts",
+        "packages/core/src/actions/resources/config-environment-reviewers.ts",
+        "packages/core/src/actions/resources/config-environment-schema.ts",
+        "packages/core/src/actions/resources/config-sodium.d.ts",
+        "packages/core/src/actions/resources/config-variable-github-page.ts",
+        "packages/core/src/actions/resources/environments.ts",
+        "packages/core/src/actions/resources/gitlab-graphql.ts",
+        "packages/core/src/actions/resources/native.ts",
+        "packages/core/src/actions/resources/policy.ts",
+        "packages/core/src/actions/resources/runners.ts",
+        "packages/core/src/actions/resources/schedule-yaml.ts",
+        "packages/core/src/actions/resources/schedules.ts",
+        "packages/core/src/actions/resources/variables.ts",
+        "packages/core/src/actions/source/document.ts",
+        "packages/core/src/actions/source/github.ts",
+        "packages/core/src/actions/source/gitlab.ts",
+        "packages/core/src/actions/source/graph.ts",
+        "packages/core/src/actions/state.ts",
+        "packages/core/src/actions/transport.ts",
+        "packages/core/src/actions/transport/cli.ts",
+        "packages/core/src/actions/transport/credentials.ts",
+        "packages/core/src/actions/transport/gitlab.ts",
+        "packages/core/src/actions/transport/http.ts",
+        "packages/core/src/actions/transport/identity.ts",
+        "packages/core/src/actions/transport/process.ts",
+        "packages/core/src/actions/transport/response.ts"
+      ]
+    },
+    {
+      "family": "agent",
+      "population_count": 10,
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "read_source_paths": [
+        "packages/core/src/agent.ts"
+      ],
+      "kinds": {
+        "bundled_instruction": 6,
+        "documentation": 1,
+        "implementation": 2,
+        "test_code": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/agent/prompt.ts"
+      ]
+    },
+    {
+      "family": "architecture-history",
+      "population_count": 9,
+      "artifact_keys": [
+        "s1.core.entry"
+      ],
+      "read_source_paths": [],
+      "kinds": {
+        "historical_design_and_qualification": 9
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": []
+    },
+    {
+      "family": "atlas",
+      "population_count": 1,
+      "artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "read_source_paths": [
+        "packages/core/src/atlas.ts"
+      ],
+      "kinds": {
+        "implementation": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": []
+    },
+    {
+      "family": "backend-toolkit",
+      "population_count": 59,
+      "artifact_keys": [
+        "s1.core.research"
+      ],
+      "read_source_paths": [
+        "packages/core/src/backend-toolkit/README.md",
+        "packages/core/src/backend-toolkit/index.ts"
+      ],
+      "kinds": {
+        "documentation": 1,
+        "generated_output": 1,
+        "implementation": 40,
+        "runtime_data_or_pin": 4,
+        "test_code": 13
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/backend-toolkit/acquisition.ts",
+        "packages/core/src/backend-toolkit/attempts.ts",
+        "packages/core/src/backend-toolkit/cassandra-dialer.ts",
+        "packages/core/src/backend-toolkit/cassandra-metadata.ts",
+        "packages/core/src/backend-toolkit/diagnostics.ts",
+        "packages/core/src/backend-toolkit/hosted.ts",
+        "packages/core/src/backend-toolkit/launcher.ts",
+        "packages/core/src/backend-toolkit/manifest.ts",
+        "packages/core/src/backend-toolkit/packs/ast-grep.ts",
+        "packages/core/src/backend-toolkit/packs/buf.ts",
+        "packages/core/src/backend-toolkit/packs/controller-gen.ts",
+        "packages/core/src/backend-toolkit/packs/datafusion-cli.ts",
+        "packages/core/src/backend-toolkit/packs/datamodel-codegen.ts",
+        "packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts",
+        "packages/core/src/backend-toolkit/packs/gitleaks.ts",
+        "packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts",
+        "packages/core/src/backend-toolkit/packs/index.ts",
+        "packages/core/src/backend-toolkit/packs/kiota.ts",
+        "packages/core/src/backend-toolkit/packs/kopium.ts",
+        "packages/core/src/backend-toolkit/packs/kubeconform.ts",
+        "packages/core/src/backend-toolkit/packs/kysely-codegen.ts",
+        "packages/core/src/backend-toolkit/packs/modelina.ts",
+        "packages/core/src/backend-toolkit/packs/ogen.ts",
+        "packages/core/src/backend-toolkit/packs/openapi-generator.ts",
+        "packages/core/src/backend-toolkit/packs/orval.ts",
+        "packages/core/src/backend-toolkit/packs/postgres-language-server.ts",
+        "packages/core/src/backend-toolkit/packs/protoc-gen-es.ts",
+        "packages/core/src/backend-toolkit/packs/sqlc.ts",
+        "packages/core/src/backend-toolkit/packs/sqlglot.ts",
+        "packages/core/src/backend-toolkit/packs/sqlx.ts",
+        "packages/core/src/backend-toolkit/packs/squawk.ts",
+        "packages/core/src/backend-toolkit/project-version.ts",
+        "packages/core/src/backend-toolkit/runtimes/go.ts",
+        "packages/core/src/backend-toolkit/runtimes/java.ts",
+        "packages/core/src/backend-toolkit/runtimes/node.ts",
+        "packages/core/src/backend-toolkit/runtimes/python.ts",
+        "packages/core/src/backend-toolkit/runtimes/rust.ts",
+        "packages/core/src/backend-toolkit/target.ts",
+        "packages/core/src/pinned-artifact.ts"
+      ]
+    },
+    {
+      "family": "board",
+      "population_count": 38,
+      "artifact_keys": [
+        "s1.core.automation"
+      ],
+      "read_source_paths": [
+        "packages/core/src/board/decision.ts"
+      ],
+      "kinds": {
+        "implementation": 25,
+        "test_code": 13
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/board/board.ts",
+        "packages/core/src/board/ci.ts",
+        "packages/core/src/board/conflicts.ts",
+        "packages/core/src/board/forecast.ts",
+        "packages/core/src/board/github.ts",
+        "packages/core/src/board/ledger.ts",
+        "packages/core/src/board/money.ts",
+        "packages/core/src/board/proof.ts",
+        "packages/core/src/board/queue-drift.ts",
+        "packages/core/src/board/queue-lanes.ts",
+        "packages/core/src/board/queue-record.ts",
+        "packages/core/src/board/queue-red.ts",
+        "packages/core/src/board/queue-settle.ts",
+        "packages/core/src/board/queue-shared.ts",
+        "packages/core/src/board/queue.ts",
+        "packages/core/src/board/record.ts",
+        "packages/core/src/board/rows.ts",
+        "packages/core/src/board/shared.ts",
+        "packages/core/src/board/snapshot.ts",
+        "packages/core/src/board/spend.ts",
+        "packages/core/src/board/sql.ts",
+        "packages/core/src/board/thread.ts",
+        "packages/core/src/board/tree.ts"
+      ]
+    },
+    {
+      "family": "capability",
+      "population_count": 170,
+      "artifact_keys": [
+        "s1.core.capability"
+      ],
+      "read_source_paths": [
+        "docs/guides/artifacts-and-processes.md",
+        "packages/core/src/capability/invocation.ts",
+        "packages/core/src/capability/mcp/README.md",
+        "packages/core/src/capability/policy.ts",
+        "packages/core/src/capability/tools.ts"
+      ],
+      "kinds": {
+        "documentation": 4,
+        "implementation": 92,
+        "runtime_asset": 1,
+        "test_code": 73
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/capability/artifact/blob.ts",
+        "packages/core/src/capability/artifact/error.ts",
+        "packages/core/src/capability/artifact/index.ts",
+        "packages/core/src/capability/artifact/management-contract.ts",
+        "packages/core/src/capability/artifact/management-mutation.ts",
+        "packages/core/src/capability/artifact/management-shared.ts",
+        "packages/core/src/capability/artifact/management.ts",
+        "packages/core/src/capability/artifact/mime.ts",
+        "packages/core/src/capability/artifact/selection.ts",
+        "packages/core/src/capability/catalog/cursors.ts",
+        "packages/core/src/capability/catalog/descriptors.ts",
+        "packages/core/src/capability/catalog/discovery.ts",
+        "packages/core/src/capability/catalog/schema.ts",
+        "packages/core/src/capability/channel/http.ts",
+        "packages/core/src/capability/channel/index.ts",
+        "packages/core/src/capability/channel/request.ts",
+        "packages/core/src/capability/channel/schema.ts",
+        "packages/core/src/capability/children.ts",
+        "packages/core/src/capability/connection/bindings-contract.ts",
+        "packages/core/src/capability/connection/bindings.ts",
+        "packages/core/src/capability/connection/index.ts",
+        "packages/core/src/capability/connection/input.ts",
+        "packages/core/src/capability/connection/management-contract.ts",
+        "packages/core/src/capability/connection/management-cursor.ts",
+        "packages/core/src/capability/connection/management.ts",
+        "packages/core/src/capability/connection/setup-contract.ts",
+        "packages/core/src/capability/connection/setup.ts",
+        "packages/core/src/capability/connection/store-contract.ts",
+        "packages/core/src/capability/connection/store.ts",
+        "packages/core/src/capability/connection/verifiers/cloudflare.ts",
+        "packages/core/src/capability/connection/verifiers/contract.ts",
+        "packages/core/src/capability/connection/verifiers/discord.ts",
+        "packages/core/src/capability/connection/verifiers/globalping.ts",
+        "packages/core/src/capability/connection/verifiers/index.ts",
+        "packages/core/src/capability/connection/verifiers/linear.ts",
+        "packages/core/src/capability/connection/verifiers/neon.ts",
+        "packages/core/src/capability/connection/verifiers/openai.ts",
+        "packages/core/src/capability/connection/verifiers/runway.ts",
+        "packages/core/src/capability/connection/verifiers/slack.ts",
+        "packages/core/src/capability/connection/verifiers/stripe.ts",
+        "packages/core/src/capability/connection/verifiers/supabase.ts",
+        "packages/core/src/capability/connection/verify.ts",
+        "packages/core/src/capability/document/index.ts",
+        "packages/core/src/capability/document/native.ts",
+        "packages/core/src/capability/document/pdf.ts",
+        "packages/core/src/capability/document/schema.ts",
+        "packages/core/src/capability/document/work.ts",
+        "packages/core/src/capability/document/worker.ts",
+        "packages/core/src/capability/job/index.ts",
+        "packages/core/src/capability/mcp/http.ts",
+        "packages/core/src/capability/mcp/index.ts",
+        "packages/core/src/capability/mcp/protocol.ts",
+        "packages/core/src/capability/media/http.ts",
+        "packages/core/src/capability/media/index.ts",
+        "packages/core/src/capability/media/schema.ts",
+        "packages/core/src/capability/operator/contract.ts",
+        "packages/core/src/capability/operator/index.ts",
+        "packages/core/src/capability/operator/request-contract.ts",
+        "packages/core/src/capability/operator/request-data.ts",
+        "packages/core/src/capability/operator/request.ts",
+        "packages/core/src/capability/operator/scope.ts",
+        "packages/core/src/capability/process-control/contract.ts",
+        "packages/core/src/capability/process-control/index.ts",
+        "packages/core/src/capability/process-control/output.ts",
+        "packages/core/src/capability/process-control/registry.ts",
+        "packages/core/src/capability/process-control/sweep.ts",
+        "packages/core/src/capability/providers/discord/index.ts",
+        "packages/core/src/capability/providers/discord/permissions.ts",
+        "packages/core/src/capability/providers/slack/index.ts",
+        "packages/core/src/capability/schedule/contract.ts",
+        "packages/core/src/capability/schedule/index.ts",
+        "packages/core/src/capability/schedule/management.ts",
+        "packages/core/src/capability/service/contract.ts",
+        "packages/core/src/capability/service/execute.ts",
+        "packages/core/src/capability/service/execution/data.ts",
+        "packages/core/src/capability/service/execution/projection.ts",
+        "packages/core/src/capability/service/index.ts",
+        "packages/core/src/capability/service/providers.ts",
+        "packages/core/src/capability/service/schema.ts",
+        "packages/core/src/capability/sheet/archive.ts",
+        "packages/core/src/capability/sheet/csv.ts",
+        "packages/core/src/capability/sheet/formula.ts",
+        "packages/core/src/capability/sheet/index.ts",
+        "packages/core/src/capability/sheet/schema.ts",
+        "packages/core/src/capability/sheet/workbook.ts",
+        "packages/core/src/capability/sheet/zip.ts",
+        "packages/core/src/capability/sql.ts",
+        "packages/core/src/toolkit/install.ts",
+        "packages/core/src/toolkit/runtime.ts"
+      ]
+    },
+    {
+      "family": "config",
+      "population_count": 62,
+      "artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "read_source_paths": [
+        "docs/specs/v2/config.md",
+        "packages/core/src/config.ts",
+        "packages/core/src/config/trust.ts"
+      ],
+      "kinds": {
+        "documentation": 1,
+        "implementation": 43,
+        "test_code": 17,
+        "test_fixture": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/behavior.ts",
+        "packages/core/src/config/agent-file.ts",
+        "packages/core/src/config/agent.ts",
+        "packages/core/src/config/attachments.ts",
+        "packages/core/src/config/command.ts",
+        "packages/core/src/config/compaction.ts",
+        "packages/core/src/config/continuity.ts",
+        "packages/core/src/config/experimental.ts",
+        "packages/core/src/config/formatter.ts",
+        "packages/core/src/config/lsp.ts",
+        "packages/core/src/config/markdown.ts",
+        "packages/core/src/config/plugin-file.ts",
+        "packages/core/src/config/plugin.ts",
+        "packages/core/src/config/plugin/agent.ts",
+        "packages/core/src/config/plugin/command.ts",
+        "packages/core/src/config/plugin/external.ts",
+        "packages/core/src/config/plugin/provider.ts",
+        "packages/core/src/config/plugin/reference.ts",
+        "packages/core/src/config/plugin/skill.ts",
+        "packages/core/src/config/provider-options.ts",
+        "packages/core/src/config/provider.ts",
+        "packages/core/src/config/reference.ts",
+        "packages/core/src/config/relay.ts",
+        "packages/core/src/config/research.ts",
+        "packages/core/src/config/tool-output.ts",
+        "packages/core/src/config/upgrade/agent.ts",
+        "packages/core/src/config/upgrade/attachment.ts",
+        "packages/core/src/config/upgrade/command.ts",
+        "packages/core/src/config/upgrade/formatter.ts",
+        "packages/core/src/config/upgrade/lsp.ts",
+        "packages/core/src/config/upgrade/mcp.ts",
+        "packages/core/src/config/upgrade/permission.ts",
+        "packages/core/src/config/upgrade/plugin.ts",
+        "packages/core/src/config/upgrade/provider.ts",
+        "packages/core/src/config/upgrade/skills.ts",
+        "packages/core/src/config/upgrade/source.ts",
+        "packages/core/src/config/upgrade/upgrade.ts",
+        "packages/core/src/config/watcher.ts",
+        "packages/core/src/flag/flag.ts",
+        "packages/core/src/policy.ts",
+        "packages/core/src/tui-config-files.ts"
+      ]
+    },
+    {
+      "family": "control-plane",
+      "population_count": 3,
+      "artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "read_source_paths": [
+        "packages/core/src/control-plane/move-session.ts"
+      ],
+      "kinds": {
+        "implementation": 2,
+        "test_code": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/control-plane/workspace.sql.ts"
+      ]
+    },
+    {
+      "family": "database",
+      "population_count": 89,
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "read_source_paths": [
+        "packages/core/src/database/README.md",
+        "packages/core/src/database/database.ts",
+        "packages/core/src/database/migration.ts"
+      ],
+      "kinds": {
+        "documentation": 1,
+        "generated_output": 2,
+        "historical_migration": 72,
+        "implementation": 8,
+        "test_code": 6
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/data-migration.sql.ts",
+        "packages/core/src/database/path.ts",
+        "packages/core/src/database/schema.sql.ts",
+        "packages/core/src/database/sqlite.bun.ts",
+        "packages/core/src/database/sqlite.node.ts",
+        "packages/core/src/database/sqlite.ts"
+      ]
+    },
+    {
+      "family": "documentation",
+      "population_count": 3,
+      "artifact_keys": [
+        "s1.core.entry"
+      ],
+      "read_source_paths": [],
+      "kinds": {
+        "documentation": 3
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": []
+    },
+    {
+      "family": "economy",
+      "population_count": 5,
+      "artifact_keys": [
+        "s1.core.economy"
+      ],
+      "read_source_paths": [
+        "packages/core/src/economy/admission.ts"
+      ],
+      "kinds": {
+        "implementation": 3,
+        "test_code": 2
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/economy/executor.ts",
+        "packages/core/src/economy/sql.ts"
+      ]
+    },
+    {
+      "family": "event",
+      "population_count": 11,
+      "artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "read_source_paths": [
+        "packages/core/src/event.ts",
+        "packages/core/src/event/seal.ts"
+      ],
+      "kinds": {
+        "implementation": 5,
+        "test_code": 6
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/event/compaction.ts",
+        "packages/core/src/event/sql.ts",
+        "packages/core/src/public-event-manifest.ts"
+      ]
+    },
+    {
+      "family": "identity",
+      "population_count": 15,
+      "artifact_keys": [
+        "s1.core.extensions",
+        "s1.core.security"
+      ],
+      "read_source_paths": [
+        "packages/core/src/credential.ts",
+        "packages/core/src/credential/cipher.ts",
+        "packages/core/src/integration.ts"
+      ],
+      "kinds": {
+        "implementation": 10,
+        "test_code": 5
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/account.ts",
+        "packages/core/src/account/sql.ts",
+        "packages/core/src/claude-code-account.ts",
+        "packages/core/src/credential/sql.ts",
+        "packages/core/src/integration/connection.ts",
+        "packages/core/src/oauth/page.ts",
+        "packages/core/src/share/sql.ts"
+      ]
+    },
+    {
+      "family": "instruction",
+      "population_count": 21,
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "read_source_paths": [
+        "packages/core/src/skill.ts"
+      ],
+      "kinds": {
+        "documentation": 1,
+        "implementation": 9,
+        "test_code": 11
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/command.ts",
+        "packages/core/src/packaged-skills.ts",
+        "packages/core/src/reference.ts",
+        "packages/core/src/reference/guidance.ts",
+        "packages/core/src/skill/discovery.ts",
+        "packages/core/src/skill/file.ts",
+        "packages/core/src/skill/guidance.ts",
+        "packages/core/src/slash-command.ts"
+      ]
+    },
+    {
+      "family": "location",
+      "population_count": 10,
+      "artifact_keys": [
+        "s1.core.project"
+      ],
+      "read_source_paths": [
+        "packages/core/src/location-mutation.ts",
+        "packages/core/src/location-service-map.ts",
+        "packages/core/src/location-services.ts"
+      ],
+      "kinds": {
+        "implementation": 4,
+        "test_code": 6
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/location.ts"
+      ]
+    },
+    {
+      "family": "package",
+      "population_count": 12,
+      "artifact_keys": [
+        "s1.core.entry"
+      ],
+      "read_source_paths": [
+        "packages/core/README.md",
+        "packages/core/package.json"
+      ],
+      "kinds": {
+        "documentation": 1,
+        "generated_output": 1,
+        "generation_or_maintenance_script": 4,
+        "package_or_tooling_metadata": 4,
+        "vendored_compatibility": 2
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": []
+    },
+    {
+      "family": "permission",
+      "population_count": 9,
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "read_source_paths": [
+        ".orchestra/skills/session-requests-usage/SKILL.md",
+        "packages/core/src/permission.ts",
+        "packages/core/src/question.ts"
+      ],
+      "kinds": {
+        "documentation": 1,
+        "implementation": 4,
+        "repository_skill": 1,
+        "test_code": 2,
+        "test_support": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/permission/saved.ts",
+        "packages/core/src/permission/sql.ts"
+      ]
+    },
+    {
+      "family": "plugin-host",
+      "population_count": 63,
+      "artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "read_source_paths": [
+        "packages/core/src/plugin.ts",
+        "packages/core/src/plugin/README.md"
+      ],
+      "kinds": {
+        "bundled_instruction": 2,
+        "documentation": 2,
+        "implementation": 13,
+        "test_code": 39,
+        "test_fixture": 6,
+        "test_support": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/plugin/agent.ts",
+        "packages/core/src/plugin/command.ts",
+        "packages/core/src/plugin/host.ts",
+        "packages/core/src/plugin/internal.ts",
+        "packages/core/src/plugin/layer-map.example.ts",
+        "packages/core/src/plugin/promise.ts",
+        "packages/core/src/plugin/sdk-admission.ts",
+        "packages/core/src/plugin/sdk-limits.ts",
+        "packages/core/src/plugin/sdk-package.ts",
+        "packages/core/src/plugin/sdk-reconcile.ts",
+        "packages/core/src/plugin/sdk-registry.ts",
+        "packages/core/src/plugin/sdk-runtime.ts"
+      ]
+    },
+    {
+      "family": "process",
+      "population_count": 58,
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "read_source_paths": [
+        ".orchestra/skills/terminal-maintenance/SKILL.md",
+        "packages/core/src/omni.ts",
+        "packages/core/src/process.ts",
+        "packages/core/src/pty.ts"
+      ],
+      "kinds": {
+        "documentation": 6,
+        "implementation": 29,
+        "repository_skill": 1,
+        "test_code": 20,
+        "test_support": 2
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/artifact-native-windows.rs",
+        "packages/core/src/artifact-native-windows.ts",
+        "packages/core/src/child-process-common.ts",
+        "packages/core/src/cross-spawn-command.ts",
+        "packages/core/src/cross-spawn-spawner.ts",
+        "packages/core/src/omni-adoption.ts",
+        "packages/core/src/omni-background.ts",
+        "packages/core/src/omni-output.ts",
+        "packages/core/src/omni-spawner.ts",
+        "packages/core/src/output-inspector.ts",
+        "packages/core/src/pty/omni.ts",
+        "packages/core/src/pty/protocol.ts",
+        "packages/core/src/pty/pty.bun.ts",
+        "packages/core/src/pty/pty.node.ts",
+        "packages/core/src/pty/pty.ts",
+        "packages/core/src/pty/schema.ts",
+        "packages/core/src/pty/shell-cwd.ts",
+        "packages/core/src/pty/shell-integration.ts",
+        "packages/core/src/pty/shell-marks.ts",
+        "packages/core/src/pty/ticket.ts",
+        "packages/core/src/ripgrep.ts",
+        "packages/core/src/ripgrep/binary.ts",
+        "packages/core/src/ripgrep/bundle.ts",
+        "packages/core/src/ripgrep/release.ts",
+        "packages/core/src/shell.ts",
+        "packages/core/src/tcp-proxy.ts"
+      ]
+    },
+    {
+      "family": "project",
+      "population_count": 56,
+      "artifact_keys": [
+        "s1.core.project",
+        "s1.core.runtime"
+      ],
+      "read_source_paths": [
+        "docs/specs/project.md",
+        "packages/core/src/filesystem.ts",
+        "packages/core/src/format/format.ts",
+        "packages/core/src/project.ts",
+        "packages/core/src/project/checkpoint.ts",
+        "packages/core/src/project/directories.ts"
+      ],
+      "kinds": {
+        "documentation": 1,
+        "implementation": 31,
+        "test_code": 24
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/file-mutation.ts",
+        "packages/core/src/file.ts",
+        "packages/core/src/filesystem/fff.bun.ts",
+        "packages/core/src/filesystem/fff.node.ts",
+        "packages/core/src/filesystem/ignore.ts",
+        "packages/core/src/filesystem/protected.ts",
+        "packages/core/src/filesystem/search.ts",
+        "packages/core/src/filesystem/watcher.ts",
+        "packages/core/src/format.ts",
+        "packages/core/src/format/formatter.ts",
+        "packages/core/src/fs-util.ts",
+        "packages/core/src/git-cli.ts",
+        "packages/core/src/git.ts",
+        "packages/core/src/guardrail.ts",
+        "packages/core/src/patch.ts",
+        "packages/core/src/project/checkpoint.sql.ts",
+        "packages/core/src/project/copy-strategies.ts",
+        "packages/core/src/project/copy.ts",
+        "packages/core/src/project/schema.ts",
+        "packages/core/src/project/sql.ts",
+        "packages/core/src/pull-request.ts",
+        "packages/core/src/repository-cache.ts",
+        "packages/core/src/repository.ts",
+        "packages/core/src/snapshot.ts",
+        "packages/core/src/vcs.ts",
+        "packages/core/src/workspace.ts"
+      ]
+    },
+    {
+      "family": "provider",
+      "population_count": 76,
+      "artifact_keys": [
+        "s1.core.models"
+      ],
+      "read_source_paths": [
+        "packages/core/src/aisdk.ts",
+        "packages/core/src/catalog.ts",
+        "packages/core/src/model.ts",
+        "packages/core/src/provider.ts"
+      ],
+      "kinds": {
+        "documentation": 2,
+        "implementation": 40,
+        "test_code": 9,
+        "vendored_compatibility": 25
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/models-dev.ts",
+        "packages/core/src/plugin/models-dev.ts",
+        "packages/core/src/plugin/provider.ts",
+        "packages/core/src/plugin/provider/alibaba.ts",
+        "packages/core/src/plugin/provider/amazon-bedrock.ts",
+        "packages/core/src/plugin/provider/anthropic.ts",
+        "packages/core/src/plugin/provider/azure.ts",
+        "packages/core/src/plugin/provider/cerebras.ts",
+        "packages/core/src/plugin/provider/cloudflare-ai-gateway.ts",
+        "packages/core/src/plugin/provider/cloudflare-workers-ai.ts",
+        "packages/core/src/plugin/provider/cohere.ts",
+        "packages/core/src/plugin/provider/deepinfra.ts",
+        "packages/core/src/plugin/provider/dynamic.ts",
+        "packages/core/src/plugin/provider/gateway.ts",
+        "packages/core/src/plugin/provider/github-copilot.ts",
+        "packages/core/src/plugin/provider/gitlab.ts",
+        "packages/core/src/plugin/provider/google-vertex.ts",
+        "packages/core/src/plugin/provider/google.ts",
+        "packages/core/src/plugin/provider/groq.ts",
+        "packages/core/src/plugin/provider/kilo.ts",
+        "packages/core/src/plugin/provider/llmgateway.ts",
+        "packages/core/src/plugin/provider/mistral.ts",
+        "packages/core/src/plugin/provider/nvidia.ts",
+        "packages/core/src/plugin/provider/openai-compatible.ts",
+        "packages/core/src/plugin/provider/openai.ts",
+        "packages/core/src/plugin/provider/opencode.ts",
+        "packages/core/src/plugin/provider/openrouter.ts",
+        "packages/core/src/plugin/provider/perplexity.ts",
+        "packages/core/src/plugin/provider/sap-ai-core.ts",
+        "packages/core/src/plugin/provider/snowflake-cortex.ts",
+        "packages/core/src/plugin/provider/togetherai.ts",
+        "packages/core/src/plugin/provider/venice.ts",
+        "packages/core/src/plugin/provider/vercel.ts",
+        "packages/core/src/plugin/provider/xai.ts",
+        "packages/core/src/plugin/provider/zenmux.ts",
+        "packages/core/src/plugin/variant.ts"
+      ]
+    },
+    {
+      "family": "rag-studio",
+      "population_count": 1,
+      "artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "read_source_paths": [
+        "packages/core/src/rag-studio/sql.ts"
+      ],
+      "kinds": {
+        "implementation": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": []
+    },
+    {
+      "family": "relay",
+      "population_count": 19,
+      "artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "read_source_paths": [
+        "packages/core/src/relay.ts"
+      ],
+      "kinds": {
+        "implementation": 10,
+        "test_code": 9
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/relay-commands.ts",
+        "packages/core/src/relay-hook-install.ts",
+        "packages/core/src/relay-hook-recovery.ts",
+        "packages/core/src/relay-hook-shipper.ts",
+        "packages/core/src/relay-workflow-binding.ts",
+        "packages/core/src/relay-workflow-currentstep.ts",
+        "packages/core/src/relay-workflow-evaluator.ts",
+        "packages/core/src/relay-workflow-session.ts",
+        "packages/core/src/relay-workflow-transition.ts"
+      ]
+    },
+    {
+      "family": "research",
+      "population_count": 71,
+      "artifact_keys": [
+        "s1.core.research"
+      ],
+      "read_source_paths": [
+        "packages/core/src/research-toolkit/index.ts",
+        "packages/core/src/research/ledger.ts"
+      ],
+      "kinds": {
+        "implementation": 40,
+        "runtime_data_or_pin": 3,
+        "test_code": 28
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/research-toolkit/code-index/build.ts",
+        "packages/core/src/research-toolkit/code-index/callers.ts",
+        "packages/core/src/research-toolkit/code-index/enclosing.ts",
+        "packages/core/src/research-toolkit/code-index/extract.ts",
+        "packages/core/src/research-toolkit/code-index/filter.ts",
+        "packages/core/src/research-toolkit/code-index/go.ts",
+        "packages/core/src/research-toolkit/code-index/python.ts",
+        "packages/core/src/research-toolkit/code-index/query.ts",
+        "packages/core/src/research-toolkit/code-index/rank.ts",
+        "packages/core/src/research-toolkit/code-index/resolve.ts",
+        "packages/core/src/research-toolkit/code-index/rust.ts",
+        "packages/core/src/research-toolkit/code-index/scip.ts",
+        "packages/core/src/research-toolkit/code-index/shard.ts",
+        "packages/core/src/research-toolkit/code-index/store.ts",
+        "packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+        "packages/core/src/research-toolkit/code-index/types.ts",
+        "packages/core/src/research-toolkit/liveness.ts",
+        "packages/core/src/research-toolkit/locate.ts",
+        "packages/core/src/research-toolkit/manifest.ts",
+        "packages/core/src/research-toolkit/packs/index.ts",
+        "packages/core/src/research-toolkit/packs/rust-analyzer.ts",
+        "packages/core/src/research-toolkit/packs/scip-go.ts",
+        "packages/core/src/research-toolkit/packs/scip-python.ts",
+        "packages/core/src/research-toolkit/packs/scip-typescript.ts",
+        "packages/core/src/research-toolkit/packs/typescript.ts",
+        "packages/core/src/research-toolkit/probe/assets.ts",
+        "packages/core/src/research-toolkit/probe/run.ts",
+        "packages/core/src/research-toolkit/probe/runners.ts",
+        "packages/core/src/research-toolkit/probe/snapshot.ts",
+        "packages/core/src/research-toolkit/probe/typecheck.ts",
+        "packages/core/src/research-toolkit/probe/types.ts",
+        "packages/core/src/research-toolkit/process.ts",
+        "packages/core/src/research-toolkit/search.ts",
+        "packages/core/src/research/allowance.ts",
+        "packages/core/src/research/artifacts.ts",
+        "packages/core/src/research/binding.ts",
+        "packages/core/src/research/records.ts",
+        "packages/core/src/research/seat-tools.ts"
+      ]
+    },
+    {
+      "family": "runtime",
+      "population_count": 41,
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "read_source_paths": [
+        "packages/core/src/effect/app-node.ts",
+        "packages/core/src/global.ts",
+        "packages/core/src/host.ts",
+        "packages/core/src/installation/service.ts",
+        "packages/core/src/observability/otlp.ts",
+        "packages/core/src/state.ts"
+      ],
+      "kinds": {
+        "implementation": 24,
+        "test_code": 15,
+        "test_support": 2
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/background-job.ts",
+        "packages/core/src/effect/app-node-builder.ts",
+        "packages/core/src/effect/app-node-platform.ts",
+        "packages/core/src/effect/keyed-mutex.ts",
+        "packages/core/src/effect/layer-node.ts",
+        "packages/core/src/effect/memo-map.ts",
+        "packages/core/src/effect/runtime.ts",
+        "packages/core/src/effect/service-use.ts",
+        "packages/core/src/host/agent-execution.ts",
+        "packages/core/src/host/catalog-availability.ts",
+        "packages/core/src/host/pty-environment.ts",
+        "packages/core/src/id/id.ts",
+        "packages/core/src/installation/version.ts",
+        "packages/core/src/observability.ts",
+        "packages/core/src/observability/logging.ts",
+        "packages/core/src/observability/shared.ts",
+        "packages/core/src/schema.ts",
+        "packages/core/src/v2-schema.ts"
+      ]
+    },
+    {
+      "family": "scheduled-task",
+      "population_count": 11,
+      "artifact_keys": [
+        "s1.core.automation"
+      ],
+      "read_source_paths": [
+        "packages/core/src/scheduled-task.ts",
+        "packages/core/src/scheduled-task/port.ts"
+      ],
+      "kinds": {
+        "implementation": 7,
+        "test_code": 4
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/scheduled-task/capability-model.ts",
+        "packages/core/src/scheduled-task/capability.ts",
+        "packages/core/src/scheduled-task/model.ts",
+        "packages/core/src/scheduled-task/shared.ts",
+        "packages/core/src/scheduled-task/sql.ts"
+      ]
+    },
+    {
+      "family": "session",
+      "population_count": 90,
+      "artifact_keys": [
+        "s1.core.context",
+        "s1.core.models",
+        "s1.core.persistence",
+        "s1.core.session-admission",
+        "s1.core.session-execution"
+      ],
+      "read_source_paths": [
+        "docs/specs/v2/session.md",
+        "packages/core/src/session.ts",
+        "packages/core/src/session/compaction.ts",
+        "packages/core/src/session/context-epoch.ts",
+        "packages/core/src/session/execution.ts",
+        "packages/core/src/session/execution/local.ts",
+        "packages/core/src/session/history.ts",
+        "packages/core/src/session/input.ts",
+        "packages/core/src/session/projector.ts",
+        "packages/core/src/session/run-coordinator.ts",
+        "packages/core/src/session/runner/llm.ts",
+        "packages/core/src/session/runner/model.ts",
+        "packages/core/src/session/sql.ts",
+        "packages/core/src/session/store.ts"
+      ],
+      "kinds": {
+        "bundled_instruction": 1,
+        "documentation": 2,
+        "implementation": 51,
+        "test_code": 35,
+        "test_support": 1
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/session-process.ts",
+        "packages/core/src/session/activity.ts",
+        "packages/core/src/session/archive.ts",
+        "packages/core/src/session/error.ts",
+        "packages/core/src/session/event.ts",
+        "packages/core/src/session/info.ts",
+        "packages/core/src/session/lean-profile-preferences.ts",
+        "packages/core/src/session/lean-project.ts",
+        "packages/core/src/session/legacy-import.ts",
+        "packages/core/src/session/legacy-transcript.ts",
+        "packages/core/src/session/lifecycle.ts",
+        "packages/core/src/session/meeting-briefing.ts",
+        "packages/core/src/session/meeting-consolidation.ts",
+        "packages/core/src/session/meeting-context.ts",
+        "packages/core/src/session/meeting-handoff.ts",
+        "packages/core/src/session/meeting-memory.sql.ts",
+        "packages/core/src/session/meeting-memory.ts",
+        "packages/core/src/session/meeting-verdict.ts",
+        "packages/core/src/session/meeting.sql.ts",
+        "packages/core/src/session/meeting.ts",
+        "packages/core/src/session/message-updater.ts",
+        "packages/core/src/session/message.ts",
+        "packages/core/src/session/prompt.ts",
+        "packages/core/src/session/revert.ts",
+        "packages/core/src/session/runner/direct-commands.ts",
+        "packages/core/src/session/runner/hosted-call.ts",
+        "packages/core/src/session/runner/max-steps.ts",
+        "packages/core/src/session/runner/mentions.ts",
+        "packages/core/src/session/runner/publish-llm-event.ts",
+        "packages/core/src/session/runner/step-tools.ts",
+        "packages/core/src/session/runner/title.ts",
+        "packages/core/src/session/runner/to-llm-message.ts",
+        "packages/core/src/session/runner/turn-transition.ts",
+        "packages/core/src/session/schema.ts",
+        "packages/core/src/session/subagent-models.ts",
+        "packages/core/src/session/todo.ts"
+      ]
+    },
+    {
+      "family": "system-context",
+      "population_count": 11,
+      "artifact_keys": [
+        "s1.core.context"
+      ],
+      "read_source_paths": [
+        "packages/core/src/instruction-context.ts",
+        "packages/core/src/system-context/builtins.ts",
+        "packages/core/src/system-context/index.ts",
+        "packages/core/src/system-context/registry.ts"
+      ],
+      "kinds": {
+        "implementation": 4,
+        "test_code": 7
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": []
+    },
+    {
+      "family": "tool",
+      "population_count": 114,
+      "artifact_keys": [
+        "s1.core.extensions",
+        "s1.core.runtime",
+        "s1.core.tools"
+      ],
+      "read_source_paths": [
+        "packages/core/src/lsp/lsp.ts",
+        "packages/core/src/mcp.ts",
+        "packages/core/src/tool-output-store.ts",
+        "packages/core/src/tool/AGENTS.md",
+        "packages/core/src/tool/agent-terminal.ts",
+        "packages/core/src/tool/application-tools.ts",
+        "packages/core/src/tool/apply-patch.ts",
+        "packages/core/src/tool/bash.ts",
+        "packages/core/src/tool/read.ts",
+        "packages/core/src/tool/registry.ts",
+        "packages/core/src/tool/tool.ts"
+      ],
+      "kinds": {
+        "bundled_instruction": 4,
+        "documentation": 4,
+        "implementation": 63,
+        "test_code": 43
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/lsp.ts",
+        "packages/core/src/lsp/client-liveness.ts",
+        "packages/core/src/lsp/client.ts",
+        "packages/core/src/lsp/diagnostic.ts",
+        "packages/core/src/lsp/language.ts",
+        "packages/core/src/lsp/launch.ts",
+        "packages/core/src/lsp/ownership.ts",
+        "packages/core/src/lsp/server-a.ts",
+        "packages/core/src/lsp/server-b.ts",
+        "packages/core/src/lsp/server-c.ts",
+        "packages/core/src/lsp/server-support.ts",
+        "packages/core/src/lsp/server.ts",
+        "packages/core/src/mcp/auth.ts",
+        "packages/core/src/mcp/catalog.ts",
+        "packages/core/src/mcp/client.ts",
+        "packages/core/src/mcp/oauth-callback.ts",
+        "packages/core/src/mcp/oauth-provider.ts",
+        "packages/core/src/mcp/project-config.ts",
+        "packages/core/src/mcp/provided.ts",
+        "packages/core/src/mcp/stdio.ts",
+        "packages/core/src/tool/builtins.ts",
+        "packages/core/src/tool/edit.ts",
+        "packages/core/src/tool/glob.ts",
+        "packages/core/src/tool/grep.ts",
+        "packages/core/src/tool/http-body.ts",
+        "packages/core/src/tool/lean-output.ts",
+        "packages/core/src/tool/lean-processor.ts",
+        "packages/core/src/tool/lean-recall.ts",
+        "packages/core/src/tool/lean-summary.ts",
+        "packages/core/src/tool/lean-telemetry.ts",
+        "packages/core/src/tool/live-look.ts",
+        "packages/core/src/tool/maestro-arsenal-omni.ts",
+        "packages/core/src/tool/maestro-arsenal.ts",
+        "packages/core/src/tool/meeting-recall.ts",
+        "packages/core/src/tool/model-capture.ts",
+        "packages/core/src/tool/model-projection.ts",
+        "packages/core/src/tool/process.ts",
+        "packages/core/src/tool/question.ts",
+        "packages/core/src/tool/read-filesystem.ts",
+        "packages/core/src/tool/skill.ts",
+        "packages/core/src/tool/task-background.ts",
+        "packages/core/src/tool/task-governance.ts",
+        "packages/core/src/tool/task-permission.ts",
+        "packages/core/src/tool/task.ts",
+        "packages/core/src/tool/team-message.ts",
+        "packages/core/src/tool/text.ts",
+        "packages/core/src/tool/todowrite.ts",
+        "packages/core/src/tool/tools.ts",
+        "packages/core/src/tool/truncation-dir.ts",
+        "packages/core/src/tool/upstream-arsenal.ts",
+        "packages/core/src/tool/webfetch.ts",
+        "packages/core/src/tool/websearch.ts",
+        "packages/core/src/tool/write.ts"
+      ]
+    },
+    {
+      "family": "tool-safety",
+      "population_count": 36,
+      "artifact_keys": [
+        "s1.core.security"
+      ],
+      "read_source_paths": [
+        "packages/core/src/tool-safety-sandbox.ts",
+        "packages/core/src/tool-safety.ts"
+      ],
+      "kinds": {
+        "implementation": 14,
+        "test_code": 22
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/sandbox-parents.ts",
+        "packages/core/src/sandbox-project-config.ts",
+        "packages/core/src/tool-safety-appcontainer.ts",
+        "packages/core/src/tool-safety-commands.ts",
+        "packages/core/src/tool-safety-git-host.ts",
+        "packages/core/src/tool-safety-git.ts",
+        "packages/core/src/tool-safety-hooks.ts",
+        "packages/core/src/tool-safety-output.ts",
+        "packages/core/src/tool-safety-profile.ts",
+        "packages/core/src/tool-safety-sandbox-homes.ts",
+        "packages/core/src/tool-safety-sandbox-runtime.ts",
+        "packages/core/src/tool-safety-srt-read-alias.ts"
+      ]
+    },
+    {
+      "family": "util",
+      "population_count": 32,
+      "artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "read_source_paths": [],
+      "kinds": {
+        "implementation": 25,
+        "test_code": 7
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": [
+        "packages/core/src/image.ts",
+        "packages/core/src/image/photon.ts",
+        "packages/core/src/npm-config.ts",
+        "packages/core/src/npm.ts",
+        "packages/core/src/util/array.ts",
+        "packages/core/src/util/binary.ts",
+        "packages/core/src/util/effect-flock.ts",
+        "packages/core/src/util/encode.ts",
+        "packages/core/src/util/error.ts",
+        "packages/core/src/util/flock.ts",
+        "packages/core/src/util/glob.ts",
+        "packages/core/src/util/hash.ts",
+        "packages/core/src/util/identifier.ts",
+        "packages/core/src/util/iife.ts",
+        "packages/core/src/util/lazy.ts",
+        "packages/core/src/util/module.ts",
+        "packages/core/src/util/path.ts",
+        "packages/core/src/util/physical-path.ts",
+        "packages/core/src/util/retry.ts",
+        "packages/core/src/util/slug.ts",
+        "packages/core/src/util/task-tool.ts",
+        "packages/core/src/util/timeout.ts",
+        "packages/core/src/util/token.ts",
+        "packages/core/src/util/which.ts",
+        "packages/core/src/util/wildcard.ts"
+      ]
+    },
+    {
+      "family": "validation-support",
+      "population_count": 80,
+      "artifact_keys": [
+        "s1.core.entry"
+      ],
+      "read_source_paths": [],
+      "kinds": {
+        "test_code": 24,
+        "test_fixture": 50,
+        "test_support": 6
+      },
+      "disposition": "L1 boundary and retained population; individual unread leaves remain outside claim authority. Tests/history/generated/vendor items have explicit per-entry depth justification.",
+      "unread_substantive_paths": []
+    }
+  ]
+}

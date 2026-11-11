@@ -1,0 +1,48 @@
+{
+  "schema": "genesis-producer-recipe/v1",
+  "task": "S1-L1-A",
+  "producer_handle": "/root/producer_a",
+  "principal_execution": "c56ee4c3-b9dc-4569-aeb0-d3cfa5c2a502",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "orchestra.s1",
+  "layer": 1,
+  "criteria": [
+    "QS-1",
+    "QS-2",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+    "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+  },
+  "steering_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request-steering.txt",
+    "sha256": "e6e6a3ab050966717aaffb8f4059f134368fee7778fa135defa2077309a4a72c"
+  },
+  "source_acquisition": "GitHub connector fetch_file at exact pin; base64 decoded without byte normalization",
+  "production": "Decisive source reading and explicitly bounded family synthesis; implementation, normative intent and gaps distinguished",
+  "validation": "Deterministic bytes/hashes/line spans/population/transport checks only; no product execution",
+  "constraints": [
+    "Exclusive producer A write area",
+    "No remote writes",
+    "No product tests",
+    "No reserved oracle or other producer output reads",
+    "No L2-L4 authorship"
+  ],
+  "unknown_usage": [
+    "tokens",
+    "physical model attempts",
+    "billing"
+  ]
+}

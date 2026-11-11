@@ -1,0 +1,22 @@
+{
+  "schema": "genesis-transport-validation/v1",
+  "unit": "S1-L1-C",
+  "checks": [
+    "Population membership: 323 unique assigned paths, all with dispositions.",
+    "All 285 captured source SHA-256, byte lengths and Git blob hashes match.",
+    "All 10 L1 stubs have legal needs, exact body bytes, input/source refs and original request/response bindings.",
+    "All 49 review groups contain exact, independently hashed source excerpts; every L1 body is covered.",
+    "Compact evidence uses original exact source spans and the dossier includes verbatim body/evidence bytes."
+  ],
+  "population_entries": 323,
+  "captured_assigned_sources": 284,
+  "additional_sources": 1,
+  "source_count": 285,
+  "artifact_count": 10,
+  "review_group_count": 49,
+  "metadata_only_entries": 39,
+  "product_tests_run": false,
+  "semantic_review": "not_performed",
+  "runtime_receipts": "not_observed",
+  "limits": "Only deterministic file/shape/hash validation. This is not a semantic or runtime PASS."
+}

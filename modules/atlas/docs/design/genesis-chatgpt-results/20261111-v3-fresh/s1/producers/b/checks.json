@@ -1,0 +1,91 @@
+{
+  "schema": "genesis-producer-transport-checks/v1",
+  "task": "S1-L1-B",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "status": "PASS",
+  "scope": "transport mechanics only, not product tests, semantic acceptance or runtime binding",
+  "counts": {
+    "artifacts": 9,
+    "assigned_entries": 472,
+    "covered_entries": 472,
+    "captured_sources": 291,
+    "captured_assigned": 289,
+    "uncaptured_assigned": 183,
+    "assigned_handwritten_production_modules": 252,
+    "exact_excerpts": 99,
+    "compact_sources": 47,
+    "compact_ranges": 122
+  },
+  "checks": [
+    "Coverage is a bijection over 472 assigned paths",
+    "All 291 sources match SHA-256, byte length and observed Git blob",
+    "All 252 assigned handwritten production src modules captured",
+    "Captured source identities match pinned inventory",
+    "All body hashes and lengths match",
+    "Legal scope/layer/need/validity and relative body paths",
+    "Source references match manifest",
+    "Every full and compact excerpt hash matches exact selected source lines",
+    "Compact ranges are retained in full archive and full archive hash matches",
+    "Input keys are file or members",
+    "No build dependencies or fabricated judge/runtime receipts",
+    "Mirrored protocol SKILL matches observed Git blob"
+  ],
+  "errors": [],
+  "file_hashes": {
+    "artifacts.json": {
+      "sha256": "1d018091d48893b69d390db03c01d39d785ce58c1a52230471308a1bfacab98b",
+      "byte_length": 202277
+    },
+    "coverage.json": {
+      "sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3",
+      "byte_length": 454738
+    },
+    "source-manifest.json": {
+      "sha256": "0128bbaf6f49cd47701c61f2dbf7bd30905565714ef7b9c9a4a44d8612bdc56c",
+      "byte_length": 178587
+    },
+    "review-evidence.md": {
+      "sha256": "e83ac99c3f78c23dfb5f6c1c597796e6fa8857b4b9f73f3003e613094a4729c9",
+      "byte_length": 152293
+    },
+    "review-evidence-index.json": {
+      "sha256": "35ecf16cd87e306ac3b66fc494b39dfcdb14e97c443a2a1a0a916c42ed94c12a",
+      "byte_length": 48058
+    },
+    "review-evidence-compact.md": {
+      "sha256": "b16b4f18dad4c2910f7d0b7a8327004063a198ed1637a85e747e24ba5db13edd",
+      "byte_length": 62330
+    },
+    "review-evidence-compact-index.json": {
+      "sha256": "43188df51115e9d46dc80b714422203e9b228a02d05e0fe7f85e8bae54054649",
+      "byte_length": 39999
+    },
+    "surface-index.json": {
+      "sha256": "93accdde3698097860bd203fec193327b0b8f2a7c433efd6f1ae97f5420b1ee1",
+      "byte_length": 637247
+    },
+    "reading-classification.json": {
+      "sha256": "b803b166faa49ddbcf033f383e44fa55d12356cddabbf2f3de59c980b5ebd032",
+      "byte_length": 23506
+    },
+    "request.txt": {
+      "sha256": "09f7b2ad2a7807e069b6719305adfeb24cc5a313b6baa09c39a5c9e597964c86",
+      "byte_length": 1902
+    },
+    "request-steering.txt": {
+      "sha256": "ab6bfd3292c07d90a66bbd156331d20958dfd2ee315dc61e6f698acae4d9754a",
+      "byte_length": 722
+    },
+    "response.md": {
+      "sha256": "51bf309577b0aa2d1b770110f3e59d68e954ec89d43678bc676ec9a8882d10a8",
+      "byte_length": 3803
+    }
+  },
+  "execution_limits": {
+    "product_tests_run": 0,
+    "generation_runs": 0,
+    "runtime_imports": 0,
+    "remote_writes": 0,
+    "judges_run_by_producer": 0
+  }
+}

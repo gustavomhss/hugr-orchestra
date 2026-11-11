@@ -1,0 +1,2586 @@
+[
+  {
+    "path": ".orchestra/skills/claude-code-maintenance/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7f3c5b9525fbe1b7bd7a34f60e6f143a8f5505d7",
+    "size": 5788,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7f3c5b9525fbe1b7bd7a34f60e6f143a8f5505d7"
+  },
+  {
+    "path": ".orchestra/skills/claude-mode-maintenance/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "398b0505f2cb06d475eb4fcbf4f90f7b571d8270",
+    "size": 5880,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/398b0505f2cb06d475eb4fcbf4f90f7b571d8270"
+  },
+  {
+    "path": ".orchestra/skills/effect/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "16271c12b0043464ad4f4dea7da7ac61f0d29722",
+    "size": 3120,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/16271c12b0043464ad4f4dea7da7ac61f0d29722"
+  },
+  {
+    "path": ".orchestra/skills/permissions-usage/SKILL.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c6b2bffe3c496da0fe2f8c4c161366403710016d",
+    "size": 3290,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c6b2bffe3c496da0fe2f8c4c161366403710016d"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/FAC-PLUGIN.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0184770b62c7e569adc4757bec75a168eb3da00b",
+    "size": 4303,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0184770b62c7e569adc4757bec75a168eb3da00b"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/RD-ACP.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0b8081937561a162bbeae6ceae3f30259c71dbad",
+    "size": 4331,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0b8081937561a162bbeae6ceae3f30259c71dbad"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/RD-CLAUDE.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "49b8bdade6c270b5ba97a9f1857418dc58dbbb1f",
+    "size": 4547,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/49b8bdade6c270b5ba97a9f1857418dc58dbbb1f"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/RD-DATABASE.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b2e822a40d503999229f1ea4b0aea58e3fc5dfdb",
+    "size": 4705,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b2e822a40d503999229f1ea4b0aea58e3fc5dfdb"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/RD-PLUGIN.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bd6861f7b1bc400fcf72c7126dd63c6a9e9327d4",
+    "size": 4773,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bd6861f7b1bc400fcf72c7126dd63c6a9e9327d4"
+  },
+  {
+    "path": "docs/architecture/phase-plans/70-90-briefs/RN-SQLITE.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3ac1fed6930a53f1cfbe29466f62d02fef0d9df8",
+    "size": 4857,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3ac1fed6930a53f1cfbe29466f62d02fef0d9df8"
+  },
+  {
+    "path": "docs/guides/claude-mode.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "77e0c8baca27404196d3c1536003321d8ea036df",
+    "size": 2845,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/77e0c8baca27404196d3c1536003321d8ea036df"
+  },
+  {
+    "path": "docs/guides/config-errors.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bf6413cf2175b7804616709506aec44b5e1f5c31",
+    "size": 942,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bf6413cf2175b7804616709506aec44b5e1f5c31"
+  },
+  {
+    "path": "docs/guides/credentials.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9e6c450c0a51ac92c9adc5852db920b575f2150a",
+    "size": 4001,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9e6c450c0a51ac92c9adc5852db920b575f2150a"
+  },
+  {
+    "path": "docs/guides/database-backups.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a661c599a3519440fd8d990bf1d48d21d3885467",
+    "size": 1645,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a661c599a3519440fd8d990bf1d48d21d3885467"
+  },
+  {
+    "path": "docs/guides/hooks.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "175b3030591420b8321395c414f935d96ca9689e",
+    "size": 3642,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/175b3030591420b8321395c414f935d96ca9689e"
+  },
+  {
+    "path": "docs/guides/integrations.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2443f982a4b768e09d631fbfda2cbe9e8f487587",
+    "size": 4264,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2443f982a4b768e09d631fbfda2cbe9e8f487587"
+  },
+  {
+    "path": "docs/guides/limits.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1d3249ed885223d71292a90c8b50f3893302f95d",
+    "size": 1311,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1d3249ed885223d71292a90c8b50f3893302f95d"
+  },
+  {
+    "path": "docs/guides/mcp-and-cli-failures.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c918be0376df020b50a94ba12f2e47e2504737bf",
+    "size": 2327,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c918be0376df020b50a94ba12f2e47e2504737bf"
+  },
+  {
+    "path": "docs/guides/mcp-project-trust.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "da47586309cc0c24ca4b7427b358c3706b648a46",
+    "size": 3852,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/da47586309cc0c24ca4b7427b358c3706b648a46"
+  },
+  {
+    "path": "docs/guides/models.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1acc49061d975b65c05cb2c194cd612b802914d8",
+    "size": 3319,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1acc49061d975b65c05cb2c194cd612b802914d8"
+  },
+  {
+    "path": "docs/guides/permissions.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4ece5d1d331da22ad5d67441e01f6ccef6717eb8",
+    "size": 2203,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4ece5d1d331da22ad5d67441e01f6ccef6717eb8"
+  },
+  {
+    "path": "docs/guides/plugins.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4a271a325f679e25a990e51f89ea0009d8c48131",
+    "size": 2287,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4a271a325f679e25a990e51f89ea0009d8c48131"
+  },
+  {
+    "path": "docs/guides/tools.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a0999eb640a65a12991e92c5cea72fd81624abd1",
+    "size": 5887,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a0999eb640a65a12991e92c5cea72fd81624abd1"
+  },
+  {
+    "path": "docs/specs/database/integrity-followups.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "23e4f2a883b42894f8cd2cfa929377acc246df16",
+    "size": 8638,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/23e4f2a883b42894f8cd2cfa929377acc246df16"
+  },
+  {
+    "path": "docs/specs/storage/effect-sqlite-package.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "782350ef3e0889351d99ec7ed740ee696aaa6476",
+    "size": 7729,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/782350ef3e0889351d99ec7ed740ee696aaa6476"
+  },
+  {
+    "path": "docs/specs/storage/remove-orchestra-db.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "85fdbfcf3d21d1d708be632dc4471fe145deadb5",
+    "size": 11897,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/85fdbfcf3d21d1d708be632dc4471fe145deadb5"
+  },
+  {
+    "path": "packages/codemode/AGENTS.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "39864a43dc6f338208f7a01877b420499d69085c",
+    "size": 3143,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/39864a43dc6f338208f7a01877b420499d69085c"
+  },
+  {
+    "path": "packages/codemode/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d4b5f125c9364b18e6f63ee811422ac750bc9cbf",
+    "size": 4091,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d4b5f125c9364b18e6f63ee811422ac750bc9cbf"
+  },
+  {
+    "path": "packages/codemode/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "size": 104,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/625b8da1173ddfb1ccb758c54f1585e90dbe2b6a"
+  },
+  {
+    "path": "packages/codemode/codemode.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "081623ed8e51efecd16883bb9270179b0ed2a28c",
+    "size": 13244,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/081623ed8e51efecd16883bb9270179b0ed2a28c"
+  },
+  {
+    "path": "packages/codemode/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1e1facca4d10cd39a12772af5c454236774c9c52",
+    "size": 625,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1e1facca4d10cd39a12772af5c454236774c9c52"
+  },
+  {
+    "path": "packages/codemode/src/codemode.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "14782d7c8aaed7b4647e64f6631459bdd4684a64",
+    "size": 6658,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/14782d7c8aaed7b4647e64f6631459bdd4684a64"
+  },
+  {
+    "path": "packages/codemode/src/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "92019825004b5455fe4ccdd8f168cb2051d70a57",
+    "size": 177,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/92019825004b5455fe4ccdd8f168cb2051d70a57"
+  },
+  {
+    "path": "packages/codemode/src/interpreter/model.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d95351451035ead43c7ad9876bd49654aa163626",
+    "size": 5936,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d95351451035ead43c7ad9876bd49654aa163626"
+  },
+  {
+    "path": "packages/codemode/src/interpreter/runtime.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "093f577765100e95597919986f606010fd82066e",
+    "size": 141124,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/093f577765100e95597919986f606010fd82066e"
+  },
+  {
+    "path": "packages/codemode/src/openapi/TODO.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cbcfe81a68c8df2fa7aae622ddf2997e3ab29433",
+    "size": 1213,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cbcfe81a68c8df2fa7aae622ddf2997e3ab29433"
+  },
+  {
+    "path": "packages/codemode/src/openapi/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7f1770ef362792996f6026dced24ab4b570added",
+    "size": 4425,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7f1770ef362792996f6026dced24ab4b570added"
+  },
+  {
+    "path": "packages/codemode/src/openapi/runtime.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2515621792b22f23fa52967362ecf69828e21ee4",
+    "size": 14768,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2515621792b22f23fa52967362ecf69828e21ee4"
+  },
+  {
+    "path": "packages/codemode/src/openapi/spec.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d",
+    "size": 21473,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d"
+  },
+  {
+    "path": "packages/codemode/src/openapi/types.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cab772e701486b9a1af29dfe0798ce8bf77124ef",
+    "size": 4305,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cab772e701486b9a1af29dfe0798ce8bf77124ef"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/collections.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f4760ff7061a7b93f495323abbf9b14027431b60",
+    "size": 1269,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f4760ff7061a7b93f495323abbf9b14027431b60"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/console.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "798563128e560a501f44494c53a99f7e47b72696",
+    "size": 210,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/798563128e560a501f44494c53a99f7e47b72696"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/date.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c492f58f94b1e7246b8d098b309c047024861dc2",
+    "size": 2732,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c492f58f94b1e7246b8d098b309c047024861dc2"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/json.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8a479d2c8c72b86298b402e9defee31659d1a93c",
+    "size": 1596,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8a479d2c8c72b86298b402e9defee31659d1a93c"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/math.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cc8dd0670e969929366e3fe8f07b700cc5f219f7",
+    "size": 1635,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cc8dd0670e969929366e3fe8f07b700cc5f219f7"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/number.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "79710e1ad226672554233d09478cb84c9e706e6a",
+    "size": 2488,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/79710e1ad226672554233d09478cb84c9e706e6a"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/object.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2beda0bf5cae137b0715b61c603de05c6320f287",
+    "size": 3580,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2beda0bf5cae137b0715b61c603de05c6320f287"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/promise.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d0b442ccf74f2230e0e8cbe060b0be86a120ce6a",
+    "size": 293,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d0b442ccf74f2230e0e8cbe060b0be86a120ce6a"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/regexp.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "eac123bc16c981317f508815b63922a213c16076",
+    "size": 2680,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/eac123bc16c981317f508815b63922a213c16076"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/string.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3ac4372e363fe60ee9b68ad01780171f13d75fd5",
+    "size": 1179,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3ac4372e363fe60ee9b68ad01780171f13d75fd5"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/url.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "583d776d22ad434d7f41fe26c7f54461e0389425",
+    "size": 2681,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/583d776d22ad434d7f41fe26c7f54461e0389425"
+  },
+  {
+    "path": "packages/codemode/src/stdlib/value.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ab40dc07ddb5f41a8ad944e06c0ce34234e8b453",
+    "size": 3383,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ab40dc07ddb5f41a8ad944e06c0ce34234e8b453"
+  },
+  {
+    "path": "packages/codemode/src/tool-error.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "16460a019ae1e901a29ac4a3dda872d75acfcf0a",
+    "size": 518,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/16460a019ae1e901a29ac4a3dda872d75acfcf0a"
+  },
+  {
+    "path": "packages/codemode/src/tool-runtime.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f4ccc61d4c49a4f7572906559e5a4e2a11acdec9",
+    "size": 33711,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f4ccc61d4c49a4f7572906559e5a4e2a11acdec9"
+  },
+  {
+    "path": "packages/codemode/src/tool-schema.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "16213fa8eeb2d146350a368aeab13e7bf923a16a",
+    "size": 13701,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/16213fa8eeb2d146350a368aeab13e7bf923a16a"
+  },
+  {
+    "path": "packages/codemode/src/tool.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6c6863f99dcf7e659a4e1a2b582095694404e39c",
+    "size": 3980,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6c6863f99dcf7e659a4e1a2b582095694404e39c"
+  },
+  {
+    "path": "packages/codemode/src/values.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4ca305d815ebf5cce00f396e79e657a88fcb26a0",
+    "size": 1250,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4ca305d815ebf5cce00f396e79e657a88fcb26a0"
+  },
+  {
+    "path": "packages/codemode/test/codemode.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "221b5e07dfe1f6be5239dbcd660050435516bca1",
+    "size": 44670,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/221b5e07dfe1f6be5239dbcd660050435516bca1"
+  },
+  {
+    "path": "packages/codemode/test/enumeration.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0de3dc3ea0ddd7e5b415159163c33e4306ecbca2",
+    "size": 5914,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0de3dc3ea0ddd7e5b415159163c33e4306ecbca2"
+  },
+  {
+    "path": "packages/codemode/test/fixtures/openapi-happy-path.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8052dd739113cd9001748c83832df2fab22d7a97",
+    "size": 5066,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8052dd739113cd9001748c83832df2fab22d7a97"
+  },
+  {
+    "path": "packages/codemode/test/fixtures/opencode-v2-openapi.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "934b22e389f4ae86039967dd8134d750780b025c",
+    "size": 637024,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/934b22e389f4ae86039967dd8134d750780b025c"
+  },
+  {
+    "path": "packages/codemode/test/openapi.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2d74ef905e422a24e66749d697fc703674d597d6",
+    "size": 37649,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2d74ef905e422a24e66749d697fc703674d597d6"
+  },
+  {
+    "path": "packages/codemode/test/parity.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dfa85831837cf7a8cea70a57901b061d3fb6ad1e",
+    "size": 18598,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dfa85831837cf7a8cea70a57901b061d3fb6ad1e"
+  },
+  {
+    "path": "packages/codemode/test/promise.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "545d463abfac49288a138251f55cbd9eb01ed56a",
+    "size": 15862,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/545d463abfac49288a138251f55cbd9eb01ed56a"
+  },
+  {
+    "path": "packages/codemode/test/rejection.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1687c3e363bab431a4e9e9b0a12f901f9bec1c49",
+    "size": 740,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1687c3e363bab431a4e9e9b0a12f901f9bec1c49"
+  },
+  {
+    "path": "packages/codemode/test/signature.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "232c6dcb221d3193c2b6024d3454dcd2eec73120",
+    "size": 16725,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/232c6dcb221d3193c2b6024d3454dcd2eec73120"
+  },
+  {
+    "path": "packages/codemode/test/stdlib.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f7831a060338939f3a1dc3b7f9186bfe58db145f",
+    "size": 26951,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f7831a060338939f3a1dc3b7f9186bfe58db145f"
+  },
+  {
+    "path": "packages/codemode/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fe5c4d217b2e0feaa3d3c9c5bd9223446561d1b2",
+    "size": 167,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fe5c4d217b2e0feaa3d3c9c5bd9223446561d1b2"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/AGENTS.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f15d1a87a553327b6bd397cd39ac9fb0212a04a6",
+    "size": 1473,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f15d1a87a553327b6bd397cd39ac9fb0212a04a6"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ba4516baec21d94e1fb3d63d3738a1d31bff0f2c",
+    "size": 2545,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ba4516baec21d94e1fb3d63d3738a1d31bff0f2c"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "size": 104,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/625b8da1173ddfb1ccb758c54f1585e90dbe2b6a"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/examples/basic.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cf219a8bb5e95980fb72d2e1f5e422b93c8b982d",
+    "size": 3357,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cf219a8bb5e95980fb72d2e1f5e422b93c8b982d"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/examples/migrations/20240101000000_create_users/migration.sql",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f1aa81cb45407e77095bf1477affafb31526efe9",
+    "size": 94,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f1aa81cb45407e77095bf1477affafb31526efe9"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6cb1e7d7c4f9eeb2978c7d6af0dc83a466e78727",
+    "size": 791,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6cb1e7d7c4f9eeb2978c7d6af0dc83a466e78727"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f2ffc207d355b4227c39dbc831d7701786330256",
+    "size": 3088,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f2ffc207d355b4227c39dbc831d7701786330256"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1133e48b3a5295a0fd8d95c50e1d4772d08220f4",
+    "size": 127,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1133e48b3a5295a0fd8d95c50e1d4772d08220f4"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/migrator.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6d0d15514373a98b149083ef04ef42e48ccbf10f",
+    "size": 554,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6d0d15514373a98b149083ef04ef42e48ccbf10f"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e7b9d6b32cd835bdf54d70ba39e92a5839f26968",
+    "size": 10799,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e7b9d6b32cd835bdf54d70ba39e92a5839f26968"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d6606b7d9fe153801a8ec42ce3a5d29d0ee6c8e5",
+    "size": 227,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d6606b7d9fe153801a8ec42ce3a5d29d0ee6c8e5"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/internal/drizzle-utils.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1998a08318cd5f2cd80a7b8d3e63b94b2bb039c9",
+    "size": 5075,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1998a08318cd5f2cd80a7b8d3e63b94b2bb039c9"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/count.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c420d6fbb052940756945507b2141984eb23d0bd",
+    "size": 2259,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c420d6fbb052940756945507b2141984eb23d0bd"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/db.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ac4cc140ad0d80d397ff0712a525780a00f5a7d7",
+    "size": 11343,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ac4cc140ad0d80d397ff0712a525780a00f5a7d7"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/delete.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "15e90d19746e6d713735acc3eb8c24d151c75c22",
+    "size": 8965,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/15e90d19746e6d713735acc3eb8c24d151c75c22"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ab7aeb1ab60bf088b78989a9f9e03ef879e06c63",
+    "size": 238,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ab7aeb1ab60bf088b78989a9f9e03ef879e06c63"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/insert.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f85dc24475650b9c8a7056042342360598338baa",
+    "size": 12707,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f85dc24475650b9c8a7056042342360598338baa"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/query.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4676039e5504780f4a8456ce7c713df91ea9484e",
+    "size": 6079,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4676039e5504780f4a8456ce7c713df91ea9484e"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/raw.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "26e3a63d83c1c4390b89116db65d6e7995e3da22",
+    "size": 1758,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/26e3a63d83c1c4390b89116db65d6e7995e3da22"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/select.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0cfde54331dc556273476fd09eb9afba894d444a",
+    "size": 9608,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0cfde54331dc556273476fd09eb9afba894d444a"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/session.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "15a56f2ca7d9fe73a1fdaaa244d3430fb74cd965",
+    "size": 17877,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/15a56f2ca7d9fe73a1fdaaa244d3430fb74cd965"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/sqlite-core/effect/update.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "369e08e878ef8ebd25f3ca35ed88c9df7c8d2a08",
+    "size": 13304,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/369e08e878ef8ebd25f3ca35ed88c9df7c8d2a08"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/up-migrations/effect-sqlite.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3418752271ed4c1f550977e85d7ca2935625bd08",
+    "size": 3570,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3418752271ed4c1f550977e85d7ca2935625bd08"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/up-migrations/sqlite.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2887c66bed735cd812d885953335d8f99c6dad2a",
+    "size": 9062,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2887c66bed735cd812d885953335d8f99c6dad2a"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/src/up-migrations/utils.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cc71213ac401511e3bd9740be46776d8f24248bb",
+    "size": 996,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cc71213ac401511e3bd9740be46776d8f24248bb"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/test/sqlite.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5303ee069ac8c48c523abdcb98f4f9e9deed61df",
+    "size": 6033,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5303ee069ac8c48c523abdcb98f4f9e9deed61df"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/test/transaction-causes.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7873cdbac60f85059f1af8817bb30109b2f29984",
+    "size": 15148,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7873cdbac60f85059f1af8817bb30109b2f29984"
+  },
+  {
+    "path": "packages/effect-drizzle-sqlite/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2bc480ffbb603a3144b086d1f2a6c128d111bf46",
+    "size": 415,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2bc480ffbb603a3144b086d1f2a6c128d111bf46"
+  },
+  {
+    "path": "packages/effect-sqlite-node/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b1aa3d802989d35580a1f9fc970d9a3b3958892",
+    "size": 1838,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b1aa3d802989d35580a1f9fc970d9a3b3958892"
+  },
+  {
+    "path": "packages/effect-sqlite-node/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9d761d16b59bc62abaad776389c6fa02c18d72f9",
+    "size": 473,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9d761d16b59bc62abaad776389c6fa02c18d72f9"
+  },
+  {
+    "path": "packages/effect-sqlite-node/src/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fe8d67b91b7c8a9fc977eba61f14de94db22fabf",
+    "size": 6530,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fe8d67b91b7c8a9fc977eba61f14de94db22fabf"
+  },
+  {
+    "path": "packages/effect-sqlite-node/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2bc480ffbb603a3144b086d1f2a6c128d111bf46",
+    "size": 415,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2bc480ffbb603a3144b086d1f2a6c128d111bf46"
+  },
+  {
+    "path": "packages/llm/AGENTS.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e2be1821f84bbc5ddf1159d4d93279a1beb2944c",
+    "size": 24295,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e2be1821f84bbc5ddf1159d4d93279a1beb2944c"
+  },
+  {
+    "path": "packages/llm/DESIGN.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ffecbe8fe85fff1c88d21c70bb447074cad9f683",
+    "size": 33012,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ffecbe8fe85fff1c88d21c70bb447074cad9f683"
+  },
+  {
+    "path": "packages/llm/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e2802692a2f1f079a4157ae8eee301a68e29e5e1",
+    "size": 4258,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e2802692a2f1f079a4157ae8eee301a68e29e5e1"
+  },
+  {
+    "path": "packages/llm/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "size": 104,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/625b8da1173ddfb1ccb758c54f1585e90dbe2b6a"
+  },
+  {
+    "path": "packages/llm/example/call-sites.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a63a13f98679dfee882640876b700397e09f8c4f",
+    "size": 21707,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a63a13f98679dfee882640876b700397e09f8c4f"
+  },
+  {
+    "path": "packages/llm/example/tutorial.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1308b7c8b328adb9770ffed2f5d34e8a9b9e5ea8",
+    "size": 9798,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1308b7c8b328adb9770ffed2f5d34e8a9b9e5ea8"
+  },
+  {
+    "path": "packages/llm/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "44778fe89942ba8a70dbd6b97c3da656e1e22ac0",
+    "size": 2171,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/44778fe89942ba8a70dbd6b97c3da656e1e22ac0"
+  },
+  {
+    "path": "packages/llm/script/recording-cost-report.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5b08e72d5c7a231e31b27f1b6bbb3cbadae80d02",
+    "size": 9226,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5b08e72d5c7a231e31b27f1b6bbb3cbadae80d02"
+  },
+  {
+    "path": "packages/llm/script/setup-recording-env.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d32769b3cea56aec64feef93bc786150c82e8bfb",
+    "size": 19314,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d32769b3cea56aec64feef93bc786150c82e8bfb"
+  },
+  {
+    "path": "packages/llm/src/cache-policy.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "60f96dc69aaa84e7b7d62fca97b96dac9f674924",
+    "size": 5659,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/60f96dc69aaa84e7b7d62fca97b96dac9f674924"
+  },
+  {
+    "path": "packages/llm/src/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "735520ff77c2c8a106b5e5b27f7301f1907d46a8",
+    "size": 963,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/735520ff77c2c8a106b5e5b27f7301f1907d46a8"
+  },
+  {
+    "path": "packages/llm/src/llm.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e4781d8608b0185c500866aae20fda8335640550",
+    "size": 6170,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e4781d8608b0185c500866aae20fda8335640550"
+  },
+  {
+    "path": "packages/llm/src/protocols/anthropic-messages.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1c0dcd32a4332261a1361010f2f314cbda4fda54",
+    "size": 33621,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1c0dcd32a4332261a1361010f2f314cbda4fda54"
+  },
+  {
+    "path": "packages/llm/src/protocols/bedrock-converse.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c447a1a39d346a39dd29eab59e2f3413ab9f8850",
+    "size": 24231,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c447a1a39d346a39dd29eab59e2f3413ab9f8850"
+  },
+  {
+    "path": "packages/llm/src/protocols/bedrock-event-stream.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d07d7de475993df317e4018b235b094ac9ec25d4",
+    "size": 3805,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d07d7de475993df317e4018b235b094ac9ec25d4"
+  },
+  {
+    "path": "packages/llm/src/protocols/gemini.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c4bb9476a49dd6f53d98f323063cb67794b45f16",
+    "size": 18414,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c4bb9476a49dd6f53d98f323063cb67794b45f16"
+  },
+  {
+    "path": "packages/llm/src/protocols/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bd8c8d3d9d9be1fce7efdef1069a3dc5207e9f1e",
+    "size": 310,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bd8c8d3d9d9be1fce7efdef1069a3dc5207e9f1e"
+  },
+  {
+    "path": "packages/llm/src/protocols/openai-chat.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9ac85b07b139f2a7a87f1a62d829a274b9cfd1ca",
+    "size": 19639,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9ac85b07b139f2a7a87f1a62d829a274b9cfd1ca"
+  },
+  {
+    "path": "packages/llm/src/protocols/openai-compatible-chat.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ce3f0a83d75a8dd646a9b7d588e9aa2dd6a61807",
+    "size": 876,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ce3f0a83d75a8dd646a9b7d588e9aa2dd6a61807"
+  },
+  {
+    "path": "packages/llm/src/protocols/openai-responses.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503",
+    "size": 39876,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503"
+  },
+  {
+    "path": "packages/llm/src/protocols/shared.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c14f52faccd472ae0f68f1a272a03d9e1310167c",
+    "size": 14371,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c14f52faccd472ae0f68f1a272a03d9e1310167c"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/bedrock-auth.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "37cc451256d30e1c9b8872675fb0aabee01b40d0",
+    "size": 2462,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/37cc451256d30e1c9b8872675fb0aabee01b40d0"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/bedrock-cache.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fab4d07b5c4a435b1bc21fefebb4e4868e6a000c",
+    "size": 1604,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fab4d07b5c4a435b1bc21fefebb4e4868e6a000c"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/bedrock-media.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6fda6c4fbb4351684565bbba1e097ab1ee25d498",
+    "size": 3455,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6fda6c4fbb4351684565bbba1e097ab1ee25d498"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/cache.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dd3e213e0eecf08c5f8fe0667ba2aeaec719f43d",
+    "size": 696,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dd3e213e0eecf08c5f8fe0667ba2aeaec719f43d"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/gemini-tool-schema.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "efdbe3f6ec65cdfa82b0a2e2c02ca6ea5e810197",
+    "size": 3647,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/efdbe3f6ec65cdfa82b0a2e2c02ca6ea5e810197"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/lifecycle.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "eb6c95dfbdabf0b92b697c2377d5329dbfb222d1",
+    "size": 3164,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/eb6c95dfbdabf0b92b697c2377d5329dbfb222d1"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/openai-options.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "51e56ae21642fa4a717c11b15177fd2922f532b8",
+    "size": 4193,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/51e56ae21642fa4a717c11b15177fd2922f532b8"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/response-format.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cd22f055848afe1b044533f81b917fec5aa98d4e",
+    "size": 1023,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cd22f055848afe1b044533f81b917fec5aa98d4e"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/tool-schema.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3a311eb34ce9ca72e0d801c58bb854161c3258e9",
+    "size": 3059,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3a311eb34ce9ca72e0d801c58bb854161c3258e9"
+  },
+  {
+    "path": "packages/llm/src/protocols/utils/tool-stream.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8e07a64bfed843d2c0fcca5b6651de5ef09d23a7",
+    "size": 7549,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8e07a64bfed843d2c0fcca5b6651de5ef09d23a7"
+  },
+  {
+    "path": "packages/llm/src/provider-error.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9900297908dc68c60fd3e47bef2d24229868e129",
+    "size": 1937,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9900297908dc68c60fd3e47bef2d24229868e129"
+  },
+  {
+    "path": "packages/llm/src/provider.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c0406f3da02d611523142e39b4949118c1c8bd6d",
+    "size": 1265,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c0406f3da02d611523142e39b4949118c1c8bd6d"
+  },
+  {
+    "path": "packages/llm/src/providers/amazon-bedrock.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2f1791e0d620ab139e32158526e83229c464fa3f",
+    "size": 1575,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2f1791e0d620ab139e32158526e83229c464fa3f"
+  },
+  {
+    "path": "packages/llm/src/providers/anthropic.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0c9640af5ea65bda1c50f73e5f8fdf3b35922841",
+    "size": 1251,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0c9640af5ea65bda1c50f73e5f8fdf3b35922841"
+  },
+  {
+    "path": "packages/llm/src/providers/azure.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bfac2d1cad34a680b62b3047e440988e112cd483",
+    "size": 3426,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bfac2d1cad34a680b62b3047e440988e112cd483"
+  },
+  {
+    "path": "packages/llm/src/providers/cloudflare.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a006152e9829cfc63bcd9a9ea5e27a0b2892aa04",
+    "size": 4407,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a006152e9829cfc63bcd9a9ea5e27a0b2892aa04"
+  },
+  {
+    "path": "packages/llm/src/providers/github-copilot.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1042f841456da4c6d2b3d687515b7641a791c72c",
+    "size": 2515,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1042f841456da4c6d2b3d687515b7641a791c72c"
+  },
+  {
+    "path": "packages/llm/src/providers/google.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c8a72c31f671fb0b82686c8e082d4456c8001604",
+    "size": 1219,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c8a72c31f671fb0b82686c8e082d4456c8001604"
+  },
+  {
+    "path": "packages/llm/src/providers/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "774274cf2d4a7dac165793b273d470d61a748b63",
+    "size": 487,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/774274cf2d4a7dac165793b273d470d61a748b63"
+  },
+  {
+    "path": "packages/llm/src/providers/openai-compatible-profile.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "30770c9671cdc546c98c213cc24a2fe500f7574e",
+    "size": 1062,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/30770c9671cdc546c98c213cc24a2fe500f7574e"
+  },
+  {
+    "path": "packages/llm/src/providers/openai-compatible.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a79f65f6dfe070c292ffe40722cf9d6a021a4ea7",
+    "size": 2071,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a79f65f6dfe070c292ffe40722cf9d6a021a4ea7"
+  },
+  {
+    "path": "packages/llm/src/providers/openai-options.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fb548dd79726bb7eca588882b02a72008a7bc4d1",
+    "size": 3375,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fb548dd79726bb7eca588882b02a72008a7bc4d1"
+  },
+  {
+    "path": "packages/llm/src/providers/openai.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "098cad84939bc46c5d15ea2ebcdc396feb1edfeb",
+    "size": 2569,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/098cad84939bc46c5d15ea2ebcdc396feb1edfeb"
+  },
+  {
+    "path": "packages/llm/src/providers/openrouter.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "914d7c0a0badbef0a6898588c497ca8c422935b5",
+    "size": 3110,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/914d7c0a0badbef0a6898588c497ca8c422935b5"
+  },
+  {
+    "path": "packages/llm/src/providers/xai.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "321db97db1049166f21f5aedc650894fe6f7bcd1",
+    "size": 1920,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/321db97db1049166f21f5aedc650894fe6f7bcd1"
+  },
+  {
+    "path": "packages/llm/src/route/auth-options.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7e40aa12a2103369a1ee9f884fdef42e7ebb5b33",
+    "size": 2041,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7e40aa12a2103369a1ee9f884fdef42e7ebb5b33"
+  },
+  {
+    "path": "packages/llm/src/route/auth.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "32871c04547e7b4cdb3fccc8adf1050f2fb6b110",
+    "size": 5907,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/32871c04547e7b4cdb3fccc8adf1050f2fb6b110"
+  },
+  {
+    "path": "packages/llm/src/route/client.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5f064512f9ff1b449137778440eb0fd6b86c8131",
+    "size": 16862,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5f064512f9ff1b449137778440eb0fd6b86c8131"
+  },
+  {
+    "path": "packages/llm/src/route/endpoint.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "accbe5324311a8d3e9105fbb6a2c03a7e206fabe",
+    "size": 1895,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/accbe5324311a8d3e9105fbb6a2c03a7e206fabe"
+  },
+  {
+    "path": "packages/llm/src/route/executor.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "aaf189c0493309d998b1c8647f308aff57a6644e",
+    "size": 13933,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/aaf189c0493309d998b1c8647f308aff57a6644e"
+  },
+  {
+    "path": "packages/llm/src/route/framing.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ef4855817d081a5dea636f659c9ee6645ef31b73",
+    "size": 1087,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ef4855817d081a5dea636f659c9ee6645ef31b73"
+  },
+  {
+    "path": "packages/llm/src/route/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "48f4b7bc33929c464d37e87425bfe0ffb18a9b71",
+    "size": 1029,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/48f4b7bc33929c464d37e87425bfe0ffb18a9b71"
+  },
+  {
+    "path": "packages/llm/src/route/protocol.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "acb1e78c67bb156c2cf83f89b436159476d1bcef",
+    "size": 4053,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/acb1e78c67bb156c2cf83f89b436159476d1bcef"
+  },
+  {
+    "path": "packages/llm/src/route/transport/http.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "acc52c6ea173c28f92247b0fd31d58ea688df7e5",
+    "size": 4991,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/acc52c6ea173c28f92247b0fd31d58ea688df7e5"
+  },
+  {
+    "path": "packages/llm/src/route/transport/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fde9d6c4154aaff56c7f908d153f03a0a5a7617a",
+    "size": 1176,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fde9d6c4154aaff56c7f908d153f03a0a5a7617a"
+  },
+  {
+    "path": "packages/llm/src/route/transport/websocket.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "edb8aafa28922cbe1dda18c28367e0b3487297b7",
+    "size": 9131,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/edb8aafa28922cbe1dda18c28367e0b3487297b7"
+  },
+  {
+    "path": "packages/llm/src/schema/errors.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "072e4e83892890ba48b25e45eb3cd2592afc9f86",
+    "size": 6524,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/072e4e83892890ba48b25e45eb3cd2592afc9f86"
+  },
+  {
+    "path": "packages/llm/src/schema/events.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1831d4aeb424550bc4dc53b36dd914f626e83ccc",
+    "size": 25228,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1831d4aeb424550bc4dc53b36dd914f626e83ccc"
+  },
+  {
+    "path": "packages/llm/src/schema/ids.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6d5b56aaab6b3fe2875bfa79c73305815eb939a4",
+    "size": 1852,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6d5b56aaab6b3fe2875bfa79c73305815eb939a4"
+  },
+  {
+    "path": "packages/llm/src/schema/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0c0fede8fa79366bd6b086551889e0aaea9e7e8d",
+    "size": 125,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0c0fede8fa79366bd6b086551889e0aaea9e7e8d"
+  },
+  {
+    "path": "packages/llm/src/schema/messages.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9a1176ed73044938155cd89df6e41c0d95daa2b6",
+    "size": 11937,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9a1176ed73044938155cd89df6e41c0d95daa2b6"
+  },
+  {
+    "path": "packages/llm/src/schema/options.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fd4f8891921ca458ff6ffe9602e15f1732e6547a",
+    "size": 11116,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fd4f8891921ca458ff6ffe9602e15f1732e6547a"
+  },
+  {
+    "path": "packages/llm/src/tool-runtime.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d69bbb9d478ca532a1481e8d7502c8e5c2b55dc6",
+    "size": 2997,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d69bbb9d478ca532a1481e8d7502c8e5c2b55dc6"
+  },
+  {
+    "path": "packages/llm/src/tool.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "11ed9854ca38a9ef648705d1091aaa35e1660da0",
+    "size": 9667,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/11ed9854ca38a9ef648705d1091aaa35e1660da0"
+  },
+  {
+    "path": "packages/llm/src/utils/record.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a121fbde11a543fc674b2037fc051124492c1775",
+    "size": 257,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a121fbde11a543fc674b2037fc051124492c1775"
+  },
+  {
+    "path": "packages/llm/test/adapter.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bbbb29f37af72acaa4abe23425f3fff147aab052",
+    "size": 5358,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bbbb29f37af72acaa4abe23425f3fff147aab052"
+  },
+  {
+    "path": "packages/llm/test/auth-options.types.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "18f9508c3ca505a6ffc33e1cea08fd3a2f26f5a7",
+    "size": 8381,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/18f9508c3ca505a6ffc33e1cea08fd3a2f26f5a7"
+  },
+  {
+    "path": "packages/llm/test/auth.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1c7148dbbb4ebc28bc7a1d0318bcd040cfe259d3",
+    "size": 3274,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1c7148dbbb4ebc28bc7a1d0318bcd040cfe259d3"
+  },
+  {
+    "path": "packages/llm/test/cache-policy.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a126d9502c5e497f240f5e53fa50a51d426479e6",
+    "size": 9571,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a126d9502c5e497f240f5e53fa50a51d426479e6"
+  },
+  {
+    "path": "packages/llm/test/continuation-scenarios.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1bb1848b557eff88f816544e604a6a2759d4726b",
+    "size": 3878,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1bb1848b557eff88f816544e604a6a2759d4726b"
+  },
+  {
+    "path": "packages/llm/test/endpoint.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "504c9843c1be9ff33eaa5705ead4f7a29e6750e4",
+    "size": 1734,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/504c9843c1be9ff33eaa5705ead4f7a29e6750e4"
+  },
+  {
+    "path": "packages/llm/test/executor.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "811f7a9ffe7b606a4f42fb34175d7f35325f8525",
+    "size": 16322,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/811f7a9ffe7b606a4f42fb34175d7f35325f8525"
+  },
+  {
+    "path": "packages/llm/test/exports.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2feb39c32b7879853390e3c769b2704608dc9202",
+    "size": 3347,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2feb39c32b7879853390e3c769b2704608dc9202"
+  },
+  {
+    "path": "packages/llm/test/fixtures/media/restroom.png",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "52ed88afb0f06e915ede727b751fa5ea0d98ceb8",
+    "size": 14496,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/52ed88afb0f06e915ede727b751fa5ea0d98ceb8"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages-cache/writes-then-reads-cache-control-on-identical-second-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8cf2be05c14ed6d86f3a72b77fa432af986aad10",
+    "size": 53425,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8cf2be05c14ed6d86f3a72b77fa432af986aad10"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages/accepts-malformed-assistant-tool-order-with-default-patch.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7730485cb4d68d8d31eb5ddde417b1f59c723775",
+    "size": 3000,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7730485cb4d68d8d31eb5ddde417b1f59c723775"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages/anthropic-opus-4-7-image-tool-result.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b1ba048d7a3bde6771180eba2194d0929dec4835",
+    "size": 22691,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b1ba048d7a3bde6771180eba2194d0929dec4835"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages/claude-opus-4-7-drives-a-tool-loop.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "316f4308fc1d82c915c4714bee301331e563291d",
+    "size": 6021,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/316f4308fc1d82c915c4714bee301331e563291d"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages/rejects-malformed-assistant-tool-order-without-patch.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cd0990cec5cf0e035ec54d876c0d56ea2ac4cb36",
+    "size": 1720,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cd0990cec5cf0e035ec54d876c0d56ea2ac4cb36"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages/streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e80a0dac34b534235fb1a4bb50d4f86d6981b3e4",
+    "size": 2281,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e80a0dac34b534235fb1a4bb50d4f86d6981b3e4"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/anthropic-messages/streams-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ef8f69c21d3f151de01008fbc9dead331ca90732",
+    "size": 3081,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ef8f69c21d3f151de01008fbc9dead331ca90732"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/bedrock-converse/drives-a-tool-loop.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "26eca01609a1175bf7bf1cca2b30603d901ca874",
+    "size": 16694,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/26eca01609a1175bf7bf1cca2b30603d901ca874"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/bedrock-converse/streams-a-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4f22ce22da80929b2199169b5e8de068fd3c7bb2",
+    "size": 2986,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4f22ce22da80929b2199169b5e8de068fd3c7bb2"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/bedrock-converse/streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7eaacec02baf306b53931004fd55d33a4956cb80",
+    "size": 2431,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7eaacec02baf306b53931004fd55d33a4956cb80"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/cloudflare-ai-gateway/cloudflare-ai-gateway-workers-ai-gpt-oss-20b-tools-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "981c14f03edfa55958a93b7b046cec763609366c",
+    "size": 8424,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/981c14f03edfa55958a93b7b046cec763609366c"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/cloudflare-ai-gateway/cloudflare-ai-gateway-workers-ai-llama-3-1-8b-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6a8eff09d9773d410528fa45058f1ccabf64efe2",
+    "size": 2228,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6a8eff09d9773d410528fa45058f1ccabf64efe2"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/cloudflare-workers-ai/cloudflare-workers-ai-gpt-oss-20b-tools-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fa22f1ddb9e5b873720927f9c3db34cc4cd18e6e",
+    "size": 8379,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fa22f1ddb9e5b873720927f9c3db34cc4cd18e6e"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/cloudflare-workers-ai/cloudflare-workers-ai-llama-3-1-8b-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "52cc25f86b325bf441be2b491ca6fdbd7b07e3db",
+    "size": 2193,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/52cc25f86b325bf441be2b491ca6fdbd7b07e3db"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/gemini-cache/reports-cachedcontenttokencount-on-identical-second-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "209aadfc1a43cdf5dcc9fbacccacb3d7e492a7e3",
+    "size": 51039,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/209aadfc1a43cdf5dcc9fbacccacb3d7e492a7e3"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/gemini/gemini-2-5-flash-image.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8ab0cc2f1c9e0626881d958de6c4892074ca3b79",
+    "size": 21068,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8ab0cc2f1c9e0626881d958de6c4892074ca3b79"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/gemini/streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7f0e6b390e48ad0d2123e380745bbce0d617e9b9",
+    "size": 1319,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7f0e6b390e48ad0d2123e380745bbce0d617e9b9"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/gemini/streams-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a526910f0dafd841260f307bcd8ce2e9f832835e",
+    "size": 2204,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a526910f0dafd841260f307bcd8ce2e9f832835e"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-chat/continues-after-tool-result.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7c02a93f0b4eab502467d6d59bcfda752967328b",
+    "size": 7853,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7c02a93f0b4eab502467d6d59bcfda752967328b"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-chat/drives-a-tool-loop-end-to-end.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fdc5fa7916b017e630e2df62a1435e6b84dd2b1c",
+    "size": 12819,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fdc5fa7916b017e630e2df62a1435e6b84dd2b1c"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-chat/streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c86a29a462bdfb9d3c4e88affedcbbe7558e59cc",
+    "size": 2991,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c86a29a462bdfb9d3c4e88affedcbbe7558e59cc"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-chat/streams-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fef4d8cd14a2cb66c2e04224fc2cb4eb306de92c",
+    "size": 4922,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fef4d8cd14a2cb66c2e04224fc2cb4eb306de92c"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/deepseek-streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a71b1121cb01f5037f1facce3276dceec15d5a44",
+    "size": 2462,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a71b1121cb01f5037f1facce3276dceec15d5a44"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/groq-llama-3-3-70b-drives-a-tool-loop.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "403260b88b2e7b3004402d9294fb668fca5bc9f6",
+    "size": 10631,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/403260b88b2e7b3004402d9294fb668fca5bc9f6"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/groq-streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "561dbfda0629e7c8640428ebbf4e0a75d221acf1",
+    "size": 3138,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/561dbfda0629e7c8640428ebbf4e0a75d221acf1"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/groq-streams-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "70e9a765d281af7ba78a5f3e5d5cf7497e5a2b4f",
+    "size": 3382,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/70e9a765d281af7ba78a5f3e5d5cf7497e5a2b4f"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-claude-opus-4-7-drives-a-tool-loop.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e67d280678c394760987e46d027393c628773126",
+    "size": 9199,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e67d280678c394760987e46d027393c628773126"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-gpt-4o-mini-drives-a-tool-loop.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7883285e581abd2d2e0e52fb08096ffb38e5ace4",
+    "size": 13146,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7883285e581abd2d2e0e52fb08096ffb38e5ace4"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-gpt-5-5-drives-a-tool-loop.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e1cbab70faac0358ae359b2892ea9d81dcd4c6a6",
+    "size": 10506,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e1cbab70faac0358ae359b2892ea9d81dcd4c6a6"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1a95146931ee7862f5c33a9f92bce969cb4789db",
+    "size": 2871,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1a95146931ee7862f5c33a9f92bce969cb4789db"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/openrouter-streams-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "36d0ad99c56b69db67dc259e523b8fb72f03aaf9",
+    "size": 5588,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/36d0ad99c56b69db67dc259e523b8fb72f03aaf9"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/togetherai-streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "640565b14faa903bc1958029a26f953bcb8a930d",
+    "size": 2157,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/640565b14faa903bc1958029a26f953bcb8a930d"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-compatible-chat/togetherai-streams-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6c1d9c1a7fc46fdcbc27ecb52de6ac562ad2ce23",
+    "size": 3087,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6c1d9c1a7fc46fdcbc27ecb52de6ac562ad2ce23"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-responses-cache/reports-cached-tokens-on-identical-second-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2110a6a99ba0892d40f816f6ffea451b09ab2f5c",
+    "size": 61781,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2110a6a99ba0892d40f816f6ffea451b09ab2f5c"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-responses/gpt-5-5-drives-a-tool-loop.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9d441205fde9b9df3d5bee0325de4950d709f35c",
+    "size": 17838,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9d441205fde9b9df3d5bee0325de4950d709f35c"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-responses/gpt-5-5-streams-text.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "92c7b7e0f1a0d6d9f884e4513a68368e107b51d7",
+    "size": 7063,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/92c7b7e0f1a0d6d9f884e4513a68368e107b51d7"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-responses/gpt-5-5-streams-tool-call.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "8aa5dedaaf77139a9b6ef8c1270b089acc6c214f",
+    "size": 7932,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/8aa5dedaaf77139a9b6ef8c1270b089acc6c214f"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-responses/openai-responses-gpt-5-5-image-tool-result.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4f65f43b5766c6d5a635893be6e9eed261a83067",
+    "size": 28582,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4f65f43b5766c6d5a635893be6e9eed261a83067"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-responses/openai-responses-gpt-5-5-reasoning-continuation.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "47670c81272d237ef249909998fbc39c23415411",
+    "size": 21882,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/47670c81272d237ef249909998fbc39c23415411"
+  },
+  {
+    "path": "packages/llm/test/fixtures/recordings/openai-responses/openai-responses-gpt-5-5-reasoning.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "107192d951e92acbf5ecc5f3f3b5cd1202436f42",
+    "size": 10517,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/107192d951e92acbf5ecc5f3f3b5cd1202436f42"
+  },
+  {
+    "path": "packages/llm/test/generate-object.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9606f58f9840bea744efb5106be3a901ae7768c4",
+    "size": 6355,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9606f58f9840bea744efb5106be3a901ae7768c4"
+  },
+  {
+    "path": "packages/llm/test/lib/effect.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "05cf017b2be59295d7e612f744141274951b3a1e",
+    "size": 2225,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/05cf017b2be59295d7e612f744141274951b3a1e"
+  },
+  {
+    "path": "packages/llm/test/lib/http.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f6c600555b9389d715d8142477a5400864084f6b",
+    "size": 3951,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f6c600555b9389d715d8142477a5400864084f6b"
+  },
+  {
+    "path": "packages/llm/test/lib/openai-chunks.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "77a7c919e1a174c983eab0331738d5e274758d59",
+    "size": 827,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/77a7c919e1a174c983eab0331738d5e274758d59"
+  },
+  {
+    "path": "packages/llm/test/lib/sse.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "80b275d296e8eb9cdac73a99a0c81afbba6dce81",
+    "size": 804,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/80b275d296e8eb9cdac73a99a0c81afbba6dce81"
+  },
+  {
+    "path": "packages/llm/test/lib/tool-runtime.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "28ebc47c712b3331ff30ff5a89449d49c7ce8621",
+    "size": 5327,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/28ebc47c712b3331ff30ff5a89449d49c7ce8621"
+  },
+  {
+    "path": "packages/llm/test/llm.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "64346a8bb030e28f41c66181a9477f654dc056d8",
+    "size": 8346,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/64346a8bb030e28f41c66181a9477f654dc056d8"
+  },
+  {
+    "path": "packages/llm/test/openai-response-format.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6a4c4adb2ee2c4d906b376a3671d2de966b54ebd",
+    "size": 14285,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6a4c4adb2ee2c4d906b376a3671d2de966b54ebd"
+  },
+  {
+    "path": "packages/llm/test/prepare.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6923c5a678ed4dbb0eb59b24bd96b6c480366aa7",
+    "size": 6524,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6923c5a678ed4dbb0eb59b24bd96b6c480366aa7"
+  },
+  {
+    "path": "packages/llm/test/provider-error.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c4185969640a2b70ed50c75beae8f9c6358e3137",
+    "size": 1309,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c4185969640a2b70ed50c75beae8f9c6358e3137"
+  },
+  {
+    "path": "packages/llm/test/provider.types.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f8b46e375394eda46143b1c01412a4a16e20b2e8",
+    "size": 1251,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f8b46e375394eda46143b1c01412a4a16e20b2e8"
+  },
+  {
+    "path": "packages/llm/test/provider/anthropic-messages-cache.recorded.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "e98e042aaa2f946eb82f692ed03438815ac6171b",
+    "size": 2156,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/e98e042aaa2f946eb82f692ed03438815ac6171b"
+  },
+  {
+    "path": "packages/llm/test/provider/anthropic-messages.recorded.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9b552550add402f6028386da07b5ba06aaafcdb7",
+    "size": 1748,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9b552550add402f6028386da07b5ba06aaafcdb7"
+  },
+  {
+    "path": "packages/llm/test/provider/anthropic-messages.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "898931295849e3d7a91813b384b887ca0d8d8fd3",
+    "size": 33489,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/898931295849e3d7a91813b384b887ca0d8d8fd3"
+  },
+  {
+    "path": "packages/llm/test/provider/bedrock-converse-cache.recorded.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0c58e7af68fc71dd8f004e38e1e6535709008a5e",
+    "size": 2308,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0c58e7af68fc71dd8f004e38e1e6535709008a5e"
+  },
+  {
+    "path": "packages/llm/test/provider/bedrock-converse.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "46657331a344c446e38147fe1433377c6266d4b2",
+    "size": 26897,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/46657331a344c446e38147fe1433377c6266d4b2"
+  },
+  {
+    "path": "packages/llm/test/provider/cloudflare.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "acd63962946929acb37bafd60f69e7c2314a18e9",
+    "size": 8789,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/acd63962946929acb37bafd60f69e7c2314a18e9"
+  },
+  {
+    "path": "packages/llm/test/provider/gemini-cache.recorded.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fdf16f047b207a1e6b94fa708c341bb0cdb3ff93",
+    "size": 1985,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fdf16f047b207a1e6b94fa708c341bb0cdb3ff93"
+  },
+  {
+    "path": "packages/llm/test/provider/gemini.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1dc253c0ea88c7cf3ae1a17ad048d07be7fc2f2c",
+    "size": 19573,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1dc253c0ea88c7cf3ae1a17ad048d07be7fc2f2c"
+  },
+  {
+    "path": "packages/llm/test/provider/golden.recorded.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ef67c866d8d8de8c900ccc05998ab33c6932a8e9",
+    "size": 7844,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ef67c866d8d8de8c900ccc05998ab33c6932a8e9"
+  },
+  {
+    "path": "packages/llm/test/provider/openai-chat.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2cc0429d2c9355b654ff2bd12571c89fd4c1cb0f",
+    "size": 24328,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2cc0429d2c9355b654ff2bd12571c89fd4c1cb0f"
+  },
+  {
+    "path": "packages/llm/test/provider/openai-compatible-chat.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "43ae283e9f7c2cfe38b3494e0bc8b13a207cb9b7",
+    "size": 8200,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/43ae283e9f7c2cfe38b3494e0bc8b13a207cb9b7"
+  },
+  {
+    "path": "packages/llm/test/provider/openai-responses-cache.recorded.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "d17cf7a5ba8d9d1eabcd9093ec944dbc5ccd8040",
+    "size": 1817,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d17cf7a5ba8d9d1eabcd9093ec944dbc5ccd8040"
+  },
+  {
+    "path": "packages/llm/test/provider/openai-responses.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "33683f0903a5d538ab743395bf99eae55b873902",
+    "size": 53781,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/33683f0903a5d538ab743395bf99eae55b873902"
+  },
+  {
+    "path": "packages/llm/test/provider/openrouter.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "86d1317b3e64f65f21cfc067828eb5133eebcbe5",
+    "size": 1815,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/86d1317b3e64f65f21cfc067828eb5133eebcbe5"
+  },
+  {
+    "path": "packages/llm/test/recorded-golden.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b310a8f1d6db617d8a151a208407592dcba1581a",
+    "size": 3090,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b310a8f1d6db617d8a151a208407592dcba1581a"
+  },
+  {
+    "path": "packages/llm/test/recorded-ledger.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9f6d2338a79c8fef97617d36494dfb3ffa76d6aa",
+    "size": 1190,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9f6d2338a79c8fef97617d36494dfb3ffa76d6aa"
+  },
+  {
+    "path": "packages/llm/test/recorded-runner.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "49d44f554628b887d14f8a4141f8b53ce19f3a64",
+    "size": 3837,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/49d44f554628b887d14f8a4141f8b53ce19f3a64"
+  },
+  {
+    "path": "packages/llm/test/recorded-scenarios.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cac348da659010055f9cf9ef3da2551a96a6e321",
+    "size": 19888,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cac348da659010055f9cf9ef3da2551a96a6e321"
+  },
+  {
+    "path": "packages/llm/test/recorded-test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c06292953cb00467ebac1ca461817c6f946725bc",
+    "size": 3891,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c06292953cb00467ebac1ca461817c6f946725bc"
+  },
+  {
+    "path": "packages/llm/test/recorded-utils.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1c135ee695029626a5f06329c652231d7840481d",
+    "size": 4552,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1c135ee695029626a5f06329c652231d7840481d"
+  },
+  {
+    "path": "packages/llm/test/recorded-websocket.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7da0ae3ba35f97eae8303b2662300d760acf9fd3",
+    "size": 1063,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7da0ae3ba35f97eae8303b2662300d760acf9fd3"
+  },
+  {
+    "path": "packages/llm/test/response.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5e48e5ef457504eb23f2b65fdc2a955dec1494ed",
+    "size": 3949,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5e48e5ef457504eb23f2b65fdc2a955dec1494ed"
+  },
+  {
+    "path": "packages/llm/test/route.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "681583bc9e475b173f33016689dccee6088186f4",
+    "size": 1362,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/681583bc9e475b173f33016689dccee6088186f4"
+  },
+  {
+    "path": "packages/llm/test/schema.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3c6628c2e511539b7b34236cddefcfadfc7bc2e5",
+    "size": 3499,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3c6628c2e511539b7b34236cddefcfadfc7bc2e5"
+  },
+  {
+    "path": "packages/llm/test/tool-runtime.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c03a18bd8aa271d33775cc033096e9e09be4cdee",
+    "size": 31581,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c03a18bd8aa271d33775cc033096e9e09be4cdee"
+  },
+  {
+    "path": "packages/llm/test/tool-schema-projection.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a9df815dafabcb2b5bbf41ab6dc02e329baaff0f",
+    "size": 3899,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a9df815dafabcb2b5bbf41ab6dc02e329baaff0f"
+  },
+  {
+    "path": "packages/llm/test/tool-stream.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b005d2666c8fbf2b9801f2866468930213e9b4f5",
+    "size": 3509,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b005d2666c8fbf2b9801f2866468930213e9b4f5"
+  },
+  {
+    "path": "packages/llm/test/tool.types.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2bd33df545f9d3f5ec526b8a3dc48ea5f0258953",
+    "size": 1550,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2bd33df545f9d3f5ec526b8a3dc48ea5f0258953"
+  },
+  {
+    "path": "packages/llm/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2bc480ffbb603a3144b086d1f2a6c128d111bf46",
+    "size": 415,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2bc480ffbb603a3144b086d1f2a6c128d111bf46"
+  },
+  {
+    "path": "packages/plugin/.gitignore",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1521c8b7652b1eec8ed4fe50877aae880c758ee3",
+    "size": 5,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1521c8b7652b1eec8ed4fe50877aae880c758ee3"
+  },
+  {
+    "path": "packages/plugin/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9ad221cdb96752e2fdcdfd08f13828eb74f599dc",
+    "size": 3665,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9ad221cdb96752e2fdcdfd08f13828eb74f599dc"
+  },
+  {
+    "path": "packages/plugin/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6a7a84a36a8a7ca8625c92217cf090743d8a42d2",
+    "size": 48,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6a7a84a36a8a7ca8625c92217cf090743d8a42d2"
+  },
+  {
+    "path": "packages/plugin/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3f696f1b3b6543ba659ca95b6c4880eccf04a3dc",
+    "size": 1521,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3f696f1b3b6543ba659ca95b6c4880eccf04a3dc"
+  },
+  {
+    "path": "packages/plugin/src/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "539ebc5a3859fca106d9fb44f5805fa5bbffa6a0",
+    "size": 478,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/539ebc5a3859fca106d9fb44f5805fa5bbffa6a0"
+  },
+  {
+    "path": "packages/plugin/src/tool.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cdf9a933f496db2a00907a4f388220715aec0097",
+    "size": 2257,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cdf9a933f496db2a00907a4f388220715aec0097"
+  },
+  {
+    "path": "packages/plugin/src/tui.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "df0eec88398ab435191810dc5e651b746561c512",
+    "size": 17715,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/df0eec88398ab435191810dc5e651b746561c512"
+  },
+  {
+    "path": "packages/plugin/src/types.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "fdfd06a7bf4d09491e6cc35acc85c7709ddf56d3",
+    "size": 2242,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/fdfd06a7bf4d09491e6cc35acc85c7709ddf56d3"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/PLAN.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "889e8d056b5bdedaeec259c9f5976783c54ad789",
+    "size": 15895,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/889e8d056b5bdedaeec259c9f5976783c54ad789"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dd1405edfdc822d72925f7c847f6c723d91a1f71",
+    "size": 2846,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dd1405edfdc822d72925f7c847f6c723d91a1f71"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/agent.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "0f76db12f9e0bfd9da0beea1927682fdb35a8165",
+    "size": 460,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/0f76db12f9e0bfd9da0beea1927682fdb35a8165"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/aisdk.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f293507a337d27b14c0b6e1498adcdf8df2ae1d7",
+    "size": 456,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f293507a337d27b14c0b6e1498adcdf8df2ae1d7"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/catalog.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4eea01ba9e7d47f140e5fa5b4a1b9e51d8472727",
+    "size": 1032,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4eea01ba9e7d47f140e5fa5b4a1b9e51d8472727"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/command.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a15230826142967b4b85e021d4e49b21d84f97e0",
+    "size": 424,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a15230826142967b4b85e021d4e49b21d84f97e0"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/context.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9089334ee3bb2d0f909877acea0f85d145577930",
+    "size": 877,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9089334ee3bb2d0f909877acea0f85d145577930"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/event.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a0b46926ae9dfd5594a846fc3d70180d56aa5eb2",
+    "size": 297,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a0b46926ae9dfd5594a846fc3d70180d56aa5eb2"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/filesystem.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "260c7b376f12301a88013dffc73d92c15d3263de",
+    "size": 609,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/260c7b376f12301a88013dffc73d92c15d3263de"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f13614a54da5afdebd278dabe3dc5fc670fc6265",
+    "size": 129,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f13614a54da5afdebd278dabe3dc5fc670fc6265"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/integration.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6ac4e0eda899374123c20038c2cda348314e6a18",
+    "size": 2113,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6ac4e0eda899374123c20038c2cda348314e6a18"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/location.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bc546a3b175d073be54d295ad47d295e6425910b",
+    "size": 116,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bc546a3b175d073be54d295ad47d295e6425910b"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/npm.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4cb96c32d172a53108771d1e5488ac365116b9f3",
+    "size": 195,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4cb96c32d172a53108771d1e5488ac365116b9f3"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/path.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f9045cc32d0f694547eb36daf1bb593c7b0e111a",
+    "size": 174,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f9045cc32d0f694547eb36daf1bb593c7b0e111a"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/plugin.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "54224fa83185a104aca4ff4519c0515d14bb56cd",
+    "size": 465,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/54224fa83185a104aca4ff4519c0515d14bb56cd"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/reference.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "72bc76e46f76134c25163c849d6d88fe3fc9924b",
+    "size": 418,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/72bc76e46f76134c25163c849d6d88fe3fc9924b"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/registration.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "dfe5626397645e9fbefd793d9f6b4a48974a36c0",
+    "size": 379,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/dfe5626397645e9fbefd793d9f6b4a48974a36c0"
+  },
+  {
+    "path": "packages/plugin/src/v2/effect/skill.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "54c77dd48b953efc09552da2b2c9bf083a169367",
+    "size": 256,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/54c77dd48b953efc09552da2b2c9bf083a169367"
+  },
+  {
+    "path": "packages/plugin/src/v2/mutable.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "29fc5c080286f47ca1f894bfe9d6144a70b4a83c",
+    "size": 162,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/29fc5c080286f47ca1f894bfe9d6144a70b4a83c"
+  },
+  {
+    "path": "packages/plugin/src/v2/options.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2b210f943b2e7dbf758fada327b926a57ed788aa",
+    "size": 58,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2b210f943b2e7dbf758fada327b926a57ed788aa"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "4cf9a0cf7ec0763e95c27b8b4921a8fa70976b62",
+    "size": 2476,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/4cf9a0cf7ec0763e95c27b8b4921a8fa70976b62"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/agent.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "bec589146ae2d30be3913758b7ec28d424d9ac49",
+    "size": 189,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/bec589146ae2d30be3913758b7ec28d424d9ac49"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/aisdk.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f293507a337d27b14c0b6e1498adcdf8df2ae1d7",
+    "size": 456,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f293507a337d27b14c0b6e1498adcdf8df2ae1d7"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/catalog.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "70842e94b71fb698c9dec52425d5f8dfe1482c9d",
+    "size": 245,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/70842e94b71fb698c9dec52425d5f8dfe1482c9d"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/command.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cdc5f8268a1ea1feb9ee4c4dee935a532dadc161",
+    "size": 199,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cdc5f8268a1ea1feb9ee4c4dee935a532dadc161"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/context.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9089334ee3bb2d0f909877acea0f85d145577930",
+    "size": 877,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9089334ee3bb2d0f909877acea0f85d145577930"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "82879556573ba8ff57b814ece2a3ba602a008b6a",
+    "size": 739,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/82879556573ba8ff57b814ece2a3ba602a008b6a"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/integration.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "53d95c91b5588c17d67bea364c4d08b83ad85749",
+    "size": 578,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/53d95c91b5588c17d67bea364c4d08b83ad85749"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/plugin.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ab59fb95fc947aef073e9a0fc5b4b1afd3fc119d",
+    "size": 362,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ab59fb95fc947aef073e9a0fc5b4b1afd3fc119d"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/reference.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "f4b7f8b8393d2b97f9fcee0cdd4bb807942c80c4",
+    "size": 209,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/f4b7f8b8393d2b97f9fcee0cdd4bb807942c80c4"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/registration.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "5e0ae7f480a3c21b1ee0ca36395f1e007558ba3f",
+    "size": 287,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/5e0ae7f480a3c21b1ee0ca36395f1e007558ba3f"
+  },
+  {
+    "path": "packages/plugin/src/v2/promise/skill.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "2efc35f818a79e239e7155926ad2f25b907523d0",
+    "size": 189,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/2efc35f818a79e239e7155926ad2f25b907523d0"
+  },
+  {
+    "path": "packages/plugin/src/v2/types.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "558eb3a6d8e53133befd573695e7876f2d165f77",
+    "size": 2263,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/558eb3a6d8e53133befd573695e7876f2d165f77"
+  },
+  {
+    "path": "packages/plugin/src/wire.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a049bf4b1cd294a9da15b0735d178e40faa0fe94",
+    "size": 11823,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a049bf4b1cd294a9da15b0735d178e40faa0fe94"
+  },
+  {
+    "path": "packages/plugin/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "553713f7d4a0282a527c91819be964fbfb722ebe",
+    "size": 332,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/553713f7d4a0282a527c91819be964fbfb722ebe"
+  },
+  {
+    "path": "schema/config.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+    "size": 30801,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/ba9b5d2121a9a3bda733cba0459094b69757ede6"
+  },
+  {
+    "path": "tooling/http-recorder/LICENSE",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6439474beed8e0271df9862eff97ffd70ec2464c",
+    "size": 1065,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6439474beed8e0271df9862eff97ffd70ec2464c"
+  },
+  {
+    "path": "tooling/http-recorder/README.md",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1fe7d52fbc4154b211945f4935809532db9dff88",
+    "size": 9397,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1fe7d52fbc4154b211945f4935809532db9dff88"
+  },
+  {
+    "path": "tooling/http-recorder/bunfig.toml",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "625b8da1173ddfb1ccb758c54f1585e90dbe2b6a",
+    "size": 104,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/625b8da1173ddfb1ccb758c54f1585e90dbe2b6a"
+  },
+  {
+    "path": "tooling/http-recorder/package.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cbee51daaf63a3bf771afb7e0d3ec23acb24e015",
+    "size": 1536,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cbee51daaf63a3bf771afb7e0d3ec23acb24e015"
+  },
+  {
+    "path": "tooling/http-recorder/script/build.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "3f66abd5dca1bc0e307b869c6005447a3ee789aa",
+    "size": 670,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/3f66abd5dca1bc0e307b869c6005447a3ee789aa"
+  },
+  {
+    "path": "tooling/http-recorder/script/pack.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "746d7aaebd8af9117eebed109689d6751b87f1a4",
+    "size": 1224,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/746d7aaebd8af9117eebed109689d6751b87f1a4"
+  },
+  {
+    "path": "tooling/http-recorder/script/verify-package.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "903ca4e993a3ea0d9e2198d28e6e45daad0fa988",
+    "size": 2894,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/903ca4e993a3ea0d9e2198d28e6e45daad0fa988"
+  },
+  {
+    "path": "tooling/http-recorder/src/cassette.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "cefc3fbc703db1f8e4dceb1cf9249f900dadd08a",
+    "size": 7700,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/cefc3fbc703db1f8e4dceb1cf9249f900dadd08a"
+  },
+  {
+    "path": "tooling/http-recorder/src/effect.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "583dee8ca12230382d0835bc564096b1c874bfe1",
+    "size": 1043,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/583dee8ca12230382d0835bc564096b1c874bfe1"
+  },
+  {
+    "path": "tooling/http-recorder/src/index.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "eac4b75b4bba70f021246c8cc5646683e3a84953",
+    "size": 849,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/eac4b75b4bba70f021246c8cc5646683e3a84953"
+  },
+  {
+    "path": "tooling/http-recorder/src/internal-effect.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "6b886311a99548188be8ab4086dc30be49bf6846",
+    "size": 7163,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/6b886311a99548188be8ab4086dc30be49bf6846"
+  },
+  {
+    "path": "tooling/http-recorder/src/internal.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "7faecf0db062e6625c19407b9139d0dc2ad8e878",
+    "size": 659,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/7faecf0db062e6625c19407b9139d0dc2ad8e878"
+  },
+  {
+    "path": "tooling/http-recorder/src/matching.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "731aa8b57ac2f066d57d43d1067ac02d6d20fd93",
+    "size": 4561,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/731aa8b57ac2f066d57d43d1067ac02d6d20fd93"
+  },
+  {
+    "path": "tooling/http-recorder/src/recorder.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c58afde4633ce7c77939650dce276b8710fe6955",
+    "size": 2336,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c58afde4633ce7c77939650dce276b8710fe6955"
+  },
+  {
+    "path": "tooling/http-recorder/src/redaction.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "b84996adecb921b8edceddce49364e42b592f9ba",
+    "size": 4112,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/b84996adecb921b8edceddce49364e42b592f9ba"
+  },
+  {
+    "path": "tooling/http-recorder/src/redactor.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "582c647702abcaf1496e6da634d699482d78bc3e",
+    "size": 4779,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/582c647702abcaf1496e6da634d699482d78bc3e"
+  },
+  {
+    "path": "tooling/http-recorder/src/schema.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "a9e673780437193396150a3dcf9787fd5c1d68cf",
+    "size": 2610,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/a9e673780437193396150a3dcf9787fd5c1d68cf"
+  },
+  {
+    "path": "tooling/http-recorder/src/socket.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "c7486db4aa29bc88bd48eaa17890286670cb575d",
+    "size": 13051,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/c7486db4aa29bc88bd48eaa17890286670cb575d"
+  },
+  {
+    "path": "tooling/http-recorder/src/types.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "1ee011420585c52507c5793c77d37732e4ca51a9",
+    "size": 3894,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/1ee011420585c52507c5793c77d37732e4ca51a9"
+  },
+  {
+    "path": "tooling/http-recorder/src/websocket.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "869cd3bf90e0df8140eb2e708e0728d197415311",
+    "size": 6965,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/869cd3bf90e0df8140eb2e708e0728d197415311"
+  },
+  {
+    "path": "tooling/http-recorder/test/fixtures/recordings/record-replay/multi-step.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "9953b860cd94b25cc52c4456237abf61d5d1cf79",
+    "size": 872,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/9953b860cd94b25cc52c4456237abf61d5d1cf79"
+  },
+  {
+    "path": "tooling/http-recorder/test/fixtures/recordings/record-replay/retry.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "873e5a16c0565ca96e8668c25587ab7329513684",
+    "size": 890,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/873e5a16c0565ca96e8668c25587ab7329513684"
+  },
+  {
+    "path": "tooling/http-recorder/test/record-replay.test.ts",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "45c10abb868422af26fdae1a19f87bd4378ad6ae",
+    "size": 33027,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/45c10abb868422af26fdae1a19f87bd4378ad6ae"
+  },
+  {
+    "path": "tooling/http-recorder/tsconfig.json",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "32abb2c0d1969d0167facb402c5aad4f2a88fc71",
+    "size": 598,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/32abb2c0d1969d0167facb402c5aad4f2a88fc71"
+  }
+]

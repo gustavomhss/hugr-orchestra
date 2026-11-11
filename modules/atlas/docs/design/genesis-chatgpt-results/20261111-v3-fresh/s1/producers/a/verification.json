@@ -1,0 +1,38 @@
+{
+  "schema": "genesis-producer-verification/v1",
+  "result": "PASS_STRUCTURAL_ONLY",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "orchestra.s1",
+  "population_count": 1441,
+  "coverage_count": 1441,
+  "unique_artifact_count": 17,
+  "capture_count": 102,
+  "captured_assigned_count": 101,
+  "source_bytes": 1125275,
+  "body_bytes": 81782,
+  "cited_line_span_count": 196,
+  "exact_excerpt_counts": {
+    "full": 193,
+    "compact": 83
+  },
+  "body_binding_set_sha256": "ab2bb9d000464f0b3ed18bc4816f61664464d078fe0376ab3ce98cbc21177fea",
+  "checks": [
+    "Captured byte lengths/SHA256/canonical Git blob SHA1",
+    "Captured assigned files match frozen population blobs and sizes",
+    "All 1441 assigned paths exactly once in coverage",
+    "All coverage rows resolve a required artifact",
+    "Common scope/L1/need enum/relative paths/body bytes/source pins",
+    "All body source anchor line ranges valid",
+    "Full and compact excerpts exactly match source slices",
+    "Artifact-to-excerpt body hashes match",
+    "Recipe/request/steering/response payload references resolve",
+    "No build dependencies or fabricated review/runtime receipts"
+  ],
+  "semantic_review": "PENDING independent judges",
+  "product_tests": "NOT_RUN",
+  "product_runtime": "NOT_RUN",
+  "remote_writes": "NONE",
+  "tokens": "UNKNOWN",
+  "physical_model_attempts": "UNKNOWN",
+  "billing": "UNKNOWN"
+}

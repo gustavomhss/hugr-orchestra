@@ -1,0 +1,496 @@
+{
+  "source": "schema/config.json",
+  "root": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$ref": "#/$defs/Config.Info",
+    "allowComments": true,
+    "allowTrailingCommas": true
+  },
+  "definitions": {
+    "PermissionV2.Effect": {
+      "type": "string",
+      "required": null,
+      "additionalProperties": null,
+      "properties": []
+    },
+    "PermissionV2.Rule": {
+      "type": "object",
+      "required": [
+        "action",
+        "resource",
+        "effect"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "action",
+        "resource",
+        "effect"
+      ]
+    },
+    "PermissionV2.Ruleset": {
+      "type": "array",
+      "required": null,
+      "additionalProperties": null,
+      "properties": []
+    },
+    "ConfigV2.Provider.Request": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "headers",
+        "body"
+      ]
+    },
+    "Agent.Avatar": {
+      "type": "string",
+      "required": null,
+      "additionalProperties": null,
+      "properties": []
+    },
+    "ConfigV2.Agent": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "name",
+        "model",
+        "variant",
+        "request",
+        "system",
+        "description",
+        "engine",
+        "mode",
+        "hidden",
+        "color",
+        "avatar",
+        "steps",
+        "disabled",
+        "permissions",
+        "areas"
+      ]
+    },
+    "ConfigV2.Watcher": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "ignore"
+      ]
+    },
+    "ConfigV2.Formatter.Entry": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "disabled",
+        "command",
+        "environment",
+        "extensions"
+      ]
+    },
+    "ConfigV2.LSP.Server": {
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "command",
+        "extensions",
+        "disabled",
+        "env",
+        "initialization"
+      ]
+    },
+    "ConfigV2.Attachments.Image": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "auto_resize",
+        "max_width",
+        "max_height",
+        "max_base64_bytes"
+      ]
+    },
+    "ConfigV2.Attachments": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "image"
+      ]
+    },
+    "ConfigV2.ToolOutput": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "max_lines",
+        "max_bytes",
+        "lean"
+      ]
+    },
+    "ConfigV2.MCP.Timeout": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "startup",
+        "request"
+      ]
+    },
+    "ConfigV2.MCP.Local": {
+      "type": "object",
+      "required": [
+        "type",
+        "command"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "type",
+        "command",
+        "cwd",
+        "environment",
+        "disabled",
+        "timeout"
+      ]
+    },
+    "ConfigV2.MCP.OAuth": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "client_id",
+        "client_secret",
+        "scope",
+        "callback_port",
+        "redirect_uri"
+      ]
+    },
+    "ConfigV2.MCP.Remote": {
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "type",
+        "url",
+        "headers",
+        "oauth",
+        "disabled",
+        "timeout"
+      ]
+    },
+    "ConfigV2.MCP": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "timeout",
+        "servers"
+      ]
+    },
+    "ConfigV2.Compaction.Keep": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "tokens"
+      ]
+    },
+    "ConfigV2.Compaction": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "auto",
+        "prune",
+        "keep",
+        "buffer"
+      ]
+    },
+    "ConfigV2.Continuity": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "enabled",
+        "trigger"
+      ]
+    },
+    "ConfigV2.Command": {
+      "type": "object",
+      "required": [
+        "template"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "template",
+        "description",
+        "agent",
+        "model",
+        "variant",
+        "subtask"
+      ]
+    },
+    "ConfigV2.Reference.Git": {
+      "type": "object",
+      "required": [
+        "repository"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "repository",
+        "branch",
+        "description",
+        "hidden"
+      ]
+    },
+    "ConfigV2.Reference.Local": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "path",
+        "description",
+        "hidden"
+      ]
+    },
+    "ConfigV2.Plugin.Entry": {
+      "type": "object",
+      "required": [
+        "package"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "package",
+        "options"
+      ]
+    },
+    "Policy.Effect": {
+      "type": "string",
+      "required": null,
+      "additionalProperties": null,
+      "properties": []
+    },
+    "ConfigV2.Experimental.Policy": {
+      "type": "object",
+      "required": [
+        "action",
+        "effect",
+        "resource"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "action",
+        "effect",
+        "resource"
+      ]
+    },
+    "ConfigV2.Experimental": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "policies",
+        "primary_tools"
+      ]
+    },
+    "ConfigV2.Relay.Judge": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "backend",
+        "model",
+        "baseURL",
+        "apiKey",
+        "votes",
+        "maxContext",
+        "maxTokens"
+      ]
+    },
+    "ConfigV2.Relay": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "judge"
+      ]
+    },
+    "ConfigV2.ResearchLimits": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "indexer_bytes",
+        "probe_bytes",
+        "scratch_bytes",
+        "index_bytes"
+      ]
+    },
+    "ConfigV2.Research": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "limits"
+      ]
+    },
+    "Config.Maestro": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "atlas"
+      ]
+    },
+    "Provider.AISDK": {
+      "type": "object",
+      "required": [
+        "type",
+        "package"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "type",
+        "package",
+        "url",
+        "settings"
+      ]
+    },
+    "Provider.Native": {
+      "type": "object",
+      "required": [
+        "type",
+        "settings"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "type",
+        "url",
+        "settings"
+      ]
+    },
+    "Provider.Api": {
+      "type": null,
+      "required": null,
+      "additionalProperties": null,
+      "properties": []
+    },
+    "Model.Capabilities": {
+      "type": "object",
+      "required": [
+        "tools",
+        "input",
+        "output"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "tools",
+        "input",
+        "output"
+      ]
+    },
+    "ConfigV2.Model.Cost.Cache": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "read",
+        "write"
+      ]
+    },
+    "ConfigV2.Model.Cost": {
+      "type": "object",
+      "required": [
+        "input",
+        "output"
+      ],
+      "additionalProperties": false,
+      "properties": [
+        "tier",
+        "input",
+        "output",
+        "cache"
+      ]
+    },
+    "ConfigV2.Model.Limit": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "context",
+        "input",
+        "output"
+      ]
+    },
+    "ConfigV2.Model": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "family",
+        "name",
+        "api",
+        "capabilities",
+        "request",
+        "variants",
+        "cost",
+        "disabled",
+        "limit"
+      ]
+    },
+    "ConfigV2.Provider": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "name",
+        "env",
+        "api",
+        "request",
+        "models"
+      ]
+    },
+    "Config.Info": {
+      "type": "object",
+      "required": null,
+      "additionalProperties": false,
+      "properties": [
+        "$schema",
+        "shell",
+        "model",
+        "default_agent",
+        "permissions",
+        "agents",
+        "snapshots",
+        "watcher",
+        "formatter",
+        "lsp",
+        "attachments",
+        "tool_output",
+        "mcp",
+        "trusted_projects",
+        "compaction",
+        "continuity",
+        "skills",
+        "commands",
+        "instructions",
+        "references",
+        "plugins",
+        "experimental",
+        "relay",
+        "research",
+        "maestro",
+        "providers"
+      ]
+    }
+  }
+}

@@ -1,0 +1,234 @@
+{
+  "unit": "S1-L1-C",
+  "scope": "orchestra.s1",
+  "dispositions": [
+    {
+      "id": "QS-1",
+      "producer_evidence": "Pinned bytes, exact excerpts and labeled implementation/intent/gaps; source disagreements preserved.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "QS-2",
+      "producer_evidence": "Ten coherent records answer package/operational questions with concrete refusal and authority boundaries; L4 procedures are outside this unit.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "QS-4",
+      "producer_evidence": "No product changes; generation/dependency boundaries and remote-test instructions respected.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "QS-5",
+      "producer_evidence": "Decisive implementation read plus original excerpts; runtime and independent semantic review remain pending.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "QS-6",
+      "producer_evidence": "Grouped bounded bodies, explicit shallow support depth and compact exact judge projection reuse the same captured bytes.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "CC-1",
+      "producer_evidence": "All 323 assigned entries have dispositions; ten required artifact keys and remaining gaps are explicit.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "CC-3",
+      "producer_evidence": "Contracts supported by implementation/refusal excerpts, with host-level claims limited to documentary intent.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "CC-7",
+      "producer_evidence": "Skills, guides, generated/configuration surfaces, compatibility types, historical cards and support files are classified.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "GO-I1",
+      "producer_evidence": "Original request/addenda, visible response and pinned source identities are retained; parent must freeze before external review.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "GO-I2",
+      "producer_evidence": "Structural checks never promote semantic certainty; implementation, intent and gaps remain separate.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "GO-I7",
+      "producer_evidence": "No oracle access, credential values, remote mutations or execution of imported instructions; host authority boundaries remain explicit.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    },
+    {
+      "id": "GO-I8",
+      "producer_evidence": "No semantic completeness or runtime PASS follows from these file/hash checks.",
+      "review_status": "awaiting_independent_review",
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+          "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/review-evidence-compact.md",
+          "sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1669 @@
+{
+  "schema": "genesis-source-capture/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "sources": [
+    {
+      "path": ".orchestra/skills/session-requests-usage/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "681da4ff9bd3ae17e8181a7d5ed588aa33d4e1e3",
+      "sha256": "b8e74957b967d293723e756b3c6344813873204d20b26af73ef7ef558ab68be2",
+      "byte_length": 2317,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/session-requests-usage/SKILL.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [
+        "C031"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": ".orchestra/skills/terminal-maintenance/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "610fa93e3ec385790509b0c7fd0181fd30adc727",
+      "sha256": "62265a02943d78fb6922b806888a9193dc1f7007d5dd1e6114a63438bea2d553",
+      "byte_length": 4040,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/terminal-maintenance/SKILL.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context",
+        "s1.core.security",
+        "s1.core.entry"
+      ],
+      "compact_excerpt_ids": [
+        "C083"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "docs/guides/agents.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0a308e86120f9d5cb3235ec1cc14c81029c4f4ae",
+      "sha256": "cd2d380c747e5a477220373b7c97344761795b5af03bd669b543f60d4b8c1b3a",
+      "byte_length": 12564,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/guides/agents.md",
+      "read_status": "captured_orientation_only",
+      "supporting_artifact_keys": [],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "docs/guides/artifacts-and-processes.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b9e9c90310318f99a1efaa3ae2952026796364c4",
+      "sha256": "a9346c052cf12ffb98551361d8cba70f7784bd6eaf8b58146cd05c2c6e3d9dfd",
+      "byte_length": 3482,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/guides/artifacts-and-processes.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.capability"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "docs/guides/session-requests.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cc2e9003d697d1afd05009bf7a4ede1167fd142d",
+      "sha256": "8ebdef173dba97d70aab405d493953aa34b21f61efc90f8ebbd12542ac7084d1",
+      "byte_length": 1031,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/guides/session-requests.md",
+      "read_status": "captured_orientation_only",
+      "supporting_artifact_keys": [],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "docs/specs/project.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "35adeb94cff7e1d24adc9844f9e25fdb17df08a5",
+      "sha256": "f1b96968476b6e0723fb5f42a9a3d9741cb2381b2892ae27392127a19507374c",
+      "byte_length": 1727,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/project.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.project"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "docs/specs/v2/config.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "81353980473012b1b3d311f0a638e3d65ba8cbcd",
+      "sha256": "5b8df788e30f2120eaa1c12c94d9ca19738fb16d14ddc4cc372b129d535d37f8",
+      "byte_length": 29061,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/v2/config.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "docs/specs/v2/session.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "sha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+      "byte_length": 29623,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/v2/session.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.tools",
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [
+        "C024",
+        "C030"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "docs/specs/v2/tools.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4dc7bfac225a2f2ecb6235a441f5b19420c1f64c",
+      "sha256": "d699b711cc97c99cdd85d4cb59a8fab1ea1ad1916c2e7a4492c182d44b95200a",
+      "byte_length": 9403,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/v2/tools.md",
+      "read_status": "captured_orientation_only",
+      "supporting_artifact_keys": [],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "742921238462659e1a5a314f2e0238102c6e9f3a",
+      "sha256": "e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324",
+      "byte_length": 7777,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/README.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.models",
+        "s1.core.entry"
+      ],
+      "compact_excerpt_ids": [
+        "C082"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385",
+      "byte_length": 31912,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/package.json",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.entry"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/actions.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "byte_length": 12779,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/actions.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.automation"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/actions/contract.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "62521cbd3f4860049c3480a2bf9f2ed650c6c9f8",
+      "sha256": "c69997923b14da057a5cab4b3e9077884263d43c02f98dee1da44fedf65ae9bc",
+      "byte_length": 5462,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/actions/contract.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.automation"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/actions/operations.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "83c0b9e03b063bd59bc2d30317f7de85cbb99ee4",
+      "sha256": "f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4",
+      "byte_length": 12124,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/actions/operations.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.automation"
+      ],
+      "compact_excerpt_ids": [
+        "C049",
+        "C050"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/agent.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "53870dcf9d34423ab49a1241e88ec5c5db0985cf",
+      "sha256": "e37dc284213ab59730e1250b43d11d29c576b69a3135c57b8c40ce8412f723d6",
+      "byte_length": 3960,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/agent.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "compact_excerpt_ids": [
+        "C043"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/aisdk.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd",
+      "sha256": "b9352f91d4dd078df2416b83e147273396cf0087d5b05d4c62031fb5664eb8df",
+      "byte_length": 7992,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/aisdk.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.models"
+      ],
+      "compact_excerpt_ids": [
+        "C070"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "byte_length": 16892,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/atlas.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "compact_excerpt_ids": [
+        "C075",
+        "C076"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a7efc8b49f165ad767f51cb49ad9bdbb220215d1",
+      "sha256": "c121de28e34b278db6e4868eeea3b09ab793c1aca1cdf0b5c304cc9d8a12529d",
+      "byte_length": 1411,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/backend-toolkit/README.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.research"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5c8e61d202f8a79a5b967d5abc467a97b58f4a3",
+      "sha256": "d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a",
+      "byte_length": 15426,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/backend-toolkit/index.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.research"
+      ],
+      "compact_excerpt_ids": [
+        "C055"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/board/decision.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+      "sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43",
+      "byte_length": 5365,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/board/decision.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.automation"
+      ],
+      "compact_excerpt_ids": [
+        "C054"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/board/tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d1ba07e4231da173fb5aa5478375cba7f99c00b4",
+      "sha256": "87638e1e13b803490987df2a5d33fd39e9c899ad7208a7b9d54d6f0635463eb5",
+      "byte_length": 8288,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/board/tools.ts",
+      "read_status": "captured_orientation_only",
+      "supporting_artifact_keys": [],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/capability/invocation.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e2ddcb3e3f0da61b8d9d5fe8c7c74436b844e890",
+      "sha256": "6f7d95bbb07aa7d3e12c63d56dbf8458bde5b7053aaf51f97b078c41a2da53ae",
+      "byte_length": 5979,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/capability/invocation.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.capability"
+      ],
+      "compact_excerpt_ids": [
+        "C045"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/capability/mcp/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "95f3154aef1625eaac3cd8feb500504996eb074f",
+      "sha256": "f9b7b9df6645714b942f2adc46c9c1a727def9ea39a1f9e33782519bb14ca662",
+      "byte_length": 11760,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/capability/mcp/README.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.capability"
+      ],
+      "compact_excerpt_ids": [
+        "C048"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/capability/policy.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d75718a6ac8d6d3e36c5b791301a68a728be26b0",
+      "sha256": "9ae8ac1edc77785058071356c0927b1d8c1a019a2b6be5cdf564c3b0dad65022",
+      "byte_length": 8907,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/capability/policy.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.capability"
+      ],
+      "compact_excerpt_ids": [
+        "C046",
+        "C047"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/capability/tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1103ab0c8eb3d9d79cc5ff295cb267847eab629e",
+      "sha256": "7704b7d8c7742deece88da2fd87f6fb2064eb580659548d159565f10893d3b46",
+      "byte_length": 4027,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/capability/tools.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.capability"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/catalog.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "86acb93f550bc2b941e85d42cc4d62d73cbf64ba",
+      "sha256": "5c1ca6d62c4116070583f9c443be2e15c5913039415dca0bfad4c1c52508d562",
+      "byte_length": 16104,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/catalog.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.models"
+      ],
+      "compact_excerpt_ids": [
+        "C066",
+        "C067"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/config.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+      "sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6",
+      "byte_length": 20934,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/config.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "compact_excerpt_ids": [
+        "C032"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/config/trust.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78",
+      "sha256": "f00fbbf4cb98646c376ff14662e4e43d16ad64b11b439d7abccffae7723569b9",
+      "byte_length": 4047,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/config/trust.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "compact_excerpt_ids": [
+        "C033"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/control-plane/move-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "49fe728d6956ca1555a763548e9458ea5f3938dc",
+      "sha256": "302fd923821d8f2d4124b8e4cca38485abe86c3f3c74e2f0b9bc420b56ec2518",
+      "byte_length": 5381,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/control-plane/move-session.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "compact_excerpt_ids": [
+        "C080"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/credential.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3161ca0d7f1e4c68a372acb97234eab80a9024b2",
+      "sha256": "d091c6c02c5ba51b930ac55cf8ca473d048f8b336e9dccf310e2c2f6f978b2e8",
+      "byte_length": 12749,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/credential.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/credential/cipher.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "829dd497e04ee5729a6ab45cd5164bee9430a641",
+      "sha256": "599393f98c4a3dbc80ccaaf14bbdaee62417a557dc1425f77fd4781dc8e7edd7",
+      "byte_length": 6671,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/credential/cipher.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [
+        "C029"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/database/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "272a4d3d363f4871b5288d8fb879b9d9b9710d65",
+      "sha256": "5bd3a917366391323a94bec85ace411f4d8ce1ee098a4ea062bd2f75b1fcaf83",
+      "byte_length": 2209,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/database/README.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/database/database.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "aa519134efff085e960affd9be376b0dc92456e1",
+      "sha256": "04091781f953b67209dae075a13ff3f118abaab7534e58c77fb065ccafa0dd1b",
+      "byte_length": 2584,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/database/database.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "compact_excerpt_ids": [
+        "C008"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/database/migration.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b3d38c72425f3bae7f5730140070b251a8a4c8e7",
+      "sha256": "3586274f5aa72a80d5645f5caea718d3c9234f69c15ca8ddbfbb8c0b5f37186d",
+      "byte_length": 7247,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/database/migration.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/economy/admission.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f",
+      "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "byte_length": 39716,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.economy"
+      ],
+      "compact_excerpt_ids": [
+        "C071",
+        "C072",
+        "C073",
+        "C074"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/effect/app-node.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e8112f921ad7a7dcefbf6985c24995df1855c96b",
+      "sha256": "84d50e650e7354f3fcbcdc39a005cce87d35aae6519cbf4995f1252062f5b2d2",
+      "byte_length": 450,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/effect/app-node.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/event.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa7a39a0c039770d36523723e75c1f228e1142f0",
+      "sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+      "byte_length": 30184,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/event.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "compact_excerpt_ids": [
+        "C009",
+        "C010",
+        "C011",
+        "C012"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/event/seal.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "92fb956062247720c457eb443e0f271a04261a44",
+      "sha256": "64fa8568bb118d3b838961e46a5b679381f4966db203629c517075e781e9a9f2",
+      "byte_length": 14927,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/event/seal.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "compact_excerpt_ids": [
+        "C013"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/filesystem.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "46791eb40338be5fcc31bc22d110a9899d6b5d80",
+      "sha256": "035a149e885fb7bb69b4c9a5ce42ee5368eef0d6b23d8140062d5a086ba8135f",
+      "byte_length": 5414,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/filesystem.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.project"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/format/format.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0198f9c0d4aa4a9e1452339ca5c3302611478aba",
+      "sha256": "1a9918459995534b16242fcdd18c576de735fdac63a87603e0ad3ca215b036fd",
+      "byte_length": 9832,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/format/format.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/global.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ba7790536b60c6075ff37854c4db14909b779183",
+      "sha256": "385f04e29c01cfa0bb6c98ba483e22b271066b263d6fac74a88a86cf078ac790",
+      "byte_length": 2166,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/global.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/host.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+      "sha256": "9c20433f123ac8ea41773434faaceaecfe87787143689f6862ef28e05a87cb0f",
+      "byte_length": 3802,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/host.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [
+        "C060"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/installation/service.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4a75cd0fdf8467866c10c692987769751edd0f42",
+      "sha256": "4d8978f8734107e6f9bb57b5025bf75b1cd0f2320cf3a3f6aad8c8165ad79aed",
+      "byte_length": 8805,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/installation/service.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [
+        "C065"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/instruction-context.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6ba99cade2574448b9a8008b544791581b22bb11",
+      "sha256": "1ad05d900edbf814b3ed68200eb5f452089a112de60cf8b8eae0d1553d0896e1",
+      "byte_length": 6643,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/instruction-context.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/integration.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d6d9a85e8c9b2737b1f09f95700c05663735e6e4",
+      "sha256": "d1952b88c361ed35ac1dd3b2f736b6aa9588bd7e82db37c1f88fb878f09f9796",
+      "byte_length": 23521,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/integration.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "compact_excerpt_ids": [
+        "C044"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/location-mutation.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5c80742365c78301f296d5fe87fd8844a1efc44c",
+      "sha256": "1eef86e372d56b4137ea0b6576b13f8eff655737d451e2446f87f97c8a02001a",
+      "byte_length": 6457,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/location-mutation.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.project"
+      ],
+      "compact_excerpt_ids": [
+        "C036"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/location-service-map.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2f9f70c7edf21ab9e8d57eb6966aacab13c47c33",
+      "sha256": "eab185ee9a1ec6ec1c16bb686b5cd57caf9b6ef21100393277c902e7f4b8977f",
+      "byte_length": 1696,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/location-service-map.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/location-services.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c754426dde31acad2dbbfd96459b32624cfdd2e4",
+      "sha256": "1b44f26207ca9fed468fb440d3b8fe0b55cabd5207958f097a7fd2d1488d9131",
+      "byte_length": 6484,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/location-services.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.configuration"
+      ],
+      "compact_excerpt_ids": [
+        "C034"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/lsp/lsp.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7848ef568344421190171962367fe2836170d084",
+      "sha256": "e7500203a6b6dc05949917252e32d6e50a605b80d186f7b596c7a294654cb3f6",
+      "byte_length": 17577,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/lsp/lsp.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/mcp.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3d2203cb152ef733ca3b7d3231a302416a1f394b",
+      "sha256": "73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59",
+      "byte_length": 39585,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/mcp.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "compact_excerpt_ids": [
+        "C041"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/model.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "085800e0480c60a70f989469ba7c0dc09aa758eb",
+      "sha256": "0e133529b3b2735c1ca04dfe328a8b862424f6b64736fc0bde7ebd5c6599988b",
+      "byte_length": 1112,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/model.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.models"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/observability/otlp.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4d403d30bded809a37d426a8c56361ca8d66ddf7",
+      "sha256": "4a76113bce60f765e3d431eb6c5c46e3d224d889da83a8cfd00143d1c52a3003",
+      "byte_length": 2545,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/observability/otlp.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/omni.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "sha256": "b032344ff11c078ecdc062bd796a5ad75ccb046a319d674ab7faba659d84b3ab",
+      "byte_length": 8446,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/omni.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [
+        "C062"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/permission.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2e3d29d3f1ec1fe805d21af091029721c9fa738e",
+      "sha256": "19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6",
+      "byte_length": 14981,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/permission.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [
+        "C025",
+        "C026"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/plugin.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5c3c232bfa46b3f8cfad106c2db4787d6c374818",
+      "sha256": "8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302",
+      "byte_length": 11007,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/plugin.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "compact_excerpt_ids": [
+        "C039",
+        "C040"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/plugin/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "24afcfd763b3a57d9de07ee4ccbe4691094be044",
+      "sha256": "e5a3ebc62eee4c3b135239bb0e81bdf64196e3456ccd5fa8e3f4aa528ead8519",
+      "byte_length": 2288,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/plugin/README.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/process.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "sha256": "7bfd3adf7274bd90bfe4cf1d7fd3f4bb256f6914dbd74cea00127e33704a6875",
+      "byte_length": 12835,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/process.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [
+        "C061"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/project.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bbedbbf34cbc5b431538db37993c0cc0830fa393",
+      "sha256": "a430e2c36fdf6544efcb36c6d13da86826083b41073a010d788e8629b9f89a63",
+      "byte_length": 9714,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/project.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.project"
+      ],
+      "compact_excerpt_ids": [
+        "C035"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/project/checkpoint.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+      "sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a",
+      "byte_length": 8309,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/project/checkpoint.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.project"
+      ],
+      "compact_excerpt_ids": [
+        "C037"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/project/directories.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7863f4d2640a9b4bd85febab338610446bf839ef",
+      "sha256": "2b4d307a7098dd77da07bcd6dfcdd3bc552b7f6a585e35ff49aba6f320985d4a",
+      "byte_length": 5819,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/project/directories.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.project"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/provider.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "56a8629db307e3d904c355789db9e5b8256e644f",
+      "sha256": "3c8f823fffdf07887fc5d398b728fb879249ff305a3f62226e0727dd29f84a9d",
+      "byte_length": 754,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/provider.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.models"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/pty.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "sha256": "03f62b4e17ac231291eb4c726d92415f63fa4b08eb66ced6d5c60cb9a3d0b4be",
+      "byte_length": 18798,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.runtime"
+      ],
+      "compact_excerpt_ids": [
+        "C063",
+        "C064"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/question.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cb64c1eb972bc01c6019f52a4fb2e71f37110457",
+      "sha256": "37719b3b7f50d433f9338fb9660514de8fe269f8628e22fb7764680bfabda43c",
+      "byte_length": 6273,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/question.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "byte_length": 2519,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/rag-studio/sql.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "compact_excerpt_ids": [
+        "C081"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "byte_length": 30225,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/relay.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.boundaries"
+      ],
+      "compact_excerpt_ids": [
+        "C077",
+        "C078",
+        "C079"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/research-toolkit/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095",
+      "sha256": "9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c",
+      "byte_length": 14147,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/research-toolkit/index.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.research"
+      ],
+      "compact_excerpt_ids": [
+        "C056",
+        "C057",
+        "C058"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/research/ledger.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf",
+      "sha256": "67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839",
+      "byte_length": 9660,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/research/ledger.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.research"
+      ],
+      "compact_excerpt_ids": [
+        "C059"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/scheduled-task.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+      "sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+      "byte_length": 26123,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/scheduled-task.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.automation"
+      ],
+      "compact_excerpt_ids": [
+        "C051",
+        "C052",
+        "C053"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/scheduled-task/port.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c",
+      "sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+      "byte_length": 2092,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/scheduled-task/port.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.capability"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "byte_length": 34126,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-admission",
+        "s1.core.project"
+      ],
+      "compact_excerpt_ids": [
+        "C001",
+        "C038"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "dcc7d968374e98a5b718c997aaaa8770a48367f3",
+      "sha256": "1d82b8589122ca30cba3b3101e7c99df162b0be86fe06aed972ced21734e3348",
+      "byte_length": 1348,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/README.md",
+      "read_status": "captured_orientation_only",
+      "supporting_artifact_keys": [],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/compaction.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+      "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+      "byte_length": 14270,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/compaction.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context"
+      ],
+      "compact_excerpt_ids": [
+        "C018"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/context-epoch.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "65b17a86a4fb131d427e12d489cec2c06a088094",
+      "sha256": "b6e07dccc330779192975a58d763941a9b8ae458cc6974e040c26cd149ff7fd8",
+      "byte_length": 6103,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/context-epoch.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context"
+      ],
+      "compact_excerpt_ids": [
+        "C017"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/execution.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+      "sha256": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+      "byte_length": 2434,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/execution.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-execution"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/execution/local.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+      "sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97",
+      "byte_length": 2471,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/execution/local.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-execution"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/history.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "60f31114138a8920e8e81a031815897568dba211",
+      "sha256": "1989745f9737d404950f166faf43df5890ccb13df6561eeae106032dc79ae79a",
+      "byte_length": 3749,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/history.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "byte_length": 13624,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/input.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "compact_excerpt_ids": [
+        "C002"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/projector.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "sha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "byte_length": 19242,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/projector.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "byte_length": 5893,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/run-coordinator.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-execution"
+      ],
+      "compact_excerpt_ids": [
+        "C003",
+        "C004"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/runner/execution-host.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c0d2b18d120a1b3380d8bab3ba5405cdc8f70e1e",
+      "sha256": "b2fb2a1ace88be09a099f386269d71b12f3b00f838557590f2bf916a3507ced7",
+      "byte_length": 9616,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/execution-host.ts",
+      "read_status": "captured_orientation_only",
+      "supporting_artifact_keys": [],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/runner/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6da5d89f1fb9528d1d1bb53ac4a72d3aa3506845",
+      "sha256": "08188f1e93d6b49e27f1b02d227516f6b2cd61f8ebc2f831ab8e6903685af109",
+      "byte_length": 2428,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/index.ts",
+      "read_status": "captured_orientation_only",
+      "supporting_artifact_keys": [],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "byte_length": 39006,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/llm.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-execution",
+        "s1.core.context",
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [
+        "C005",
+        "C006",
+        "C007",
+        "C019"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/runner/model.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b",
+      "sha256": "25c8400ee9162fb798aafa3cf2c540b7364c097e669a7b361489e5cf1610db5f",
+      "byte_length": 14022,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/model.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.models"
+      ],
+      "compact_excerpt_ids": [
+        "C068",
+        "C069"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+      "sha256": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+      "byte_length": 7337,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/sql.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.session-admission"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/session/store.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1e44d051f1a51b816bfeb96ce46dbc0747d07aff",
+      "sha256": "2532e550ec0d74f7b07c33560651db176479d6b9d827fdc19d1d1198ba0628de",
+      "byte_length": 4422,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/store.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.persistence"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/skill.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "dc8d8f67c6b658ce7716a2b17e0c9b2e517c6db0",
+      "sha256": "07c062a4f778a329572ba0217df3e72315c61bf5baa135414324af63dd28a18b",
+      "byte_length": 9172,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/skill.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "compact_excerpt_ids": [
+        "C042"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/state.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "116e268bb9edf045985e1598a4e1a3ed1d410872",
+      "sha256": "237de5f76069595f50c7e7049dc72fe295a6b0ecaa615d849ef5b67ecd9f4189",
+      "byte_length": 4662,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/state.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.extensions"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/system-context/builtins.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "66a1874ec8aca00c305583b60a66cd5e882d4eae",
+      "sha256": "57520a5beaea3ceee69dbfa4e2e0360a713082ba7376a3fd8a9ab1626d08abac",
+      "byte_length": 2304,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/system-context/builtins.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/system-context/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "af6e4b8397ac971476c63ca8c0e0d65273ddc933",
+      "sha256": "1f75c1982f73364cd29d5b5a5d0e34e2c848b83de0d5024be63ae61d24e448b1",
+      "byte_length": 11380,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/system-context/index.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context"
+      ],
+      "compact_excerpt_ids": [
+        "C014",
+        "C015",
+        "C016"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/system-context/registry.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9402523a4b03cb21465da1285e2488eb7d2c11bd",
+      "sha256": "27505e7f29016e62fc521c6d20a132003d1487c9e7099859cd7c1cab4ff1952e",
+      "byte_length": 2494,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/system-context/registry.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.context"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool-output-store.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "605a99e72e0482a998e2521a26f025589f81da68",
+      "sha256": "179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8",
+      "byte_length": 9643,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool-output-store.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.tools"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool-safety-sandbox.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "61a252c15cc35fa534593413045a6f54a15b6665",
+      "sha256": "bbf5091b282f9fbeea862f3ebc3d9365a87a59fb414197eb6524268fbc32478a",
+      "byte_length": 44865,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool-safety-sandbox.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [
+        "C027",
+        "C028"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool-safety.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "effd9af70e95a38de93c9e472bd03728666c4da8",
+      "sha256": "c33a3088b858884bbb2b358836df8a971e80575bf3d15eccfe75ac554c1aa015",
+      "byte_length": 35966,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool-safety.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "98ab3e6cc58259a418b7ab80d939295a21eeba2e",
+      "sha256": "381bcdefe9f3f40426c8e955ce3cdbc2295d067a46f568e7623671dfaabf7f24",
+      "byte_length": 4553,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/AGENTS.md",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.tools"
+      ],
+      "compact_excerpt_ids": [
+        "C021"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/agent-terminal.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d8cbde3d8436081eb9c3815bea334915e6efef0b",
+      "sha256": "a869ee14c21054a21d7f7adbe289588655f49d3c1cad7d21b6d4f22a30000fc4",
+      "byte_length": 4813,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/agent-terminal.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/application-tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1633897cd6c71cc3abdd22901829b95af2dd96aa",
+      "sha256": "612d045ddfea89b2a98b330f390de68d2c1711cf0aaa651fbdd01d10e320900d",
+      "byte_length": 1708,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/application-tools.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.tools"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/apply-patch.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c8ba6c68abbd121db47475f17163d72c381f55f9",
+      "sha256": "f0ee81a3b65e46383bd5a2a133279bb82890be5a35f4f7262959e12c459787be",
+      "byte_length": 11258,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/apply-patch.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.tools"
+      ],
+      "compact_excerpt_ids": [
+        "C023"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/bash.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b",
+      "sha256": "e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473",
+      "byte_length": 17377,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/bash.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.security"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/read.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1e38e74b7231691a31d2ba217267326e74189558",
+      "sha256": "1ca9741cfd96e11391c0cd457a354ad07a45072ed005b2c77b07c2710c6134c1",
+      "byte_length": 5745,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/read.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.tools"
+      ],
+      "compact_excerpt_ids": [
+        "C022"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/registry.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ab6a6dc2f8c993aec804ebdfc73d89885e8a1453",
+      "sha256": "276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085",
+      "byte_length": 17719,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/registry.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.tools"
+      ],
+      "compact_excerpt_ids": [
+        "C020"
+      ],
+      "semantic_acceptance": false
+    },
+    {
+      "path": "packages/core/src/tool/tool.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2ecde42373ef59b1bf2352e6272141a610feea16",
+      "sha256": "69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e",
+      "byte_length": 8883,
+      "captured_via": "GitHub connector fetch_file encoding=base64",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/tool/tool.ts",
+      "read_status": "semantically_read_targeted_ranges",
+      "supporting_artifact_keys": [
+        "s1.core.tools"
+      ],
+      "compact_excerpt_ids": [],
+      "semantic_acceptance": false
+    }
+  ]
+}

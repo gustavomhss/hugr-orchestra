@@ -1,0 +1,55 @@
+{
+  "status": "PASS_TRANSPORT_ONLY",
+  "frozen_at": "2026-11-11T16:50:21.971686+00:00",
+  "artifact_count": 36,
+  "body_bytes": 157851,
+  "population_count": 2236,
+  "paths_sha256": "67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889",
+  "groups": [
+    {
+      "group": "a",
+      "assigned": 1441,
+      "artifacts": 17,
+      "captures": 102,
+      "fragment_sha256": "528eaae032b21708a9a55ef027bd7449b6e29d0c9881f26d84b16d58805a67e7",
+      "coverage_sha256": "7eeb9775351e5e85021c4bb584cd8833cf9bb36326c87827077cb2033bde7337",
+      "compact_evidence_sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676",
+      "body_bytes": 81782
+    },
+    {
+      "group": "b",
+      "assigned": 472,
+      "artifacts": 9,
+      "captures": 291,
+      "fragment_sha256": "1d018091d48893b69d390db03c01d39d785ce58c1a52230471308a1bfacab98b",
+      "coverage_sha256": "1bc6b1d714b3dadf7cff70325b6c5bc5705cc9edec58a5242b00af78007e50c3",
+      "compact_evidence_sha256": "b16b4f18dad4c2910f7d0b7a8327004063a198ed1637a85e747e24ba5db13edd",
+      "body_bytes": 42153
+    },
+    {
+      "group": "c",
+      "assigned": 323,
+      "artifacts": 10,
+      "captures": 285,
+      "fragment_sha256": "d91c3605542369e8b196daccbf25571f9dfd31d8b6ee1522c78178f2f91be27a",
+      "coverage_sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9",
+      "compact_evidence_sha256": "87206e9b82b1e6f1094bcdcdc03fb6dca310b19f9ad2085477564a6518a50295",
+      "body_bytes": 33916
+    }
+  ],
+  "distinct_source_blobs": 675,
+  "source_capture_count": 678,
+  "native_package_sha256": "df1ac005133bc4b89577a581ea9053bd7a5231cf98b7b99c4a67db58921ed670",
+  "source_archive": {
+    "path": "evidence/source-captures.zip",
+    "sha256": "429f82f075aaf8aacff755137015d9bce0623c6ad9746b86fe8eae4bcd9726d4",
+    "byte_length": 1339105,
+    "format": "ZIP, exact original bytes, relative producer source paths, extraction restores sources/ paths from producer manifests"
+  },
+  "does_not_prove": [
+    "semantic acceptance",
+    "runtime publication or observation",
+    "consumer success",
+    "product tests or CI"
+  ]
+}
