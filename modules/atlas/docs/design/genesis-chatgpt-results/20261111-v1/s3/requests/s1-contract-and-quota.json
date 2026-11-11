@@ -1,0 +1,35 @@
+{
+  "schema": "genesis-session-dependency-request/v1",
+  "campaign": "20261111-v1",
+  "from": "s3",
+  "to": "s1",
+  "state": "OPEN",
+  "request_id": "s3-s1-freeze-and-reconciliation-001",
+  "consumed_handoff": {
+    "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+    "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+  },
+  "resolved": [
+    "Protocol digest mismatch",
+    "Missing criterion catalog"
+  ],
+  "needed": [
+    "Finite needs/artifacts/domains and mandatory closure with independent valid control",
+    "Frozen coherence/compatibility and shared interface/file-ownership contract",
+    "Applicable production/execution allocation",
+    "Reconcile five observed native preparation packets against bootstrap sizing of four preparation plus two protected correction units; do not silently relabel environment preparation"
+  ],
+  "allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "criteria_ref": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "new_native_packets_started_after_binding": 0,
+  "effect": "Recovery execution remains blocked; existing root preparation packet continues deterministic correction and handoff publication only."
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "genesis-s3-build-source-materialization-summary/v1",
+  "source_anchor_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_sha": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "actual_head_sha": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "scope": [
+    "modules/atlas/packages",
+    "modules/atlas/scripts",
+    "modules/atlas/package.json",
+    "modules/atlas/package-lock.json",
+    "modules/atlas/tsconfig.json",
+    "modules/atlas/tsconfig.base.json"
+  ],
+  "verified_files": 1040,
+  "mismatches": 0,
+  "copied_in_this_pass": 0,
+  "all_repository_sources_materialized": false,
+  "full_original_receipt": {
+    "path": "receipts/runtime/build-source-materialization-full.json.gz",
+    "encoding": "gzip",
+    "sha256": "c7e08eaf25a7850027bfedb82ffd6319eadad6bd00fb5183fb75ff68af5844d7",
+    "uncompressed_sha256": "dec80e37d020819423a6f4222df2fd6bc679fd4145892c0b4217f479035e9f4b",
+    "uncompressed_bytes": 273724
+  },
+  "scope_limit": "Atlas packages/scripts and four build manifests only; not whole-Orchestra semantic coverage or a complete worktree claim."
+}

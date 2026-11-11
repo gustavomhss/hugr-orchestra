@@ -1,16 +1,17 @@
 {
   "schema": "genesis-s3-dependency-validation/v1",
   "campaign": "20261111-v1",
-  "observed_at": "2026-11-11T14:16:16.624Z",
+  "observed_at": "2026-11-11T14:30:04.268Z",
   "dependencies": [
     {
       "session": "s1",
       "consumed_for_inspection": {
-        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
-        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
       },
-      "handoff_blob": "6f5ab32575006b170eba1a87c2c0c854f4ec005c",
+      "handoff_blob": "ceec0e21d79f39be0b3ed2c06e88502a7e35a387",
+      "handoff_sequence": 2,
       "declared_state": "WORKING",
       "checks": {
         "schema": true,
@@ -18,23 +19,27 @@
         "session": true,
         "source": true,
         "protocol_commit": true,
-        "protocol_sha256": false,
-        "scope_present": false,
-        "candidate_present": false
+        "protocol_sha256": true
       },
-      "protocol_sha256_declared": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
-      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
       "accepted_as_execution_dependency": false,
-      "reason": "Scope, production allocation and candidate remain unavailable; S1 also has a protocol digest mismatch."
+      "reason": "Corrected protocol binding and 50-row author-frozen criterion catalog consumed. Scope/independent control/interfaces and production allocation are still absent; budget remains preparation-only."
     },
     {
       "session": "s2",
       "consumed_for_inspection": {
-        "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+        "commit": "2cd07208e7611429586c70eda87066b4330d9b94",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
-        "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df"
+        "sha256": "ef8cb2216ed458378b1c75978c473fd8e9c0bf63612222d45a300445c9f9c07a"
       },
-      "handoff_blob": "a03c5b3ec78b275505f7d66463ba1de76f7af698",
+      "handoff_blob": "45480498a1e780eca5ce965020e926275938b81a",
+      "handoff_sequence": 2,
       "declared_state": "WORKING",
       "checks": {
         "schema": true,
@@ -42,39 +47,96 @@
         "session": true,
         "source": true,
         "protocol_commit": true,
-        "protocol_sha256": true,
-        "scope_present": false,
-        "candidate_present": false
+        "protocol_sha256": true
       },
-      "protocol_sha256_declared": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
-      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": null,
       "accepted_as_execution_dependency": false,
-      "reason": "Working preparation checkpoint; candidate_revision is null and no accepted layer manifest/restore path is delivered."
-    },
-    {
-      "session": "s4",
-      "consumed_for_inspection": {
-        "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
-        "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad"
-      },
-      "declared_state": "BLOCKED",
-      "protocol_digest_matches": true,
-      "accepted_as_execution_dependency": false,
-      "reason": "Preparation checkpoint without integrated candidate or binding judgments. This is not receiver acknowledgment of the final S3 package."
+      "reason": "Latest discovered branch HEAD contains the same sequence-2 handoff bytes as 973cd9951cc09e3dc8b403eb99c277e13d169f66. Candidate is null, with no accepted layer/manifest or generic restore binding."
     },
     {
       "session": "s5",
       "consumed_for_inspection": {
-        "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+        "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
-        "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00"
+        "sha256": "3c14f1033c0387e6ddf76f857a2d88d67db53519ff538940a83cfab7277b6558"
       },
-      "declared_state": "BLOCKED",
-      "protocol_digest_matches": true,
+      "handoff_blob": "fb91b0efb4757900496175f616a1cf44f76ca685",
+      "handoff_sequence": 2,
+      "declared_state": "WORKING",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "session": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": true
+      },
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": null,
       "accepted_as_execution_dependency": false,
-      "reason": "Preparation checkpoint without integrated candidate or binding judgments. This is not receiver acknowledgment of the final S3 package."
+      "reason": "No integrated candidate or two applicable judgments. The handoff does record consumption of S3 initial checkpoint 87804c85d4241e68a2fc3f5a5693c171b4f1a9c3, not the later payload."
+    },
+    {
+      "session": "s4",
+      "consumed_for_inspection": {
+        "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad"
+      },
+      "handoff_blob": "7ea8fc5f90177bd57ba448cf8bd6841477f9357e",
+      "handoff_sequence": 1,
+      "declared_state": "BLOCKED",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "session": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": true
+      },
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": null,
+      "accepted_as_execution_dependency": false,
+      "reason": "Latest discovered branch HEAD still contains the initial sequence-1 handoff. No integrated host candidate or final S3 package acknowledgment is claimed."
     }
   ],
-  "polling": "Finite discovery completed. New branches are material information, but these pinned checkpoints do not release dependent execution."
+  "criteria_catalog_ref": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "allocation_scope": "FROZEN_PREPARATION_ONLY",
+  "resolved_protocol_error": {
+    "previous_evidence": {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/blockers.json",
+      "sha256": "fd9a778de150a989274142c4c14b81517019846b196f256d4c195ae831ad8fcc"
+    },
+    "successor_handoff": {
+      "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+      "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+    },
+    "erratum_ref": {
+      "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap-binding-correction.json",
+      "sha256": "4565b9188978dc8ce69e209c58677f8e71bdb8aaaa59a47556407ca582da77ea"
+    }
+  },
+  "discovery": {
+    "cycle": 2,
+    "queries_per_dependency_in_this_cycle": 2,
+    "maximum_per_cycle": 3,
+    "trigger": "S1/S2 branches appeared with material new preparation contracts; S3 payload now published at 967141e5022e77005f76320cd0a4b3adbfd6f8c9.",
+    "behavior": "No waiting loop; exact checkpoints inspected and remaining dependencies named."
+  }
 }

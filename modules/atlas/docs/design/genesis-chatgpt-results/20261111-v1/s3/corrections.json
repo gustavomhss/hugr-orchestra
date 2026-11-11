@@ -1,0 +1,68 @@
+{
+  "schema": "genesis-s3-correction-tracking/v1",
+  "campaign": "20261111-v1",
+  "corrections": [
+    {
+      "id": "S3-ENV-01",
+      "kind": "ENVIRONMENT_PREPARATION",
+      "status": "CORRECTED_AND_OBSERVED",
+      "original_attempt": "s3-root-runtime-build-001",
+      "original_receipt_path": "receipts/runtime/runtime-build.json",
+      "finding": "Copied dependencies did not have the repository postinstall packaging shim; build failed with TS1295/1484/1287 in @c4312/scip.",
+      "correction": "Run unchanged scripts/fix-scip-types.mjs against own copied node_modules.",
+      "correction_receipt_path": "receipts/runtime/scip-postinstall.json",
+      "renewed_proofs": [
+        "receipts/runtime/runtime-build-corrected.json",
+        "receipts/runtime/operational-bootstrap-read.json"
+      ],
+      "source_code_changed": false,
+      "judgment_or_recovery_acceptance": false
+    },
+    {
+      "id": "S3-B06",
+      "kind": "DEPENDENCY_BINDING",
+      "status": "RESOLVED_BY_S1_SUCCESSOR",
+      "original_evidence": {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/blockers.json",
+        "sha256": "fd9a778de150a989274142c4c14b81517019846b196f256d4c195ae831ad8fcc"
+      },
+      "correction_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap-binding-correction.json",
+        "sha256": "4565b9188978dc8ce69e209c58677f8e71bdb8aaaa59a47556407ca582da77ea"
+      },
+      "renewed_proof_path": "receipts/dependencies/cycle2-binding-verification.json"
+    },
+    {
+      "id": "S3-ROLLBACK-01",
+      "kind": "SOURCE_INSPECTION_FINDING",
+      "status": "PROPOSAL_PENDING_SERIAL_INTEGRATION",
+      "proposal_ref": {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/proposals/rollback-activation-refusal.json",
+        "sha256": "91b0ef9e45e01afce644411b0b058e5dfdd114cd2bb7870d901f3ba1904def2b"
+      },
+      "patch_ref": {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/proposals/rollback-activation-refusal.patch",
+        "sha256": "590ecbf74b8a8cbb856904d5aa350a08dfce6ec0c8eb69d5b31de781ba81ec73"
+      },
+      "runtime_reproduction": "NOT_RUN",
+      "applicability_check": "exit 0; not application or product behavior",
+      "required_renewal": "S5 exact integrated candidate, affected CI controls and governed A-to-B-to-retained-A observations; both S5 judges on changed criteria."
+    },
+    {
+      "id": "S3-RESUME-01",
+      "kind": "SOURCE_INSPECTION_GAP",
+      "status": "OPEN",
+      "evidence_ref": {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/agents/durable-resume.md",
+        "sha256": "15e52a754bb7a8ec3ceb1cbb60198b1284c7a09bcf63afde93cd9234e7aff060"
+      },
+      "required_change": "S2/S5 specify and integrate real durable completion/decision restore without replay; S3 then binds and executes the prepared interruption scenarios."
+    }
+  ],
+  "uncertain_native_attempts": "No new uncertain native result observed in S3; physical attempts/tokens/billing remain UNKNOWN. Historical unresolved attempts remain unresolved."
+}

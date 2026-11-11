@@ -1,0 +1,10 @@
+{
+  "schema": "genesis-observation-limit/v1",
+  "observed_at": "2026-11-11T14:33:37.748681+00:00",
+  "original_receipt": "receipts/runtime/operational-bootstrap-read.json",
+  "snapshot_method_in_original": "Files under .atlas whose basename starts with projection or suffix is .cas.",
+  "limitation": "The original before/after fields are a filtered observation, not a complete pre-read CAS snapshot. Hash-named CAS entries need the explicit cas-directory inventory below.",
+  "post_read_full_cas_inventory": [],
+  "pre_read_full_cas_inventory": "NOT_OBSERVED_BY_THE_ORIGINAL_FILTER",
+  "effect_on_claim": "No recovery inference; deciding runtime observation is the exact reader HOLD. No prior generation identity or activation is claimed."
+}
