@@ -45,8 +45,8 @@ for (const item of cases) {
         return Effect.die("API RED E6: real Claude host does not implement describeModel")
       return host.describeModel(item.input)
     })))
-    expect(result.status).toBe(item.status)
-    if ("reason" in item) expect(result.reason).toBe(item.reason)
+    expect(result).toMatchObject({ status: item.status })
+    if ("reason" in item) expect(result).toMatchObject({ reason: item.reason })
     expect(EligibilityFixture.state.options).toEqual([])
   })
 }

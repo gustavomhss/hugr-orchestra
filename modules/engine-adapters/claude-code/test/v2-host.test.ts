@@ -1,3 +1,4 @@
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 import { beforeEach, expect, test } from "bun:test"
 import type { HookInput, McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
@@ -77,6 +78,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
 const collect = (turn: ExecutionHost.Turn) =>
   Effect.runPromise(
     ClaudeCodeHost.make.pipe(
+      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.flatMap((host) => Stream.runCollect(host.stream(turn))),
       Effect.provide(sdk),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),
@@ -105,6 +107,7 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
   const run = (history: ReadonlyArray<unknown>) =>
     Effect.runPromise(
       ClaudeCodeHost.make.pipe(
+        Effect.provide(ClaudeCodeAccountFixture.layer),
         Effect.flatMap((host) => Stream.runCollect(host.stream(turn(history)))),
         Effect.provide(sdk),
         Effect.provideService(ClaudeCodeSDK.Environment, {}),
@@ -761,6 +764,7 @@ test("a query kept up for background work is closed before the session's next tu
     // One host serves both turns, as the layer's does: it is the host that remembers the query it kept up.
     await Effect.runPromise(
       ClaudeCodeHost.make.pipe(
+        Effect.provide(ClaudeCodeAccountFixture.layer),
         Effect.flatMap((host) =>
           Effect.gen(function* () {
             yield* Stream.runCollect(host.stream(turnOf({ session })))
@@ -822,6 +826,7 @@ test("a prompt Claude Code already took is not sent again after a stop or a brok
   const run = (history: ReadonlyArray<unknown>) =>
     Effect.runPromise(
       ClaudeCodeHost.make.pipe(
+        Effect.provide(ClaudeCodeAccountFixture.layer),
         Effect.flatMap((host) =>
           Stream.runCollect(
             host.stream(

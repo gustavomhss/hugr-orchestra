@@ -134,6 +134,7 @@ for (const stale of [false, true]) {
   it.live(`BEHAVIOR E6: ${stale ? "stale ready" : "unsupported"} registered custom host cannot execute`, () => Effect.gen(function* () {
     const session = yield* setup
     yield* session.switchAgent({ sessionID: Harness.sessionID, agent: "custom-seat" })
+    EligibilityFixture.state.useCustomHost = true
     if (stale) {
       EligibilityFixture.state.customReady = true
       expect(yield* EligibilityFixture.custom.describeModel()).toEqual({ status: "ready" })

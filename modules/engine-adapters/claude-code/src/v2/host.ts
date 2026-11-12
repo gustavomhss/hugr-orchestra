@@ -6,10 +6,11 @@ import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
 import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
-import { Duration, Effect, Layer, Stream } from "effect"
+import { Cause, Duration, Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
+import { ModelExecutionOptions } from "@orchestra/core/model-execution-options"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
@@ -125,6 +126,7 @@ const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path
 export const make = Effect.gen(function* () {
   const sdk = yield* ClaudeCodeSDK.Service
   const env = yield* ClaudeCodeSDK.Environment
+  const account = yield* ClaudeCodeAccount.Service
   // Queries kept alive past their turn because background work still runs: one per Orchestra session, closed when
   // that work reports, when the session's next turn starts, or when it has waited long enough.
   const tails = new Map<string, { readonly close: () => Promise<void> }>()
@@ -140,6 +142,48 @@ export const make = Effect.gen(function* () {
   return {
     id: ID,
     stateKey: STATE_KEY,
+    describeModel: Effect.fn("ClaudeCodeHost.describeModel")(function* (
+      input: Parameters<ExecutionHost.Interface["describeModel"]>[0],
+    ) {
+      if (input.ref) {
+        const model = input.model
+        if (
+          input.ref.providerID !== "anthropic" ||
+          !model ||
+          model.providerID !== input.ref.providerID ||
+          model.id !== input.ref.id
+        )
+          return { status: "unsupported" as const, reason: "host-model-unsupported" as const }
+        if (!model.enabled) return { status: "unavailable" as const, reason: "host-unavailable" as const }
+        const selected = yield* ModelExecutionOptions.selectVariant(model, input.ref.variant).pipe(
+          Effect.flatMap((value) =>
+            ModelExecutionOptions.options(value.model, value.variant).pipe(
+              Effect.map((options) => ({ options, variant: value.variant })),
+            ),
+          ),
+          Effect.catch(() => Effect.succeed(undefined)),
+        )
+        if (!selected) return { status: "unavailable" as const, reason: "host-options-unsupported" as const }
+        const variant = selected.variant?.id
+        if (
+          (variant !== undefined && variant !== "default" && !EFFORTS.some((effort) => effort === variant)) ||
+          selected.options.generation !== undefined ||
+          Object.keys(selected.options.providerOptions).length > 0
+        )
+          return { status: "unsupported" as const, reason: "host-options-unsupported" as const }
+      }
+      return yield* account.account.pipe(
+        Effect.map(
+          (value): ExecutionHost.Decision =>
+            value.signedIn ? { status: "ready" } : { status: "unavailable", reason: "host-unavailable" },
+        ),
+        Effect.catchCause((cause) =>
+          Cause.hasInterruptsOnly(cause)
+            ? Effect.failCause(cause)
+            : Effect.succeed({ status: "unavailable" as const, reason: "host-unavailable" as const }),
+        ),
+      )
+    }),
     stream: (turn) =>
       Stream.unwrap(
         Effect.gen(function* () {
@@ -478,7 +522,7 @@ export const make = Effect.gen(function* () {
 export const node = makeLocationNode({
   service: ExecutionHost.Service,
   layer: Layer.effect(ExecutionHost.Service, make.pipe(Effect.map((host) => ExecutionHost.of([host])))),
-  deps: [ClaudeCodeSDK.node],
+  deps: [ClaudeCodeSDK.node, ClaudeCodeAccount.node],
 })
 
 export const contribution: Host.Contribution = {

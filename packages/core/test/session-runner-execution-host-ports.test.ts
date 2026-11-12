@@ -60,6 +60,7 @@ const client = Layer.succeed(
 const host: ExecutionHost.Interface = {
   id: "claude-code",
   stateKey: "claudeCode",
+  describeModel: () => Effect.succeed({ status: "ready" as const }),
   stream: (turn) =>
     streamOf ? streamOf(turn) : Stream.unwrap(script(turn).pipe(Effect.map((events) => Stream.fromIterable(events)))),
 }

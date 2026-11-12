@@ -15,7 +15,7 @@ import { ScriptedSDK } from "../../../modules/engine-adapters/claude-code/test/f
 
 const options: ScriptedSDK.Options[] = []
 export const state = { options, signedIn: true, accountFails: false, registered: true,
-  customReady: false, customCalls: 0, tools: 0, materializations: 0, nativeResolves: 0, nativeModel: undefined as Model | undefined }
+  customReady: false, useCustomHost: false, customCalls: 0, tools: 0, materializations: 0, nativeResolves: 0, nativeModel: undefined as Model | undefined }
 export const ref = (providerID: string, variant?: string) => ModelV2.Ref.make({
   providerID: ProviderV2.ID.make(providerID), id: ModelV2.ID.make("fixture"),
   ...(variant === undefined ? {} : { variant: ModelV2.VariantID.make(variant) }),
@@ -34,7 +34,7 @@ export const account = Layer.succeed(ClaudeCodeAccount.Service, ClaudeCodeAccoun
 export const claude = ClaudeCodeHost.make.pipe(Effect.provide(sdk), Effect.provide(account),
   Effect.provideService(ClaudeCodeSDK.Environment, {}))
 export const custom = {
-  id: "eligibility-fixture", stateKey: "eligibilityFixture",
+  id: "claude-code", stateKey: "eligibilityFixture",
   describeModel: () => Effect.sync(() => state.customReady ? { status: "ready" as const }
     : { status: "unsupported" as const, reason: "host-model-unsupported" as const }),
   stream: () => Stream.suspend(() => {
@@ -43,7 +43,7 @@ export const custom = {
   }),
 }
 export const hosts = Layer.effect(ExecutionHost.Service, claude.pipe(Effect.map((host) => ExecutionHost.Service.of({
-  get: (engine) => !state.registered ? undefined : engine === host.id ? host : engine === custom.id ? custom : undefined,
+  get: (engine) => !state.registered ? undefined : engine === host.id ? state.useCustomHost ? custom : host : undefined,
 }))))
 
 export const seed = Effect.gen(function* () {
@@ -52,6 +52,7 @@ export const seed = Effect.gen(function* () {
   state.accountFails = false
   state.registered = true
   state.customReady = false
+  state.useCustomHost = false
   state.customCalls = 0
   state.tools = 0
   state.materializations = 0
@@ -62,7 +63,7 @@ export const seed = Effect.gen(function* () {
     draft.update(AgentV2.defaultID, (agent) => { agent.engine = "orchestra"; agent.mode = "primary" })
     draft.update(AgentV2.ID.make("host-seat"), (agent) => { agent.engine = "claude-code"; agent.mode = "primary" })
     draft.update(AgentV2.ID.make("inherit-seat"), (agent) => { agent.engine = undefined; agent.mode = "all" })
-    draft.update(AgentV2.ID.make("custom-seat"), (agent) => { agent.engine = "eligibility-fixture"; agent.mode = "primary" })
+    draft.update(AgentV2.ID.make("custom-seat"), (agent) => { agent.engine = "claude-code"; agent.mode = "primary" })
   })
   const integrations = yield* Integration.Service
   yield* integrations.transform((draft) => {

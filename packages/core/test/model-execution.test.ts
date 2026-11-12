@@ -47,12 +47,12 @@ const draft = (agentID = "maestro") => ({ type: "draft" as const, agentID })
 it.effect("API E6: native inventory keeps globally available unsupported models and exact invalid selections", () => Effect.gen(function* () {
   yield* setup
   const catalog = yield* Catalog.Service
-  expect((yield* catalog.model.available()).map((model) => model.providerID)).toContain("google")
+  expect((yield* catalog.model.available()).map((model) => model.providerID)).toContain(ProviderV2.ID.make("google"))
   const result = yield* describe({ context: draft(), model: EligibilityFixture.ref("google") })
   expect(result.selection).toMatchObject({ ref: EligibilityFixture.ref("google"), engine: "orchestra", status: "unsupported", reason: "unsupported-api" })
   expect(result.models.find((row) => row.model.providerID === "openai")).toMatchObject({ engine: "orchestra", status: "ready" })
   expect(result.models.find((row) => row.model.providerID === "google")).toMatchObject({ status: "unsupported" })
-  expect((yield* catalog.model.available()).map((model) => model.providerID)).toContain("google")
+  expect((yield* catalog.model.available()).map((model) => model.providerID)).toContain(ProviderV2.ID.make("google"))
   expect((yield* describe({ context: draft() })).selection).toBeUndefined()
 }))
 
@@ -122,7 +122,7 @@ for (const condition of ["unregistered", "signed-out", "account-error", "provide
     }
     const result = yield* describe({ context: draft("host-seat"), model: EligibilityFixture.ref("anthropic") })
     expect(result.selection).toMatchObject({ engine: "claude-code", status: "unavailable" })
-    if (condition !== "provider-disabled") expect(result.selection?.reason).toBe(condition === "unregistered" ? "host-unregistered" : "host-unavailable")
+    if (condition !== "provider-disabled") expect(result.selection).toMatchObject({ reason: condition === "unregistered" ? "host-unregistered" : "host-unavailable" })
     expect(EligibilityFixture.state.options).toEqual([])
   }))
 }

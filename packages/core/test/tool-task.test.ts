@@ -163,6 +163,7 @@ const governance = Layer.effect(TaskGovernance.Service, Effect.gen(function* () 
 const host: ExecutionHost.Interface = {
   id: "claude-code",
   stateKey: "testHost",
+  describeModel: () => Effect.succeed({ status: "ready" as const }),
   stream: (turn) => Stream.make(
     LLMEvent.stepStart({ index: 0 }),
     LLMEvent.textStart({ id: "answer" }),

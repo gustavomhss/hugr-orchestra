@@ -212,6 +212,8 @@
     "./mcp/provided": "./src/mcp/provided.ts",
     "./mcp/stdio": "./src/mcp/stdio.ts",
     "./model": "./src/model.ts",
+    "./model-execution": "./src/model-execution.ts",
+    "./model-execution-options": "./src/model-execution-options.ts",
     "./models-dev": "./src/models-dev.ts",
     "./npm": "./src/npm.ts",
     "./npm-config": "./src/npm-config.ts",

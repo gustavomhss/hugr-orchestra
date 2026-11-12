@@ -70,6 +70,10 @@ Move an old variant's `body.temperature` to `generation.temperature`, and its An
 
 Later trusted configuration layers merge generation fields and nested provider options into a variant with the same ID. If `request.variant` names a default variant, that variant must exist. Claude mode retains its host effort selection; this canonical variant lowering applies to the native engine.
 
+Availability is assessed for the selected executor. A connected provider can expose an API that the native engine does not support. A ready assessment checks executor support, current availability, model policies and structural variant options; protocol-specific combinations are checked when preparing the actual request. For example, enabled Anthropic thinking still requires a token budget.
+
+Claude mode checks its cached account status and accepts enabled Anthropic catalog models with supported effort levels. Canonical generation/provider options run through the native engine; Claude mode refuses those options instead of silently ignoring them. Its account status is advisory and cannot guarantee that a later provider call will be accepted.
+
 ## Prompt estimate
 
 For automatic compaction, the heuristic prompt estimate reuses bounded JSON-encoded lengths of identical long text values. The current request structure is serialized afresh for each estimate; whole requests or conversation histories are not cached.

@@ -1,3 +1,4 @@
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 import { expect, test } from "bun:test"
 import type { Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { AgentV2 } from "@orchestra/core/agent"
@@ -47,6 +48,7 @@ const turnOf = (agent: string, input: Partial<ExecutionHost.Turn> = {}): Executi
 const run = (turn: ExecutionHost.Turn) =>
   Effect.runPromise(
     ClaudeCodeHost.make.pipe(
+      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.flatMap((host) => Stream.runCollect(host.stream(turn))),
       Effect.provide(sdk),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),

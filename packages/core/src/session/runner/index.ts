@@ -8,10 +8,12 @@ import { SessionRunnerModel } from "./model"
 import type { SystemContext } from "../../system-context/index"
 import type { ToolOutputStore } from "../../tool-output-store"
 import type { SessionSubagentModels } from "../subagent-models"
+import type { ModelExecution } from "../../model-execution"
 
 export type RunError =
   | LLMError
   | SessionRunnerModel.Error
+  | ModelExecution.ExecutionUnavailableError
   | MessageDecodeError
   | ContextSnapshotDecodeError
   | SystemContext.InitializationBlocked
