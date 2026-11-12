@@ -16,7 +16,7 @@ import { Agent } from "@orchestra/schema/agent"
 import { Model } from "@orchestra/schema/model"
 import { Provider } from "@orchestra/schema/provider"
 import { ModelExecution } from "@orchestra/schema/model-execution"
-import { ArgsProvider } from "../../../../src/context/args"
+import { ArgsProvider, type Args } from "../../../../src/context/args"
 import { KVProvider } from "../../../../src/context/kv"
 import { SDKProvider, useSDK } from "../../../../src/context/sdk"
 import { ProjectProvider } from "../../../../src/context/project"
@@ -36,6 +36,7 @@ import { OrchestraKeymapProvider, registerOrchestraKeymap } from "../../../../sr
 import { createPluginRuntime, PluginRuntimeProvider } from "../../../../src/plugin/runtime"
 import { Prompt, type PromptRef } from "../../../../src/component/prompt"
 import { DialogModel } from "../../../../src/component/dialog-model"
+import { DialogVariant } from "../../../../src/component/dialog-variant"
 import { DialogProvider, useDialog } from "../../../../src/ui/dialog"
 import { ToastProvider } from "../../../../src/ui/toast"
 import { PromptStashProvider } from "../../../../src/prompt/stash"
@@ -71,15 +72,18 @@ export async function wait(predicate: () => boolean, label: string, milliseconds
 
 // One injected transport preserves the actual generated SDK, catalog adapter, providers and Prompt.
 // This is contract-consumption evidence, not a substitute for the backend describe HTTP gate.
-export async function mount(options: { draft?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response> } = {}) {
+export async function mount(options: { draft?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response>;
+  preferences?: { variant?: Record<string, string>; variantIntent?: Record<string, unknown> };
+  catalogModel?: Model.Info; args?: Args } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "orchestra-model-consumer-"))
   const state = path.join(root, "state")
   await mkdir(state)
   await Bun.write(path.join(state, "kv.json"), "{}")
+  if (options.preferences) await Bun.write(path.join(state, "model.json"), JSON.stringify(options.preferences))
   const [owner, setOwner] = createStore({ sessionID: options.draft ? undefined : "session-1", directory: root, url: "http://consumer.fixture", authorization: "Basic Zml4dHVyZTpub25l", generation: 1 })
   const calls: { path: string; method: string; body: unknown; authorization: string | null; url: URL; signal: AbortSignal }[] = []
   const control = { reply: options.reply ?? ((_request: Request) => json({ location: { directory: owner.directory }, data: options.initial ?? decision() })),
-    before: async (_path: string) => {} }
+    before: async (_path: string) => {}, catalogModel: options.catalogModel ?? model }
   const events = createEventSource()
   const fallback = createFetch()
   const fetch: typeof Bun.fetch = Object.assign(async (...args: Parameters<typeof Bun.fetch>) => {
@@ -93,7 +97,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     if (["/api/integration", "/api/skill", "/api/reference"].includes(url.pathname)) return envelope([])
     if (url.pathname === "/api/command") return envelope([Command.Info.make({ name: "known", template: "fixture command" })])
     if (url.pathname === "/api/provider") return envelope([Provider.Info.empty(Provider.ID.make(ref.providerID))])
-    if (url.pathname === "/api/model") return envelope([model, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }])
+    if (url.pathname === "/api/model") return envelope([control.catalogModel, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }])
     if (url.pathname === "/api/model/default") return envelope(ref)
     if (url.pathname === "/api/agent") return envelope([{ ...Agent.Info.empty(Agent.ID.make("maestro")), engine: "orchestra" }, { ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra" }])
     if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
@@ -128,7 +132,11 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
   let prompt: PromptRef | undefined
   function Probe() {
     context = { sdk: useSDK(), sync: useSync(), local: useLocal(), route: useRoute(), dialog: useDialog() }
-    onMount(() => sdkReady.resolve())
+    onMount(() => {
+      // Match app.tsx: apply CLI variant through the real setter, including before preference I/O completes.
+      if (options.args?.variant !== undefined) context.local.model.variant.set(options.args.variant)
+      sdkReady.resolve()
+    })
     return <Prompt sessionID={owner.sessionID} ref={(value) => { prompt = value }} />
   }
   function Harness() {
@@ -138,7 +146,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     onCleanup(registerOrchestraKeymap(keymap, renderer, config))
     return <TestTuiContexts directory={root} paths={{ home: root, state, worktree: root }}>
       <ExitProvider exit={() => {}}><ClipboardProvider value={{ read: async () => undefined, write: async () => {} }}>
-        <OrchestraKeymapProvider keymap={keymap}><ArgsProvider><KVProvider><ToastProvider>
+        <OrchestraKeymapProvider keymap={keymap}><ArgsProvider {...options.args}><KVProvider><ToastProvider>
           <RouteProvider initialRoute={options.draft ? { type: "home" } : { type: "session", sessionID: "session-1" }}>
             <TuiConfigProvider config={config}><PluginRuntimeProvider value={createPluginRuntime()}>
               <Show when={owner.generation} keyed>{(_generation) => <SDKProvider url={owner.url} directory={owner.directory} fetch={fetch} headers={{ authorization: owner.authorization }} events={events.source}>
@@ -169,6 +177,8 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
       queries: () => calls.filter((call) => call.path === "/api/model/execution"),
       admissions: () => calls.filter((call) => call.path.endsWith("/prompt")),
       showModels() { context.dialog.replace(() => <DialogModel />) },
+      showVariants() { context.dialog.replace(() => <DialogVariant />) },
+      preferenceFile: path.join(state, "model.json"),
       async dispose() {
         if (lifecycle.disposed) return
         lifecycle.disposed = true
