@@ -35,7 +35,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout exact child head
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
@@ -44,23 +44,23 @@ jobs:
         with:
           install-flags: --frozen-lockfile --os="*" --cpu="*"
       # OMNI_ARTIFACTS=<dir>/<omni id>/ and TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as build.ts reads them.
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: omni-win32-x64-msvc
           path: ${{ runner.temp }}/omni-artifacts/win32-x64-msvc
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: omni-linux-x64-gnu
           path: ${{ runner.temp }}/omni-artifacts/linux-x64-gnu
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: omni-linux-arm64-gnu
           path: ${{ runner.temp }}/omni-artifacts/linux-arm64-gnu
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: tree-sitter-linux-arm64
           path: ${{ runner.temp }}/tree-sitter-artifacts/linux-arm64
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: tree-sitter-win32-x64
           path: ${{ runner.temp }}/tree-sitter-artifacts/win32-x64
@@ -98,7 +98,7 @@ jobs:
               cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "windows-cli/omni-$target/"
             fi
           done
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: windows-cli
           path: windows-cli/
@@ -121,7 +121,7 @@ jobs:
       DESKTOP_PR_HEAD: ${{ github.event.pull_request.head.sha }}
     steps:
       - name: Checkout exact child head
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
@@ -141,7 +141,7 @@ jobs:
 
       - name: The Windows bundle's CLIs from the Linux producer
         if: runner.os == 'Windows'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-cli
           path: ${{ runner.temp }}/windows-cli
@@ -185,7 +185,7 @@ jobs:
 
       - name: Preserve actual proof, red cells and source/artifact pins
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: omni-desktop-${{ matrix.os }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: apps/desktop/.omni-desktop-evidence/

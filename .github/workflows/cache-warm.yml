@@ -36,7 +36,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Saves the Bun package cache (Linux) or the installed node_modules tree (Windows).
       - name: Setup Bun
@@ -57,7 +57,7 @@ jobs:
       # Same path and key as the e2e job in test.yml.
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ github.workspace }}/.playwright-browsers
           key: ${{ runner.os }}-${{ runner.arch }}-playwright-${{ steps.playwright-version.outputs.version }}-chromium
@@ -72,7 +72,7 @@ jobs:
       # of a PR replays no test task. Test entries are saved by test.yml itself; dispatch it on dev (workflow_dispatch,
       # which saves under dev's cache scope) to seed them. Warming them here would run the whole suite on every push.
       - name: Cache Turbo
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ github.sha }}
@@ -82,7 +82,7 @@ jobs:
       # Same Python version and dependency file as the Relay steps in test.yml, so epic runs restore this pip cache.
       - name: Setup Python for Relay
         if: runner.os == 'Linux'
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
           cache: pip
@@ -108,7 +108,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: omni binaries
         uses: ./.github/actions/omni-binaries
