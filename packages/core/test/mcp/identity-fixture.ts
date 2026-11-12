@@ -1,8 +1,9 @@
 import path from "node:path"
 import fs from "node:fs/promises"
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+import { CallToolRequestSchema, ListToolsRequestSchema, isInitializeRequest } from "@modelcontextprotocol/sdk/types.js"
 import { Context, Effect, Layer, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Config } from "@orchestra/core/config"
@@ -233,8 +234,51 @@ export function provided(name: string, key: string, names: readonly string[], va
 export function remote(names: readonly string[], value: string, options: { oauth?: true } = {}) {
   const state = { names: [...names] }
   const calls: Array<{ method: string; name?: string; authorization: string | null; body: string }> = []
-  const listeners = new Set<ReadableStreamDefaultController<Uint8Array>>()
-  const listening = Promise.withResolvers<void>()
+  type Connection = {
+    server: Server
+    transport: WebStandardStreamableHTTPServerTransport
+    listening: ReturnType<typeof Promise.withResolvers<void>>
+  }
+  const connections = new Set<Connection>()
+  const sessions = new Map<string, Connection>()
+  const observe = Schema.decodeUnknownSync(
+    Schema.Struct({
+      method: Schema.String,
+      params: Schema.optional(Schema.Struct({ name: Schema.optional(Schema.String) })),
+    }),
+  )
+  const openSession = async () => {
+    const instance = new Server(
+      { name: "identity-fixture", version: "1" },
+      { capabilities: { tools: { listChanged: true } } },
+    )
+    instance.setRequestHandler(ListToolsRequestSchema, async () => ({
+      tools: state.names.map((name) => ({
+        name,
+        description: "remote fixture",
+        inputSchema: { type: "object", properties: {} },
+      })),
+    }))
+    instance.setRequestHandler(CallToolRequestSchema, async () => ({ content: [{ type: "text", text: value }] }))
+    const transport = new WebStandardStreamableHTTPServerTransport({
+      sessionIdGenerator: () => crypto.randomUUID(),
+      keepAliveMs: 0,
+      enableJsonResponse: true,
+      onsessioninitialized: (id) => {
+        sessions.set(id, connection)
+      },
+      onsessionclosed: (id) => {
+        sessions.delete(id)
+      },
+    })
+    const connection: Connection = { server: instance, transport, listening: Promise.withResolvers<void>() }
+    connections.add(connection)
+    instance.onclose = () => {
+      if (transport.sessionId) sessions.delete(transport.sessionId)
+    }
+    await instance.connect(transport)
+    return connection
+  }
   const authCalls: Array<{ path: string; body: string }> = []
   const issuer = options.oauth
     ? Bun.serve({
@@ -283,53 +327,26 @@ export function remote(names: readonly string[], value: string, options: { oauth
           status: 401,
           headers: { "www-authenticate": `Bearer resource_metadata="${url.origin}/metadata"` },
         })
-      if (request.method === "GET") {
-        const stream: { controller?: ReadableStreamDefaultController<Uint8Array> } = {}
-        return new Response(
-          new ReadableStream<Uint8Array>({
-            start(controller) {
-              stream.controller = controller
-              listeners.add(controller)
-              controller.enqueue(new TextEncoder().encode(": ready\n\n"))
-              listening.resolve()
-            },
-            cancel() {
-              if (stream.controller) listeners.delete(stream.controller)
-            },
-          }),
-          { headers: { "content-type": "text/event-stream", "cache-control": "no-cache" } },
-        )
+      const id = request.headers.get("mcp-session-id")
+      const known = id ? sessions.get(id) : undefined
+      if (request.method === "POST") {
+        const body = await request.clone().text()
+        const message: unknown = JSON.parse(body)
+        const observed = observe(message)
+        calls.push({
+          method: observed.method,
+          name: observed.params?.name,
+          authorization: request.headers.get("authorization"),
+          body,
+        })
+        const connection = known ?? (!id && isInitializeRequest(message) ? await openSession() : undefined)
+        if (!connection) return new Response("Unknown MCP session", { status: 404 })
+        return connection.transport.handleRequest(request, { parsedBody: message })
       }
-      if (request.method === "DELETE") return new Response(null, { status: 204 })
-      const body = await request.text()
-      const message = JSON.parse(body)
-      calls.push({
-        method: message.method,
-        name: message.params?.name,
-        authorization: request.headers.get("authorization"),
-        body,
-      })
-      if (message.id === undefined) return new Response(null, { status: 202 })
-      const result =
-        message.method === "initialize"
-          ? {
-              protocolVersion: message.params.protocolVersion,
-              capabilities: { tools: { listChanged: true } },
-              serverInfo: { name: "identity-fixture", version: "1" },
-            }
-          : message.method === "tools/list"
-            ? {
-                tools: state.names.map((name) => ({
-                  name,
-                  description: "remote fixture",
-                  inputSchema: { type: "object", properties: {} },
-                })),
-              }
-            : { content: [{ type: "text", text: value }] }
-      return Response.json(
-        { jsonrpc: "2.0", id: message.id, result },
-        { headers: { "mcp-session-id": "identity-session" } },
-      )
+      if (!known) return new Response("Unknown MCP session", { status: 404 })
+      const response = await known.transport.handleRequest(request)
+      if (request.method === "GET" && response.ok) known.listening.resolve()
+      return response
     },
   })
   return {
@@ -339,20 +356,30 @@ export function remote(names: readonly string[], value: string, options: { oauth
     state,
     calls,
     async changed(next: readonly string[]) {
-      await listening.promise
       state.names = [...next]
-      for (const listener of listeners)
-        listener.enqueue(
-          new TextEncoder().encode(
-            'event: message\ndata: {"jsonrpc":"2.0","method":"notifications/tools/list_changed"}\n\n',
-          ),
-        )
+      const active = Array.from(sessions.values())
+      await Promise.all(active.map((connection) => connection.listening.promise))
+      await Promise.all(active.map((connection) => connection.server.sendToolListChanged()))
     },
     async [Symbol.asyncDispose]() {
-      for (const listener of listeners) listener.close()
-      listeners.clear()
-      await server.stop(true)
-      await issuer?.stop(true)
+      const closed = await Promise.allSettled(
+        Array.from(connections).flatMap((connection) => [
+          Promise.resolve().then(() => connection.server.close()),
+          Promise.resolve().then(() => connection.transport.close()),
+        ]),
+      )
+      connections.clear()
+      sessions.clear()
+      const stopped = await Promise.allSettled([
+        Promise.resolve().then(() => server.stop(true)),
+        ...(issuer ? [Promise.resolve().then(() => issuer.stop(true))] : []),
+      ])
+      const failures = [...closed, ...stopped].filter((result) => result.status === "rejected")
+      if (failures.length)
+        throw new AggregateError(
+          failures.map((result) => result.reason),
+          "MCP fixture cleanup failed",
+        )
     },
   }
 }
