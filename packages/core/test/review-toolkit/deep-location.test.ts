@@ -51,11 +51,11 @@ describe("Deep host-observed caller locations", () => {
     }
     const unbuilt = { ...deep, route: { ...deep.route, tiers: deep.route.tiers.map((tier) => tier.id === "deep" ? { ...tier, built: false } : tier) } }
     expect(items(ReviewNoise.pipeline({ head, changed, blastRadius, tier: "deep", catalog: unbuilt })).map((item) => item.path)).toEqual(["src/changed.ts"])
-    expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")?.built).toBe(false)
+    expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")?.built).toBe(true)
     const fallback = { ...deep, route: { ...deep.route, tiers: deep.route.tiers.map((tier) => tier.id === "deep" ? { ...tier, runs: "standard" } : tier) } }
     expect(items(ReviewNoise.pipeline({ head, changed, blastRadius, tier: "deep", catalog: fallback })).map((item) => item.path)).toEqual(["src/changed.ts"])
     expect(items(ReviewNoise.pipeline({ head, changed, blastRadius, tier: "deep", catalog: ReviewCatalog.current })).map((item) => item.path))
-      .toEqual(["src/changed.ts"])
+      .toEqual(["src/changed.ts", "src/caller.ts"])
   })
 
   test("caller admission preserves new-only debt and suppression handling", () => {

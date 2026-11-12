@@ -169,9 +169,11 @@ describe("review noise pipeline", () => {
     expect(quick.retained.unread).toEqual({ security: 2 })
     expect(quick.retained.items.map((item) => item.line)).toEqual([60, 70])
 
-    // Deep is unbuilt and runs Standard, so it takes Standard's cap.
-    const deep = run({ head: Array.from({ length: 20 }, (_, index) => entry({ line: index + 1 })), tier: "deep" })
-    expect(deep.items.security).toHaveLength(15)
+    const standard = run({ head: Array.from({ length: 20 }, (_, index) => entry({ line: index + 1 })), tier: "standard" })
+    expect(standard.items.security).toHaveLength(15)
+    expect(standard.retained.unread).toEqual({ security: 5 })
+    const deep = run({ head: Array.from({ length: 35 }, (_, index) => entry({ line: index + 1 })), tier: "deep" })
+    expect(deep.items.security).toHaveLength(30)
     expect(deep.retained.unread).toEqual({ security: 5 })
     expect(() => run({ head, tier: "nope" })).toThrow("Unknown review tier: nope")
   })

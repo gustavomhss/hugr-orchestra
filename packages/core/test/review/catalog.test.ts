@@ -43,7 +43,7 @@ describe("review catalog", () => {
       "plan", "code", "rereview", "pr", "release", "audit", "diligence", "artifact",
     ])
     expect(catalog.route.tiers.map((tier) => [tier.id, tier.built, tier.runs])).toEqual([
-      ["quick", true, "quick"], ["standard", true, "standard"], ["deep", false, "standard"],
+      ["quick", true, "quick"], ["standard", true, "standard"], ["deep", true, "deep"],
     ])
     expect(catalog.overlays.map((overlay) => overlay.id)).toEqual([
       "docs", "concurrency", "api-wire", "data-migration", "performance", "ci-infra", "dependency", "ui", "personal-data", "github-actions",

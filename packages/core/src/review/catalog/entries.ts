@@ -391,10 +391,10 @@ export const current = {
         probeAttempts: 2,
       },
       {
-        // Requestable; until phase 5 builds it, the route records the request and runs Standard (R3).
+        // Qualified Deep adapters, independent samples and release checks run under their own budget.
         id: "deep",
-        built: false,
-        runs: "standard",
+        built: true,
+        runs: "deep",
         report: ["P0", "P1", "P2", "P3"],
         budget: {
           lenses: { min: 3, max: 8 },

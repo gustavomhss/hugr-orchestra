@@ -10,7 +10,7 @@ import { ReviewResultV2 } from "../src/v2/governance/review-result"
 import { ENTRY, candidate, fenced, item } from "./fixture/lucy-fanout-data"
 import { brief, dataBlock, harness, run } from "./fixture/lucy-fanout"
 
-// Host sampling for two independent Deep hunts. Deep stays unbuilt in the catalog; only this file's clone runs it.
+// Production Deep sampling with a bounded fixture lens set.
 // Replies are the fixture's fixed K9 records. No model calls.
 
 const TWO = [
@@ -38,7 +38,6 @@ const deepCatalog = (catalog: ReviewCatalog.Catalog) => ({
       ...profile,
       lenses: { ...profile.lenses, deep: ["correctness-logic", "correctness-edges", "correctness-reliability", "tests", "security", "correctness-concurrency"] },
     } : profile),
-    tiers: catalog.route.tiers.map((tier) => tier.id === "deep" ? { ...tier, built: true, runs: "deep" } : tier),
   },
 })
 
@@ -56,7 +55,7 @@ test("Standard uses one sample with its original child keys and diff order", () 
   })),
 )
 
-test("a built Deep clone fans out two scoped sessions per lens and slice under the host cap", () =>
+test("production Deep fans out two scoped sessions per lens and slice under the host cap", () =>
   run((directory) =>
     Effect.gen(function* () {
       const h = yield* harness(directory, "sampledeep")

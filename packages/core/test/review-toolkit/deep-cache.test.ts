@@ -239,18 +239,18 @@ it.live("the real cache on an empty root records index_unavailable and writes no
   expect(entries).toEqual([])
 }), 120_000)
 
-it.live("built deep asks for impact before packs and other tiers do not", () => Effect.gen(function* () {
+it.live("production Deep asks for impact before packs and other tiers do not", () => Effect.gen(function* () {
   expectSpawn(import.meta.path)
   const made = yield* repo
   const seen: Seen = { factory: 0, roots: [] }
   const radius: unknown[] = []
-  const result = yield* ReviewAnalyze.run(input(made, { catalog: built(true) }), (entry) => {
+  const result = yield* ReviewAnalyze.run(input(made, { catalog: ReviewCatalog.current }), (entry) => {
     radius.push(entry.blastRadius ?? null)
     return empty
   }).pipe(Effect.provideService(ReviewImpactCache.ReadCache, seam(seen, made.sha)))
   expect(radius).toEqual([ranges])
   expect(result.checks.find((entry) => entry.id === "repo:blast-radius")).toMatchObject({ ...host, status: "pass" })
-  expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")?.built).toBe(false)
+  expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")?.built).toBe(true)
   const fallback = { ...built(true), route: { ...built(true).route, tiers: built(true).route.tiers.map((tier) => tier.id === "deep" ? { ...tier, runs: "standard" } : tier) } }
   const die = () => Effect.die("ReadImpact must not run")
   for (const [tier, catalog] of [["standard", built(true)], ["quick", built(true)], ["deep", built(false)], ["deep", fallback]] as const)

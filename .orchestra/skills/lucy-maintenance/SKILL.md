@@ -47,8 +47,9 @@ The §8.3 budgets, §8.4 rungs and probe attempts, the §5.3 triggers and the §
   stale, and no landing protocol is needed for a catalog-only change.
 - Budgets are host counts (`SessionScope` loads and tool calls, `ReviewResultV2.CAPS`, the fan-out's child counts);
   never move one into prompt or skill prose.
-- Deep is requestable with `built: false` and `runs: "standard"`; the route records `tier.requested` (R3). A profile,
-  lens or option that is not built is refused or reported `not-built`, never silently skipped.
+- Deep is built and runs its own tier after P0–P3/D1–D3 qualification. Two hunt samples rank agreement only; caller context requires complete revision-bound evidence. An explicitly unbuilt catalog still records `tier.requested` and falls back (R3). Missing individual adapters remain `not-run`.
+- Advanced targets are host-closed: JS/TS integer properties and gated base/head schedules; installed cargo-mutants 27.1.0 is qualified on Linux x64 only. The JS invariant row replaces generic script with property; lower tiers filter that advanced option. Formal/fuzz remain unbuilt.
+- Governed code-stage release captures live candidate bytes once before salting both Session and cache identities. Five fixed host proofs are required even without supplied paths. Failed proofs and acquisition errors block; unavailable proofs use explicit R2 acceptance. The release lens is Deep-only; Quick/Standard security routes stay unchanged. Syft remains the generator, and attachment co-signature does not qualify runtime coverage. Behavioural eval remains `owner-permission`.
 
 ## Adding a pack
 

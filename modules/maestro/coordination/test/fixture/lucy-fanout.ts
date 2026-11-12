@@ -27,6 +27,7 @@ export const NODES = [
   ["lucy-review", "lucy-review"],
   ["lucy-review/code", "lucy-review-code"],
   ["lucy-review/rereview", "lucy-review-rereview"],
+  ["lucy-review/release", "lucy-review-release"],
   ["lucy-review/prove", "lucy-review-prove"],
   ["lucy-review/prove/quote", "lucy-review-prove-quote"],
   ["lucy-review/prove/regress", "lucy-review-prove-regress"],
@@ -42,6 +43,7 @@ export const NODES = [
   ["lucy-lens/correctness/concurrency", "lucy-lens-correctness-concurrency"],
   ["lucy-lens/tests", "lucy-lens-tests"],
   ["lucy-lens/security", "lucy-lens-security"],
+  ["lucy-lens/security/release", "lucy-lens-security-release"],
   ["team-stack", "team-stack"],
   ["team-stack/js-ts", "team-stack-js-ts"],
 ] as const

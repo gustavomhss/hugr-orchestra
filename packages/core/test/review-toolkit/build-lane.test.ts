@@ -45,7 +45,7 @@ describe("build lane catalog", () => {
     expect(ids).toContain("probe:race")
     for (const id of ["probe:mutants", "probe:interleave", "probe:property"]) expect(ids).toContain(id)
     for (const id of ["probe:formal", "probe:fuzz"]) expect(ids).not.toContain(id)
-    expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")).toMatchObject({ built: false, runs: "standard" })
+    expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")).toMatchObject({ built: true, runs: "deep" })
     const base = { files: ["package.json", "tsconfig.json"] }
     const head = {
       files: ["package.json", "tsconfig.json", "src/a.ts"],
@@ -58,7 +58,8 @@ describe("build lane catalog", () => {
     const quick = ReviewRoute.route({ stage: "code", tier: "quick", settings }, base, head, ReviewCatalog.current)
     expect(quick.packs.some((pack) => pack.id === "tsc")).toBe(false)
     const deep = ReviewRoute.route({ stage: "code", tier: "deep", settings }, base, head, ReviewCatalog.current)
-    expect(deep.tier).toMatchObject({ id: "standard", requested: "deep" })
+    expect(deep.tier).toMatchObject({ id: "deep" })
+    expect(deep.tier.requested).toBeUndefined()
     expect(deep.packs).toContainEqual(routed)
     const goBase = { files: ["go.mod", "pkg/a.go"] }
     const goHead = {
@@ -143,7 +144,8 @@ const input = (
 ): ReviewAnalyze.RunInput => ({
   worktree: made.root,
   base: "base",
-  tier: "deep",
+  // Isolate compiler-lane checks; production Deep caller evidence is qualified in deep-cache.test.ts.
+  tier: "standard",
   store: made.store,
   changed: { "src/a.ts": [{ start: 1, end: 1 }] },
   trusted: true,

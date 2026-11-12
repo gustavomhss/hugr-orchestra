@@ -236,6 +236,10 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     })
   const teamStack = ReviewFanoutSupportV2.stackNodes(routed.record, catalog)
   const auditNodes = new Set(["lucy-audit", ...ReviewFanoutSupportV2.below(input.skills, "lucy-audit")])
+  const releaseNodes = new Set([ReviewCatalog.releaseChecks.lens.node, ...ReviewFanoutSupportV2.below(input.skills, ReviewCatalog.releaseChecks.lens.node)])
+  // The generic security tree contains this specialized child; its ancestry does not grant the release route.
+  const allowedNodes = (nodes: readonly string[], record: ReviewRouting.Record) => nodes.filter((name) =>
+    !auditNodes.has(name) && (!releaseNodes.has(name) || (record.profile.id === "release" && record.tier.id === "deep")))
   const lead = yield* port.create({ key: "lead", role: "lead" })
   const delivered = new Map<string, ReviewItem.ToolItem[]>()
   let sealedReads: ReadonlyArray<ReviewLedger.Read> | undefined
@@ -254,7 +258,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     skills: {
       entry: ENTRY_NODE,
       // At Quick the lead also hunts, so the leaves below its lens nodes are on its route from the start.
-      allow: quick ? unique([...routed.record.lenses.flatMap((lens) => lens.node === "lucy-audit-compliance-privacy" ? [lens.node] : ReviewFanoutSupportV2.below(input.skills, lens.node).filter((name) => !auditNodes.has(name))), ...teamStack]) : [],
+      allow: quick ? unique([...routed.record.lenses.flatMap((lens) => lens.node === "lucy-audit-compliance-privacy" ? [lens.node] : allowedNodes(ReviewFanoutSupportV2.below(input.skills, lens.node), routed.record)), ...teamStack]) : [],
     },
     // K4 writes a scope once, so the lead holds its final turn's set; the record tool refuses outside that turn.
     tools: stageTools(quick ? [...input.stages.lead, ...input.stages.lens, ...input.stages.final] : [...input.stages.lead, ...input.stages.final]),
@@ -458,7 +462,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         const child = yield* port.create({ key, role: "lens" })
         yield* bind(child, "lens", { lens: job.lens.id, cap: tier.probeAttempts, observeItems: observeFor(child) })
         const scope: SessionScope.Scope = {
-          skills: { entry: job.lens.node, allow: unique([...ReviewFanoutSupportV2.below(input.skills, job.lens.node).filter((name) => !auditNodes.has(name)), ...teamStack]) },
+          skills: { entry: job.lens.node, allow: unique([...allowedNodes(ReviewFanoutSupportV2.below(input.skills, job.lens.node), afterEntry), ...teamStack]) },
           tools: stageTools(input.stages.lens),
           budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
         }
@@ -554,8 +558,10 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         }
         const proof = catalog.classes.find((entry) => entry.id === batch.class)?.node ?? QUOTE_NODE
         if (auditNodes.has(proof)) return yield* new Tool.Failure({ message: "Review verifier cannot receive an audit node" })
+        if (!allowedNodes([proof], afterEntry).includes(proof))
+          return yield* new Tool.Failure({ message: "Review verifier cannot receive an unrouted release node" })
         const scope: SessionScope.Scope = {
-          skills: { entry: proof, allow: unique([...batch.candidates.map((candidate) => candidate.node), ...teamStack]).filter((name) => name !== proof && !auditNodes.has(name)) },
+          skills: { entry: proof, allow: allowedNodes(unique([...batch.candidates.map((candidate) => candidate.node), ...teamStack]), afterEntry).filter((name) => name !== proof) },
           tools: stageTools(input.stages.verifier),
           budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
         }

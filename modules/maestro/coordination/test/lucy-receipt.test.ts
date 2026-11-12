@@ -251,9 +251,9 @@ test("a review-v2 method is checked against the catalog and the stage; unrecorde
       expect(yield* refused(harness, id, { reviewMethodVersion: "review-v2/plan/bogus" })).toBe(
         "MaestroReviewRejected: unsupported-review-method",
       )
-      // Deep is requestable but unbuilt: the route runs Standard and the method says so (R3).
-      expect(yield* refused(harness, id, { reviewMethodVersion: "review-v2/plan/deep" })).toBe(
-        "MaestroReviewRejected: unsupported-review-method",
+      // Built Deep is a supported method and still requires every binding field.
+      expect(yield* refused(harness, id, { reviewMethodVersion: "review-v2/plan/deep", items: undefined })).toBe(
+        "MaestroReviewRejected: review-binding-missing",
       )
       expect(yield* refused(harness, id, { reviewMethodVersion: "review-v2/plan" })).toBe(
         "MaestroReviewRejected: unsupported-review-method",
