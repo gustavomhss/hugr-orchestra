@@ -3,35 +3,30 @@
   "protocol_epoch": "parallel-v3-fresh",
   "results_epoch": "20261111-v3-fresh",
   "session": "integration",
-  "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "execution_id": "aa85d928-5ef9-4cb5-b774-e8fce94f9901",
   "branch": "genesis-fresh-final",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
   "candidate_revision": null,
-  "artifact_revision": "b3cc6dfe2af68e20ec998cd59291feb4674b5b98",
-  "observed_branch_head": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+  "artifact_revision": "b14b87aa8e5256246c1f28b257a00c4b5441458b",
+  "observed_branch_head": "317c7ed337549036c5d3f773cfb65d0a755e75dd",
   "completion_state": "IN_PROGRESS",
-  "kind": "takeover-coordination-checkpoint",
+  "kind": "resumed-root-coordination-checkpoint",
   "payload": [
     {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/execution-ledger.jsonl",
-      "sha256": "dc51d0999e3f87bd9b54299b856b3a7857fb276c99d5e0ce44eebac679596fad",
-      "byte_length": 1828
+      "sha256": "077354dcbd7415be65b9b5a2f9b7a73df3754401ebe193d74a3511877457abe2",
+      "byte_length": 3500
     },
     {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/takeover-refs.json",
-      "sha256": "3343d6e1344ec75cef02b23e63d77dafd78d6680c3bf18d3443e757cf3d863a7",
-      "byte_length": 3403
-    },
-    {
-      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/takeover-request.txt",
-      "sha256": "8d9c6743f5284a7eaa1529a6049cb75b65c2a479b5d19a9775ff03c6937a6750",
-      "byte_length": 25388
+      "sha256": "3f0fbf190217657be8c4de1cfcf187a3d706224fb8f0e66e768e2fcfc3532f7b",
+      "byte_length": 4956
     },
     {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/work.md",
-      "sha256": "858bae7772ca8f36d8edd7a1b3dd4a2c862293de6853d00db555508a9dce754d",
-      "byte_length": 5896
+      "sha256": "87d8ad60d0696e51e0d7a73e40e1d0a015cba1394f588044e62b6676e940a5f9",
+      "byte_length": 5348
     }
   ],
   "local_obligations_open": [
@@ -45,5 +40,15 @@
     "owner": "root",
     "status": "NOT_REVIEWED"
   },
-  "supersedes": null
+  "supersedes": {
+    "commit": "317c7ed337549036c5d3f773cfb65d0a755e75dd",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/handoff.json",
+    "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299"
+  },
+  "selected_runtime_checkpoint": {
+    "source_payload": "9b1e129feed74236fb2ba473dac093aecacea515",
+    "source_seal": "22815b6821dce26562624b4711c705c7cd786268",
+    "ci_run": 43154719978,
+    "release": "r3 remains; R4 semantic review pending"
+  }
 }
