@@ -7,7 +7,7 @@
 // the host collected, through the answer gate the command client applies. Candidates are staged, never promoted.
 import {
   admitAnswerText,
-  advisoryClaimParser,
+  completionProposal,
   createHistorySource,
   createPromptFactory,
   createUnitSourceReader,
@@ -73,10 +73,7 @@ export function mineWith(
       propose: (cand) => {
         const reply = replies.get(cand.site.qualifiedPath)
         if (reply === undefined) return null
-        const admitted = admitAnswerText(reply)
-        if (admitted.claim === null)
-          return admitted.abstainReason === undefined ? null : { abstain: admitted.abstainReason }
-        return advisoryClaimParser(admitted.claim, cand, admitted.rawAnswer)
+        return completionProposal(admitAnswerText(reply), cand)
       },
     },
   })

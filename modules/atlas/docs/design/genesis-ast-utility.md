@@ -1,0 +1,119 @@
+# External ast-grep utility experiment
+
+**Remote matrix verified; no production dependency adopted.** Runs
+[41937906767](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41937906767) and
+[41945340129](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41945340129) executed the original
+matrix; [41969397745](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41969397745) verified
+the updated source spelling and unchanged match-count matrix below with the real pinned binary. This repo-only
+probe asks whether external `@ast-grep/cli@0.51.1` usefully distinguishes two real
+TypeScript syntax claims in `packages/adapter-io/src/llm.ts`:
+
+1. The production `execFileSync` call has `stdio: ["pipe", "pipe", "pipe"]` (line 427/432
+   at baseline `ab27d260db5e3700f5c4af6214d2cf593b508ae4`). Its mutant changes **only**
+   stderr's `"pipe"` to `"inherit"`.
+2. The current linear fenced-block parser returns the tagged malformed abstention when a second opener
+   is found by ``text.indexOf("```atlas-fact", open + "```atlas-fact".length) >= 0``.
+   Its syntax mutant changes **only** `>= 0` to `>= 1`. This distinguishes the pinned syntax, not a
+   behavioral regression: the search begins after a positive-length first marker. The historical
+   `blocks.length > 1` / `> 2` pin belonged to the earlier parser and is no longer the live target.
+
+`script/atlas-genesis/ast-utility.mjs` never spawns or fetches. `prepare` reads actual
+source, requires exactly one occurrence of each pinned target, writes full-source
+fixtures and a manifest, and refuses a nonempty or checkout-internal output directory.
+Its exact-text substitutions are fixture preparation, **not** the syntax oracle.
+The manifest freezes these TypeScript queries:
+
+```text
+execFileSync($CMD,$ARGS,{ $$$BEFORE,stdio:["pipe","pipe","pipe"],$$$AFTER })
+if($TEXT.indexOf($MARKER,$FROM)>=0) return {abstain:"answer-malformed:multi-response"}
+```
+
+| Query / expected match count | baseline | control | stdio-mutant | splice-mutant |
+| --- | ---: | ---: | ---: | ---: |
+| stdio | 1 | 1 | 0 | 1 |
+| splice | 1 | 1 | 1 | 0 |
+
+The control changes whitespace in both targets and prepends an inert comment.
+Each query must survive that control and the **other** query's mutant. An
+always-matching, never-matching, duplicated-match, or cross-query-loss matrix fails.
+
+## Remote-only recipe (Bash, Node, npm, jq)
+
+Run from this checkout's root on the authorized remote runner. Do **not** install
+or execute the tool locally. No workflow, dependency manifest, runtime code, model,
+or credential setup is part of this packet. Keep the output and tool directories
+as evidence, including stdout, stderr, exit codes, source copies and version receipt.
+
+```bash
+set -euo pipefail
+: "${RUNNER_TEMP:?run only on the authorized remote runner}"
+tool="$(mktemp -d "$RUNNER_TEMP/atlas-ast-tool.XXXXXX")"
+out="$(mktemp -d "$RUNNER_TEMP/atlas-ast-utility.XXXXXX")"
+node --test script/atlas-genesis/ast-utility.test.mjs
+node script/atlas-genesis/ast-utility.mjs prepare "$out"
+npm install --prefix "$tool" --no-save --package-lock=false @ast-grep/cli@0.51.1 \
+  > "$tool/install.stdout" 2> "$tool/install.stderr"
+binary="$tool/node_modules/.bin/ast-grep"
+if "$binary" --version > "$out/version.txt" 2> "$out/version.stderr"; then
+  code=0
+else
+  code=$?
+fi
+printf '%s\n' "$code" > "$out/version.code"
+while IFS= read -r query; do
+  id="$(jq -r '.id' <<< "$query")"
+  pattern="$(jq -r '.pattern' <<< "$query")"
+  while IFS= read -r variant; do
+    if (cd "$out" && "$binary" run --lang ts --pattern "$pattern" \
+      --json=compact "$out/$variant.ts") \
+      > "$out/$id.$variant.json" 2> "$out/$id.$variant.stderr"; then
+      code=0
+    else
+      code=$?
+    fi
+    printf '%s\n' "$code" > "$out/$id.$variant.code"
+  done < <(jq -r '.variants[].id' "$out/manifest.json")
+done < <(jq -c '.queries[]' "$out/manifest.json")
+node script/atlas-genesis/ast-utility.mjs check "$out"
+printf 'retain evidence: %s\nretain installation receipt: %s\n' "$out" "$tool"
+```
+
+The `if` blocks retain the binary's real exits despite `set -e`; no `|| true` or
+pipeline replaces them. Running from the external output directory avoids loading
+the checkout's ast-grep project config. `check` requires the frozen, nonempty
+manifest/matrix, every variant unchanged from preparation against current source,
+all eight JSON/code pairs, successful exact version receipt, and the printed JSON
+array schema. Every positive match must name the requested absolute variant path,
+cover the target expression's exact UTF-8 byte range, reproduce its source text,
+and have consistent zero-based character positions and context counts.
+The current source-specific range pin covers the complete `if_statement`, including its following-line
+return. The historical parser's ASI-owned trailing comment was part of that older receipt, not this target.
+
+Exit `0` means nonempty matches; exit `1` means an empty array. Any other status is
+`tool-error`, never `BROKEN`. Missing evidence, invalid JSON/schema, wrong file,
+range/text/position/context mismatch, manifest drift and matrix mismatch are named
+failures, not negative syntax verdicts. The checker tests fabricate CLI-shaped
+receipts to exercise the actual `prepare`/`check` exports; they do **not** establish
+that ast-grep emits those receipts or that the patterns work. In-memory module
+mutations remove the matrix check and tool-status check separately and require
+their corresponding bad evidence to escape, calibrating those checker assertions.
+
+## Decision boundary
+
+Decision: the external utility is useful for these two syntax checks, but the experiment does not
+justify adopting it as a production GEN-12 proof engine. Keep it as a repo-only executable experiment;
+do not add the dependency or represent syntax matching as compile/behavioral teeth. This resolves the
+utility-adoption decision, not a promise to ship a runtime Check.
+
+A successful **real-binary remote** matrix supports only these two syntax queries
+on these full-source fixtures, with this tool version and formatting control.
+Failure is useful evidence against this candidate/query pair; do not weaken the
+matrix to manufacture success. No persistent Atlas `Check`, GEN-12 compile/teeth
+implementation, dependency adoption, multi-fact behavior, or identity amendment
+is implemented or certified by this probe. **Malformed TypeScript is not certified by this probe**: tree-sitter
+can recover syntax errors. A query match is not execution, reachability, value-flow,
+or whole-program safety proof (including stderr isolation or universal splice
+rejection). Existing dynamic/semantic verification remains a separate obligation.
+
+Read-only references: [CLI run/exit contract](https://ast-grep.github.io/reference/cli/run.html),
+[pinned 0.51.1 JSON printer schema and UTF-8 ranges](https://github.com/ast-grep/ast-grep/blob/0.51.1/crates/cli/src/print/json_print.rs).

@@ -95,7 +95,7 @@ export function evaluate(arms) {
     const top = parseFrontier(tsv).slice(0, TOP).map(classify)
     for (const c of top) languages[c.language] += 1
     if (top.length === 0) {
-      errors.push(`arm ${arm}: empty frontier — on this repository that means indexing or the site filter broke`)
+      errors.push(`arm ${arm}: empty frontier evidence — inspect the arm exit/report; a refused mine can lose its rendered ledger, so this alone does not diagnose indexing or the site filter`)
       return `| ${arm} | 0 | — | FAIL (empty) |`
     }
     const share = top.filter((c) => c.handWritten).length / top.length

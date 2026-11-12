@@ -2,9 +2,13 @@
 //
 // Reads what the pure question rules (`@atlas/genesis` open-questions.ts) need from one repository: the live current
 // facts (retired ones excluded, R6), each unit's policy owner (`terrainOwner`, the owner `atlas own` prints), and each
-// file's blast — how many files depend on it in the code index's reverse closure. It builds its own index from the
-// working tree and `.atlas/index.scip` (no dump ⇒ no edges ⇒ every blast is 0), so one call costs one index build;
-// it is not a leg of the composed runtime because `compose.ts` has no room under the godfile ceiling.
+// file's blast — how many files depend on it in the code index's reverse closure. An unowned unit's question also
+// offers the mined authors of the fact files already in that unit (`git log --format=%an HEAD -- <file>`, the same
+// read `owners` uses, and nothing else — not `signals()`, which also runs SZZ). Those names are not persisted. A
+// history throw, or a file git cannot see, contributes no names for that file — the interview never throws. It builds
+// its own index from the working tree and `.atlas/index.scip` (no dump ⇒ no edges ⇒ every blast is 0), so one call
+// costs one index build; it is not a leg of the composed runtime because `compose.ts` has no room under the godfile
+// ceiling.
 //
 // `interviewOf` (D29) serves one batch over those questions for the CLI and the Atlas screen alike. A question is
 // answered only when its LATEST `answer` record has no `drafted`: a model's draft keeps it open and rides along as
@@ -12,7 +16,7 @@
 
 import { join } from "node:path"
 import type { Hash } from "@atlas/contracts"
-import { assembleInterview, deriveOpenQuestions } from "@atlas/genesis"
+import { assembleInterview, deriveOpenQuestions, unitOfFile } from "@atlas/genesis"
 import type { QuestionFact, RankedQuestion } from "@atlas/genesis"
 import { build, createDepgraph, nodeHashOfPath } from "@atlas/index"
 import { currentNodes, isRetired } from "@atlas/knowledge"
@@ -23,7 +27,7 @@ import { terrainOwner } from "./own-source.js"
 import { loadPolicy } from "./policy.js"
 import { foldReview, readReview } from "./review-log.js"
 import type { ReviewFold } from "./review-log.js"
-import { headSha } from "./run-git.js"
+import { headSha, runGit } from "./run-git.js"
 import { readScipOrEmpty, SCIP_INDEX_REL } from "./scip.js"
 import { createDiskStore, rehydrateProjection } from "./store.js"
 import { gitSidecarTrust } from "./store-provenance.js"
@@ -60,6 +64,7 @@ export function openQuestionsOf(repoPath: string, answered: ReadonlySet<string>)
   return deriveOpenQuestions({
     facts,
     ownerOf: (unit) => terrainOwner(policy, unit),
+    authorsOf: (unit) => minedAuthors(repoPath, facts, unit),
     blast: (file) => {
       const self = nodeHashOfPath(file)
       return depgraph.reverseClosure(self).closure.filter((h) => h !== self).length
@@ -92,4 +97,19 @@ export function interviewOf(
 /** The question ids a PERSON has answered: a question whose latest answer is a model's draft is still open (D29). */
 export function answeredIds(fold: ReviewFold): ReadonlySet<string> {
   return new Set([...fold.answers.values()].filter((a) => a.drafted === undefined).map((a) => a.questionId))
+}
+
+/** Distinct authors of the unit's fact files. Same log the history source uses for `owners`, and nothing else.
+ *  A throw, or a path git cannot see, contributes nothing and does not fail the rest. */
+function minedAuthors(repoPath: string, facts: readonly QuestionFact[], unit: string): readonly string[] {
+  const files = [...new Set(facts.filter((fact) => unitOfFile(fact.file) === unit).map((fact) => fact.file))]
+  return [...new Set(files.flatMap((file) => ownersOf(repoPath, file)))]
+}
+
+function ownersOf(repoPath: string, file: string): readonly string[] {
+  try {
+    return runGit(repoPath, ["log", "--format=%an", "HEAD", "--", file]).split("\n").filter((line) => line.length > 0)
+  } catch {
+    return []
+  }
 }

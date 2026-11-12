@@ -2,9 +2,9 @@ name: atlas-genesis
 
 # Run Atlas genesis over this repository on a runner (genesis-hardening S6, S10-S12), with no human in the loop:
 #   mine    — index the repository (TypeScript, Python modules/relay, Rust native/omni) into .atlas/index.d/,
-#             then `atlas mine` one arm at a time, capped at `budget` sites per arm. Stages candidates only. The
+#             then `atlas mine` once, capped at `budget` sites per arm. Stages candidates only. The
 #             frontier gate and (when a model is configured) the judge decide whether the run is publishable.
-#             Without the CLAUDE_CODE_OAUTH_TOKEN secret no model is wired: every visited site abstains and the
+#             Without the GROK_AUTH_JSON secret no model is wired: every visited site abstains and the
 #             run spends nothing, which still measures the frontier and the cost of the history probe.
 #   publish — same run, only with `publish: true` and a mine job that passed the gate and the binding judge:
 #             hold what the judge rejected, promote the rest, build the Own snapshot and upload it as a patch.
@@ -25,9 +25,59 @@ on:
         description: "a publishing run: the judge is binding, and a passing run promotes and builds the Own snapshot patch"
         type: boolean
         default: false
+      adapter_probe_run:
+        description: "probe source run; with verify_only, prove exact-response replay offline instead of calling Grok"
+        type: string
+        default: ""
+      adapter_trace:
+        description: "probe only: trace one prepared advisory request; no mining or publication"
+        type: boolean
+        default: false
+      verify_only:
+        description: "scoped recovery tests, no model/publication; index_run optionally reconstructs a zero-budget plan"
+        type: boolean
+        default: false
+      continuation_control:
+        description: "verification only: original-source 200-site continuation with preserved responses and a synthetic provider"
+        type: boolean
+        default: false
+      refresh_own:
+        description: "verification only: materialize the reviewed, unchanged Own fact pack with current source receipts"
+        type: boolean
+        default: false
+      index_run:
+        description: "optional: reuse a prior run's index only when all source/dependency paths are unchanged"
+        type: string
+        default: ""
+      judge_run:
+        description: "rejudge retained candidates from this run, without new proposer calls or publication"
+        type: string
+        default: ""
+      evaluate_corpus:
+        description: "evaluate the frozen judge on all pinned real-data claims, without mining or publication"
+        type: boolean
+        default: false
+      retained_runs:
+        description: "optional: up to four comma-separated mining runs whose candidates must be preserved and rejudged"
+        type: string
+        default: ""
+      index_only:
+        description: "build and verify fresh source indexes without any proposer or judge calls"
+        type: boolean
+        default: false
+      trace_file:
+        description: "trace only: optional exact file from the prepared three-file probe (empty keeps the original fixture)"
+        type: string
+        default: ""
+      trace_seconds:
+        description: "trace only: diagnostic deadline, not the production command timeout"
+        type: choice
+        options: ["90", "300", "600"]
+        default: "90"
 
 concurrency:
-  group: atlas-genesis
+  # Serialize subscription jobs; judgment calls are bounded to three, independently of code/test jobs.
+  group: ${{ inputs.index_only && 'atlas-genesis-index' || (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || 'atlas-genesis-model' }}
   cancel-in-progress: false
 
 permissions:
@@ -35,34 +85,1029 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  RETAINED_RUNS: ${{ inputs.retained_runs }}
 
 jobs:
-  mine:
-    name: atlas genesis mine
+  fresh-index:
+    name: atlas fresh indexes (no model)
+    if: inputs.index_only == true
     runs-on: ubuntu-24.04
-    # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
-    # measures how long that takes on this repository.
+    timeout-minutes: 90
+    env:
+      PUBLISH: ${{ inputs.publish }}
+      VERIFY_ONLY: ${{ inputs.verify_only }}
+      REFRESH_OWN: ${{ inputs.refresh_own }}
+      EVALUATE: ${{ inputs.evaluate_corpus }}
+      SOURCE_RUN: ${{ inputs.judge_run }}
+      INDEX_RUN: ${{ inputs.index_run }}
+      ADAPTER_RUN: ${{ inputs.adapter_probe_run }}
+      TRACE_ONLY: ${{ inputs.adapter_trace }}
+      TRACE_FILE: ${{ inputs.trace_file }}
+    steps:
+      - name: Validate index-only inputs
+        run: |
+          [ "$PUBLISH" != true ] && [ "$VERIFY_ONLY" != true ] && [ "$REFRESH_OWN" != true ] && [ "$EVALUATE" != true ] && [ "$TRACE_ONLY" != true ] || { echo "::error::index-only mode cannot publish or select another mode"; exit 1; }
+          [ -z "$SOURCE_RUN$INDEX_RUN$ADAPTER_RUN$TRACE_FILE$RETAINED_RUNS" ] || { echo "::error::fresh indexing cannot restore sources or old indexes"; exit 1; }
+          echo "OUT=$RUNNER_TEMP/atlas-fresh-index" >> "$GITHUB_ENV"
+          echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build Atlas
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          bun typecheck
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Build fresh indexes and verify actual document identities
+        id: fresh-build
+        run: bash script/atlas-genesis/fresh-index.sh
+
+      - name: Scan index receipts
+        id: index-scan
+        if: always() && steps.fresh-build.outcome != 'skipped'
+        run: node script/atlas-genesis/secret-scan.mjs "$OUT" .atlas/index.d
+
+      - name: Upload verified indexes
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Preserve failed index diagnostics without declaring them reusable
+        if: failure() && steps.index-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-index-debug
+          path: |
+            .atlas/index.d
+            ${{ runner.temp }}/atlas-fresh-index
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload source receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-index-source
+          path: ${{ runner.temp }}/atlas-fresh-index
+          if-no-files-found: error
+          retention-days: 30
+
+  adapter-probe:
+    name: atlas adapter probe (no reindex)
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && (inputs.verify_only || inputs.continuation_control || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write # Only the checkpoint control appends immutable evidence to genesis-checkpoints.
+      actions: read
+    env:
+      SOURCE_RUN: ${{ inputs.adapter_probe_run }}
+      HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
+      GROK_VERSION: "1.0.13"
+      VERIFY_ONLY: ${{ inputs.verify_only }}
+      CONTINUATION_CHECK: ${{ inputs.continuation_control }}
+      REFRESH_OWN: ${{ inputs.refresh_own }}
+      INDEX_RUN: ${{ inputs.index_run }}
+      TRACE_FILE: ${{ inputs.trace_file }}
+      TRACE_SECONDS: ${{ inputs.trace_seconds }}
+      TRACE_ONLY: ${{ inputs.adapter_trace }}
+    steps:
+      - name: Validate probe inputs
+        run: |
+          if [ "$CONTINUATION_CHECK" = true ]; then
+            [ "$VERIFY_ONLY" = true ] && [ -n "$SOURCE_RUN" ] || { echo "::error::continuation control requires verify_only and its original source run"; exit 1; }
+          fi
+          [ -z "$RETAINED_RUNS" ] || { echo "::error::retained_runs requires mining or judgment-only mode"; exit 1; }
+          [[ -z "$SOURCE_RUN" || "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
+          if [ "$VERIFY_ONLY" = true ] && [ -n "$SOURCE_RUN" ]; then
+            [ -z "$INDEX_RUN" ] && [ "$REFRESH_OWN" != true ] || { echo "::error::offline replay cannot select index reconstruction or Own refresh"; exit 1; }
+          fi
+          if [ "$REFRESH_OWN" = true ] && [ "$VERIFY_ONLY" != true ]; then
+            echo "::error::refresh_own requires verify_only"; exit 1
+          fi
+          if [ "$VERIFY_ONLY" != true ]; then
+            [[ "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
+            [ "$HAS_MODEL" = true ] || { echo "::error::adapter probe requires GROK_AUTH_JSON"; exit 1; }
+          fi
+          [[ -z "$INDEX_RUN" || "$INDEX_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::index_run must be a run ID"; exit 1; }
+          case "$TRACE_SECONDS" in 90 | 300 | 600) ;; *) echo "::error::unsupported trace deadline"; exit 1 ;; esac
+          if { [ -n "$TRACE_FILE" ] || [ "$TRACE_SECONDS" != 90 ]; } && [ "$TRACE_ONLY" != true ]; then echo "::error::trace options require adapter_trace"; exit 1; fi
+          if [ "$TRACE_ONLY" = true ] && { [ "$VERIFY_ONLY" = true ] || [ "$REFRESH_OWN" = true ]; }; then echo "::error::trace and verification modes are exclusive"; exit 1; fi
+          echo "OUT=$RUNNER_TEMP/atlas-adapter-probe" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/atlas-adapter-probe"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false # Offline replay must not inherit checkout authentication on disk.
+
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build the Atlas CLI
+        id: atlas-build
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          bun typecheck
+          test -f packages/cli/dist/src/mine-worker.js
+
+      - name: Test genesis script bundle
+        id: genesis-scripts
+        run: node --test script/atlas-genesis/*.test.mjs
+
+      - name: Prove external checkpoints survive abrupt producer death
+        if: inputs.verify_only && steps.genesis-scripts.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          control="$OUT/checkpoint-control"
+          mkdir -p "$control"
+          mkfifo "$control/ready.fifo"
+          node script/atlas-genesis/checkpoint-control.mjs produce "$control" > "$control/ready.fifo" &
+          producer=$!
+          trap 'kill -TERM "$producer" 2>/dev/null || true; rm -f "$control/ready.fifo"' EXIT
+          read -r -t 270 ready < "$control/ready.fifo"
+          [ "$ready" = EXTERNAL_CHECKPOINTS_ACKNOWLEDGED ]
+          kill -KILL "$producer"
+          if wait "$producer"; then code=0; else code=$?; fi
+          [ "$code" = 137 ]
+          printf '%s\n' "$code" > "$control/death.code"
+          rm "$control/ready.fifo"
+          trap - EXIT
+          node script/atlas-genesis/checkpoint-control.mjs restore "$control"
+          node script/atlas-genesis/checkpoint-transport.mjs "$OUT/checkpoint-transport"
+
+      - name: Verify source-linked continuation commands and external recovery without subscription calls
+        if: inputs.verify_only && steps.genesis-scripts.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node script/atlas-genesis/checkpoint-continuation-remote-control.mjs "$OUT/continuation-control"
+
+      - name: Validate retained run IDs before any remote read
+        if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
+        run: |
+          control="$RUNNER_TEMP/retained-run-control"
+          mkdir -p "$control/bin"
+          printf '#!/usr/bin/env bash\nprintf "called\\n" >> "$RETAINED_GH_LOG"\nexit 99\n' > "$control/bin/gh"
+          chmod 700 "$control/bin/gh"
+          export RETAINED_GH_LOG="$control/gh.log"
+          # Calibrate the absence check: the fixture command demonstrably records a call.
+          set +e
+          PATH="$control/bin:$PATH" gh control
+          code=$?
+          set -e
+          [ "$code" = 99 ] && [ -s "$RETAINED_GH_LOG" ]
+          rm "$RETAINED_GH_LOG"
+          i=0
+          for runs in invalid 1,1 1,2,3,4,5 42; do
+            i=$((i+1))
+            if RETAINED_RUNS="$runs" SOURCE_RUN=42 OUT="$control/bad-$i" PATH="$control/bin:$PATH" \
+              bash script/atlas-genesis/retained-runs.sh > "$control/bad-$i.out" 2> "$control/bad-$i.err"; then
+              echo "::error::invalid retained run IDs were accepted"; exit 1
+            fi
+            [ ! -e "$RETAINED_GH_LOG" ] || { echo "::error::invalid IDs reached a remote read"; exit 1; }
+          done
+          RETAINED_RUNS='' SOURCE_RUN=42 OUT="$control/empty" PATH="$control/bin:$PATH" bash script/atlas-genesis/retained-runs.sh
+          node -e 'const fs=require("node:fs"); if(JSON.stringify(JSON.parse(fs.readFileSync(process.argv[1])))!=="[]") throw new Error("empty retained list must be explicit")' "$control/empty/retained-import-sources.json"
+          [ ! -e "$RETAINED_GH_LOG" ]
+
+      - name: Verify immutable real-data source bytes
+        if: inputs.verify_only
+        run: |
+          mkdir -p "$OUT"
+          set -o pipefail
+          timeout 180 node --test script/atlas-genesis/realdata-source.node-smoke.mjs | tee "$OUT/realdata-source.txt"
+
+      - name: Execute the external AST utility matrix
+        id: ast-matrix
+        if: always() && inputs.verify_only && steps.genesis-scripts.outcome == 'success'
+        run: |
+          out="$OUT/utility"
+          tool="$RUNNER_TEMP/atlas-ast-tool"
+          mkdir -p "$out" "$tool"
+          node script/atlas-genesis/ast-utility.mjs prepare "$out" > "$OUT/ast-prepare.json"
+          timeout 180 npm install --prefix "$tool" --no-save --package-lock=false @ast-grep/cli@0.51.1
+          binary="$tool/node_modules/.bin/ast-grep"
+          if timeout 10 "$binary" --version > "$out/version.txt" 2> "$out/version.stderr"; then code=0; else code=$?; fi
+          printf '%s\n' "$code" > "$out/version.code"
+          while IFS= read -r query; do
+            id="$(jq -r '.id' <<< "$query")"
+            pattern="$(jq -r '.pattern' <<< "$query")"
+            while IFS= read -r variant; do
+              if (cd "$out" && timeout 20 "$binary" run --lang ts --pattern "$pattern" --json=compact "$out/$variant.ts") \
+                > "$out/$id.$variant.json" 2> "$out/$id.$variant.stderr"; then code=0; else code=$?; fi
+              printf '%s\n' "$code" > "$out/$id.$variant.code"
+            done < <(jq -r '.variants[].id' "$out/manifest.json")
+          done < <(jq -c '.queries[]' "$out/manifest.json")
+          node script/atlas-genesis/ast-utility.mjs check "$out" > "$OUT/ast-verdict.json"
+
+      - name: Scan external utility receipts
+        id: utility-scan
+        if: always() && inputs.verify_only
+        env:
+          SCRIPT_OUTCOME: ${{ steps.genesis-scripts.outcome }}
+          MATRIX_OUTCOME: ${{ steps.ast-matrix.outcome }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs'
+          writeFileSync(process.env.OUT + '/verification-status.json', JSON.stringify({
+            revision: process.env.GITHUB_SHA, scripts: process.env.SCRIPT_OUTCOME, astMatrix: process.env.MATRIX_OUTCOME,
+          }) + '\n')
+          NODE
+          node script/atlas-genesis/secret-scan.mjs "$OUT"
+
+      - name: Upload external utility receipts
+        if: always() && inputs.verify_only && steps.utility-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-utility
+          path: ${{ runner.temp }}/atlas-adapter-probe
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Reproduce original protected responses without network or subscription access
+        id: exact-replay
+        if: inputs.verify_only && inputs.adapter_probe_run != '' && steps.genesis-scripts.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONTINUATION_CONTROL: ${{ inputs.continuation_control && '1' || '0' }}
+        run: bash script/atlas-genesis/checkpoint-replay-proof.sh
+
+      - name: Scan offline replay evidence
+        id: replay-scan
+        if: always() && inputs.verify_only && inputs.adapter_probe_run != '' && steps.exact-replay.outcome != 'skipped'
+        run: node script/atlas-genesis/secret-scan.mjs "$OUT/exact-replay"
+
+      - name: Upload offline replay evidence
+        if: always() && inputs.verify_only && inputs.adapter_probe_run != '' && steps.replay-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ inputs.continuation_control && 'atlas-genesis-continuation-control' || 'atlas-genesis-exact-replay' }}
+          path: ${{ runner.temp }}/atlas-adapter-probe/exact-replay
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Test the scoped genesis recovery bundle
+        if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
+        working-directory: modules/atlas
+        run: |
+          files=(
+            packages/genesis/test/deferred-signals.test.ts
+            packages/genesis/test/multifact-extract.test.ts
+            packages/genesis/test/provable-frontier.test.ts
+            packages/genesis/test/wp-fix-concurrency.test.ts
+            packages/genesis/test/coverage-ledger.test.ts
+            packages/genesis/test/run-failure.test.ts
+            packages/cli/test/mine-deferred-signals.test.ts
+            packages/cli/test/mine-budget-cap.test.ts
+            packages/cli/test/mine-pool-slot.test.ts
+            packages/cli/test/mine-coverage-render.test.ts
+            packages/cli/test/mine-arms-render.test.ts
+            packages/cli/test/mine-failure-evidence.test.ts
+            packages/cli/test/mine-claim-evidence.test.ts
+            packages/cli/test/mine-staged-metrics.test.ts
+            packages/cli/test/mine-multifact.test.ts
+            packages/cli/test/mine-multifact-worker.test.ts
+            packages/cli/test/surface-mine.test.ts
+            packages/cli/test/mine-render-seeded-count.test.ts
+            packages/knowledge/test/claim-evidence-carrier.test.ts
+            packages/knowledge/test/wp-5.13-a-know.router.test.ts
+            packages/knowledge/test/wp-5.13-b-know.anchor-identity.test.ts
+            packages/genesis/test/open-questions.test.ts
+            packages/adapter-io/test/open-questions-source.test.ts
+            packages/adapter-io/test/git-history.test.ts
+            packages/adapter-io/test/git-history-bridge.test.ts
+            packages/adapter-io/test/git-history-memo.test.ts
+            packages/adapter-io/test/git-history-frontier-szz.test.ts
+            packages/adapter-io/test/git-history-szz.test.ts
+            packages/adapter-io/test/git-history-selected-szz.test.ts
+            packages/adapter-io/test/llm-multifact.test.ts
+            packages/adapter-io/test/governed-promote-claims.test.ts
+          )
+          # These implementations share parser/ratification boundaries; keep their existing regressions too.
+          files+=(packages/adapter-io/test/llm-*.test.ts packages/adapter-io/test/governed-*.test.ts)
+          for file in "${files[@]}"; do test -f "$file" || { echo "::error::missing recovery test $file"; exit 1; }; done
+          npm test -- "${files[@]}"
+
+      - name: Falsify the recovery regression assertions
+        if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
+        working-directory: modules/atlas
+        run: |
+          for control in signals age authors szz-cap metrics evidence-plan evidence-report evidence-fault claim-store claim-union claim-prune claim-own claim-replace claim-answer staged-keys proposal-all proposal-grounds proposal-bytes proposal-controls group-window group-rebind group-receipts group-resume promote-all promote-origin promote-settlement; do
+            case "$control" in
+              signals) file=packages/genesis/test/deferred-signals.test.ts ;;
+              age) file=packages/adapter-io/test/git-history.test.ts ;;
+              authors) file=packages/adapter-io/test/open-questions-source.test.ts ;;
+              szz-cap) file=packages/adapter-io/test/git-history-selected-szz.test.ts ;;
+              metrics) file=packages/cli/test/mine-coverage-render.test.ts ;;
+              evidence-plan | evidence-report | evidence-fault) file=packages/cli/test/mine-failure-evidence.test.ts ;;
+              claim-store | claim-answer) file=packages/cli/test/mine-claim-evidence.test.ts ;;
+              claim-union | claim-prune | claim-own | claim-replace) file=packages/knowledge/test/claim-evidence-carrier.test.ts ;;
+              staged-keys) file=packages/cli/test/mine-staged-metrics.test.ts ;;
+              proposal-*) file=packages/adapter-io/test/llm-multifact.test.ts ;;
+              group-window) file=packages/genesis/test/multifact-extract.test.ts ;;
+              group-rebind | group-receipts) file=packages/cli/test/mine-multifact.test.ts ;;
+              group-resume) file=packages/genesis/test/coverage-ledger.test.ts ;;
+              promote-*) file=packages/adapter-io/test/governed-promote-claims.test.ts ;;
+            esac
+            backup="$RUNNER_TEMP/$control.source"
+            report="$RUNNER_TEMP/$control.mutation.json"
+            node ../../script/atlas-genesis/recovery-mutation.mjs apply "$control" "$backup"
+            trap 'node ../../script/atlas-genesis/recovery-mutation.mjs restore "$control" "$backup"' EXIT
+            set +e
+            npm test -- "$file" --reporter=json --outputFile="$report"
+            code=$?
+            set -e
+            node ../../script/atlas-genesis/recovery-mutation.mjs restore "$control" "$backup"
+            trap - EXIT
+            node ../../script/atlas-genesis/recovery-mutation.mjs verify "$control" "$report" "$code"
+          done
+          git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts packages/cli/src/mine-render.ts packages/cli/src/mine.ts packages/cli/src/mine-decide.ts packages/knowledge/src/write/upsert.ts packages/knowledge/src/write/claim-evidence.ts
+
+      - name: Prove compiled pool worker-death liveness
+        if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
+        run: |
+          for mode in healthy dead; do
+            backup="$RUNNER_TEMP/pool-$mode.worker.js"
+            node script/atlas-genesis/pool-liveness.mjs prepare "$mode" "$backup"
+            trap 'node script/atlas-genesis/pool-liveness.mjs restore "$backup"' EXIT
+            echo "pool-liveness: starting controlled $mode worker"
+            timeout 45 node script/atlas-genesis/pool-liveness.mjs run "$mode" "$RUNNER_TEMP"
+            if [ "$mode" = healthy ]; then
+              timeout 10 node script/atlas-genesis/pool-liveness.mjs ranges "$RUNNER_TEMP"
+            fi
+            node script/atlas-genesis/pool-liveness.mjs restore "$backup"
+            trap - EXIT
+          done
+
+      - name: Materialize the reviewed Own receipts
+        id: own-receipts
+        if: inputs.verify_only && inputs.refresh_own
+        working-directory: modules/atlas
+        run: |
+          mkdir -p "$OUT"
+          OWN_REVIEW_REV=$(git rev-parse HEAD)
+          export OWN_REVIEW_REV
+          for path in packages/genesis/src/extract.ts packages/genesis/src/index.ts packages/genesis/src/types.ts; do
+            printf '%s\t%s\n' "$path" "$(git rev-parse "HEAD:modules/atlas/$path")"
+          done > "$RUNNER_TEMP/own-blobs.tsv"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          const snapshot = JSON.parse(readFileSync('OWN-SNAPSHOT.json', 'utf8'))
+          assert.equal(snapshot.units.length, 1)
+          assert.equal(snapshot.units[0].unit.id, 'packages/genesis')
+          const blobs = Object.fromEntries(readFileSync(`${process.env.RUNNER_TEMP}/own-blobs.tsv`, 'utf8')
+            .trim().split('\n').map((line) => line.split('\t')))
+          assert.deepEqual(Object.keys(blobs).sort(), Object.keys(snapshot.units[0].sourceBlobs).sort())
+          assert(/^[a-f0-9]{40}$/.test(process.env.OWN_REVIEW_REV))
+          assert(Object.values(blobs).every((blob) => /^[a-f0-9]{40}$/.test(blob)))
+          snapshot.sourceRevision = process.env.OWN_REVIEW_REV
+          snapshot.units[0].sourceBlobs = blobs
+          writeFileSync(`${process.env.RUNNER_TEMP}/reviewed-own.json`, JSON.stringify(snapshot))
+          NODE
+          node scripts/materialize-own-snapshot.mjs "$RUNNER_TEMP/reviewed-own.json"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { readFileSync } from 'node:fs'
+          const input = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/reviewed-own.json`, 'utf8'))
+          const output = JSON.parse(readFileSync('OWN-SNAPSHOT.json', 'utf8'))
+          assert.deepEqual(output.units.map((unit) => unit.pack), input.units.map((unit) => unit.pack))
+          NODE
+          npm run own-snapshot-guard
+          git diff --binary -- OWN-SNAPSHOT.json .orchestra/skills/own > "$OUT/recovery-own.patch"
+          test -s "$OUT/recovery-own.patch"
+          node ../../script/atlas-genesis/secret-scan.mjs "$OUT/recovery-own.patch"
+
+      - name: Verify committed Own freshness
+        if: always() && inputs.verify_only && inputs.refresh_own != true && steps.atlas-build.outcome == 'success'
+        working-directory: modules/atlas
+        run: npm run own-snapshot-guard
+
+      - name: Verify overlap with the restored production workers
+        if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
+        run: |
+          control="$RUNNER_TEMP/recovery-pool-control"
+          mkdir -p "$control"
+          node --input-type=module - "$control" <<'NODE'
+          import { writeFileSync } from 'node:fs'
+          writeFileSync(`${process.argv[2]}/manifest.json`, JSON.stringify({ paths: [
+            'packages/schema/src/schema.ts',
+            'packages/core/src/effect/layer-node.ts',
+            'packages/core/src/flag/flag.ts',
+          ] }))
+          NODE
+          timeout 90 node script/atlas-genesis/adapter-probe.mjs control "$control"
+
+      - name: Reconstruct the failed source plan without a model
+        if: inputs.verify_only && inputs.index_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$INDEX_RUN" --jq .head_sha)
+          [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable reconstruction revision"; exit 1; }
+          git cat-file -e "$source^{commit}"
+          git merge-base --is-ancestor "$source" HEAD
+          git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/reconstruction-changes.nul"
+          node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/reconstruction-changes.nul" "$source" "$OUT/reconstruction-index.json"
+          gh run download "$INDEX_RUN" -R "$GITHUB_REPOSITORY" -n atlas-genesis-index -D .atlas/index.d
+          for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing reconstruction $file"; exit 1; }; done
+          test -s .atlas/index.d/roots.json || { echo "::error::index artifact lacks its verified root manifest"; exit 1; }
+          node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/reconstruction-changes.nul" "$OUT/reconstruction-index.json"
+          source_root="$RUNNER_TEMP/atlas-reconstruction-source"
+          git worktree add --detach "$source_root" "$source"
+          mkdir -p "$source_root/.atlas/index.d"
+          cp .atlas/index.d/*.scip .atlas/index.d/roots.json "$source_root/.atlas/index.d/"
+          timeout 900 node script/atlas-genesis/reconstruct-plan.mjs "$source" "$source_root" "$OUT/reconstructed"
+
+      - name: Scan zero-model reconstruction receipts
+        id: reconstruction-scan
+        if: always() && inputs.verify_only && inputs.index_run != ''
+        run: |
+          node script/atlas-genesis/secret-scan.mjs "$OUT/reconstructed" "$OUT/reconstruction-index.json"
+
+      - name: Upload zero-model reconstruction receipts
+        if: always() && inputs.verify_only && inputs.index_run != '' && steps.reconstruction-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-reconstruction
+          path: |
+            ${{ runner.temp }}/atlas-adapter-probe/reconstructed
+            ${{ runner.temp }}/atlas-adapter-probe/reconstruction-index.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the reviewed receipt patch
+        if: inputs.verify_only && inputs.refresh_own && steps.own-receipts.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-recovery-own
+          path: ${{ runner.temp }}/atlas-adapter-probe/recovery-own.patch
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Restore the source run indexes
+        if: inputs.verify_only != true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          run-id: ${{ inputs.index_run || inputs.adapter_probe_run }}
+          github-token: ${{ github.token }}
+
+      - name: Restore the source run staging evidence
+        if: inputs.verify_only != true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-mine
+          path: ${{ runner.temp }}/probe-source
+          run-id: ${{ inputs.adapter_probe_run }}
+          github-token: ${{ github.token }}
+
+      - name: Pin the replayed source files
+        if: inputs.verify_only != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f .atlas/index.d/roots.json ]; then cp "$RUNNER_TEMP/probe-source/atlas/roots.json" .atlas/index.d/roots.json; fi
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/${INDEX_RUN:-$SOURCE_RUN}" --jq .head_sha)
+          [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable probe index revision"; exit 1; }
+          git cat-file -e "$source^{commit}"
+          git merge-base --is-ancestor "$source" HEAD
+          git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/probe-index-changes.nul"
+          node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/probe-index-changes.nul" "$source" "$OUT/index-reuse.json"
+          node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/probe-index-changes.nul" "$OUT/index-reuse.json"
+          node script/atlas-genesis/adapter-probe.mjs prepare "$RUNNER_TEMP/probe-source/atlas/staging.json" "$OUT"
+          source=$(node -e 'console.log(require(process.argv[1]).revision)' "$OUT/manifest.json")
+          mapfile -t files < "$OUT/paths.txt"
+          git diff --exit-code "$source" HEAD -- "${files[@]}"
+          if [ "$TRACE_ONLY" = true ]; then
+            node script/atlas-genesis/adapter-probe.mjs prompt "$OUT" "$RUNNER_TEMP/probe.prompt" "$TRACE_FILE"
+          fi
+
+      - name: Prove compiled model calls overlap
+        if: inputs.verify_only != true
+        run: timeout 90 node script/atlas-genesis/adapter-probe.mjs control "$OUT"
+
+      - name: Configure the subscription adapter
+        if: inputs.verify_only != true
+        env:
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          npm install -g "@xai-official/grok@$GROK_VERSION"
+          grok --no-auto-update version
+          script/atlas-genesis/grok-text.sh --version > "$OUT/model-identity.txt"
+          umask 077
+          mkdir -p "$HOME/.grok"
+          printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
+          node -e '
+            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-text.sh", args: [] } }, timeoutMs: 600000 }
+            require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg) + "\n")
+          ' "$RUNNER_TEMP/probe-model.json"
+          echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/probe-model.json" >> "$GITHUB_ENV"
+
+      - name: Verify prompt-only policy before source requests
+        if: inputs.verify_only != true
+        run: |
+          umask 077
+          set +e
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 30 sh script/atlas-genesis/grok-text.sh \
+            <<<"Reply with exactly the word ok" >"$RUNNER_TEMP/policy-stream.jsonl" 2>"$RUNNER_TEMP/policy-stderr.txt"
+          code=$?
+          set -e
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/policy-stream.jsonl" "$OUT/policy.json" "$code"
+
+      - name: Verify the actual compiled subscription socket transport
+        if: inputs.verify_only != true && inputs.adapter_trace != true
+        run: node script/atlas-genesis/grok-transport.mjs subscription "$OUT/socket-transport.json"
+
+      - name: Probe each real arm through compiled workers
+        if: inputs.verify_only != true && inputs.adapter_trace != true
+        run: |
+          status=0
+          for arm in advisory dependency count; do
+            timeout 660 node script/atlas-genesis/adapter-probe.mjs run "$OUT" "$arm" || status=1
+          done
+          exit "$status"
+
+      - name: Trace one selected source request
+        if: inputs.verify_only != true && inputs.adapter_trace == true
+        run: |
+          umask 077
+          node -e 'const fs = require("node:fs"); fs.writeFileSync(process.argv[1], JSON.stringify({diagnosticTimeoutMs: Number(process.env.TRACE_SECONDS) * 1000, productionTimeoutMs: JSON.parse(fs.readFileSync(process.env.ATLAS_MODEL_CONFIG, "utf8")).timeoutMs}) + "\n")' "$OUT/trace-policy.json"
+          set +e
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout "$TRACE_SECONDS" sh script/atlas-genesis/grok-text.sh \
+            <"$RUNNER_TEMP/probe.prompt" >"$RUNNER_TEMP/probe-stream.jsonl" 2>"$RUNNER_TEMP/probe-stderr.txt"
+          code=$?
+          set -e
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/probe-stream.jsonl" "$OUT/trace.json" "$code"
+
+      - name: Remove private trace buffers
+        if: always()
+        run: rm -f "$RUNNER_TEMP/probe.prompt" "$RUNNER_TEMP/probe-stream.jsonl" "$RUNNER_TEMP/probe-stderr.txt" "$RUNNER_TEMP/policy-stream.jsonl" "$RUNNER_TEMP/policy-stderr.txt"
+
+      - name: Scan probe evidence
+        id: probe-scan
+        if: always() && inputs.verify_only != true
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          mkdir -p "$OUT"
+          if [ -f "$HOME/.grok/auth.json" ]; then export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"; fi
+          node script/atlas-genesis/secret-scan.mjs "$OUT"
+
+      - name: Upload sanitized probe evidence
+        if: always() && steps.probe-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-adapter-probe
+          path: ${{ runner.temp }}/atlas-adapter-probe
+          if-no-files-found: error
+          retention-days: 14
+
+  evaluate-corpus:
+    name: atlas frozen real-data judge evaluation
+    if: inputs.index_only != true && inputs.evaluate_corpus == true
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
+      GROK_VERSION: "1.0.13"
+      VERIFY_ONLY: ${{ inputs.verify_only }}
+      REFRESH_OWN: ${{ inputs.refresh_own }}
+      ADAPTER_RUN: ${{ inputs.adapter_probe_run }}
+      TRACE_FILE: ${{ inputs.trace_file }}
+      TRACE_ONLY: ${{ inputs.adapter_trace }}
+      JUDGE_RUN: ${{ inputs.judge_run }}
+      PUBLISH: ${{ inputs.publish }}
+    steps:
+      - name: Validate corpus-only inputs
+        run: |
+          [ "$PUBLISH" != true ] && [ "$VERIFY_ONLY" != true ] && [ "$REFRESH_OWN" != true ] || { echo "::error::corpus evaluation cannot publish or run verification-only modes"; exit 1; }
+          [ -z "$ADAPTER_RUN$TRACE_FILE$JUDGE_RUN$RETAINED_RUNS" ] && [ "$TRACE_ONLY" != true ] || { echo "::error::corpus evaluation and other model routes are exclusive"; exit 1; }
+          [ "$HAS_MODEL" = true ] || { echo "::error::corpus evaluation requires the Grok subscription"; exit 1; }
+          echo "OUT=$RUNNER_TEMP/atlas-corpus-evaluation" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build Atlas and gate frozen evaluation helpers
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          bun typecheck
+          node --test ../../script/atlas-genesis/realdata-evaluate.test.mjs ../../script/atlas-genesis/judge.test.mjs \
+            ../../script/atlas-genesis/judge-source.test.mjs ../../script/atlas-genesis/judge-index.test.mjs \
+            ../../script/atlas-genesis/grok-agent.test.mjs ../../script/atlas-genesis/grok-trace.test.mjs \
+            ../../script/atlas-genesis/secret-scan.test.mjs
+
+      - name: Fetch immutable corpus sources once and verify all bytes
+        run: |
+          mkdir -p "$OUT/source"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { createHash } from 'node:crypto'
+          import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+          import { dirname, join } from 'node:path'
+          const manifest = JSON.parse(readFileSync('script/atlas-genesis/realdata-corpus-v1.json', 'utf8'))
+          const json = async (url) => {
+            const response = await fetch(url)
+            assert(response.ok, 'corpus-source: metadata request failed')
+            return response.json()
+          }
+          const commit = await json(`https://api.github.com/repos/${manifest.repository}/git/commits/${manifest.revision}`)
+          assert.equal(commit.sha, manifest.revision, 'corpus-source: immutable commit mismatch')
+          assert.match(commit.tree.sha, /^[a-f0-9]{40}$/)
+          const tree = await json(`https://api.github.com/repos/${manifest.repository}/git/trees/${commit.tree.sha}?recursive=1`)
+          assert.equal(tree.sha, commit.tree.sha, 'corpus-source: tree identity mismatch')
+          assert.equal(tree.truncated, false, 'corpus-source: incomplete tree')
+          const entries = new Map(tree.tree.map((entry) => [entry.path, entry]))
+          const blob = (bytes) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')
+          assert.equal(blob(Buffer.alloc(0)), 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391', 'corpus-source: Git blob control')
+          const verified = await Promise.all([...manifest.sources, manifest.license].map(async (pin) => {
+            assert.deepEqual([entries.get(pin.path)?.mode, entries.get(pin.path)?.type, entries.get(pin.path)?.sha], ['100644', 'blob', pin.gitBlob], 'corpus-source: tree membership mismatch')
+            const response = await fetch(`https://raw.githubusercontent.com/${manifest.repository}/${manifest.revision}/${pin.path}`)
+            assert(response.ok, 'corpus-source: source request failed')
+            const bytes = Buffer.from(await response.arrayBuffer())
+            assert.equal(blob(bytes), pin.gitBlob, 'corpus-source: source byte mismatch')
+            const target = join(process.env.OUT, 'source', pin.path)
+            mkdirSync(dirname(target), { recursive: true })
+            writeFileSync(target, bytes, { flag: 'wx' })
+            return pin
+          }))
+          writeFileSync(join(process.env.OUT, 'source-receipt.json'), JSON.stringify({repository: manifest.repository, revision: manifest.revision, tree: tree.sha, verified}, null, 2) + '\n')
+          NODE
+
+      - name: Prepare frozen prompts and validate source references before model calls
+        run: |
+          node script/atlas-genesis/realdata-evaluate.mjs prepare "$OUT/judge" --sources "$OUT/source"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { createHash } from 'node:crypto'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { loadCorpus, validateFreeze, validateReference } from './script/atlas-genesis/realdata-evaluate.mjs'
+          const sample = JSON.parse(readFileSync(process.env.OUT + '/judge/sample.json'))
+          validateFreeze(sample, JSON.parse(readFileSync('script/atlas-genesis/realdata-evaluation-freeze-v2.json')))
+          const corpus = loadCorpus(process.env.OUT + '/source')
+          const references = ['a', 'b'].map((name) => {
+            const bytes = readFileSync(`script/atlas-genesis/realdata-reference-${name}-v1.json`)
+            const reference = JSON.parse(bytes)
+            const labels = validateReference(reference, corpus)
+            return {id: reference.producer.id, sha256: createHash('sha256').update(bytes).digest('hex'), labels: labels.size}
+          })
+          assert.notEqual(references[0].id, references[1].id)
+          writeFileSync(process.env.OUT + '/reference-preflight.json', JSON.stringify({references}, null, 2) + '\n')
+          NODE
+
+      - name: Configure and check the frozen subscription policy
+        env:
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          npm install -g "@xai-official/grok@$GROK_VERSION"
+          script/atlas-genesis/grok-text.sh --version > "$OUT/model-identity.txt"
+          umask 077
+          mkdir -p "$HOME/.grok"
+          printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
+          trap 'rm -f "$RUNNER_TEMP/corpus-policy.jsonl" "$RUNNER_TEMP/corpus-policy.err"' EXIT
+          grok --no-auto-update --help > "$RUNNER_TEMP/corpus-grok-help.txt"
+          grep -F -- --prompt-file "$RUNNER_TEMP/corpus-grok-help.txt"
+          node -e 'process.stdout.write(" ".repeat(160000) + "Reply with the single word ok\n")' > "$RUNNER_TEMP/corpus-policy.prompt"
+          trap 'rm -f "$RUNNER_TEMP/corpus-policy.jsonl" "$RUNNER_TEMP/corpus-policy.err" "$RUNNER_TEMP/corpus-policy.prompt"' EXIT
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 600 sh script/atlas-genesis/grok-text.sh \
+            <"$RUNNER_TEMP/corpus-policy.prompt" >"$RUNNER_TEMP/corpus-policy.jsonl" 2>"$RUNNER_TEMP/corpus-policy.err"
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/corpus-policy.jsonl" "$OUT/policy.json" 0
+          node -e 'const fs=require("node:fs"); const freeze=JSON.parse(fs.readFileSync("script/atlas-genesis/realdata-evaluation-freeze-v2.json")); const policy=JSON.parse(fs.readFileSync(process.env.OUT+"/policy.json")); if(policy.model!==freeze.settings.expectedObservedModel) throw new Error("frozen evaluation model mismatch")'
+
+      - name: Prove command failure cannot masquerade as a valid judgment
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto'
+          import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+          const dir = process.env.OUT + '/argv-control'
+          mkdirSync(dir + '/bin', { recursive: true })
+          const prompt = 'transport-prefix\n' + '界'.repeat(60000) + '\ntransport-footer\n'
+          writeFileSync(dir + '/input.prompt', prompt)
+          writeFileSync(dir + '/expected.sha256', createHash('sha256').update(prompt).digest('hex'))
+          writeFileSync(dir + '/bin/grok', `#!/usr/bin/env node
+          const assert = require('node:assert/strict')
+          const fs = require('node:fs')
+          const crypto = require('node:crypto')
+          const args = process.argv.slice(2)
+          assert(args.every(arg => Buffer.byteLength(arg) < 131072))
+          assert.equal(args[args.indexOf('--model') + 1], 'grok-4.7')
+          assert.equal(args[args.indexOf('--prompt-file') + 1], '/dev/stdin')
+          assert(!args.includes('-p'))
+          const bytes = fs.readFileSync(0)
+          const sha256 = crypto.createHash('sha256').update(bytes).digest('hex')
+          assert.equal(sha256, fs.readFileSync(process.env.EXPECTED_PROMPT_HASH, 'utf8'))
+          assert(bytes.length > 131072)
+          console.log(JSON.stringify({bytes: bytes.length, sha256, transport: 'file-stdin'}))
+          `, { mode: 0o700 })
+          const wrapper = readFileSync('script/atlas-genesis/grok-text.sh', 'utf8')
+          assertSingle(wrapper, '--prompt-file /dev/stdin')
+          writeFileSync(dir + '/mutant.sh', wrapper.replace('--prompt-file /dev/stdin', '-p "$(cat)"'))
+          writeFileSync(dir + '/grok-agent.json', readFileSync('script/atlas-genesis/grok-agent.json'))
+          function assertSingle(text, needle) {
+            if (text.split(needle).length !== 2) throw new Error('transport mutation target must be unique')
+          }
+          NODE
+          EXPECTED_PROMPT_HASH="$OUT/argv-control/expected.sha256" PATH="$OUT/argv-control/bin:$PATH" \
+            sh script/atlas-genesis/grok-text.sh < "$OUT/argv-control/input.prompt" > "$OUT/argv-control.json"
+          if EXPECTED_PROMPT_HASH="$OUT/argv-control/expected.sha256" PATH="$OUT/argv-control/bin:$PATH" \
+            sh "$OUT/argv-control/mutant.sh" < "$OUT/argv-control/input.prompt" > "$OUT/argv-control/mutant.out" 2> "$OUT/argv-control/mutant.err"; then
+            echo "::error::long-argument transport mutation survived"; exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import { mkdirSync, writeFileSync } from 'node:fs'
+          const dir = process.env.OUT + '/transport-control'
+          mkdirSync(dir, { recursive: true })
+          const verdict = JSON.stringify({verdict: 'true', nonObvious: true, reason: 'synthetic transport control, not a source label'})
+          for (const [name, code] of [['healthy', 0], ['failed', 1]]) {
+            writeFileSync(`${dir}/${name}.prompt`, 'synthetic transport input\n', {flag: 'wx'})
+            writeFileSync(`${dir}/${name}.sh`, `#!/usr/bin/env bash\ncat >/dev/null\nprintf '%s\\n' '${verdict}'\nexit ${code}\n`, {flag: 'wx'})
+          }
+          NODE
+          for mode in healthy failed; do
+            bash script/atlas-genesis/judge-request.sh "$OUT/transport-control/$mode.prompt" "$OUT/transport-control/$mode.sh"
+          done
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { createHash } from 'node:crypto'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { parseVerdict } from './script/atlas-genesis/judge.mjs'
+          const dir = process.env.OUT + '/transport-control'
+          assert.equal(parseVerdict(readFileSync(`${dir}/healthy.out`, 'utf8'))?.verdict, 'true')
+          assert.equal(parseVerdict(readFileSync(`${dir}/failed.out`, 'utf8')), null)
+          const receipt = Object.fromEntries(['healthy', 'failed'].map((mode) => {
+            const events = readFileSync(`${dir}/${mode}.attempts.jsonl`, 'utf8').trim().split('\n').map(JSON.parse)
+            const ends = events.filter((event) => event.event === 'end')
+            assert.deepEqual(events.map((event) => event.event), mode === 'healthy' ? ['start', 'end'] : ['start', 'end', 'start', 'end'])
+            assert.deepEqual(ends.map((event) => event.exitCode), mode === 'healthy' ? [0] : [1, 1])
+            for (const event of ends) assert.equal(event.outputSha256, createHash('sha256').update(readFileSync(`${dir}/${mode}.attempt-${event.attempt}.out`)).digest('hex'))
+            return [mode, events]
+          }))
+          writeFileSync(process.env.OUT + '/transport-control.json', JSON.stringify(receipt, null, 2) + '\n')
+          NODE
+
+      - name: Evaluate every fixed claim with bounded parallel calls
+        id: corpus-requests
+        run: |
+          set -o pipefail
+          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
+
+      - name: Score calibration and heldout without tuning or dropping failed calls
+        if: always() && steps.corpus-requests.outcome != 'skipped'
+        run: |
+          if [ ! -f "$OUT/judge/sample.json" ]; then echo "::error::no prepared corpus sample"; exit 1; fi
+          node script/atlas-genesis/realdata-evaluate.mjs score "$OUT/judge" --sources "$OUT/source" \
+            --reference-a script/atlas-genesis/realdata-reference-a-v1.json \
+            --reference-b script/atlas-genesis/realdata-reference-b-v1.json >> "$GITHUB_STEP_SUMMARY"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { readFileSync } from 'node:fs'
+          import { BAR } from './script/atlas-genesis/judge.mjs'
+          const report = JSON.parse(readFileSync(process.env.OUT + '/judge/evaluation.json', 'utf8'))
+          const partitions = Object.values(report.partitions)
+          const total = partitions.reduce((n, part) => n + part.denominator, 0)
+          const failed = partitions.reduce((n, part) => n + part.failures.count, 0)
+          assert(total > 0 && total === report.records.length, 'evaluation denominator mismatch')
+          assert(failed / total <= BAR.failedShare, 'too many failed corpus model calls; descriptive metrics retained')
+          NODE
+
+      - name: Collect safe evaluation receipts
+        if: always()
+        run: |
+          mkdir -p "$OUT/upload/attempts"
+          for file in model-identity.txt policy.json source-receipt.json reference-preflight.json transport-control.json argv-control.json; do
+            if [ -f "$OUT/$file" ]; then cp "$OUT/$file" "$OUT/upload/"; fi
+          done
+          for file in sample.json evaluation.json; do
+            if [ -f "$OUT/judge/$file" ]; then cp "$OUT/judge/$file" "$OUT/upload/"; fi
+          done
+          for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
+          cp script/atlas-genesis/realdata-evaluation-freeze-v*.json script/atlas-genesis/realdata-reference-LICENSE.txt "$OUT/upload/"
+
+      - name: Scan evaluation receipts
+        id: scan
+        if: always()
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          if [ -f "$HOME/.grok/auth.json" ]; then export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"; fi
+          node script/atlas-genesis/secret-scan.mjs "$OUT/upload"
+
+      - name: Upload evaluation receipts
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-corpus-evaluation
+          path: ${{ runner.temp }}/atlas-corpus-evaluation/upload
+          if-no-files-found: error
+          retention-days: 30
+
+  rejudge:
+    name: atlas retained-candidate judgment (no mining)
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     permissions:
       contents: read
+      actions: read
+    env:
+      SOURCE_RUN: ${{ inputs.judge_run }}
+      INDEX_RUN: ${{ inputs.index_run || inputs.judge_run }}
+      HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
+      GROK_VERSION: "1.0.13"
+      VERIFY_ONLY: ${{ inputs.verify_only }}
+      REFRESH_OWN: ${{ inputs.refresh_own }}
+      ADAPTER_RUN: ${{ inputs.adapter_probe_run }}
+      TRACE_FILE: ${{ inputs.trace_file }}
+      TRACE_ONLY: ${{ inputs.adapter_trace }}
+      PUBLISH: ${{ inputs.publish }}
+    steps:
+      - name: Validate judgment-only inputs
+        run: |
+          [[ "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::judge_run must be a run ID"; exit 1; }
+          [ "$PUBLISH" != true ] || { echo "::error::rejudgment does not publish"; exit 1; }
+          [ "$VERIFY_ONLY" != true ] && [ "$REFRESH_OWN" != true ] || { echo "::error::rejudgment and verification modes are exclusive"; exit 1; }
+          [ -z "$ADAPTER_RUN$TRACE_FILE" ] && [ "$TRACE_ONLY" != true ] || { echo "::error::rejudgment and adapter probes are exclusive"; exit 1; }
+          [ "$HAS_MODEL" = true ] || { echo "::error::rejudgment requires the Grok subscription"; exit 1; }
+          echo "OUT=$RUNNER_TEMP/atlas-rejudge" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build Atlas and verify judgment helpers
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          bun typecheck
+          node --test ../../script/atlas-genesis/*.test.mjs
+
+      - name: Verify settled-row metrics and their mutation
+        working-directory: modules/atlas
+        run: |
+          npm test -- packages/cli/test/mine-staged-metrics.test.ts packages/cli/test/mine-arms-render.test.ts
+          backup="$RUNNER_TEMP/rejudge-staged-keys.source"
+          report="$RUNNER_TEMP/rejudge-staged-keys.mutation.json"
+          node ../../script/atlas-genesis/recovery-mutation.mjs apply staged-keys "$backup"
+          trap 'node ../../script/atlas-genesis/recovery-mutation.mjs restore staged-keys "$backup"' EXIT
+          set +e
+          npm test -- packages/cli/test/mine-staged-metrics.test.ts --reporter=json --outputFile="$report"
+          code=$?
+          set -e
+          node ../../script/atlas-genesis/recovery-mutation.mjs restore staged-keys "$backup"
+          trap - EXIT
+          node ../../script/atlas-genesis/recovery-mutation.mjs verify staged-keys "$report" "$code"
+          git diff --exit-code -- packages/cli/src/mine.ts
+
+      - name: Pin source run and unchanged indexed tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$OUT" .atlas/index.d
+          [[ "$INDEX_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::index_run must be a run ID"; exit 1; }
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$INDEX_RUN" --jq .head_sha)
+          [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable source revision"; exit 1; }
+          git cat-file -e "$source^{commit}"
+          git merge-base --is-ancestor "$source" HEAD
+          git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/rejudge-source-changes.nul"
+          node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/rejudge-source-changes.nul" "$source" "$OUT/index-reuse.json"
+
+      - name: Restore source indexes
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          run-id: ${{ inputs.index_run || inputs.judge_run }}
+          github-token: ${{ github.token }}
+
+      - name: Verify restored document identities
+        run: |
+          for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing restored $file"; exit 1; }; done
+          test -s .atlas/index.d/roots.json || { echo "::error::index artifact lacks its verified root manifest"; exit 1; }
+          node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/rejudge-source-changes.nul" "$OUT/index-reuse.json"
+
+      - name: Validate and restore retained candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RETAINED_RUNS="$SOURCE_RUN${RETAINED_RUNS:+,$RETAINED_RUNS}" SOURCE_RUN='' bash script/atlas-genesis/retained-runs.sh
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { restoreRetainedCandidates } from './script/atlas-genesis/retained-candidates.mjs'
+          try {
+            const receipt = await restoreRetainedCandidates(process.cwd(), JSON.parse(readFileSync(process.env.OUT + '/retained-import-sources.json')))
+            writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(receipt, null, 2) + '\n')
+          } catch (error) {
+            if (error.receipt !== undefined) writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(error.receipt, null, 2) + '\n')
+            throw error
+          }
+          NODE
+          node script/atlas-genesis/judge.mjs prepare "$OUT/judge" --repo . --seed "$SOURCE_RUN"
+
+      - name: Configure and check the Grok subscription
+        env:
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          npm install -g "@xai-official/grok@$GROK_VERSION"
+          script/atlas-genesis/grok-text.sh --version > "$OUT/model-identity.txt"
+          umask 077
+          mkdir -p "$HOME/.grok"
+          printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
+          trap 'rm -f "$RUNNER_TEMP/rejudge-policy.jsonl" "$RUNNER_TEMP/rejudge-policy.err"' EXIT
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 60 sh script/atlas-genesis/grok-text.sh \
+            <<<"Reply with the single word ok" >"$RUNNER_TEMP/rejudge-policy.jsonl" 2>"$RUNNER_TEMP/rejudge-policy.err"
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/rejudge-policy.jsonl" "$OUT/policy.json" 0
+
+      - name: Judge preserved claims with bounded parallel calls
+        run: |
+          set -o pipefail
+          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
+          node script/atlas-genesis/judge.mjs score "$OUT/judge" --binding --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Collect retained judgment evidence
+        if: always()
+        run: |
+          mkdir -p "$OUT/upload/atlas" "$OUT/upload/attempts"
+          for file in model-identity.txt policy.json retained-receipt.json index-reuse.json; do
+            if [ -f "$OUT/$file" ]; then cp "$OUT/$file" "$OUT/upload/"; fi
+          done
+          for file in sample.json judge.jsonl judge-verdict.json; do
+            if [ -f "$OUT/judge/$file" ]; then cp "$OUT/judge/$file" "$OUT/upload/"; fi
+          done
+          for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
+          for file in .atlas/staging*.json; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/atlas/"; fi; done
+          if [ -d .atlas/cas ]; then cp -R .atlas/cas "$OUT/upload/atlas/"; fi
+
+      - name: Scan retained judgment evidence
+        id: scan
+        if: always()
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          if [ -f "$HOME/.grok/auth.json" ]; then export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"; fi
+          node script/atlas-genesis/secret-scan.mjs "$OUT/upload"
+
+      - name: Upload retained judgment evidence
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-rejudge
+          path: ${{ runner.temp }}/atlas-rejudge/upload
+          if-no-files-found: error
+          retention-days: 30
+
+  mine:
+    name: atlas genesis mine
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && inputs.verify_only != true && inputs.continuation_control != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
+    runs-on: ubuntu-24.04
+    # The miner has a separate 300-minute bound, leaving collection/judgment headroom on this runner.
+    timeout-minutes: 360
+    permissions:
+      contents: write # Append-only evidence on genesis-checkpoints; never implementation/dev writes.
+      actions: read
     outputs:
       # publish runs only on a run the binding judge passed (a skipped judge — no model — never publishes).
       judged: ${{ steps.judge.outcome }}
     env:
       BUDGET: ${{ inputs.budget }}
       ARMS: ${{ inputs.arms }}
-      HAS_MODEL: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
-      # Pinned Claude Code release for the proposer and the judge; bump deliberately.
-      CLAUDE_CODE_VERSION: "2.1.316"
-      # Every built-in tool, disallowed for both the proposer and the judge: they answer from the text they are
-      # given, and cannot read files, run commands or browse.
-      # A denylist, not `--tools ""`: that flag could not be confirmed for the pinned release, so every current
-      # built-in tool is named. Re-check this list when CLAUDE_CODE_VERSION moves.
-      DISALLOWED_TOOLS: "Agent,Task,Bash,BashOutput,KillShell,Edit,MultiEdit,Write,Read,Glob,Grep,LS,NotebookEdit,NotebookRead,WebFetch,WebSearch,TodoWrite,Skill,SlashCommand,ExitPlanMode"
+      HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
+      # Pinned Grok Build CLI. Subscription login, not an API key. Bump deliberately.
+      GROK_VERSION: "1.0.13"
+      INDEX_RUN: ${{ inputs.index_run }}
     steps:
       - name: Validate inputs
         run: |
           [[ "$BUDGET" =~ ^[1-9][0-9]*$ ]] || { echo "::error::budget must be a positive integer, got '$BUDGET'"; exit 1; }
+          [[ -z "$INDEX_RUN" || "$INDEX_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::index_run must be a run ID"; exit 1; }
           IFS=',' read -ra arms <<< "$ARMS"
           for arm in "${arms[@]}"; do
             arm="${arm// /}"
@@ -71,7 +1116,12 @@ jobs:
               *) echo "::error::unknown arm '$arm' (advisory, dependency, count, definition)"; exit 1 ;;
             esac
           done
+          sorted=$(printf '%s\n' "${arms[@]}" | sort | paste -sd, -)
+          [ "$sorted" = advisory,count,dependency ] || [ "${#arms[@]}" = 1 ] || {
+            echo "::error::protected mining requires the shared default arm set or a single arm"; exit 1;
+          }
           echo "OUT=$RUNNER_TEMP/atlas-genesis" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/atlas-genesis"
           echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js" >> "$GITHUB_ENV"
 
       - name: Checkout repository
@@ -88,97 +1138,170 @@ jobs:
         working-directory: modules/atlas
         run: |
           npm ci
-          npx tsc -b
+          bun typecheck
           test -f packages/cli/dist/src/bin.js
 
-      - name: Index TypeScript
+      - name: Verify reusable source identity
+        if: inputs.index_run != ''
         env:
-          NODE_OPTIONS: --max-old-space-size=12288
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p .atlas/index.d "$OUT"
-          list=$(bash script/atlas-genesis/ts-projects.sh)
-          mapfile -t projects <<< "$list"
-          echo "scip-typescript: ${#projects[@]} project(s): ${projects[*]}"
-          npx --yes @sourcegraph/scip-typescript@0.4.0 index --cwd . --output .atlas/index.d/ts.scip "${projects[@]}" ||
-            { echo "::error::indexer failed: scip-typescript (TypeScript)"; exit 1; }
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$INDEX_RUN" --jq .head_sha)
+          [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable index source revision"; exit 1; }
+          git cat-file -e "$source^{commit}"
+          git merge-base --is-ancestor "$source" HEAD
+          git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/index-source-changes.nul"
+          node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/index-source-changes.nul" "$source" "$OUT/index-reuse.json"
+
+      - name: Restore verified index dumps
+        if: inputs.index_run != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          run-id: ${{ inputs.index_run }}
+          github-token: ${{ github.token }}
+
+      - name: Check restored index dumps
+        if: inputs.index_run != ''
+        run: |
+          for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing restored $file"; exit 1; }; done
 
       - name: Setup Python
+        if: inputs.index_run == ''
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
-      # Run inside modules/relay/lib so the dump's paths start at orchestra_relay/; roots.json rebases them.
-      - name: Index Python (modules/relay)
-        run: |
-          python -m venv "$RUNNER_TEMP/relay-venv"
-          source "$RUNNER_TEMP/relay-venv/bin/activate"
-          pip install ./modules/relay/lib/orchestra_relay
-          cd modules/relay/lib
-          npx --yes @sourcegraph/scip-python@0.6.6 index --project-name orchestra_relay \
-            --output "$GITHUB_WORKSPACE/.atlas/index.d/py.scip" ||
-            { echo "::error::indexer failed: scip-python (modules/relay)"; exit 1; }
+      - name: Build fresh source indexes
+        if: inputs.index_run == ''
+        run: bash script/atlas-genesis/fresh-index.sh
 
-      # rust-analyzer comes from rustup for the toolchain native/omni pins (rust-toolchain.toml), so its
-      # version moves only with that pin. Its dump's paths are relative to the Cargo workspace.
-      - name: Index Rust (native/omni)
-        working-directory: native/omni
+      - name: Require the index root manifest
         run: |
-          rustup show active-toolchain
-          rustup component add rust-analyzer
-          rust-analyzer --version
-          rust-analyzer scip . --output "$GITHUB_WORKSPACE/.atlas/index.d/rust.scip" ||
-            { echo "::error::indexer failed: rust-analyzer (native/omni)"; exit 1; }
-
-      - name: Write index roots
-        run: |
-          printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
+          test -s .atlas/index.d/roots.json || { echo "::error::index artifact lacks its verified root manifest"; exit 1; }
           ls -l .atlas/index.d
 
+      - name: Verify restored document coverage
+        if: inputs.index_run != ''
+        run: node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/index-source-changes.nul" "$OUT/index-reuse.json"
+
       - name: Atlas doctor index
-        run: node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
+        if: inputs.index_run != ''
+        run: |
+          set -o pipefail
+          node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
+
+      - name: Restore retained candidate sources before new proposals
+        if: inputs.retained_runs != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash script/atlas-genesis/retained-runs.sh
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { restoreRetainedCandidates } from './script/atlas-genesis/retained-candidates.mjs'
+          const sources = JSON.parse(readFileSync(process.env.OUT + '/retained-import-sources.json'))
+          try {
+            const receipt = await restoreRetainedCandidates(process.cwd(), sources)
+            writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(receipt, null, 2) + '\n')
+          } catch (error) {
+            if (error.receipt !== undefined) writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(error.receipt, null, 2) + '\n')
+            throw error
+          }
+          NODE
 
       - name: Configure the proposer model
         if: env.HAS_MODEL == 'true'
+        env:
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
         run: |
-          npm install -g "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION"
-          claude --version
-          mkdir -p "$RUNNER_TEMP/atlas"
-          # Text only: every built-in tool disallowed and no MCP server, so a proposal cannot read or run anything.
+          npm install -g "@xai-official/grok@$GROK_VERSION"
+          grok --no-auto-update version
+          script/atlas-genesis/grok-text.sh --version > "$OUT/model-identity.txt"
+          umask 077
+          mkdir -p "$HOME/.grok" "$RUNNER_TEMP/atlas"
+          # Subscription session. Never print it. The secret scan below refuses an artifact that contains it.
+          printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
           node -e '
-            const cfg = { roles: { propose: { cmd: "claude", args: ["-p", "--model", "sonnet", "--strict-mcp-config", "--disallowedTools", process.env.DISALLOWED_TOOLS] } }, timeoutMs: 120000 }
+            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-checkpoint.sh", args: [] } }, timeoutMs: 600000 }
             require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg, null, 2) + "\n")
           ' "$RUNNER_TEMP/atlas/model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
 
+      # Fail in seconds when the subscription session is rejected. Otherwise mine pays the history probe
+      # and only then discovers it.
+      - name: Check the Grok session
+        id: denylist
+        if: env.HAS_MODEL == 'true'
+        run: |
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/mine-policy-stream.jsonl" "$RUNNER_TEMP/mine-policy-stderr.txt"' EXIT
+          set +e
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 60 sh script/atlas-genesis/grok-text.sh \
+            <<<"Reply with the single word ok" >"$RUNNER_TEMP/mine-policy-stream.jsonl" 2>"$RUNNER_TEMP/mine-policy-stderr.txt"
+          code=$?
+          set -e
+          if [ "$code" != 0 ]; then
+            echo "::error::configured Grok subscription did not complete the policy canary; refusing before history/model mining"
+            exit 1
+          fi
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/mine-policy-stream.jsonl" "$OUT/policy.json" "$code"
+          echo "wired=true" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the actual compiled subscription socket transport
+        if: env.HAS_MODEL == 'true'
+        run: node script/atlas-genesis/grok-transport.mjs subscription "$OUT/socket-transport.json"
+
       - name: Mine each arm
         id: mine
         env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ATLAS_MINE_PROGRESS: "1"
+          ATLAS_MINE_EVIDENCE_DIR: ${{ runner.temp }}/atlas-genesis/evidence
+          GH_TOKEN: ${{ github.token }}
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
         run: |
-          [ "$HAS_MODEL" = true ] || echo "::notice::no CLAUDE_CODE_OAUTH_TOKEN secret: no model is wired, every site abstains (zero spend)"
-          IFS=',' read -ra arms <<< "$ARMS"
+          [ "$HAS_MODEL" = true ] || { echo "::error::protected campaign requires its configured subscription"; exit 1; }
+          export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"
+          IFS=',' read -ra raw <<< "$ARMS"
+          arms=()
+          for arm in "${raw[@]}"; do arms+=("${arm// /}"); done
+          # Prove this run's external writer/transport before the first ranked model request.
+          node script/atlas-genesis/checkpoint-transport.mjs "$OUT/checkpoint-transport"
+          set +e
+          timeout --signal=TERM --kill-after=30s 300m node script/atlas-genesis/checkpoint-runner.mjs \
+            >"$OUT/mine.txt" 2> >(tee "$OUT/mine.err" >&2)
+          code=$?
+          set -e
+          node script/atlas-genesis/split-arms.mjs "$OUT/mine.txt" "$OUT" --code "$code" --arms "$ARMS"
+          cat "$OUT/mine.txt"
+          cat "$OUT/mine.err" >&2
           failed=0
           for arm in "${arms[@]}"; do
-            arm="${arm// /}"
-            echo "::group::arm $arm (budget $BUDGET)"
-            set +e
-            ATLAS_MINE_SLOT="$arm" ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/arm-$arm.txt" 2>"$OUT/arm-$arm.err"
-            code=$?
-            set -e
-            echo "$code" >"$OUT/arm-$arm.code"
-            cat "$OUT/arm-$arm.txt"
-            cat "$OUT/arm-$arm.err" >&2
-            echo "::endgroup::"
+            if [ ! -f "$OUT/arm-$arm.code" ]; then
+              echo "::error::arm $arm produced no result"
+              failed=1
+              continue
+            fi
+            one=$(tr -d '[:space:]' <"$OUT/arm-$arm.code")
             # 0 complete. 1 is allowed ONLY as a partial pass, which the render marks with `partial: resume at
             # rank`: a bare 1 is a usage error. 2 is a refusal or failed run, 3 an internal error.
-            if [ "$code" = 1 ] && ! grep -q '^partial: resume at rank' "$OUT/arm-$arm.txt"; then
-              echo "::error::arm $arm exited 1 without a partial marker: $(head -n 1 "$OUT/arm-$arm.err")"
+            if [ "$one" = 1 ] && ! grep -q '^partial: resume at rank' "$OUT/arm-$arm.txt"; then
+              echo "::error::arm $arm exited 1 without a partial marker"
               failed=1
-            elif [ "$code" != 0 ] && [ "$code" != 1 ]; then
-              echo "::error::arm $arm exited $code: $(head -n 1 "$OUT/arm-$arm.err")"
+            elif [ "$one" != 0 ] && [ "$one" != 1 ]; then
+              echo "::error::arm $arm exited $one"
               failed=1
             fi
           done
+          if [ "$code" = 1 ] && ! grep -q '^partial: resume at rank' "$OUT"/arm-*.txt; then
+            echo "::error::mine exited 1 without a partial marker"
+            failed=1
+          elif [ "$code" != 0 ] && [ "$code" != 1 ]; then
+            echo "::error::mine exited $code"
+            failed=1
+          fi
           exit "$failed"
 
       - name: Job summary
@@ -196,28 +1319,20 @@ jobs:
         run: node script/atlas-genesis/frontier-gate.mjs "$OUT" --summary "$GITHUB_STEP_SUMMARY"
 
       # The automated judge (no human reviews facts): a seeded, arm-stratified sample of the staged, non-quarantined
-      # candidates, each judged once by an independent model from the claim and its cited source only. judge.mjs
+      # candidates, each judged in a separate call to the same Grok model from claim and cited source only.
+      # This is not independent-model calibration. judge.mjs
       # never spawns (the spawn gate covers script/); this loop runs the model and judge.mjs prepares and scores.
       # One retry on a malformed answer, then the fact counts as unverifiable and as a failed call. The bar is
       # binding on a publishing run (`publish`), advisory otherwise.
       - name: Judge sample
         id: judge
-        if: env.HAS_MODEL == 'true' && steps.mine.outcome == 'success' && steps.gate.outcome == 'success'
+        if: steps.denylist.outputs.wired == 'true' && steps.mine.outcome == 'success' && steps.gate.outcome == 'success'
         env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PUBLISH: ${{ inputs.publish }}
         run: |
+          set -o pipefail
           node script/atlas-genesis/judge.mjs prepare "$OUT/judge" --repo . --seed "$GITHUB_RUN_ID"
-          for prompt in "$OUT"/judge/*.prompt; do
-            [ -e "$prompt" ] || break
-            out="${prompt%.prompt}.out"
-            for attempt in 1 2; do
-              timeout 180 claude -p --model opus --strict-mcp-config --disallowedTools "$DISALLOWED_TOOLS" \
-                <"$prompt" >"$out" 2>"${prompt%.prompt}.err" || true
-              node script/atlas-genesis/judge.mjs check "$out" && break
-              echo "judge: $(basename "$prompt") attempt $attempt gave no valid verdict"
-            done
-          done
+          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
           binding=()
           [ "$PUBLISH" = true ] && binding=(--binding)
           node script/atlas-genesis/judge.mjs score "$OUT/judge" --summary "$GITHUB_STEP_SUMMARY" "${binding[@]}"
@@ -227,26 +1342,37 @@ jobs:
         env:
           PUBLISH: ${{ inputs.publish }}
         run: |
-          mkdir -p "$OUT/upload/atlas" "$OUT/index"
+          mkdir -p "$OUT/upload/atlas" "$OUT/upload/attempts" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
-          # A publishing run must carry the judge's evidence: without judge.jsonl nothing would be held.
-          if [ "$PUBLISH" = true ]; then
-            cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/"
-          else
-            cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/" 2>/dev/null || true
-          fi
-          cp .atlas/staging*.json "$OUT/upload/atlas/" 2>/dev/null || true
-          [ -d .atlas/cas ] && cp -R .atlas/cas "$OUT/upload/atlas/cas"
+          if [ -d "$OUT/evidence" ]; then cp -R "$OUT/evidence" "$OUT/upload/evidence"; fi
+          for receipt in policy.json index-reuse.json retained-receipt.json socket-transport.json; do
+            if [ -f "$OUT/$receipt" ]; then cp "$OUT/$receipt" "$OUT/upload/"; fi
+          done
+          # Recover settled candidates even when a later source conflicts or judgment never started.
+          for file in .atlas/staging*.json; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/atlas/"; fi; done
+          if [ -d .atlas/cas ]; then cp -R .atlas/cas "$OUT/upload/atlas/"; fi
+          # Preserve every available outcome before refusing missing publication evidence.
+          missing_judge=0
+          for file in judge.jsonl judge-verdict.json sample.json; do
+            if [ -f "$OUT/judge/$file" ]; then cp "$OUT/judge/$file" "$OUT/upload/"; else missing_judge=1; fi
+          done
+          for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
           [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"
           cp .atlas/index.d/*.scip "$OUT/index/" 2>/dev/null || true
+          if [ -f .atlas/index.d/roots.json ]; then cp .atlas/index.d/roots.json "$OUT/index/"; fi
           du -sh "$OUT/upload" "$OUT/index"
+          if [ "$PUBLISH" = true ] && [ "$missing_judge" != 0 ]; then
+            echo "::error::publishing run lacks complete judgment evidence; preserved recovery artifacts only"; exit 1
+          fi
 
       - name: Secret scan
         id: scan
         if: always()
         env:
-          ATLAS_SCAN_SECRETS: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        run: node script/atlas-genesis/secret-scan.mjs "$OUT/upload" "$OUT/index"
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          if [ -f "$HOME/.grok/auth.json" ]; then export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"; fi
+          node script/atlas-genesis/secret-scan.mjs "$OUT/upload" "$OUT/index"
 
       - name: Upload run artifact
         if: always() && steps.scan.outcome == 'success'
@@ -296,18 +1422,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: modules/atlas/package-lock.json
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
 
       - name: Build the Atlas CLI
         working-directory: modules/atlas
         run: |
           npm ci
-          npx tsc -b
+          bun typecheck
 
       - name: Download the mine artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -431,7 +1553,7 @@ jobs:
         id: scan
         if: always()
         env:
-          ATLAS_SCAN_SECRETS: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
         run: |
           mkdir -p "$OUT"
           node script/atlas-genesis/secret-scan.mjs "$OUT"
@@ -444,4 +1566,3 @@ jobs:
           path: ${{ runner.temp }}/atlas-publish
           if-no-files-found: warn
           retention-days: 30
-

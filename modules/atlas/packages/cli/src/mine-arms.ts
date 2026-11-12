@@ -7,11 +7,10 @@
 // An EXPLICIT `ATLAS_MINE_SLOT` resolves to a SINGLETON, so the benchmark's per-axis measurement harness (one
 // arm per invocation) is preserved EXACTLY — a single-arm run renders byte-identical to the frozen fold.
 //
-// THE MERGED TOTAL MIRRORS THE DURABLE STORE'S UNION, it is not read back FROM it: each pass writes CANDIDATES
-// to the SAME staging sidecar, which unions on `nodeKey` across passes, so the sound facts and the advisory
-// prose coexist. This file recomputes that union in memory from the per-arm reports — the number agrees with
-// the store because the report's dedup key (`Fact.id`) IS `nodeKey` and distinct arms carry distinct slots, so
-// no cross-arm collision. It is a faithful parallel recompute of proposed candidates, not the store's own read.
+// THE MERGED STAGING TOTAL uses the keys of each pass's SETTLED writes, not a store readback or a recomputed
+// identity. `Fact.id` can name the same source path across distinct slots and is NOT the minted NodeKey.
+// Legacy/injected passes without staging keys retain the ledger-first reported-id union, explicitly labeled
+// as identity-unavailable rather than claiming to count durable candidate rows.
 
 import type { GenesisReport } from "@atlas/genesis"
 import { driveMinePass, type MineDeps } from "./mine.js"
@@ -44,11 +43,8 @@ export function driveMineArms(
   return slots.map((slot) => ({ slot, pass: runPass(repoPath, { ...deps, slot }) }))
 }
 
-/** The union SIZE of every arm's seeded facts, deduped by fact id — the durable store's cross-pass union.
- *  #237: reads each arm's LEDGER-derived id set (`ledgerSeededIds`, mine-render.ts) when the arm's report
- *  carries a coverage ledger, falling back to the raw `report.seeded` ids only for a pre-ledger report —
- *  the SAME source `seededCount` (below, per-arm) reads, so the union total and the per-arm line it sits
- *  beside can never disagree the way `report.seeded.length` alone did (#237's measured defect). */
+/** Legacy reported-id union, NOT staging identity. Preserve #237's authoritative coverage-ledger reading;
+ *  raw `report.seeded` ids are used only for pre-ledger reports. */
 function unionSeededCount(arms: readonly ArmPass[]): number {
   const ids = new Set<string>()
   for (const a of arms) {
@@ -70,13 +66,16 @@ function unionSeededCount(arms: readonly ArmPass[]): number {
  */
 export function foldArms(arms: readonly ArmPass[], ceiling?: number): CliVerdict {
   if (arms.length === 1) return foldVerdict(arms[0]!.pass, ceiling)
-  const unionCount = unionSeededCount(arms)
+  const stagingIdentity = arms.every((a) => a.pass.stagedNodeKeys !== undefined)
+  const unionCount = stagingIdentity
+    ? new Set(arms.flatMap((a) => a.pass.stagedNodeKeys ?? [])).size
+    : unionSeededCount(arms)
   const sum = (pick: (r: GenesisReport) => number): number => arms.reduce((n, a) => n + pick(a.pass.report), 0)
   const failed = arms.some((a) => passIncomplete(a.pass))
   const perArm = `mine: arms — ${arms.map((a) => `${a.slot} ${seededCount(a.pass.report)}`).join(" · ")}`
   const ratified = arms.reduce((n, a) => n + a.pass.report.ratified.length, 0) // sum, never hardcode 0 — mirrors single-arm foldVerdict so a ratifying pass would not go silent in the default (bobby note; today always 0, mine is candidate-only)
   const lines = [
-    `genesis: seeded ${unionCount} candidate fact(s) [union]; ratified ${ratified}`,
+    `genesis: seeded ${unionCount} candidate ${stagingIdentity ? "row(s) [staging-key union]" : "fact(s) [reported-id union; staging identity unavailable]"}; ratified ${ratified}`,
     `cost: llmCalls ${sum((r) => r.llmCalls)} · budgetSpent ${sum((r) => r.budgetSpent)}`,
     perArm,
     ...arms.flatMap((a) => [`arm: ${a.slot}`, ...passBodyLines(a.pass, ceiling)]),
