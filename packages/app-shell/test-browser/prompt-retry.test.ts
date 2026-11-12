@@ -585,8 +585,8 @@ test("CONTROL E1 native HTTP admission and same text after ACK create two distin
       const response = await Bun.fetch(request)
       // Only this private fixture's synthetic HTTP data; cap diagnostic output and never log headers/env/settings.
       responses.push({ stage, status: response.status, body: (await response.clone().text()).slice(0, 512) })
-      expect(["agent", "model", "prompt"]).toContain(stage)
-      expect(response.status).toBe(stage === "prompt" ? 200 : 204)
+      expect(["execution", "agent", "model", "prompt"]).toContain(stage)
+      expect(response.status).toBe(stage === "execution" || stage === "prompt" ? 200 : 204)
       return response
     }, { preconnect: Bun.fetch.preconnect })
     const owner = bindNative(host, transport)
@@ -604,7 +604,7 @@ test("CONTROL E1 native HTTP admission and same text after ACK create two distin
       expect(second.inputs).toHaveLength(2)
       expect(second.admissions).toHaveLength(2)
       expect(second.inputs[0]?.id).not.toBe(second.inputs[1]?.id)
-      expect(calls).toEqual(["agent", "model", "prompt", "agent", "model", "prompt"])
+      expect(calls).toEqual(["execution", "agent", "model", "prompt", "execution", "agent", "model", "prompt"])
       expect(promptInputs, "the mocked harness transport must not service this test").toEqual([])
     } finally { owner.dispose() }
   })
