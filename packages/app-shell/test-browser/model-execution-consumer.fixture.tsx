@@ -9,7 +9,7 @@ import { createModelCatalog } from "@/hooks/provider-catalog"
 import { mixedEngineAgents } from "@/testing/model-execution-fixture"
 import { normalizeProviderList } from "@/context/global-sync/utils"
 import { isolatedSolid } from "./orchestra/integrations-solid.fixture"
-import { Effect, Fiber, Schema } from "effect"
+import { DateTime, Effect, Fiber, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -17,6 +17,10 @@ import { Orchestra } from "@orchestra/client"
 import { Model } from "@orchestra/schema/model"
 import { Provider } from "@orchestra/schema/provider"
 import { ModelExecution } from "@orchestra/schema/model-execution"
+import { Prompt } from "@orchestra/schema/prompt"
+import { SessionID } from "@orchestra/schema/session-id"
+import { SessionInput } from "@orchestra/schema/session-input"
+import { SessionMessage } from "@orchestra/schema/session-message"
 import { createPromptState, type ImageAttachmentPart } from "@/context/prompt-state"
 import { createApiForServer } from "@/utils/server"
 import { createSessionManagementForServer } from "@/utils/session-management"
@@ -78,8 +82,9 @@ export function transport(options: { native?: NativeServer; reply?: (request: Re
       },
     }), { headers: { "content-type": "text/event-stream" } })
     if (url.pathname === "/api/model/execution") return control.reply(request)
-    const response = options.native ? await Bun.fetch(request) : url.pathname.endsWith("/agent") || url.pathname.endsWith("/model")
-      ? new Response(null, { status: 204 }) : json({})
+    const response = options.native ? await Bun.fetch(request) : /\/(agent|model|shell)$/.test(url.pathname)
+      ? new Response(null, { status: 204 }) : /\/(prompt|command)$/.test(url.pathname)
+        ? await admittedResponse(request, calls.filter((call) => call.method === "POST" && /\/(prompt|command)$/.test(call.path)).length) : json({})
     await control.after(url.pathname, response)
     return response
   }, { preconnect: Bun.fetch.preconnect })
@@ -226,8 +231,12 @@ export async function selectorDOM(owner: ReturnType<typeof selection>) {
   }), root)
   const button = root.querySelector("button")
   if (!button) { dispose(); root.remove(); currentRows.local = undefined; throw new Error("Model selector control did not render") }
-  button.click()
-  await new Promise<void>((resolve) => setTimeout(resolve, 0))
+  button.focus()
+  button.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
+  await wait(() => document.querySelectorAll('[role="menuitemradio"]').length > 0, "actual model popover rows after Enter").catch((error: unknown) => {
+    dispose(); root.remove(); currentRows.local = undefined
+    throw error
+  })
   return { root, rows: () => [...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]')],
     dispose() { dispose(); root.remove(); currentRows.local = undefined } }
 }
@@ -293,4 +302,19 @@ export async function wait(predicate: () => boolean, label: string) {
     if (Date.now() >= until) throw new Error(`Fixture deadline: ${label}`)
     await new Promise<void>((resolve) => setTimeout(resolve, 10))
   }
+}
+
+
+async function admittedResponse(request: Request, admittedSeq: number) {
+  const input = Schema.decodeUnknownSync(Schema.Struct({
+    id: Schema.optional(SessionMessage.ID), prompt: Schema.optional(Prompt),
+    command: Schema.optional(Schema.String), arguments: Schema.optional(Schema.String),
+    delivery: Schema.optional(SessionInput.Delivery),
+  }))(await request.clone().json())
+  return json({ data: Schema.encodeSync(SessionInput.Admitted)(SessionInput.Admitted.make({
+    id: input.id ?? SessionMessage.ID.make(`msg_fixture_${admittedSeq}`),
+    sessionID: SessionID.make(decodeURIComponent(new URL(request.url).pathname.split("/")[3])),
+    admittedSeq, prompt: input.prompt ?? { text: `/${input.command} ${input.arguments ?? ""}`.trim() },
+    delivery: input.delivery ?? "steer", timeCreated: DateTime.makeUnsafe(1),
+  })) })
 }

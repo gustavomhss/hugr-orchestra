@@ -3,7 +3,7 @@ import { Schema } from "effect"
 import { unwrap } from "solid-js/store"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
-import { createFollowupSender, followupInput, commands, state, optimistic, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
+import { createFollowupSender, followupInput, commands, state, toasts, optimistic, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
 import { createPromptState } from "@/context/prompt-state"
 import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
@@ -207,9 +207,12 @@ test("CONTROL E6 App shell keeps its semantics without a fresh model preflight",
     expect(state.modelID).toBe(ref.id)
     const before = calls.queries().length
     calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: decision("unavailable") })
-    expect(await send(owner)).toBe(true)
+    expect(await send(owner)).toBeUndefined()
     expect(calls.queries()).toHaveLength(before)
     expect(calls.calls.at(-1)?.path.endsWith("/shell")).toBe(true)
+    expect(calls.calls.at(-1)?.body).toMatchObject({ command: "pwd" })
+    expect(toasts).toEqual([])
+    expect(owner.prompt.current()).toEqual(text(""))
     expect(sentShell).toEqual([])
   } finally { owner.dispose() }
 })
