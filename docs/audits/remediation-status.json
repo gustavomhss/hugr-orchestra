@@ -1959,7 +1959,25 @@
       "status": "planned_unverified",
       "runtime_reproduced": false,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "actual_memory_decision_controls_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43310548546",
+          "snapshot": "458ea1c6dfe2823aef179e928c3ed54998993a7b",
+          "result": "2pass/0fail/17assertions; actual canonical modules hosted bundle, namedscanner recordstdin, Memory/review/fold/returnedref, indexed and discarded. Official wrapper0/cleanup success. No local build or Vitest substitution."
+        },
+        {
+          "kind": "actual_memory_decision_joint_publication_red_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43311045470",
+          "result": "0pass/1behavioral failure/12assertions. Fault scanner witness, immutable recordstdin, original review restoration, openproposal and no decision checks all pass; final effective Memory equality fails: actual backend project rule/frecency1 remains active versus original empty store. No missingmodule/setup miss. Cleanup succeeds; operation error code/kill/powerloss not claimed."
+        },
+        {
+          "kind": "acceptance_typecheck",
+          "source": "bdb0872ef0",
+          "result": "Root Atlas boundary package bun typecheck0 (tsgo), new fixture/tests included; no local test or runtime build executed."
+        }
+      ],
+      "remaining": "Original joint-publication inconsistency reproduced by real scanner-to-review I/O fault after two actual controls. One immutable per-proposal receipt plan remains unimplemented; exact typed/source/reader/merge contracts and additional concurrency/corruption acceptance still required before source GO."
     },
     {
       "id": "M1",
