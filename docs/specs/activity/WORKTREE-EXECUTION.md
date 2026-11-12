@@ -106,3 +106,22 @@ split pure state (activity-worktree-state.ts) from async coordination
 publish signatures, with both factories explicitly unavailable until red proof. No implementation worker is
 dispatched until the exact anchor and baseline gates have passed. W2 and W3
 remain pending; public Protocol/HttpApi and generated Client are unchanged.
+
+## Current hosted request
+
+The reviewed acceptance is committed through `a0dedcecc4` and pushed to
+activity-monitor. The exact requested Core tree is
+`bca4d35a48aa2d45cfbb0ce3b98d92a2a3765039`; Schema tree is
+`ef7da65d3a27715ef5b365733f513aba7562b843`.
+The four-file Linux/Windows test:ci request completed uploading its snapshot
+and is waiting for runner capacity (15 unrelated queued runs observed).
+The standard helper waits at most 30 minutes before creating its CI branch.
+No duplicate request was started and no unrelated run was changed.
+
+Local request log: `/tmp/activity-worktree-red-ci.log`; eventual helper exit:
+`/tmp/activity-worktree-red-ci.exit`. The expected baseline is four new
+W01–W04 failures from the explicit unavailable constructor, with existing
+ActivityDisk tests retaining their passing/platform-skip outcomes. A nonzero
+helper exit alone is not red proof: inspect actual named hosted test outcomes,
+Omni control and exact snapshot before implementation. Final typecheck receipts:
+`/tmp/activity-worktree-final-{core,schema}-typecheck.exit`, both 0.

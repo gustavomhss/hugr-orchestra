@@ -9,7 +9,8 @@ bounded cold quality review.
 Four executable cases now cover cached state, real partial readings, persisted
 incarnations and concurrent pre/post validation. Core and Schema acceptance
 typechecks passed before the latest suite split; final Core and Schema passed,
-and hosted red evidence remains pending. Public and private anchors compile but both factories
+and the four-file Linux/Windows hosted request has uploaded its snapshot and
+is waiting for runner capacity. Hosted red evidence remains pending. Public and private anchors compile but both factories
 still throw explicitly; no W1 runtime implementation or API/UI change is claimed.
 See [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md).
 
