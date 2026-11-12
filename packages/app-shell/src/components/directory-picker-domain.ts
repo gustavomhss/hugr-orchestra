@@ -357,6 +357,7 @@ export function createDirectorySearch(args: {
     const key = trimPickerPath(directory)
     const existing = cache.get(key)
     if (existing) return existing
+    const notify = tell
     const request = args.sdk.api.file
       .list({ location: { directory: key } })
       .then((result) =>
@@ -368,9 +369,11 @@ export function createDirectorySearch(args: {
           }),
       )
       // A failed listing is not cached, so the next keystroke retries it. It is not "no folders".
+      // A newer search has replaced `tell`; this rejection belongs to the search that started the read.
       .catch((error: unknown) => {
         cache.delete(key)
-        tell(error)
+        if (notify !== tell) throw new StalePickerSearch()
+        notify(error)
         throw error
       })
     cache.set(key, request)
