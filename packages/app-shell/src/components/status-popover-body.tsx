@@ -4,6 +4,7 @@ import { Icon } from "@orchestra/ui/icon"
 import { Switch } from "@orchestra/ui/switch"
 import { Tabs } from "@orchestra/ui/tabs"
 import { showToast } from "@/utils/toast"
+import { settleDefaultOpen } from "./default-open"
 import { useNavigate } from "@solidjs/router"
 import { type Accessor, createEffect, createMemo, For, type JSXElement, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
@@ -54,8 +55,10 @@ const listServersByHealth = (
 const useDefaultServerKey = (
   get: (() => string | Promise<string | null | undefined> | null | undefined) | undefined,
 ) => {
+  const language = useLanguage()
   const [state, setState] = createStore({
     key: undefined as ServerConnection.Key | undefined,
+    failed: false,
     tick: 0,
   })
 
@@ -64,7 +67,6 @@ const useDefaultServerKey = (
     let dead = false
     const result = get?.()
     if (!result) {
-      setState("key", undefined)
       onCleanup(() => {
         dead = true
       })
@@ -72,9 +74,15 @@ const useDefaultServerKey = (
     }
 
     if (result instanceof Promise) {
-      void result.then((next) => {
-        if (dead) return
-        setState("key", next ?? undefined)
+      void settleDefaultOpen({
+        read: result,
+        current: () => !dead,
+        apply: (next) => setState({ key: next ?? undefined, failed: false }),
+        report: (error) => {
+          console.error(error)
+          setState("failed", true)
+          showToast({ variant: "error", title: language.t("common.requestFailed") })
+        },
       })
       onCleanup(() => {
         dead = true
@@ -82,16 +90,15 @@ const useDefaultServerKey = (
       return
     }
 
-    setState("key", ServerConnection.Key.make(result))
+    setState({ key: ServerConnection.Key.make(result), failed: false })
     onCleanup(() => {
       dead = true
     })
   })
 
   return {
-    key: () => {
-      return state.key
-    },
+    key: () => state.key,
+    failed: () => state.failed,
     refresh: () => setState("tick", (value) => value + 1),
   }
 }
@@ -99,6 +106,7 @@ const useDefaultServerKey = (
 type ServerStatusState = {
   servers: () => ServerStatusItem[]
   defaultKey: () => ServerConnection.Key | undefined
+  defaultFailed?: () => boolean
   ariaLabel: string
   serversLabel: string
   defaultLabel: string
@@ -153,6 +161,7 @@ export function StatusPopoverServerBody() {
       state={{
         servers: serverItems,
         defaultKey: defaultServer.key,
+        defaultFailed: defaultServer.failed,
         ariaLabel: language.t("status.popover.ariaLabel"),
         serversLabel: language.t("status.popover.tab.servers"),
         defaultLabel: language.t("common.default"),
@@ -223,7 +232,7 @@ function ServerStatusList(props: { state: ServerStatusState }) {
                   nameClass="text-14-regular text-text-base truncate"
                   versionClass="text-12-regular text-text-weak truncate"
                   badge={
-                    <Show when={item.key === props.state.defaultKey()}>
+                    <Show when={!props.state.defaultFailed?.() && item.key === props.state.defaultKey()}>
                       <span class="text-11-regular text-text-base bg-surface-base px-1.5 py-0.5 rounded-md">
                         {props.state.defaultLabel}
                       </span>
