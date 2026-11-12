@@ -89,6 +89,8 @@ import type {
   ModelsListOutput,
   ModelsDefaultInput,
   ModelsDefaultOutput,
+  ModelsExecutionInput,
+  ModelsExecutionOutput,
   ProvidersListInput,
   ProvidersListOutput,
   ProvidersGetInput,
@@ -1308,6 +1310,19 @@ export function make(options: ClientOptions) {
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      execution: (input: ModelsExecutionInput, requestOptions?: RequestOptions) =>
+        request<ModelsExecutionOutput>(
+          {
+            method: "POST",
+            path: `/api/model/execution`,
+            query: { location: input["location"] },
+            body: { context: input["context"], model: input["model"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 503, 401],
             empty: false,
           },
           requestOptions,

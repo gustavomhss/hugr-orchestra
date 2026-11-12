@@ -607,7 +607,23 @@ const Endpoint6_1 = (raw: RawClient["server.model"]) => (input?: Endpoint6_1Inpu
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-const adaptGroup6 = (raw: RawClient["server.model"]) => ({ list: Endpoint6_0(raw), default: Endpoint6_1(raw) })
+type Endpoint6_2Request = Parameters<RawClient["server.model"]["model.execution"]>[0]
+type Endpoint6_2Input = {
+  readonly location?: Endpoint6_2Request["query"]["location"]
+  readonly context: Endpoint6_2Request["payload"]["context"]
+  readonly model?: Endpoint6_2Request["payload"]["model"]
+}
+const Endpoint6_2 = (raw: RawClient["server.model"]) => (input: Endpoint6_2Input) =>
+  raw["model.execution"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { context: input["context"], ...(input["model"] === undefined ? {} : { model: input["model"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup6 = (raw: RawClient["server.model"]) => ({
+  list: Endpoint6_0(raw),
+  default: Endpoint6_1(raw),
+  execution: Endpoint6_2(raw),
+})
 
 type Endpoint7_0Request = Parameters<RawClient["server.provider"]["provider.list"]>[0]
 type Endpoint7_0Input = { readonly location?: Endpoint7_0Request["query"]["location"] }
