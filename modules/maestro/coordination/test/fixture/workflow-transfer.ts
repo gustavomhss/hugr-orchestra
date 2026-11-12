@@ -68,7 +68,7 @@ export function open<A, E>(controls: Controls, body: (fixture: Fixture) => Effec
     yield* repo(directory).pipe(Effect.provide(AppNodeBuilder.build(GitCli.node)))
     const calls = { provider: [] as string[], tools: [] as string[], completed: [] as string[], interrupted: [] as string[], rebind: 0 }
     const host: ExecutionHost.Interface = {
-      id: "holder-transfer",
+      id: "claude-code",
       stateKey: "holderTransfer",
       describeModel: () => Effect.succeed({ status: "ready" }),
       stream: (turn) => Stream.unwrap(Effect.gen(function* () {
@@ -100,11 +100,11 @@ export function open<A, E>(controls: Controls, body: (fixture: Fixture) => Effec
             return { counted: true }
           }),
         }),
-      }))),
+      })).pipe(Effect.orDie)),
       deps: [ToolRegistry.node],
     })
     const implementation = Relay.node.implementation
-    if (!implementation) return yield* Effect.die("Relay node has no implementation")
+    if (!Layer.isLayer(implementation)) return yield* Effect.die("Relay node has no Layer implementation")
     const observed = implementation.pipe(Layer.flatMap((context) => {
       const actual = Context.getUnsafe(context, Relay.Service)
       return Layer.succeed(Relay.Service, Relay.Service.of({
@@ -163,7 +163,7 @@ function setup(directory: string) {
     const context = yield* locations.contextEffect(authority.location)
     const relay = Context.get(context, Relay.Service)
     const agents = Context.get(context, AgentV2.Service)
-    yield* agents.transform((draft) => draft.update(AgentV2.ID.make("backend"), (agent) => { agent.engine = "holder-transfer" }))
+    yield* agents.transform((draft) => draft.update(AgentV2.ID.make("backend"), (agent) => { agent.engine = "claude-code" }))
     const child = () => sessions.create({ agent: AgentV2.ID.make("backend"), parentID: authority.id, location: authority.location })
     const old = yield* child()
     const next = yield* child()
