@@ -3,7 +3,7 @@ import type { Event } from "@/v2-wire"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { type Accessor, type ParentProps, batch, createMemo, createSignal, onCleanup, onMount } from "solid-js"
+import { type Accessor, type ParentProps, batch, createMemo, createRoot, createSignal, onCleanup, onMount } from "solid-js"
 import { Orchestra } from "@orchestra/client"
 import { authTokenFromCredentials, createApiForServer, type ServerApi } from "@/utils/server"
 import { type Platform, usePlatform } from "./platform"
@@ -172,6 +172,7 @@ type ServerSDKBase = {
   isReady: Accessor<boolean>
   connectionEpoch?: Accessor<number>
   transportCurrent?: Accessor<boolean>
+  onModelExecutionChange: (directory: string, onChange: () => void) => () => void
   url: string
   api: CompatibleApi
   currentApi: ServerApi
@@ -273,6 +274,13 @@ function createServerSdkContextBase(
   })
   const [isReady, setReady] = createSignal(false)
   const [connectionEpoch, setConnectionEpoch] = createSignal(0)
+  const modelExecutionObservers = new Set<{ directory: string; onChange: () => void }>()
+  const onModelExecutionChange = (directory: string, onChange: () => void) => {
+    if (abort.signal.aborted) return () => {}
+    const observer = { directory, onChange }
+    modelExecutionObservers.add(observer)
+    return () => { modelExecutionObservers.delete(observer) }
+  }
   const ready = createServerReadyPromise(http, scopedFetch(), { signal: abort.signal }, () => setReady(true))
   const emitter = createGlobalEmitter<{
     [key: string]: ServerEvent
@@ -354,6 +362,11 @@ function createServerSdkContextBase(
             streamErrorLogged = false
             failures = 0
             const directory = event.location?.directory ?? "global"
+            if ((event.type === "catalog.updated" || event.type === "integration.connection.updated") &&
+              event.location?.workspaceID === undefined)
+              [...modelExecutionObservers].forEach((observer) => {
+                if (modelExecutionObservers.has(observer) && (directory === "global" || observer.directory === directory)) observer.onChange()
+              })
             const payload = readEvent(event)
             if (!payload) continue
             if (payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
@@ -414,6 +427,7 @@ function createServerSdkContextBase(
   onCleanup(() => {
     stop()
     abort.abort()
+    modelExecutionObservers.clear()
     if (timer) clearTimeout(timer)
     queue.length = 0
     buffer.length = 0
@@ -443,6 +457,7 @@ function createServerSdkContextBase(
     isReady,
     connectionEpoch,
     transportCurrent,
+    onModelExecutionChange,
     url: server.http.url,
     api,
     currentApi,
@@ -466,8 +481,31 @@ export function createServerSdkContext(
   platform = usePlatform(),
 ): ServerSDK {
   const sdk = createServerSdkContextBase(server, scope, platform)
+  const lifetime = { closed: false }
+  const roots = new Map<string, VoidFunction>()
+  onCleanup(() => {
+    lifetime.closed = true
+    const disposers = [...roots.values()]
+    roots.clear()
+    disposers.forEach((dispose) => dispose())
+  })
+  const acquire = createRefCountMap((directory) => {
+    const resource = createRoot((dispose) => {
+      try { return { value: createDirSdkContext(directory, sdk), dispose } }
+      catch (error) { dispose(); throw error }
+    })
+    roots.set(directory, resource.dispose)
+    return resource.value
+  }, (directory) => {
+    const dispose = roots.get(directory)
+    roots.delete(directory)
+    dispose?.()
+  })
   return Object.assign(sdk, {
-    ensureDirSdkContext: createRefCountMap((dir) => createDirSdkContext(dir, sdk)),
+    ensureDirSdkContext(directory: string) {
+      if (lifetime.closed) throw new Error("Server SDK is closed")
+      return acquire(directory)
+    },
   })
 }
 
@@ -511,6 +549,8 @@ type SDKEventMap = {
 
 function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
   const emitter = createGlobalEmitter<SDKEventMap>()
+  const [modelExecutionEpoch, setModelExecutionEpoch] = createSignal(0)
+  onCleanup(serverSDK.onModelExecutionChange(directory, () => setModelExecutionEpoch((value) => value + 1)))
 
   const unsub = serverSDK.event.on(directory, (event) => {
     emitter.emit(event.type, event)
@@ -523,6 +563,7 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
     directory,
     orchestra: serverSDK.orchestra,
     connectionEpoch: serverSDK.connectionEpoch,
+    modelExecutionEpoch,
     transportCurrent: serverSDK.transportCurrent,
     api: createCompatibleApi({
       current: serverSDK.currentApi,
