@@ -212,7 +212,7 @@ test("CONTROL E6 TUI shell is not blocked solely by unavailable model eligibilit
 
 test("E6 TUI absent raw choice does not install a catalog default while canonical selection is loading", async () => {
   const release = Promise.withResolvers<void>()
-  const fixture = await mount({ reply: async () => { await release.promise; return json({ location: { directory: "/repo" }, data: decision() }) } })
+  const fixture = await mount({ reply: async () => { await release.promise; return json({ location: { directory: fixture.owner.directory }, data: decision() }) } })
   try {
     await Bun.sleep(0)
     expect(fixture.queries()).toHaveLength(1)

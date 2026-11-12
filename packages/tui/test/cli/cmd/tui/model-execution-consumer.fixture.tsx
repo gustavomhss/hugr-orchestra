@@ -7,6 +7,10 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import path from "node:path"
 import { tmpdir } from "node:os"
 import { Orchestra } from "@orchestra/client"
+import { DateTime, Schema } from "effect"
+import { SessionID } from "@orchestra/schema/session-id"
+import { SessionInput } from "@orchestra/schema/session-input"
+import { SessionMessage } from "@orchestra/schema/session-message"
 import { Command } from "@orchestra/schema/command"
 import { Agent } from "@orchestra/schema/agent"
 import { Model } from "@orchestra/schema/model"
@@ -86,6 +90,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     await control.before(url.pathname)
     if (url.pathname === "/api/model/execution") return control.reply(request)
     const envelope = (data: unknown) => json({ location: { directory: root }, data })
+    if (["/api/integration", "/api/skill", "/api/reference"].includes(url.pathname)) return envelope([])
     if (url.pathname === "/api/command") return envelope([Command.Info.make({ name: "known", template: "fixture command" })])
     if (url.pathname === "/api/provider") return envelope([Provider.Info.empty(Provider.ID.make(ref.providerID))])
     if (url.pathname === "/api/model") return envelope([model, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }])
@@ -94,12 +99,18 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
     if (url.pathname === "/api/mcp/resource") return envelope({ resources: [] })
     if (url.pathname === "/api/location") return json({ directory: root, project: { id: "proj_test", directory: root } })
-    if (url.pathname === "/api/session") return request.method === "POST" ? json(v2Session({ id: "created-session", directory: root }))
+    // This exact route must precede the generic Session-detail route below.
+    if (url.pathname === "/api/session/active") return json(Schema.encodeSync(Schema.Struct({
+      data: Schema.Record(SessionID, Schema.Struct({ type: Schema.Literal("running") })),
+    }))({ data: {} }))
+    if (url.pathname === "/api/session") return request.method === "POST" ? json({ data: v2Session({ id: "ses_created_fixture", directory: root }) })
       : json({ data: [v2Session({ id: "session-1", directory: root }), v2Session({ id: "session-2", directory: root })], cursor: {} })
-    if (/^\/api\/session\/[^/]+$/.test(url.pathname)) return json(v2Session({ id: url.pathname.split("/").at(-1)!, directory: root }))
+    if (/^\/api\/session\/[^/]+$/.test(url.pathname)) return json({ data: v2Session({ id: url.pathname.split("/").at(-1)!, directory: root }) })
     if (url.pathname.endsWith("/todo")) return json({ data: [] })
     if (url.pathname.endsWith("/message")) return json({ data: [], cursor: {} })
-    if (request.method === "POST" && (url.pathname.endsWith("/agent") || url.pathname.endsWith("/model"))) return new Response(null, { status: 204 })
+    if (request.method === "POST" && /\/(agent|model|shell)$/.test(url.pathname)) return new Response(null, { status: 204 })
+    if (request.method === "POST" && /\/(prompt|command)$/.test(url.pathname))
+      return admittedResponse(request, calls.filter((call) => call.method === "POST" && /\/(prompt|command)$/.test(call.path)).length)
     if (request.method === "POST") return json({})
     return fallback.fetch(request)
   }, { preconnect: Bun.fetch.preconnect })
@@ -187,4 +198,20 @@ export async function ready(options: { draft?: boolean; initial?: ModelExecution
     await Bun.sleep(0)
     return fixture
   } catch (error) { await fixture.dispose(); throw error }
+}
+
+
+// Declared controlled HTTP successes only; these receipts do not claim Core/SQL admission.
+async function admittedResponse(request: Request, admittedSeq: number) {
+  const input = Schema.decodeUnknownSync(Schema.Struct({
+    id: Schema.optional(SessionMessage.ID), prompt: Schema.optional(SessionInput.Admitted.fields.prompt),
+    command: Schema.optional(Schema.String), arguments: Schema.optional(Schema.String),
+    delivery: Schema.optional(SessionInput.Delivery),
+  }))(await request.clone().json())
+  return json({ data: Schema.encodeSync(SessionInput.Admitted)(SessionInput.Admitted.make({
+    id: input.id ?? SessionMessage.ID.make(`msg_fixture_${admittedSeq}`),
+    sessionID: SessionID.make(decodeURIComponent(new URL(request.url).pathname.split("/")[3])),
+    admittedSeq, prompt: input.prompt ?? { text: `/${input.command} ${input.arguments ?? ""}`.trim() },
+    delivery: input.delivery ?? "steer", timeCreated: DateTime.makeUnsafe(1),
+  })) })
 }
