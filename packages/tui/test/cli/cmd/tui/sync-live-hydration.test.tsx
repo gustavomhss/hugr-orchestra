@@ -11,6 +11,60 @@ const assistantID = "msg_hydration_assistant"
 const directory = "/tmp/orchestra/apps/cli"
 const model = { id: "model", providerID: "test" }
 
+test("real SSE connection control observes greeting, offline and reconnect on one mounted TUI", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const streams: ReadableStreamDefaultController<Uint8Array>[] = []
+  const unexpected: string[] = []
+  const routes = createFetch((url) => {
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
+    if (url.pathname === "/api/mcp/resource") return json({ location: { directory }, data: { resources: [] } })
+    return undefined
+  })
+  const server = Bun.serve({
+    port: 0, hostname: "127.0.0.1",
+    fetch(request) {
+      if (new URL(request.url).pathname === "/api/event")
+        return new Response(new ReadableStream<Uint8Array>({
+          start(controller) {
+            streams.push(controller)
+            if (streams.length > 1) greeting(controller, streams.length)
+          },
+        }), { headers: { "content-type": "text/event-stream" } })
+      return routes.fetch(request).catch((error) => {
+        unexpected.push(new URL(request.url).pathname)
+        throw error
+      })
+    },
+  })
+  const mounted = await mount(undefined, tmp.path, undefined, { url: server.url.origin }).catch((error) => {
+    server.stop(true)
+    throw error
+  })
+  const greetings = () => mounted.received.filter((event) => event.payload.type === "server.connected")
+  try {
+    expect(mounted.mounts.count).toBe(1)
+    await wait(() => streams.length === 1)
+    expect(streams).toHaveLength(1)
+    expect(unexpected).toEqual([])
+    // Hold the first server greeting until the real Probe and its observer exist.
+    greeting(streams[0], 1)
+    await wait(() => greetings().length === 1)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1"])
+    streams[0].close()
+    await wait(() => mounted.sdk.offline())
+    await wait(() => greetings().length === 2, 5_000)
+    expect(streams).toHaveLength(2)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1", "evt_connected_2"])
+    expect(mounted.sdk.offline()).toBe(false)
+    expect(mounted.mounts.count).toBe(1)
+    expect(unexpected).toEqual([])
+  } finally {
+    mounted.app.renderer.destroy()
+    server.stop(true)
+  }
+}, 15_000)
+
 test("a mounted fully synced Session reloads history and status after a real SSE reconnect", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")
@@ -54,9 +108,7 @@ test("a mounted fully synced Session reloads history and status after a real SSE
         return new Response(new ReadableStream<Uint8Array>({
           start(controller) {
             streams.push(controller)
-            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
-              id: `evt_connected_${streams.length}`, type: "server.connected", data: {},
-            })}\n\n`))
+            if (streams.length > 1) greeting(controller, streams.length)
           },
         }), { headers: { "content-type": "text/event-stream" } })
       return routes.fetch(request).catch((error) => {
@@ -72,6 +124,11 @@ test("a mounted fully synced Session reloads history and status after a real SSE
   const greetings = () => mounted.received.filter((event) => event.payload.type === "server.connected")
 
   try {
+    expect(mounted.mounts.count).toBe(1)
+    await wait(() => streams.length === 1)
+    expect(streams).toHaveLength(1)
+    expect(unexpected).toEqual([])
+    greeting(streams[0], 1)
     await wait(() => greetings().length === 1)
     await mounted.sync.session.sync(sessionID)
     expect(mounted.mounts.count).toBe(1)
@@ -116,6 +173,12 @@ test("a mounted fully synced Session reloads history and status after a real SSE
     server.stop(true)
   }
 }, 15_000)
+
+function greeting(controller: ReadableStreamDefaultController<Uint8Array>, index: number) {
+  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+    id: `evt_connected_${index}`, type: "server.connected", data: {},
+  })}\n\n`))
+}
 
 function content(sync: { data: { message: Record<string, SessionMessage[]> } }) {
   const message = sync.data.message[sessionID]?.find((item) => item.id === assistantID)
