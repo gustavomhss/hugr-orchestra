@@ -662,7 +662,9 @@ check("shutdown is memoized, aborts actual body reader, closes store, and no req
   const manager = attach(f); manager.retry(record.id); await until(() => f.remote.requests.length === 1, "actual response headers")
   const first = manager.shutdown(), second = manager.shutdown()
   assert.equal(first, second); await first
-  assert.equal(manager.snapshot().state, "closed"); assert.equal(f.remote.requests[0]?.closed, true)
+  assert.equal(manager.snapshot().state, "closed")
+  await until(() => f.remote.requests[0]?.closed === true, "owned cancellation reaches the actual peer close event")
+  assert.equal(f.remote.requests[0]?.closed, true)
   assert.throws(() => f.store.list()); const count = f.remote.requests.length; await pause(60); assert.equal(f.remote.requests.length, count)
 })
 
