@@ -5,6 +5,8 @@ import type { Prompt, PromptStore } from "@/context/prompt"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, type ServerApi } from "@/utils/server"
+import type { AdmissionOptions } from "@/server-api"
+import { inheritSessionModelExecution, registerSessionModelExecution } from "@/utils/session-model-execution"
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import { draftSessionKey } from "./draft-session"
 import { clearPending, pendingSnapshot } from "../draft-subagent-models"
@@ -201,13 +203,15 @@ export const clientFor = (directory: string) => {
           location: { directory: location },
         }
       },
-      prompt: async (input: unknown) => {
+      prompt: async (input: unknown, options?: AdmissionOptions) => {
+        options?.beforeAdmission?.()
         sentPrompts.push(directory)
         promptInputs.push(input)
         await state.sendHook(input)
         return { data: undefined }
       },
-      command: async (input: unknown) => {
+      command: async (input: unknown, options?: AdmissionOptions) => {
+        options?.beforeAdmission?.()
         sentCommands.push(input)
         await state.sendHook(input)
       },
@@ -228,14 +232,24 @@ export const clientFor = (directory: string) => {
       },
     },
   }
+  // Explicit contract response for the fake admission hooks above; never a production eligibility fallback.
+  registerSessionModelExecution(api.session, async (input) => {
+    if (!input.model) throw new Error("Fake admission fixture requires an exact model candidate")
+    const directory = input.location?.directory ?? "/repo/main"
+    return {
+      location: { directory, project: { id: "project", directory } },
+      data: { models: [], selection: { status: "ready", ref: input.model, engine: "orchestra" } },
+    }
+  })
   return { api }
 }
 
 export function serverFor(scope = ServerScope.local): FixtureServer {
   const current = createApiForServer({ server: { url: "http://fixture.invalid" } })
+  const fixture = clientFor("/repo/main").api.session
   const api = {
     ...current,
-    session: { ...current.session, ...clientFor("/repo/main").api.session },
+    session: { ...current.session, ...fixture },
     message: {
       list: async () => {
         if (state.messageCount === undefined) throw new Error("server unreachable")
@@ -252,6 +266,8 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
       },
     },
   } as unknown as ServerApi
+  // The shallow fixture composition owns a new adapter object; retain the explicit fake client association.
+  inheritSessionModelExecution(fixture, api.session)
   return {
     scope, ready: Promise.resolve(),
     isReady: () => true,
@@ -314,6 +330,7 @@ beforeAll(async () => {
   mock.module("@/context/local", () => ({
     useLocal: () => ({
       model: {
+        intent: () => ({ model: { providerID: "provider", modelID: state.modelID }, variant: state.variant }),
         current: () => ({ id: state.modelID, provider: { id: "provider" } }),
         variant: { current: () => state.variant },
       },
