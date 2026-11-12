@@ -141,11 +141,14 @@ test("real Node WebSocket slow reader bounds native buffers and terminates only 
     client.destroy()
     native.terminate()
     // Bun's ws compatibility layer can omit the server-close callback even
-    // after its client is CLOSED. Keep fixture teardown bounded as well.
+    // after its client is CLOSED. Keep fixture teardown bounded, then verify
+    // listener closure independently so the deadline cannot fake cleanup.
     await Promise.race([
       new Promise<void>((resolve) => server.close(() => resolve())),
       new Promise<void>((resolve) => setTimeout(resolve, 250)),
     ])
+    expect(server.address()).toBeNull()
+    expect(client.destroyed).toBe(true)
     expect(server.clients.size).toBe(0)
   }
 }, 20000)
