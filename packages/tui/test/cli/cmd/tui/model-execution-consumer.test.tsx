@@ -259,12 +259,13 @@ test("E6 TUI unavailable known command requires a NEW canonical query before any
 })
 
 test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A response", async () => {
-  const fixture = await ready()
   const release = Promise.withResolvers<void>()
   const entered = Promise.withResolvers<void>()
   const returned = Promise.withResolvers<void>()
   const both = { ...decision(), models: decision().models.map((entry) => ({ model: entry.model, engine: entry.engine, status: "ready" as const })) }
+  const bothB = Schema.decodeUnknownSync(ModelExecution.Response)({ ...both, selection: { status: "ready", ref: { ...ref, id: "blocked" }, engine: "orchestra" } })
   const newest = { ...decision(), models: both.models.filter((entry) => entry.model.id === ref.id) }
+  const fixture = await ready({ initial: both })
   const selecting = spyOn(fixture.context.local.model, "set")
   try {
     fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: both })
@@ -272,6 +273,10 @@ test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A re
     const contract = await fixture.context.sdk.api.models.execution({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: ref })
     expect(fixture.queries()).toHaveLength(manualBefore + 1)
     expect(contract.data.models.map((entry) => entry.model.id)).toEqual(["model", "blocked"])
+    fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: bothB })
+    fixture.context.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
+    await wait(() => fixture.context.local.model.current()?.modelID === "blocked", "real READY seed B choice")
+    await Bun.sleep(0)
     fixture.showModels()
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Consumer model") }, "actual READY selector rendered")
     const beforeA = fixture.queries().length
@@ -282,30 +287,27 @@ test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A re
       returned.resolve()
       return captured
     }
-    fixture.setOwner("sessionID", "session-2")
-    fixture.context.route.navigate({ type: "session", sessionID: "session-2" })
+    fixture.context.local.model.set({ providerID: ref.providerID, modelID: ref.id })
     await fixture.app.renderOnce()
     await Bun.sleep(0)
     expect(fixture.queries().length).toBeGreaterThan(beforeA)
-    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-2", agentID: "maestro" }, model: ref })
+    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: ref })
     await entered.promise
     const beforeB = fixture.queries().length
-    fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: both })
-    fixture.setOwner("sessionID", "session-1")
-    fixture.context.route.navigate({ type: "session", sessionID: "session-1" })
+    fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: bothB })
+    fixture.context.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
     await fixture.app.renderOnce()
     await Bun.sleep(0)
     expect(fixture.queries().length).toBeGreaterThan(beforeB)
-    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: ref })
+    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: { ...ref, id: "blocked" } })
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Blocked model") }, "B response actually rendered")
     const beforeNewA = fixture.queries().length
     fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: newest })
-    fixture.setOwner("sessionID", "session-2")
-    fixture.context.route.navigate({ type: "session", sessionID: "session-2" })
+    fixture.context.local.model.set({ providerID: ref.providerID, modelID: ref.id })
     await fixture.app.renderOnce()
     await Bun.sleep(0)
     expect(fixture.queries().length).toBeGreaterThan(beforeNewA)
-    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-2", agentID: "maestro" }, model: ref })
+    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: ref })
     await wait(() => { void fixture.app.renderOnce(); const frame = fixture.app.captureCharFrame(); return frame.includes("Consumer model") && !frame.includes("Blocked model") }, "NEW A model list applied")
     const selectedBefore = selecting.mock.calls.length
     await fixture.app.mockInput.pressEnter()

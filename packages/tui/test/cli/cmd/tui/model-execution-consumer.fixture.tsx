@@ -66,14 +66,14 @@ export async function wait(predicate: () => boolean, label: string, milliseconds
 
 // One injected transport preserves the actual generated SDK, catalog adapter, providers and Prompt.
 // This is contract-consumption evidence, not a substitute for the backend describe HTTP gate.
-export async function mount(options: { draft?: boolean; reply?: (request: Request) => Response | Promise<Response> } = {}) {
+export async function mount(options: { draft?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response> } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "orchestra-model-consumer-"))
   const state = path.join(root, "state")
   await mkdir(state)
   await Bun.write(path.join(state, "kv.json"), "{}")
   const [owner, setOwner] = createStore({ sessionID: options.draft ? undefined : "session-1", directory: root, url: "http://consumer.fixture", authorization: "Basic Zml4dHVyZTpub25l", generation: 1 })
   const calls: { path: string; method: string; body: unknown; authorization: string | null; url: URL; signal: AbortSignal }[] = []
-  const control = { reply: options.reply ?? ((_request: Request) => json({ location: { directory: owner.directory }, data: decision() })),
+  const control = { reply: options.reply ?? ((_request: Request) => json({ location: { directory: owner.directory }, data: options.initial ?? decision() })),
     before: async (_path: string) => {} }
   const events = createEventSource()
   const fallback = createFetch()
@@ -177,7 +177,7 @@ export async function mount(options: { draft?: boolean; reply?: (request: Reques
 
 // Establish a real selected choice under a READY endpoint before a submit fault is installed.
 // Loading/bootstrap acceptance deliberately uses mount() instead of this prerequisite.
-export async function ready(options: { draft?: boolean } = {}) {
+export async function ready(options: { draft?: boolean; initial?: ModelExecution.Response } = {}) {
   const fixture = await mount(options)
   try {
     await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "READY real model choice")

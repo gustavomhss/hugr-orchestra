@@ -503,6 +503,7 @@ test("E6 App rendered selector keeps NEW A after A to B to A and a late old A re
   const entered = Promise.withResolvers<void>()
   const returned = Promise.withResolvers<void>()
   const both = { ...decision(), models: decision().models.map((entry) => ({ model: entry.model, engine: entry.engine, status: "ready" as const })) }
+  const bothB = Schema.decodeUnknownSync(ModelExecution.Response)({ ...both, selection: { status: "ready", ref: { ...ref, id: "blocked" }, engine: "orchestra" } })
   const newest = { ...decision(), models: both.models.filter((entry) => entry.model.id === ref.id) }
   const calls = transport({ reply: () => json({ location: { directory: "/repo/main" }, data: both }) })
   const contract = await calls.orchestra.models.execution({ context: { type: "session", sessionID: "bootstrap-session", agentID: "maestro" }, model: ref })
@@ -510,8 +511,11 @@ test("E6 App rendered selector keeps NEW A after A to B to A and a late old A re
   const owner = selection(calls, "bootstrap-session")
   owner.local.model.set({ providerID: ref.providerID, modelID: ref.id })
   await wait(() => owner.local.model.current()?.id === ref.id, "real READY explicit selector choice")
-  owner.setSaved("session", "session-A", { model: { providerID: ref.providerID, modelID: ref.id } })
-  owner.setSaved("session", "session-B", { model: { providerID: ref.providerID, modelID: ref.id } })
+  // Seed B READY, then park a fresh A request. The following A→B→A are actual raw selector choices.
+  calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: bothB })
+  owner.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
+  await wait(() => owner.local.model.current()?.id === "blocked", "real READY seed B choice")
+  await new Promise<void>((resolve) => setTimeout(resolve, 0))
   const view = await selectorDOM(owner)
   try {
     expect(view.rows().some((row) => row.textContent?.includes("Consumer model"))).toBe(true)
@@ -523,24 +527,24 @@ test("E6 App rendered selector keeps NEW A after A to B to A and a late old A re
       returned.resolve()
       return captured
     }
-    owner.setView("sessionID", "session-A")
+    owner.local.model.set({ providerID: ref.providerID, modelID: ref.id })
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(calls.queries().length).toBeGreaterThan(beforeA)
-    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-A", agentID: "maestro" }, model: ref })
+    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "bootstrap-session", agentID: "maestro" }, model: ref })
     await entered.promise
     const beforeB = calls.queries().length
-    calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: both })
-    owner.setView("sessionID", "session-B")
+    calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: bothB })
+    owner.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(calls.queries().length).toBeGreaterThan(beforeB)
-    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-B", agentID: "maestro" }, model: ref })
+    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "bootstrap-session", agentID: "maestro" }, model: { ...ref, id: "blocked" } })
     await wait(() => view.rows().some((row) => row.textContent?.includes("Blocked model")), "B snapshot actually rendered")
     const beforeNewA = calls.queries().length
     calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: newest })
-    owner.setView("sessionID", "session-A")
+    owner.local.model.set({ providerID: ref.providerID, modelID: ref.id })
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(calls.queries().length).toBeGreaterThan(beforeNewA)
-    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-A", agentID: "maestro" }, model: ref })
+    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "bootstrap-session", agentID: "maestro" }, model: ref })
     await wait(() => view.rows().some((row) => row.textContent?.includes("Consumer model")) && !view.rows().some((row) => row.textContent?.includes("Blocked model")), "NEW A model list applied")
     const a = view.rows().find((row) => row.textContent?.includes("Consumer model"))
     expect(a?.getAttribute("aria-disabled")).not.toBe("true")
