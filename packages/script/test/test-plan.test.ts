@@ -52,8 +52,9 @@ describe("test shard planner", () => {
     expect([...repairs.matchAll(/process\.exit\([^)]*\)/g)].map((match) => match[0])).toEqual(["process.exit(failed ? 1 : 0)"])
     expect(runner).toContain("run(value, layer).catch(")
     expect(runner).toContain("onFailure?.()")
-    expect(runner).toContain("noted(value, liveLayer)")
-    expect(runner).not.toContain("run(value, liveLayer)")
+    const live = runner.split("const live =")[1]?.split("live.only")[0] ?? ""
+    expect(live).toContain("noted(value, liveLayer)")
+    expect(live).not.toContain("run(")
     expect(step).not.toContain("turbo build")
     expect(workflow).not.toContain("Build Windows test dependencies")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
