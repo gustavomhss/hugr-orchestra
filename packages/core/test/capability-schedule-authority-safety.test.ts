@@ -241,8 +241,8 @@ describe("H8 direct safety", () => {
     const original: Capability.Failure[] = []
     const api = management(f, { ...f.operators, validate: (binding, target) => f.operators.validate(binding, target).pipe(
       Effect.tapError((error) => Effect.sync(() => { original.push(error) })),
-      Effect.mapErrorCause((cause) => Cause.fromReasons(cause.reasons.map((reason) =>
-        reason.annotate(new Map([["h8-validation", "real-policy"]]))))),
+      Effect.catchCause((cause) => Effect.failCause(Cause.fromReasons(cause.reasons.map((reason) =>
+        reason.annotate(new Map([["h8-validation", "real-policy"]])))))),
       Effect.onExit(() => Effect.failCause(Cause.fromReasons([
         Cause.makeDieReason(alien).annotate(new Map([["h8-validation", "alien-finalizer"]])),
       ]))),
