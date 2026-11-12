@@ -82,7 +82,9 @@ it.live("a running tool fences stage, clear and commit without changing files or
       expect(duringRevert).toEqual(staged)
       expect(content).toBe("untouched")
       yield* sessions.revert.clear(created.id)
+      yield* released(sessions, created.id)
       yield* sessions.revert.stage({ sessionID: created.id, messageID: boundary, files: false })
+      yield* released(sessions, created.id)
       yield* sessions.revert.commit(created.id)
       expect((yield* store.entries(created.id)).map((entry) => entry.message.id)).toEqual([boundary])
     }).pipe(Effect.provide(f.layer), Effect.ensuring(Deferred.succeed(f.release, undefined)))
@@ -99,6 +101,7 @@ it.live("a failing revert releases ownership and a different Session remains ind
       const running = yield* f.coordinator.run(first.id).pipe(Effect.forkChild)
       yield* Queue.take(f.started)
       yield* sessions.revert.clear(other.id)
+      yield* released(sessions, other.id)
       yield* sessions.revert.commit(other.id)
       yield* Deferred.succeed(f.release, undefined)
       yield* Fiber.join(running)
@@ -107,8 +110,10 @@ it.live("a failing revert releases ownership and a different Session remains ind
           .stage({ sessionID: first.id, messageID: SessionMessage.ID.make("msg_missing") })
           .pipe(Effect.flip),
       ).toMatchObject({ _tag: "Session.MessageNotFoundError" })
+      yield* released(sessions, first.id)
       const acquired = yield* f.coordinator.exclusive(first.id, Effect.succeed("released"))
       expect(Option.isSome(acquired) && acquired.value).toBe("released")
+      yield* released(sessions, first.id)
       yield* sessions.revert.clear(first.id)
     }).pipe(Effect.provide(f.layer), Effect.ensuring(Deferred.succeed(f.release, undefined)))
   }),
@@ -309,4 +314,13 @@ function seedHistory(sessionID: SessionV2.ID) {
     })
     return boundary
   })
+}
+
+// The operation's result can reach its caller before the detached owner's finalizer clears active.
+function released(sessions: SessionV2.Interface, sessionID: SessionV2.ID) {
+  return sessions.active.pipe(
+    Effect.tap(() => Effect.yieldNow),
+    Effect.repeat({ while: (active) => active.has(sessionID) }),
+    Effect.asVoid,
+  )
 }

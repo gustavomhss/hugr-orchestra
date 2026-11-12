@@ -114,9 +114,10 @@ it.live("real revert HTTP routes return 409 while a tool owns the Session and pr
           operation === "stage" ? { messageID: boundary } : undefined,
         ).pipe(
           Effect.flatMap((response) =>
-            response.status === 204
-              ? Effect.succeed({ status: response.status, body: undefined })
-              : response.json.pipe(Effect.map((body) => ({ status: response.status, body }))),
+            Effect.gen(function* () {
+              const body = response.status === 204 ? undefined : yield* response.json
+              return { status: response.status, body }
+            }),
           ),
         ),
       )

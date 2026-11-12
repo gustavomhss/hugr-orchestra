@@ -1,13 +1,15 @@
 import { expect } from "bun:test"
-import { Effect, Layer } from "effect"
+import { Context, Effect, Layer } from "effect"
 import { TestClock } from "effect/testing"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import { buildLocationServiceMap } from "@orchestra/core/location-services"
 import { ProjectV2 } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
@@ -18,6 +20,16 @@ import { SessionInputTable } from "@orchestra/core/session/sql"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
+type RosterState = {
+  default: AgentV2.ID
+  rows: { id: AgentV2.ID; hidden: boolean; mode: "primary" | "subagent" }[]
+}
+class Rosters extends Context.Service<Rosters, Map<string, RosterState>>()("test/ScheduleRosters") {}
+const rosters = makeGlobalNode({
+  service: Rosters,
+  layer: Layer.sync(Rosters, () => new Map()),
+  deps: [],
+})
 const projects = Layer.succeed(
   ProjectV2.Service,
   ProjectV2.Service.of({
@@ -27,9 +39,49 @@ const projects = Layer.succeed(
     commit: () => Effect.void,
   }),
 )
+const replacements = [
+  [ProjectV2.node, projects],
+  [SessionExecution.node, SessionExecution.noopLayer],
+] as const
+const locations = makeGlobalNode({
+  service: LocationServiceMap.Service,
+  layer: buildLocationServiceMap(replacements).pipe(
+    Layer.flatMap((context) =>
+      Layer.effect(
+        LocationServiceMap.Service,
+        Effect.gen(function* () {
+          const states = yield* Rosters
+          const map = Context.get(context, LocationServiceMap.Service)
+          const contextEffect = (ref: Location.Ref) =>
+            map.contextEffect(ref).pipe(
+              Effect.tap((context) => {
+                const service = Context.get(context, AgentV2.Service)
+                // Apply after Location initialization so native roster transforms run before this scoped configuration.
+                return service.transform((editor) => {
+                  const state = states.get(ref.directory)
+                  if (!state) return
+                  editor.list().forEach((info) => editor.remove(info.id))
+                  state.rows.forEach((item) =>
+                    editor.update(item.id, (info) => {
+                      info.hidden = item.hidden
+                      info.mode = item.mode
+                    }),
+                  )
+                  editor.default(state.default)
+                })
+              }),
+            )
+          return { ...map, contextEffect, get: (ref) => Layer.effectContext(contextEffect(ref)) }
+        }),
+      ),
+    ),
+  ),
+  deps: [rosters],
+})
 const it = testEffect(
   AppNodeBuilder.build(
     LayerNode.group([
+      rosters,
       Database.node,
       EventV2.node,
       LocationServiceMap.node,
@@ -37,10 +89,7 @@ const it = testEffect(
       SessionV2.node,
       ScheduledTask.node,
     ]),
-    [
-      [ProjectV2.node, projects],
-      [SessionExecution.node, SessionExecution.noopLayer],
-    ],
+    [...replacements, [LocationServiceMap.node, locations]],
   ),
 )
 const schedule = {
@@ -195,21 +244,13 @@ function fixture(initial = custom) {
     )
     const location = Location.Ref.make({ directory: AbsolutePath.make(tmp.path) })
     const locations = yield* LocationServiceMap.Service
-    const agents = yield* AgentV2.Service.pipe(Effect.provide(locations.get(location)))
-    const state: { default: AgentV2.ID; rows: { id: AgentV2.ID; hidden: boolean; mode: "primary" | "subagent" }[] } = {
+    const state: RosterState = {
       default: initial,
       rows: [{ id: initial, hidden: false, mode: "primary" }],
     }
-    yield* agents.transform((editor) => {
-      editor.list().forEach((info) => editor.remove(info.id))
-      state.rows.forEach((item) =>
-        editor.update(item.id, (info) => {
-          info.hidden = item.hidden
-          info.mode = item.mode
-        }),
-      )
-      editor.default(state.default)
-    })
+    const states = yield* Rosters
+    states.set(location.directory, state)
+    const agents = Context.get(yield* locations.contextEffect(location), AgentV2.Service)
     return { location, agents, state }
   })
 }
