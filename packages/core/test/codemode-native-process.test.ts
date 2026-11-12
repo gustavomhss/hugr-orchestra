@@ -141,7 +141,8 @@ cases.forEach((scenario) => test(scenario.name, async () => {
         bytes: 0, pending: "", invalidOutput: false, overflow: false,
         enterMs: undefined as number | undefined, killMs: undefined as number | undefined,
         killJoinedMs: undefined as number | undefined, exitMs: undefined as number | undefined,
-        liveBeforeKill: undefined as boolean | undefined, outerWatchdog: false,
+        liveBeforeKill: undefined as boolean | undefined, osAliveBeforeKill: undefined as boolean | undefined,
+        outerWatchdog: false,
         heartbeats: 0, lastHeartbeat: admittedAt, maxGapMs: 0,
       }
       const messages = new Array<typeof Envelope.Type>()
@@ -157,8 +158,10 @@ cases.forEach((scenario) => test(scenario.name, async () => {
           if (Option.isNone(decoded) || messages.length >= 4) { state.invalidOutput = true; return }
           messages.push(decoded.value)
           if (decoded.value.type === "CPU_ENTER" && state.enterMs === undefined) {
-            state.enterMs = performance.now() - admittedAt
-            state.lastHeartbeat = performance.now()
+            const now = performance.now()
+            state.enterMs = now - admittedAt
+            state.maxGapMs = Math.max(state.maxGapMs, now - state.lastHeartbeat)
+            state.lastHeartbeat = now
           }
         })
       }))))
@@ -176,6 +179,7 @@ cases.forEach((scenario) => test(scenario.name, async () => {
       const productKill = yield* Effect.forkChild(scenario.cpu ? Effect.gen(function* () {
         yield* waitUntil(admittedAt + 1500)
         state.liveBeforeKill = yield* child.isRunning
+        state.osAliveBeforeKill = osPidIsAlive(Number(child.pid))
         if (!state.liveBeforeKill) return
         state.killMs = performance.now() - admittedAt
         yield* child.kill({ killSignal: "SIGKILL", forceKillAfter: 0 })
@@ -187,6 +191,7 @@ cases.forEach((scenario) => test(scenario.name, async () => {
         yield* child.kill({ killSignal: "SIGKILL", forceKillAfter: 0 })
       }))
       const [exit, , stderr] = yield* Effect.all([Fiber.join(exited), Fiber.join(output), Fiber.join(errors)], { concurrency: "unbounded" })
+      const osAliveAfterExit = osPidIsAlive(Number(child.pid))
       yield* Fiber.join(productKill)
       const joinedMs = performance.now() - admittedAt
       const runningAfter = yield* child.isRunning
@@ -194,7 +199,7 @@ cases.forEach((scenario) => test(scenario.name, async () => {
       yield* Fiber.interrupt(heartbeat)
       if (state.enterMs !== undefined) state.maxGapMs = Math.max(state.maxGapMs, performance.now() - state.lastHeartbeat)
       const terminal = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
-      return { state, messages, stderr, exit, pid: Number(child.pid), joinedMs, runningAfter,
+      return { state, messages, stderr, exit, pid: Number(child.pid), joinedMs, runningAfter, osAliveAfterExit,
         terminalKind: terminal instanceof Error ? terminal.name : terminal === undefined ? null : typeof terminal }
     }).pipe(Effect.scoped, Effect.provide(layer)))
     console.log(`E10_HARDENED_WITNESS ${JSON.stringify({ scenario: scenario.name, pid: observed.pid,
@@ -202,6 +207,7 @@ cases.forEach((scenario) => test(scenario.name, async () => {
       exitCode: Exit.isSuccess(observed.exit) ? Number(observed.exit.value) : null,
       observedSignal: null, requestedSignal: scenario.cpu ? "SIGKILL" : null,
       terminalKind: observed.terminalKind, joinedMs: observed.joinedMs, runningAfter: observed.runningAfter,
+      osAliveAfterExit: observed.osAliveAfterExit,
       stderrBytes: observed.stderr.buffer.length, stderrTruncated: observed.stderr.truncated })}`)
     const message = observed.messages[0]
     if (!message) throw new Error("CAPABILITY: expected child identity record was not produced")
@@ -217,6 +223,7 @@ cases.forEach((scenario) => test(scenario.name, async () => {
     expect(observed.stderr.buffer.length).toBe(0)
     expect(observed.stderr.truncated).toBe(false)
     expect(observed.runningAfter).toBe(false)
+    expect(observed.osAliveAfterExit).toBe(false)
     expect(observed.state.outerWatchdog).toBe(false)
     expect(observed.messages).toHaveLength(1)
     expect(message.pid).toBe(observed.pid)
@@ -235,6 +242,7 @@ cases.forEach((scenario) => test(scenario.name, async () => {
     expect(message.patternBytes).toBe(14340)
     expect(message.subjectBytes).toBe(8 * 1024 * 1024)
     expect(observed.state.liveBeforeKill).toBe(true)
+    expect(observed.state.osAliveBeforeKill).toBe(true)
     expect(observed.state.killMs).toBeDefined()
     expect(observed.state.killMs).toBeGreaterThanOrEqual(1500)
     expect(observed.state.killJoinedMs).toBeDefined()
@@ -267,4 +275,14 @@ function waitUntil(deadline: number): Effect.Effect<void> {
     const remaining = deadline - performance.now()
     return remaining > 0 ? Effect.sleep(Math.ceil(remaining)).pipe(Effect.andThen(() => waitUntil(deadline))) : Effect.void
   })
+}
+
+function osPidIsAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "ESRCH") return false
+    throw error
+  }
 }
