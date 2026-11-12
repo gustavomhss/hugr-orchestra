@@ -290,7 +290,7 @@ const layer = Layer.effect(
       timeout: number,
     ) =>
       Tool.dynamic({
-        description: def.description ?? "",
+        description: `MCP server ${JSON.stringify(server.slice(0, 128))}${server.length > 128 ? " (truncated)" : ""}, tool ${JSON.stringify(def.name.slice(0, 128))}${def.name.length > 128 ? " (truncated)" : ""}.\n${def.description ?? ""}`,
         inputSchema: { ...def.inputSchema, type: "object", properties: def.inputSchema.properties ?? {} },
         execute: (input, context) =>
           Effect.gen(function* () {

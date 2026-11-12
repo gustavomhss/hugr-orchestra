@@ -90,7 +90,7 @@ it.live(
       const state = {
         docs: [
           document(path.join(f.global.config, "orchestra.json"), {
-            same: { type: "remote", url: a.url, oauth: false },
+            same: { type: "remote", url: a.url, headers: { Authorization: "PRIVATE_LABEL_HEADER" }, oauth: false },
           }),
         ],
         next: undefined as ReturnType<typeof Promise.withResolvers<string>> | undefined,
@@ -103,6 +103,11 @@ it.live(
       })
       yield* g.mcp.ready()
       const first = (yield* names(g))[0]
+      const description = (yield* g.registry.materialize()).definition(first)!.description
+      expect(description).toContain(JSON.stringify("same"))
+      expect(description).toContain(JSON.stringify("probe"))
+      expect(description).not.toContain("PRIVATE_LABEL_HEADER")
+      expect(description).not.toContain(a.url)
       yield* g.saved.add({ projectID: f.projectID, action: first, resources: ["*"] })
       state.docs = [
         document(path.join(f.directory, "project.json"), { same: { type: "remote", url: b.url, oauth: false } }),
@@ -315,7 +320,8 @@ it.live(
       })
       const a = provided("first", "PRIVATE_KEY_A", ["probe"], "A")
       const raw = "PRIVATE_RAW_TOOL_".repeat(700)
-      const b = provided("second-" + "x".repeat(180), "PRIVATE_KEY_B", ["accepted-tool", raw, "refused-two"], "B")
+      const accepted = "accepted-tool-" + "y".repeat(180)
+      const b = provided("second-" + "x".repeat(180), "PRIVATE_KEY_B", [accepted, raw, "refused-two"], "B")
       const state = { servers: [a.server] }
       const g = yield* graph(f, {
         documents: () => [],
@@ -326,19 +332,28 @@ it.live(
       state.servers = [a.server, b.server]
       yield* g.mcp.ready()
       expect((yield* g.mcp.list()).find((entry) => entry.name === b.server.name)?.status.status).toBe("connected")
-      expect((yield* g.mcp.tools())[b.server.name]).toEqual(["accepted-tool"])
+      expect((yield* g.mcp.tools())[b.server.name]).toEqual([accepted])
       expect(yield* names(g)).toHaveLength(2)
+      const description = (yield* g.registry.materialize()).definitions.find((tool) =>
+        tool.description.includes("accepted-tool"),
+      )!.description
+      expect(description).toContain(JSON.stringify(b.server.name.slice(0, 128)))
+      expect(description).toContain(JSON.stringify(accepted.slice(0, 128)))
+      expect(description).toContain("truncated")
+      expect(description).not.toContain(b.server.name)
+      expect(description).not.toContain(accepted)
+      expect(description).not.toContain("PRIVATE_KEY_B")
       expect(warnings).toEqual([["MCP tool registration refused", { server: b.server.name.slice(0, 128), refused: 2 }]])
       expect(JSON.stringify(warnings)).not.toMatch(/PRIVATE_|refused-two/)
       next.warning = Promise.withResolvers<void>()
-      yield* Effect.promise(() => b.changed(["accepted-tool", raw, "refused-two"]))
+      yield* Effect.promise(() => b.changed([accepted, raw, "refused-two"]))
       yield* Effect.promise(() => next.warning!.promise)
       expect(warnings).toHaveLength(2)
       expect(warnings[1]).toEqual([
         "MCP tool registration refused",
         { server: b.server.name.slice(0, 128), refused: 2 },
       ])
-      expect((yield* g.mcp.tools())[b.server.name]).toEqual(["accepted-tool"])
+      expect((yield* g.mcp.tools())[b.server.name]).toEqual([accepted])
       expect(JSON.stringify(warnings)).not.toMatch(/PRIVATE_|refused-two/)
     }).pipe(Effect.provide(Logger.layer([logger])))
   },
