@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, createResource, createSignal } from "solid-js"
+import { Component, Show, createEffect, createMemo, createResource, createSignal } from "solid-js"
 import { createMediaQuery } from "@solid-primitives/media"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { SelectV2 } from "@orchestra/ui/v2/select-v2"
@@ -8,6 +8,7 @@ import { useLanguage } from "@/context/language"
 import { usePlatform, type LiveSeatPlatform } from "@/context/platform"
 import { useFlight } from "@/orchestra/chapters/flight-engineer/run"
 import { showToast } from "@/utils/toast"
+import { pinchKnown, settlePinchRead, settlePinchWrite } from "./pinch"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
 import { SettingsListV2 } from "./parts/list"
@@ -277,17 +278,49 @@ export const SettingsGeneralV2: Component<{
   const sounds = createSoundSettingsController()
   const desktop = createMemo(() => platform.platform === "desktop")
 
-  const [pinchZoom, { mutate: setPinchZoom }] = createResource(
-    () => desktop() && "getPinchZoomEnabled" in platform,
-    () => Promise.resolve(platform.getPinchZoomEnabled?.() ?? false).catch(() => false),
-    { initialValue: false },
-  )
+  const [pinch, setPinch] = createSignal<boolean | undefined>()
+  const [pinchFailed, setPinchFailed] = createSignal(false)
+  const [pinchBusy, setPinchBusy] = createSignal(false)
+  let pinchRead = 0
+  let pinchWrite = 0
+  const reportPinch = (error: unknown) => {
+    console.error(error)
+    if (!pinchFailed()) showToast({ variant: "error", title: language.t("common.requestFailed") })
+    setPinchFailed(true)
+  }
+  createEffect(() => {
+    const started = ++pinchRead
+    if (!desktop()) return
+    const read = platform.getPinchZoomEnabled
+    if (!read) return
+    void settlePinchRead({
+      read: Promise.resolve().then(() => read()),
+      current: () => started === pinchRead,
+      apply: (value) => {
+        setPinch(value)
+        setPinchFailed(false)
+      },
+      report: reportPinch,
+    })
+  })
 
   const onPinchZoomChange = (checked: boolean) => {
-    setPinchZoom(checked)
-    const update = platform.setPinchZoomEnabled?.(checked)
-    if (!update) return
-    void update.catch(() => setPinchZoom(!checked))
+    if (pinchBusy() || !pinchKnown(pinch())) return
+    const set = platform.setPinchZoomEnabled
+    if (!set) return
+    const started = ++pinchWrite
+    const previous = pinch()
+    setPinch(checked)
+    setPinchBusy(true)
+    void settlePinchWrite({
+      write: Promise.resolve().then(() => set(checked)),
+      current: () => started === pinchWrite,
+      revert: () => setPinch(previous),
+      report: reportPinch,
+    }).then((saved) => {
+      if (saved) setPinchFailed(false)
+      if (started === pinchWrite) setPinchBusy(false)
+    })
   }
 
   const GeneralSection = () => (
@@ -512,9 +545,17 @@ export const SettingsGeneralV2: Component<{
             description={language.t("settings.general.row.pinchZoom.description")}
           >
             <div data-action="settings-pinch-zoom">
-              <Switch hideLabel checked={pinchZoom.latest} onChange={onPinchZoomChange}>
+              <Switch
+                hideLabel
+                checked={pinch() === true}
+                disabled={!pinchKnown(pinch()) || pinchBusy()}
+                onChange={onPinchZoomChange}
+              >
                 {language.t("settings.general.row.pinchZoom.title")}
               </Switch>
+              <Show when={pinchFailed()}>
+                <p role="alert">{language.t("common.requestFailed")}</p>
+              </Show>
             </div>
           </SettingsRowV2>
         </SettingsListV2>

@@ -99,6 +99,20 @@ export function make(scope: Scope.Scope) {
       }),
     )
 
+  /** Register delivery now; the returned effect waits unless this is a same-aggregate reentrant publication. */
+  const schedule = (ticket: Ticket | undefined, notifying: Effect.Effect<void>) =>
+    Effect.uninterruptible(Effect.gen(function* () {
+      const reentrant = ticket !== undefined && (yield* Delivering).has(ticket.aggregateID)
+      const done = yield* Deferred.make<void>()
+      yield* deliver(ticket, notifying, Effect.interruptible).pipe(
+        Effect.provideService(Delivering, new Set<string>()),
+        Effect.onExit((exit) => Deferred.done(done, exit)),
+        Effect.ignore,
+        Effect.forkIn(scope, { startImmediately: true }),
+      )
+      return reentrant ? Effect.void : Deferred.await(done)
+    }))
+
   // Pipe a commit transaction through this when its body takes a ticket as the last step: a commit that then fails
   // would otherwise leave the ticket blocking its successors forever.
   const guard =
@@ -106,5 +120,5 @@ export function make(scope: Scope.Scope) {
     <A, E, R>(transaction: Effect.Effect<A, E, R>) =>
       transaction.pipe(Effect.onExit((exit) => (Exit.isFailure(exit) ? release(box.ticket) : Effect.void)))
 
-  return { take, release, deliver, commit, guard }
+  return { take, release, deliver, commit, guard, schedule }
 }

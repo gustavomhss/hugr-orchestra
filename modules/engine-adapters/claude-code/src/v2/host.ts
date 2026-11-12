@@ -5,7 +5,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
-import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
+import { LLMEvent, type ToolDefinition } from "@orchestra/llm"
 import { Duration, Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
@@ -17,6 +17,7 @@ import { ClaudeCodeAccountV2 } from "./account"
 import { ClaudeCodeCatalog } from "./catalog"
 import { ClaudeCodeOutput } from "./output"
 import { ClaudeCodeRecord } from "./record"
+import { ClaudeCodeContext } from "./context"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
@@ -149,14 +150,16 @@ export const make = Effect.gen(function* () {
           const state = ClaudeCodeTranscript.record(stored) ? stored : {}
           const delivered = Array.isArray(state.delivered) ? state.delivered.filter((id) => typeof id === "string") : []
           const pending = turn.history.flatMap((message) =>
-            message.type === "user" && !delivered.includes(message.id) ? [message] : [],
+            ["user", "synthetic", "shell", "compaction"].includes(message.type) && !delivered.includes(message.id) ? [message] : [],
           )
           // System Context changes published after the baseline (`ContextUpdated`) reach history as `system` messages;
           // the baseline alone would leave Claude Code on the session's first context until a compaction.
           const updates = turn.history.flatMap((message) => (message.type === "system" ? [message] : []))
           const unsent = updates.filter((message) => !delivered.includes(message.id))
-          const prompt = pending.map((message) => message.text).join("\n\n").trim()
-          if (!prompt) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
+          const lowered = yield* Effect.try({ try: () => pending.flatMap(ClaudeCodeContext.input), catch: (error) => error }).pipe(Effect.result)
+          if (lowered._tag === "Failure") return Stream.make(LLMEvent.providerError({ message: String(lowered.failure) }))
+          const prompt = ClaudeCodeContext.prompt(lowered.success)
+          if (lowered.success.length === 0) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
           const abort = new AbortController()
           // `handed`: Claude Code took the prompt from its input. Its transcript then holds the prompt, so a turn that
           // stops or breaks before its result must not send it again. Only a result that answered nothing (signed out,
@@ -644,8 +647,10 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string, arg
       { signal: extra.signal },
     )
     if (tool.name === "skill" && request.params.arguments?.name === GOVERNED_PLAYBOOK && settlement.result.type !== "error") governedLoad()
+    const converted = await Effect.runPromise(Effect.try({ try: () => ClaudeCodeContext.output(settlement.result), catch: (error) => error }).pipe(Effect.result))
+    if (converted._tag === "Failure") return { content: [{ type: "text" as const, text: String(converted.failure) }], isError: true }
     return {
-      content: [{ type: "text" as const, text: modelText(settlement.result) }],
+      content: converted.success,
       ...(settlement.result.type === "error" ? { isError: true } : {}),
     }
   })
@@ -664,12 +669,7 @@ function canonical(value: unknown): string {
   return JSON.stringify(value) ?? "null"
 }
 
-function modelText(result: ToolResultValue) {
-  if (result.type === "content") return result.value.flatMap((part: ToolContent) => (part.type === "text" ? [part.text] : [])).join("\n")
-  return typeof result.value === "string" ? result.value : JSON.stringify(result.value)
-}
-
-function user(text: string, uuid: SDKUserMessage["uuid"]): SDKUserMessage {
+function user(text: SDKUserMessage["message"]["content"], uuid: SDKUserMessage["uuid"]): SDKUserMessage {
   return { type: "user", message: { role: "user", content: text }, parent_tool_use_id: null, uuid }
 }
 
