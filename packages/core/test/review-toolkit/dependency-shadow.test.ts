@@ -196,7 +196,7 @@ it.live("direct and transitive CJS/ESM resolution selects the reviewed snapshot,
       const copies = [base, head, live]
       for (const copy of copies) {
         expect((yield* Effect.promise(() => lstat(path.join(copy.root, "node_modules")))).isSymbolicLink()).toBe(false)
-        expect(yield* Effect.promise(() => readlink(path.join(copy.root, "node_modules", "@ws", "lib")))).toBe("../../packages/lib")
+        expect(posixLink(yield* Effect.promise(() => readlink(path.join(copy.root, "node_modules", "@ws", "lib"))))).toBe("../../packages/lib")
         expect(yield* Effect.promise(() => realpath(path.join(copy.root, "node_modules", "@ws", "lib")))).toBe(path.join(copy.root, "packages", "lib"))
       }
       const rel = (copy: ReviewScratch.Snapshot) => createRequire(path.join(copy.root, "package.json"))(
@@ -227,7 +227,7 @@ it.live("direct and transitive CJS/ESM resolution selects the reviewed snapshot,
       expect(base.dependencyRoots.some((root) => FSUtil.contains(root, shadow))).toBe(true)
       expect(base.files).toBeLessThan(20)
       const bin = path.join(base.root, "node_modules", ".bin", "tool")
-      expect(yield* Effect.promise(() => readlink(bin))).toBe("../third/bin/tool.js")
+      expect(posixLink(yield* Effect.promise(() => readlink(bin)))).toBe("../third/bin/tool.js")
       expect(yield* Effect.promise(() => realpath(bin))).toBe(path.join(base.root, "node_modules", "third", "bin", "tool.js"))
       if (process.platform !== "win32") expect((yield* Effect.promise(() => lstat(path.join(base.root, "node_modules", "third", "bin", "tool.js")))).mode & 0o777).toBe(0o755)
       const ran = yield* ResearchProcess.run({
@@ -308,11 +308,15 @@ it.live("an unreadable dependency candidate is layout-unsupported, a missing roo
     yield* Effect.promise(() => chmod(app, 0o000))
     yield* Effect.gen(function* () {
       const probe = yield* Effect.promise(() => lstat(candidate).then(() => "readable", (error: { code?: string }) => error.code ?? "unknown"))
-      if (probe !== "EACCES") return yield* Effect.die(new Error(`snapshot-dependency-unreadable-unsupported: ${probe}`))
-      const error = yield* ProbeSnapshot.create({
-        worktree: root, snapshot: { kind: "commit", revision: "HEAD" }, scratch, maxBytes: 1024 * 1024,
-      }).pipe(Effect.flip)
-      expect(error.reason).toBe("snapshot-dependency-layout-unsupported: packages/app/node_modules EACCES")
+      // Windows chmod 0 does not deny the owner. Dying here hung the file until the step died (run 43150681461).
+      if (probe !== "EACCES") {
+        if (process.platform !== "win32") return yield* Effect.die(new Error(`snapshot-dependency-unreadable-unsupported: ${probe}`))
+      } else {
+        const error = yield* ProbeSnapshot.create({
+          worktree: root, snapshot: { kind: "commit", revision: "HEAD" }, scratch, maxBytes: 1024 * 1024,
+        }).pipe(Effect.flip)
+        expect(error.reason).toBe("snapshot-dependency-layout-unsupported: packages/app/node_modules EACCES")
+      }
     }).pipe(Effect.ensuring(Effect.promise(() => chmod(app, mode))))
     expect(yield* Effect.promise(() => seal(root))).toEqual(before)
     const copy = yield* ProbeSnapshot.create({
@@ -321,6 +325,10 @@ it.live("an unreadable dependency candidate is layout-unsupported, a missing roo
     expect(copy.dependencyRoots).toEqual([])
   }), 120_000,
 )
+
+function posixLink(target: string) {
+  return target.replaceAll("\\", "/")
+}
 
 /** One attack symlink only. Ordinary package and relative .bin stay inside the closure. */
 function refuseOneOutside(name: string, attack: string, plant: (paths: { root: string; sibling: string; external: string }) => Promise<void>) {
