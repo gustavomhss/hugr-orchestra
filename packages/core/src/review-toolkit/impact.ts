@@ -144,12 +144,12 @@ function orderRanges(found: ReadonlyArray<{ readonly path: string; readonly star
     if (left.start > right.start) return 1
     return left.end - right.end
   })
-  const ranges: Record<string, Array<{ start: number; end: number }>> = {}
+  const ranges = new Map<string, Array<{ start: number; end: number }>>()
   for (const range of sorted) {
-    const existing = ranges[range.path] ?? []
+    const existing = ranges.get(range.path) ?? []
     const last = existing[existing.length - 1]
     if (last !== undefined && last.start === range.start && last.end === range.end) continue
-    ranges[range.path] = [...existing, { start: range.start, end: range.end }]
+    ranges.set(range.path, [...existing, { start: range.start, end: range.end }])
   }
-  return ranges
+  return Object.fromEntries(ranges)
 }
