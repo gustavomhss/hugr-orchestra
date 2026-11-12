@@ -107,7 +107,7 @@ impl Life {
             .collect())
     }
 
-    #[cfg(test)]
+    #[cfg(all(test, target_os = "linux"))]
     pub(super) fn inventory_probe(&self) -> Result<crate::client::inventory_probe::Watch, Error> {
         self.tree.inventory_probe()
     }

@@ -12,7 +12,7 @@ use crate::process::PipeChild;
 use crate::process::child::Inner;
 
 use super::super::deadline::{eventually, logged};
-use super::super::{LIMIT, alive, assert_dead, binary, block, use_supervisor};
+use super::super::{LIMIT, alive, assert_dead, binary, use_supervisor};
 
 pub(super) const TIMEOUT: Duration = Duration::from_secs(6);
 pub(super) const MIB: u64 = 1 << 20;
@@ -36,7 +36,11 @@ pub(super) fn run_role(case: &str) {
         .stderr(Stdio::piped())
         .spawn()
         .expect("isolated role");
-    let mut role = Role { child, directory };
+    let mut role = Role {
+        child,
+        directory,
+        finished: false,
+    };
     let until = Instant::now() + Duration::from_secs(50);
     let status = loop {
         if let Some(status) = role.child.try_wait().expect("role status") {
@@ -59,23 +63,56 @@ pub(super) fn run_role(case: &str) {
         .expect("role stderr")
         .read_to_string(&mut err)
         .expect("read stderr");
+    let cleanup = role.finish();
     assert!(status.success(), "N2 role {case}: {status}\n{out}\n{err}");
+    cleanup.expect("successful role must also complete cleanup");
 }
 
 struct Role {
     child: std::process::Child,
     directory: PathBuf,
+    finished: bool,
+}
+
+impl Role {
+    fn finish(&mut self) -> Result<(), String> {
+        let restored =
+            restore_record(&self.directory.join("nofile")).map_err(|e| format!("restore before role cleanup: {e}"));
+        let stopped = kill_role(&mut self.child);
+        let removed = if restored.is_ok() && stopped.is_ok() {
+            std::fs::remove_dir_all(&self.directory).map_err(|e| format!("remove own role directory: {e}"))
+        } else {
+            Ok(())
+        };
+        let result = restored.and(stopped).and(removed);
+        self.finished = result.is_ok();
+        result
+    }
 }
 
 impl Drop for Role {
     fn drop(&mut self) {
-        // Also covers the outer watchdog: restore the role's own supervisor before killing that role.
-        let restored = restore_record(&self.directory.join("nofile"));
-        assert!(restored.is_ok(), "restore before role cleanup: {restored:?}");
-        let _ = self.child.kill();
-        let _ = self.child.wait();
-        let _ = std::fs::remove_dir_all(&self.directory);
+        if !self.finished
+            && let Err(error) = self.finish()
+        {
+            eprintln!("N2 outer role cleanup failed: {error}");
+        }
     }
+}
+
+fn kill_role(child: &mut std::process::Child) -> Result<(), String> {
+    if child.try_wait().map_err(|e| e.to_string())?.is_some() {
+        return Ok(());
+    }
+    child.kill().map_err(|e| format!("kill own role: {e}"))?;
+    let until = Instant::now() + LIMIT;
+    while child.try_wait().map_err(|e| e.to_string())?.is_none() {
+        if Instant::now() >= until {
+            return Err("own role did not exit after kill".to_owned());
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    Ok(())
 }
 
 pub(super) struct Scenario {
@@ -246,17 +283,38 @@ impl Scenario {
     pub(super) fn assert_dead(&self, within: Duration) {
         assert_dead(&self.pids, within);
     }
+
+    pub(super) fn finish(&mut self) -> Result<(), String> {
+        let restored = self.limit.take().map_or(Ok(()), |mut limit| {
+            limit
+                .restore()
+                .map_err(|e| format!("restore before child cleanup: {e}"))
+        });
+        let stopped = self.child.take().map_or(Ok(()), |child| stop_child(&child));
+        restored.and(stopped)
+    }
 }
 
 impl Drop for Scenario {
     fn drop(&mut self) {
-        if let Some(mut limit) = self.limit.take() {
-            limit.restore().expect("restore own supervisor before any child stop");
-        }
-        if let Some(child) = self.child.take() {
-            let _ = block(child.stop(Some(Duration::ZERO)));
+        if let Err(error) = self.finish() {
+            eprintln!("N2 scenario cleanup failed: {error}");
         }
     }
+}
+
+fn stop_child(child: &PipeChild) -> Result<(), String> {
+    let caller = tokio::runtime::Builder::new_current_thread()
+        .enable_time()
+        .build()
+        .map_err(|e| e.to_string())?;
+    caller.block_on(async {
+        tokio::time::timeout(LIMIT, child.stop(Some(Duration::ZERO)))
+            .await
+            .map_err(|_| "child cleanup stop exceeded its bound".to_owned())?
+            .map(|_| ())
+            .map_err(|e| e.to_string())
+    })
 }
 
 fn own_supervisor() -> u32 {

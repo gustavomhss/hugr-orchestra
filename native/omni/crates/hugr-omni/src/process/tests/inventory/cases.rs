@@ -26,6 +26,7 @@ pub(super) fn rss() {
         "real RSS after recovery must enforce the cap"
     );
     run.no_weak();
+    run.finish().expect("successful RSS case cleanup");
 }
 
 pub(super) fn deadline(periodic: bool, cancel: bool) {
@@ -72,6 +73,7 @@ pub(super) fn deadline(periodic: bool, cancel: bool) {
     let exit = block(run.child().wait()).expect("same root status after member enforcement");
     assert_eq!((exit.code, exit.reason), (Some(0), Reason::Exit));
     run.no_weak();
+    run.finish().expect("successful deadline case cleanup");
 }
 
 pub(super) fn release(drop_child: bool) {
@@ -91,4 +93,5 @@ pub(super) fn release(drop_child: bool) {
     run.assert_dead(Duration::from_secs(3));
     run.no_weak();
     assert_eq!(Arc::weak_count(&run.inner), 0);
+    run.finish().expect("successful release case cleanup");
 }

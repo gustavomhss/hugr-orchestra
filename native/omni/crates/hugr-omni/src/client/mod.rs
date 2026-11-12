@@ -8,7 +8,7 @@
 
 mod channel;
 mod hold;
-#[cfg(test)]
+#[cfg(all(test, target_os = "linux"))]
 pub(crate) mod inventory_probe;
 #[cfg(unix)]
 mod keeper;
@@ -121,7 +121,7 @@ pub(crate) struct Tree {
     id: u64,
     life: LifeTx,
     hold: Hold,
-    #[cfg(test)]
+    #[cfg(all(test, target_os = "linux"))]
     probe: inventory_probe::Probe,
 }
 
@@ -216,14 +216,14 @@ impl Tree {
             .await?
         {
             Answer::Processes(list) => {
-                #[cfg(test)]
+                #[cfg(all(test, target_os = "linux"))]
                 self.probe
                     .received(inventory_probe::Receipt::Listed(list.iter().map(|p| p.pid).collect()))
                     .await;
                 Ok(list)
             }
             other => {
-                #[cfg(test)]
+                #[cfg(all(test, target_os = "linux"))]
                 if matches!(&other, Answer::Ack(Ack::Error)) {
                     self.probe.received(inventory_probe::Receipt::Incomplete).await;
                 }
@@ -232,7 +232,7 @@ impl Tree {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(all(test, target_os = "linux"))]
     pub(crate) fn inventory_probe(&self) -> Result<inventory_probe::Watch, Error> {
         self.sup.home()?;
         Ok(self.probe.attach())
@@ -244,7 +244,7 @@ impl Tree {
             id,
             life,
             hold: Hold::new(held),
-            #[cfg(test)]
+            #[cfg(all(test, target_os = "linux"))]
             probe: inventory_probe::Probe::default(),
         }
     }
