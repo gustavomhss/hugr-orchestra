@@ -143,6 +143,132 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
   }
 }, 15_000)
 
+test("a pre-gap bootstrap active snapshot cannot resurrect busy after newer recovery without any live status event", async () => {
+  const old = Promise.withResolvers<Response>()
+  const harness = statusBootstrap((read) => (read === 1 ? old.promise : Response.json({ data: {} })))
+  try {
+    await until(() => harness.reads.length === 1 && harness.greetings.length === 1 && harness.sync.ready)
+    harness.sync.session.set("session_status", "ses_bootstrap", { type: "busy" })
+    expect(harness.mounts.count).toBe(1)
+    expect(harness.sync.session.data.session_status.ses_bootstrap).toEqual({ type: "busy" })
+    harness.connections[0].close()
+    await until(() => harness.reads.length === 2 && harness.greetings.length === 2)
+    await until(() => harness.sync.session.data.session_status.ses_bootstrap?.type === "idle")
+    expect(harness.reads).toHaveLength(2)
+    old.resolve(Response.json({ data: { ses_bootstrap: { type: "running" } } }))
+    await until(() => harness.client.isFetching({ queryKey: [ServerScope.local, "activeSessions"] }) === 0)
+    expect(harness.sync.session.data.session_status.ses_bootstrap).toEqual({ type: "idle" })
+    expect(harness.mounts.count).toBe(1)
+    expect(harness.unexpected).toEqual([])
+  } finally {
+    old.resolve(Response.json({ data: {} }))
+    harness.dispose()
+  }
+}, 15_000)
+
+function statusBootstrap(active: (read: number) => Response | Promise<Response>) {
+  const connections: ReadableStreamDefaultController<Uint8Array>[] = []
+  const reads: string[] = []
+  const greetings: string[] = []
+  const unexpected: string[] = []
+  const mounts = { count: 0 }
+  const location = { directory: "/repo", project: { id: "project", directory: "/repo" } }
+  const server = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    fetch(request) {
+      const pathname = new URL(request.url).pathname
+      if (pathname === "/api/event")
+        return new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              connections.push(controller)
+              controller.enqueue(
+                new TextEncoder().encode(
+                  `data: ${JSON.stringify({ id: `evt_bootstrap_${connections.length}`, type: "server.connected", data: {} })}\n\n`,
+                ),
+              )
+            },
+          }),
+          { headers: { "content-type": "text/event-stream" } },
+        )
+      if (pathname === "/api/session/active") {
+        reads.push(pathname)
+        return active(reads.length)
+      }
+      if (pathname === "/api/health") return Response.json({ pid: 123 })
+      if (pathname === "/api/config") return Response.json({ disabledProviders: [] })
+      if (pathname === "/api/location/paths")
+        return Response.json({ state: "", config: "", worktree: "/repo", directory: "/repo", home: "/home" })
+      if (pathname === "/api/project") return Response.json([])
+      if (pathname === "/api/model/default") return Response.json({ location, data: null })
+      if (pathname === "/api/provider" || pathname === "/api/model") return Response.json({ location, data: [] })
+      if (pathname === "/api/session/ses_bootstrap")
+        return Response.json({
+          data: {
+            id: "ses_bootstrap",
+            projectID: "project",
+            title: "bootstrap fixture",
+            location: { directory: "/repo" },
+            cost: 0,
+            tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+            time: { created: 1, updated: 1 },
+          },
+        })
+      unexpected.push(pathname)
+      return Response.json({ message: "Unexpected request" }, { status: 500 })
+    },
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  let sync!: ReturnType<typeof createServerSyncContextInner>
+  function Probe() {
+    mounts.count++
+    const sdk = createServerSdkContext({ type: "http", http: { url: server.url.origin } }, ServerScope.local)
+    sync = createServerSyncContextInner(sdk)
+    sdk.event.listen((event) => {
+      if (event.details.type === "server.connected") greetings.push(event.details.id)
+    })
+    return null
+  }
+  const host = document.createElement("div")
+  document.body.appendChild(host)
+  const stop = render(
+    () =>
+      createComponent(PlatformProvider, {
+        value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
+        get children() {
+          return createComponent(LanguageProvider, {
+            locale: "en",
+            get children() {
+              return createComponent(QueryClientProvider, {
+                client,
+                get children() {
+                  return createComponent(Probe, {})
+                },
+              })
+            },
+          })
+        },
+      }),
+    host,
+  )
+  return {
+    connections,
+    reads,
+    greetings,
+    unexpected,
+    mounts,
+    sync,
+    client,
+    dispose() {
+      stop()
+      host.remove()
+      client.clear()
+      server.stop(true)
+    },
+  }
+}
+
 async function until(check: () => boolean) {
   const deadline = Date.now() + 5_000
   while (!check()) {

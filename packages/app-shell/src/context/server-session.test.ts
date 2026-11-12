@@ -173,6 +173,123 @@ describe("server session", () => {
     expect(store.history.loading("ses_child")).toBe(false)
   })
 
+  test("forced history settles failed predecessors, coalesces callers and leaves another Session independent", async () => {
+    const results: {
+      failure: string
+      problem: Error
+      first: unknown
+      trailing: unknown
+      duplicate: unknown
+      reads: number
+      maximum: number
+      ids: string[] | undefined
+    }[] = []
+    for (const failure of ["history", "metadata"] as const) {
+      const pending = deferredPage()
+      const started = Promise.withResolvers<void>()
+      const metadata = Promise.withResolvers<Session>()
+      const problem = new Error(`${failure} read failed`)
+      const state = { reads: 0, active: 0, maximum: 0, gets: 0 }
+      const base = messageClient()
+      const store = createServerSession(
+        {
+          ...base.sessionApi,
+          get: async (input) => {
+            if (input.sessionID !== "ses_child") return session(input.sessionID)
+            state.gets++
+            return failure === "metadata" && state.gets === 1 ? metadata.promise : session(input.sessionID)
+          },
+        },
+        {
+          ...base.messageApi,
+          list: async (input) => {
+            if (input.sessionID !== "ses_child") return page([v2User("other-session")])
+            state.reads++
+            state.active++
+            state.maximum = Math.max(state.maximum, state.active)
+            started.resolve()
+            try {
+              return state.reads === 1 ? await pending.promise : page([v2User("fresh-after-failure")])
+            } finally {
+              state.active--
+            }
+          },
+        },
+        { retry: async (read) => read(), todo: async () => [] },
+      )
+      const outcome = (task: Promise<void>) =>
+        task.then(
+          () => ({ ok: true }),
+          (error: unknown) => ({ error }),
+        )
+      const first = outcome(store.sync("ses_child"))
+      await started.promise
+      if (failure === "metadata") metadata.reject(problem)
+      // A complete independent read lets the failed metadata child settle while A's history stays held.
+      await store.sync("ses_other")
+      expect(store.data.message.ses_other?.map((message) => message.id)).toEqual(["other-session"])
+      expect(state.reads).toBe(1)
+      expect(state.active).toBe(1)
+      const trailing = outcome(store.sync("ses_child", { force: true }))
+      const samePredecessor = outcome(store.sync("ses_child", { force: true }))
+      try {
+        if (failure === "history") pending.reject(problem)
+        if (failure === "metadata") pending.resolve(page([v2User("old-captured-page")]))
+        results.push({
+          failure,
+          problem,
+          first: await first,
+          trailing: await trailing,
+          duplicate: await samePredecessor,
+          reads: state.reads,
+          maximum: state.maximum,
+          ids: ids(store),
+        })
+      } finally {
+        metadata.resolve(session("ses_child"))
+        pending.resolve(page())
+        await Promise.all([first, trailing, samePredecessor])
+      }
+    }
+    for (const result of results) {
+      expect(result.first).toEqual({ error: result.problem })
+      expect(result.trailing).toEqual({ ok: true })
+      expect(result.duplicate).toEqual({ ok: true })
+      expect(result.reads).toBe(2)
+      expect(result.maximum).toBe(1)
+      expect(result.ids).toEqual(["fresh-after-failure"])
+    }
+  })
+
+  test("deletion cancels the old trailing read without letting its finalizer erase a replacement owner", async () => {
+    const old = deferredPage()
+    const replacement = deferredPage()
+    const client = messageClient(old.promise, replacement.promise, page([v2User("replacement-fresh")]))
+    const store = create(client)
+    const first = store.sync("ses_child")
+    await client.requested(1)
+    const obsolete = store.sync("ses_child", { force: true })
+    store.apply({ type: "session.next.deleted", properties: { timestamp: 2, sessionID: "ses_child" } })
+    const next = store.sync("ses_child")
+    await client.requested(2)
+    const nextForce = store.sync("ses_child", { force: true })
+    try {
+      old.resolve(page([v2User("deleted-owner")]))
+      await Promise.all([first, obsolete])
+      expect(client.requests).toHaveLength(2)
+      expect(ids(store) ?? []).not.toContain("deleted-owner")
+      const sameReplacement = store.sync("ses_child", { force: true })
+      replacement.resolve(page([v2User("replacement-captured")]))
+      await Promise.all([next, nextForce, sameReplacement])
+      expect(client.requests).toHaveLength(3)
+      expect(ids(store)).toEqual(["replacement-fresh"])
+    } finally {
+      old.resolve(page())
+      replacement.resolve(page())
+      await Promise.allSettled([first, obsolete, next, nextForce])
+    }
+  })
+
   test("projects V2 session events into current and wire message state", () => {
     const ctx = setup({ ses_child: session("ses_child") })
     ctx.store.remember(session("ses_child"))
