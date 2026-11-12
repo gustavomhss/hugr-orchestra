@@ -36,7 +36,7 @@ export function selectVariant(
   model: ModelV2.Info,
   variantID: ModelV2.VariantID | undefined,
 ): Effect.Effect<{ readonly model: ModelV2.Info; readonly variant: ModelV2.Info["variants"][number] | undefined }, VariantUnavailableError> {
-  const id = variantID === "default" || variantID === undefined ? model.request.variant : variantID
+  const id = variantID === undefined ? model.request.variant : variantID
   const variant = model.variants.find((item) => item.id === id)
   if (!variant && id !== undefined)
     return Effect.fail(
@@ -50,6 +50,7 @@ export function selectVariant(
     variant,
     model: variant
       ? produce(model, (draft) => {
+          draft.request.variant = variant.id
           Object.assign(draft.request.headers, variant.headers)
           Object.assign(draft.request.body, variant.body)
         })
