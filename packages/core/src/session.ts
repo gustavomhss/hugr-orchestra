@@ -152,9 +152,14 @@ export type Error =
   | PromptConflictError
   | PromptBlockedError
 
+/** Internal admission checkpoint; never serialized or inherited by Session execution. */
+export interface CommitOptions {
+  readonly beforeCommit?: Effect.Effect<void>
+}
+
 export interface Interface {
   readonly list: (input?: ListInput) => Effect.Effect<SessionSchema.Info[]>
-  readonly create: (input: CreateInput) => Effect.Effect<SessionSchema.Info, NotFoundError>
+  readonly create: (input: CreateInput, options?: CommitOptions) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly archive: (input: { sessionID: SessionSchema.ID; archived: boolean }) => Effect.Effect<void, NotFoundError>
   readonly rename: (input: { sessionID: SessionSchema.ID; title: string }) => Effect.Effect<void, NotFoundError>
@@ -201,7 +206,7 @@ export interface Interface {
     prompt: PromptInput.Prompt
     delivery?: SessionInput.Delivery
     resume?: boolean
-  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError | PromptBlockedError>
+  }, options?: CommitOptions) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError | PromptBlockedError>
   /** Copies the history before `messageID` (and before a staged revert) into a new Session. */
   readonly fork: (input: {
     sessionID: SessionSchema.ID
@@ -393,7 +398,8 @@ const layer = Layer.effect(
       )
 
     const result = Service.of({
-      create: Effect.fn("V2Session.create")(function* (input) {
+      create: Effect.fn("V2Session.create")(function* (input, options) {
+        const beforeCommit = options?.beforeCommit
         const sessionID = input.id ?? SessionSchema.ID.create()
         const recorded = yield* topology.withPermit(
           Effect.gen(function* () {
@@ -446,20 +452,21 @@ const layer = Layer.effect(
                           }
                         : {}),
                     },
-                    { location: input.location },
+                    { location: input.location, ...(beforeCommit ? { commit: () => beforeCommit } : {}) },
                   )
                   .pipe(
                     Effect.as({ type: "created" } as const),
-                    Effect.catchDefect((defect) => {
-                      if (!(defect instanceof SessionProjector.SessionAlreadyProjected)) {
-                        return Effect.die(defect)
+                    Effect.catchCause((cause) => {
+                      const reason = cause.reasons.length === 1 ? cause.reasons[0] : undefined
+                      if (reason?._tag !== "Die" || !(reason.defect instanceof SessionProjector.SessionAlreadyProjected)) {
+                        return Effect.failCause(cause)
                       }
                       // Concurrent creation lost the projection race. The existing Session identity wins.
                       return store
                         .get(sessionID)
                         .pipe(
                           Effect.flatMap((session) =>
-                            session ? Effect.succeed({ type: "existing", session } as const) : Effect.die(defect),
+                            session ? Effect.succeed({ type: "existing", session } as const) : Effect.failCause(cause),
                           ),
                         )
                     }),
@@ -581,7 +588,7 @@ const layer = Layer.effect(
           manifest: SessionDurable,
         })
       }),
-      prompt: Effect.fn("V2Session.prompt")((input) =>
+      prompt: Effect.fn("V2Session.prompt")((input, options) =>
         Effect.uninterruptibleMask((restore) =>
           Effect.gen(function* () {
             const messageID = input.id ?? SessionMessage.ID.create()
@@ -600,12 +607,13 @@ const layer = Layer.effect(
                     prompt,
                     ...(notes.length === 0 ? {} : { promptContext: { reminders: [...notes] } }),
                     delivery,
-                  }).pipe(
-                    Effect.catchDefect((defect) =>
-                      defect instanceof SessionInput.LifecycleConflict
+                  }, options?.beforeCommit).pipe(
+                    Effect.catchCause((cause) => {
+                      const reason = cause.reasons.length === 1 ? cause.reasons[0] : undefined
+                      return reason?._tag === "Die" && reason.defect instanceof SessionInput.LifecycleConflict
                         ? new PromptConflictError({ sessionID: input.sessionID, messageID })
-                        : Effect.die(defect),
-                    ),
+                        : Effect.failCause(cause)
+                    }),
                   )
                 }),
               ),

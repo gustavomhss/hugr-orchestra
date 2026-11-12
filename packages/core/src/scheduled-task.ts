@@ -14,6 +14,7 @@ import { ScheduledTaskCapability } from "./scheduled-task/capability"
 import { ScheduledTaskModel } from "./scheduled-task/model"
 import { ScheduledTaskPort } from "./scheduled-task/port"
 import { ScheduledTaskShared } from "./scheduled-task/shared"
+import { rememberFailureCause } from "./scheduled-task/failure-cause"
 import { ScheduledTaskRunTable, ScheduledTaskTable } from "./scheduled-task/sql"
 
 export const ID = ScheduledTask.ID
@@ -158,7 +159,7 @@ const layer = Layer.effect(
     // Legacy runs are Maestro Sessions in the task's directory. A capability run uses its owner's agent and
     // placement, and only while the owner Session still exists there with that agent. `admitted` is a takeover
     // retrying a prompt that is already durable, which only reconciles and wakes.
-    const dispatch = (claimed: Claim, admitted = false) =>
+    const dispatch = (claimed: Claim, admitted = false, options?: SessionV2.CommitOptions) =>
       Effect.gen(function* () {
         const owner = claimed.task.policy === "capability" ? claimed.task.owner : undefined
         if (claimed.task.policy === "capability" && !(owner && (yield* cap.present(owner))))
@@ -170,12 +171,12 @@ const layer = Layer.effect(
           id: claimed.sessionID,
           agent: owner?.agentID ?? AgentV2.defaultID,
           location: owner?.location ?? { directory: claimed.task.directory },
-        })
+        }, options)
         // An edit, pause or removal since the claim voids it before admission. What remains is the window from this
         // read to the durable admission inside `sessions.prompt` (its prompt hooks included); a claim revoked in it
         // still settles with an honest `started` receipt.
         if (checked && !(yield* cap.holds(claimed))) return { type: "void" } as const
-        yield* sessions.prompt({ id: claimed.messageID, sessionID: session.id, prompt: { text: claimed.prompt } })
+        yield* sessions.prompt({ id: claimed.messageID, sessionID: session.id, prompt: { text: claimed.prompt } }, options)
         return { type: "started", sessionID: session.id } as const
       }).pipe(
         Effect.catchCause((cause) =>
@@ -184,7 +185,7 @@ const layer = Layer.effect(
             const durable =
               claimed.task.policy === "capability" ? yield* SessionInput.find(db, claimed.messageID) : undefined
             if (durable) return { type: "started", sessionID: durable.sessionID } as const
-            return { type: "failed", error: reason(cause) } as const
+            return rememberFailureCause({ type: "failed", error: reason(cause) } as const, cause)
           }),
         ),
       )
@@ -351,7 +352,7 @@ const layer = Layer.effect(
       yield* Effect.race(Effect.sleep(delay), Queue.take(woken))
     })
 
-    const capability = cap.api({ dispatch, settle })
+    const capability = cap.api({ dispatch: (claimed, options) => dispatch(claimed, false, options), settle })
     yield* ScheduledTaskPort.bind(capability)
     return Service.of({
       list: Effect.fn("ScheduledTask.list")(function* (directory) {

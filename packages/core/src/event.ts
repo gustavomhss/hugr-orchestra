@@ -5,6 +5,7 @@ import { Event } from "@orchestra/schema/event"
 import type { Data, Definition, Payload } from "@orchestra/schema/event"
 import { and, asc, eq, gt, inArray, sql } from "drizzle-orm"
 import { Database } from "./database/database"
+import { dieFailures } from "./effect/cause"
 import { EventSequenceTable, EventTable } from "./event/sql"
 import { EventSeal } from "./event/seal"
 import { EventOrder } from "./event/order"
@@ -444,7 +445,7 @@ export const layerWith = (options?: LayerOptions) =>
                         }),
                       { behavior: "immediate" },
                     )
-                    .pipe(order.guard(box), Effect.orDie)
+                    .pipe(order.guard(box), Effect.catchCause((cause) => Effect.failCause(dieFailures(cause))))
                   if (committed) {
                     yield* Effect.forEach(
                       pubsub.durable.get(committed.aggregateID) ?? [],

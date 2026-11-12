@@ -4,6 +4,7 @@ import { and, desc, eq, inArray } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import type { Database } from "../database/database"
+import { dieFailures } from "../effect/cause"
 import type { AbsolutePath } from "../schema"
 import { SessionV2 } from "../session"
 import { SessionMessage } from "../session/message"
@@ -51,7 +52,9 @@ export type Store = ReturnType<typeof store>
 // over once their lease ends.
 export function store(db: Database.Interface["db"], lease: string) {
   const immediate = <A, E>(effect: Effect.Effect<A, E>) =>
-    db.transaction(() => effect, { behavior: "immediate" }).pipe(Effect.orDie)
+    db.transaction(() => effect, { behavior: "immediate" }).pipe(
+      Effect.catchCause((cause) => Effect.failCause(dieFailures(cause))),
+    )
 
   // A directory-scoped lookup serves the legacy routes, which never see capability rows.
   const find = (id: ScheduledTask.ID, directory?: AbsolutePath) =>

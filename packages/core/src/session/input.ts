@@ -55,6 +55,7 @@ export const admit = Effect.fn("SessionInput.admit")(function* (
     readonly promptContext?: PromptContext.Info
     readonly delivery: Delivery
   },
+  beforeCommit?: Effect.Effect<void>,
 ) {
   const existing = yield* find(db, input.id)
   if (existing !== undefined) {
@@ -72,7 +73,7 @@ export const admit = Effect.fn("SessionInput.admit")(function* (
       prompt: input.prompt,
       promptContext: input.promptContext,
       delivery: input.delivery,
-    })
+    }, beforeCommit ? { commit: () => beforeCommit } : undefined)
     .pipe(
       Effect.flatMap((event) =>
         event.durable === undefined
@@ -83,13 +84,14 @@ export const admit = Effect.fn("SessionInput.admit")(function* (
               ),
             ),
       ),
-      Effect.catchDefect((defect) =>
-        find(db, input.id).pipe(
+      Effect.catchCause((cause) => {
+        if (cause.reasons.length !== 1 || cause.reasons[0]?._tag !== "Die") return Effect.failCause(cause)
+        return find(db, input.id).pipe(
           Effect.flatMap((stored) =>
-            stored && equivalent(stored, input) ? Effect.succeed(stored) : Effect.die(defect),
+            stored && equivalent(stored, input) ? Effect.succeed(stored) : Effect.failCause(cause),
           ),
-        ),
-      ),
+        )
+      }),
     )
 })
 
