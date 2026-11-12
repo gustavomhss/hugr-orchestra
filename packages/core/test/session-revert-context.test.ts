@@ -1,13 +1,15 @@
 import { expect } from "bun:test"
 import { asc, eq } from "drizzle-orm"
-import { DateTime, Effect, Exit, Layer, Schema } from "effect"
+import { DateTime, Effect, Exit, Layer, Option, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessage } from "@orchestra/core/session/message"
+import { SessionExecution } from "@orchestra/core/session/execution"
 import { Prompt } from "@orchestra/core/session/prompt"
+import { SessionRevert } from "@orchestra/core/session/revert"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionContextEpochTable, SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
@@ -79,9 +81,21 @@ const epoch = Effect.gen(function* () {
   return row
 })
 
+// Harness uses a nonexistent /project. Stage through the real owned leaf with its provided Snapshot.noopLayer;
+// the public commit under test remains SessionV2, without constructing a second filesystem Location graph.
+const stage = (messageID: SessionMessage.ID) => Effect.gen(function* () {
+  const session = yield* SessionV2.Service
+  const execution = yield* SessionExecution.Service
+  const owned = yield* execution.exclusive(Harness.sessionID, Effect.gen(function* () {
+    const current = yield* session.get(Harness.sessionID)
+    return yield* SessionRevert.stage({ session: current, messageID, files: false })
+  }))
+  expect(Option.isSome(owned)).toBe(true)
+})
+
 const revert = (messageID: SessionMessage.ID) => Effect.gen(function* () {
   const session = yield* SessionV2.Service
-  yield* session.revert.stage({ sessionID: Harness.sessionID, messageID, files: false })
+  yield* stage(messageID)
   yield* session.revert.commit(Harness.sessionID)
 })
 
@@ -229,7 +243,7 @@ it.live("a failed projection delete rolls back the epoch update and the committe
     state.value = "CTX-B"
     yield* turn("deleted user")
     const session = yield* SessionV2.Service
-    yield* session.revert.stage({ sessionID: Harness.sessionID, messageID: boundary, files: false })
+    yield* stage(boundary)
     const stored = yield* epoch
     const database = yield* Database.Service
     const messages = yield* session.messages({ sessionID: Harness.sessionID })
