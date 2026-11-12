@@ -77,7 +77,10 @@ const useDefaultServerKey = (
       void settleDefaultOpen({
         read: result,
         current: () => !dead,
-        apply: (next) => setState({ key: next ?? undefined, failed: false }),
+        apply: (next) => {
+          const key = typeof next === "string" ? ServerConnection.Key.make(next) : undefined
+          setState({ key, failed: false })
+        },
         report: (error) => {
           console.error(error)
           setState("failed", true)
