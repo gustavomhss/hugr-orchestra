@@ -348,6 +348,15 @@ const toolkit = Spec.make("toolkit", {
         ),
       },
     }),
+    Spec.make("rustsec", {
+      description: "Refresh the host RustSec advisory database outside a review",
+      params: {
+        operands: Argument.string("operand").pipe(
+          Argument.variadic,
+          Argument.filter((values) => values.length === 0, () => "rustsec does not accept positional operands"),
+        ),
+      },
+    }),
     Spec.make("osv", {
       description: "Refresh the OSV advisory database outside a review",
     }),
