@@ -382,6 +382,11 @@
           "kind": "consumer_correction_static_approved_pending_runtime",
           "source": "a678f8e108abbb4c8711e7725f06b83841333ff4",
           "result": "Root and independent cold critic read all22 correction paths and approve.132consumer/safety cases (94original+38new) plus34unchanged E1 and existing owner/delivery/roster/Sync regressions frozen. Base ACK/item raw identity, scoped semantic context, DirSDK last-ref lifetime and empty-string semantics corrected. Four package types now authorized serially; official A/B/C gates conditional on types, no AFTER yet. No consumer runtime GREEN claimed."
+        },
+        {
+          "kind": "consumer_typecheck_fixture_and_callsite_errors",
+          "source": "a678f8e108abbb4c8711e7725f06b83841333ff4",
+          "result": "Client and SessionUI typecheck0; App typecheck1 with exactly two errors: excess scope/directory keys in waitForSubagentPolicy call, optional test identity value after an explicit defined assertion. Chain stops before TUI; no consumer hosted gate dispatched. Root and independent critic approve removing only unused call arguments and asserting that already-validated test value nonnull; no authority or assertion requirement changed. App/TUI rerun required after narrow patch."
         }
       ],
       "remaining": "Core/host/API and literal variant identity are integrated and verified in scoped hosted gates. Consumer correction freeze/cold review, Client/SessionUI/App/TUI types, full consumer/E1/owner regressions and production AFTER benchmark remain required. Whole E6 stays open. Historical stored default strings are preserved literally; ambiguous old aliases are not rewritten."
