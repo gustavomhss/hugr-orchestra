@@ -92,7 +92,7 @@ test.each(["array", "function"] as const)("CONTROL parser: original token/commen
   const regexTokens = original.tokens.filter((token) => token.type.label === "regexp")
   expect(regexTokens).toHaveLength(2)
   regexTokens.forEach((token) => {
-    if (!isRecord(token.value)) throw new Error("Expected original Acorn regex token payload")
+    if (!("value" in token) || !isRecord(token.value)) throw new Error("Expected original Acorn regex token payload")
     expect(token.value.value).toBeInstanceOf(RegExp)
   })
 })
@@ -108,7 +108,7 @@ test.each(["array", "function"] as const)("ACCEPT parser: preserves all token/co
   const regexTokens = actual.tokens.filter((token) => token.type.label === "regexp")
   expect(regexTokens).toHaveLength(2)
   regexTokens.forEach((token) => {
-    if (!isRecord(token.value)) throw new Error("Expected Acorn regex token payload")
+    if (!("value" in token) || !isRecord(token.value)) throw new Error("Expected Acorn regex token payload")
     expect(token.value.value).toBeNull()
   })
 })
