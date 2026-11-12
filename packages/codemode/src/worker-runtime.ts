@@ -13,7 +13,7 @@ type RemoteCall = {
   readonly cancelled: Deferred.Deferred<void>
 }
 
-/** Worker-owned interpreter lifetime. The public entry only awaits this program. */
+/** Worker-owned interpreter lifetime. The entry observes rejection without blocking module evaluation. */
 export const runWorker = (): Promise<void> => Effect.runPromise(Effect.gen(function* () {
   const port = parentPort
   if (port === null) return yield* Effect.die("CodeMode worker requires a parent port.")
