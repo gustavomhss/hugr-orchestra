@@ -233,6 +233,11 @@ const assertDeadline = Effect.fn("CodeModeDeadline.assertDeadline")(function* (i
   assertSetup(report, true)
   // On the old implementation the marked CPU phase stalls this child. Killing it is containment, never enforcement.
   expect(report.result, "CodeMode must produce a result; an external watchdog kill is not its deadline").toBeDefined()
+  const facts = Schema.decodeUnknownSync(Schema.Struct({
+    facts: Schema.Struct({ heartbeats: Schema.Number, elapsedAfterMarkMs: Schema.Number, maxGapMs: Schema.Number }),
+    result: Schema.Struct({ toolCalls: Schema.Array(Schema.Struct({ name: Schema.String })) }),
+    trace: Schema.Array(Schema.String),
+  }))(report.result)
   expect(report.result).toMatchObject({
     result: {
       ok: false, error: { kind: "TimeoutExceeded" }, logs: expect.arrayContaining(["regex-phase"]),
@@ -241,11 +246,6 @@ const assertDeadline = Effect.fn("CodeModeDeadline.assertDeadline")(function* (i
     facts: { heartbeats: expect.any(Number), slowCompleted: 0, slowInterrupted: 1, afterCalls: 0 },
     trace: expect.arrayContaining(["start:slow", "start:mark", "end:mark:success"]),
   })
-  const facts = Schema.decodeUnknownSync(Schema.Struct({
-    facts: Schema.Struct({ heartbeats: Schema.Number, elapsedAfterMarkMs: Schema.Number, maxGapMs: Schema.Number }),
-    result: Schema.Struct({ toolCalls: Schema.Array(Schema.Struct({ name: Schema.String })) }),
-    trace: Schema.Array(Schema.String),
-  }))(report.result)
   expect(facts.facts.heartbeats).toBeGreaterThanOrEqual(3)
   expect(facts.facts.elapsedAfterMarkMs).toBeGreaterThanOrEqual(250)
   expect(facts.facts.elapsedAfterMarkMs).toBeLessThan(3000)
