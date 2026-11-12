@@ -162,8 +162,8 @@
     {
       "id": "E6",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "clients",
+      "status": "acceptance_in_progress",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
@@ -602,7 +602,7 @@
       "id": "G2",
       "severity": "P2",
       "owner": "ui",
-      "status": "acceptance_in_progress",
+      "status": "implementation_in_progress",
       "runtime_reproduced": true,
       "commits": [],
       "evidence": [
@@ -764,8 +764,8 @@
     {
       "id": "H6",
       "severity": "P1",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "security",
+      "status": "acceptance_in_progress",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
@@ -1692,8 +1692,8 @@
     {
       "id": "M9",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "desktop",
+      "status": "contract_review",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
@@ -1701,8 +1701,8 @@
     {
       "id": "M10",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "desktop",
+      "status": "contract_review",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
@@ -2356,9 +2356,33 @@
     }
   },
   "next_contracts": {
-    "G2": "e1c503d3b4: private custody helper interface frozen; existing API behavioral RED confirmed, extended acceptance still in progress",
-    "E6": "fe942ad488: contextual prospective eligibility contract under cold review; no tests/source GO",
-    "H6": "security factual source/provenance mapping only; no contract/source GO",
-    "M9_M10": "desktop current release revalidation only; no contract/source GO"
+    "G2": "44b4b83de3 tests frozen; Elon and lead acceptance GO, implementation authorized; corrected API-red gate pending, behavioral RED verified",
+    "E6": "cdd57cd172 +9c1f9d421f: Core/host acceptance only GO; wire/UI deferred to subsequent bounded stage within same task",
+    "H6": "5d4733127f: factory/provenance/private sealed seed/config loader interfaces frozen; House GO, acceptance only",
+    "M9_M10": "da4887f41e: single publisher, immutable versioned feed URLs before approval, metadata-only latest promotion; cold contract review in progress"
+  },
+  "wave4": {
+    "agents": {
+      "security": {
+        "branch": "mcp-identity",
+        "baseline": "5d4733127f405a89e77a6319cbba3da1e45f1635",
+        "scope": "H6 acceptance only"
+      },
+      "desktop": {
+        "scope": "M9/M10 contract facts/review only"
+      },
+      "clients": {
+        "branch": "model-eligibility",
+        "baseline": "cdd57cd1723c47219d347034520a7a255dbd1403",
+        "scope": "E6 Core/host acceptance only"
+      },
+      "ui": {
+        "branch": "embedded-custody",
+        "baseline": "367b8ef87948fe1d67d02d238ef2becc491f03ac",
+        "scope": "G2 implementation after cold acceptance and behavioral RED"
+      }
+    },
+    "conflicts": "G2 Core DB export only; E6 Core model/host then wire/UI; H6 MCP/Registry/Config readDocument; releases workflow/tools. Shared docs owned by root. Client generation serialized, no writer currently active.",
+    "checks": "globally serial typechecks GOMAXPROCS=2; hosted tests only; full epic suite once final scope"
   }
 }
