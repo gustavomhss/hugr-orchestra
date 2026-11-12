@@ -33,12 +33,38 @@ that boundary with deferred request responses; such tests prove admission and
 store behavior, not real HTTP or component mounting. Actual HTTP composition is
 covered by W2, and isolated rendered inspection remains a separate W3 gate.
 
-The lead will freeze exact signatures and compilable unavailable anchors before
-the executable suite. This preparation does not authorize a worker to invent
-them. Required observable operations are inventory refresh, read by opaque row
-ID, context retirement/disposal, and monotonic age ticking. A request owns its
+The lead's unavailable worktree-reading.ts anchor now freezes these signatures:
+
+```ts
+make(input: {
+  api: Pick<ReturnType<typeof Orchestra.make>["activity"], "worktrees" | "readWorktree">
+  now?: () => number
+  report?: (error: unknown) => void
+}): Controller
+```
+
+Controller exposes readonly state plus refresh(): Promise<void>,
+read(recordID: string): Promise<void>, tick(): void and dispose(): void.
+State holds snapshot (canonical WorktreeSnapshot or undefined), receivedAt
+(monotonic number or undefined), now, inventory status and reads keyed by recordID.
+Each status has busy and failed booleans. These are actual reactive Solid store
+fields in the eventual implementation, not independent copies for tests.
+The unavailable anchor throws explicitly and is not imported by the component.
+No functional UI implementation is present. Worker tests must use this API;
+no agent may independently redesign it. Required observable operations are
+inventory refresh, read by opaque row ID, context retirement/disposal, and
+monotonic age ticking. A request owns its
 AbortSignal. No manual read is emitted by constructing the controller, rendering,
 refreshing, filtering, selecting a session, changing locale or ticking ages.
+Construction is side-effect free; the component explicitly calls refresh on
+mount. Duplicate pending refreshes or reads of the same row coalesce; different
+rows may proceed concurrently. Reading an ID absent from the accepted snapshot
+does not issue an HTTP request. While a replacement handshake is pending, rows
+are hidden and old-ID actions cannot issue requests. now defaults to
+performance.now and report defaults to console.error with an Activity context.
+Refresh/read promises settle after their owned operation's status is updated;
+disposal suppresses subsequent store updates and reporting, including ignored
+AbortSignals from a deferred transport. tick updates monotonic now only.
 
 The component owns server/category context lifetime. Capture the SDK value that
 made a request; a later sdk() value must never redirect that request to a different
