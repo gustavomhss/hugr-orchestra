@@ -4,6 +4,7 @@ import type { Platform } from "@/context/platform"
 import { pathKey } from "./path-key"
 import { Persist, persisted } from "./persist"
 import type { ServerScope } from "./server-scope"
+import { settleBehaviorRead } from "./behavior-read"
 import {
   defaultBehaviorState,
   sanitizeBehaviorState,
@@ -23,23 +24,34 @@ export function llmBehaviors(platform: Platform, scope: ServerScope, directory: 
 }
 
 function open(platform: Platform, scope: ServerScope, directory: string) {
+  const [failed, setFailed] = createSignal(false)
   const [state, setState, init] = persisted(
     { ...Persist.serverWorkspace(scope, directory, "orchestra-llm-behaviors"), migrate: sanitizeBehaviorState },
     createStore(defaultBehaviorState()),
-    tolerant(platform),
+    reporting(platform, (error) => {
+      console.error(error)
+      setFailed(true)
+    }),
   )
   const [loading, setLoading] = createSignal(init instanceof Promise)
-  Promise.resolve(init).then(() => void setLoading(false))
+  void Promise.resolve(init).then(
+    () => setLoading(false),
+    (error: unknown) => {
+      console.error(error)
+      setFailed(true)
+      setLoading(false)
+    },
+  )
   return {
     loading,
+    failed,
     behaviors: () => state.behaviors,
     update: (next: LlmBehavior[]) => setState("behaviors", next),
   }
 }
 
-// A desktop storage read that fails counts as "nothing saved": the profile keeps its defaults (nothing
-// enabled) and no rejection escapes into the page or a send.
-function tolerant(platform: Platform): Platform {
+// A missing store is not a failure. A failed read is reported and rethrown so it is not "nothing saved".
+function reporting(platform: Platform, report: (error: unknown) => void): Platform {
   const storage = platform.storage
   if (!storage) return platform
   return {
@@ -47,10 +59,20 @@ function tolerant(platform: Platform): Platform {
     storage: (name) => {
       const store = storage(name)
       return {
-        getItem: (key: string) =>
-          Promise.resolve()
-            .then(() => store.getItem(key))
-            .catch(() => null),
+        getItem: (key: string) => {
+          let value: string | null | undefined
+          return settleBehaviorRead({
+            read: Promise.resolve().then(() => store.getItem(key)),
+            current: () => true,
+            apply: (next) => {
+              value = next
+            },
+            report,
+          }).then((ok) => {
+            if (!ok) throw new Error("behavior read failed")
+            return value ?? null
+          })
+        },
         setItem: (key: string, value: string) => Promise.resolve(store.setItem(key, value)),
         removeItem: (key: string) => Promise.resolve(store.removeItem(key)).then(() => {}),
       }

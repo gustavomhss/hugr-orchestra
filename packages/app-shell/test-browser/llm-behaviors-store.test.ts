@@ -67,12 +67,13 @@ describe("profile LLM behavior store", () => {
     ).toBe(false)
   })
 
-  test("a storage read that fails keeps the defaults and never throws", async () => {
+  test("a storage read that fails is not a saved default set", async () => {
     const stub = desktop(async () => {
       throw new Error("storage unavailable")
     })
     const store = llmBehaviors(stub.platform, ServerScope.local, "/repo/c")
     await settled(store)
-    expect(store.behaviors()).toEqual(defaultBehaviorState().behaviors)
+    expect(store.failed()).toBe(true)
+    expect(stub.writes).toEqual([])
   })
 })
