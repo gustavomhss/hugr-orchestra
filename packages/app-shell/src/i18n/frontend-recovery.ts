@@ -27,6 +27,7 @@ export const subagentModelsBase = {
 }
 
 export const FRONTEND_RECOVERY_COPY = {
+  "model.variant.default": "Model default",
   "model.execution.unavailable": "This model is unavailable for this session. Choose an available model or try again.",
   "model.execution.reason.missing": "Model is no longer available",
   "model.execution.reason.disabled": "Model is disabled",
@@ -44,6 +45,7 @@ export const FRONTEND_RECOVERY_COPY = {
 } as const
 
 export const FRONTEND_RECOVERY_COPY_BR: Record<keyof typeof FRONTEND_RECOVERY_COPY, string> = {
+  "model.variant.default": "Padrão do modelo",
   "model.execution.unavailable": "Este modelo está indisponível para esta sessão. Escolha um modelo disponível ou tente novamente.",
   "model.execution.reason.missing": "O modelo não está mais disponível",
   "model.execution.reason.disabled": "O modelo está desativado",

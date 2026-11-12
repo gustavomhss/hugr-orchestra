@@ -585,7 +585,7 @@ export function PromptInputV2Select(props: {
             <MenuV2.RadioGroup value={props.current} onChange={props.onSelect}>
               <For each={props.options}>
                 {(option) => (
-                  <MenuV2.RadioItem value={option.id} class="capitalize" closeOnSelect>
+                  <MenuV2.RadioItem value={option.id} disabled={option.disabled} class="capitalize" closeOnSelect>
                     {option.label}
                   </MenuV2.RadioItem>
                 )}
