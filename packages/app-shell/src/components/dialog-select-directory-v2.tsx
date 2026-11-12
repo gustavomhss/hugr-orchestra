@@ -34,6 +34,17 @@ import "./dialog-select-directory-v2.css"
 import { DividerV2 } from "@orchestra/ui/v2/divider-v2"
 import { getFilename } from "@orchestra/core/util/path"
 
+type PickerSuggestion = { absolute: string; type: "file" | "directory" }
+
+function keptPickerSuggestions(
+  previous: { query: string; items: PickerSuggestion[] } | undefined,
+  query: string,
+) {
+  if (previous) return previous
+  const items: PickerSuggestion[] = []
+  return { query, items }
+}
+
 interface DialogSelectDirectoryV2Props {
   title?: string
   multiple?: boolean
@@ -88,8 +99,8 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     base: () => root() || start(),
     report: reportSearch,
   })
-  const [held, setHeld] = createSignal<{ query: string; items: Array<{ absolute: string; type: "file" | "directory" }> }>()
-  const [suggestions] = createResource(input, async (value) => {
+  const [held, setHeld] = createSignal<{ query: string; items: PickerSuggestion[] }>()
+  const [suggestions] = createResource(input, async (value): Promise<{ query: string; items: PickerSuggestion[] }> => {
     told = false
     const cleaned = cleanPickerInput(value)
     const typed = cleaned.replace(/\/+$/, "")
@@ -98,7 +109,7 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     const previous = held()
     try {
       const directories = (await search(value)).map((absolute) => ({ absolute, type: "directory" as const }))
-      if (input() !== value) return previous ?? { query: value, items: previous?.items ?? [] }
+      if (input() !== value) return keptPickerSuggestions(previous, value)
       setSearchFailed(false)
       if (!policy.includeFiles) {
         const next = { query: value, items: directories.slice(0, 5) }
@@ -139,17 +150,15 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
       setHeld(next)
       return next
     } catch (error) {
-      if (input() !== value || error instanceof StalePickerSearch) {
-        return previous ?? { query: value, items: previous?.items ?? [] }
-      }
+      if (input() !== value || error instanceof StalePickerSearch) return keptPickerSuggestions(previous, value)
       console.error(error)
       setSearchFailed(true)
-      return previous ?? { query: value, items: previous?.items ?? [] }
+      return keptPickerSuggestions(previous, value)
     }
   })
-  const currentSuggestions = createMemo(() => {
+  const currentSuggestions = createMemo((): PickerSuggestion[] => {
     if (searchFailed()) return held()?.items ?? []
-    return currentPickerSuggestions(suggestions(), input())
+    return [...currentPickerSuggestions(suggestions(), input())]
   })
 
   async function load(path: string, generation: number, eager = false) {
