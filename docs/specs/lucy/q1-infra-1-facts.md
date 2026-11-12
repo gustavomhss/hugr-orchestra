@@ -48,7 +48,7 @@ Sources: https://api.github.com/repos/crytic/echidna/releases/tags/v2.4.0 · htt
 
 ## Mythril 0.24.8
 
-- **Artifact:** Selected dist is the PyPI sdist only: `mythril-0.24.8.tar.gz`, publisher digest `sha256 6631ffaad0342c9b2a6b82dbe12106ab38512be45b6c8e0a364e9d4cb146874a`. No wheel. Docker not selected; unknown digest is not an install binary. No newer release or binary assets.
+- **Artifact:** Selected dist is the PyPI sdist only: `mythril-0.24.8.tar.gz`, publisher digest `sha256 6631ffaad0342c9b2a6b82dbe12106ab38512be45b6c8e0a364e9d4cb146874a`. No wheel. Docker not selected; digest not qualified; not an install binary. No newer release or binary assets.
 - **License:** MIT, copyright Bernhard Mueller since 2017. Text SHA-256 `418e0e2238d1dd42f1feb4cb83381f53bc5541bf41dbc60a47ee9ca1e99ac287` (not the sdist). https://raw.githubusercontent.com/Consensys/mythril/v0.24.8/LICENSE Z3 is a separate dependency.
 - **Use:** Selected call is `myth analyze <solidity-file>` with local solc. `-a` is a different RPC path, not this analysis. Caller config not required. Z3 is in-process, not a second CLI or hashed binary.
 - **Output/exits:** Report prints, then exit. Default text: SWC ID, severity, function, program counter. Analyze path: exit 1 if issues, else 0. Error helper `sys.exit()` passes no integer; unqualified, status unknown.
