@@ -1,6 +1,8 @@
 export * as ClaudeCodeContext from "./context"
 
 import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
+import type { ToolResultValue } from "@orchestra/llm"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
 
 type Block = Exclude<SDKUserMessage["message"]["content"], string>[number]
@@ -54,4 +56,21 @@ export function inline(file: File) {
 
 export function prompt(blocks: Block[]): SDKUserMessage["message"]["content"] {
   return blocks.every((block) => block.type === "text") ? blocks.map((block) => block.type === "text" ? block.text : "").join("\n\n") : blocks
+}
+
+/** Typed MCP lowering: unsupported media fails the entire tool reply, never an empty successful result. */
+export function output(result: ToolResultValue): CallToolResult["content"] {
+  if (result.type !== "content") return [{ type: "text", text: typeof result.value === "string" ? result.value : JSON.stringify(result.value) }]
+  return result.value.map((part): CallToolResult["content"][number] => {
+    if (part.type === "text") return { type: "text", text: part.text }
+    const data = inline(part)
+    const limit = image(part.mime) ? 5 * 1024 * 1024 : 20 * 1024 * 1024
+    if (Buffer.byteLength(data, "base64") > limit) throw new Error(`Claude Code tool media exceeds the ${limit} byte limit.`)
+    if (image(part.mime)) return { type: "image", mimeType: part.mime, data }
+    if (part.mime === "audio/wav" || part.mime === "audio/mpeg") return { type: "audio", mimeType: part.mime, data }
+    if (part.mime === "application/pdf" || part.mime.startsWith("text/")) return {
+      type: "resource", resource: { uri: part.uri, mimeType: part.mime, blob: data },
+    }
+    throw new Error(`Claude Code cannot receive tool media type ${part.mime}. Provide text, PDF, audio, or a supported image.`)
+  })
 }

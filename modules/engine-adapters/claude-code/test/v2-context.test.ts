@@ -140,3 +140,46 @@ test("unsupported inline attachments fail visibly without marking input delivere
   expect(events.some((event) => event.type === "provider-error")).toBe(true)
   expect(calls.length).toBe(before)
 })
+
+test("audit: Orchestra image tool output reaches the Claude MCP client as media", async () => {
+  let reply: unknown
+  during = async (options) => {
+    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
+    const [client, transport] = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transport)
+    const mcp = new Client({ name: "audit", version: "0" })
+    await mcp.connect(client)
+    reply = await mcp.callTool({ name: "image_probe", arguments: {} })
+    await mcp.close()
+  }
+  script = [done]
+  await collect(turnOf({
+    tools: [new ToolDefinition({ name: "image_probe", description: "probe", inputSchema: { type: "object", properties: {} } })],
+    execute: () => Effect.succeed({ result: { type: "content", value: [{ type: "file", mime: "image/png", uri: "data:image/png;base64,iVBORw0KGgo=" }] } }),
+  }))
+  expect(reply).toMatchObject({ content: [{ type: "image", mimeType: "image/png", data: "iVBORw0KGgo=" }] })
+})
+
+test("MCP bridge preserves mixed document/text and errors, and refuses unsupported media", async () => {
+  const replies: unknown[] = []
+  during = async (options) => {
+    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
+    const [client, transport] = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transport)
+    const mcp = new Client({ name: "media", version: "0" })
+    await mcp.connect(client)
+    for (const mode of ["mixed", "unsupported", "unresolved", "error"]) replies.push(await mcp.callTool({ name: "probe", arguments: { mode } }))
+    await mcp.close()
+  }
+  script = [done]
+  await collect(turnOf({ tools: [new ToolDefinition({ name: "probe", description: "probe", inputSchema: { type: "object" } })],
+    execute: (call) => Effect.succeed({ result: call.input.mode === "error" ? { type: "error", value: "failed" } : { type: "content", value: [
+      { type: "text", text: "caption" },
+      { type: "file", mime: call.input.mode === "unsupported" ? "video/mp4" : "application/pdf", uri: call.input.mode === "unresolved" ? "file:///document" : "data:application/pdf;base64,JVBERg==" },
+    ] } }),
+  }))
+  expect(replies[0]).toMatchObject({ content: [{ type: "text", text: "caption" }, { type: "resource", resource: { mimeType: "application/pdf", blob: "JVBERg==" } }] })
+  expect(replies[1]).toMatchObject({ isError: true })
+  expect(replies[2]).toMatchObject({ isError: true })
+  expect(replies[3]).toMatchObject({ isError: true, content: [{ type: "text", text: "failed" }] })
+})

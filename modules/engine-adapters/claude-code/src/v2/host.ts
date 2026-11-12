@@ -5,7 +5,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
-import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
+import { LLMEvent, type ToolDefinition } from "@orchestra/llm"
 import { Duration, Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
@@ -647,8 +647,10 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string, arg
       { signal: extra.signal },
     )
     if (tool.name === "skill" && request.params.arguments?.name === GOVERNED_PLAYBOOK && settlement.result.type !== "error") governedLoad()
+    const converted = await Effect.runPromise(Effect.try(() => ClaudeCodeContext.output(settlement.result)).pipe(Effect.result))
+    if (converted._tag === "Failure") return { content: [{ type: "text" as const, text: String(converted.failure) }], isError: true }
     return {
-      content: [{ type: "text" as const, text: modelText(settlement.result) }],
+      content: converted.success,
       ...(settlement.result.type === "error" ? { isError: true } : {}),
     }
   })
@@ -665,11 +667,6 @@ function canonical(value: unknown): string {
   if (ClaudeCodeTranscript.record(value))
     return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`
   return JSON.stringify(value) ?? "null"
-}
-
-function modelText(result: ToolResultValue) {
-  if (result.type === "content") return result.value.flatMap((part: ToolContent) => (part.type === "text" ? [part.text] : [])).join("\n")
-  return typeof result.value === "string" ? result.value : JSON.stringify(result.value)
 }
 
 function user(text: SDKUserMessage["message"]["content"], uuid: SDKUserMessage["uuid"]): SDKUserMessage {
