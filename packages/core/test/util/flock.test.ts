@@ -5,6 +5,8 @@ import path from "path"
 import os from "os"
 import { Flock } from "@orchestra/core/util/flock"
 import { Hash } from "@orchestra/core/util/hash"
+import { CredentialCipher } from "../../src/credential/cipher"
+import { createDecipheriv } from "node:crypto"
 
 type Msg = {
   key: string
@@ -216,6 +218,125 @@ describe("util.flock", () => {
 
     expect(hit).toBe(true)
   }, 20_000)
+
+  test("keychain initialization serializes independent XDG profiles and retains both ciphertexts", async () => {
+    await using tmp = await tmpdir()
+    const home = path.join(tmp.path, "home")
+    await fs.mkdir(home)
+    const ready = path.join(tmp.path, "key-ready")
+    const resume = path.join(tmp.path, "key-resume")
+    const contended = path.join(tmp.path, "key-contended")
+    const backing = path.join(tmp.path, "fake-service")
+    const module = path.join(root, "src/credential/keychain.ts")
+    const cipher = path.join(root, "src/credential/cipher.ts")
+    const source = `
+      import { CredentialKeychain } from ${JSON.stringify(module)};
+      import { CredentialCipher } from ${JSON.stringify(cipher)};
+      import fs from "node:fs/promises";
+      const [backing, ready, resume, contended, role] = process.argv.slice(1);
+      const key = await CredentialKeychain.load({
+        store: {
+          get: () => fs.readFile(backing, "utf8").catch(e => { if(e.code === "ENOENT") return null; throw e }),
+          set: value => fs.writeFile(backing, value),
+        },
+        beforeCreate: async () => {
+          if(role !== "first") return;
+          await fs.writeFile(ready, "ready");
+          while(!(await Bun.file(resume).exists())) await Bun.sleep(10);
+        },
+        onWait: () => fs.writeFile(contended, "wait"),
+      });
+      console.log(JSON.stringify({ identity: CredentialKeychain.identity, text: CredentialCipher.seal(role, key) }));
+    `
+    const start = (role: string) => {
+      const child = spawn(process.execPath, ["-e", source, backing, ready, resume, contended, role], {
+        cwd: root, env: { ...process.env, HOME: home, USERPROFILE: home, XDG_DATA_HOME: path.join(tmp.path, role) },
+      })
+      const output: Buffer[] = []
+      const errors: Buffer[] = []
+      child.stdout.on("data", (data) => output.push(Buffer.from(data)))
+      child.stderr.on("data", (data) => errors.push(Buffer.from(data)))
+      const done = new Promise<{ code: number | null; output: string; errors: string }>((resolve) =>
+        child.on("close", code => resolve({ code, output: Buffer.concat(output).toString(), errors: Buffer.concat(errors).toString() })))
+      return { child, done }
+    }
+    const first = start("first")
+    let second: ReturnType<typeof start> | undefined
+    try {
+      await wait(ready, 10_000)
+      second = start("second")
+      await wait(contended, 10_000)
+      await fs.writeFile(resume, "go")
+      const results = await Promise.all([first.done, second.done])
+      expect(results.map(result => ({ code: result.code, errors: result.errors }))).toEqual([
+        { code: 0, errors: "" }, { code: 0, errors: "" },
+      ])
+      const values = results.map(result => JSON.parse(result.output.trim()))
+      expect(values[0].identity).toEqual(values[1].identity)
+      expect(values[0].identity.dir).toBe(path.join(home, ".orchestra", "locks"))
+      const key = Buffer.from(await fs.readFile(backing, "utf8"), "base64")
+      expect(values.map(value => {
+        const raw = Buffer.from(value.text.slice(CredentialCipher.PREFIX.length), "base64")
+        const decipher = createDecipheriv("aes-256-gcm", key, raw.subarray(0, 12))
+        decipher.setAuthTag(raw.subarray(12, 28))
+        return Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString("utf8")
+      })).toEqual(["first", "second"])
+    } finally {
+      await fs.writeFile(resume, "go")
+      await stopWorker(first.child)
+      if (second) await stopWorker(second.child)
+    }
+  }, 30_000)
+
+  test("dead-owner policy never evicts a live owner with an aged heartbeat", async () => {
+    await using tmp = await tmpdir()
+    const key = "flock:live-stale"
+    const lease = await Flock.acquire(key, { dir: tmp.path })
+    const old = new Date(Date.now() - 60_000)
+    await fs.utimes(path.join(lock(tmp.path, key), "heartbeat"), old, old)
+    try {
+      await expect(Flock.acquire(key, {
+        dir: tmp.path, staleMs: 1, timeoutMs: 50, baseDelayMs: 5, maxDelayMs: 5, requireDeadOwner: true,
+      })).rejects.toThrow("Timed out waiting")
+    } finally {
+      await lease.release()
+    }
+  })
+
+  test("dead-owner policy recovers an actual crashed same-host process", async () => {
+    await using tmp = await tmpdir()
+    const key = "flock:dead-owner"
+    const ready = path.join(tmp.path, "ready")
+    const proc = spawnWorker({ key, dir: tmp.path, ready, holdMs: 20_000 })
+    try {
+      await wait(ready, 5_000)
+    } finally {
+      await stopWorker(proc)
+    }
+    const old = new Date(Date.now() - 60_000)
+    await fs.utimes(path.join(lock(tmp.path, key), "heartbeat"), old, old)
+    const lease = await Flock.acquire(key, {
+      dir: tmp.path, staleMs: 1, timeoutMs: 500, requireDeadOwner: true,
+    })
+    await lease.release()
+  })
+
+  test("dead-owner policy fails closed for unknown owner metadata", async () => {
+    await using tmp = await tmpdir()
+    const key = "flock:unknown-owner"
+    const target = lock(tmp.path, key)
+    await fs.mkdir(target)
+    await fs.writeFile(path.join(target, "heartbeat"), "")
+    const old = new Date(Date.now() - 60_000)
+    await fs.utimes(path.join(target, "heartbeat"), old, old)
+    for (const value of [undefined, "invalid json", JSON.stringify({ pid: process.pid, hostname: "other-host" }),
+      JSON.stringify({ pid: -1, hostname: os.hostname() })]) {
+      if (value !== undefined) await fs.writeFile(path.join(target, "meta.json"), value)
+      await expect(Flock.acquire(key, {
+        dir: tmp.path, staleMs: 1, timeoutMs: 5, baseDelayMs: 5, maxDelayMs: 5, requireDeadOwner: true,
+      })).rejects.toThrow("Timed out waiting")
+    }
+  })
 
   test("breaks stale lock dirs when heartbeat is missing", async () => {
     await using tmp = await tmpdir()

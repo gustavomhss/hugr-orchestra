@@ -22,11 +22,14 @@ export async function load(input: {
   signal?: AbortSignal
   dir?: string
   timeoutMs?: number
+  onWait?: Flock.Wait
 }) {
   const lease = await Flock.acquire(identity.key, {
     dir: input.dir ?? identity.dir,
     signal: input.signal,
     timeoutMs: input.timeoutMs ?? 10_000,
+    requireDeadOwner: true,
+    onWait: input.onWait,
   })
   try {
     input.signal?.throwIfAborted()

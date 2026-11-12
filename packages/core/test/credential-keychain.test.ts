@@ -1,11 +1,12 @@
 import { afterAll, expect, test } from "bun:test"
 import { createDecipheriv, randomBytes } from "node:crypto"
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, rm, utimes } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { CredentialCipher } from "../src/credential/cipher"
 import { CredentialKeychain } from "../src/credential/keychain"
 import { Flock } from "../src/util/flock"
+import { Hash } from "../src/util/hash"
 
 const root = await mkdtemp(path.join(os.tmpdir(), "orchestra-keychain-"))
 afterAll(() => rm(root, { recursive: true, force: true }))
@@ -44,16 +45,22 @@ test("independent first starts retain both ciphertexts after a fresh keychain re
   }
   const first = CredentialKeychain.load(options)
   await entered.promise
-  const second = CredentialKeychain.load(options)
+  // Model a paused live owner whose heartbeat is old while its native operation is outstanding.
+  const old = new Date(Date.now() - 120_000)
+  await utimes(path.join(options.dir, Hash.fast(CredentialKeychain.identity.key) + ".lock", "heartbeat"), old, old)
+    .catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error })
+  const contended = gate()
+  const second = CredentialKeychain.load({ ...options, onWait: () => contended.resolve() })
   // Both initializers have started, but only the lease holder may inspect/create the entry.
-  await new Promise((resolve) => setTimeout(resolve, 30))
+  // Under the original unlocked implementation the contender completes instead; let it expose divergent keys.
+  await Promise.race([contended.promise, second.then(() => {})])
   resume.resolve()
   const keys = await Promise.all([first, second])
   const ciphertexts = keys.map((key, i) => CredentialCipher.seal(`secret-${i}`, key))
   const reloaded = await CredentialKeychain.load(options)
+  expect(ciphertexts.map((text) => decrypt(text, reloaded))).toEqual(["secret-0", "secret-1"])
   expect(reads).toBe(4)
   expect(sets).toBe(1)
-  expect(ciphertexts.map((text) => decrypt(text, reloaded))).toEqual(["secret-0", "secret-1"])
 })
 
 test("existing key is never replaced", async () => {
@@ -74,17 +81,35 @@ test("creation failure and cancellation release the lease without a late replace
   } })).rejects.toThrow("store failed")
   const entered = gate()
   const resume = gate()
+  const contended = gate()
   const controller = new AbortController()
-  const canceled = CredentialKeychain.load({ ...options, signal: controller.signal, store: {
-    get: async () => { entered.resolve(); await resume.promise; return null },
-    set: async () => { throw new Error("canceled initialization must not set") },
-  } })
+  let stored: string | null = null
+  let reads = 0
+  let sets = 0
+  const store = {
+    get: async () => { reads++; return stored },
+    set: async (value: string) => {
+      sets++
+      entered.resolve()
+      await resume.promise
+      stored = value
+    },
+  }
+  const canceled = CredentialKeychain.load({ ...options, signal: controller.signal, store })
+    .then(() => undefined, (error: unknown) => error)
   await entered.promise
   controller.abort(new Error("canceled"))
+  const second = CredentialKeychain.load({ ...options, store, onWait: () => contended.resolve() })
+  await contended.promise
+  expect(reads).toBe(1)
+  expect(sets).toBe(1)
   resume.resolve()
-  await expect(canceled).rejects.toThrow("canceled")
-  const lease = await Flock.acquire(CredentialKeychain.identity.key, { dir, timeoutMs: 100 })
-  await lease.release()
+  expect(await canceled).toEqual(new Error("canceled"))
+  const key = await second
+  const text = CredentialCipher.seal("after cancellation", key)
+  const reloaded = await CredentialKeychain.load({ ...options, store })
+  expect(decrypt(text, reloaded)).toBe("after cancellation")
+  expect(sets).toBe(1)
 })
 
 test("missing key with sealed data refuses creation and releases the lease", async () => {

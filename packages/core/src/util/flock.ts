@@ -46,6 +46,8 @@ export namespace Flock {
     baseDelayMs?: number
     maxDelayMs?: number
     onWait?: Wait
+    /** Reclaim an aged lease only after proving its recorded same-host process is dead. */
+    requireDeadOwner?: boolean
   }
 
   type Opts = {
@@ -53,6 +55,7 @@ export namespace Flock {
     timeoutMs: number
     baseDelayMs: number
     maxDelayMs: number
+    requireDeadOwner: boolean
   }
 
   type Owned = {
@@ -124,7 +127,21 @@ export namespace Flock {
     }
   }
 
-  async function stale(lockDir: string, heartbeatPath: string, metaPath: string, staleMs: number) {
+  async function deadOwner(metaPath: string) {
+    try {
+      const owner = JSON.parse(await readFile(metaPath, "utf8"))
+      if (owner?.hostname !== os.hostname() || !Number.isSafeInteger(owner.pid) || owner.pid <= 0) return false
+      process.kill(owner.pid, 0)
+      return false
+    } catch (error) {
+      // Missing/malformed metadata, other hosts, permissions and PID reuse are not proof of death.
+      return code(error) === "ESRCH"
+    }
+  }
+
+  async function stale(lockDir: string, heartbeatPath: string, metaPath: string, opts: Opts) {
+    if (opts.requireDeadOwner && !(await deadOwner(metaPath))) return false
+    const staleMs = opts.staleMs
     // Stale detection allows automatic recovery after crashed owners.
     const now = wall()
     const heartbeat = await stats(heartbeatPath)
@@ -157,7 +174,7 @@ export namespace Flock {
         throw err
       }
 
-      if (!(await stale(lockDir, heartbeatPath, metaPath, opts.staleMs))) {
+      if (!(await stale(lockDir, heartbeatPath, metaPath, opts))) {
         return { acquired: false }
       }
 
@@ -183,7 +200,7 @@ export namespace Flock {
 
       try {
         // Breaker ownership ensures only one contender performs stale cleanup.
-        if (!(await stale(lockDir, heartbeatPath, metaPath, opts.staleMs))) {
+        if (!(await stale(lockDir, heartbeatPath, metaPath, opts))) {
           return { acquired: false }
         }
 
@@ -314,6 +331,7 @@ export namespace Flock {
       timeoutMs: input.timeoutMs ?? defaultOpts.timeoutMs,
       baseDelayMs: input.baseDelayMs ?? defaultOpts.baseDelayMs,
       maxDelayMs: input.maxDelayMs ?? defaultOpts.maxDelayMs,
+      requireDeadOwner: input.requireDeadOwner ?? false,
     }
     const dir = input.dir ?? root()
 
