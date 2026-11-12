@@ -35,3 +35,11 @@ Product tests run only in GitHub Actions under AGENTS.md. A CI pass is not seman
 The prior local judge handles cannot be resumed as live agents here. Preserve original requests, answers and exact decisions. New local pair will be created with clean contexts when its first packet is frozen; both cover every mandatory criterion. A distinct new pair is reserved for the integrated union. Exposed cases remain regression cases, not newly blind evaluation.
 
 Tokens, physical attempts and billing remain UNKNOWN. Historical accounting remains GLOBAL_UNRECONCILED, not zero. Bytes, semantic acceptance, preparation, binding, governed publication/read, independent consumption and sealed delivery remain separate. No DELIVERY_COMPLETE or GLOBAL_REVIEW_READY is claimed. This checkpoint continues the queue; it does not terminate work.
+
+## Continuation 2026-11-12T21:10:35Z
+
+Execution a753db9b-40c6-4b3e-8953-c242affde3cb resumes the owner's requested complete Genesis campaign recovery. Previous execution records above remain historical, not active worker handles. Current coordinator is /root/recover_genesis_campaign; ROOT remains the sole remote writer.
+
+S2 preservation is now complete at 2d56325e3cac12ccbed8009d70ef6842045ab387 (content 8b8aeccb310ba8f2f38f70ef952f87687958efac): 1109 original files, independently hash-verified, 925 restored. This does not establish runtime or semantic acceptance beyond the historical decisions. S1, S3, S4 and S5 heads match the table above; ROOT was 606fac8a82414df1508de66f00088c18ce7e3c93 before this checkpoint.
+
+Immediate next operation: preserve the exact historical driver excerpt requested by S4 J1-E02; form a fresh independent review pair for the unchanged L4 evidence and exact R4 delta/CI. Do not implement the existing R4 fix again. Then release only demonstrated R4 capabilities and operate the full S2 package in isolated state. Remaining finite queue above is retained. No product tests, model calls, runtime acceptance or global completion are asserted by this checkpoint.
