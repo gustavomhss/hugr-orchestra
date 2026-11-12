@@ -164,7 +164,11 @@ describe("LocationMutation", () => {
       withTmp((outside) =>
         Effect.gen(function* () {
           yield* Effect.promise(() =>
-            fs.symlink(path.join(outside, "missing-parent"), path.join(directory, "alias"), process.platform === "win32" ? "junction" : "dir"),
+            fs.symlink(
+              path.join(outside, "missing-parent"),
+              path.join(directory, "alias"),
+              process.platform === "win32" ? "junction" : "dir",
+            ),
           )
           const mutation = yield* LocationMutation.Service
           const error = yield* Effect.flip(mutation.resolve({ path: path.join("alias", "nested", "new.txt") }))
@@ -178,7 +182,11 @@ describe("LocationMutation", () => {
     withTmp((directory) =>
       Effect.gen(function* () {
         yield* Effect.promise(() =>
-          fs.symlink(path.join(directory, "future"), path.join(directory, "alias"), process.platform === "win32" ? "junction" : "dir"),
+          fs.symlink(
+            path.join(directory, "future"),
+            path.join(directory, "alias"),
+            process.platform === "win32" ? "junction" : "dir",
+          ),
         )
         const mutation = yield* LocationMutation.Service
         const target = yield* mutation.resolve({ path: path.join("alias", "nested", "new.txt") })
@@ -196,7 +204,11 @@ describe("LocationMutation", () => {
       withTmp((outside) =>
         Effect.gen(function* () {
           yield* Effect.promise(() =>
-            fs.symlink(path.join(outside, "future"), path.join(outside, "alias"), process.platform === "win32" ? "junction" : "dir"),
+            fs.symlink(
+              path.join(outside, "future"),
+              path.join(outside, "alias"),
+              process.platform === "win32" ? "junction" : "dir",
+            ),
           )
           const mutation = yield* LocationMutation.Service
           const target = yield* mutation.resolve({ path: path.join(outside, "alias", "nested", "new.txt") })
@@ -218,11 +230,19 @@ describe("LocationMutation", () => {
     it.live(`fails with a typed error for a dangling directory ancestor ${shape}`, () =>
       withTmp((directory) =>
         Effect.gen(function* () {
-          const links = Array.from({ length: shape === "cycle" ? 2 : 43 }, (_, index) => path.join(directory, `link-${index}`))
+          const links = Array.from({ length: shape === "cycle" ? 2 : 43 }, (_, index) =>
+            path.join(directory, `link-${index}`),
+          )
           yield* Effect.promise(() =>
-            Promise.all(links.map((link, index) =>
-              fs.symlink(links[index + 1] ?? (shape === "cycle" ? links[0] : path.join(directory, "future")), link, process.platform === "win32" ? "junction" : "dir"),
-            )),
+            Promise.all(
+              links.map((link, index) =>
+                fs.symlink(
+                  links[index + 1] ?? (shape === "cycle" ? links[0] : path.join(directory, "future")),
+                  link,
+                  process.platform === "win32" ? "junction" : "dir",
+                ),
+              ),
+            ),
           )
           const mutation = yield* LocationMutation.Service
           const error = yield* Effect.flip(mutation.resolve({ path: path.join(links[0], "nested", "new.txt") }))

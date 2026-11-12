@@ -23,7 +23,7 @@ export type ResolveInput = typeof ResolveInput.Type
 
 export class PathError extends Schema.TaggedErrorClass<PathError>()("LocationMutation.PathError", {
   path: Schema.String,
-  reason: Schema.Literals(["relative_escape", "location_escape", "non_directory_ancestor"]),
+  reason: Schema.Literals(["relative_escape", "location_escape", "non_directory_ancestor", "symlink_limit"]),
 }) {}
 
 export interface ExternalDirectoryAuthorization {
@@ -89,20 +89,24 @@ const layer = Layer.effect(
     }
 
     // A dangling symlink is not missing: a write through it creates the file where it points.
-    const followDangling = Effect.fnUntraced(function* (start: string) {
+    const followDangling = Effect.fnUntraced(function* (start: string, links: { remaining: number }) {
       let current = start
-      for (let hops = 0; hops < 40; hops++) {
+      while (true) {
         if ((yield* notFound(fs.realPath(current))) !== undefined) return current
         const link = yield* fs.readLink(current).pipe(Effect.orElseSucceed(() => undefined))
         if (link === undefined) return current
+        if (links.remaining === 0) return yield* new PathError({ path: start, reason: "symlink_limit" })
+        links.remaining--
         const parent = (yield* notFound(fs.realPath(path.dirname(current)))) ?? path.dirname(current)
         current = path.resolve(parent, link)
       }
-      return current
     })
 
-    const resolvePath = Effect.fnUntraced(function* (requested: string) {
-      const absolute = yield* followDangling(requested)
+    const resolvePath: (
+      requested: string,
+      links: { remaining: number },
+    ) => Effect.Effect<ResolvedPath, PathError | FSUtil.Error> = Effect.fnUntraced(function* (requested, links) {
+      const absolute = yield* followDangling(requested, links)
       const existing = yield* notFound(fs.realPath(absolute))
       if (existing !== undefined) {
         const info = yield* fs.stat(existing)
@@ -126,6 +130,10 @@ const layer = Layer.effect(
             directory: canonical,
           } satisfies ResolvedPath
         }
+        // A missing ancestor can itself be a dangling directory link; preserve the requested suffix through it.
+        const followed = yield* followDangling(anchor, links)
+        if (followed !== anchor)
+          return yield* resolvePath(path.resolve(followed, path.relative(anchor, absolute)), links)
         const parent = path.dirname(anchor)
         if (parent === anchor) return yield* new PathError({ path: absolute, reason: "non_directory_ancestor" })
         anchor = parent
@@ -139,15 +147,13 @@ const layer = Layer.effect(
       const lexicallyInternal = FSUtil.contains(location.directory, absolute)
       if (relative && !lexicallyInternal) return yield* new PathError({ path: input.path, reason: "relative_escape" })
 
-      const resolved = yield* resolvePath(absolute)
+      const resolved = yield* resolvePath(absolute, { remaining: 40 })
       if (lexicallyInternal && !FSUtil.contains(root, resolved.canonical)) {
         return yield* new PathError({ path: input.path, reason: "location_escape" })
       }
 
       const external = !lexicallyInternal
-      const resource = external
-        ? slash(resolved.canonical)
-        : slash(path.relative(root, resolved.canonical) || ".")
+      const resource = external ? slash(resolved.canonical) : slash(path.relative(root, resolved.canonical) || ".")
       const externalDirectory =
         input.kind === "directory" && resolved.type === "Directory" ? resolved.canonical : resolved.directory
       const externalResource = slash(path.join(externalDirectory, "*"))
