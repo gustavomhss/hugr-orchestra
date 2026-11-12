@@ -19,31 +19,36 @@ const run = <A, E, R, E2>(value: Body<A, E, R | Scope.Scope>, layer: Layer.Layer
     return yield* exit
   }).pipe(Effect.runPromise)
 
-const make = <R, E>(testLayer: Layer.Layer<R, E>, liveLayer: Layer.Layer<R, E>) => {
+const make = <R, E>(testLayer: Layer.Layer<R, E>, liveLayer: Layer.Layer<R, E>, onFailure?: () => void) => {
+  // Scope release is outside the user effect. A rejection there must still be visible to the caller.
+  const noted = <A, E2>(value: Body<A, E2, R | Scope.Scope>, layer: Layer.Layer<R, E>) => run(value, layer).catch((error: unknown) => {
+    onFailure?.()
+    throw error
+  })
   const effect = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test(name, () => run(value, testLayer), opts)
+    test(name, () => noted(value, testLayer), opts)
 
   effect.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.only(name, () => run(value, testLayer), opts)
+    test.only(name, () => noted(value, testLayer), opts)
 
   effect.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.skip(name, () => run(value, testLayer), opts)
+    test.skip(name, () => noted(value, testLayer), opts)
 
   const live = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test(name, () => run(value, liveLayer), opts)
+    test(name, () => noted(value, liveLayer), opts)
 
   live.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.only(name, () => run(value, liveLayer), opts)
+    test.only(name, () => noted(value, liveLayer), opts)
 
   live.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.skip(name, () => run(value, liveLayer), opts)
+    test.skip(name, () => noted(value, liveLayer), opts)
 
   // Counted as skipped by the runner when the condition holds, instead of passing with an early return.
   effect.skipIf = (condition: boolean) => <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.skipIf(condition)(name, () => run(value, testLayer), opts)
+    test.skipIf(condition)(name, () => noted(value, testLayer), opts)
 
   live.skipIf = (condition: boolean) => <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.skipIf(condition)(name, () => run(value, liveLayer), opts)
+    test.skipIf(condition)(name, () => noted(value, liveLayer), opts)
 
   return { effect, live }
 }
@@ -56,5 +61,5 @@ const liveEnv = TestConsole.layer
 
 export const it = make(testEnv, liveEnv)
 
-export const testEffect = <R, E>(layer: Layer.Layer<R, E>) =>
-  make(Layer.provideMerge(layer, testEnv), Layer.provideMerge(layer, liveEnv))
+export const testEffect = <R, E>(layer: Layer.Layer<R, E>, onFailure?: () => void) =>
+  make(Layer.provideMerge(layer, testEnv), Layer.provideMerge(layer, liveEnv), onFailure)
