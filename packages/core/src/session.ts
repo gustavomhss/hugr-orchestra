@@ -447,7 +447,7 @@ const layer = Layer.effect(
                             model: {
                               id: ModelV2.ID.make(input.model.id),
                               providerID: input.model.providerID,
-                              ...(input.model.variant ? { variant: input.model.variant } : {}),
+                              ...(input.model.variant !== undefined ? { variant: input.model.variant } : {}),
                             },
                           }
                         : {}),
@@ -752,7 +752,7 @@ const layer = Layer.effect(
         if (
           session.model?.providerID === input.model.providerID &&
           session.model.id === input.model.id &&
-          (session.model.variant ?? "default") === (input.model.variant ?? "default")
+          session.model.variant === input.model.variant
         )
           return
         yield* events.publish(SessionEvent.ModelSwitched, {
