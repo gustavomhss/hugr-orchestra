@@ -767,9 +767,19 @@
       "id": "H7",
       "severity": "P1",
       "owner": "security",
-      "status": "implementation_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "bb82852e2d",
+        "b3f29662ac",
+        "fe06f9f2ca",
+        "708eca85df",
+        "1a168a58b2",
+        "e2fa04be37",
+        "8a6289e0b3",
+        "bd17430207",
+        "0bac4fd17c"
+      ],
       "evidence": [
         {
           "kind": "red",
@@ -789,6 +799,54 @@
             "leslie_lamport"
           ],
           "verdict": "APPROVE202c2924b002; production GO frozen92b99dff79"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43140492241",
+          "snapshot_sha": "c51b9061a7defdf2cc0d23a59b9243eab7ce459d",
+          "result": "41 pass per OS, actual independent2Managers after Layer.fresh correction; issuer/CAS/callback/compat. Source before later duplicate-cleanup correction."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43139673191",
+          "result": "Static secret first exposure lacked persistent pin before failed token exchange; fixed before integration"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43141237217",
+          "result": "2 duplicate-finish failures: rejected contender cancelled owner"
+        },
+        {
+          "kind": "compat_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43141577327",
+          "result": "8 pass,1 test-assertion failure per OS; workflow NOT green. MCP/debug4 passed on final production source; Result assertion corrected separately."
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43141939609",
+          "snapshot_sha": "5e7aecc0e37e3761f4c9d88fef72f3322540e488",
+          "result": "5 manager tests pass per OS,65 assertions; manual+automatic owners survive duplicates, commit once"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0, diffcheck0",
+          "receipts": [
+            "/tmp/audit-h7-duplicate-core-recheck.exit",
+            "/tmp/audit-h7-duplicate-final-guards.exit"
+          ]
+        },
+        {
+          "kind": "cold_source_review",
+          "reviewers": [
+            "dr_house",
+            "leslie_lamport",
+            "lead"
+          ],
+          "verdict": "APPROVE composed final Auth/provider257763 + managercleanup92a2; root read all production paths and exact narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "No same-generation refresh single-flight; no guarantee to cancel a request already legitimately sent. Earlier reused-manager fixture is not independent2Manager evidence."
         }
       ]
     },
@@ -1334,9 +1392,25 @@
       "id": "M5",
       "severity": "P2",
       "owner": "desktop",
-      "status": "acceptance_fix_first",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "1f8f4f0ef5",
+        "4a215c2d06",
+        "d95b100d56",
+        "ee05774595",
+        "ff35777b7f",
+        "b99a301225",
+        "1f0ea9becc",
+        "861e597f7f",
+        "405ac1a7d4",
+        "a76dace604",
+        "7a3438372f",
+        "77e728a767",
+        "5377c6305b",
+        "8f4b6dc7a0",
+        "1691632a77"
+      ],
       "evidence": [
         {
           "kind": "red_mixed",
@@ -1349,12 +1423,54 @@
           "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
         },
         {
-          "kind": "cold_acceptance_review",
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136333451",
+          "result": "Readonly proof original backup is lost across retries/success"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43143188539",
+          "result": "Both OS: retired known null-name timestamp rejected and active captured final wrongly accepted in garbage"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145434373",
+          "result": "Both OS: interruption finishes while actual link Promise remains gated; proves early ownership release, not reproduced corruption"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857503",
+          "snapshot_sha": "aded471b9f835cdeae3b57bae305e19ac1f96e39",
+          "result": "79 pass per OS, Linux additionally1Windows-onlyskip;20realomni spawns per OS, positive control pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857489",
+          "result": "Both OS: cancellation retains fence until real pending IO settles, then interruption+retry"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43142245390",
+          "result": "Node actual sqlite.node,WAL/DELETE commit/rollback both OS;8s test/6s build budgets. Proof source unchanged by migration helper deltas."
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0; diffcheck0",
+          "receipt": "/tmp/migration-safety-core-typecheck-fenced.exit"
+        },
+        {
+          "kind": "cold_source_review",
           "reviewers": [
             "dr_house",
-            "rodney_mckay"
+            "rodney_mckay",
+            "leslie_lamport",
+            "lead"
           ],
-          "verdict": "FIX-FIRST: scratch physical storage bound, multiple legacy pins, repeated EEXIST startup and old filename expectations. Production not authorized."
+          "verdict": "APPROVE journal/atomicity, namespace/state, publication/GC, then streaming/IO-fence deltas; root read all696production lines and final narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "Process crash/retry guarantee; no power-loss/OS durability upgrade, restored-store GUID or adversarial filesystem CAS. Large-file functional streaming test is not an OOM reproduction."
         }
       ]
     },
@@ -1362,9 +1478,25 @@
       "id": "M6",
       "severity": "P2",
       "owner": "desktop",
-      "status": "acceptance_fix_first",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "1f8f4f0ef5",
+        "4a215c2d06",
+        "d95b100d56",
+        "ee05774595",
+        "ff35777b7f",
+        "b99a301225",
+        "1f0ea9becc",
+        "861e597f7f",
+        "405ac1a7d4",
+        "a76dace604",
+        "7a3438372f",
+        "77e728a767",
+        "5377c6305b",
+        "8f4b6dc7a0",
+        "1691632a77"
+      ],
       "evidence": [
         {
           "kind": "red_mixed",
@@ -1377,12 +1509,54 @@
           "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
         },
         {
-          "kind": "cold_acceptance_review",
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136333451",
+          "result": "Readonly proof original backup is lost across retries/success"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43143188539",
+          "result": "Both OS: retired known null-name timestamp rejected and active captured final wrongly accepted in garbage"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145434373",
+          "result": "Both OS: interruption finishes while actual link Promise remains gated; proves early ownership release, not reproduced corruption"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857503",
+          "snapshot_sha": "aded471b9f835cdeae3b57bae305e19ac1f96e39",
+          "result": "79 pass per OS, Linux additionally1Windows-onlyskip;20realomni spawns per OS, positive control pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857489",
+          "result": "Both OS: cancellation retains fence until real pending IO settles, then interruption+retry"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43142245390",
+          "result": "Node actual sqlite.node,WAL/DELETE commit/rollback both OS;8s test/6s build budgets. Proof source unchanged by migration helper deltas."
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0; diffcheck0",
+          "receipt": "/tmp/migration-safety-core-typecheck-fenced.exit"
+        },
+        {
+          "kind": "cold_source_review",
           "reviewers": [
             "dr_house",
-            "rodney_mckay"
+            "rodney_mckay",
+            "leslie_lamport",
+            "lead"
           ],
-          "verdict": "FIX-FIRST: scratch physical storage bound, multiple legacy pins, repeated EEXIST startup and old filename expectations. Production not authorized."
+          "verdict": "APPROVE journal/atomicity, namespace/state, publication/GC, then streaming/IO-fence deltas; root read all696production lines and final narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "Process crash/retry guarantee; no power-loss/OS durability upgrade, restored-store GUID or adversarial filesystem CAS. Large-file functional streaming test is not an OOM reproduction."
         }
       ]
     },
@@ -1390,9 +1564,25 @@
       "id": "M7",
       "severity": "P2",
       "owner": "desktop",
-      "status": "acceptance_fix_first",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "1f8f4f0ef5",
+        "4a215c2d06",
+        "d95b100d56",
+        "ee05774595",
+        "ff35777b7f",
+        "b99a301225",
+        "1f0ea9becc",
+        "861e597f7f",
+        "405ac1a7d4",
+        "a76dace604",
+        "7a3438372f",
+        "77e728a767",
+        "5377c6305b",
+        "8f4b6dc7a0",
+        "1691632a77"
+      ],
       "evidence": [
         {
           "kind": "red_mixed",
@@ -1405,12 +1595,54 @@
           "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
         },
         {
-          "kind": "cold_acceptance_review",
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136333451",
+          "result": "Readonly proof original backup is lost across retries/success"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43143188539",
+          "result": "Both OS: retired known null-name timestamp rejected and active captured final wrongly accepted in garbage"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145434373",
+          "result": "Both OS: interruption finishes while actual link Promise remains gated; proves early ownership release, not reproduced corruption"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857503",
+          "snapshot_sha": "aded471b9f835cdeae3b57bae305e19ac1f96e39",
+          "result": "79 pass per OS, Linux additionally1Windows-onlyskip;20realomni spawns per OS, positive control pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857489",
+          "result": "Both OS: cancellation retains fence until real pending IO settles, then interruption+retry"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43142245390",
+          "result": "Node actual sqlite.node,WAL/DELETE commit/rollback both OS;8s test/6s build budgets. Proof source unchanged by migration helper deltas."
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0; diffcheck0",
+          "receipt": "/tmp/migration-safety-core-typecheck-fenced.exit"
+        },
+        {
+          "kind": "cold_source_review",
           "reviewers": [
             "dr_house",
-            "rodney_mckay"
+            "rodney_mckay",
+            "leslie_lamport",
+            "lead"
           ],
-          "verdict": "FIX-FIRST: scratch physical storage bound, multiple legacy pins, repeated EEXIST startup and old filename expectations. Production not authorized."
+          "verdict": "APPROVE journal/atomicity, namespace/state, publication/GC, then streaming/IO-fence deltas; root read all696production lines and final narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "Process crash/retry guarantee; no power-loss/OS durability upgrade, restored-store GUID or adversarial filesystem CAS. Large-file functional streaming test is not an OOM reproduction."
         }
       ]
     },
@@ -2030,12 +2262,12 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 34,
+    "new_fixes_verified": 38,
     "already_fixed_verified": 1,
-    "remaining": 30,
+    "remaining": 26,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "a3fe129981f576eeb6e35f1f6dde1ceb105a7dc8",
+  "integration_checkpoint": "1691632a77",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
@@ -2108,5 +2340,9 @@
       "typecheck_exit": 0,
       "receipt": "/tmp/orchestra-audit-desktop-boundary-type.exit"
     }
+  },
+  "next_contracts": {
+    "G2": "0ebc24e90d: physical pre-open file custody, optional SDK database/host composition, own child Scope; acceptance GO by elon_musk",
+    "E6": "planning prospective selection/host capability/inventory; no endpoint/source GO yet"
   }
 }
