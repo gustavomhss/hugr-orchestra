@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { shouldWaitForRunners } from "../../../script/test-ci-queue"
+import { shouldWaitForRunners } from "../src/test-ci-queue"
 
 const now = Date.parse("2026-11-11T21:00:00Z")
 const stamp = (age: number) => new Date(now - age * 60_000).toISOString()

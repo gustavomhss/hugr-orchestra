@@ -28,10 +28,12 @@ const provider = {
   default: { orchestra: "claude-opus-4-6" },
 }
 const sample = "\n```owner-demand\né — 😀\u200B\n\n``` \n\n"
+// Native Windows clipboard uses CRLF; fix the expected bytes before writing them.
+const nativePaste = sample + "row\n".repeat(240)
 const rawClipboard = "\r\n```owner-demand\ré — 😀\u200B\r\n\r\n```\n"
 const cases = [
   { mode: "fill", text: sample },
-  { mode: "paste", text: sample + "row\n".repeat(240) },
+  { mode: "paste", text: process.platform === "win32" ? nativePaste.replace(/\n/g, "\r\n") : nativePaste },
   { mode: "shift-enter", text: "lead\n\né — 😀\u200B\n\n" },
   { mode: "raw-clipboard", text: rawClipboard },
   { mode: "replace-break", before: "a\nb", text: "axb", cursor: 2 },
