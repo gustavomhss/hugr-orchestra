@@ -80,6 +80,10 @@ The screen itself, with its views, issue pages, inbox, money and decisions, is d
 For a published workflow Maestro records each step (admission, plan, your approval, review, validation, decision) so
 you can see what was agreed and what was checked. Large changes can use its repository and wave planning tools.
 
+Maestro can transfer an unused workflow step to another Task. A running Task, or one with a recorded reply or review
+hold, keeps its step and needs a new contract instead. After a transfer, resuming the previous Task cannot continue
+that workflow.
+
 Reviews of plans and returned work go to the code review seat, `lucy`. See [Code review](review.md) for its card,
 verdicts and tiers.
 
