@@ -9,7 +9,7 @@ mod big;
 mod deadline;
 mod exit;
 mod host;
-#[cfg(target_os = "linux")]
+#[cfg(all(test, target_os = "linux"))]
 mod inventory;
 mod memory;
 mod scope;
