@@ -175,10 +175,44 @@ def main():
                     destination.chmod(member.mode & 0o777)
         descriptor = json.loads((standalone / "distribution.json").read_text())
         metadata = json.loads((standalone / "package.json").read_text())
+        require(isinstance(descriptor, dict) and isinstance(metadata, dict), "Archive descriptor/package must be JSON objects")
         require(descriptor["schema"] == "orchestra-distribution-v1" and descriptor["version"] == args.version and descriptor["target"] == args.target, "Archive descriptor does not match frozen release tuple")
         require(metadata["version"] == args.version and metadata["name"] == "@humanguardrail/cli-" + args.target, "Archive package identity differs")
         evidence["descriptor"] = {"schema": descriptor["schema"], "version": descriptor["version"], "target": descriptor["target"]}
         evidence["checks"].append("trusted archive digest, frozen installer bytes, and archive tuple verified")
+        # Tar member modes may be normalized to 0644. Restore only descriptor-
+        # declared modes on this private extraction, as the official installer does.
+        # Validate every entry before changing any mode; archive bytes stay intact.
+        phase("setup-standalone-descriptor-modes", "setup_failure")
+        files = descriptor.get("files")
+        require(isinstance(files, list) and files, "Descriptor files must be a nonempty array")
+        admitted = []
+        seen = set()
+        for entry in files:
+            require(isinstance(entry, dict) and set(entry) == {"path", "sha256", "executable"}, "Invalid descriptor file entry shape")
+            name, expected_hash, executable = entry["path"], entry["sha256"], entry["executable"]
+            require(isinstance(name, str) and name and "\\" not in name and "\0" not in name, "Invalid descriptor file path")
+            item = PurePosixPath(name)
+            require(not item.is_absolute() and item.as_posix() == name and all(part not in ("..", ".") for part in item.parts), "Unsafe descriptor file path")
+            require(name == "package.json" or name.startswith("bin/"), "Descriptor file is outside payload locations")
+            require(name not in seen, "Duplicate descriptor file path")
+            seen.add(name)
+            require(type(executable) is bool, "Descriptor executable flag must be a boolean")
+            require(isinstance(expected_hash, str) and len(expected_hash) == 64 and all(c in "0123456789abcdef" for c in expected_hash), "Invalid descriptor SHA-256")
+            file = standalone.joinpath(*item.parts)
+            require(all(not standalone.joinpath(*item.parts[:length]).is_symlink() for length in range(1, len(item.parts) + 1)), "Descriptor file has a symlink component")
+            require(standalone in file.resolve(strict=True).parents and stat.S_ISREG(file.lstat().st_mode), "Descriptor path is not a contained regular file")
+            require(digest(file) == expected_hash, "Extracted bytes differ from descriptor: " + name)
+            admitted.append((file, name, expected_hash, 0o755 if executable else 0o644))
+        require(any(name == "bin/orchestra" and mode == 0o755 for _, name, _, mode in admitted), "Descriptor does not declare an executable CLI")
+        evidence["standaloneModeRestoration"] = []
+        for file, name, expected_hash, mode in admitted:
+            before_mode = stat.S_IMODE(file.lstat().st_mode)
+            file.chmod(mode)
+            require(digest(file) == expected_hash, "Standalone bytes changed while restoring mode: " + name)
+            require(stat.S_IMODE(file.lstat().st_mode) == mode, "Standalone descriptor mode was not restored: " + name)
+            evidence["standaloneModeRestoration"].append({"path": name, "sha256": expected_hash, "modeBefore": before_mode, "modeAfter": mode})
+        evidence["checks"].append("standalone descriptor files verified and executable modes restored without byte changes")
         phase("product-official-install", "product_failure")
         run("official-install", ["/bin/sh", installer, "--prefix", prefix, "--version", args.version, "--target", args.target, "--archive", archive, "--sha256", args.sha256])
         payload = prefix / "versions" / (args.version + "-" + args.target)
