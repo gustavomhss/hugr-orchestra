@@ -183,10 +183,13 @@ describe("server session", () => {
       reads: number
       maximum: number
       ids: string[] | undefined
+      later: unknown[]
     }[] = []
-    for (const failure of ["history", "metadata"] as const) {
+    for (const failure of ["history", "metadata", "trailing"] as const) {
       const pending = deferredPage()
+      const trailingPage = deferredPage()
       const started = Promise.withResolvers<void>()
+      const secondStarted = Promise.withResolvers<void>()
       const metadata = Promise.withResolvers<Session>()
       const problem = new Error(`${failure} read failed`)
       const state = { reads: 0, active: 0, maximum: 0, gets: 0 }
@@ -209,7 +212,11 @@ describe("server session", () => {
             state.maximum = Math.max(state.maximum, state.active)
             started.resolve()
             try {
-              return state.reads === 1 ? await pending.promise : page([v2User("fresh-after-failure")])
+              if (state.reads === 1) return await pending.promise
+              secondStarted.resolve()
+              return failure === "trailing" && state.reads === 2
+                ? await trailingPage.promise
+                : page([v2User("fresh-after-failure")])
             } finally {
               state.active--
             }
@@ -232,9 +239,21 @@ describe("server session", () => {
       expect(state.active).toBe(1)
       const trailing = outcome(store.sync("ses_child", { force: true }))
       const samePredecessor = outcome(store.sync("ses_child", { force: true }))
+      const later: ReturnType<typeof outcome>[] = []
       try {
         if (failure === "history") pending.reject(problem)
-        if (failure === "metadata") pending.resolve(page([v2User("old-captured-page")]))
+        if (failure !== "history") pending.resolve(page([v2User("old-captured-page")]))
+        if (failure === "trailing") {
+          await first
+          // This deadline only bounds observation; the actual second HTTP read establishes the ordering.
+          expect(await Promise.race([secondStarted.promise.then(() => true), Bun.sleep(2_000).then(() => false)])).toBe(true)
+          expect(state.reads).toBe(2)
+          expect(state.active).toBe(1)
+          later.push(outcome(store.sync("ses_child", { force: true })), outcome(store.sync("ses_child", { force: true })))
+          expect(state.reads).toBe(2)
+          trailingPage.resolve(page([v2User("captured-trailing-page")]))
+        }
+        const laterResults = await Promise.all(later)
         results.push({
           failure,
           problem,
@@ -244,20 +263,23 @@ describe("server session", () => {
           reads: state.reads,
           maximum: state.maximum,
           ids: ids(store),
+          later: laterResults,
         })
       } finally {
         metadata.resolve(session("ses_child"))
         pending.resolve(page())
-        await Promise.all([first, trailing, samePredecessor])
+        trailingPage.resolve(page())
+        await Promise.all([first, trailing, samePredecessor, ...later])
       }
     }
     for (const result of results) {
-      expect(result.first).toEqual({ error: result.problem })
+      expect(result.first).toEqual(result.failure === "trailing" ? { ok: true } : { error: result.problem })
       expect(result.trailing).toEqual({ ok: true })
       expect(result.duplicate).toEqual({ ok: true })
-      expect(result.reads).toBe(2)
+      expect(result.reads).toBe(result.failure === "trailing" ? 3 : 2)
       expect(result.maximum).toBe(1)
       expect(result.ids).toEqual(["fresh-after-failure"])
+      expect(result.later).toEqual(result.failure === "trailing" ? [{ ok: true }, { ok: true }] : [])
     }
   })
 

@@ -11,10 +11,11 @@ const otherID = "ses_recovery_independent"
 test("forced hydration waits for failed children, coalesces callers and leaves other Sessions independent", async () => {
   const results = []
   // Execute all variants before checking the regression outcomes, including metadata/todo rejection while history is held.
-  for (const failure of ["history", "metadata", "todo"]) {
+  for (const failure of ["history", "metadata", "todo", "trailing"]) {
     await using tmp = await tmpdir()
     await Bun.write(`${tmp.path}/kv.json`, "{}")
     const history = Promise.withResolvers<Response>()
+    const trailingHistory = Promise.withResolvers<Response>()
     const failed = Promise.withResolvers<Response>()
     const problem = new Error(`${failure} failed with history pending`)
     const state = { reads: 0, active: 0, maximum: 0, metadata: 0, todo: 0 }
@@ -27,14 +28,20 @@ test("forced hydration waits for failed children, coalesces callers and leaves o
         if (url.pathname !== `/api/session/${sessionID}/message`) return
         state.reads++
         state.maximum = Math.max(state.maximum, ++state.active)
-        return (state.reads === 1 ? history.promise : Promise.resolve(messages("fresh"))).finally(() => state.active--)
+        const response =
+          state.reads === 1
+            ? history.promise
+            : failure === "trailing" && state.reads === 2
+              ? trailingHistory.promise
+              : Promise.resolve(messages("fresh"))
+        return response.finally(() => state.active--)
       }),
       tmp.path,
     )
     const synchronize: (id: string, options?: { force?: boolean }) => Promise<void> = mounted.sync.session.sync
     const first = observe(synchronize(sessionID))
     await wait(() => state.reads === 1)
-    if (failure !== "history") failed.reject(problem)
+    if (failure === "metadata" || failure === "todo") failed.reject(problem)
     // Complete B after the rejected HTTP child, without waiting for A's wrapper or releasing A's history.
     await synchronize(otherID)
     expect(text(mounted.sync, otherID)).toBe("ordinary")
@@ -42,9 +49,19 @@ test("forced hydration waits for failed children, coalesces callers and leaves o
     expect(state.active).toBe(1)
     const trailing = observe(synchronize(sessionID, { force: true }))
     const duplicate = observe(synchronize(sessionID, { force: true }))
+    const later: ReturnType<typeof observe>[] = []
     try {
       if (failure === "history") history.reject(problem)
       if (failure !== "history") history.resolve(messages("old"))
+      if (failure === "trailing") {
+        await first
+        await wait(() => state.reads === 2)
+        expect(state.active).toBe(1)
+        later.push(observe(synchronize(sessionID, { force: true })), observe(synchronize(sessionID, { force: true })))
+        expect(state.reads).toBe(2)
+        trailingHistory.resolve(messages("captured trailing"))
+      }
+      const laterResults = await Promise.all(later)
       results.push({
         failure,
         problem,
@@ -54,22 +71,26 @@ test("forced hydration waits for failed children, coalesces callers and leaves o
         reads: state.reads,
         maximum: state.maximum,
         text: text(mounted.sync),
+        later: laterResults,
       })
     } finally {
       history.resolve(messages("cleanup"))
+      trailingHistory.resolve(messages("cleanup trailing"))
       failed.resolve(json({ data: [] }))
-      await Promise.allSettled([first, trailing, duplicate])
+      await Promise.allSettled([first, trailing, duplicate, ...later])
       mounted.app.renderer.destroy()
     }
   }
   for (const result of results) {
-    if (result.failure !== "history") expect(result.first).toMatchObject({ reason: "Transport", cause: result.problem })
-    if (result.failure === "history") expect(result.first).toBeUndefined()
+    if (result.failure === "metadata" || result.failure === "todo")
+      expect(result.first).toMatchObject({ reason: "Transport", cause: result.problem })
+    if (result.failure === "history" || result.failure === "trailing") expect(result.first).toBeUndefined()
     expect(result.trailing).toBeUndefined()
     expect(result.duplicate).toBeUndefined()
-    expect(result.reads).toBe(2)
+    expect(result.reads).toBe(result.failure === "trailing" ? 3 : 2)
     expect(result.maximum).toBe(1)
     expect(result.text).toBe("fresh")
+    expect(result.later).toEqual(result.failure === "trailing" ? [undefined, undefined] : [])
   }
 }, 20_000)
 
@@ -175,8 +196,13 @@ test("first greeting accepts bootstrap but a later gap fences its old active sna
       await emit(mounted, connected(1))
       expect(mounted.mounts.count).toBe(1)
       if (reconnect) {
+        mounted.sync.set("session_status", "ses_untouched_stale", { type: "busy" })
+        expect(mounted.sync.data.session_status.ses_untouched_stale).toEqual({ type: "busy" })
         await emit(mounted, connected(2))
         await wait(() => state.reads === 2)
+        // Absence for sessionID is initially idle too. This untouched busy entry proves fresh empty actually applied.
+        await wait(() => (mounted.sync.data.session_status.ses_untouched_stale?.type ?? "idle") === "idle")
+        expect(mounted.sync.data.session_status.ses_untouched_stale?.type ?? "idle").toBe("idle")
         await wait(() => (mounted.sync.data.session_status[sessionID]?.type ?? "idle") === "idle")
       }
       old.resolve(json({ data: { [sessionID]: { type: "running" } } }))
