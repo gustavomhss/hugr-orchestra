@@ -38,6 +38,9 @@ function fixture(source: "native" | "legacy" | "markdown", engine?: "orchestra" 
     Effect.promise(() => tmpdir()),
     (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
   ).pipe(Effect.tap((tmp) => Effect.promise(async () => {
+    await fs.mkdir(path.join(tmp.path, ".global"), { recursive: true })
+    await Bun.write(path.join(tmp.path, ".global", "orchestra.json"),
+      JSON.stringify({ trusted_projects: [tmp.path] }))
     await fs.mkdir(path.join(tmp.path, ".orchestra", "agents"), { recursive: true })
     await Bun.write(path.join(tmp.path, ".orchestra", "orchestra.json"), JSON.stringify({
       snapshots: false,

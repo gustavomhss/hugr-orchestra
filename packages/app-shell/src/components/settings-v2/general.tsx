@@ -8,6 +8,7 @@ import { useLanguage } from "@/context/language"
 import { usePlatform, type LiveSeatPlatform } from "@/context/platform"
 import { useFlight } from "@/orchestra/chapters/flight-engineer/run"
 import { showToast } from "@/utils/toast"
+import { liveKnown, liveOn, settleLiveRead, settleLiveWrite } from "./live-seat"
 import { pinchKnown, settlePinchRead, settlePinchWrite } from "./pinch"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
@@ -594,60 +595,116 @@ export const SettingsGeneralV2: Component<{
 
 function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
   const language = useLanguage()
-  const [state, { mutate, refetch }] = createResource(() =>
-    Promise.all([props.seat.running(), props.seat.hasTranscriptionKey(), props.seat.getContentProtection()])
-      .then(([running, key, protection]) => ({ running, key, protection }))
-      .catch(() => ({ running: false, key: false, protection: true })),
-  )
+  const [running, setRunning] = createSignal<boolean | undefined>()
+  const [keySaved, setKeySaved] = createSignal<boolean | undefined>()
+  const [protection, setProtectionValue] = createSignal<boolean | undefined>()
+  const [liveFailed, setLiveFailed] = createSignal(false)
   const [key, setKey] = createSignal("")
   const [busy, setBusy] = createSignal(false)
-  const run = (work: Promise<void>) => {
-    setBusy(true)
-    void work.finally(() => {
-      setBusy(false)
-      void refetch()
-    })
+  const [protectionBusy, setProtectionBusy] = createSignal(false)
+  let liveRead = 0
+  let protectionWrite = 0
+  let stopWrite = 0
+  const reportLive = (error: unknown) => {
+    console.error(error)
+    if (!liveFailed()) showToast({ variant: "error", title: language.t("common.requestFailed") })
+    setLiveFailed(true)
   }
+  createEffect(() => {
+    const seat = props.seat
+    const started = ++liveRead
+    void settleLiveRead({
+      read: Promise.resolve().then(() =>
+        Promise.all([seat.running(), seat.hasTranscriptionKey(), seat.getContentProtection()]),
+      ),
+      current: () => started === liveRead && props.seat === seat,
+      apply: ([nextRunning, nextKey, nextProtection]) => {
+        setRunning(nextRunning)
+        setKeySaved(nextKey)
+        setProtectionValue(nextProtection)
+        setLiveFailed(false)
+      },
+      report: reportLive,
+    })
+  })
   const flight = useFlight()
-  const toggleMeeting = () => (state.latest?.running ? run(props.seat.stop()) : flight.requestStart())
-  const saveKey = (value: string) =>
-    run(
-      props.seat
-        .setTranscriptionKey(value)
-        .then(() => void setKey(""))
-        .catch(
-          () =>
-            void showToast({
-              variant: "error",
-              title: language.t("settings.live.key.failed"),
-              description: language.t("settings.live.key.keychain"),
-            }),
-        ),
-    )
+  const toggleMeeting = () => {
+    if (running() === true) {
+      if (busy()) return
+      const seat = props.seat
+      const started = ++stopWrite
+      setBusy(true)
+      void settleLiveWrite({
+        write: Promise.resolve().then(() => seat.stop()),
+        current: () => started === stopWrite && props.seat === seat,
+        revert: () => undefined,
+        report: reportLive,
+      }).then((saved) => {
+        if (saved) setRunning(false)
+        if (started === stopWrite) setBusy(false)
+      })
+      return
+    }
+    if (running() === false) flight.requestStart()
+  }
+  const saveKey = (value: string) => {
+    if (busy()) return
+    setBusy(true)
+    void props.seat
+      .setTranscriptionKey(value)
+      .then(() => {
+        setKey("")
+        setKeySaved(value !== "")
+      })
+      .catch(() =>
+        showToast({
+          variant: "error",
+          title: language.t("settings.live.key.failed"),
+          description: language.t("settings.live.key.keychain"),
+        }),
+      )
+      .finally(() => setBusy(false))
+  }
   const setProtection = (enabled: boolean) => {
-    mutate((current) => current && { ...current, protection: enabled })
-    void props.seat.setContentProtection(enabled).catch(() => refetch())
+    if (protectionBusy() || !liveKnown(protection())) return
+    const seat = props.seat
+    const started = ++protectionWrite
+    const previous = protection()
+    setProtectionValue(enabled)
+    setProtectionBusy(true)
+    void settleLiveWrite({
+      write: Promise.resolve().then(() => seat.setContentProtection(enabled)),
+      current: () => started === protectionWrite && props.seat === seat,
+      revert: () => setProtectionValue(previous),
+      report: reportLive,
+    }).then((saved) => {
+      if (saved) setLiveFailed(false)
+      if (started === protectionWrite) setProtectionBusy(false)
+    })
   }
 
   return (
     <div class="settings-v2-section">
       <h3 class="settings-v2-section-title">{language.t("settings.general.section.live")}</h3>
+      <Show when={liveFailed()}>
+        <p role="alert">{language.t("common.requestFailed")}</p>
+      </Show>
 
       <SettingsListV2>
         <SettingsRowV2
           title={language.t("settings.live.meeting.title")}
           description={language.t(
-            state.latest?.running ? "settings.live.meeting.running" : "settings.live.meeting.description",
+            running() === true ? "settings.live.meeting.running" : "settings.live.meeting.description",
           )}
         >
-          <ButtonV2 size="normal" variant="neutral" disabled={busy() || !state.latest} onClick={toggleMeeting}>
-            {language.t(state.latest?.running ? "live.command.stop" : "live.command.start")}
+          <ButtonV2 size="normal" variant="neutral" disabled={busy() || !liveKnown(running())} onClick={toggleMeeting}>
+            {language.t(running() === true ? "live.command.stop" : "live.command.start")}
           </ButtonV2>
         </SettingsRowV2>
 
         <SettingsRowV2
           title={language.t("settings.live.key.title")}
-          description={language.t(state.latest?.key ? "settings.live.key.saved" : "settings.live.key.missing")}
+          description={language.t(keySaved() === true ? "settings.live.key.saved" : "settings.live.key.missing")}
         >
           <form
             class="flex w-80 items-center gap-2"
@@ -674,7 +731,7 @@ function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
             <ButtonV2 type="submit" size="normal" variant="neutral" disabled={busy() || !key().trim()}>
               {language.t("settings.live.key.save")}
             </ButtonV2>
-            <Show when={state.latest?.key}>
+            <Show when={keySaved() === true}>
               <ButtonV2 size="normal" variant="ghost" disabled={busy()} onClick={() => saveKey("")}>
                 {language.t("settings.live.key.remove")}
               </ButtonV2>
@@ -687,7 +744,12 @@ function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
           description={language.t("settings.live.protection.description")}
         >
           <div data-action="settings-live-protection">
-            <Switch hideLabel checked={state.latest?.protection ?? true} onChange={setProtection}>
+            <Switch
+              hideLabel
+              checked={liveOn(protection())}
+              disabled={!liveKnown(protection()) || protectionBusy()}
+              onChange={setProtection}
+            >
               {language.t("settings.live.protection.title")}
             </Switch>
           </div>

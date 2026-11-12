@@ -238,13 +238,14 @@ export const make = Effect.gen(function* () {
               "background-unavailable",
               "a background Task's result has no way back to this Session",
             )
-          background.register(
+          yield* background.register(
             GovernanceBackgroundV2.watch({
               parentID: parent.id,
               childID: child,
               description: input.description,
               context: admission.context,
             }),
+            sessions.value,
           )
         }
         return {
