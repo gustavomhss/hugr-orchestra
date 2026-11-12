@@ -220,7 +220,8 @@ for (const automatic of [false, true]) {
           release.resolve()
           if (owner) {
             const result = await owner
-            expect(result).toEqual({ _tag: "Success", success: { status: "connected" } })
+            expect(result._tag).toBe("Success")
+            if (result._tag === "Success") expect(result.success).toEqual({ status: "connected" })
           }
           await committed.promise
           expect(calls).toEqual({ consumed: 1, committed: 1 })
