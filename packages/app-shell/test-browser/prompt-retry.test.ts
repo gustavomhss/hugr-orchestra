@@ -582,7 +582,8 @@ test("CONTROL E1 native HTTP admission and same text after ACK create two distin
       const response = await Bun.fetch(request)
       // Only this private fixture's synthetic HTTP data; cap diagnostic output and never log headers/env/settings.
       responses.push({ stage, status: response.status, body: (await response.clone().text()).slice(0, 512) })
-      expect(response.status).toBe(200)
+      expect(["agent", "model", "prompt"]).toContain(stage)
+      expect(response.status).toBe(stage === "prompt" ? 200 : 204)
       return response
     }, { preconnect: Bun.fetch.preconnect })
     const owner = bindNative(host, transport)
