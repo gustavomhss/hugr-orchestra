@@ -3,6 +3,7 @@ export * as EligibilityFixture from "./model-eligibility"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
+import { Database } from "@orchestra/core/database/database"
 import { Integration } from "@orchestra/core/integration"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
@@ -14,6 +15,8 @@ import { ClaudeCodeHost } from "../../src/v2/host"
 import { ScriptedSDK } from "./scripted-sdk"
 
 const options: ScriptedSDK.Options[] = []
+// These integration tests also run outside Core's preload, which defaults tests to an in-memory store.
+export const database = Database.layerFromPath(":memory:")
 export const state = { options, signedIn: true, accountFails: false, registered: true,
   customReady: false, useCustomHost: false, customCalls: 0, tools: 0, materializations: 0, nativeResolves: 0, nativeModel: undefined as Model | undefined }
 export const ref = (providerID: string, variant?: string) => ModelV2.Ref.make({

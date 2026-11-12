@@ -26,6 +26,7 @@ import { EligibilityFixture } from "./fixture/model-eligibility"
 import { Harness } from "@orchestra/core/test/session-runner-harness"
 
 const it = Harness.make({
+  replacements: [[Database.node, EligibilityFixture.database]],
   client: LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer)),
   models: SessionRunnerModel.layerWith(() => Effect.sync(() => {
     EligibilityFixture.state.nativeResolves++

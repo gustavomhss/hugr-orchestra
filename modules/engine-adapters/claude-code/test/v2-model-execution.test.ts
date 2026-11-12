@@ -30,7 +30,7 @@ const it = testEffect(Layer.unwrap(Effect.suspend(() => {
   return Effect.succeed(AppNodeBuilder.build(LayerNode.group([
     future.ModelExecution.node, AgentV2.node, Catalog.node, Integration.node, Database.node,
     SessionStore.node, SessionSubagentModels.node,
-  ]), [[Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })], [ExecutionHost.node, EligibilityFixture.hosts]]))
+  ]), [[Database.node, EligibilityFixture.database], [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })], [ExecutionHost.node, EligibilityFixture.hosts]]))
 })))
 const setup = Effect.gen(function* () { yield* Harness.setup; yield* EligibilityFixture.seed })
 const describe = Effect.fn(function* (input: {
