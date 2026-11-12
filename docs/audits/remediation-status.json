@@ -601,11 +601,18 @@
     {
       "id": "G2",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "ui",
+      "status": "acceptance_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43149079101",
+          "snapshot": "53166e2ed7efeb3548737282ad81e18bf7ae99cb",
+          "result": "Linux existing create API admits duplicate default-file hosts; one assertion fails, first-host survival and real default SQLite controls pass. Not yet a concurrent-provider corruption reproduction."
+        }
+      ]
     },
     {
       "id": "H1",
@@ -2309,27 +2316,29 @@
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
-    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   },
   "integrated_checks": {
     "guards": {
       "exit": 0,
       "rules": 78,
-      "changed_paths": 116,
+      "changed_paths": 169,
       "gate": 0,
-      "warn": 0
+      "warn": 0,
+      "receipt": "/tmp/orchestra-audit-wave3-guards.exit"
     },
     "boundaries": {
       "exit": 0,
-      "parsed_files": 5540,
-      "cross_package_edges": 4954,
+      "parsed_files": 5562,
+      "cross_package_edges": 4995,
       "ledgered": 92,
       "new": 0,
-      "stale": 0
+      "stale": 0,
+      "receipt": "/tmp/orchestra-audit-wave3-boundaries.exit"
     },
     "spawn_imports": {
       "exit": 0,
-      "receipt": "/tmp/orchestra-audit-current-spawn.exit"
+      "receipt": "/tmp/orchestra-audit-wave3-spawn.exit"
     },
     "desktop_boundary_import": {
       "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134685283",
@@ -2339,10 +2348,17 @@
       ],
       "typecheck_exit": 0,
       "receipt": "/tmp/orchestra-audit-desktop-boundary-type.exit"
+    },
+    "core_typecheck": {
+      "exit": 0,
+      "source": "1691632a77",
+      "receipt": "/tmp/orchestra-audit-root-core-type.exit"
     }
   },
   "next_contracts": {
-    "G2": "0ebc24e90d: physical pre-open file custody, optional SDK database/host composition, own child Scope; acceptance GO by elon_musk",
-    "E6": "planning prospective selection/host capability/inventory; no endpoint/source GO yet"
+    "G2": "e1c503d3b4: private custody helper interface frozen; existing API behavioral RED confirmed, extended acceptance still in progress",
+    "E6": "fe942ad488: contextual prospective eligibility contract under cold review; no tests/source GO",
+    "H6": "security factual source/provenance mapping only; no contract/source GO",
+    "M9_M10": "desktop current release revalidation only; no contract/source GO"
   }
 }
