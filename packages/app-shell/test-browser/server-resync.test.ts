@@ -152,7 +152,16 @@ test("a pre-gap bootstrap active snapshot cannot resurrect busy after newer reco
     expect(harness.mounts.count).toBe(1)
     expect(harness.sync.session.data.session_status.ses_bootstrap).toEqual({ type: "busy" })
     harness.connections[0].close()
-    await until(() => harness.reads.length === 2 && harness.greetings.length === 2)
+    await until(() => harness.connections.length === 2 && harness.greetings.length === 2)
+    expect(harness.connections).toHaveLength(2)
+    expect(harness.greetings).toHaveLength(2)
+    await until(() => harness.reads.length === 2).catch((error) => {
+      console.error("bootstrap gap greeting arrived without a fresh active read", {
+        reads: harness.reads.length, greetings: harness.greetings, connections: harness.connections.length,
+        mounts: harness.mounts.count, unexpected: harness.unexpected,
+      })
+      throw error
+    })
     await until(() => harness.sync.session.data.session_status.ses_bootstrap?.type === "idle")
     expect(harness.reads).toHaveLength(2)
     old.resolve(Response.json({ data: { ses_bootstrap: { type: "running" } } }))
