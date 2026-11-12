@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { Deferred, Effect, Exit, Fiber, Schema, Stream, type Scope } from "effect"
-import { ChildProcess } from "effect/unstable/process"
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { AppProcess } from "../src/process"
 import { expectSpawn } from "./fixture/omni-expect"
@@ -116,7 +116,7 @@ for (const artifact of ["source", "compiled"] as const) {
       assertSetup(report)
       expect(report.result).toMatchObject({ result: { ok: true, value: ordinary, toolCalls: [{ name: "decorate" }, { name: "decorate" }] } })
       expect(report.containmentKill).toBe(false)
-      expect(report.exitCode).toBe(0)
+      expect(report.exitCode).toBe(ChildProcessSpawner.ExitCode(0))
     }))
   }, 120_000)
 }
@@ -133,7 +133,7 @@ test("CONTROL E10 source: actual Effect service, hooks, receipts and maxToolCall
       budgetTrace: ["start:0:value:budget-value", "run:budget-value", "end:0:value:success:budget-value"],
     })
     expect(report.containmentKill).toBe(false)
-    expect(report.exitCode).toBe(0)
+    expect(report.exitCode).toBe(ChildProcessSpawner.ExitCode(0))
   }))
 }, 120_000)
 
@@ -147,7 +147,7 @@ test("CONTROL E10 source: actual host tool distinguishes undefined properties an
       explicitSlot: true, slotUndefined: true, length: 3, last: "last",
     }, toolCalls: [{ name: "inspect" }] } })
     expect(report.containmentKill).toBe(false)
-    expect(report.exitCode).toBe(0)
+    expect(report.exitCode).toBe(ChildProcessSpawner.ExitCode(0))
   }))
 }, 120_000)
 
@@ -163,7 +163,7 @@ test("CONTROL E10 source: safe tool errors survive while private causes stay hid
     expect(JSON.stringify(report.result)).not.toContain("PRIVATE_CODEMODE_DEADLINE_CAUSE")
     expect(report.stderr).not.toContain("PRIVATE_CODEMODE_DEADLINE_CAUSE")
     expect(report.containmentKill).toBe(false)
-    expect(report.exitCode).toBe(0)
+    expect(report.exitCode).toBe(ChildProcessSpawner.ExitCode(0))
   }))
 }, 120_000)
 
@@ -180,7 +180,7 @@ test("CONTROL E10 source: exact Effect reuse and concurrent budgets keep distinc
       repeated: { ok: true, value: "again", toolCalls: [{ name: "value" }] }, distinctReceipts: true,
     })
     expect(report.containmentKill).toBe(false)
-    expect(report.exitCode).toBe(0)
+    expect(report.exitCode).toBe(ChildProcessSpawner.ExitCode(0))
   }))
 }, 120_000)
 
@@ -228,5 +228,5 @@ const assertDeadline = Effect.fn("CodeModeDeadline.assertDeadline")(function* (i
   expect(facts.result.toolCalls).toHaveLength(2)
   expect(facts.trace.some((entry) => entry.startsWith("end:slow"))).toBe(false)
   expect(report.containmentKill).toBe(false)
-  expect(report.exitCode).toBe(0)
+  expect(report.exitCode).toBe(ChildProcessSpawner.ExitCode(0))
 })
