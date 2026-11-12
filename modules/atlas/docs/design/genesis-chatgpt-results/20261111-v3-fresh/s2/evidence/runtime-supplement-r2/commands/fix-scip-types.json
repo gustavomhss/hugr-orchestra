@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "node",
+    "scripts/fix-scip-types.mjs"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+  "started_at": "2026-11-11T17:50:50.146734+00:00",
+  "ended_at": "2026-11-11T17:50:50.239049+00:00",
+  "duration_seconds": 0.09232591999898432,
+  "exit_code": 0,
+  "resolved_executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+  "stdout": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/fix-scip-types.stdout",
+    "sha256": "9ce7ef0c8339d106f3259c824a6e88c0bb408b11e790b226a18b79bb888eb3a5",
+    "byte_length": 78
+  },
+  "stderr": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/fix-scip-types.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "byte_length": 0
+  }
+}

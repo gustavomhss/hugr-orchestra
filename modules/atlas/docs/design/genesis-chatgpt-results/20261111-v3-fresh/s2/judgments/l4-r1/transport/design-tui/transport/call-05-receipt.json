@@ -1,0 +1,14 @@
+{
+  "actual_call_number": 5,
+  "tool": "collaboration.send_message",
+  "target": "/root/s2_resume_j1",
+  "part": 3,
+  "total_parts": 3,
+  "observed_tool_result": "",
+  "observation": "Native call returned empty output with no reported error. No recipient response read.",
+  "envelope_file": "call-05-envelope.json",
+  "local_envelope_sha256": "eac9e763f7db285cce7b2cf9389b3e19de368a2f76d9daca00c5a5dede9cc2d2",
+  "hash_scope": "Local saved envelope bytes; no host serialized-byte or recipient-byte attestation.",
+  "invalidated": false,
+  "replacement": false
+}

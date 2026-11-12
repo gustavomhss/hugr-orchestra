@@ -1,0 +1,15 @@
+{
+  "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r3-app/review-delta-frozen.txt",
+  "source_bytes": 23151,
+  "source_sha256": "89cdd61d184c02b9bbd8fc6d50c2e4b6813bd5afa0d3f072e05af8643a4a9fe1",
+  "source_ends_with_lf": true,
+  "message_file": "/workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r3-app/transport/message-payload.txt",
+  "message_bytes": 23204,
+  "message_sha256": "00af2caf2eba40377c82ffe69af112010ec4f6e6c2eb98b1b6776d66ddabe08a",
+  "outside_label": "app-session L1 r3 delta1/1; wait for principal seal\n\n",
+  "targets": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "scope": "literal transport only; no semantic edits or reviewer-content reads"
+}

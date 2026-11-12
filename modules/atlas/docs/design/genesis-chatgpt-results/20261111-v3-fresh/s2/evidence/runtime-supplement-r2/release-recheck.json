@@ -1,0 +1,14 @@
+{
+  "schema": "genesis-s2-release-recheck/v1",
+  "fetch_ref": "genesis-fresh-s4",
+  "fetch_count": 1,
+  "git_blob_sha": "6d02108e688e488f0ca86075fba37bce7f4bc6b2",
+  "sha256": "47deabb52ee93e18de06c68c1c27a0ff810a4e779a5087581080e87d6756979f",
+  "matches_prior_r1_bytes": true,
+  "adopted_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "release_id": "20261111-v3-fresh-s4-r1",
+  "compatible_update_observed": false,
+  "new_limits": false,
+  "prior_pinned_release_commit": "b42d14978c8b727310369920d4bfaf86145a2b80",
+  "latest_branch_head_not_resolved": true
+}

@@ -1,0 +1,28 @@
+{
+  "artifact": "s2.l3.app-session",
+  "transport_revision": 1,
+  "files": [
+    {
+      "path": "receipts.json",
+      "sha256": "5bc8badd29395062f7978630f4680039f8d7e21d219bf9a45541e74dbffd1496",
+      "byte_length": 5228
+    },
+    {
+      "path": "response.md",
+      "sha256": "e67b0ca9c1f34da7ad0cd48169b877b9b4e21ad8b22d86505e8e4f8db9b42dc1",
+      "byte_length": 1921
+    },
+    {
+      "path": "payload-01.txt",
+      "sha256": "ef6ccacecf40d06f323b72767b014d8396183fa1c2c428121563270e22e82966",
+      "byte_length": 25913
+    },
+    {
+      "path": "payload-02.txt",
+      "sha256": "1885e666d963d1f7e1037aac1c0e08af347f4afbdbc3987a37d59528b3983cf2",
+      "byte_length": 17159
+    }
+  ],
+  "excludes_self": true,
+  "attestation": "local bytes only"
+}

@@ -1,0 +1,10 @@
+{
+  "actual_call_issued": true,
+  "visible_return": "",
+  "truncation_marker_observed": false,
+  "payload_matches_assigned_literal": false,
+  "difference": "Section 10 prediction_only.direct_input_consumers closing delimiter sent as } instead of ]",
+  "automatic_retry": false,
+  "root_notified": true,
+  "required_disposition": "Principal to resolve before final seal; do not treat this J2 part5 call as exact literal transport"
+}

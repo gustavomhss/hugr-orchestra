@@ -1,0 +1,8 @@
+{
+  "operation": "python closure-work/observable-usage-01/reconcile_usage.py",
+  "actual_exit_code": 1,
+  "actual_exception": "KeyError: 'calls_observed'",
+  "cause": "The L3 desktop transport receipt uses a different call-array field from L2; the first scoped normalizer assumed the L2 field name.",
+  "effect": "No accounting output JSON had been written; no canonical, remote or runtime operation occurred.",
+  "resolution": "Read the exact receipt field names and adapt only the local normalizer; original receipt bytes remain unchanged."
+}

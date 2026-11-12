@@ -1,0 +1,11 @@
+--- frozen-part-005
++++ actual-visible-part-005-J2-argument
+@@ -556,7 +556,7 @@
+     "direct_input_consumers": [
+       "s2.l1.desktop-web",
+       "s2.l2.desktop-web"
+-    ],
++    },
+     "build_dependent_closure": [
+       "s2.l1.desktop-web",
+       "s2.l2.desktop-web",

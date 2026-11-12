@@ -1,0 +1,32 @@
+[
+  {
+    "file": "local-verification.json",
+    "sha256": "7c9595d88a75a18656ae19fb5c8a0b5aaf3f3357d3c045a703ebd7a9c34eab07",
+    "byte_length": 6800
+  },
+  {
+    "file": "visible-requests.json",
+    "sha256": "916ffe0cb6e211787bc60765bb060d7cfa5b23f4e703b13eba2301c50430434f",
+    "byte_length": 562845
+  },
+  {
+    "file": "s2_resume_j1-receipt.json",
+    "sha256": "8698a664355bbcc5cfccbdd44b141a65a56f49fa88f62f2bd8066a5d5513fa1a",
+    "byte_length": 10870
+  },
+  {
+    "file": "s2_resume_j2-receipt.json",
+    "sha256": "6fb2d4f8b142d89a7fdb980b95b01e606e58b7ad48d3aab8940048540d717291",
+    "byte_length": 11106
+  },
+  {
+    "file": "completion.json",
+    "sha256": "353f0fc86ee993ea4adf8b0d0d4255a71310059127dec25da9d538c1d9948338",
+    "byte_length": 1921
+  },
+  {
+    "file": "principal-visible-coordination.json",
+    "sha256": "03360f58d0fe10d382505d1bf6d65f28b9de191c7d86fde11ad67a365421fff2",
+    "byte_length": 2965
+  }
+]

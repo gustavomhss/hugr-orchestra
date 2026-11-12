@@ -1,0 +1,13 @@
+{
+  "schema": "genesis-s2-local-accounting-helper-failure/v1",
+  "recorded_at": "2026-11-11T21:30:51.541741+00:00",
+  "actual_exit_code": 1,
+  "script": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconcile_delta.py",
+  "script_sha256": "7bc6cc0eb74fb75f310fb0063b8e96226fb43cab89965497a223bbcec39da73c",
+  "error": "AssertionError at line77 comparing diff to [(19279,93,125)]",
+  "cause": "Expected position19279 is one-based; enumerate gives zero-based offset19278. Actual differing byte is still exactly ] to }.",
+  "partial_output_preserved": "ledger-observed-82-rows.jsonl",
+  "remote_calls": 0,
+  "runtime_calls": 0,
+  "resolution": "Correct only offset assertion and incorporate actual root final-return readback; run new version into new reconciled-01 directory, retaining failed script and snapshot."
+}

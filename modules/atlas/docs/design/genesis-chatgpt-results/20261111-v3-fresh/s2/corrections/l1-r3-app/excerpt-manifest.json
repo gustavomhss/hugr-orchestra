@@ -1,0 +1,23 @@
+[
+  {
+    "path": "packages/app-shell/AGENTS.md",
+    "start_line": 1,
+    "end_line": 4,
+    "bytes": 196,
+    "sha256": "bd1901552f9be337458524392305bc6f2a62b70fc8951db67e337f80f2062154"
+  },
+  {
+    "path": "packages/session-ui/AGENTS.md",
+    "start_line": 1,
+    "end_line": 7,
+    "bytes": 1404,
+    "sha256": "60bfa8f3ae4ad8e65a15247074ae0c105712b352990dac4b1f9463c1de4a58e7"
+  },
+  {
+    "path": "AGENTS.md",
+    "start_line": 1,
+    "end_line": 2,
+    "bytes": 405,
+    "sha256": "d106c475e9cb2805443695dc5d251d955b070bbdc991d59c29477328a71d5fc2"
+  }
+]

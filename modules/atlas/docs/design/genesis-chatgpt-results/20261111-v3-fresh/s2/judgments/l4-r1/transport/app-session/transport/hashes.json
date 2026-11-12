@@ -1,0 +1,29 @@
+{
+  "schema": "genesis-local-transport-hashes/v1",
+  "artifact": "s2.l4.app-session",
+  "revision": 1,
+  "scope": "Local record files only; no host-internal or received-byte attestation.",
+  "files": [
+    {
+      "file": "payload-01.txt",
+      "byte_length": 25975,
+      "sha256": "d87a2d26fd53fceb5b3cc96459d56cc78a1929634019ca8760f34bc1c028274d"
+    },
+    {
+      "file": "payload-02.txt",
+      "byte_length": 11195,
+      "sha256": "b169cb22fd9b3b8a483ea0645bf3fc81d9c2bb3d5e8883c80e93a4b8da37529f"
+    },
+    {
+      "file": "receipts.json",
+      "byte_length": 7671,
+      "sha256": "068092ac3ccf9c03a1e4757aa2e5738e08be68efa091cabffa9f62498225f5f8"
+    },
+    {
+      "file": "response.md",
+      "byte_length": 2439,
+      "sha256": "663dd485c4b414ae9836c70ca80c9535f706b09a2824bd86b16cb4aad8225473"
+    }
+  ],
+  "self_excluded": true
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-visible-judge-dispatch/v1",
+  "recorded_at": "2026-11-11T19:36:43.425581+00:00",
+  "layer": 3,
+  "revision": 1,
+  "request": {
+    "path": "judgments/l3-r1/seal-message.txt",
+    "sha256": "9a11184c24c73e00139a0ac4ef3341ba2c6d9bdb43e02469be621623d0a136fb",
+    "byte_length": 6459
+  },
+  "calls": [
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j1",
+      "message": "Complete literal seal-message.txt text, including final newline",
+      "observed_return": "Empty normal tool result; actual independent response pending"
+    },
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j2",
+      "message": "Complete literal seal-message.txt text, including final newline",
+      "observed_return": "Empty normal tool result; actual independent response pending"
+    }
+  ],
+  "limits": [
+    "Local request file and visible-call record; host serialized and received-byte hashes unavailable."
+  ]
+}

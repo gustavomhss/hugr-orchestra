@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-s2-runtime-discovery-recheck/v1",
+  "observed_at": "2026-11-11T19:58:37+00:00",
+  "branch": "genesis-fresh-s4",
+  "discovery_commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+  "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+  "git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+  "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+  "byte_length": 28282,
+  "release_id": "20261111-v3-fresh-s4-r3",
+  "native_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "common_controls_candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "same_release_blob_as_prior_r3": true,
+  "file_limit_retained": 256000,
+  "meaning": "Branch advanced; exact runtime release and candidate/cap remain unchanged. No new binding, consumer or aggregate CI result inferred."
+}

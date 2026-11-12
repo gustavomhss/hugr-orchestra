@@ -1,0 +1,11 @@
+{
+  "call_number": 1,
+  "tool": "collaboration.send_message",
+  "recorded_at": "2026-11-11T21:06:48.377942+00:00",
+  "visible_tool_result": "",
+  "visible_result_file": "call-01.result.txt",
+  "tool_return_observed": true,
+  "receipt_guarantee": false,
+  "host_serialized_bytes": "NOT_EXPOSED",
+  "retry": false
+}

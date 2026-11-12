@@ -1,0 +1,13 @@
+{
+  "schema": "genesis-s2-final-staging-seal/v1",
+  "package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "stage_plan_sha256": "095cb57bc9cb5178f3168d069a257b8ef962572dba2a1e8f631aa74e186e0f70",
+  "source_root": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+  "payload_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2",
+  "file_count": 1542,
+  "original_count_preserved": 641,
+  "payload_read_only_permissions": true,
+  "runtime_compatibility": "HOLD_KNOWN_INPUT_LIMIT",
+  "prepare_executed": false,
+  "runtime_cas_created": false
+}

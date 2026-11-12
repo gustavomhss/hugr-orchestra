@@ -1,0 +1,11 @@
+{
+  "event": "FINAL_RENDER_REFUSAL_RESOLVED",
+  "recorded_at": "2026-11-11T20:52:02.457285+00:00",
+  "actual_exit_code": 2,
+  "actual_output": "RENDER_REFUSED: Reference absent or SHA-256 mismatch: schema/tui.json\n",
+  "cause": "The generic reference resolver did not include the exact staged source-root alias for repository-relative source paths in the actual diagnosis receipt.",
+  "resolution": "Added a bounded relative source-root candidate while retaining exact SHA-256/length checks; original evidence, body bytes and runtime code unchanged.",
+  "old_utility_sha256": "4ffae317ff07e4ef8403939d2a0566e36f8db110dfa0b74a8df5923b4fe93a1b",
+  "new_utility_sha256": "1bca70f6aa06669884c31da2a76d2f9e6d53ed0709d6c63e2222115270ea960d",
+  "runtime_rerun": false
+}

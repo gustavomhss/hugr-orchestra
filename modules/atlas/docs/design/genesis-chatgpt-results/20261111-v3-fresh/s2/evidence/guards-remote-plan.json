@@ -1,0 +1,24 @@
+{
+  "phase": "prepared-not-executed",
+  "remote_route": "test-ci push snapshot through GitHub connector; existing workflow unshallows history for script package",
+  "request": {
+    "package": "script",
+    "packageSelector": "packages/script",
+    "directory": "packages/script",
+    "runner": "bun",
+    "args": [
+      "../../modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/verification/guards.test.ts",
+      "--timeout",
+      "120000"
+    ],
+    "env": {}
+  },
+  "test_source": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/verification/guards.test.ts",
+  "must_pin": "candidate snapshot commit after payload frozen",
+  "status": "NOT_RUN",
+  "notes": [
+    "No local product test executed.",
+    "Do not change guard rules, source baseline, workflow, or approval values.",
+    "Failure against origin/dev remains failure; report baseline divergence separately."
+  ]
+}

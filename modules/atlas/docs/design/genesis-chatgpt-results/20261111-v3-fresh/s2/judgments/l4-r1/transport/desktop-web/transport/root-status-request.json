@@ -1,0 +1,4 @@
+{
+  "target": "/root",
+  "message": "L4 desktop-web transport: all four native packet send_message calls have now been issued in numeric part order to both designated reviewers. The first call (j1 part 1) displayed “Output exceeded the available model context and was truncated”; I am preserving that observed outcome as uncertain, not a normal empty acknowledgment. The other three calls returned no visible output/error. No known literal error, replacement, seal, activation or recipient-reply inspection occurred. I am writing exact local envelope reconstructions and the completion receipt in my own l4/transport-r1 now."
+}

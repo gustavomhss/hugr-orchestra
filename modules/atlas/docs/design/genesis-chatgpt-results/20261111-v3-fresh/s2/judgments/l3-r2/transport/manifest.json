@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-producer-safe-review-parts/v1",
+  "artifact": "s2.l3.design-tui",
+  "revision": 2,
+  "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "parts": [
+    {
+      "file": "part-01.txt",
+      "number": 1,
+      "total": 2,
+      "byte_length": 25988,
+      "sha256": "f46c90b3ed316fb4f039d6c84bc754ea566ebfabef55a7efc292c334fe447b49"
+    },
+    {
+      "file": "part-02.txt",
+      "number": 2,
+      "total": 2,
+      "byte_length": 5168,
+      "sha256": "b8c0f25f60d8cc9e6e0629971d432f17188609c5bb58d3d60f3cbb33ecf2d5f0"
+    }
+  ],
+  "notes": [
+    "Concatenate numbered parts in order; a Markdown block may cross a part boundary.",
+    "The complete r1 evidence already received remains applicable except for the explicit addition in this delta.",
+    "Local byte/hash receipts do not attest host message serialization."
+  ]
+}

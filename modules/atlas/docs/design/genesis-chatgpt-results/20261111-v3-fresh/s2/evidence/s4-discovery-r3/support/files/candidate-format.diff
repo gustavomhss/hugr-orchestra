@@ -1,0 +1,20 @@
+--- e3a/modules/atlas/packages/adapter-io/src/genesis-native-format.ts
++++ 7102/modules/atlas/packages/adapter-io/src/genesis-native-format.ts
+@@ -88,7 +88,7 @@
+   if (Object.hasOwn(query, "key")) nativeText(query.key, "query.key")
+   if (Object.hasOwn(query, "section")) nativeText(query.section, "query.section")
+   if (Object.hasOwn(query, "historical") && query.historical !== true) throw new Error("native-query-historical")
+-  return query as unknown as OwnershipQuery
++  return value as OwnershipQuery
+ }
+ 
+ /** Transport is data. No package state, semantic verdict or reference grants runtime authority. */
+@@ -152,7 +152,7 @@
+     queue.push(...artifact.navigation, ...artifact.build_dependencies.map((dependency) => dependency.key))
+   }
+   if (required.some((key) => !reachable.has(key))) throw new Error("native-required-unreachable")
+-  return pack as unknown as NativePackage
++  return value as NativePackage
+ }
+ 
+ function validateArtifact(value: unknown, scope: unknown) {

@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-s2-publication-destination-observation/v1",
+  "recorded_at": "2026-11-11T21:14:45.271452+00:00",
+  "repository": "gustavomhss/hugr-orchestra",
+  "private": false,
+  "visibility": "public",
+  "archived": false,
+  "repository_url": "https://github.com/gustavomhss/hugr-orchestra",
+  "observed_permissions": {
+    "admin": true,
+    "maintain": true,
+    "push": true,
+    "triage": true,
+    "pull": true
+  },
+  "connector_receipt_sha256": "b6f4c56c83a3e30b89db082e4c95f74a6ac4b4f9a3f9be56362799d4cfe928df",
+  "actual_read_only_github_calls": 1,
+  "authorization_effect": "Read-only metadata and technical push capability do not resolve the two prior automatic approval refusals of public internal-record disclosure."
+}

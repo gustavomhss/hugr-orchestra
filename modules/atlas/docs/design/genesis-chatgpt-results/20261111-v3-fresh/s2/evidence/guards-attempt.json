@@ -1,0 +1,14 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "cwd_kind": "verified source-file materialization without Git history, not an original checkout",
+  "command": "bun run check:guards --base origin/dev",
+  "result": {
+    "chunk_id": "c4121e",
+    "wall_time_seconds": 0.0000336,
+    "exit_code": 1,
+    "original_token_count": 66,
+    "output": "$ bun run script/guards/run.ts --base origin/dev\nERROR /workspace/scratch/992c54067adf/genesis-s2/guard-materialization is not a git repository\nguards: 0 rules, 0 changed paths, 0 gate and 0 warn findings, 1 errors.\nerror: script \"check:guards\" exited with code 1\n"
+  },
+  "verdict": "HOLD",
+  "interpretation": "This attempt cannot establish a candidate guard pass; authentic Git base/history is required."
+}

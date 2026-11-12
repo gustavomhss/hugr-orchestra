@@ -1,0 +1,18 @@
+{
+  "schema": "genesis-s2-native-prepare-helper-preparation/v1",
+  "helper": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/prepare-capture-support/capture_native_prepare.py",
+    "sha256": "37d663ce76b0acb0f73d902bcf12e3d0c0fd3e1e6cc85b62ea141ee3c5a22f3e",
+    "byte_length": 17852
+  },
+  "syntax": "PASS via ast.parse only",
+  "prepare_executed": false,
+  "product_tests_executed": false,
+  "package_or_cas_modified": false,
+  "prior_manifest_pins": {
+    "runtime-materialization.json": "9ba791b332abab7bba4b6949aedce9363a13dbb87ab3a4aa58ad485b695bea60",
+    "dependency-materialization.json": "973e1414bdc71833420da907e15c1183bc0d452de70f8f7044b7f850cfc29e20",
+    "build-receipt-initial.json": "cf284f3645bf605be0500716db346e55cb9241374b7b1ecd9042d4cecb5a1022"
+  },
+  "behavior_tested": false
+}

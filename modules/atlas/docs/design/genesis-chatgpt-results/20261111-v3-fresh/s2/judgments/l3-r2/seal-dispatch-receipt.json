@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s2-native-review-dispatch/v1",
+  "recorded_at": "2026-11-11T19:54:15.764466+00:00",
+  "request_path": "judgments/l3-r2/seal-message.txt",
+  "request_sha256": "04a41d70c5c441e95e9f2a2f93b096b308cc852215ba95fe6680aee42df5aaba",
+  "calls": [
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j1",
+      "observed_tool_result": "",
+      "reported_error": false
+    },
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j2",
+      "observed_tool_result": "",
+      "reported_error": false
+    }
+  ],
+  "host_serialized_request_byte_attestation": "NOT_EXPOSED"
+}

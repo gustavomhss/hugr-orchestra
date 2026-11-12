@@ -1,0 +1,13 @@
+{
+  "scope": "Original local producer files only; hashes remain unchanged after transport.",
+  "files": {
+    "body.md": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+    "sources.json": "f79315087069efc9d88acf629f8cfb7a744f768b968a90602b2e51dee287e262",
+    "dependencies.json": "587f33ed309b185def4977a4818895be123b108ac2101bcb09a8b21ca28df49c",
+    "decisive-evidence.md": "8d2e149e8afda625cb3deef7a7b6b53c95014853fb637358f118021561a97071",
+    "response.md": "486bec496eb2e8e83e90f931d319ae82469891ddc43c82c26aebc8b60b20f745",
+    "author-checks.json": "8404b1a308c7fa118f12b2b2298448b03a683b841d597aee783a6bec8bb9f10f",
+    "hashes.sha256": "7846a5316e04040effd60ac6f4b66253b2c64b218abaa28ae0e3948a035f9b57"
+  },
+  "all_match": true
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "genesis-preserved-support/v1",
+  "files": [
+    {
+      "path": "stage_final_native.py",
+      "byte_length": 30238,
+      "sha256": "7444339116752f208b0043c99e0b6ee52d3a13bf90ccc6887bc993c3dc46d2d8"
+    },
+    {
+      "path": "final_staging.md",
+      "byte_length": 7570,
+      "sha256": "1aa3c25adba557b55b1fce3b3d196d4d2c0480381ae61dcc89cce5d250e197c4"
+    },
+    {
+      "path": "final-staging-report.md",
+      "byte_length": 2692,
+      "sha256": "39e91c612a2d65eb19df52207e31c0694bf2908a6a13b07106904e11b4485001"
+    },
+    {
+      "path": "final-staging-receipt.json",
+      "byte_length": 2488,
+      "sha256": "717a29e8c503f389527db45eca697556ed59ae6e3bc426bea09bbafb46267610"
+    }
+  ],
+  "note": "Support artifact copies; original execution layout remains assembly-tools/. No staging, prepare or semantic acceptance is asserted by this preservation."
+}

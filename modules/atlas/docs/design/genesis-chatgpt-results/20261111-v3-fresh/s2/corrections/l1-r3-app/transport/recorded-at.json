@@ -1,0 +1,4 @@
+{
+  "recorded_at_utc": "2026-11-11 18:32:08 UTC",
+  "basis": "clock__curr_time after both sends; native per-send timestamps were not exposed"
+}

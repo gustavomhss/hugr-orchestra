@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-11-11T20:45:28.660498+00:00",
+  "tool": "collaboration.followup_task",
+  "actual_calls": 2,
+  "recipients": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "visible_message_file": "seal-message-dispatched.txt",
+  "visible_message_bytes": 3778,
+  "visible_message_sha256": "0ac25b06d95dfaddb9676310465a38ee72399ded7a6f41978aad052be5e1234f",
+  "difference_from_prepared_template": "Final file newline omitted in actual visible message; otherwise same visible text.",
+  "actual_results": [
+    "empty normal result",
+    "empty normal result"
+  ],
+  "limits": [
+    "Recorded from the two actual calls; no host-internal serialized-byte attestation.",
+    "Actual independent semantic responses are still pending."
+  ]
+}

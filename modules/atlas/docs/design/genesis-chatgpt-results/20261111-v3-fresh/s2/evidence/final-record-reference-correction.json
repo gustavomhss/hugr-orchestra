@@ -1,0 +1,15 @@
+{
+  "schema": "genesis-s2-final-record-reference-correction/v1",
+  "recorded_at": "2026-11-11T21:34:33.438093+00:00",
+  "finding": "Two relative command arguments carried an extra deliverable/ prefix in new record links. Raw support files, accepted content and actual review responses were unaffected.",
+  "correction": "Normalize these two source paths relative to the deliverable root; update dependent current record hashes. Preserve original draft outputs and ledger snapshot.",
+  "original_records_preserved": "history/final-records-r1-before-reference-correction",
+  "affected_active_records": [
+    "work.md",
+    "handoff.json",
+    "evidence/final-local-gates.json",
+    "evidence/final-record-consolidation.json"
+  ],
+  "historical_ledger_policy": "Keep original rows88 and earlier; append this correction, never rewrite old events.",
+  "semantic_or_runtime_changes": 0
+}

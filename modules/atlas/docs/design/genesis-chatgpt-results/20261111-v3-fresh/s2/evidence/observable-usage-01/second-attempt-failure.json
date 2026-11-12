@@ -1,0 +1,8 @@
+{
+  "operation": "python closure-work/observable-usage-01/reconcile_usage.py",
+  "actual_exit_code": 1,
+  "actual_exception": "KeyError: 'calls'",
+  "cause": "A premature local field-name correction still did not match L3 desktop's actual_native_send_calls array.",
+  "effect": "No accounting output JSON had been written; no canonical, remote or runtime operation occurred.",
+  "resolution": "Use the exact inspected actual_native_send_calls field; all original receipts remain unchanged."
+}

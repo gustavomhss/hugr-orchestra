@@ -1,0 +1,12 @@
+{
+  "call_number": 3,
+  "tool": "collaboration.send_message",
+  "recorded_at": "2026-11-11T21:10:02.729763+00:00",
+  "visible_tool_result": "",
+  "visible_result_file": "call-03.result.txt",
+  "tool_return_observed": true,
+  "delivery_state": "RETURNED_EMPTY_VISIBLE_PAYLOAD",
+  "receipt_guarantee": false,
+  "host_serialized_bytes": "NOT_EXPOSED",
+  "retry": false
+}

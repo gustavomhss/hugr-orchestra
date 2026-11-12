@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s2-sibling-ci-actual-readback/v1",
+  "observed_at": "2026-11-11T20:04:03.956354+00:00",
+  "run_id": 43065851373,
+  "run_attempt": 1,
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "head_sha": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "head_branch": "genesis-fresh-s4",
+  "status": "completed",
+  "conclusion": "failure",
+  "workflow_path": ".github/workflows/atlas-pilot.yml",
+  "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43065851373",
+  "created_at": "2026-11-11T17:12:17Z",
+  "updated_at": "2026-11-11T17:14:32Z",
+  "connector_response": {
+    "path": "evidence/ci-final-readbacks/run-43065851373-connector.json",
+    "sha256": "89bc579ada65513dd1900dda7bca2d4cb078bd6ae0c164256afb07ba80bd4562"
+  },
+  "scope": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding.",
+  "historical_or_current_control": "Historical aggregate failure retained"
+}

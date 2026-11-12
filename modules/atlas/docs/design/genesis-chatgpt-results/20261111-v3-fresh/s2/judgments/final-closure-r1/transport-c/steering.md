@@ -1,0 +1,3 @@
+Transport detail: numbered parts may end mid-line/mid-word; preserve exact literal segment boundaries without trimming or adding continuation text. Root seals only after all three helpers report. A post-native read-only check at21:04UTC confirms identical S4release/nativecandidate/cap and ownHEAD; no packet modification needed. Do not add this note to assignedparts.
+
+Acknowledged. Preserve actual part5/J2 visible arguments and exact byte-diff against frozen file, marking that call INVALIDATED. Finish only the two assignedpart6 sends, then report paths. No replacement yet. Root will inspect whether the recorded discrepancy is exactly one bracket and authorize a concrete correction after reconciliation. All original evidence stays; no final seal until resolved.
