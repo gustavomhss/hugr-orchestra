@@ -56,7 +56,9 @@ function withPeer<A, E>(mode: Mode, body: (peer: Peer) => Effect.Effect<A, E>) {
       const errors = yield* Stream.runCollect(child.stderr).pipe(Effect.forkChild)
       return yield* body(peer).pipe(Effect.ensuring(
         child.kill({ forceKillAfter: "1 second" }).pipe(
-          Effect.andThen(child.exitCode), Effect.andThen(Fiber.await(output)), Effect.andThen(Fiber.await(errors)),
+          Effect.andThen(child.isRunning),
+          Effect.flatMap((running) => running ? Effect.die("Owned fixture still running after kill") : Effect.void),
+          Effect.andThen(Fiber.await(output)), Effect.andThen(Fiber.await(errors)),
           Effect.timeout("3 seconds"), Effect.orDie,
         ),
       ))
