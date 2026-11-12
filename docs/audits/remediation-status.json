@@ -867,10 +867,19 @@
     {
       "id": "H4",
       "severity": "P2",
-      "owner": "lead",
-      "status": "implemented_ancestor_final_gates_pending",
+      "owner": "security",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "518ff7d982",
+        "7273d6c76b",
+        "24ef87114e",
+        "515a480932",
+        "877d3e0eb0",
+        "b03e2b093e",
+        "05649073ff",
+        "9850d20eb7"
+      ],
       "evidence": [
         {
           "kind": "actual_permission_behavioral_red",
@@ -886,9 +895,28 @@
           "kind": "unsupported_diagnostic_witness",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43204592393",
           "result": "Actual pinned FileSystem realPath normalizes raw link/../secret to inside path; expected outside witness failed before resolver comparison. Not product RED and no raw-path rewrite."
+        },
+        {
+          "kind": "final_engine_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205364693",
+          "result": "42pass/0fail/528assertions per OS."
+        },
+        {
+          "kind": "final_core_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205755207",
+          "result": "Linux29pass/61assertions; Windows26pass/3 pre-existing skips/58assertions. All five new ancestor cases executed on both OSes."
+        },
+        {
+          "kind": "integrated_mcp_model_authorization_seam",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43209710312",
+          "result": "4pass/18assertions/1 actual Omni spawn. Original wrapper exit1 was network monitor failure; same run job131153892528 and cleanup success recovered with GitHub connector, raw logs retained; no duplicate run."
+        },
+        {
+          "kind": "typechecks_and_cold_review",
+          "result": "Core and Engine final package types0 on source-equivalent934; House initial72a and ancestor7f APPROVE; root inspected incremental source and9 exact hashes plus retained H6-only llm diff."
         }
       ],
-      "remaining": "Physical Location authorization source and missing directory-ancestor fix cold reviewed; final Core/Engine types and both-OS gates pending. Raw symlink-parent hypothesis had unsupported witness and was not implemented."
+      "remaining": "Closed. Nine owned files exactly match tested7f; llm.ts preserves integrated H6 MCP materialization hunks and passes four-case integration seam. Scripted SDK Query with real Host/runner/Permission/SQL/FS; no Claude binary execution or hostile symlink-swap guarantee."
     },
     {
       "id": "H5",
@@ -2708,12 +2736,12 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 47,
+    "new_fixes_verified": 48,
     "already_fixed_verified": 1,
-    "remaining": 17,
+    "remaining": 16,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "c0252fc037",
+  "integration_checkpoint": "9850d20eb7",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
