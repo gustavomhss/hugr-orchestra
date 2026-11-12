@@ -403,7 +403,7 @@ jobs:
             if [ "$RUNNER_OS" = "Windows" ]; then
               kept=()
               for file in "${files[@]}"; do
-                if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ]; then
+                if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ]; then
                   alone+=("$file")
                 else
                   kept+=("$file")
@@ -431,7 +431,9 @@ jobs:
             if [ -n "${alone[0]:-}" ]; then
               for alone_file in "${alone[@]}"; do
                 echo "shard $PART runs $alone_file in its own process" >&2
-                (cd packages/core && GITHUB_ACTIONS=false bun test --timeout 30000 --only-failures "$alone_file")
+                # declared: a file that does not spawn (tool-write) must not fail the suite-wide omni control
+              # (run 43242689800). A file that declares a spawn still has to make one.
+              (cd packages/core && GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 --only-failures "$alone_file")
               done
             fi
             exit 0
