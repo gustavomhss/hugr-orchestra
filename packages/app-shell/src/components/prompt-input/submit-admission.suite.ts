@@ -32,7 +32,7 @@ test.each(["removed", "unavailable"])("rejects %s workspace before Session creat
   state.workspaceDirectories = []
   state.workspaceLookupFailure = failure === "unavailable"
   const submit = createPromptSubmit({ ...submitInput(), info: () => undefined, newSessionWorktree: () => state.selected })
-  await submit.handleSubmit({ preventDefault: () => undefined } as unknown as Event)
+  await submit.handleSubmit(new Event("submit", { cancelable: true }))
   expect(state.workspaceLookups).toEqual([{ projectID: "project" }])
   expect(sessionCreateInputs).toEqual([])
   expect(createdSessions).toEqual([])

@@ -23,16 +23,8 @@ const project = (name: string, sandboxes: string[]) => ({
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 
 const releaseChannel = process.env.ORCHESTRA_CHANNEL === "prod"
-test.beforeEach(({}, info) => {
-  test.skip(
-    releaseChannel && !info.title.startsWith("placement:"),
-    "The other journeys drive the development workspace picker",
-  )
-})
-
 for (const placement of ["active", "stale", "unknown", "direct", "removed-before-submit"] as const) {
-  test(`placement: production ${placement} draft creates the session at the resolved workspace`, async ({ page }) => {
-    test.skip(!releaseChannel, "Requires the release channel to prove the hidden workspace picker")
+  test(`placement: production ${placement} draft creates the session at the resolved workspace`, { tag: "@production-channel" }, async ({ page }) => {
     const direct = placement === "direct"
     const mock = await setup(page, { profile: direct ? sandboxes[1] : root })
     await openChapter(page)
@@ -84,7 +76,7 @@ test("placement: direct V2 copy profile resolves its owning repository", async (
 })
 
 for (const scheme of ["dark", "light"] as const) {
-  test(`${scheme}: renders the mock page and selecting a workspace steers new sessions`, async ({ page }) => {
+  test(`${scheme}: renders the mock page and selecting a workspace steers new sessions`, { tag: "@development-channel" }, async ({ page }) => {
     const mock = await setup(page, { scheme })
     await openChapter(page)
     const chapter = page.locator(".orchestra-workspaces")
@@ -162,7 +154,7 @@ for (const scheme of ["dark", "light"] as const) {
   })
 }
 
-test("rename stays local to the profile, survives reload and resets to the folder name", async ({ page }) => {
+test("rename stays local to the profile, survives reload and resets to the folder name", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   await openChapter(page)
   // Keyboard activation opens the dialog with focus on its close button, as in the mock.
@@ -208,7 +200,7 @@ test("rename stays local to the profile, survives reload and resets to the folde
   expect(writes(mock.requests)).toEqual([])
 })
 
-test("creates and deletes a git worktree through the server, deletion behind a confirmation", async ({ page }) => {
+test("creates and deletes a git worktree through the server, deletion behind a confirmation", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   await openChapter(page)
   const created = "/repos/orchestra-workspaces/feature-a"
@@ -312,7 +304,7 @@ test("creates and deletes a git worktree through the server, deletion behind a c
   )
 })
 
-test("v2: the active workspace never offers deletion until another workspace is active", async ({ page }) => {
+test("v2: the active workspace never offers deletion until another workspace is active", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   await openChapter(page)
   await card(page, sandboxes[0]).getByRole("button", { name: "Configure", exact: true }).click()
@@ -338,7 +330,7 @@ test("v2: the active workspace never offers deletion until another workspace is 
   expect(writes(mock.requests)).toEqual([])
 })
 
-test("v2: the tab bar's New session from a draft in a copy starts in the selected workspace", async ({ page }) => {
+test("v2: the tab bar's New session from a draft in a copy starts in the selected workspace", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   await openChapter(page)
   // A draft in the first copy; the second copy then becomes the selected workspace.
@@ -370,7 +362,7 @@ test("v2: the tab bar's New session from a draft in a copy starts in the selecte
 })
 
 // Workspaces is a WIP screen that still needs a spec; the owner parked its open failures (2026-10-05).
-test.fixme("Escape closes the dialog while a navigation tooltip still shows behind it", async ({ page }) => {
+test.fixme("Escape closes the dialog while a navigation tooltip still shows behind it", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   await openChapter(page)
   // The WIP row's tooltip is a Kobalte layer that also listens for Escape on the document.
@@ -390,7 +382,7 @@ test.fixme("Escape closes the dialog while a navigation tooltip still shows behi
   expect(writes(mock.requests)).toEqual([])
 })
 
-test("same paths on a second server remain isolated while a first-server response is pending", async ({ page }) => {
+test("same paths on a second server remain isolated while a first-server response is pending", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   await openHome(page)
   // Hold only this page's project request; the shell's own bootstrap has already completed.
@@ -423,7 +415,7 @@ test("same paths on a second server remain isolated while a first-server respons
   expect(writes(mock.requests)).toEqual([])
 })
 
-test("a project that is not a repository says why New workspace is unavailable", async ({ page }) => {
+test("a project that is not a repository says why New workspace is unavailable", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   mock.state.vcs = undefined
   await openChapter(page)
@@ -439,7 +431,7 @@ test("a project that is not a repository says why New workspace is unavailable",
   await expect(chapter).not.toContainText("needs a git repository")
 })
 
-test("reports error, unavailable and no-repository states and recovers", async ({ page }) => {
+test("reports error, unavailable and no-repository states and recovers", { tag: "@development-channel" }, async ({ page }) => {
   const mock = await setup(page)
   await openHome(page)
   mock.state.status = 500
