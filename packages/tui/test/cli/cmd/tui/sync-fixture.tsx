@@ -78,6 +78,12 @@ export async function mount(override?: FetchHandler, state?: string, args?: { au
   ))
 
   await ready
-  await wait(() => sync.status === "complete")
+  await wait(() => sync.status === "complete").catch((error) => {
+    console.error("sync fixture bootstrap did not complete", {
+      status: sync.status, offline: sdk.offline(), received: received.map((event) => event.payload.type),
+    })
+    app.renderer.destroy()
+    throw error
+  })
   return { app, emit: events.emit, kv, project, sync, sdk, received, mounts, session: calls.session }
 }
