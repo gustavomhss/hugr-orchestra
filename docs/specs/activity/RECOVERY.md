@@ -4,6 +4,18 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
+The registered Worktrees first wave is complete on activity-monitor: R0/W1/W2/W3,
+four WPs/nine tasks with all six quality fields. W3 final hosted run 43300730127
+passed all 31 cases (Solid 17/109 expects, browser 14/199 expects), zero failures
+or skips. Exact fetched source and unchanged-oracle comparison are recorded in
+worktree-ui-validation.json. This closes G01–G04/W01–W12 only; full R1–R20,
+remaining collectors and effects remain incomplete. Nothing is merged or released.
+
+### First-wave continuation history
+
+Pending statuses below describe earlier checkpoints; the final receipt above
+and WORKTREE-UI-EXECUTION.md supersede them.
+
 WP-W1 is complete: corrected hosted run 43279701564 passed W01–W04 and all
 prior disk outcomes, with 14 passes on Linux and 11 passes/3 existing platform
 skips on Windows. The fetched snapshot matches current Core/Schema trees;
@@ -52,8 +64,8 @@ attempt summary fixes preview layout; final App tree is
 c42c8963b52c64d7c5b22b9eaa0523ad85c6da1a. Actual-HTTP EN/BR/narrow/keyboard/error
 and two-server inspection is recorded in WORKTREE-UI-RENDERED.md. Both owned
 preview SQL faults were restored; all preview processes/ports/profile/state
-were closed and removed after evidence preservation. Own hosted green remains
-open at /tmp/activity-worktree-ui-green-final-ci.log before W3 closes. The earlier
+were closed and removed after evidence preservation. Own hosted green is now
+verified at /tmp/activity-worktree-ui-green-final-ci.log. The earlier
 helper was superseded before workflow creation, not a test failure/result.
 The mistaken root typecheck was stopped and a scoped App rerun passed. No local
 tests ran. Grok 4.7

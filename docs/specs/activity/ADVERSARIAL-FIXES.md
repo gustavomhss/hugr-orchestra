@@ -73,9 +73,21 @@ The separate rendered steps include zero versus unread partial and empty/filter/
 failure/owner distinctions. Both disjoint coverage scopes received two fresh
 consecutive clean reviews; independent quality review approved each bounded unit.
 
-Current structure is four WPs/nine tasks, all with six required fields, and 399
-unique acceptance rows. R0 and W1 alone are complete. W2's reviewed implementation
-awaits its unchanged hosted green; W3's unavailable anchors await hosted red.
+At that source-review checkpoint the structure was four WPs/nine tasks, all with six required fields, and 399
+unique acceptance rows. R0 and W1 alone were complete. W2's reviewed implementation
+awaited its unchanged hosted green; W3's unavailable anchors awaited hosted red.
 Guardrails have zero gates and one existing reviewed R0 warning. No local product
 test, owner app/server restart or owner database migration occurred. Relay remains
 manual because its stop hook is unconfigured.
+
+## First-wave final evidence
+
+W2 green 43289677269 and W3 green 43300730127 now supersede those pending gates.
+W3's unchanged eleven failing cases became passes and all twenty prior passing
+outcomes remained green: Solid 17/browser 14, zero failures/skips. Exact fetched
+source and lane outcomes are in worktree-ui-validation.json. Independent review
+also approved the actual HTTP web/EN/BR/keyboard/error/server-switch receipt and
+bounded preview cleanup. Source/controller/component/compact-layout reviews all
+approved their separate bounded units. No new P1/P2 was reported in those reviews.
+This closes only the registered Worktrees first wave; collector/action/use-proof
+work and the full R1–R20 acceptance ledger remain open. No local test ran.

@@ -201,3 +201,28 @@ source failures/retries and two server contexts. Both preview SQL faults were
 restored; owned preview processes/profile/state were closed and removed after
 artifact preservation. Owner runtime and database were untouched. This manual
 evidence does not replace the pending hosted controller/store acceptance gate.
+
+## Final W3 hosted receipt
+
+Run [43300730127](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43300730127)
+completed successfully: Solid 17 pass/109 expects, browser 14 pass/199 expects,
+zero failures/skips. All eleven new red outcomes became passes; all twenty
+previous passes stayed green. The eight acceptance/fixture files are unchanged
+from red ff6887b900710e4a63eb9d3099b881690c50d73d. Actual named outcomes and
+lane counts are preserved in worktree-ui-validation.json.
+
+Fetched snapshot 52084035332936074b50339cac8bba2c52730081 matches final App tree
+c42c8963b52c64d7c5b22b9eaa0523ad85c6da1a and current supporting Client/Protocol/
+Schema trees exactly. Focused Omni control explicitly reports not applicable,
+zero actual spawns and zero delegated; this proves no native behavior. The
+test:ci caller exited zero. Its pre-dispatch queue wait was not a test failure.
+
+Together with the independently reviewed actual-HTTP rendered receipt, source
+reviews, final App typecheck, guide and cleanup, this satisfies W3's bounded DoD.
+Guards report 78 rules, zero gates/errors and one existing reviewed R0 migration
+warning. Relay remains manually inspected because its stop hook is unconfigured.
+No local product tests, owner runtime/database changes, merge or release occurred.
+The four-WP first wave is complete; the entire product acceptance ledger is not.
+Independent final evidence review returned APPROVE with no findings after checking
+raw named outcomes, fetched trees, unchanged oracles and the bounded completion
+ledger. Final guards inspected 121 changed paths with the same reviewed warning.

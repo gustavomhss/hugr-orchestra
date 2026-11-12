@@ -14,10 +14,12 @@ exact source/run boundaries. This does not close every product acceptance case.
 No entire R1–R20 requirement is marked complete by inference.
 
 The 367 original A cases remain preserved. New S01–S16 cases close gaps found
-by independent demand-versus-acceptance criticism. G01–G04 and W01–W12 specialize the next
+by independent demand-versus-acceptance criticism. G01–G04 and W01–W12 specialize this
 bounded implementation. These are in
-[ACCEPTANCE-EXTENSIONS.md](ACCEPTANCE-EXTENSIONS.md). They are **specified, not
-executed**. The original acceptance file's historical “red” header is not a
+[ACCEPTANCE-EXTENSIONS.md](ACCEPTANCE-EXTENSIONS.md). G01–G04/W01–W12 now have
+first-wave hosted red-to-green evidence and separate manual web inspection.
+Original A and added S cases retain their individual unverified status. The
+original acceptance file's historical “red” header is not a
 captured failing baseline. Full executable mapping and final evidence remain
 required; coverage criticism and structural checks cannot supply runtime proof.
 
@@ -42,7 +44,7 @@ until linked to a concrete test and tested source scope.
 | R7 use proof       | cwd, git -C, open files/handles and live-PID locks require actual per-object methods and fail-closed composition                                    | Platform adapters; unsupported remains unproved          |
 | R8 closed copies   | Copy/store proof for only node_modules and .turbo remains                                                                                           | R7, identity; no gitignore heuristic                     |
 | R9 claimants/move  | Live recorded references, shared classification, same-volume move and reference update remain                                                       | R7, durable ledger and human confirmation                |
-| R10 worktree       | Inventory exists; manual disk readings are the next wave; child-only reclaim later preserves git registration                                       | Registered-path resolution; later R7–R9 effects          |
+| R10 worktree       | Inventory and manual disk readings validated; child-only reclaim later preserves git registration                                       | Registered-path resolution; later R7–R9 effects          |
 | R11 unique         | Current UI says não colapsei; audit every remaining category and aggregate                                                                          | No APFS clone implementation demanded                    |
 | R12 IN/OUT         | Durable generation, requests, six states, arm/revalidate/apply/postconditions and shared counters remain                                            | R7–R11, R13; no agent or aggregate action                |
 | R13 confirmation   | Person-only authority bound to object, generation and verb across every route remains                                                               | Trusted caller boundary and frozen action contracts      |
@@ -63,10 +65,12 @@ visible obligations, even though the earlier five-block summary omitted them.
 
 ## Dispatch decision
 
-**HYBRID, preparation only at this checkpoint.** Four first-wave WPs below
-are specified but not ready for implementation-agent dispatch. Missing hosted
-red baseline, exact anchor code, compilable dependency stubs and final write-set
-approval are named readiness gates, not waivers or completed work.
+**HYBRID, first wave complete.** R0/W1/W2/W3 have reviewed source, unchanged
+acceptance red-to-green evidence and their scoped gates. W3 additionally has
+actual-HTTP rendered inspection and owned preview cleanup. This closes only
+G01–G04/W01–W12, not the entire R1–R20 product. No first-wave dispatch remains.
+The original scheduling/readiness requirements below were satisfied; future
+fronts need their own complete packets (NEXT-SOURCE-INVENTORY.md is input only).
 
 - Lead alone owns shared Schema, Protocol, Server handlers, Client generation,
   page integration and localization edits. Workers must not touch them together.
@@ -88,8 +92,9 @@ approval are named readiness gates, not waivers or completed work.
   manual gates; no enforcement claim is made.
 
 The normative identity and response-order rules are in
-[FIRST-WAVE-CONTRACT.md](FIRST-WAVE-CONTRACT.md). These decisions are fixed for
-preparation; code anchors, migrations, stubs and runtime proof still do not exist.
+[FIRST-WAVE-CONTRACT.md](FIRST-WAVE-CONTRACT.md). These first-wave decisions are
+implemented with anchors, migration, stubs and scoped runtime receipts. They do
+not freeze interfaces for future collectors or effects.
 
 ## WP-R0 — observable registration incarnations
 
@@ -241,9 +246,9 @@ actual composition/regression wiring, generated Client outputs.
 
 ## WP-W3 — Worktrees manual-reading interface
 
-Status: W3-A complete; exact-source hosted red verified (43288085468), runtime
-candidate implemented/reviewed/typechecked; hosted green/rendered inspection pending. See WORKTREE-UI-EXECUTION.md
-and WORKTREE-UI-PREPARATION.md for separate rendered obligations.
+Status: complete; exact-source hosted red-to-green verified (43288085468 →
+43300730127), independent source/manual reviews and package checks passed.
+See worktree-ui-validation.json and WORKTREE-UI-RENDERED.md for separate proof.
 Owner: controller worker and lead-owned component/localization integration.
 Depends on W2 generated API and frozen W1 reading shape. Writes: activity
 inventory/view helpers and tests; page and EN/BR localization integrated by lead.
@@ -271,8 +276,8 @@ Writes: focused activity unit/store tests.
 
 ### Task W3-B — interface implementation and isolated verification
 
-Owner: controller worker plus lead UI integration; state: candidate implemented,
-cold reviewed and typechecked; W2 passed, own green and rendered acceptance pending.
+Owner: controller worker plus lead UI integration; state: complete, cold reviewed,
+typechecked, hosted green and separate actual-HTTP rendered acceptance verified.
 Writes: disjoint activity view files; lead serializes page/localization edits.
 
 - **Axioms:** read-only inventory is registration evidence, not idle/owner evidence; partial observed bytes cannot replace the logical cell (R1/R7/R20).

@@ -101,3 +101,7 @@ backend/frontend/browser/native-host child PIDs gone and ports 57712/57713/60028
 closed. The owned temporary root, databases, password and browser profile were
 removed after artifact preservation. cleanup.json and cleanup-processes.json
 record the bounded custody check. No owner app/server was stopped or restarted.
+
+Final hosted gate 43300730127 subsequently passed the unchanged 31 cases against
+the same App tree. WORKTREE-UI-EXECUTION.md and worktree-ui-validation.json record
+that separate gate and supersede the pending-hosted status above.

@@ -1,0 +1,167 @@
+{
+  "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43300730127",
+  "snapshot": "52084035332936074b50339cac8bba2c52730081",
+  "purpose": "Final exact-source W3 request/store/formatter validation on Linux",
+  "verifiedSourceTrees": {
+    "app": "c42c8963b52c64d7c5b22b9eaa0523ad85c6da1a",
+    "client": "cc7c3fd50fd7cf86c377b257456980917e23db7c",
+    "protocol": "896cd83f929f6af133f030d347c2e06fdbb9b9f5",
+    "schema": "c125baa2144abcb969e3a1440b35413a7ebdf185"
+  },
+  "redBaseline": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288085468",
+  "unchangedAcceptanceAndFixtureSinceRed": true,
+  "redToGreen": 11,
+  "priorPassingOutcomesPreserved": true,
+  "omniControl": "not applicable (focused: no declaring test ran)",
+  "omniSpawns": 0,
+  "delegatedSpawns": 0,
+  "lanes": [
+    {
+      "conditions": "solid",
+      "tests": [
+        {
+          "name": "W12 worktree en labels preserve source, row identity, unique and proof vocabulary",
+          "status": "pass"
+        },
+        {
+          "name": "W12 worktree br labels preserve source, row identity, unique and proof vocabulary",
+          "status": "pass"
+        },
+        {
+          "name": "activity en copy formats measured values and category names",
+          "status": "pass"
+        },
+        {
+          "name": "activity br copy formats measured values and category names",
+          "status": "pass"
+        },
+        {
+          "name": "reading age cancels remote clock offsets and continues while a refresh is failing",
+          "status": "pass"
+        },
+        {
+          "name": "a missing source is unread, never zero",
+          "status": "pass"
+        },
+        {
+          "name": "owner is only the recorded session name",
+          "status": "pass"
+        },
+        {
+          "name": "selecting a session does not fill an empty owner or change the string",
+          "status": "pass"
+        },
+        {
+          "name": "a recorded spawn is the supervisor id, and an empty owner stays empty",
+          "status": "pass"
+        },
+        {
+          "name": "a pid is not the address",
+          "status": "pass"
+        },
+        {
+          "name": "inspection failure is unknown, not unread",
+          "status": "pass"
+        },
+        {
+          "name": "the first sample and machine pressure stay unread",
+          "status": "pass"
+        },
+        {
+          "name": "a filter miss is not an empty machine",
+          "status": "pass"
+        },
+        {
+          "name": "tab names stay the closed English set",
+          "status": "pass"
+        },
+        {
+          "name": "only recorded git worktrees enter the inventory, without inferred owners",
+          "status": "pass"
+        },
+        {
+          "name": "Windows separators deduplicate without conflating distinct POSIX filenames",
+          "status": "pass"
+        },
+        {
+          "name": "filter searches project and full path while preserving recorded facts",
+          "status": "pass"
+        }
+      ],
+      "expects": 109,
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "conditions": "browser",
+      "tests": [
+        {
+          "name": "W09 manual requests use owned signals, coalesce, and admit only known row IDs",
+          "status": "pass"
+        },
+        {
+          "name": "W09 late inventory success and failure cannot regress newer full readings or their age anchor",
+          "status": "pass"
+        },
+        {
+          "name": "W09 concurrent full snapshots retain cumulative rows and compare decimal revisions exactly",
+          "status": "pass"
+        },
+        {
+          "name": "W09 lifetime mismatch hides retired data, aborts old requests, and establishes only one fresh handshake",
+          "status": "pass"
+        },
+        {
+          "name": "W09 failed replacement handshake remains explicit and a deliberate refresh retries",
+          "status": "pass"
+        },
+        {
+          "name": "W09 disposal aborts pending GET and POST and ignores transport outcomes that disregard abort",
+          "status": "pass"
+        },
+        {
+          "name": "W12 row failures stay per target, retries coalesce, and current failures retain facts and timestamps",
+          "status": "pass"
+        },
+        {
+          "name": "W10 unread, complete zero and partial readings retain separate monotonic ages and named source",
+          "status": "pass"
+        },
+        {
+          "name": "W10 missing and noncanonical wire revisions fail without replacing a successful inventory",
+          "status": "pass"
+        },
+        {
+          "name": "W11 filtering preserves opaque cross-project rows, blank owners and registered facts",
+          "status": "pass"
+        },
+        {
+          "name": "W12 retired same-ID completions cannot settle a replacement row's busy or failed action",
+          "status": "pass"
+        },
+        {
+          "name": "the first snapshot leaves missing CPU unread and preserves other UI state",
+          "status": "pass"
+        },
+        {
+          "name": "refreshing one instance preserves record identity and removes absent readings",
+          "status": "pass"
+        },
+        {
+          "name": "a new instance discards old CPU and record identity even when record ids are reused",
+          "status": "pass"
+        }
+      ],
+      "expects": 199,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "separateRenderedReceipt": "WORKTREE-UI-RENDERED.md",
+  "limitations": [
+    "Controller tests exercise production requests and Solid stores with deferred transport; not actual HTTP or DOM mounting",
+    "Actual HTTP web observations are recorded separately; neither gate proves packaged Electron or new native behavior"
+  ]
+}
