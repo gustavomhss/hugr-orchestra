@@ -376,7 +376,12 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43319261692",
           "source": "2b56c6cc9f0eb70eb96653bdd80d48fb441500da",
           "snapshot": "473bd697b5bec75f768561b4a301e25986453e5c",
-          "result": "Five complete Core files:104pass/0fail/430assertions per OS, including21new acceptance cases. Eleven actual hosted blobs equal frozen source and integrated Root. Core type0; only undefined inherits, every string including default and empty is literal. No API/schema/dependency/generated changes. Root Server aggregate type and guards pending at this entry."
+          "result": "Five complete Core files:104pass/0fail/430assertions per OS, including21new acceptance cases. Eleven actual hosted blobs equal frozen source and integrated Root. Core type0; only undefined inherits, every string including default and empty is literal. No API/schema/dependency/generated changes. Root aggregate Server bun typecheck0. Root guards78rules390paths0gates0errors/one existing advisory; boundaries5639files5297edges92existing0new0stale, spawn4021files66allowed; all exit0. Entire integrated Core git tree equals the independently typed/tested unit (3fcfd93c349a7e80e1255e88deb26bc6fc1a6fc4)."
+        },
+        {
+          "kind": "consumer_correction_static_approved_pending_runtime",
+          "source": "a678f8e108abbb4c8711e7725f06b83841333ff4",
+          "result": "Root and independent cold critic read all22 correction paths and approve.132consumer/safety cases (94original+38new) plus34unchanged E1 and existing owner/delivery/roster/Sync regressions frozen. Base ACK/item raw identity, scoped semantic context, DirSDK last-ref lifetime and empty-string semantics corrected. Four package types now authorized serially; official A/B/C gates conditional on types, no AFTER yet. No consumer runtime GREEN claimed."
         }
       ],
       "remaining": "Core/host/API and literal variant identity are integrated and verified in scoped hosted gates. Consumer correction freeze/cold review, Client/SessionUI/App/TUI types, full consumer/E1/owner regressions and production AFTER benchmark remain required. Whole E6 stays open. Historical stored default strings are preserved literally; ambiguous old aliases are not rewritten."
@@ -2691,6 +2696,11 @@
           "source": "ecdb6bb8ffb299fb40acaab89bd25608783c81ad",
           "snapshot": "17867ef69b42341096173365d3d0a424c4750787",
           "result": "Six controls pass per OS on actual Node24.22.2/SQLite3.53.4: reopen, Basic/location, manual307/308, real response-body abort/socket closure, valid exact128MiB detail. No manager import. Full102Node acceptance (6controls+96future) and3Core bridges cold-reviewed; future96 and bridges not yet run. Desktop package type0 excludes test harness. Root source-only GO after frozen contract; no compiler/CI GO yet."
+        },
+        {
+          "kind": "manager_acceptance_three_edge_cases_cold_approved",
+          "source": "f00d794f514e7e1e8824219a82b9a8b962884df5",
+          "result": "Three new real SQLite/HTTP cases preserve original102 byte-for-byte: Finish paused8 does not restart budget, recovered closed paused/blocked does not auto-send, seal after append latch releases producer without durable seal until retained retry+Finish. Root and independent cold critic approve. Now105Node=6controls+99future,3Core bridges; no future runtime yet. Recovery close-intent interrupted remains eligible under original single-instance contract; no13fixture rewrite."
         }
       ],
       "remaining": "Private store verified/integrated. Manager implementation now authorized against frozen private API and cold-reviewed acceptance, without changing legacy client/Senses/Main/IPC/UI yet. Original3 failures and production capture/target/quit wiring remain open; controls do not prove manager behavior."
