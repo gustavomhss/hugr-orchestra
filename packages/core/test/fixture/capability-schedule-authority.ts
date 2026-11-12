@@ -28,6 +28,8 @@ import { ScheduledTaskRunTable, ScheduledTaskTable } from "@orchestra/core/sched
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
+import { InboxHandoff } from "@orchestra/core/inbox/handoff"
+import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ExecutionHost } from "@orchestra/core/session/runner"
@@ -39,6 +41,8 @@ import { Snapshot } from "@orchestra/core/snapshot"
 import { SystemContext } from "@orchestra/core/system-context"
 import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
+import { TaskTool } from "@orchestra/core/tool/task"
+import { TeamMessageTool } from "@orchestra/core/tool/team-message"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetyProfile } from "@orchestra/core/tool-safety-profile"
@@ -219,6 +223,10 @@ export function make() {
       [Location.node, Location.boundNode(ref)], [LocationServiceMap.node, locations],
       [SessionExecution.node, SessionExecutionLocal.node], [ToolRegistry.node, registry],
       [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
+      // This focused host does not expose the separate Task/handoff tool fleet; none is part of the H8 path.
+      [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty],
+      [MeetingHandoff.node, Layer.succeed(MeetingHandoff.Service, { handoff: () => Effect.die("No meeting handoff in the H8 focused host") })],
+      [InboxHandoff.node, Layer.succeed(InboxHandoff.Service, { handoff: () => Effect.die("No inbox handoff in the H8 focused host") })],
       [Global.node, Global.layerWith({ data, home: join(tmp.path, "home"), tmp: join(tmp.path, "tmp") })],
       [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed([]) }))],
       [Snapshot.node, Snapshot.noopLayer],
