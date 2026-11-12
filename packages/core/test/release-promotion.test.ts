@@ -393,7 +393,7 @@ linux(
     const fixture = await releaseFixture(join(tmp.path, "remote-digest"))
     const state = await fixture.read()
     const before = structuredClone(state.releases["desktop-latest"].assets)
-    state.badDigest = { tag: "desktop-latest", name: "latest.yml" }
+    state.badDigest = { tag: "desktop-latest", name: "latest.yml", afterUpload: true }
     const source = await readFile(join(fixture.source, "feed/latest.yml"), "utf8")
     await fixture.save(state)
     expect((await fixture.promote()).exitCode).not.toBe(0)

@@ -20,7 +20,7 @@ export type State = {
   log: { operation: string; mutation: boolean; args: string[] }[]
   fault?: { operation: string; remaining: number; status?: number }
   hold?: string
-  badDigest?: { tag: string; name: string }
+  badDigest?: { tag: string; name: string; afterUpload?: boolean }
 }
 export type Step = { name: string; run?: string; uses?: string; if?: string; env?: Record<string, string> }
 export type Workflow = {

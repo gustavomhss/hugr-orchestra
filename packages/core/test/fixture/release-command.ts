@@ -102,7 +102,10 @@ const metadata = (release: Release) => ({
     name: file.name,
     size: file.size,
     digest:
-      state.badDigest?.tag === release.tag_name && state.badDigest.name === file.name
+      state.badDigest?.tag === release.tag_name &&
+      state.badDigest.name === file.name &&
+      (!state.badDigest.afterUpload ||
+        state.log.some((entry) => entry.operation === `asset.upload:${release.tag_name}/${file.name}`))
         ? `sha256:${"0".repeat(64)}`
         : file.digest,
     browser_download_url: `https://github.com/${state.repository}/releases/download/${release.tag_name}/${file.name}`,
