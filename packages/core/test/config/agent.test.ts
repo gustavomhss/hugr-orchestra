@@ -12,6 +12,7 @@ import { Location } from "@orchestra/core/location"
 import { Global } from "@orchestra/core/global"
 import { Project } from "@orchestra/core/project"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { ConfigUpgrade } from "@orchestra/core/config/upgrade/upgrade"
 import { tmpdir } from "../fixture/tmpdir"
@@ -74,7 +75,7 @@ describe("ConfigAgentPlugin.Plugin", () => {
           expect(PermissionV2.evaluate("bash", "anything", agent.permissions).effect).toBe(approved ? "allow" : "deny")
           expect(PermissionV2.evaluate("edit", "anything", agent.permissions).effect).toBe(approved ? "allow" : "ask")
           expect(PermissionV2.evaluate("read", "anything", agent.permissions).effect).toBe(approved ? "allow" : "deny")
-          expect(agent.model?.providerID).toBe(approved ? "other" : "safe")
+          expect(agent.model?.providerID).toBe(ProviderV2.ID.make(approved ? "other" : "safe"))
           expect(agent.request.headers).toEqual(approved ? { authorization: "other" } : {})
           expect(agent.request.body).toEqual(approved ? { baseURL: "https://other.test" } : {})
           expect(agent.engine).toBe(approved ? "claude-code" : undefined)
