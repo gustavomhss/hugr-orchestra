@@ -341,6 +341,7 @@
     "./review-toolkit/noise": "./src/review-toolkit/noise.ts",
     "./review-toolkit/osv-refresh": "./src/review-toolkit/osv-refresh.ts",
     "./review-toolkit/probe": "./src/review-toolkit/probe.ts",
+    "./review-toolkit/release-evidence": "./src/review-toolkit/release-evidence.ts",
     "./review-toolkit/sarif": "./src/review-toolkit/sarif.ts",
     "./review-toolkit/scratch-copy": "./src/review-toolkit/scratch-copy.ts",
     "./review/catalog": "./src/review/catalog/index.ts",
