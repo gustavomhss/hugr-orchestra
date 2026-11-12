@@ -379,6 +379,7 @@ test("L11 receipts: receipt-only duplicates retain first sorted event while dist
   const chosen = MemoryDecisionReceipts.object(MemoryDecisionReceipts.receipt(f.repo, receipts[0]!).indexed)
   const memory = harness.api.createDurableMemory(f.repo).read()
   expect(memory.log.size).toBe(1)
+  if (typeof chosen.sequence !== "number") throw new Error("Expected actual receipt sequence")
   expect([...memory.log.values()][0]?.seq).toBe(chosen.sequence)
   const next = propose(f, { rule: "another actual rule", scope: "lib" })
   decide(f, next)
