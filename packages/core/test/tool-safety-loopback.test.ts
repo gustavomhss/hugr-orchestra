@@ -37,24 +37,26 @@ const listen = (host = "127.0.0.1", port = 0) => Effect.acquireRelease(
     const sockets = new Set<Socket>()
     const server = createServer((socket) => {
       sockets.add(socket)
+      socket.unref()
       socket.on("close", () => sockets.delete(socket))
       socket.end(host)
     })
     accepted.set(server, sockets)
     server.once("error", reject)
-    server.listen({ host, port, ipv6Only: true }, () => resolve(server))
-  })),
-  // A timed-out client leaves the accepted socket open. close() then never returns, and the file
-  // holds the step until the 8-minute timeout (run 43225486925).
-  (server) => Effect.promise(() => new Promise<void>((resolve) => {
-    const done = () => resolve()
-    const timer = setTimeout(done, 1000)
-    for (const socket of accepted.get(server) ?? []) socket.destroy()
-    server.close(() => {
-      clearTimeout(timer)
-      done()
+    server.listen({ host, port, ipv6Only: true }, () => {
+      server.unref()
+      resolve(server)
     })
   })),
+  // close() on a timed-out client deadlocks the Windows thread, so a timer never fires and the file
+  // holds the step (runs 43225486925 and 43232120353). Drop the handles. Do not wait for close.
+  (server) => Effect.sync(() => {
+    server.unref()
+    for (const socket of accepted.get(server) ?? []) {
+      socket.unref()
+      socket.destroy()
+    }
+  }),
 )
 
 it.live("host service grants keep generic TCP and bind denied; Darwin supplies an exact Unix route, Linux never falls back", () =>
