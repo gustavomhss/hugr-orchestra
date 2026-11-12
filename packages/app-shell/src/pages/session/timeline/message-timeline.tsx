@@ -419,7 +419,10 @@ export function MessageTimeline(props: {
 
   let overscanFrame: number | undefined
   onMount(() => {
-    if (timelineRows().length === 0 && sessionMessages().length === 0) reportInitialContent()
+    createEffect(() => {
+      // Reverting the first user message can leave loaded history with no visible rows.
+      if (timelineRows().length === 0) reportInitialContent()
+    })
     overscanFrame = requestAnimationFrame(() => {
       if (props.shouldAnchorBottom()) virtualizer.scrollToEnd()
       overscanFrame = requestAnimationFrame(() => {
