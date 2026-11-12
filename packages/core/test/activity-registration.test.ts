@@ -1,6 +1,4 @@
 import { expect, test } from "bun:test"
-import fs from "node:fs/promises"
-import os from "node:os"
 import path from "node:path"
 import { SqliteClient } from "@effect/sql-sqlite-bun"
 import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
@@ -16,6 +14,7 @@ import { ProjectDirectories } from "@orchestra/core/project/directories"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { migrations } from "../src/database/migration.gen"
+import { tmpdir } from "./fixture/tmpdir"
 
 const makeDb = EffectDrizzleSqlite.makeWithDefaults()
 const projectID = Project.ID.make("activity-registration")
@@ -42,11 +41,11 @@ function registry<A, E>(
 }
 
 async function fixture() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "activity-registration-"))
+  const root = await tmpdir()
   return {
-    filename: path.join(root, "registry.sqlite"),
+    filename: path.join(root.path, "registry.sqlite"),
     async [Symbol.asyncDispose]() {
-      await fs.rm(root, { recursive: true, force: true })
+      await root[Symbol.asyncDispose]()
     },
   }
 }

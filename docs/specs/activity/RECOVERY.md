@@ -9,7 +9,10 @@ intended failures per OS; Omni controls pass with 52 real spawns each), followed
 by an implemented persisted registrationID producer, internal reads and a
 data-preserving migration. Generation/check, final Core typecheck, formatting,
 diff checks and independent source/precision reviews passed. The same hosted
-pack for green is awaiting shared runner capacity; R0 is not complete yet.
+pack passed 22 tests on Linux; Windows passed 21 and failed G04's temporary
+fixture disposal with EBUSY. The test now reuses the repository's bounded EBUSY
+cleanup helper; review and final typecheck passed. The corrected same-pack retry
+is awaiting shared runner capacity; R0 is not complete yet.
 Guardrails have zero gates and one reviewed rebuild-ignore warning. No owner
 database was migrated and no running app/server was restarted. Exact source,
 oracle strengthening, comment-only snapshot boundary and pending green receipt

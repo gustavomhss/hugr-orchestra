@@ -107,10 +107,25 @@ warning: migration-destructive permits an ignore on the rebuild's DROP line;
 the source copies every old field first in the transaction, and the independent
 reviewer confirmed that reason. No rule/approval label was changed.
 
-The authoritative green request uses the same three-file pack on Linux/Windows:
-`/tmp/activity-registration-green-sealed-ci.log` and matching `.exit` receipt.
-It is awaiting shared runner capacity. A superseded green uploader stopped
-before creating a CI branch when the precision oracle was strengthened. The
-only post-snapshot Core change is the reviewed guardrail rationale comment.
-No hosted-green or completed R0/whole-product claim is made yet. Local product
-tests, owner database migration and owner app/server restart remain prohibited.
+The first implementation run,
+[43205125191](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205125191),
+passed all 22 tests on Linux. Windows passed 21 and failed G04 during fixture
+disposal with EBUSY, after reaching the temporary-directory cleanup. Both Omni
+controls passed with 79 actual spawns and zero delegated spawns. This is a
+failed overall gate, not a cross-platform pass.
+
+The SQLite layer really closes its connection through its scope finalizer.
+The test now uses the repository's existing tmpdir fixture, which retries only
+EBUSY with bounded GC/backoff and still throws for other errors or a persistent
+lock. No assertion, test timeout, shared helper or production code changed in
+this cleanup correction. Independent review approved it; final Core typecheck
+passed (`/tmp/activity-registration-cleanup-typecheck.exit`, 0).
+
+The authoritative retry uses the same three-file pack on Linux/Windows:
+`/tmp/activity-registration-green-cleanup-ci.log` and matching `.exit` receipt.
+It is awaiting shared runner capacity. An earlier uploader stopped before
+creating a CI branch when the precision oracle was strengthened. The first
+implementation snapshot predates only the reviewed guardrail comment; the new
+retry includes that comment and the cleanup correction. No completed R0 or
+whole-product claim is made yet. Local product tests, owner database migration
+and owner app/server restart remain prohibited.
