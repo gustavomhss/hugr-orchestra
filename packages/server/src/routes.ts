@@ -1,3 +1,6 @@
+export type { HttpExtension } from "./http-extensions"
+import type { HttpExtension } from "./http-extensions"
+import { httpExtensionsLayer } from "./http-extensions"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
@@ -82,6 +85,7 @@ const applicationServices = LayerNode.group([
 ])
 
 export interface Options {
+  readonly httpExtensions?: readonly HttpExtension[]
   readonly password?: string
   /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */
   readonly host?: ReadonlyArray<Host.Contribution>
@@ -106,7 +110,7 @@ export function createRoutes(options: Options = {}) {
   )
 }
 
-export function createEmbeddedRoutes(options: Pick<Options, "host" | "operator" | "verifier" | "allowedHosts"> = {}) {
+export function createEmbeddedRoutes(options: Pick<Options, "host" | "operator" | "verifier" | "allowedHosts" | "httpExtensions"> = {}) {
   return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), options)
 }
 
@@ -143,7 +147,7 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(corsLayer({ cors: options.cors })),
     Layer.provide(BodyLimit.layer),
   )
-  return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty).pipe(
+  return Layer.mergeAll(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty, httpExtensionsLayer(options.httpExtensions ?? [])).pipe(
     Layer.provide(hostPolicyLayer(options.allowedHosts)),
   )
 }

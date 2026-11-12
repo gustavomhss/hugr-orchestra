@@ -6,14 +6,14 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { SessionV2 } from "@orchestra/core/session"
-import { Context, Layer, Option } from "effect"
-import * as Effect from "effect/Effect"
+import { Context, Effect, Layer, Option } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { createServer } from "node:http"
 import { writeSync } from "node:fs"
 import path from "node:path"
 import { WebUi } from "@orchestra/server/web-ui"
 import { createRoutes } from "@orchestra/server/routes"
+import type { HttpExtension } from "@orchestra/server/routes"
 import { AppDockSocket } from "@orchestra/app-dock/socket-transport"
 import { Commands } from "../commands"
 import { ProductHost } from "../../host"
@@ -33,6 +33,7 @@ export default Runtime.handler(Commands.commands.serve, (input) =>
 export type ServeInput = {
   readonly hostname: string
   readonly port: Option.Option<number>
+  readonly installation?: Option.Option<string>
   readonly register: boolean
   readonly cors?: ReadonlyArray<string>
   readonly allowedHosts?: ReadonlyArray<string>
@@ -76,44 +77,72 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
             process.exit()
           }),
         )
-        const daemon = yield* Daemon.Service
-        // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
-        const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
-        // The password is captured: drop it from the environment so no child (stdio MCP server, LSP, PTY, omni) inherits it.
-        // The server authenticates from the value passed to createRoutes, never from env.
-        delete process.env.ORCHESTRA_SERVER_PASSWORD
-        delete process.env.ORCHESTRA_SERVER_USERNAME
-        const root = yield* Effect.promise(() => webRoot())
-        // Legacy transcripts on this database are copied to V2 before the server answers: a Session is eligible only
-        // while it has no V2 message, so a prompt reaching an old Session first would skip its history forever.
-        yield* Effect.gen(function* () {
-          const database = yield* Database.Service
-          const imported = yield* SessionV2.SessionLegacyImport.run(database.db)
-          if (imported > 0) console.log(`imported ${imported} legacy session transcripts`)
-        }).pipe(
-          Effect.provide(AppNodeBuilder.build(LayerNode.group([Database.node]))),
-          Effect.catchCause((cause) => Effect.logError("legacy session import failed", cause)),
-        )
-        const allowedHosts = listenerHosts(input.hostname, input.allowedHosts)
-        const listening = yield* listen(input.hostname, input.port, password, hosts(), root, allowedHosts, input.cors)
-        const address = listening.address
-        // Closing the server waits for every open connection, and the event stream never ends on its own. Scope
-        // finalizers run in reverse, so this drops the connections before the server closes.
-        yield* Effect.addFinalizer(() => Effect.sync(() => listening.server.closeAllConnections?.()))
-        if (input.register) yield* daemon.register(address)
-        console.log(`server listening on ${HttpServer.formatAddress(address)}`)
-        if (input.onListening) yield* input.onListening(address, root)
-        return yield* ServeShutdown.untilSignal(process, process.platform, (signal) => {
-          if (shutdown.signal) return
-          shutdown.signal = signal
-          shutdown.startedAt = Date.now()
-          process.exitCode = ServeShutdown.exitCode(signal)
-          note("started")
-          setTimeout(() => process.exit(), SHUTDOWN_GRACE_MS).unref()
-        })
+        return yield* withInstallation(input, (httpExtensions) => Effect.gen(function* () {
+          const daemon = yield* Daemon.Service
+          // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
+          const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
+          // The password is captured: drop it from the environment so no child (stdio MCP server, LSP, PTY, omni) inherits it.
+          // The server authenticates from the value passed to createRoutes, never from env.
+          delete process.env.ORCHESTRA_SERVER_PASSWORD
+          delete process.env.ORCHESTRA_SERVER_USERNAME
+          const root = yield* Effect.promise(() => webRoot())
+          // Legacy transcripts on this database are copied to V2 before the server answers: a Session is eligible only
+          // while it has no V2 message, so a prompt reaching an old Session first would skip its history forever.
+          yield* Effect.gen(function* () {
+            const database = yield* Database.Service
+            const imported = yield* SessionV2.SessionLegacyImport.run(database.db)
+            if (imported > 0) console.log(`imported ${imported} legacy session transcripts`)
+          }).pipe(
+            Effect.provide(AppNodeBuilder.build(LayerNode.group([Database.node]))),
+            Effect.catchCause((cause) => Effect.logError("legacy session import failed", cause)),
+          )
+          const allowedHosts = listenerHosts(input.hostname, input.allowedHosts)
+          const listening = yield* listen(input.hostname, input.port, password, hosts(), root, allowedHosts, input.cors, httpExtensions)
+          const address = listening.address
+          // Closing the server waits for every open connection, and the event stream never ends on its own. Scope
+          // finalizers run in reverse, so this drops the connections before the server closes.
+          yield* Effect.addFinalizer(() => Effect.sync(() => listening.server.closeAllConnections?.()))
+          if (input.register) yield* daemon.register(address)
+          console.log(`server listening on ${HttpServer.formatAddress(address)}`)
+          if (input.onListening) yield* input.onListening(address, root)
+          return yield* ServeShutdown.untilSignal(process, process.platform, (signal) => {
+            if (shutdown.signal) return
+            shutdown.signal = signal
+            shutdown.startedAt = Date.now()
+            process.exitCode = ServeShutdown.exitCode(signal)
+            note("started")
+            setTimeout(() => process.exit(), SHUTDOWN_GRACE_MS).unref()
+          })
+        }))
       }),
     )
 })
+
+/** Own installation acquisition and cleanup around the server startup and lifetime. */
+export function withInstallation<A, E, R>(
+  input: ServeInput,
+  start: (extensions: readonly HttpExtension[] | undefined) => Effect.Effect<A, E, R>,
+) {
+  return Effect.scoped(Effect.gen(function* () {
+    if (!input.installation || Option.isNone(input.installation)) return yield* start(undefined)
+    if (!["127.0.0.1", "localhost", "::1"].includes(input.hostname)) {
+      return yield* Effect.fail(new Error("Installation requires a loopback hostname (127.0.0.1, localhost or ::1)"))
+    }
+    if (Option.isNone(input.port) || !Number.isInteger(input.port.value) || input.port.value < 1 || input.port.value > 65_535) {
+      return yield* Effect.fail(new Error("Installation requires an explicit port from 1 to 65535"))
+    }
+    const { InstallationHttp } = yield* Effect.promise(() => import("../../services/installation-http"))
+    const origin = `http://${input.hostname === "::1" ? "[::1]" : input.hostname}:${input.port.value}`
+    const loaded = yield* Effect.acquireRelease(
+      InstallationHttp.load(input.installation.value, { origin }),
+      (installation) => Effect.tryPromise({
+        try: () => installation.dispose(),
+        catch: () => new Error("Installation cleanup failed"),
+      }).pipe(Effect.catch(() => Effect.logError("Installation cleanup failed"))),
+    )
+    return yield* start([loaded])
+  }))
+}
 
 function listen(
   hostname: string,
@@ -123,10 +152,11 @@ function listen(
   root: string | undefined,
   allowedHosts: ReadonlyArray<string>,
   cors?: ReadonlyArray<string>,
+  httpExtensions?: readonly HttpExtension[],
 ) {
-  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, allowedHosts, cors)
+  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, allowedHosts, cors, httpExtensions)
   const next = (port: number): ReturnType<typeof bind> =>
-    bind(hostname, port, password, host, root, allowedHosts, cors).pipe(
+    bind(hostname, port, password, host, root, allowedHosts, cors, httpExtensions).pipe(
       Effect.catch((error) => (port === 65_535 || !addressInUse(error) ? Effect.fail(error) : next(port + 1))),
     )
   return next(4096)
@@ -140,10 +170,11 @@ function bind(
   root: string | undefined,
   allowedHosts: ReadonlyArray<string>,
   cors?: ReadonlyArray<string>,
+  httpExtensions?: readonly HttpExtension[],
 ) {
   const server = createServer()
   return Layer.build(
-    HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts }), {
+    HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts, httpExtensions }), {
       disableListenLog: true,
       disableLogger: true,
     }).pipe(
