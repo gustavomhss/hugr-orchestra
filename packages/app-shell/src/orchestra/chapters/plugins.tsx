@@ -53,7 +53,7 @@ export default function PluginsPage(props: ChapterPageProps) {
   const [attempt, setAttempt] = createSignal(0)
   createEffect(() => {
     attempt()
-    if (store().loading()) return
+    if (store().loading() || store().failed()) return
     const input = {
       location: { directory: directory() },
       behaviors: behaviorInstructions(store().behaviors()),
@@ -161,6 +161,11 @@ export default function PluginsPage(props: ChapterPageProps) {
           <div class="mx-empty" role="status">
             {language.t("orchestra.plugins.loading")}
           </div>
+        </Match>
+        <Match when={store().failed()}>
+          <p class="mx-error" role="alert">
+            {language.t("common.requestFailed")}
+          </p>
         </Match>
         <Match when={!store().behaviors().length}>
           <div class="mx-empty">
