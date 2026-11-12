@@ -1,5 +1,9 @@
 # Adversarial planning corrections
 
+The initial planning receipts below are historical. The continuation receipt at
+the end records later implementation/test reviews and supersedes their old
+readiness/count statements; PLAN.md and RECOVERY.md own current status.
+
 Reviewed input: `d89a662b4ba4eff96367cea5a78b5f672b077f60`.
 Scope: the plan, acceptance oracles and dispatch inputs. Runtime code remains
 unchanged. These fixes do not claim the future registry/UI implementation exists.
@@ -48,3 +52,30 @@ manual, not mechanical.
 Implementation readiness remains false: exact anchor code, compilable stubs,
 executable tests, hosted red baselines and final write-set approval are still
 required. No owner database/schema migration or running-app restart occurred.
+
+## Implementation continuation review — 2026-11-12
+
+An independent cold cross-layer adversarial review at
+b8ec973feb8b20b28e461b434d7f21dbfc095f8e inspected the actual persisted registry
+source, Core serialized validation/state, canonical Schema/Protocol seam and
+HTTP composition. It returned APPROVE with no concrete P1/P2 counterexample in
+that bounded source scope. The reviewer checked unobserved incarnation changes,
+fresh pre/post queries, immutable cumulative snapshots, capacity/failure recovery,
+opaque-ID/authenticated targeting and sanitized errors. This is source review,
+not hosted W2 green or an endorsement of unimplemented UI/actions/collectors.
+
+W3 acceptance reviews separately found vacuous lifetime-reset assertions and
+a missing same-ID stale-completion case. The tests now establish a complete
+attempt and failed row before replacement, then prove both clear; another case
+holds a replacement action busy/failed while retired completions arrive. Copy
+assertions now explicitly verify entry count, gap count and age in both locales.
+The separate rendered steps include zero versus unread partial and empty/filter/
+failure/owner distinctions. Both disjoint coverage scopes received two fresh
+consecutive clean reviews; independent quality review approved each bounded unit.
+
+Current structure is four WPs/nine tasks, all with six required fields, and 399
+unique acceptance rows. R0 and W1 alone are complete. W2's reviewed implementation
+awaits its unchanged hosted green; W3's unavailable anchors await hosted red.
+Guardrails have zero gates and one existing reviewed R0 warning. No local product
+test, owner app/server restart or owner database migration occurred. Relay remains
+manual because its stop hook is unconfigured.
