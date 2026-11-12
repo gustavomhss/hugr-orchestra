@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "bun:test"
 import { Effect } from "effect"
-import { ChildProcessSpawner } from "effect/unstable/process"
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { access, mkdtemp, mkdir, writeFile, readFile, symlink, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -123,10 +123,54 @@ test("ownership is checked again before removal; symlinked versions cannot claim
 test("npm platform descriptors retain npm detection with the owning global prefix, including nested dependencies", async () => {
   for (const nested of [false, true]) {
     const prefix = await mkdtemp(path.join(home, "npm-prefix-"))
-    const scope = path.join(prefix, "lib", "node_modules", "@humanguardrail")
+    const scope = path.join(prefix, ...(process.platform === "win32" ? [] : ["lib"]), "node_modules", "@humanguardrail")
     await mkdir(path.join(scope, "cli"), { recursive: true })
     await writeFile(path.join(scope, "cli", "package.json"), JSON.stringify({ name: "@humanguardrail/cli", version: "1.2.3" }))
     const root = path.join(nested ? path.join(scope, "cli", "node_modules", "@humanguardrail") : scope, "cli-linux-x64")
     expect(await installationMethod(await payload(root))).toEqual({ method: "npm", prefix })
+  }
+})
+
+
+test.skipIf(process.platform === "win32")("local npm cannot uninstall a separate global installation under the same project prefix", async () => {
+  for (const nested of [false, true]) {
+    const project = await mkdtemp(path.join(home, "npm-project-"))
+    const scope = path.join(project, "node_modules", "@humanguardrail")
+    const localOwner = path.join(scope, "cli")
+    const globalOwner = path.join(project, "lib", "node_modules", "@humanguardrail", "cli")
+    for (const owner of [localOwner, globalOwner]) {
+      await mkdir(owner, { recursive: true })
+      await writeFile(path.join(owner, "package.json"), JSON.stringify({ name: "@humanguardrail/cli", version: "1.2.3" }))
+    }
+    await writeFile(path.join(globalOwner, "bystander"), "separate global install")
+    const root = path.join(nested ? path.join(localOwner, "node_modules", "@humanguardrail") : scope, "cli-linux-x64")
+    const executable = await payload(root)
+    await expect(installationMethod(executable)).rejects.toThrow("Cannot safely identify")
+    await expect(run(uninstall(input, executable))).rejects.toThrow("Cannot safely identify")
+    expect(await exists(executable)).toBe(true)
+    expect(await readFile(path.join(globalOwner, "bystander"), "utf8")).toBe("separate global install")
+  }
+})
+
+test("global npm handler scopes its command to the verified owner, including a Windows prefix named lib", async () => {
+  for (const nested of [false, true]) {
+    const prefix = path.join(await mkdtemp(path.join(home, "global-npm-")), "lib")
+    const scope = path.join(prefix, ...(process.platform === "win32" ? [] : ["lib"]), "node_modules", "@humanguardrail")
+    const owner = path.join(scope, "cli")
+    await mkdir(owner, { recursive: true })
+    await writeFile(path.join(owner, "package.json"), JSON.stringify({ name: "@humanguardrail/cli", version: "1.2.3" }))
+    const root = path.join(nested ? path.join(owner, "node_modules", "@humanguardrail") : scope, "cli-linux-x64")
+    const executable = await payload(root)
+    expect(await installationMethod(executable)).toEqual({ method: "npm", prefix })
+    const commands: string[][] = []
+    const recorder = ChildProcessSpawner.make((command) => {
+      if (ChildProcess.isStandardCommand(command)) commands.push([command.command, ...command.args])
+      return Effect.die("Command captured; never execute npm")
+    })
+    await expect(uninstall(input, executable).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recorder), Effect.runPromise,
+    )).rejects.toThrow("Command captured")
+    expect(commands).toEqual([["npm", "uninstall", "-g", "--prefix", prefix, "@humanguardrail/cli"]])
+    expect(await exists(executable)).toBe(true)
   }
 })

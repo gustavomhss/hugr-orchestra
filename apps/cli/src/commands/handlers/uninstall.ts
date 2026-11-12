@@ -50,6 +50,9 @@ export const uninstall = Effect.fn("cli.uninstall")(function* (
   }
 
   if (installation.method === "npm") {
+    const current = yield* Effect.tryPromise(() => installationMethod(executable))
+    if (current.method !== "npm" || current.prefix !== installation.prefix)
+      return yield* Effect.fail(new Error("Installation ownership changed; no npm package was removed"))
     const result = yield* Spawn.run(["npm", "uninstall", "-g", "--prefix", installation.prefix, "@humanguardrail/cli"], { extendEnv: true })
     if (result.exitCode !== 0) {
       process.stderr.write(
@@ -131,10 +134,15 @@ export async function installationMethod(exec = process.execPath): Promise<Insta
     const owner = await Bun.file(path.join(ownerRoot, "package.json")).json().catch(() => null)
     const globalModules = ownerRoot === nestedOwner ? path.dirname(path.dirname(ownerRoot)) : modules
     const parent = path.dirname(globalModules)
-    if (owner?.name === "@humanguardrail/cli" && owner.version === metadata.version &&
+    // npm -g uses <prefix>/lib/node_modules on POSIX and <prefix>/node_modules
+    // on Windows. A local POSIX node_modules must never claim the global tree.
+    const prefix = process.platform === "win32" ? parent : path.basename(parent) === "lib" ? path.dirname(parent) : null
+    const removalRoot = prefix === null ? null
+      : path.join(prefix, ...(process.platform === "win32" ? [] : ["lib"]), "node_modules", "@humanguardrail", "cli")
+    if (prefix !== null && removalRoot === ownerRoot && owner?.name === "@humanguardrail/cli" && owner.version === metadata.version &&
         path.basename(payload) === `cli-${descriptor.target}` && path.basename(globalModules) === "node_modules" &&
-        await realpath(modules) === modules && await realpath(ownerRoot) === ownerRoot) {
-      return { method: "npm", prefix: path.basename(parent) === "lib" ? path.dirname(parent) : parent }
+        await realpath(modules) === modules && await realpath(removalRoot) === ownerRoot) {
+      return { method: "npm", prefix }
     }
   }
 
