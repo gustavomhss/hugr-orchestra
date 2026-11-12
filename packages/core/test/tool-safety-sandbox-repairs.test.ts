@@ -295,7 +295,9 @@ function replacementErrorCode(error: unknown) {
   try {
     if (error !== null && typeof error === "object" && "code" in error && typeof error.code === "string")
       return error.code.slice(0, 64)
-  } catch {}
+  } catch {
+    // A diagnostic getter failure uses unknown and must not replace the original Effect failure.
+  }
   return "unknown"
 }
 
@@ -349,8 +351,12 @@ function retainReplacementFailure<A, E, R>(effect: Effect.Effect<A, E, R>, state
         current: { owned: snapshot(state.owned), moved: snapshot(state.moved) },
       } })
       message = Buffer.byteLength(report) <= 4096 ? report : '{"sandboxReplacement":{"report":"size_limit"}}'
-    } catch {}
-    try { sink(message) } catch {} // Reporting must never replace the original Effect failure.
+    } catch {
+      // Keep the bounded fallback if diagnostic formatting fails; preserve the original Effect failure.
+    }
+    try { sink(message) } catch {
+      // A diagnostic sink failure must never replace the original Effect failure.
+    }
   }) : Effect.void))
 }
 
