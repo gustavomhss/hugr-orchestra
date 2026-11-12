@@ -43,6 +43,7 @@ import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TeamMessageTool } from "@orchestra/core/tool/team-message"
+import { Tools } from "@orchestra/core/tool/tools"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetyProfile } from "@orchestra/core/tool-safety-profile"
@@ -184,8 +185,8 @@ export function make() {
     if (!Layer.isLayer(native.implementation)) return yield* Effect.die("Expected the concrete native registry Layer")
     // Actual native registry/profile loader/hook evaluation, with a barrier AFTER the real prompt hook returns.
     // The native descriptor exposes an erased implementation type; its real Layer exports this registry service.
-    const nativeLayer = native.implementation as Layer.Layer<ToolRegistry.Service>
-    const registry = { ...native, implementation: nativeLayer.pipe(
+    const nativeLayer = native.implementation as Layer.Layer<ToolRegistry.Service | Tools.Service>
+    const implementation = nativeLayer.pipe(
       Layer.provide(Layer.effect(ToolSafety.RuntimeProfileLoader, Effect.gen(function* () {
         const fs = yield* FSUtil.Service
         const global = yield* Global.Service
@@ -193,16 +194,21 @@ export function make() {
         return ToolSafetyProfile.makeLoader(fs, { directory: location.directory,
           stateDirectory: MaestroArsenal.stateDirectory(global.data, location.project.id), projectID: location.project.id })
       }))),
-      Layer.tap((context) => Effect.sync(() => {
-        const service = Context.get(context, ToolRegistry.Service)
-        const original = service.session
-        // This is the registry instance just constructed, before it is published to any consumer.
-        Object.assign(service, { session: (input: Parameters<typeof original>[0]) => original(input).pipe(
-          Effect.tap(() => input.operation === "prompt" ? Effect.sync(() => { state.hookReturns++ }).pipe(
-            Effect.andThen(checkpoint("prompt-hook"))) : Effect.void),
-        ) })
-      })),
-    ), dependencies: [...native.dependencies, FSUtil.node, Global.node, Location.node] }
+      Layer.flatMap((context) => {
+        const actual = Context.get(context, ToolRegistry.Service)
+        // Each exported Context gets one observer; never stack wrappers on the shared native service object.
+        return Layer.succeedContext(Context.add(context, ToolRegistry.Service, ToolRegistry.Service.of({
+          ...actual,
+          session: (input) => actual.session(input).pipe(
+            Effect.tap(() => input.operation === "prompt" ? Effect.sync(() => { state.hookReturns++ }).pipe(
+              Effect.andThen(checkpoint("prompt-hook"))) : Effect.void),
+          ),
+        })))
+      }),
+    )
+    const dependencies = [...native.dependencies, FSUtil.node, Global.node, Location.node]
+    const registry = { ...native, implementation, dependencies }
+    const nativeTools = { ...ToolRegistry.nativeToolsNode, implementation, dependencies }
     const host: ExecutionHost.Interface = { id: "claude-code", stateKey: "authorityAcceptance",
       describeModel: () => Effect.succeed({ status: "ready" }),
       stream: (turn) => Stream.unwrap(Effect.gen(function* () {
@@ -223,7 +229,7 @@ export function make() {
       [Database.node, databaseLayer], [EventV2.node, Layer.succeed(EventV2.Service, events)],
       [Location.node, Location.boundNode(ref)], [LocationServiceMap.node, locations],
       [SessionExecution.node, SessionExecutionLocal.node], [ToolRegistry.node, registry],
-      [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
+      [ToolRegistry.toolsNode, nativeTools],
       // This focused host does not expose the separate Task/handoff tool fleet; none is part of the H8 path.
       [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty],
       [MeetingHandoff.node, Layer.succeed(MeetingHandoff.Service, { handoff: () => Effect.die("No meeting handoff in the H8 focused host") })],
