@@ -148,7 +148,7 @@ it.live("mutants lock, missing targets, repeat, cap, and not-offered keep the le
     candidate: "m", option: "probe:mutants", target: { mutants: { path: "src/lib.rs", startLine: 1, endLine: 1 } },
   }), ctx({ m: ["probe:mutants"] }, 1))
   expect(locked.result.status).toBe("not-run")
-  expect(locked.result.reason ?? "").toMatch(/lock/i)
+  expect(locked.result.reason ?? "").toMatch(process.platform === "linux" && process.arch === "x64" ? /lock/i : /^native-runtime-unqualified$/)
   expect(locked.result.reason).not.toBe("not-built")
   expect(locked.result.reason ?? "").not.toContain("target-missing")
   expect(locked.result.reason ?? "").not.toContain("regress")

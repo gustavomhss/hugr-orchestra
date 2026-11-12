@@ -1,5 +1,5 @@
 import { createHash, generateKeyPairSync, sign, type KeyObject } from "node:crypto"
-import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { constants, existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { describe, expect, test } from "bun:test"
 import { Effect } from "effect"
@@ -21,9 +21,10 @@ const CLAIMS = [
   "notes supplied for candidate",
 ] as const
 let seq = 0
+const read = constants.O_NOFOLLOW ? test : test.skip
 
 describe("ReviewReleaseChecks", () => {
-  test("valid five pass, behavioural eval stays not-run, raw keeps narrow claims", async () => {
+  read("valid five pass, behavioural eval stays not-run, raw keeps narrow claims", async () => {
     await using root = await tmpdir()
     const staged = stage(root.path)
     expect(staged.payloadBytes.byteLength).not.toBe(staged.payloadBytes.toString("utf8").length)
@@ -48,7 +49,7 @@ describe("ReviewReleaseChecks", () => {
     expect(raw).not.toMatch(/authenticode|notariz|publisher identity|codesign|slsa level/i)
   })
 
-  test("mutated artifact and wrong fingerprint fail signing and provenance", async () => {
+  read("mutated artifact and wrong fingerprint fail signing and provenance", async () => {
     await using root = await tmpdir()
     const mutated = await analyze(root.path, stage(root.path, (draft) => {
       const next = Buffer.from(draft.artifact)
@@ -82,7 +83,7 @@ describe("ReviewReleaseChecks", () => {
     expect(one(rsa.result, "release:signing").status).not.toBe("pass")
   })
 
-  test("missing signer or proofs never pass", async () => {
+  read("missing signer or proofs never pass", async () => {
     await using root = await tmpdir()
     const missingSigner = await analyze(root.path, stage(root.path, (draft) => { draft.omitSigner = true }).input)
     expect(one(missingSigner.result, "release:signing").reason).toBe("signer-policy-missing")
@@ -101,7 +102,7 @@ describe("ReviewReleaseChecks", () => {
     }
   })
 
-  test("dsse ambiguity fails and an advisory keyid change still passes", async () => {
+  read("dsse ambiguity fails and an advisory keyid change still passes", async () => {
     await using root = await tmpdir()
     const provenance = async (adjust: (draft: Draft) => void) => one((await analyze(root.path, stage(root.path, adjust).input)).result, "release:provenance")
     const unsupported = await provenance((draft) => { draft.payloadType = "application/json"; restate(draft) })
@@ -135,7 +136,7 @@ describe("ReviewReleaseChecks", () => {
     expect(one(passed.result, "release:signing").status).toBe("pass")
   })
 
-  test("malformed envelope and signed malformed JSON payload are acquisition errors", async () => {
+  read("malformed envelope and signed malformed JSON payload are acquisition errors", async () => {
     await using root = await tmpdir()
     const staged = stage(root.path)
     const proof = staged.input.provenance
@@ -151,7 +152,7 @@ describe("ReviewReleaseChecks", () => {
     expect(one((await analyze(root.path, payload.input)).result, "release:provenance").status).toBe("acquisition-error")
   })
 
-  test("updater zero, multi, digest and unsupported format cannot pass", async () => {
+  read("updater zero, multi, digest and unsupported format cannot pass", async () => {
     await using root = await tmpdir()
     const runUpdater = async (updater: string | ((artifact: Buffer) => string)) => one((await analyze(root.path, stage(root.path, (draft) => { draft.updater = typeof updater === "function" ? updater(draft.artifact) : updater }).input)).result, "release:updater")
     expect((await runUpdater((artifact) => updaterYaml([{ url: "https://downloads.example/app.bin", sha512: sha512b64(artifact) }]))).status).toBe("fail")
@@ -169,7 +170,7 @@ describe("ReviewReleaseChecks", () => {
     expect(unsupported.reason).toBe("unsupported-format")
   })
 
-  test("sbom passes only as a co-signature and stays not-run without binding", async () => {
+  read("sbom passes only as a co-signature and stays not-run without binding", async () => {
     await using root = await tmpdir()
     const unbound = await analyze(root.path, stage(root.path, (draft) => { draft.byproducts = []; restate(draft) }).input)
     expect(one(unbound.result, "release:sbom").status).toBe("not-run")
@@ -204,7 +205,7 @@ describe("ReviewReleaseChecks", () => {
     expect(raw).not.toMatch(/syft source describes|coverage complete|completeness verified/i)
   })
 
-  test("artifact acquisition errors cannot become waived omissions and unsigned DSSE fails", async () => {
+  read("artifact acquisition errors cannot become waived omissions and unsigned DSSE fails", async () => {
     await using root = await tmpdir()
     const unreadable = await analyze(root.path, { artifact: "absent.bin" })
     for (const id of FIVE) expect(one(unreadable.result, id)).toMatchObject({ status: "acquisition-error", reason: "ENOENT" })
@@ -214,7 +215,7 @@ describe("ReviewReleaseChecks", () => {
     expect(one((await analyze(root.path, staged.input)).result, "release:provenance")).toMatchObject({ status: "fail", reason: "signature-mismatch" })
   })
 
-  test("missing input is five not-runs and each omitted path is evidence-missing", async () => {
+  read("missing input is five not-runs and each omitted path is evidence-missing", async () => {
     await using root = await tmpdir()
     const absent = await analyze(root.path)
     expect(absent.result.checks.map((item) => item.id)).toEqual([...FIVE, EVAL])
@@ -232,7 +233,7 @@ describe("ReviewReleaseChecks", () => {
     }
   })
 
-  test("empty or invalid notes are acquisition errors and genuine notes only prove presence", async () => {
+  read("empty or invalid notes are acquisition errors and genuine notes only prove presence", async () => {
     await using root = await tmpdir()
     for (const notes of [Buffer.alloc(0), Buffer.from(" \n\t", "utf8"), Buffer.from([0xff, 0xfe, 0xfd])]) {
       const item = one((await analyze(root.path, stage(root.path, (draft) => { draft.notes = notes }).input)).result, "release:notes")
@@ -243,6 +244,23 @@ describe("ReviewReleaseChecks", () => {
     const raw = JSON.stringify(result.raw)
     expect(raw).toContain("notes supplied for candidate")
     expect(raw).not.toMatch(/semantic quality|behavioral claim|behavioural eval passed/i)
+  })
+
+  test.skipIf(Boolean(constants.O_NOFOLLOW))("unavailable no-follow is five acquisition errors and omitted input never passes", async () => {
+    await using root = await tmpdir()
+    write(root.path, "marker.bin", "SECRET_RELEASE_BYTES")
+    const captured = await Effect.runPromise(ReviewReleaseEvidence.capture(root.path, { artifact: "marker.bin", signer: { publicKey: "marker.bin", sha256: "ab".repeat(32) }, signature: "marker.bin", provenance: "marker.bin", updater: "marker.bin", sbom: "marker.bin", notes: "marker.bin" }))
+    const result = await Effect.runPromise(ReviewReleaseChecks.run(captured))
+    for (const id of FIVE) expect(one(result, id)).toMatchObject({ status: "acquisition-error", reason: "nofollow-unavailable" })
+    expectEval(result)
+    expect(JSON.stringify(result.raw)).toContain(captured.identity)
+    expect(JSON.stringify(result)).not.toContain("SECRET_RELEASE_BYTES")
+    expect(result.checks.some((item) => item.status === "pass")).toBe(false)
+    const absent = await analyze(root.path)
+    for (const id of FIVE) expect(one(absent.result, id)).toMatchObject({ status: "not-run", reason: "artifact-unavailable" })
+    expectEval(absent.result)
+    expect(JSON.stringify(absent.result.raw)).toContain(absent.captured.identity)
+    expect(absent.result.checks.some((item) => item.status === "pass")).toBe(false)
   })
 })
 

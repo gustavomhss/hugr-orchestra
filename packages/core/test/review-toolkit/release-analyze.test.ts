@@ -1,5 +1,6 @@
 import { expect } from "bun:test"
 import { createHash } from "node:crypto"
+import { constants } from "node:fs"
 import path from "path"
 import { mkdir, readFile, readdir, writeFile } from "fs/promises"
 import { Effect } from "effect"
@@ -70,7 +71,7 @@ const retained = async (store: string, uri: string) => {
   return Bun.file(path.join(store, match![1], match![2])).text()
 }
 
-it.live("retains v1 release evidence after live overwrite", () =>
+it.live.skipIf(!Boolean(constants.O_NOFOLLOW))("retains v1 release evidence after live overwrite", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const fixture = yield* repo
@@ -82,6 +83,7 @@ it.live("retains v1 release evidence after live overwrite", () =>
     const cap = yield* ReviewReleaseEvidence.capture(fixture.root, { artifact: "dist/app.bin", notes: "dist/notes.txt" })
     const artifactFile = cap.files.artifact
     const notesFile = cap.files.notes
+    if (!artifactFile || "reason" in artifactFile) throw new Error(`artifact capture failed: ${JSON.stringify(artifactFile)}`)
     expect(artifactFile && "sha256" in artifactFile && artifactFile.sha256).toBe(sha(V1))
     expect(notesFile && "sha256" in notesFile && notesFile.sha256).toBe(sha(N1))
     yield* Effect.promise(() => writeFile(artifact, V2))
@@ -112,6 +114,33 @@ it.live("retains v1 release evidence after live overwrite", () =>
     expect(yield* Effect.promise(() => readFile(artifact, "utf8"))).toBe(V2)
     expect(yield* Effect.promise(() => readFile(notes, "utf8"))).toBe(N2)
     expect(artifactFile && "bytes" in artifactFile && Buffer.from(artifactFile.bytes).toString()).toBe(V1)
+  }))
+
+it.live.skipIf(Boolean(constants.O_NOFOLLOW))("unavailable no-follow retains refusal without artifact bytes", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const fixture = yield* repo
+    const artifact = path.join(fixture.root, "dist", "app.bin")
+    yield* Effect.promise(() => mkdir(path.dirname(artifact), { recursive: true }))
+    yield* Effect.promise(() => writeFile(artifact, V1))
+    const cap = yield* ReviewReleaseEvidence.capture(fixture.root, { artifact: "dist/app.bin" })
+    expect(cap.files.artifact).toEqual({ path: "dist/app.bin", reason: "nofollow-unavailable" })
+    const result = yield* analyze(fixture, "release", cap)
+    const checks = releaseChecks(result.checks)
+    expect(checks).toHaveLength(6)
+    const uri = checks[0]?.uri ?? ""
+    const proofs = checks.filter((check) => check.id !== "release:behavioural-eval")
+    expect(proofs).toHaveLength(5)
+    expect(checks.every((check) => check.uri === uri)).toBe(true)
+    for (const check of proofs) {
+      expect(check.status).toBe("acquisition-error")
+      expect(check.reason).toContain("nofollow-unavailable")
+      expect(check.reason).toContain(cap.identity)
+    }
+    const raw = yield* Effect.promise(() => retained(fixture.store, uri))
+    expect(raw).toContain(cap.identity)
+    expect(raw).not.toContain(V1)
+    expect(yield* Effect.promise(() => readFile(artifact, "utf8"))).toBe(V1)
   }))
 
 it.live("missing release capture is five artifact-unavailable checks plus eval", () =>

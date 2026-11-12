@@ -1,4 +1,5 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto"
+import { constants } from "node:fs"
 import { mkdir, open, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { describe, expect, test } from "bun:test"
@@ -48,9 +49,10 @@ const sparse = async (file: string, size: number) => {
   await handle.close()
 }
 const run = (root: string, input?: ReviewReleaseEvidence.Input) => Effect.runPromise(ReviewReleaseEvidence.capture(root, input))
+const read = constants.O_NOFOLLOW ? test : test.skip
 
 describe("ReviewReleaseEvidence.capture", () => {
-  test("hashes every supplied path and binds the SPKI fingerprint into identity", async () => {
+  read("hashes every supplied path and binds the SPKI fingerprint into identity", async () => {
     await using dir = await tmpdir()
     const root = path.join(dir.path, "work")
     await mkdir(root)
@@ -97,7 +99,7 @@ describe("ReviewReleaseEvidence.capture", () => {
     expect(second.identity).toBe(first.identity)
   })
 
-  test("byte, path, and key-policy changes retarget identity; prior bytes and captured input survive caller mutation", async () => {
+  read("byte, path, and key-policy changes retarget identity; prior bytes and captured input survive caller mutation", async () => {
     await using dir = await tmpdir()
     const root = path.join(dir.path, "work")
     await mkdir(root)
@@ -129,7 +131,7 @@ describe("ReviewReleaseEvidence.capture", () => {
     expect(taken(retained.files.artifact).bytes).toEqual(kept.bytes)
   })
 
-  test("refuses unsafe paths and binds each nonempty reason into identity", async () => {
+  read("refuses unsafe paths and binds each nonempty reason into identity", async () => {
     await using dir = await tmpdir()
     const root = path.join(dir.path, "work")
     await mkdir(root)
@@ -155,7 +157,7 @@ describe("ReviewReleaseEvidence.capture", () => {
     expect(new Set(digests).size).toBe(bad.length)
   })
 
-  test("a missing file and a directory at the same path are distinct errors", async () => {
+  read("a missing file and a directory at the same path are distinct errors", async () => {
     await using dir = await tmpdir()
     const root = path.join(dir.path, "work")
     await mkdir(root)
@@ -170,7 +172,7 @@ describe("ReviewReleaseEvidence.capture", () => {
     expect(missing.identity).not.toBe(directory.identity)
   })
 
-  test("refuses escaping, in-root, and symlinked dependency-root components", async () => {
+  read("refuses escaping, in-root, and symlinked dependency-root components", async () => {
     await using dir = await tmpdir()
     const root = path.join(dir.path, "work")
     const outside = path.join(dir.path, "outside")
@@ -206,7 +208,7 @@ describe("ReviewReleaseEvidence.capture", () => {
     expect(taken((await run(root, { artifact: "regular.bin" })).files.artifact).bytes).toEqual(new TextEncoder().encode("ok"))
   })
 
-  test("pins ceilings and accepts exact evidence bounds while refusing one extra byte", async () => {
+  read("pins ceilings and accepts exact evidence bounds while refusing one extra byte", async () => {
     expect(ReviewReleaseEvidence.LIMITS).toEqual({ artifact: artifactLimit, evidence: evidenceLimit, publicKey: keyLimit })
     await using dir = await tmpdir()
     const root = path.join(dir.path, "work")
@@ -240,6 +242,33 @@ describe("ReviewReleaseEvidence.capture", () => {
       const file = refused(over.files[field])
       expect(JSON.stringify(file)).not.toContain("bytes")
       expect(over.identity).toBe(identity(rows({ artifact: { path: "app.bin", bytesSHA256: sha256(new TextEncoder().encode("a")) } }, "", { [field]: { path: rel, reason: file.reason } })))
+    }
+  })
+
+  test.skipIf(Boolean(constants.O_NOFOLLOW))("unavailable no-follow refuses every supplied role without bytes", async () => {
+    await using dir = await tmpdir()
+    const root = path.join(dir.path, "work")
+    await mkdir(root)
+    await writeFile(path.join(root, "marker.bin"), "SECRET_MARKER_BYTES")
+    const fingerprint = "ab".repeat(32)
+    const denied = { path: "marker.bin", reason: "nofollow-unavailable" }
+    const input: ReviewReleaseEvidence.Input = { artifact: "marker.bin", signer: { publicKey: "marker.bin", sha256: fingerprint }, signature: "marker.bin", provenance: "marker.bin", updater: "marker.bin", sbom: "marker.bin", notes: "marker.bin" }
+    const errors = { artifact: denied, publicKey: denied, signature: denied, provenance: denied, updater: denied, sbom: denied, notes: denied }
+    const captured = await run(root, input)
+    for (const field of fields) expect(captured.files[field]).toEqual(denied)
+    expect(JSON.stringify(captured)).not.toContain("SECRET_MARKER_BYTES")
+    expect(JSON.stringify(captured)).not.toContain("bytes")
+    expect(captured.identity).toBe(identity(rows({}, fingerprint, errors)))
+    expect((await run(root, input)).identity).toBe(captured.identity)
+    const moved = await run(root, { ...input, artifact: "other.bin" })
+    const policy = await run(root, { ...input, signer: { publicKey: "marker.bin", sha256: "cd".repeat(32) } })
+    expect(moved.identity).toBe(identity(rows({}, fingerprint, { ...errors, artifact: { path: "other.bin", reason: "nofollow-unavailable" } })))
+    expect(policy.identity).toBe(identity(rows({}, "cd".repeat(32), errors)))
+    expect(new Set([captured.identity, moved.identity, policy.identity]).size).toBe(3)
+    for (const artifact of ["../secret.bin", "a\r\nb"]) {
+      const bad = await run(root, { artifact } as ReviewReleaseEvidence.Input)
+      expect(refused(bad.files.artifact)).toEqual({ path: artifact, reason: "unsafe-path" })
+      expect(bad.identity).toBe(identity(rows({}, "", { artifact: { path: artifact, reason: "unsafe-path" } })))
     }
   })
 })

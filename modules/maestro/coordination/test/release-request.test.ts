@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { constants } from "node:fs"
 import path from "path"
 import { mkdir, writeFile } from "fs/promises"
 import { Cause, Effect, Exit } from "effect"
@@ -43,7 +44,7 @@ test("omitted non-release is undefined and omitted release capture is stable wit
   expect(ReviewReleaseRequestV2.key("lead", undefined)).toBe("lead")
 })
 
-test("capture keeps v1 bytes and keys identity without a second read", async () => {
+test.skipIf(!Boolean(constants.O_NOFOLLOW))("capture keeps v1 bytes and keys identity without a second read", async () => {
   const dir = await tmpdir()
   try {
     const root = dir.path
@@ -65,6 +66,28 @@ test("capture keeps v1 bytes and keys identity without a second read", async () 
     const retry = await Effect.runPromise(ReviewReleaseRequestV2.capture(input, root))
     expect(retry?.identity).toBe(second?.identity)
     expect(ReviewReleaseRequestV2.key("lead", retry)).toBe(ReviewReleaseRequestV2.key("lead", second))
+  } finally {
+    await dir[Symbol.asyncDispose]()
+  }
+})
+
+test.skipIf(Boolean(constants.O_NOFOLLOW))("unavailable no-follow capture errors and keys a stable identity", async () => {
+  const dir = await tmpdir()
+  try {
+    const root = dir.path
+    await mkdir(path.join(root, "dist"), { recursive: true })
+    await writeFile(path.join(root, "dist", "app.bin"), V1)
+    const input = { profile: "release" as const, stage: "code" as const, release: { artifact: "dist/app.bin", notes: "dist/app.bin" } }
+    const first = await Effect.runPromise(ReviewReleaseRequestV2.capture(input, root))
+    expect(first?.files.artifact).toEqual({ path: "dist/app.bin", reason: "nofollow-unavailable" })
+    expect(first?.files.notes).toEqual({ path: "dist/app.bin", reason: "nofollow-unavailable" })
+    expect(JSON.stringify(first)).not.toContain(V1)
+    expect(JSON.stringify(first)).not.toContain("bytes")
+    await writeFile(path.join(root, "dist", "app.bin"), V2)
+    const second = await Effect.runPromise(ReviewReleaseRequestV2.capture(input, root))
+    expect(second?.identity).toBe(first?.identity)
+    expect(ReviewReleaseRequestV2.key("lead", first)).toBe(`lead_release_${first?.identity}`)
+    expect(ReviewReleaseRequestV2.key("lead", second)).toBe(ReviewReleaseRequestV2.key("lead", first))
   } finally {
     await dir[Symbol.asyncDispose]()
   }
