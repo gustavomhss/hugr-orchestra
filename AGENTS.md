@@ -189,7 +189,7 @@ Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/term
 - The PTY cursor and ring (`BUFFER_LIMIT`) count UTF-16 characters, not bytes.
 - The `Pty` service is served over HTTP by `packages/server/src/handlers/pty.ts`. The app uses `/api/pty`.
 - `ORCHESTRA_AGENT_TERMINAL` and `ORCHESTRA_SHELL_INTEGRATION` are permanent opt-in flags in `flag/flag.ts`; read them through `Flag`, never `process.env`.
-- Known limit: a WebSocket client that stops reading makes the server grow; not solved.
+- Slow WebSocket clients have bounded queued output. Preserve backpressure, ordered replay cursors and detach cleanup; disconnecting an attachment must not kill its PTY.
 
 ## Guardrail
 
