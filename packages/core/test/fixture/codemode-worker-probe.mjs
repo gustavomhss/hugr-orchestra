@@ -19,7 +19,7 @@ const errorFacts = (error) => ({
 
 async function main() {
   const { executeWithLimits } = await import(process.argv[2])
-  emit("HOST_READY", { atMs: performance.now() - clock })
+  emit("HOST_READY", { atMs: performance.now() - clock, mode: process.argv[3] })
   state.timer = setTimeout(() => emit("SNAPSHOT", {
     atMs: performance.now() - clock, ready: state.ready, online: state.online, start: state.start, done: state.done,
     terminateCalls: state.terminateCalls, terminateSettled: state.terminateSettled,
@@ -69,6 +69,7 @@ async function main() {
           }
         }
       },
+      process.argv[4] === undefined ? undefined : new URL(process.argv[4]),
     ))
     clearTimeout(state.timer)
     emit("RESULT", Exit.isSuccess(exit) ? {
