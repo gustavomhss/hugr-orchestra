@@ -25,6 +25,14 @@ If a history read fails temporarily, reopening the Session retries it and retain
 
 After an event connection reconnects, the app and TUI refresh loaded Session history and running status without reopening the view. A refresh waits for an earlier history read to finish, then reads a new snapshot. Status events received during a snapshot read take precedence over that snapshot; deleted Sessions stay removed.
 
+## Retrying a message
+
+If sending a normal message to an existing Session fails, retrying the same action in the same open composer reuses its request and prepared attachments. The server may already have admitted the message before the connection failed; an exact retry reconciles that admission. Simultaneous attempts of the same action share one send.
+
+Editing the message, context, attachments, delivery choice, agent, model, variant or subagent-model policy creates a different action. After a confirmed success, sending the same text again also creates a new message. A subagent-model policy change while preparation is waiting stops that attempt; send again with the current selection.
+
+Retry memory ends when the composer closes or leaves its Session or server, even if it later returns. It does not survive reloads. Slash commands and shell commands keep their own send behavior. Stop can cancel a pending send, but it does not undo a message the server already admitted.
+
 ## Reverting history
 
 Staging, clearing or committing a revert is refused while the Session has active work. API clients receive HTTP 409. Wait for the turn or operation to finish, or explicitly interrupt the Session, then retry.

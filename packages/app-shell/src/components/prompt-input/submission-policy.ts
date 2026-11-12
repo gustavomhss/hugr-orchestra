@@ -210,7 +210,9 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
 
   const [head, ...tail] = text.split(" ")
   const cmd = head?.startsWith("/") ? head.slice(1) : undefined
-  if (cmd && !input.request?.preparation && (input.request?.command || input.sync.data.command.find((item) => item.name === cmd))) {
+  if (cmd && !input.request?.preparation && (input.request?.kind
+    ? input.request.kind === "command"
+    : input.request?.command || input.sync.data.command.find((item) => item.name === cmd))) {
     if (!(await wait())) return false
     const files = input.request?.command?.files ?? await Promise.all(images.map(async (attachment) => ({
       uri: await blobDataUrl(attachment.blob, attachment.mime), name: attachment.filename,
@@ -237,7 +239,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
           files,
         }
         if (request) request.command = command
-        if (request) setBusy()
+        if (request && request.kind !== "command") setBusy()
         if (!ready()) return Promise.resolve(false)
         return input.api.command(command, { signal: input.signal })
       }

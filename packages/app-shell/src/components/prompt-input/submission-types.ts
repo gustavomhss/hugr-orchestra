@@ -12,6 +12,8 @@ export type AdmissionRequest = {
   key: string
   id: string
   admitted: boolean
+  kind?: "prompt" | "command"
+  selection?: Pick<FollowupDraft, "agent" | "model" | "variant" | "delivery"> & { policyVersion: number }
   revision?: number
   preparation?: ReturnType<typeof buildRequestParts>
   command?: Parameters<DirectorySDK["api"]["session"]["command"]>[0]
