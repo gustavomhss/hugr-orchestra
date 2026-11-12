@@ -66,7 +66,7 @@ const fixture = Harness.make({
   echo: Layer.effectDiscard(ToolRegistry.Service.use((registry) => registry.register({}))),
   systemContext: Harness.systemContextLayer,
   skillGuidance: Layer.mock(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) }),
-  nodes: [TaskTool.node, stateNode], replacements: [[TaskGovernance.node, governance]],
+  nodes: [TaskTool.node, Catalog.node, stateNode], replacements: [[TaskGovernance.node, governance]],
 })
 
 fixture.live("completed Task exact retry reconciles and retires without a second child provider turn", () =>
