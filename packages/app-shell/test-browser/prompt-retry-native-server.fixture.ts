@@ -4,6 +4,7 @@ import { AgentV2 } from "@orchestra/core/agent"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
@@ -68,7 +69,7 @@ await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const events = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, session.id)).all()
     const messages = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.session_id, session.id)).all()
     return { session: yield* sessions.get(session.id), inputs,
-      admissions: events.filter((event) => event.type === SessionEvent.PromptAdmitted.type), messages }
+      admissions: events.filter((event) => event.type === EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)), messages }
   }))
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
     const pathname = new URL(request.url).pathname
