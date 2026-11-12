@@ -29,7 +29,9 @@ export type Timings = {
   budget: { limit: number; fixed: number }
   // Seconds per test file of a sharded package, keyed `<package directory>:<platform>`, measured by a cold run.
   files: Record<string, Record<string, number>>
-  // Seconds per sharded package in total, keyed `<package directory>`; it sets the shard count.
+  // Declared scheduling floors, separate from cold-run measurements. Same keys as `files`.
+  reserves?: Record<string, Record<string, number>>
+  // Seconds per sharded package in total, keyed `<package directory>`.
   totals: Record<string, Record<Platform, number>>
 }
 
@@ -37,9 +39,13 @@ export function shardCount(seconds: number, target: number, margin: number) {
   return Math.max(1, Math.ceil((seconds * margin) / target))
 }
 
-// Shards of a time-sharded package on one platform: its measured total, scaled by the platform's overhead.
+// Size from the larger of the measured total and current file weights, scaled by platform overhead.
 export function packageShards(timings: Timings, directory: string, platform: Platform) {
-  return shardCount((timings.totals[directory]?.[platform] ?? 0) * timings.overhead[platform], timings.target[platform], timings.margin)
+  const total = timings.totals[directory]?.[platform]
+  if (total === undefined) return 1
+  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, timings.reserves?.[`${directory}:${platform}`])
+  const seconds = Math.round(weights.reduce((sum, entry) => sum + entry.weight, 0) * 1000) / 1000
+  return shardCount(Math.max(total, seconds) * timings.overhead[platform], timings.target[platform], timings.margin)
 }
 
 // Longest-processing-time first: each item goes to the currently lightest bin. Deterministic for equal weights.
@@ -54,7 +60,7 @@ export function balance(items: { name: string; weight: number }[], bins: number)
 }
 
 // Test files of a package with their weights in seconds.
-export function weigh(directory: string, measured: Record<string, number>, total: number) {
+export function weigh(directory: string, measured: Record<string, number>, total: number, reserves: Record<string, number> = {}) {
   const files = testFiles(path.join(root, directory)).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
@@ -64,7 +70,7 @@ export function weigh(directory: string, measured: Record<string, number>, total
   // With no measurement the package total is spread over the files by size.
   const rate =
     knownBytes > 0 ? knownSeconds / knownBytes : unknownBytes > 0 ? Math.max(total - knownSeconds, 0) / unknownBytes : 0
-  return files.map((entry) => ({ name: entry.file, weight: measured[entry.file] ?? Math.max(entry.bytes * rate, 0.05) }))
+  return files.map((entry) => ({ name: entry.file, weight: Math.max(measured[entry.file] ?? Math.max(entry.bytes * rate, 0.05), reserves[entry.file] ?? 0) }))
 }
 
 // Per-file seconds from a Bun JUnit report: only the top-level suites, which are named after the test file. Describe
@@ -106,7 +112,7 @@ function shard(timings: Timings, args: string[]) {
     console.error("usage: test-plan.ts shard <package directory> <linux|windows> <shard> <shards>")
     process.exit(2)
   }
-  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, timings.totals[directory]?.[platform] ?? 0)
+  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, timings.totals[directory]?.[platform] ?? 0, timings.reserves?.[`${directory}:${platform}`])
   const mine = balance(weights, shards)[selected - 1]
   if (!mine || mine.names.length === 0) {
     console.error(`shard ${selected}/${shards} has no test files`)
