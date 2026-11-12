@@ -7,13 +7,13 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { test } from "node:test"
 import { Omni } from "../src/omni.ts"
 
-test("real sqlite.node readonly capture under IMMEDIATE commits and rolls back in WAL and DELETE", { timeout: 60_000 }, async () => {
+test("real sqlite.node readonly capture under IMMEDIATE commits and rolls back in WAL and DELETE", { timeout: 8000 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), "node-vacuum-build-"))
   try {
     const omni = await Omni.load()
     const built = await omni.run("bun", ["build", fileURLToPath(new URL("./fixture/database-vacuum-node.ts", import.meta.url)),
       "--target", "node", "--format", "esm", "--external", "node:sqlite", "--outfile", join(directory, "proof.mjs")], {
-      inheritEnv: false, env: Omni.childEnv(), timeoutMs: 30_000,
+      inheritEnv: false, env: Omni.childEnv(), timeoutMs: 6000,
     })
     Omni.count("spawns")
     assert.equal(built.success, true, built.stderr)

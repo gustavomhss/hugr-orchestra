@@ -35,7 +35,7 @@ export async function inspectBackupFootprint(filename: string, foreign: string[]
     legacyPins: { name: string; bytes: number }[]
     recentAttempts: { backup: { name: string; bytes: number } }[]
     currentBaselinePin: null | { name: string; bytes: number }
-    active: null | { id: string; tempName: string; finalName: string; backup: null | { name: string; bytes: number } }
+    active: null | { id: string; phase: "prepared" | "captured" | "ready"; tempName: string; finalName: string; backup: null | { name: string; bytes: number } }
     garbage: { name: string; bytes: number }[]
   }
   const work = `${filename}.migration-work`
