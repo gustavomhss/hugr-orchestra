@@ -144,7 +144,8 @@ export interface PublishOptions {
 }
 
 /** A lifecycle guard around the SQL transaction only, released before observer delivery. */
-export type CommitBoundary = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
+export type CommitBoundary<A, E, R, E2 = never, R2 = never> =
+  (effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | E2, R | R2>
 
 type PendingNotification = { readonly ticket: EventOrder.Ticket | undefined; readonly notifying: Effect.Effect<void> }
 const TransactionBatch = Context.Reference<{
@@ -159,7 +160,10 @@ export interface Interface {
    * defects, rejected before their effects run. Replay/replayAll composition is likewise rejected before effects.
    * Cancellation after commit still schedules all committed notifications in the event service scope.
    */
-  readonly transact: <A, E, R>(effect: Effect.Effect<A, E, R>, boundary?: CommitBoundary) => Effect.Effect<A, E, R>
+  readonly transact: <A, E, R, E2 = never, R2 = never>(
+    effect: Effect.Effect<A, E, R>,
+    boundary?: CommitBoundary<A, E, R, E2, R2>,
+  ) => Effect.Effect<A, E | E2, R | R2>
 
   readonly publish: <D extends Definition>(
     /**

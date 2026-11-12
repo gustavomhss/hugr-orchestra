@@ -22,6 +22,7 @@ function Tray() {}
 // keeps this list equal to the imports the desktop actually makes.
 export const electronMock = {
   app: {},
+  autoUpdater: {},
   BrowserWindow,
   Menu,
   WebContentsView,

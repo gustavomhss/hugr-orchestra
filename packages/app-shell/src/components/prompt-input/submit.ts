@@ -26,6 +26,7 @@ import { Worktree as WorktreeState } from "@/utils/worktree"
 import { defaultCopyParent, repositoryProject, WORKTREE_STRATEGY } from "@/orchestra/chapters/workspaces-model"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError, hookRefusal } from "@/utils/server-errors"
+import { pathKey } from "@/utils/path-key"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
@@ -349,6 +350,27 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         sessionDirectory = worktreeSelection
       }
 
+      // Persisted workspace lists can outlive a removed copy. Refuse before creating a Session in a stale placement.
+      if (!session && sessionDirectory !== projectDirectory && worktreeSelection !== "create") {
+        const valid = await server.api.project.current({ location: { directory: projectDirectory } })
+          .then(async (project) => pathKey(project.directory) === pathKey(sessionDirectory) ||
+            (await server.api.project.directories({ projectID: project.id }))
+              .some((entry) => pathKey(entry.directory) === pathKey(sessionDirectory)))
+          .catch((error: unknown) => {
+            console.error("Failed to validate session workspace", error)
+            return false
+          })
+        if (!ownsSource() || controller.signal.aborted) return false
+        if (!valid) {
+          console.error("Session workspace is not available in the owning project", sessionDirectory)
+          showToast({
+            variant: "error",
+            title: language.t("prompt.toast.sessionCreateFailed.title"),
+            description: language.t("common.requestFailed"),
+          })
+          return false
+        }
+      }
       if (sessionDirectory !== projectDirectory) {
         serverState.child(sessionDirectory)
       }
