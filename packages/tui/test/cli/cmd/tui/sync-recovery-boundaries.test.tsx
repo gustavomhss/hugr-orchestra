@@ -169,6 +169,8 @@ test("an ordinary sync retries a failed forced history while retaining cached an
         },
       }),
     )
+    await wait(() => mounted.sync.data.message[sessionID]?.some((message) => message.id === "msg_live_during_failed_force"))
+    expect(mounted.sync.data.message[sessionID].map((message) => message.id)).toContain("msg_live_during_failed_force")
     failed.reject(new Error("forced history failure"))
     expect(await forced).toBeUndefined()
     expect(text(mounted.sync)).toBe("initial cached")
