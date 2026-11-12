@@ -201,7 +201,14 @@ export function packageLanes(name: Platform, host: string) {
     ...(linux
       ? [
           { name, host, part: "gates", label: "gates, relay", repo_gates: true, relay: true },
-          { name, host, part: "httpapi", label: "httpapi", httpapi: true },
+          ...[1, 2].map((index) => ({
+            name,
+            host,
+            part: `httpapi-${index}`,
+            label: `httpapi ${index}/2`,
+            httpapi: true,
+            httpapiShard: `${index}/2`,
+          })),
           { name, host, part: "sandbox", label: "sandbox proofs", hosted: true },
         ]
       : []),

@@ -29,11 +29,12 @@ describe("test shard planner", () => {
     }
   })
 
-  test("Windows dedicated lanes reuse the existing budget and Linux package lanes stay unchanged", () => {
+  test("dedicated lanes preserve package filters and partition Linux HttpApi", () => {
     const linux = packageLanes("linux", "ubuntu-24.04")
     expect(linux.map((lane) => lane.part)).toEqual([
-      "packages-app", "packages-cli", "packages-atlas", "packages-relay", "packages-libs", "gates", "httpapi", "sandbox",
+      "packages-app", "packages-cli", "packages-atlas", "packages-relay", "packages-libs", "gates", "httpapi-1", "httpapi-2", "sandbox",
     ])
+    expect(linux.filter((lane) => "httpapi" in lane && lane.httpapi).map((lane) => "httpapiShard" in lane ? lane.httpapiShard : undefined)).toEqual(["1/2", "2/2"])
     const windows = packageLanes("windows", "windows-latest") as { part: string; filters?: string; budget?: number }[]
     expect(windows.filter((lane) => ["windows-desktop", "windows-script", "windows-libs"].includes(lane.part)).map((lane) => lane.budget)).toEqual([15, 15, 15])
     const libs = windows.find((lane) => lane.part === "windows-libs")!

@@ -446,10 +446,15 @@ jobs:
 
       - name: Run HttpApi exerciser gates
         if: matrix.httpapi
-        # Effect mode runs every scenario against a fresh in-memory server; fail instead of holding the runner if one wedges.
+        # Coverage and auth stay full. Effect runs one partition; fail instead of holding the runner if one wedges.
         timeout-minutes: 8
         working-directory: packages/server
-        run: bun run test:httpapi
+        run: |
+          bun run script/httpapi-exercise.ts --mode coverage --fail-on-missing --fail-on-skip
+          bun run script/httpapi-exercise.ts --mode auth --fail-on-missing --fail-on-skip
+          bun run script/httpapi-exercise.ts --mode effect --fail-on-missing --fail-on-skip --shard "$HTTPAPI_SHARD"
+        env:
+          HTTPAPI_SHARD: ${{ matrix.httpapiShard }}
 
       # Hosted proofs are excluded from Bun's suffix discovery and run by exact path, so they run here and nowhere else.
       # Linux needs the AppArmor relaxation above for bubblewrap; the srt endpoint proof starts Cassandra, ScyllaDB and
