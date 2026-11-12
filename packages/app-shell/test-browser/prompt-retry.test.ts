@@ -406,14 +406,16 @@ test.each(["directory", "server", "credentials", "scope", "session", "target", "
       expect(promptInputs).toHaveLength(1)
       state.policyWait = async () => {}
       failure.enabled = false
-      // A fresh composer owner may share the editor target, but it must not inherit the ambiguous action.
-      const next = createRoot((dispose) => ({ dispose, submit: createPromptSubmit({ ...submitInput(), prompt: owner.prompt }) }))
+      // ABA must invalidate retention inside the original live owner. Only disposal requires a replacement owner.
+      const next = binding === "dispose"
+        ? createRoot((dispose) => ({ dispose, submit: createPromptSubmit({ ...submitInput(), prompt: owner.prompt }) }))
+        : undefined
       try {
         owner.prompt.set(text("retry this"))
-        expect(await send(next.submit)).toBe(true)
+        expect(await send(next?.submit ?? owner.submit)).toBe(true)
         expect(promptInputs).toHaveLength(2)
         expect(inputAt(1).id).not.toBe(first)
-      } finally { next.dispose() }
+      } finally { next?.dispose() }
     } finally { release.resolve(); await Promise.allSettled(tasks); owner.dispose() }
   },
 )
