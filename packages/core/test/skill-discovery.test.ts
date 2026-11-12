@@ -42,7 +42,8 @@ async function pull(
   ])
   const directories = await Effect.runPromise(
     Effect.gen(function* () {
-      return yield* (yield* SkillDiscovery.Service).pull(base)
+      const discovery = yield* SkillDiscovery.Service
+      return (yield* discovery.pull(base)).map((skill) => skill.directory)
     }).pipe(Effect.provide(skillDiscoveryLayer)),
   )
   return { tmp, requests, directories }
@@ -205,7 +206,7 @@ describe("SkillDiscovery.pull", () => {
       const root = path.join(result.tmp.path, "skills", (await fs.readdir(path.join(result.tmp.path, "skills")))[0], "deploy")
       const written = (await fs.readdir(root)).length
       expect(written).toBeLessThan(names.length)
-      // Files read at the same time were each admitted before the total was known.
+      // Completed files may remain in a partial unversioned cache even when the root cannot be admitted.
       expect(written).toBeGreaterThanOrEqual(SkillDiscovery.MAX_PULL_BYTES / SkillDiscovery.MAX_FILE_BYTES - 1)
     } finally {
       await result.tmp[Symbol.asyncDispose]()
