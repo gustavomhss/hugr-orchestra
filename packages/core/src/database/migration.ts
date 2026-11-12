@@ -52,7 +52,7 @@ function execute(db: Database, targets: Migration[], universe: Migration[], init
             const file = (yield* tx.all<{ file: string | null }>(
               sql`SELECT file FROM pragma_database_list WHERE name = 'main'`,
             ))[0]?.file
-            const manager = file ? yield* MigrationBackup.open(file, changing, options?.backup) : undefined
+            const manager = file ? yield* MigrationBackup.load(file, changing, options?.backup) : undefined
             if (manager) yield* manager.recover(journal)
             if (!changing) return
             if (manager)
@@ -84,7 +84,7 @@ function execute(db: Database, targets: Migration[], universe: Migration[], init
         (tx) =>
           Effect.gen(function* () {
             const journal = yield* readJournal(tx, universe)
-            const current = yield* MigrationBackup.open(backup.file, false, options?.backup)
+            const current = yield* MigrationBackup.load(backup.file, false, options?.backup)
             if (!current || current.attemptID !== attemptID) return
             yield* current.recover(journal)
           }),
@@ -138,7 +138,7 @@ function readJournal(tx: Transaction, universe: Migration[]) {
         )
           return yield* Effect.fail(new Error(`Invalid legacy migration timestamp: ${String(timestamp)}`))
         const prefix = new Date(timestamp).toISOString().replace(/[-:T]/g, "").slice(0, 14)
-        const matches = [...new Set(universe.map((item) => item.id))].filter((id) => id.startsWith(`${prefix}_`))
+        const matches = [...known].filter((id) => id.startsWith(`${prefix}_`))
         if (matches.length !== 1)
           return yield* Effect.fail(
             new Error(`Legacy migration timestamp ${timestamp} does not match any known migration unambiguously`),

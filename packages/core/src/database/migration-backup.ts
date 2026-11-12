@@ -1,7 +1,7 @@
 export * as MigrationBackup from "./migration-backup"
 
 import { createHash, randomUUID } from "node:crypto"
-import { lstat, mkdir, open as openFile, readFile, readdir, rename, rmdir, link, unlink } from "node:fs/promises"
+import { lstat, mkdir, open, readFile, readdir, rename, rmdir, link, unlink } from "node:fs/promises"
 import { basename, dirname, join } from "node:path"
 import { Effect, Schema } from "effect"
 import { sql } from "drizzle-orm"
@@ -69,7 +69,7 @@ const info = (file: string) =>
   })
 
 /** All callers hold SQLite IMMEDIATE. The sidecar is a process-crash journal, not a power-loss receipt. */
-export function open(file: string, needed: boolean, options: Options = {}) {
+export function load(file: string, needed: boolean, options: Options = {}) {
   return Effect.gen(function* () {
     const manifestFile = `${file}.migration-backups.json`
     const work = `${file}.migration-work`
@@ -295,7 +295,7 @@ class Session {
       yield* readonlyDatabase(self.file, (reader) => reader.run(sql`VACUUM INTO ${scratch}`))
       yield* io(async () => {
         // Windows FlushFileBuffers requires write access, even though no bytes are changed.
-        const handle = await openFile(scratch, "r+")
+        const handle = await open(scratch, "r+")
         try {
           await handle.sync()
         } finally {
@@ -394,7 +394,10 @@ class Session {
     return Effect.gen(function* () {
       if (!self.state.garbage.length) return
       yield* self.observe({ kind: "garbage", attemptID: self.state.active?.id })
-      const protectedNames = new Set(self.protected().map((copy) => copy.name))
+      const protectedNames = new Set([
+        ...self.protected().map((copy) => copy.name),
+        ...(self.state.active ? [self.state.active.finalName] : []),
+      ])
       for (const copy of self.state.garbage) {
         if (protectedNames.has(copy.name))
           return yield* Effect.fail(new Error("Protected migration backup in garbage plan"))
@@ -444,7 +447,7 @@ class Session {
     return Effect.gen(function* () {
       const temporary = join(self.work, `${slot}.pending`)
       yield* Effect.acquireUseRelease(
-        io(() => openFile(temporary, "wx", 0o600)),
+        io(() => open(temporary, "wx", 0o600)),
         (handle) =>
           Effect.gen(function* () {
             yield* self.observe({ kind: "slot-opened", slot, nextPhase })
@@ -464,7 +467,8 @@ class Session {
 
 function readonlyDatabase<A, E>(filename: string, body: (db: Effect.Success<typeof makeDb>) => Effect.Effect<A, E>) {
   return Effect.gen(function* () {
-    return yield* body(yield* makeDb)
+    const db = yield* makeDb
+    return yield* body(db)
   }).pipe(
     Effect.provide(layer({ filename, readonly: true, readwrite: false, create: false, disableWAL: true })),
     Effect.scoped,
@@ -478,7 +482,7 @@ function uniqueCopies(copies: readonly Copy[]) {
 async function syncDirectory(path: string) {
   // Windows does not support opening directories for fsync. File sync and atomic rename still bound process crashes.
   if (process.platform === "win32") return
-  const handle = await openFile(path, "r")
+  const handle = await open(path, "r")
   try {
     await handle.sync()
   } finally {
@@ -487,6 +491,8 @@ async function syncDirectory(path: string) {
 }
 
 function validateState(file: string, state: State) {
+  if (state.active && state.garbage.some((copy) => copy.name === state.active?.finalName))
+    throw new Error("Active migration backup in garbage plan")
   if (!Number.isSafeInteger(state.revision) || state.revision < 0 || state.recentAttempts.length > 3)
     throw new Error("Invalid migration backup manifest revision or ring")
   const prefix = `${basename(file)}.backup-`
