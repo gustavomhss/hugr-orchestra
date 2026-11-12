@@ -8,7 +8,7 @@ Open **Workspaces** in the sidebar's Advanced group. It needs a project whose fo
 
 ## Use a workspace
 
-Choose **Use workspace** on a row to make it the active one. New chat drafts then start in that workspace. The button reads **Open Chat** on the workspace that is already active. Placement follows the active workspace even when the quick picker is hidden. Before creating a Session, Orchestra checks that the saved workspace still belongs to this repository. If it was removed or cannot be verified, submission stops with an error and keeps your draft; choose a valid workspace and try again.
+Choose **Use workspace** on a row to make it the active one. New chat drafts then start in that workspace. The button reads **Open Chat** on the workspace that is already active. If the chosen workspace is no longer valid, new drafts fall back to the repository's root folder.
 
 ## Create a workspace
 

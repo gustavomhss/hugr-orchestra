@@ -6,15 +6,11 @@
 - **A local server that exits or crashes** is `failed` with `Connection closed` (or the connect error), followed by `Last stderr lines:` and the last 20 lines it wrote. Use them to find why it stopped.
 - **`orchestra mcp logout <server>`** removes the stored OAuth credentials, disconnects the server and sets its status to `needs_auth`. Run `orchestra mcp auth <server>` to sign in again. Servers without OAuth are not changed.
 
-## Ambiguous tool names
-
-If distinct MCP server/tool pairs produce the same canonical tool name, Orchestra refuses every ambiguous owner and names the conflicting pairs in the error. Rename the configured server or tool so the names are distinct, then reconnect. Existing permission keys are preserved; connection order does not choose a winner.
-
 ## OAuth callback port
 
 The browser sign-in for a remote server returns to `http://127.0.0.1:19876/mcp/oauth/callback`. If another program holds the port, starting the sign-in fails at once with `OAuth callback port <port> is already in use`. Close the program, or set `oauth.callback_port` (or `oauth.redirect_uri`) in the server's MCP config.
 
-The ChatGPT browser sign-in uses port 1455 and fails with a clear message when it is taken. An unrelated or malformed callback does not consume the pending login. Listener cleanup remains bounded even if another local request is incomplete. Closing the connect dialog, or going back from it, cancels the sign-in and releases the port.
+The ChatGPT browser sign-in uses port 1455 and fails with a clear message when it is taken. Closing the connect dialog, or going back from it, cancels the sign-in and releases the port.
 
 ## CLI
 
@@ -24,7 +20,3 @@ The ChatGPT browser sign-in uses port 1455 and fails with a clear message when i
 - `orchestra run --continue` with no earlier session in the directory prints `No earlier session to continue in <dir>; started a new session.` to stderr, then runs the prompt in a new session. Pass `--session <id>` to require an existing one.
 - A headless `orchestra run` that needs a permission cannot ask anyone. It prints `auto-rejecting. Pass --auto to allow it.` to stderr, rejects the request, and exits non-zero even when the agent finishes. Pass `--auto` to allow it. With `--format json` the warning is not printed; only the exit code reports it.
 - `orchestra mcp add`, `mcp auth`, `mcp logout` and `agent create` print a one-line error and exit non-zero instead of a stack dump.
-
-## Removing an archive installation
-
-`orchestra uninstall` recognizes the versioned prefix created by the archive installer and removes only its owned launcher, current link and selected payload. Other installed versions remain. Dry-run and data/config retention flags still apply. A standalone executable or an unproven npm layout is refused with instructions rather than targeting another installation.
