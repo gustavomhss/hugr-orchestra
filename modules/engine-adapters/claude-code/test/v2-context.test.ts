@@ -6,9 +6,10 @@ import { ToolDefinition } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { SessionSchema } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/core/session/message"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
-import { Cause, Effect, Exit, Layer, Schema, Stream } from "effect"
+import { Cause, DateTime, Effect, Exit, Layer, Schema, Stream } from "effect"
 import { QuestionV2 } from "@orchestra/core/question"
 import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
@@ -225,8 +226,13 @@ test("PostCompact archives carry explicit identity and are not replayed after hi
   script = [done]
   const before = calls.length
   await collect(turnOf({ state, memory: { recall: Effect.succeed(undefined), archive: (value) => Effect.sync(() => {
-    const record = value as typeof value & { messageID?: string }
-    archived.push({ id: record.messageID ?? "msg_archive_fallback", type: "synthetic", text: `Engine compaction summary (${value.trigger}):\nNative owner: ${value.nativeSessionID}\n\n${value.summary}`, time: { created: 1 } } as ExecutionHost.Turn["history"][number])
+    archived.push(SessionMessage.Synthetic.make({
+      id: value.messageID ?? SessionMessage.ID.make("msg_archive_fallback"),
+      sessionID: SessionSchema.ID.make("ses_host"),
+      type: "synthetic",
+      text: `Engine compaction summary (${value.trigger}):\nNative owner: ${value.nativeSessionID}\n\n${value.summary}`,
+      time: { created: DateTime.makeUnsafe(1) },
+    }))
   }) } }))
   expect(archived).toHaveLength(1)
   during = async () => {}
@@ -262,7 +268,7 @@ test("tracked work receives a durable pending notice before cancellation, query 
       expect(notifiedBeforeAbort).toBe(true)
       pump = undefined
       script = [done]
-      await Effect.runPromise(Stream.runCollect(host.stream(turnOf({ history: [user("msg_next", "Continue")] as ExecutionHost.Turn["history"] }))))
+      await Effect.runPromise(Stream.runCollect(host.stream(turnOf({ history: [SessionMessage.User.make({ id: SessionMessage.ID.make("msg_next"), type: "user", text: "Continue", files: [], agents: [], time: { created: DateTime.makeUnsafe(0) } })] }))))
       expect(notified).toHaveLength(1)
     } finally { pump = undefined }
   }
