@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import { Parser, tokTypes, lineBreak, version, type Options, type Program, type TokenType } from "acorn"
+import { Parser, tokTypes, version, type Options, type Program, type TokenType } from "acorn"
 
 type ValidationState = {
   parser: unknown
@@ -45,7 +45,10 @@ type PinnedParser = {
 
 export function parseWithoutNativeRegExp(input: string, options: Options): Program {
   if (version !== "8.15.0" || typeof Parser.extend !== "function" || typeof Parser.tokenizer !== "function" ||
-      typeof lineBreak.test !== "function" || !isRecord(tokTypes.regexp)) unavailable()
+      !isRecord(tokTypes.regexp)) unavailable()
+  const acorn: unknown = Reflect.get(Parser, "acorn")
+  if (!isRecord(acorn) || !(acorn.lineBreak instanceof RegExp)) unavailable()
+  const lineBreak = acorn.lineBreak
 
   const PinnedAcornParser = Parser.extend((BaseParser) => class extends BaseParser {
     readRegexp() {
