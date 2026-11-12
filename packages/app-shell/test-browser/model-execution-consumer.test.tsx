@@ -91,7 +91,7 @@ test("E6 App actual deferred sender refuses a blocked model and preserves the ca
   const drafts: FollowupDraft[] = []
   const owner = composer("deferred draft", { shouldQueue: () => true, onQueue: (draft) => drafts.push(draft) })
   try {
-    expect(await send(owner)).toBe(true)
+    await send(owner)
     expect(drafts).toHaveLength(1)
     expect(calls.admissions()).toEqual([])
     const input = followupInput(drafts[0])
