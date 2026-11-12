@@ -47,10 +47,14 @@ beforeAll(() => {
         import { unwrap } from "solid-js/store"
         import { createSubmissionOwner } from "@/components/prompt-input/submission-policy"
         import { useMutation } from "@tanstack/solid-query"
+        import { showToast } from "@/utils/toast"
+        import { FRONTEND_RECOVERY_COPY, modelExecutionReasonKey } from "@/i18n/frontend-recovery"
         import { queuedPromptSources } from "@/components/prompt-input/queued-prompt"
         export function mount(input) {
           const { params, sdk, serverSDK, sync, serverSync, sessionOwnership, followup, setFollowup,
             platform, sendFollowupDraft, fail, resumeScroll, composer, busy, isChildSession } = input
+          // Text-only port for Page refusal toasts; authority still comes from the actual query and owner code.
+          const language = { t: (key) => FRONTEND_RECOVERY_COPY[key] }
           const emptyFollowups = []
           ${[...selected, ...itemObserver, ...idle].map((statement) => statement.getFullText(source)).join("\n")}
           return { send: sendFollowup, mutation: followupMutation }
