@@ -3,167 +3,153 @@ export * as DatabaseMigration from "./migration"
 import { sql } from "drizzle-orm"
 import { Effect, Semaphore } from "effect"
 import type { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
-import { readdirSync, rmSync } from "fs"
-import { basename, dirname, join } from "path"
 import { migrations } from "./migration.gen"
 import schema from "./schema.gen"
+import { MigrationBackup } from "./migration-backup"
 
 type Database = EffectDrizzleSqlite.EffectSQLiteDatabase
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0]
 const lock = Semaphore.makeUnsafe(1)
-const KEEP_BACKUPS = 3
 
 export type Migration = {
   id: string
   up: (tx: Transaction) => Effect.Effect<void, unknown>
 }
+export type BackupEvent = MigrationBackup.Event
+export type Options = { backup?: MigrationBackup.Options }
 
-export function apply(db: Database, input: Migration[] = migrations) {
+export function apply(db: Database, input: Migration[] = migrations, options?: Options) {
+  return execute(db, input, input, true, options)
+}
+
+/** Incremental callers execute their targets, but must still recognize the rest of the shipped journal. */
+export function applyOnly(db: Database, input: Migration[], options?: Options) {
+  return execute(db, input, [...migrations, ...input], false, options)
+}
+
+function execute(db: Database, targets: Migration[], universe: Migration[], initialize: boolean, options?: Options) {
   return lock.withPermit(
     Effect.gen(function* () {
-      const tables = yield* db.all<{ name: string }>(
-        sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'`,
+      const backup = yield* db.transaction(
+        (tx) =>
+          Effect.gen(function* () {
+            // Classification, validation and the complete batch share the cross-process write reservation.
+            const tables = yield* tx.all<{ name: string }>(
+              sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'`,
+            )
+            const journal = yield* readJournal(tx, universe)
+            if (initialize && !tables.some((table) => table.name === "session")) {
+              if (tables.length) return yield* Effect.die("Database is not empty and has no session table")
+              yield* schema.up(tx)
+              yield* createJournal(tx)
+              yield* Effect.forEach(targets, (migration) => record(tx, migration.id))
+              return
+            }
+            const completed = new Set([...journal.applied, ...journal.legacy])
+            const pending = targets.filter((migration) => !completed.has(migration.id))
+            const changing =
+              !journal.exists || journal.legacy.some((id) => !journal.applied.includes(id)) || pending.length > 0
+            const file = (yield* tx.all<{ file: string | null }>(
+              sql`SELECT file FROM pragma_database_list WHERE name = 'main'`,
+            ))[0]?.file
+            const manager = file ? yield* MigrationBackup.open(file, changing, options?.backup) : undefined
+            if (manager) yield* manager.recover(journal)
+            if (!changing) return
+            if (manager)
+              yield* manager.capture({
+                baselineIDs: journal.applied,
+                legacyIDs: journal.legacy,
+                targetIDs: [
+                  ...new Set([...journal.applied, ...journal.legacy, ...targets.map((item) => item.id)]),
+                ].sort(),
+              })
+            yield* createJournal(tx)
+            yield* Effect.forEach(
+              journal.legacy.filter((id) => !journal.applied.includes(id)),
+              (id) => record(tx, id),
+            )
+            for (const migration of pending) {
+              yield* migration.up(tx)
+              yield* record(tx, migration.id)
+            }
+            return manager
+          }),
+        { behavior: "immediate" },
       )
-      if (tables.some((table) => table.name === "session")) return yield* applyExisting(db, input)
-      if (tables.length > 0) return yield* Effect.die("Database is not empty and has no session table")
-      // IMMEDIATE takes the write lock up front, so a second process (CLI and desktop share one database file)
-      // waits here instead of both creating the schema; the check inside the lock sees what the first one did.
-      yield* db.transaction((tx) =>
-        Effect.gen(function* () {
-          const created = yield* tx.get(sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'session'`)
-          if (created) return
-          yield* schema.up(tx)
-          yield* tx.run(
-            sql`CREATE TABLE ${sql.identifier("migration")} (id TEXT PRIMARY KEY, time_completed INTEGER NOT NULL)`,
-          )
-          yield* Effect.forEach(input, (migration) =>
-            tx.run(
-              sql`INSERT INTO ${sql.identifier("migration")} (id, time_completed) VALUES (${migration.id}, ${Date.now()})`,
-            ),
-          )
-        }),
+      if (!backup) return
+      // COMMIT is observable separately from filesystem finalization. Recovery infers it from complete journal facts.
+      const attemptID = backup.attemptID
+      yield* backup.observe({ kind: "committed", attemptID })
+      yield* db.transaction(
+        (tx) =>
+          Effect.gen(function* () {
+            const journal = yield* readJournal(tx, universe)
+            const current = yield* MigrationBackup.open(backup.file, false, options?.backup)
+            if (!current || current.attemptID !== attemptID) return
+            yield* current.recover(journal)
+          }),
         { behavior: "immediate" },
       )
     }),
   )
 }
 
-/**
- * Opens an already-initialised database safely: refuses a schema written by a newer build, and takes a consistent
- * backup before any pending migration runs so a destructive migration can be undone by restoring the copy.
- */
-function applyExisting(db: Database, input: Migration[]) {
+function createJournal(tx: Transaction) {
+  return tx.run(sql`CREATE TABLE IF NOT EXISTS migration (id TEXT PRIMARY KEY, time_completed INTEGER NOT NULL)`)
+}
+
+function record(tx: Transaction, id: string) {
+  return tx.run(sql`INSERT INTO migration (id, time_completed) VALUES (${id}, ${Date.now()})`)
+}
+
+function readJournal(tx: Transaction, universe: Migration[]) {
   return Effect.gen(function* () {
-    const hasJournal = yield* db.get(sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'migration'`)
-    const applied = hasJournal
-      ? (yield* db.all<{ id: string }>(sql`SELECT id FROM ${sql.identifier("migration")} ORDER BY id`)).map((row) => row.id)
+    const known = new Set(universe.map((item) => item.id))
+    if (known.has("20260511173437_session-metadata")) known.add("20260530232709_lovely_romulus")
+    const exists = !!(yield* tx.get(sql`SELECT name FROM sqlite_master WHERE type='table' AND name='migration'`))
+    const applied = exists
+      ? (yield* tx.all<{ id: unknown }>(sql`SELECT id FROM migration ORDER BY id`)).map((row) => row.id)
       : []
-    const known = new Set(input.map((migration) => migration.id))
-    const unknown = applied.filter((id) => !known.has(id))
-    if (unknown.length > 0)
-      return yield* Effect.die(
+    const unknown = applied.filter((id) => typeof id !== "string" || !known.has(id))
+    if (unknown.length)
+      return yield* Effect.fail(
         new Error(
           `This database was created by a newer Orchestra version (it has migrations this build does not know: ${unknown.join(", ")}). Update the app before opening it.`,
         ),
       )
-    if (input.every((migration) => applied.includes(migration.id))) return
-    yield* backup(db, applied.at(-1) ?? "legacy")
-    yield* applyOnly(db, input)
-  })
-}
-
-function backup(db: Database, from: string) {
-  return Effect.gen(function* () {
-    const file = (yield* db.all<{ file: string | null }>(sql`SELECT file FROM pragma_database_list WHERE name = 'main'`))[0]?.file
-    if (!file) return
-    const target = `${file}.backup-${from}-${Date.now()}`
-    yield* db.run(sql`VACUUM INTO ${target}`).pipe(
-      Effect.mapError((error) => new Error(`Could not back up the database before migrating, nothing was changed: ${error}`)),
-    )
-    prune(file)
-  })
-}
-
-function prune(file: string) {
-  const prefix = `${basename(file)}.backup-`
-  readdirSync(dirname(file))
-    .filter((name) => name.startsWith(prefix))
-    .map((name) => ({ name, time: Number(name.slice(name.lastIndexOf("-") + 1)) }))
-    .sort((a, b) => b.time - a.time)
-    .slice(KEEP_BACKUPS)
-    .forEach((old) => rmSync(join(dirname(file), old.name), { force: true }))
-}
-
-export function applyOnly(db: Database, input: Migration[]) {
-  return Effect.gen(function* () {
-    yield* db.run(
-      sql`CREATE TABLE IF NOT EXISTS ${sql.identifier("migration")} (id TEXT PRIMARY KEY, time_completed INTEGER NOT NULL)`,
-    )
-    let completed = new Set(
-      (yield* db.all<{ id: string }>(sql`SELECT id FROM ${sql.identifier("migration")}`)).map((row) => row.id),
-    )
-    if (completed.size === 0) {
-      // Existing installs used Drizzle's migration journal. Seed the new
-      // journal once so TypeScript migrations don't replay old SQL.
-      if (
-        yield* db.get(sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ${"__drizzle_migrations"}`)
-      ) {
-        const named = (yield* db.all<{ name: string }>(
-          sql`SELECT name FROM pragma_table_info('__drizzle_migrations')`,
-        )).some((column) => column.name === "name")
-
-        if (named) {
-          yield* db.run(sql`
-            INSERT OR IGNORE INTO ${sql.identifier("migration")} (id, time_completed)
-            SELECT name, ${Date.now()}
-            FROM ${sql.identifier("__drizzle_migrations")}
-            WHERE name IS NOT NULL
-          `)
+    const legacy: string[] = []
+    if (yield* tx.get(sql`SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`)) {
+      const columns = (yield* tx.all<{ name: string }>(
+        sql`SELECT name FROM pragma_table_info('__drizzle_migrations')`,
+      )).map((row) => row.name)
+      const rows = yield* tx.all<{ name?: unknown; created_at?: unknown }>(sql`SELECT * FROM __drizzle_migrations`)
+      for (const row of rows) {
+        if (columns.includes("name") && row.name !== null && row.name !== undefined) {
+          if (typeof row.name !== "string" || !row.name.length || !known.has(row.name))
+            return yield* Effect.fail(new Error(`Unknown legacy migration name: ${String(row.name)}`))
+          legacy.push(row.name)
+          continue
         }
-
-        if (!named) {
-          const entries = yield* db.all<{ created_at: number; prefix: string | null }>(sql`
-            SELECT created_at, strftime('%Y%m%d%H%M%S', created_at / 1000, 'unixepoch') AS prefix
-            FROM ${sql.identifier("__drizzle_migrations")}
-            WHERE created_at IS NOT NULL
-          `)
-
-          for (const entry of entries) {
-            const migration = input.find((item) => item.id.startsWith(`${entry.prefix}_`))
-            if (!migration) {
-              return yield* Effect.die(
-                new Error(`Legacy migration timestamp ${entry.created_at} does not match any known migration`),
-              )
-            }
-            yield* db.run(sql`
-              INSERT OR IGNORE INTO ${sql.identifier("migration")} (id, time_completed)
-              VALUES (${migration.id}, ${Date.now()})
-            `)
-          }
-        }
-        completed = new Set(
-          (yield* db.all<{ id: string }>(sql`SELECT id FROM ${sql.identifier("migration")}`)).map((row) => row.id),
+        const timestamp = row.created_at
+        if (
+          typeof timestamp !== "number" ||
+          !Number.isSafeInteger(timestamp) ||
+          !Number.isFinite(new Date(timestamp).getTime())
         )
+          return yield* Effect.fail(new Error(`Invalid legacy migration timestamp: ${String(timestamp)}`))
+        const prefix = new Date(timestamp).toISOString().replace(/[-:T]/g, "").slice(0, 14)
+        const matches = [...new Set(universe.map((item) => item.id))].filter((id) => id.startsWith(`${prefix}_`))
+        if (matches.length !== 1)
+          return yield* Effect.fail(
+            new Error(`Legacy migration timestamp ${timestamp} does not match any known migration unambiguously`),
+          )
+        legacy.push(matches[0]!)
       }
     }
-
-    for (const migration of input) {
-      if (completed.has(migration.id)) continue
-      // The semaphore only serialises this process. IMMEDIATE makes another process (CLI and desktop share the
-      // database file) wait for the write lock, and the journal is read again inside it, so a migration the other
-      // process just applied is skipped instead of failing on a duplicate column.
-      yield* db.transaction(
-        (tx) =>
-          Effect.gen(function* () {
-            const done = yield* tx.get(sql`SELECT id FROM ${sql.identifier("migration")} WHERE id = ${migration.id}`)
-            if (done) return
-            yield* migration.up(tx)
-            yield* tx.run(
-              sql`INSERT INTO ${sql.identifier("migration")} (id, time_completed) VALUES (${migration.id}, ${Date.now()})`,
-            )
-          }),
-        { behavior: "immediate" },
-      )
+    return {
+      exists,
+      applied: [...new Set(applied.filter((id): id is string => typeof id === "string"))].sort(),
+      legacy: [...new Set(legacy)].sort(),
     }
   })
 }

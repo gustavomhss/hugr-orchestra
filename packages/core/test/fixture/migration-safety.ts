@@ -38,6 +38,7 @@ export async function inspectBackupFootprint(filename: string, foreign: string[]
     active: null | { id: string; phase: "prepared" | "captured" | "ready"; tempName: string; finalName: string; backup: null | { name: string; bytes: number } }
     garbage: { name: string; bytes: number }[]
   }
+  assert.ok(state.recentAttempts.length <= 3, "recent attempt ring exceeded")
   const work = `${filename}.migration-work`
   const entries = await readdir(work, { withFileTypes: true })
   const directories = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name)
