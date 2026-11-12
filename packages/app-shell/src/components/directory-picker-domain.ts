@@ -432,7 +432,8 @@ export function createDirectorySearch(args: {
         continue
       }
       paths = Array.from(new Set((await Promise.all(paths.map((path) => match(path, part, 4)))).flat())).slice(0, 12)
-      if (!active() || paths.length === 0) return []
+      if (!active()) throw new StalePickerSearch()
+      if (paths.length === 0) return []
     }
     const matches = Array.from(new Set((await Promise.all(paths.map((path) => match(path, tail, 50)))).flat()))
     if (!active()) throw new StalePickerSearch()
