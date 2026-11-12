@@ -347,9 +347,27 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282763415",
           "source": "3bd38316d8cdd1a385f610090a109a758cd08a51",
           "result": "Actual popover/controller/TanStack rows: one control/two assertions per OS; isolated synthetic600x220 layout, no physical-browser geometry claim. Composes15/15 controls. Fault baselines not yet run."
+        },
+        {
+          "kind": "ui_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43285868925",
+          "source": "3bd38316d8cdd1a385f610090a109a758cd08a51",
+          "result": "36 valid App first-behavior RED per OS; deferred queue return expectation is one fixture setup miss, excluded. Later assertion tails unexecuted."
+        },
+        {
+          "kind": "ui_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43286041103",
+          "source": "3bd38316d8cdd1a385f610090a109a758cd08a51",
+          "result": "22 valid TUI first-behavior RED per OS, no setup misses; downstream ownership/ABA assertions unexecuted after missing query witnesses."
+        },
+        {
+          "kind": "ui_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43287303247",
+          "source": "8983671c77199fd8eacae6f2eb0f1697c9b52cb5",
+          "result": "Deferred public sender returns true instead of false; captured draft and no prior POST assertions pass,1F/3assertions per OS. One invalid queue return assertion removed in separately reviewed fixture correction; sender/query/draft requirements unchanged. Completes59 original first-witness cases compositionally, not59 distinct defects or proven later tails."
         }
       ],
-      "remaining": "API stage integrated; App/TUI15 controls now pass compositionally on both OS. Freeze59 fault selectors before original behavioral baseline. Consumer source contract and implementation still pending; fresh production BEFORE benchmark archived."
+      "remaining": "Consumer source authorized only after59 composed first-witness RED,15controls and independent exact-contract review. Root contract in remediation-model-consumers.md; actual source, regression and AFTER benchmark gates still pending."
     },
     {
       "id": "E7",
@@ -598,8 +616,33 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279188151",
           "source": "f0083529770a2effafb722443899dfa04ba7904a",
           "result": "Pinned Linux actual Worker reaches READY and parent sends start; no DONE/result by3s snapshot or owned6.5s containment. Does not establish worker received start or top-level-await causality; protocol pass is not product GREEN."
+        },
+        {
+          "kind": "diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43285225960",
+          "source": "a8f44cc3e4cfba338dad71386f0d3ba2b2b1dd98",
+          "result": "Pinned Linux controlled A/B: default awaited entry hangs after READY/start; test-only no-await entry using identical runtime produces1, original terminate Promise settles, actual worker exits threadId=-1, child naturalexit0. Protocol2pass/9assertions/Omni2; not product GREEN."
+        },
+        {
+          "kind": "staged_source_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43286717038",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Eleven actual lifecycle/safety cases per OS,68assertions each;10 actual Worker exits/threadId=-1 plus constructor-fault case. Includes entry rejection safeFailure/exit1, caller Scope, exact cancel-finalizer ACK and absolute clock guards."
+        },
+        {
+          "kind": "staged_source_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43286840580",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Six public controls per OS,42assertions/Omni6: source/compiled public semantics, R/hooks/receipts, sparse arguments, safeerrors and reuse. Extra conditional artifact assertion reflects actual worker-entry.js existence; original parent unchanged."
+        },
+        {
+          "kind": "source_cpu_gate_incomplete",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Linux six cases reach valid CPU marks256–307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51–52ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79–5.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
         }
-      ]
+      ],
+      "remaining": "Private11/public6 staged green both OS; CPU source still fails timing observations. Narrow fixture read-order correction and actual native-CPU termination diagnostic require cold review; no early return before Worker exit or timing relaxation authorized. Full package running."
     },
     {
       "id": "E11",
@@ -2480,8 +2523,15 @@
             "windows"
           ],
           "result": "Three behavioral failures per OS: remote close with known pending text; foreign transcript forwarding for 307/308. Authorization absent at foreign peer, no credential-leak claim. Later tails not reached."
+        },
+        {
+          "kind": "private_store_runtime_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43285750973",
+          "source": "baaa0296bc7544428e50fa49500b86c8dff65f82",
+          "result": "One actual Node SQLite/FULL/FK control per OS; Node24.22.2/SQLite3.53.4 measured, cleanup success. Setup Bun action selects Node24 after validator24.15; no Electron qualification. Future37 store cases/crash not executed against refusing scaffold."
         }
-      ]
+      ],
+      "remaining": "Private store source authorized under frozen receipt/quota/close-seal contract after actual Node control and cold acceptance review. Manager/target/producer/IPC/UI integration remains planned and not implemented."
     },
     {
       "id": "M14",
