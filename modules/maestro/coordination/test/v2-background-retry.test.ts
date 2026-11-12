@@ -26,8 +26,8 @@ import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Context, DateTime, Deferred, Effect, Layer, LayerMap, Schedule, Stream } from "effect"
 import { eq } from "drizzle-orm"
-import { Harness, fragmentFixture } from "../../../../packages/core/test/session-runner-harness"
-import { settleTool } from "../../../../packages/core/test/lib/tool"
+import { Harness, fragmentFixture } from "@orchestra/core/test/session-runner-harness"
+import { settleTool } from "@orchestra/core/test/lib/tool"
 import { GovernanceBackgroundV2 } from "../src/v2/governance/background"
 
 class State extends Context.Service<State, {
