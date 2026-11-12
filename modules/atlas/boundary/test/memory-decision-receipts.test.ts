@@ -189,6 +189,50 @@ test.each([
   absent(f, proposalId)
 })
 
+test("L11 receipts: internally coherent forged proposal cannot replace actual raw review authority", async () => {
+  const f = await harness.fresh()
+  const proposalId = propose(f)
+  decide(f, proposalId)
+  const raw = readFileSync(f.review)
+  const receipt = MemoryDecisionReceipts.receipt(f.repo, proposalId)
+  const indexed = JSON.stringify(receipt.indexed)
+  const proposal = MemoryDecisionReceipts.object(receipt.proposal)
+  const decision = MemoryDecisionReceipts.object(receipt.decision)
+  proposal.at = "2026-11-12T11:59:59.000Z"
+  delete proposal.id
+  const forgedId = harness.api.id(proposal)
+  proposal.id = forgedId
+  decision.proposalId = forgedId
+  delete decision.id
+  decision.id = harness.api.id(decision)
+  const forgedPath = MemoryDecisionReceipts.receiptPath(f.repo, forgedId)
+  rmSync(MemoryDecisionReceipts.receiptPath(f.repo, proposalId))
+  writeFileSync(forgedPath, JSON.stringify(receipt) + "\n")
+  const saved = MemoryDecisionReceipts.receipt(f.repo, forgedId)
+  const savedProposal = MemoryDecisionReceipts.object(saved.proposal)
+  const savedDecision = MemoryDecisionReceipts.object(saved.decision)
+  expect(forgedId).not.toBe(proposalId)
+  expect(path.basename(forgedPath)).toBe(`${forgedId}.jsonl`)
+  expect(savedProposal.id).toBe(harness.api.id(Object.fromEntries(Object.entries(savedProposal).filter(([key]) => key !== "id"))))
+  expect(savedDecision.proposalId).toBe(savedProposal.id)
+  expect(savedDecision.id).toBe(harness.api.id(Object.fromEntries(Object.entries(savedDecision).filter(([key]) => key !== "id"))))
+  expect(savedProposal).toEqual({ kind: "memory-proposal", member: "backend", ...rule,
+    at: "2026-11-12T11:59:59.000Z", by: "backend", id: forgedId })
+  expect(JSON.stringify(saved.indexed)).toBe(indexed)
+  expect(readFileSync(f.review)).toEqual(raw)
+  expect(raw.toString().trim().split("\n")).toHaveLength(1)
+  const review = harness.api.readReview(f.repo)
+  const memory = harness.api.createDurableMemory(f.repo).read()
+  expect(review.records.filter((record) => record.kind === "memory-proposal").map((record) => record.id)).toEqual([proposalId])
+  expect(review.rejected).toBeGreaterThan(0)
+  expect(memory.rejected).toBeGreaterThan(0)
+  const folded = harness.api.foldReview(review.records)
+  expect(folded.memoryDecisions).toHaveLength(0)
+  expect(folded.openMemoryProposals.map((record) => record.id)).toEqual([proposalId])
+  expect(memory.store).toHaveLength(0)
+  expect(memory.log.size).toBe(0)
+})
+
 test.each(["review-malformed", "review-directory", "receipt-directory-file", "unrelated-corrupt-receipt"] as const)(
   "L11 receipts: unknown %s blocks even a same-intent existing winner", async (fault) => {
     const f = await harness.fresh()
