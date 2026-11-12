@@ -279,12 +279,12 @@ test("Standard runs the seven steps in order, each Session with the scope and br
       // Verifier: the class proof node delivered, intent and acceptance only, four candidates with regions and at most
       // three options each, a refutation brief on the same model, never the finders' reasoning.
       expect(yield* h.scope("verify:logic.invariant")).toEqual({
-        skills: { entry: "lucy-review-prove-quote", allow: ["lucy-lens-correctness-logic-invariants", "team-stack-js-ts"] },
+        skills: { entry: "lucy-review-prove-property", allow: ["lucy-lens-correctness-logic-invariants", "team-stack-js-ts"] },
         tools: ["read", "grep", "glob", "review_probe"],
         budgets: { loads: 3, toolCalls: 30 },
       })
       const verify = brief(h.briefs, "verify:logic.invariant:verify")
-      expect(verify).toContain("Body of lucy-review-prove-quote.")
+      expect(verify).toContain("Body of lucy-review-prove-property.")
       expect(verify).toContain("refute")
       expect(dataBlock(verify, "intent and acceptance")).toEqual({
         intent: [{ text: "Fix the counter", line: "card:2" }],
@@ -296,7 +296,7 @@ test("Standard runs the seven steps in order, each Session with the scope and br
       const candidates: { id: string; region: string; options: { id: string }[] }[] = dataBlock(verify, "candidates")
       expect(candidates.map((entry) => entry.id)).toEqual(["C1", "C2", "C3", "C4"])
       expect(candidates[0].region).toBe("REGION src/a.ts:1-5")
-      expect(candidates[0].options.map((option) => option.id)).toEqual(["quote", "probe:test", "probe:script"])
+      expect(candidates[0].options.map((option) => option.id)).toEqual(["quote", "probe:test"])
       expect(candidates[2].options.map((option) => option.id)).toEqual(["quote"])
 
       // Merge: the duplicate counted as agreement, so the lens candidate it matched ranks first.
