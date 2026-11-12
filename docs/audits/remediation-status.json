@@ -836,9 +836,23 @@
       "id": "H6",
       "severity": "P1",
       "owner": "security",
-      "status": "source_runtime_fix_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "6c579f21f2",
+        "b2265ff4ee",
+        "5d65e7f75b",
+        "557573eb13",
+        "7da391dd5e",
+        "d3571c34cd",
+        "2a10f43a8b",
+        "e04beb4627",
+        "106a0c1933",
+        "aabd0ce791",
+        "24bdd9ed65",
+        "ca4f845b4b",
+        "ce46eb7c0f"
+      ],
       "evidence": [
         {
           "kind": "source_partial_fail",
@@ -847,9 +861,34 @@
         {
           "kind": "after_hoist_narrow_fail",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43162642145"
+        },
+        {
+          "kind": "sdk_transport_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43179887247",
+          "result": "actual SDK per-session HTTP transport, concurrent clients, close and disposal"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43181842637",
+          "result": "17 files: Linux87 pass/613 assertions/7 omni; Windows86 pass/1 POSIX skip/612 assertions/11 omni"
+        },
+        {
+          "kind": "integrated_seam_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43188088063",
+          "snapshot_sha": "a247ecd0184adcd75541e780f0dc4345936f419e",
+          "result": "4 tests across2files; merged E6/H6 execution-host and MCP identity seam"
+        },
+        {
+          "kind": "integrated_typecheck",
+          "exit": 0,
+          "receipt": "/tmp/orchestra-h6-l1-core-type.exit"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE plus final Context/SDK incremental approvals; root inspected all24 own-file hashes and both E6 unions"
         }
-      ],
-      "remaining": "Three manager timeouts persist after approved G2 hoist dependency; full gate not green."
+      ]
     },
     {
       "id": "H7",
@@ -2527,30 +2566,30 @@
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
-    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   },
   "integrated_checks": {
     "guards": {
       "exit": 0,
       "rules": 78,
-      "changed_paths": 231,
+      "changed_paths": 251,
       "gate": 0,
       "warn": 1,
-      "receipt": "/tmp/orchestra-wave6-guards.exit",
+      "receipt": "/tmp/orchestra-h6-integrated-guards.exit",
       "warning_resolution": "dep-new-added: existing repo catalog drizzle-orm is required as Engine devDependency by relocated SQL integration tests; same version, one workspace lock entry; PR explains need, no ignore or approval label."
     },
     "boundaries": {
       "exit": 0,
-      "parsed_files": 5582,
-      "cross_package_edges": 5082,
+      "parsed_files": 5593,
+      "cross_package_edges": 5087,
       "ledgered": 92,
       "new": 0,
       "stale": 0,
-      "receipt": "/tmp/orchestra-wave6-boundaries.exit"
+      "receipt": "/tmp/orchestra-h6-integrated-boundaries.exit"
     },
     "spawn_imports": {
       "exit": 0,
-      "receipt": "/tmp/orchestra-wave4-spawn.exit"
+      "receipt": "/tmp/orchestra-h6-integrated-spawn.exit"
     },
     "desktop_boundary_import": {
       "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134685283",
@@ -2563,9 +2602,9 @@
     },
     "core_typecheck": {
       "exit": 0,
-      "source": "2d7cf5872a",
-      "receipt": "/tmp/orchestra-l3-source-type-final.exit",
-      "scope": "L3 final plus prior integrated source; release Core tests separately checked in seal"
+      "source": "ce46eb7c0f",
+      "receipt": "/tmp/orchestra-h6-l1-core-type.exit",
+      "scope": "H6 merged E6 plus initial4 L1 acceptance; later acceptance extensions not included"
     },
     "engine_typecheck": {
       "exit": 0,
@@ -2575,12 +2614,12 @@
   },
   "next_contracts": {
     "G2": "Integrated9ec1751833; fixed with compositional SDK evidence and hoist24green, both independent approvals",
-    "E6": "Core/host source proved and integrated; wire tests-only ca359 fixture cold GO, controls pending. Root relocated fixture isolation retry pending; Engine type0.",
-    "H6": "cdaf source delta cold APPROVE; original three timeouts diagnosed fixture teardown/context; narrow6 queued, final runtime/type still open.",
+    "E6": "Core/host integrated; Schema5/Client5 and five package types green. Wire HTTP omitted-agent fixture and baseline transport cancellation diagnostics remain open.",
+    "H6": "Integrated ce46eb7c0f; full both-OS source proof plus root merged seam4green and Coretype0. Closed.",
     "M9_M10": "Integrated e8ab184d15, all four scoped gates green, source hashes16 equal, closed.",
     "L1": "Residual topology design cold GO after lifecycle resolutions; root tests-first next, no production GO.",
-    "M11_M13": "Startup cancellation design acceptance blocked on explicit STT/permission transport seams and cleanup semantics; outbox factual revalidation underway. No production GO.",
-    "E2": "Force-inflight behavioral RED; browser status and TUI mounted reconnect fixtures corrected, gates pending. No production GO.",
+    "M11_M13": "M11 trusted permission/WS seams explicitly planned; implementation sequenced after M13 delivery/close-intent contract. No production GO.",
+    "E2": "Three original behavioral REDs valid; expanded boundary suite cold FIX-FIRST two additional interleavings, tests-only corrections pending.",
     "T2": "Legitimate800KiB admitted-event acceptance cold GO; no size/transport policy selected."
   },
   "wave4": {
