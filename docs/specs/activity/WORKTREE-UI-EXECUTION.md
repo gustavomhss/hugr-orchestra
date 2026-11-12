@@ -1,6 +1,12 @@
 # WP-W3 UI acceptance anchor
 
 This is W3-A acceptance preparation, not a working manual-reading interface.
+Current receipt: hosted red 43288085468 is verified against exact source. Solid
+lane passed all 17 cases; browser lane passed the three existing store cases and
+failed all eleven new controller/filter cases for the explicit unavailable anchors.
+Focused Omni control is not applicable (zero spawns/delegated). W3-A is complete;
+W3-B may author the frozen disjoint implementation. Subsequent pending-request
+wording is historical. W2 green still gates closure and actual-HTTP rendered proof.
 W1 is complete; W2's hosted red is verified and its candidate is implemented
 and independently reviewed; hosted green remains pending.
 W3-B dispatch requires its own verified hosted red and the frozen API/Client;
@@ -129,3 +135,22 @@ Use source/age/attempt data from the admitted snapshot, preserving explicit unre
 zero, partial, blank owner, uncollapsed and unproved values. The project column and
 filter use canonical projectID. Keep shared kit typography/horizontal scrolling;
 inline errors and keyboard labels remain tied to the actual target.
+
+## Verified UI baseline
+
+Run [43288085468](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288085468)
+completed with Solid 17 pass/0 fail/109 expects and browser 3 pass/11 expected
+failures/11 expects. All eleven new request/filter cases fail for missing request
+admission/filtering; all existing cases and both additive locale cases pass.
+There are no skips. Browser focused Omni control explicitly reports not applicable,
+zero actual spawns and zero delegated; this proves no native behavior.
+
+Fetched snapshot ff6887b900710e4a63eb9d3099b881690c50d73d matches App tree
+04f66395d9d666268842a0e4c4bc86b175f152f6. Supporting Client/Protocol/Schema trees
+also match current source; all 31 named outcomes and both lane boundaries are in
+worktree-ui-baseline.json. No acceptance case or anchor changed after capture.
+The actual HTTP/DOM/rendered observations remain pending, separate from this proof.
+
+All first-wave executable red baselines now exist; first-wave dispatch readiness
+is true, with implementation in progress. This is not completion: only R0/W1
+are closed. W2 and W3 retain their independent green, review and integration gates.

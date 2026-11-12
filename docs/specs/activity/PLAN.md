@@ -241,10 +241,10 @@ actual composition/regression wiring, generated Client outputs.
 
 ## WP-W3 — Worktrees manual-reading interface
 
-Status: exact anchors and executable acceptance reviewed/typechecked; hosted red
-pending, runtime implementation not dispatched. See WORKTREE-UI-EXECUTION.md
+Status: W3-A complete; exact-source hosted red verified (43288085468), runtime
+implementation ready against the frozen contract. See WORKTREE-UI-EXECUTION.md
 and WORKTREE-UI-PREPARATION.md for separate rendered obligations.
-Owner: unassigned UI seat after anchor freeze.
+Owner: controller worker and lead-owned component/localization integration.
 Depends on W2 generated API and frozen W1 reading shape. Writes: activity
 inventory/view helpers and tests; page and EN/BR localization integrated by lead.
 Acceptance owner: W09–W12. Existing tab names/tokens/layout remain authoritative.
@@ -258,8 +258,8 @@ Acceptance owner: W09–W12. Existing tab names/tokens/layout remain authoritati
 
 ### Task W3-A — UI acceptance and red evidence
 
-Owner: lead; state: generated Client and exact anchors frozen; executable cases
-passed two coverage sweeps and cold quality review, hosted red pending.
+Owner: lead; state: complete, exact-source hosted red verified (43288085468),
+with two clean coverage sweeps and independent cold quality approval.
 Writes: focused activity unit/store tests.
 
 - **Axioms:** Solid store replacement and request ordering need actual production updaters; projection-only tests cannot prove component requests or visual behavior (R19/R20).
@@ -271,7 +271,8 @@ Writes: focused activity unit/store tests.
 
 ### Task W3-B — interface implementation and isolated verification
 
-Owner: UI implementation seat; state: awaits W3-A and frozen Client.
+Owner: controller worker plus lead UI integration; state: W3-A verified, ready
+against frozen Client; W2 green still gates closure and rendered HTTP acceptance.
 Writes: disjoint activity view files; lead serializes page/localization edits.
 
 - **Axioms:** read-only inventory is registration evidence, not idle/owner evidence; partial observed bytes cannot replace the logical cell (R1/R7/R20).

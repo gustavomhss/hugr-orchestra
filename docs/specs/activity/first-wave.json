@@ -83,22 +83,26 @@
     {
       "id": "W09",
       "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W09 manual requests use owned signals, coalesce, and admit only known row IDs; additional W09 ordering/lifetime cases in the same file; rendered steps in WORKTREE-UI-PREPARATION.md pending",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288085468"
     },
     {
       "id": "W10",
       "test": "packages/app-shell/test-browser/activity-worktree-reading.test.ts :: W10 unread, complete zero and partial readings retain separate monotonic ages and named source; W10 missing and noncanonical wire revisions fail without replacing a successful inventory; rendered steps pending",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288085468"
     },
     {
       "id": "W11",
       "test": "packages/app-shell/test-browser/activity-worktree-reading.test.ts :: W11 filtering preserves opaque cross-project rows, blank owners and registered facts; rendered selection/category/empty-state steps in WORKTREE-UI-PREPARATION.md pending",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288085468"
     },
     {
       "id": "W12",
       "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W12 row failures stay per target, retries coalesce, and current failures retain facts and timestamps; activity-worktree-stale.test.ts :: W12 retired same-ID completions cannot settle a replacement row's busy or failed action; src/orchestra/chapters/activity/copy.test.ts :: W12 worktree $locale labels preserve source, row identity, unique and proof vocabulary; actual-HTTP rendered steps pending",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288085468"
     }
   ],
   "wps": [
@@ -168,7 +172,7 @@
     {
       "id": "WP-W3",
       "preparationAnchor": "docs/specs/activity/WORKTREE-UI-PREPARATION.md",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red",
+      "executionStatus": "hosted-red-verified-ready-for-implementation",
       "covers": ["W09", "W10", "W11", "W12"],
       "writes": [
         "packages/app-shell/src/orchestra/chapters/activity",
@@ -183,12 +187,13 @@
         "packages/client/src/generated-effect",
         "packages/schema/src/activity-monitor.ts"
       ],
-      "executionAnchor": "docs/specs/activity/WORKTREE-UI-EXECUTION.md"
+      "executionAnchor": "docs/specs/activity/WORKTREE-UI-EXECUTION.md",
+      "acceptanceBaseline": "ff6887b900710e4a63eb9d3099b881690c50d73d"
     }
   ],
   "baseline": "d20520c2d04221b77b4fdad6785d65886559e322",
-  "status": "preparation-only",
-  "readyForImplementationDispatch": false,
+  "status": "implementation-in-progress",
+  "readyForImplementationDispatch": true,
   "integrationOrder": ["WP-R0", "WP-W1", "WP-W2", "WP-W3"],
   "prerequisites": [
     "persisted-registration-incarnation-producer",

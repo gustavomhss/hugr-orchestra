@@ -35,10 +35,14 @@ approved preparation. A compilable unavailable controller anchor now freezes
 the generated Client/store/request/clock signatures. W09–W12 executable cases
 and translation assertions received independent quality review and two clean
 coverage sweeps per disjoint scope after closing identified gaps. App typecheck,
-formatting and guards passed; the scoped hosted red request is active at
-/tmp/activity-worktree-ui-red-ci.log. See WORKTREE-UI-EXECUTION.md.
+formatting and guards passed. Hosted red 43288085468 is verified: Solid 17 pass;
+browser 3 existing pass/11 expected new failures; Omni not applicable with zero
+spawns/delegation. Exact App/Client/Protocol/Schema trees and 31 named outcomes
+are in worktree-ui-baseline.json. W3-A is complete; frozen disjoint implementation
+may proceed while W2 validates. W2 green still gates W3 closure and actual-HTTP
+rendered inspection. See WORKTREE-UI-EXECUTION.md.
 The mistaken root typecheck was stopped and a scoped App rerun passed. No local
-tests ran. W3 runtime implementation is not dispatched. Grok 4.7
+tests ran. Grok 4.7
 was attempted for a read-only W2 review: opencode-go produced no verdict within
 the bounded attempt, and OpenRouter refused for exhausted credit. Neither is
 review evidence; existing independent agent reviews remain authoritative.
