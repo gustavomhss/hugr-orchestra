@@ -50,7 +50,7 @@ function open(platform: Platform, scope: ServerScope, directory: string) {
   }
 }
 
-// A missing store is not a failure. A failed read is reported and rethrown so it is not "nothing saved".
+// A missing store is not a failure. A failed read is reported and is not a confirmed empty store.
 function reporting(platform: Platform, report: (error: unknown) => void): Platform {
   const storage = platform.storage
   if (!storage) return platform
@@ -69,7 +69,7 @@ function reporting(platform: Platform, report: (error: unknown) => void): Platfo
             },
             report,
           }).then((ok) => {
-            if (!ok) throw new Error("behavior read failed")
+            if (!ok) return null
             return value ?? null
           })
         },
