@@ -181,6 +181,29 @@ test("L6: actual absence observed during restore or selection never enters prove
         },
       }
       const result = current.api.replayKnowledge(fresh.repo, disk, AtlasCas.policy, () => true)
+      expect(existsSync(current.api.blobPath(fresh.repo, row.contentHash))).toBe(true)
+      if (phase === "before-selection-read" && removed.length === 0) {
+        // Snapshot control, not absence RED: a validated snapshot need not cause a redundant second get.
+        expect(reads, "snapshot control: no second get or removal").toEqual([fact])
+        expect(existsSync(file)).toBe(true)
+        const actual = fresh.disk.get(row.contentHash)
+        expect(actual).toEqual(fact)
+        expect(current.api.id(actual as AtlasCas.Fact)).toBe(row.contentHash)
+        expect(result).toEqual({
+          applied: seal === "proven" ? 1 : 0,
+          staged: seal === "proven" ? 0 : 1,
+          missing: 0,
+          rejected: 0,
+        })
+        expect(current.api.rehydrateProjection(fresh.disk).current.get(row.nodeKey)?.contentHash).toBe(
+          seal === "proven" ? row.contentHash : undefined,
+        )
+        expect(AtlasCas.staged(fresh.disk).current.get(row.nodeKey)?.contentHash).toBe(
+          seal === "proven" ? undefined : row.contentHash,
+        )
+        continue
+      }
+      // after-real-put is always strict; the selection phase is strict whenever it observes actual absence.
       expect(removed).toContain(file)
       expect(removed.every((target) => target === file)).toBe(true)
       expect(reads).toContain(undefined)
@@ -189,7 +212,6 @@ test("L6: actual absence observed during restore or selection never enters prove
       expect(fresh.disk.loadProjection()).toBeUndefined()
       expect(current.api.rehydrateProjection(fresh.disk).current.size).toBe(0)
       expect(AtlasCas.staged(fresh.disk).current.size).toBe(0)
-      expect(existsSync(current.api.blobPath(fresh.repo, row.contentHash))).toBe(true)
     }
   }
 })
