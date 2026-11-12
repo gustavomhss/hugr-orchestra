@@ -56,18 +56,18 @@ const routing = (f: Fixture) => Layer.effect(LocationServiceMap.Service, LayerMa
 
 function scheduler(f: Fixture, sessions: SessionV2.Interface) {
   return Effect.gen(function* () {
-    const context = yield* Layer.build(AppNodeBuilder.build(ScheduledTask.node, [
+    const context = yield* Layer.build(Layer.fresh(AppNodeBuilder.build(ScheduledTask.node, [
       [Database.node, Layer.succeed(Database.Service, f.database)],
       [SessionV2.node, Layer.succeed(SessionV2.Service, sessions)],
       [LocationServiceMap.node, routing(f)],
-    ]))
+    ])))
     return Context.get(context, ScheduledTask.Service)
   })
 }
 
 function sessionsWithWakeFailure(f: Fixture, wake: SessionExecution.Interface["wake"]) {
   return Effect.gen(function* () {
-    const context = yield* Layer.build(AppNodeBuilder.build(SessionV2.node, [
+    const context = yield* Layer.build(Layer.fresh(AppNodeBuilder.build(SessionV2.node, [
       [Database.node, Layer.succeed(Database.Service, f.database)],
       [EventV2.node, Layer.succeed(EventV2.Service, f.events)],
       [SessionStore.node, Layer.succeed(SessionStore.Service, Context.get(f.context, SessionStore.Service))],
@@ -77,7 +77,7 @@ function sessionsWithWakeFailure(f: Fixture, wake: SessionExecution.Interface["w
       [LocationServiceMap.node, routing(f)],
       // The original application already registered these on the very same Event service and database.
       [SessionProjector.node, Layer.empty], [SessionArchive.node, Layer.empty],
-    ]))
+    ])))
     return Context.get(context, SessionV2.Service)
   })
 }
@@ -242,9 +242,9 @@ describe("H8 direct safety", () => {
     const api = management(f, { ...f.operators, validate: (binding, target) => f.operators.validate(binding, target).pipe(
       Effect.tapError((error) => Effect.sync(() => { original.push(error) })),
       Effect.catchCause((cause) => Effect.failCause(Cause.fromReasons(cause.reasons.map((reason) =>
-        reason.annotate(new Map([["h8-validation", "real-policy"]])))))),
+        reason.annotate(Context.makeUnsafe(new Map([["h8-validation", "real-policy"]]))))))),
       Effect.onExit(() => Effect.failCause(Cause.fromReasons([
-        Cause.makeDieReason(alien).annotate(new Map([["h8-validation", "alien-finalizer"]])),
+        Cause.makeDieReason(alien).annotate(Context.makeUnsafe(new Map([["h8-validation", "alien-finalizer"]]))),
       ]))),
     ) })
     yield* f.arm("placed")
@@ -394,7 +394,7 @@ describe("H8 direct safety", () => {
       const id = SessionV2.ID.create()
       const race = new SessionProjector.SessionAlreadyProjected()
       const alien = new Error("adjacent create rollback identity")
-      const original = Cause.makeDieReason(race).annotate(new Map([["h8-race", "original"]]))
+      const original = Cause.makeDieReason(race).annotate(Context.makeUnsafe(new Map([["h8-race", "original"]])))
       const exit = yield* f.sessions.create({ id, location: f.owner.location }, {
         beforeCommit: Effect.failCause(Cause.fromReasons(mixed ? [original, Cause.makeDieReason(alien)] : [original])),
       }).pipe(Effect.exit)

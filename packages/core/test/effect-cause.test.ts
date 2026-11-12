@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Cause, Schema } from "effect"
+import { Cause, Context, Schema } from "effect"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { dieFailures } from "../src/effect/cause"
 import { failureCause, rememberFailureCause } from "../src/scheduled-task/failure-cause"
@@ -8,10 +8,10 @@ test("H8 safety: dieFailures keeps every identity, annotation and interrupt in o
   const first = new Error("first typed failure")
   const second = new Error("second typed failure")
   const alien = new Error("independent defect")
-  const failure = Cause.makeFailReason(first).annotate(new Map([["h8-source", "first"]]))
-  const other = Cause.makeFailReason(second).annotate(new Map([["h8-source", "second"]]))
-  const defect = Cause.makeDieReason(alien).annotate(new Map([["h8-source", "defect"]]))
-  const interrupt = Cause.makeInterruptReason(181).annotate(new Map([["h8-source", "interrupt"]]))
+  const failure = Cause.makeFailReason(first).annotate(Context.makeUnsafe(new Map([["h8-source", "first"]])))
+  const other = Cause.makeFailReason(second).annotate(Context.makeUnsafe(new Map([["h8-source", "second"]])))
+  const defect = Cause.makeDieReason(alien).annotate(Context.makeUnsafe(new Map([["h8-source", "defect"]])))
+  const interrupt = Cause.makeInterruptReason(181).annotate(Context.makeUnsafe(new Map([["h8-source", "interrupt"]])))
   const original = Cause.fromReasons([failure, other, defect, interrupt])
   const converted = dieFailures(original)
   expect(converted.reasons.map((reason) => reason._tag)).toEqual(["Die", "Die", "Die", "Interrupt"])
