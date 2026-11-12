@@ -1,4 +1,4 @@
-# Project trust: MCP servers, plugins, formatters and LSP
+# Project trust: configuration and executable integrations
 
 A project can declare code to run in its own config (`orchestra.json`, `orchestra.jsonc`, or the same files under `.orchestra/`). A cloned repository could use that to run anything on your machine. So none of the following run until you approve the project:
 
@@ -9,7 +9,9 @@ A project can declare code to run in its own config (`orchestra.json`, `orchestr
 
 When the project is not approved, the project's formatter and LSP settings are ignored as a whole (the built-in defaults and your own config still apply), and a warning in the log says so.
 
-Remote MCP servers (a URL), and anything declared in your own global config, are not affected.
+Project provider overrides and agent model, engine, request, permissions and selection settings also require trust. Agent selection includes the default agent, visibility, mode and disabling an agent; this applies to JSON and discovered agent Markdown files. Revoking trust removes those overrides when configuration reloads.
+
+Remote MCP servers (a URL), and anything declared in your own global config, are not affected by these executable-integration restrictions.
 
 Trust only folders you wrote or reviewed. Do not approve a project just to make a banner go away.
 
