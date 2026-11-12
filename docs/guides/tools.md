@@ -86,3 +86,11 @@ Specialists use real engines, not reimplementations. Pinned, checksummed version
 | Plugins | Add tools and lifecycle hooks (Promise or Effect APIs) and can extend the terminal UI. Packages have size and entry limits. |
 | MCP servers | From the project or your config; start only after you trust the project folder. Sign-ins are stored encrypted. |
 | Hooks | "When this happens, if this holds, then": block the action, ask you, remind the agent, require a repair or run a check. Each firing is logged. |
+
+## Code Mode deadlines
+
+Code Mode runs each program in its own Bun worker. Its deadline covers worker startup, parsing and execution, including regular expressions that would otherwise block the host event loop. Host tools still run with the caller's services and scope; their hooks, call budget and execution receipts remain authoritative.
+
+A timeout or interruption stops new tool calls, waits for admitted host calls and their cleanup, and waits for the worker to exit. `Promise.race` also waits for a losing tool call's cleanup before returning its winner. A host tool that cannot be interrupted can delay that cleanup; worker initialization can also delay shutdown before it is ready. The deadline does not promise a hard wall-clock settlement bound in those cases.
+
+Bun bundles must include both `src/index.ts` and `src/worker-entry.js` as adjacent output entries. This worker path is verified for Bun; it does not establish Node or browser support.
