@@ -6,6 +6,8 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { Location } from "@orchestra/core/location"
+import { ModelV2 } from "@orchestra/core/model"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { ProjectV2 } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
@@ -281,7 +283,8 @@ describe("E6 literal variant legacy history", () => {
       expect(yield* SessionV2.SessionLegacyImport.run(database.db)).toBe(1)
       const imported = (yield* sessions.messages({ sessionID: created.id, order: "asc" })).find((message) => message.type === "assistant")
       if (imported?.type !== "assistant") return yield* Effect.die("Expected the actual imported assistant")
-      expect(imported.model).toEqual({ id: "m", providerID: "p", ...(variant === undefined ? {} : { variant }) })
+      expect(imported.model).toEqual({ id: ModelV2.ID.make("m"), providerID: ProviderV2.ID.make("p"),
+        ...(variant === undefined ? {} : { variant: ModelV2.VariantID.make(variant) }) })
       expect(yield* SessionV2.SessionLegacyImport.run(database.db)).toBe(0)
       expect(yield* database.db.select().from(MessageTable).where(eq(MessageTable.session_id, created.id)).all().pipe(Effect.orDie)).toEqual(before)
       const retained = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.session_id, created.id)).all().pipe(Effect.orDie)
