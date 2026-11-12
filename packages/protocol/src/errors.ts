@@ -52,6 +52,15 @@ export class ProviderNotFoundError extends Schema.TaggedErrorClass<ProviderNotFo
   { httpApiStatus: 404 },
 ) {}
 
+export class ModelExecutionContextNotFoundError extends Schema.TaggedErrorClass<ModelExecutionContextNotFoundError>()(
+  "ModelExecutionContextNotFoundError",
+  {
+    reason: Schema.Literals(["session-missing", "parent-missing", "location-mismatch", "agent-missing"]),
+    message: Schema.String,
+  },
+  { httpApiStatus: 404 },
+) {}
+
 export class SessionNotFoundError extends Schema.TaggedErrorClass<SessionNotFoundError>()(
   "SessionNotFoundError",
   {

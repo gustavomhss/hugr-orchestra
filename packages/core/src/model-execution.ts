@@ -1,6 +1,7 @@
 export * as ModelExecution from "./model-execution"
 
 import { Context, Effect, Layer, Schema } from "effect"
+import { Reason, Decision, Input, Response, Entry, Selection } from "@orchestra/schema/model-execution"
 import { AgentV2 } from "./agent"
 import { Catalog } from "./catalog"
 import { makeLocationNode } from "./effect/app-node"
@@ -12,33 +13,8 @@ import { SessionSchema } from "./session/schema"
 import { SessionStore } from "./session/store"
 import { SessionSubagentModels } from "./session/subagent-models"
 
-export const Reason = Schema.Literals([
-  "model-missing",
-  "model-disabled",
-  "connection-unavailable",
-  "model-denied",
-  "unsupported-api",
-  "invalid-options",
-  "variant-unavailable",
-  "host-unregistered",
-  "host-unavailable",
-  "host-model-unsupported",
-  "host-options-unsupported",
-])
-export type Reason = typeof Reason.Type
-export type Decision =
-  | { readonly status: "ready" }
-  | { readonly status: "unsupported" | "unavailable"; readonly reason: Reason }
-export type Input = {
-  readonly context:
-    | { readonly type: "session"; readonly sessionID: SessionSchema.ID; readonly agentID?: string }
-    | { readonly type: "draft"; readonly agentID?: string; readonly parentID?: SessionSchema.ID }
-  readonly model?: ModelV2.Ref
-}
-export interface Response {
-  readonly models: ReadonlyArray<Decision & { readonly model: ModelV2.Info; readonly engine: string }>
-  readonly selection?: Decision & { readonly ref: ModelV2.Ref; readonly engine: string }
-}
+export { Reason, Decision, Input, Response, Entry, Selection }
+
 export class ContextError extends Schema.TaggedErrorClass<ContextError>()("ModelExecution.ContextError", {
   reason: Schema.Literals([
     "session-missing",

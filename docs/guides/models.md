@@ -74,6 +74,12 @@ Availability is assessed for the selected executor. A connected provider can exp
 
 Claude mode checks its cached account status and accepts enabled Anthropic catalog models with supported effort levels. Canonical generation/provider options run through the native engine; Claude mode refuses those options instead of silently ignoring them. Its account status is advisory and cannot guarantee that a later provider call will be accepted.
 
+Clients can request a contextual assessment with `models.execution({ location, context, model })`, backed by `POST /api/model/execution`. Use a context with `type: "session"` and `sessionID` for a prospective selection in an existing Session, or `type: "draft"` before creating one. Both accept an optional `agentID`; a draft can also name a `parentID`. The response retains its Location and contains model entries plus an optional assessment of the exact requested Ref. An unknown candidate remains in `selection` with `model-missing`; it does not become an invented catalog entry. Omitting `model` omits `selection` and does not resolve the execution host's SDK default.
+
+This request does not create a Session, admit a prompt, change its selected agent/model, or start provider/tool work. Invalid Session, parent, agent or Location context returns a declared 404; an invalid Session chain returns 400 and unavailable policy storage returns 503. An assessment can become stale and does not replace validation when executing. Existing model list/default methods keep their global catalog behavior; a secondary host's eligibility does not enable its models globally.
+
+When an assessment is canceled, the server waits for the lookup's cleanup before ending request processing.
+
 ## Prompt estimate
 
 For automatic compaction, the heuristic prompt estimate reuses bounded JSON-encoded lengths of identical long text values. The current request structure is serialized afresh for each estimate; whole requests or conversation histories are not cached.

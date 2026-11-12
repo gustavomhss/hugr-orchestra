@@ -12,7 +12,11 @@ const wire = () => {
   if (!future) throw new Error("API RED E6 wire: shared ModelExecution schemas are absent")
   return future.ModelExecution
 }
-const ref = { providerID: "openai", id: "wire-model", variant: "high" }
+const ref = Model.Ref.make({
+  providerID: Provider.ID.make("openai"),
+  id: Model.ID.make("wire-model"),
+  variant: Model.VariantID.make("high"),
+})
 
 test("API E6 wire: Reason is the closed eleven-value model decision set", () => {
   const decode = Schema.decodeUnknownSync(wire().Reason)
@@ -28,7 +32,7 @@ test("API E6 wire: Reason is the closed eleven-value model decision set", () => 
     "host-unavailable",
     "host-model-unsupported",
     "host-options-unsupported",
-  ])
+  ] as const)
     expect(decode(reason)).toBe(reason)
   for (const reason of ["agent-missing", "storage-unavailable", "invalid-session-chain", "unknown"])
     expect(() => decode(reason)).toThrow()
@@ -37,7 +41,7 @@ test("API E6 wire: Reason is the closed eleven-value model decision set", () => 
 test("API E6 wire: Decision discriminates ready from required non-ready reasons", () => {
   const decode = Schema.decodeUnknownSync(wire().Decision, { onExcessProperty: "error" })
   expect(decode({ status: "ready" })).toEqual({ status: "ready" })
-  for (const status of ["unsupported", "unavailable"]) {
+  for (const status of ["unsupported", "unavailable"] as const) {
     expect(decode({ status, reason: "model-missing" })).toEqual({ status, reason: "model-missing" })
     expect(() => decode({ status })).toThrow()
   }
@@ -54,16 +58,17 @@ test("API E6 wire: Input accepts Session or draft context and omits undefined op
   const contract = wire().Input
   const decode = Schema.decodeUnknownSync(contract)
   expect(decode({ context: { type: "session", sessionID: "ses_wire", agentID: "host-seat" }, model: ref })).toEqual({
-    context: { type: "session", sessionID: "ses_wire", agentID: "host-seat" },
+    context: { type: "session", sessionID: Session.ID.make("ses_wire"), agentID: "host-seat" },
     model: ref,
   })
   expect(
-    Schema.encodeSync(contract)(
-      decode({ context: { type: "draft", agentID: undefined, parentID: undefined }, model: undefined }),
-    ),
+    Schema.encodeSync(contract)({
+      context: { type: "draft", agentID: undefined, parentID: undefined },
+      model: undefined,
+    }),
   ).toEqual({ context: { type: "draft" } })
   expect(decode({ context: { type: "draft", parentID: "ses_parent" } })).toEqual({
-    context: { type: "draft", parentID: "ses_parent" },
+    context: { type: "draft", parentID: Session.ID.make("ses_parent") },
   })
   for (const context of [
     { type: "session" },
@@ -76,12 +81,12 @@ test("API E6 wire: Input accepts Session or draft context and omits undefined op
 
 test("API E6 wire: Entry requires real Model.Info; Selection can preserve a missing Ref without fabricating Info", () => {
   const model = Model.Info.empty(Provider.ID.make(ref.providerID), Model.ID.make(ref.id))
-  const entry = { model: Schema.encodeSync(Model.Info)(model), engine: "orchestra", status: "ready" }
+  const entry = { model: Schema.encodeSync(Model.Info)(model), engine: "orchestra", status: "ready" as const }
   const selection = {
-    ref: { ...ref, id: "missing" },
+    ref: { ...ref, id: Model.ID.make("missing") },
     engine: "claude-code",
-    status: "unavailable",
-    reason: "model-missing",
+    status: "unavailable" as const,
+    reason: "model-missing" as const,
   }
   const decoded = Schema.decodeUnknownSync(wire().Response)({ models: [entry], selection })
   expect(decoded.models[0].model).toEqual(model)
@@ -107,5 +112,5 @@ test("API E6 wire: shared public schemas have distinct stable identifiers and pl
   expect(Object.getPrototypeOf(Schema.decodeUnknownSync(wire().Input)({ context: { type: "draft" } }))).toBe(
     Object.prototype,
   )
-  expect(Schema.decodeUnknownSync(Session.ID)("ses_wire")).toBe("ses_wire")
+  expect(Schema.decodeUnknownSync(Session.ID)("ses_wire")).toBe(Session.ID.make("ses_wire"))
 })

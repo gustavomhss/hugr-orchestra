@@ -56,6 +56,7 @@
     "./mcp": "./src/mcp.ts",
     "./mcp-event": "./src/mcp-event.ts",
     "./model": "./src/model.ts",
+    "./model-execution": "./src/model-execution.ts",
     "./models-dev": "./src/models-dev.ts",
     "./permission": "./src/permission.ts",
     "./permission-saved": "./src/permission-saved.ts",

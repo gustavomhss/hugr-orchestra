@@ -1,4 +1,10 @@
 import { Catalog } from "@orchestra/core/catalog"
+import { ModelExecution } from "@orchestra/core/model-execution"
+import {
+  InvalidRequestError,
+  ModelExecutionContextNotFoundError,
+  ServiceUnavailableError,
+} from "@orchestra/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
@@ -40,6 +46,24 @@ export const ModelHandler = HttpApiBuilder.group(Api, "server.model", (handlers)
             Effect.gen(function* () {
               return (yield* preferred(catalog)) ?? (yield* catalog.model.default()) ?? null
             }),
+          )
+        }),
+      )
+      .handle(
+        "model.execution",
+        Effect.fn(function* ({ payload }) {
+          const execution = yield* ModelExecution.Service
+          return yield* response(
+            execution.describe(payload).pipe(
+              Effect.mapError((error) => {
+                const message = "Model execution context is unavailable"
+                if (error.reason === "storage-unavailable")
+                  return new ServiceUnavailableError({ message, service: "model-execution" })
+                if (error.reason === "invalid-session-chain")
+                  return new InvalidRequestError({ message, kind: "invalid-model-execution-context" })
+                return new ModelExecutionContextNotFoundError({ reason: error.reason, message })
+              }),
+            ),
           )
         }),
       )
