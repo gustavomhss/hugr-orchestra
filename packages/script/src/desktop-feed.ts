@@ -153,7 +153,7 @@ function newer(left: string, right: string): boolean {
 }
 
 function receipt(value: unknown): value is string {
-  return typeof value === "string" && /^[a-f0-9]{64}$/.test(value)
+  return typeof value === "string" && value.length === 64 && /^[a-f0-9]{64}$/.test(value)
 }
 
 function checksum(value: unknown): value is string {

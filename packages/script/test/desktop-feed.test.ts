@@ -136,6 +136,16 @@ test("desktop feed API floor survives all manifests absent and authorizes only s
   ).not.toThrow()
 })
 
+test("desktop feed API refuses a receipt SHA256 with a trailing newline", async () => {
+  const helper = await api()
+  const floor = { version, receiptSha256: receiptSha256 + "\n" }
+  expect(() => helper.parseDesktopFeedFloor(marker(floor))).toThrow("RELEASE_FEED_FLOOR_INVALID")
+  expect(() => helper.withDesktopFeedFloor("", floor)).toThrow("RELEASE_FEED_FLOOR_INVALID")
+  expect(() =>
+    helper.assertDesktopFeedVersion({ ...floor, currentFeeds: [], releaseExists: false }),
+  ).toThrow("RELEASE_FEED_IDENTITY_INVALID")
+})
+
 test("desktop feed API compares canonical stable segments numerically in major minor patch order", async () => {
   const helper = await api()
   for (const [newer, older] of [
