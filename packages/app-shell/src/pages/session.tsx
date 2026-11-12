@@ -523,10 +523,16 @@ export default function Page() {
 
   const followupOwner = { serverScopeKey: serverSDK().scope, directory: sdk().directory }
   const [followup, setFollowup] = createQueuedPromptStore(followupOwner)
+  const followupBaseOwnership = createSubmissionOwner(() => ({
+    server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
+    scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
+    active: serverSDK().transportCurrent?.() !== false && sdk().transportCurrent?.() !== false,
+  }))
   const followupOwnership = createSubmissionOwner(() => ({
     server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
     scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
     epoch: serverSDK().connectionEpoch?.() ?? 0,
+    context: local.model.execution.context(),
     policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
   }))
   const queuedItemOwner = (() => {
@@ -1603,6 +1609,7 @@ export default function Page() {
   const followupMutation = useMutation(() => ({
     mutationFn: async (input: { sessionID: string; id: string; manual?: boolean }) => {
       const owner = sessionOwnership.capture()
+      const base = followupBaseOwnership.capture()
       const binding = followupOwnership.capture()
       const directorySDK = sdk()
       const server = serverSDK()
@@ -1617,10 +1624,13 @@ export default function Page() {
       const itemOwner = queuedItemOwner().get(identity)?.token
       if (!itemOwner) return
       const policyVersion = server.sessionManagement.subagentModelsWriteVersion?.(input.sessionID) ?? 0
-      const current = () => owner.current() && binding.current() && queuedItemOwner().get(identity)?.token === itemOwner &&
+      const baseCurrent = () => owner.current() && base.current() &&
         serverSDK() === server && sdk().scope === directorySDK.scope && server.transportCurrent?.() !== false &&
         directorySDK.transportCurrent?.() !== false && sdk().directory === directorySDK.directory && params.id === sessionID &&
-        JSON.stringify(server.server.http) === credentials &&
+        sdk().orchestra === directorySDK.orchestra && sdk().api === directorySDK.api &&
+        JSON.stringify(server.server.http) === credentials
+      const itemCurrent = () => queuedItemOwner().get(identity)?.token === itemOwner
+      const current = () => baseCurrent() && binding.current() && itemCurrent() &&
         (server.sessionManagement.subagentModelsWriteVersion?.(input.sessionID) ?? 0) === policyVersion
 
       if (input.manual) setFollowup("paused", input.sessionID, undefined)
@@ -1648,8 +1658,10 @@ export default function Page() {
       if (ok === false && current()) setFollowup("failed", input.sessionID, input.id)
       if (!ok) return
 
-      if (item.source) queuedPromptSources.release(item.source)
-      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry.id !== input.id))
+      if (!baseCurrent() || !itemCurrent()) return
+      if (draft.source) queuedPromptSources.release(draft.source)
+      if (!baseCurrent() || !itemCurrent()) return
+      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry !== item))
       if (input.manual) owner.run(resumeScroll)
     },
   }))

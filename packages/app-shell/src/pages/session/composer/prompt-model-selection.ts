@@ -83,6 +83,8 @@ export function createPromptModelSelection(input: {
   }
   const candidate = () => intent().model ?? input.agent()?.model ?? configured() ?? models.recent.list()[0] ?? fallback()
   const execution = createModelExecutionView({ sdk, sessionID: () => undefined, ready: () => models.ready() && prompt.ready(),
+    metadata: () => ({ agents: sync().data.agent, config: sync().data.config, providers: [...providers.all()],
+      connected: providers.connected().map((provider) => provider.id), semanticEpoch: sdk().modelExecutionEpoch() }),
     agentID: () => input.agent()?.id ?? "maestro", agent: input.agent, intent, candidate,
     savedVariant: (key) => models.variant.get(key),
   })
@@ -93,7 +95,7 @@ export function createPromptModelSelection(input: {
     const metadata = provider?.models[key.modelID]
     const item = models.find(key) ?? (provider && metadata ? { ...metadata, provider,
       name: metadata.name.replace("(latest)", "").trim(), latest: metadata.name.includes("(latest)") } : undefined)
-    const token = `${key.providerID}:${key.modelID}`
+    const token = JSON.stringify([key.providerID, key.modelID])
     const selected = intent().model ?? candidate()
     if (item && selected?.providerID === key.providerID && selected.modelID === key.modelID) known.set(token, item)
     return item ?? known.get(token)

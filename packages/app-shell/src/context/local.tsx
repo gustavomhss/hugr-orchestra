@@ -181,6 +181,8 @@ export function createLocal(deps: LocalDeps) {
   const intent = () => ({ model: scope()?.model, variant: scope()?.variant })
   const candidate = () => intent().model ?? agent.current()?.model ?? fallback()
   const execution = createModelExecutionView({ sdk, server: serverSDK, sessionID: id, ready: () => savedReady() && models.ready(),
+    metadata: () => ({ agents: sync().data.agent, config: sync().data.config, providers: [...providers.all()],
+      connected: providers.connected().map((provider) => provider.id), semanticEpoch: sdk().modelExecutionEpoch() }),
     agentID: agent.key, agent: agent.current, intent, candidate,
     savedVariant: (key) => models.variant.get(key),
   })
@@ -191,7 +193,7 @@ export function createLocal(deps: LocalDeps) {
     const metadata = provider?.models[key.modelID]
     const item = models.find(key) ?? (provider && metadata ? { ...metadata, provider,
       name: metadata.name.replace("(latest)", "").trim(), latest: metadata.name.includes("(latest)") } : undefined)
-    const token = `${key.providerID}:${key.modelID}`
+    const token = JSON.stringify([key.providerID, key.modelID])
     const selected = intent().model ?? candidate()
     if (item && selected?.providerID === key.providerID && selected.modelID === key.modelID) known.set(token, item)
     return item ?? known.get(token)
@@ -385,10 +387,12 @@ export function createModelExecutionView(input: {
   intent: () => { model: ModelKey | undefined; variant: string | null | undefined }
   candidate: () => ModelKey | undefined
   savedVariant: (model: ModelKey) => string | undefined
+  metadata: () => unknown
   ready?: () => boolean
 }) {
   const [view, setView] = createStore<{ value: ModelExecutionState }>({ value: { status: "idle" } })
   const lifetime = { disposed: false }
+  const context = createMemo(() => JSON.stringify(input.metadata()))
   const version = () => {
     const id = input.sessionID()
     return id ? input.server?.().sessionManagement.subagentModelsWriteVersion?.(id) ?? 0 : 0
@@ -400,7 +404,7 @@ export function createModelExecutionView(input: {
     const intent = input.intent()
     const agent = input.agent()
     const variant = typeof intent.variant === "string" ? intent.variant : intent.variant === null ? undefined
-      : model && agent?.model?.providerID === model.providerID && agent.model.modelID === model.modelID && agent.variant
+      : model && agent?.model?.providerID === model.providerID && agent.model.modelID === model.modelID && agent.variant !== undefined
         ? agent.variant : model ? input.savedVariant(model) : undefined
     const sessionID = input.sessionID()
     const request = {
@@ -410,12 +414,13 @@ export function createModelExecutionView(input: {
       model: model ? { providerID: model.providerID, id: model.modelID, variant } : undefined,
     }
     return { sdk, client: sdk.orchestra, server, credentials: JSON.stringify(server?.server?.http), version: version(),
+      context: context(),
       active: sdk.transportCurrent?.() !== false && server?.transportCurrent?.() !== false,
       epoch: sdk.connectionEpoch?.() ?? server?.connectionEpoch?.() ?? 0,
       key: JSON.stringify({ request, intent }), request }
   }, undefined, { equals: (left, right) => !!left && left.sdk === right.sdk && left.client === right.client &&
     left.server === right.server && left.credentials === right.credentials && left.version === right.version &&
-    left.active === right.active && left.epoch === right.epoch && left.key === right.key })
+    left.active === right.active && left.context === right.context && left.epoch === right.epoch && left.key === right.key })
   let readyOwner: ReturnType<typeof owner> | undefined
   const query = makeModelExecutionQuery({
     changed: (value) => { readyOwner = value.status === "ready" ? owner() : undefined; setView("value", value) },
@@ -442,6 +447,7 @@ export function createModelExecutionView(input: {
   })
   onCleanup(() => { lifetime.disposed = true; query.dispose() })
   return {
+    context,
     read: () => lifetime.disposed ? query.read() : view.value,
     input: () => owner().request,
     reason(key: ModelKey) {

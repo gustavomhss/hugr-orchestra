@@ -189,6 +189,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const choiceOwner = createSubmissionOwner(() => ({
     intent: JSON.stringify((input.model ?? local.model).intent()), agent: local.agent.current()?.id,
     epoch: serverSDK().connectionEpoch?.() ?? 0,
+    context: (input.model ?? local.model).execution.context(),
     policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
   }))
   const admissionSource = () => sourceAdmission(prompt.capture(),
@@ -262,7 +263,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       const candidate = intent.model ?? (provisional && { providerID: provisional.providerID, modelID: provisional.id }) ??
         (model && { providerID: model.provider.id, modelID: model.id })
       const variant = typeof intent.variant === "string" ? intent.variant : intent.variant === null ? undefined
-        : candidate && agent?.model?.providerID === candidate.providerID && agent.model.modelID === candidate.modelID && agent.variant
+        : candidate && agent?.model?.providerID === candidate.providerID && agent.model.modelID === candidate.modelID && agent.variant !== undefined
           ? agent.variant : modelSelection.execution ? provisional?.variant : modelSelection.variant.current()
       selected.value = { model: candidate && { id: candidate.modelID, provider: { id: candidate.providerID } },
         agent: agentID ? { id: agentID, name: agent?.name ?? agentID } : undefined, variant }
