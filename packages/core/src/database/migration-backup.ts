@@ -1,6 +1,7 @@
 export * as MigrationBackup from "./migration-backup"
 
 import { createHash, randomUUID } from "node:crypto"
+import { createReadStream } from "node:fs"
 import { lstat, mkdir, open, readFile, readdir, rename, rmdir, link, unlink } from "node:fs/promises"
 import { basename, dirname, join } from "node:path"
 import { Effect, Schema } from "effect"
@@ -223,8 +224,8 @@ class Session {
       const stat = yield* io(() => info(path))
       if (!stat?.isFile() || stat.isSymbolicLink())
         return yield* Effect.fail(new Error(`Invalid migration backup: ${name}`))
-      const bytes = yield* io(() => readFile(path))
-      if (sqlite && (bytes.byteLength < 100 || bytes.subarray(0, 16).toString("binary") !== "SQLite format 3\0"))
+      const copy = yield* io(() => fingerprint(path))
+      if (sqlite && (copy.bytes < 100 || copy.header !== "SQLite format 3\0"))
         return yield* Effect.fail(new Error(`Invalid SQLite migration backup header: ${name}`))
       if (sqlite)
         yield* readonlyDatabase(path, (db) =>
@@ -234,7 +235,7 @@ class Session {
               return yield* Effect.fail(new Error(`Invalid SQLite migration backup: ${name}`))
           }),
         )
-      return { name, sha256: hash(bytes), bytes: bytes.byteLength }
+      return { name, sha256: copy.sha256, bytes: copy.bytes }
     })
   }
 
@@ -308,8 +309,8 @@ class Session {
             return yield* Effect.fail(new Error("Invalid captured migration snapshot"))
         }),
       )
-      const bytes = yield* io(() => readFile(scratch))
-      const backup = { name: active.finalName, sha256: hash(bytes), bytes: bytes.byteLength }
+      const copy = yield* io(() => fingerprint(scratch))
+      const backup = { name: active.finalName, sha256: copy.sha256, bytes: copy.bytes }
       yield* self.save({ ...self.state, active: { ...active, phase: "captured", backup } }, "captured")
       yield* self.observe({ kind: "captured", attemptID: id })
       yield* self.publishCapture()
@@ -326,8 +327,8 @@ class Session {
       const source = yield* io(() => info(scratch))
       if (!source?.isFile() || source.isSymbolicLink())
         return yield* Effect.fail(new Error("Missing captured migration scratch"))
-      const scratchBytes = yield* io(() => readFile(scratch))
-      if (scratchBytes.byteLength !== active.backup.bytes || hash(scratchBytes) !== active.backup.sha256)
+      const copy = yield* io(() => fingerprint(scratch))
+      if (copy.bytes !== active.backup.bytes || copy.sha256 !== active.backup.sha256)
         return yield* Effect.fail(new Error("Captured migration scratch changed"))
       const final = join(dirname(self.file), active.finalName)
       const published = yield* io(() => info(final))
@@ -477,6 +478,20 @@ function readonlyDatabase<A, E>(filename: string, body: (db: Effect.Success<type
 
 function uniqueCopies(copies: readonly Copy[]) {
   return [...new Map(copies.map((copy) => [copy.name, copy])).values()]
+}
+
+async function fingerprint(file: string) {
+  const digest = createHash("sha256")
+  let bytes = 0
+  let header = ""
+  // Snapshot size is independent of the memory bound, including databases beyond readFile's Buffer limit.
+  for await (const chunk of createReadStream(file, { highWaterMark: 64 * 1024 })) {
+    if (bytes < 16) header += chunk.subarray(0, 16 - bytes).toString("latin1")
+    digest.update(chunk)
+    bytes += chunk.byteLength
+  }
+  if (!Number.isSafeInteger(bytes)) throw new Error("Migration backup exceeds supported byte count")
+  return { sha256: digest.digest("hex"), bytes, header }
 }
 
 async function syncDirectory(path: string) {
