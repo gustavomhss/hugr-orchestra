@@ -55,22 +55,22 @@
     {
       "id": "W05",
       "test": "packages/server/test/activity-worktree-http.test.ts :: W05 HTTP inventory authenticates and selects only persisted git worktree roots",
-      "executionStatus": "authored-awaiting-review-and-hosted-red"
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     },
     {
       "id": "W06",
       "test": "packages/server/test/activity-worktree-races.test.ts :: W06 real HTTP walks coalesce, enforce capacity and reject retired incarnations before publication",
-      "executionStatus": "authored-awaiting-review-and-hosted-red"
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     },
     {
       "id": "W07",
       "test": "packages/server/test/activity-worktree-http.test.ts :: W07 generated Client measures real worktrees and retains complete bytes after partial HTTP reads",
-      "executionStatus": "authored-awaiting-review-and-hosted-red"
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     },
     {
       "id": "W08",
       "test": "packages/server/test/activity-worktree-http.test.ts :: W08 registry failure is explicit HTTP failure and recovery preserves readings and server lifetime isolation",
-      "executionStatus": "authored-awaiting-review-and-hosted-red"
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     },
     {
       "id": "W09",
@@ -150,6 +150,8 @@
     },
     {
       "id": "WP-W3",
+      "preparationAnchor": "docs/specs/activity/WORKTREE-UI-PREPARATION.md",
+      "executionStatus": "reviewed-preparation-awaiting-exact-anchors-and-suite",
       "covers": ["W09", "W10", "W11", "W12"],
       "writes": [
         "packages/app-shell/src/orchestra/chapters/activity",

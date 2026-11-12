@@ -20,11 +20,21 @@ functional Worktrees manual-read API/button is exposed yet. See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
 worktree-first-validation.json for actual named outcomes.
 
+W3 acceptance preparation is now in
+[WORKTREE-UI-PREPARATION.md](WORKTREE-UI-PREPARATION.md): current UI limits,
+canonical Client boundary, context/instance admission, exact revisions,
+operation-scoped errors, source/age/gaps and separate actual-HTTP rendered steps.
+Independent review found and closed a source-visibility oracle omission, then
+approved preparation. Exact signatures, executable suite, coverage sweeps and
+hosted red still precede implementation; W3 is not dispatched. A read-only Grok
+4.7 review of W2 composition is active through OpenCode; it has no verdict yet.
+No mechanical Relay enforcement is claimed because the hook is unconfigured.
+
 WP-R0 is complete on activity-monitor: persisted registrationID producer,
 internal reads and data-preserving migration have hosted red-to-green proof.
 The corrected three-file pack passed 22/22 tests on each of Linux and Windows,
 with Omni controls passing (79 real spawns per OS, zero delegated). The fetched
-tested snapshot matches the complete current Core tree exactly. Generation/check,
+tested snapshot matches the captured R0 Core tree exactly. Generation/check,
 final Core typecheck, formatting, diff checks and independent source/precision/
 cleanup reviews passed. The earlier Windows fixture EBUSY failure is resolved
 through the repository's existing bounded cleanup helper. Actual named outcomes
