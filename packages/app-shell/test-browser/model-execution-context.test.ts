@@ -121,6 +121,7 @@ test.each(["catalog.updated", "integration.connection.updated"] as const)("E6 Ap
   try {
     await wait(() => actual.greetings.length === 1 && owner.local.model.execution.ready(), "actual SSE greeting and initial canonical response")
     owner.local.model.set({ providerID: ref.providerID, modelID: ref.id })
+    await wait(() => owner.local.model.intent().model?.providerID === ref.providerID && owner.local.model.intent().model?.modelID === ref.id, "explicit raw intent committed before scope counters")
     await wait(() => owner.local.model.execution.ready(), "explicit same ref ready")
     const reconnect = actual.sdk.connectionEpoch?.()
     const input = calls.queries().at(-1)?.body

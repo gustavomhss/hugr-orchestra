@@ -81,6 +81,7 @@ test.each(["session-1", undefined])("E6 App Local selection retains an explicit 
   const owner = selection(calls, sessionID)
   try {
     owner.local.model.set({ providerID: ref.providerID, modelID: ref.id })
+    await wait(() => owner.local.model.intent().model?.providerID === ref.providerID && owner.local.model.intent().model?.modelID === ref.id, "explicit raw intent committed before catalog removal")
     expect(owner.local.model.current()?.id).toBe(ref.id)
     owner.removeModel()
     await Promise.resolve()
