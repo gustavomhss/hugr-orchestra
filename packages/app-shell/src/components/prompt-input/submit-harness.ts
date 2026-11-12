@@ -110,6 +110,9 @@ export const state = {
   params: {} as { id?: string },
   search: {} as { draftId?: string },
   selected: "/repo/worktree-a",
+  workspaceDirectories: ["/repo/worktree-a", "/repo/worktree-b"],
+  workspaceLookupFailure: false,
+  workspaceLookups: [] as { projectID: string }[],
   variant: undefined as string | undefined,
   permissionServer: "server-a",
   createSessionGate: undefined as Promise<void> | undefined,
@@ -240,6 +243,15 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
       list: async () => {
         if (state.messageCount === undefined) throw new Error("server unreachable")
         return { data: Array.from({ length: state.messageCount }, (_, index) => ({ id: `message-${index}` })), cursor: {} }
+      },
+    },
+    project: {
+      ...current.project,
+      current: async () => ({ id: "project", directory: "/repo/main" }),
+      directories: async (input: { projectID: string }) => {
+        state.workspaceLookups.push(input)
+        if (state.workspaceLookupFailure) throw new Error("directories unavailable")
+        return state.workspaceDirectories.map((directory) => ({ directory }))
       },
     },
     projectCopy: {
@@ -511,6 +523,9 @@ beforeEach(() => {
   sentShell.length = 0
   syncedDirectories.length = 0
   state.selected = "/repo/worktree-a"
+  state.workspaceDirectories = ["/repo/worktree-a", "/repo/worktree-b"]
+  state.workspaceLookupFailure = false
+  state.workspaceLookups = []
   state.variant = undefined
   state.permissionServer = "server-a"
   state.createSessionGate = undefined
