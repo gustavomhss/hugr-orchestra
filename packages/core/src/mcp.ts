@@ -602,24 +602,26 @@ const layer = Layer.effect(
     const complete = Effect.fnUntraced(function* (name: string, flow: AuthFlow, code: string) {
       if (flow.finishing) return yield* authFailure()
       flow.finishing = true
-      yield* checkFlow(name, flow)
-      // Claim the captured state before exchanging any code; PKCE remains available to this lease only.
-      yield* auth.consumeState(flow.binding, flow.state).pipe(Effect.mapError(authFailure))
-      McpOAuthCallback.cancelPending(name, flow.state)
-      const finished = yield* Effect.tryPromise({
-        try: () => flow.transport.finishAuth(code),
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-      }).pipe(Effect.result)
-      yield* checkFlow(name, flow)
-      if (finished._tag === "Failure") {
+      return yield* Effect.gen(function* () {
+        yield* checkFlow(name, flow)
+        // Claim the captured state before exchanging any code; PKCE remains available to this lease only.
+        yield* auth.consumeState(flow.binding, flow.state).pipe(Effect.mapError(authFailure))
+        McpOAuthCallback.cancelPending(name, flow.state)
+        const finished = yield* Effect.tryPromise({
+          try: () => flow.transport.finishAuth(code),
+          catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        }).pipe(Effect.result)
+        yield* checkFlow(name, flow)
+        if (finished._tag === "Failure") {
+          yield* abandon(name, flow)
+          return authStatus(finished.failure, true) ?? failed(`OAuth completion failed: ${messageOf(finished.failure)}`)
+        }
+        yield* Effect.tryPromise({ try: () => flow.provider.commit(), catch: authFailure })
         yield* abandon(name, flow)
-        return authStatus(finished.failure, true) ?? failed(`OAuth completion failed: ${messageOf(finished.failure)}`)
-      }
-      yield* Effect.tryPromise({ try: () => flow.provider.commit(), catch: authFailure })
-      yield* abandon(name, flow)
-      if (entry(name).generation !== flow.generation) return { status: "needs_auth" } as Mcp.Status
-      yield* connect(name)
-      return entries.get(name)?.status ?? ({ status: "disabled" } as Mcp.Status)
+        if (entry(name).generation !== flow.generation) return { status: "needs_auth" } as Mcp.Status
+        yield* connect(name)
+        return entries.get(name)?.status ?? ({ status: "disabled" } as Mcp.Status)
+      }).pipe(Effect.tapError(() => abandon(name, flow)))
     })
 
     const startAuth = Effect.fn("Mcp.startAuth")(function* (name: string) {
@@ -690,7 +692,7 @@ const layer = Layer.effect(
           })
         // Registration and completion retain this exact flow. No cleanup discovers a replacement by name.
         yield* Effect.tryPromise(() => McpOAuthCallback.waitForCallback(state, name)).pipe(
-          Effect.flatMap((code) => complete(name, flow, code).pipe(Effect.tapError(() => abandon(name, flow)))),
+          Effect.flatMap((code) => complete(name, flow, code)),
           Effect.catch(() => (flow.finishing ? Effect.void : abandon(name, flow))),
           Effect.forkIn(layerScope),
         )
@@ -702,7 +704,7 @@ const layer = Layer.effect(
       if (!(yield* configured()).servers.has(name)) return yield* new NotFoundError({ name })
       const flow = pending.get(name)
       if (!flow) return yield* new AuthError({ message: `No pending OAuth flow for MCP server: ${name}` })
-      return yield* complete(name, flow, code).pipe(Effect.tapError(() => abandon(name, flow)))
+      return yield* complete(name, flow, code)
     })
 
     const removeAuth = Effect.fn("Mcp.removeAuth")(function* (name: string) {
