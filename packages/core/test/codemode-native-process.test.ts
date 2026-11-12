@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { Cause, Effect, Exit, Fiber, Option, Schema, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Option, Schema, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { AppProcess } from "../src/process"
@@ -131,83 +131,116 @@ cases.forEach((scenario) => test(scenario.name, async () => {
       canaries: { env: 2, config: 2, preload: 2 }, emptyConfig: true,
       envKeys: Object.keys(env), fixtureVersionInput: buildState.manifest?.fixtureVersionInput })}`)
     const observed = await Effect.runPromise(Effect.gen(function* () {
-      const processes = yield* AppProcess.Service
-      const admittedAt = performance.now()
-      const child = yield* processes.spawn(ChildProcess.make(executable, scenario.entry ? [] : [
-        "--no-env-file", `--config=${config}`, "-e", scenario.cpu ? cpuScript : ordinaryScript,
-      ], { cwd, env, extendEnv: false, shell: false, stdin: "ignore", stdout: "pipe", stderr: "pipe",
-        killSignal: "SIGKILL", forceKillAfter: 0 }))
+      const harnessScope = yield* Effect.scope
+      const admitted = yield* Deferred.make<number>()
+      const control: { admittedAt?: number; kill?: Effect.Effect<void, unknown> } = {}
       const state = {
         bytes: 0, pending: "", invalidOutput: false, overflow: false,
         enterMs: undefined as number | undefined, killMs: undefined as number | undefined,
         killJoinedMs: undefined as number | undefined, exitMs: undefined as number | undefined,
         liveBeforeKill: undefined as boolean | undefined, osAliveBeforeKill: undefined as boolean | undefined,
         outerWatchdog: false,
-        heartbeats: 0, lastHeartbeat: admittedAt, maxGapMs: 0,
+        heartbeats: 0, lastHeartbeat: 0, maxGapMs: 0,
       }
-      const messages = new Array<typeof Envelope.Type>()
-      const decoder = new TextDecoder()
-      const output = yield* Effect.forkChild(child.stdout.pipe(Stream.runForEach((chunk) => Effect.sync(() => {
-        state.bytes += chunk.length
-        if (state.bytes > maxBytes) { state.overflow = true; return }
-        const lines = (state.pending + decoder.decode(chunk, { stream: true })).split("\n")
-        state.pending = lines.pop() ?? ""
-        lines.filter(Boolean).forEach((line) => {
-          const json = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
-          const decoded = Option.flatMap(json, Schema.decodeUnknownOption(Envelope))
-          if (Option.isNone(decoded) || messages.length >= 4) { state.invalidOutput = true; return }
-          messages.push(decoded.value)
-          if (decoded.value.type === "CPU_ENTER" && state.enterMs === undefined) {
-            const now = performance.now()
-            state.enterMs = now - admittedAt
-            state.maxGapMs = Math.max(state.maxGapMs, now - state.lastHeartbeat)
-            state.lastHeartbeat = now
-          }
-        })
-      }))))
-      const errors = yield* Effect.forkChild(AppProcess.collectStream(child.stderr, maxBytes))
-      const exited = yield* Effect.forkChild(Effect.exit(child.exitCode).pipe(Effect.tap(() => Effect.sync(() => {
-        state.exitMs = performance.now() - admittedAt
-      }))))
-      const heartbeat = yield* Effect.forkChild(Effect.forever(Effect.sleep(50).pipe(Effect.andThen(Effect.sync(() => {
+      // These belong to the outer harness: inner child/layer finalization must not stop either observer.
+      const heartbeat = yield* Effect.forkIn(Effect.forever(Effect.sleep(50).pipe(Effect.andThen(Effect.sync(() => {
         if (state.enterMs === undefined) return
         const now = performance.now()
         state.heartbeats++
         state.maxGapMs = Math.max(state.maxGapMs, now - state.lastHeartbeat)
         state.lastHeartbeat = now
-      })))))
-      const productKill = yield* Effect.forkChild(scenario.cpu ? Effect.gen(function* () {
-        yield* waitUntil(admittedAt + 1500)
-        state.liveBeforeKill = yield* child.isRunning
-        state.osAliveBeforeKill = osPidIsAlive(Number(child.pid))
-        if (!state.liveBeforeKill) return
-        state.killMs = performance.now() - admittedAt
-        yield* child.kill({ killSignal: "SIGKILL", forceKillAfter: 0 })
-        state.killJoinedMs = performance.now() - admittedAt
-      }) : Effect.void)
-      const containment = yield* Effect.forkChild(Effect.gen(function* () {
+      })))), harnessScope)
+      const containment = yield* Effect.forkIn(Effect.gen(function* () {
+        const admittedAt = yield* Deferred.await(admitted)
         yield* waitUntil(admittedAt + 8000)
         state.outerWatchdog = true
-        yield* child.kill({ killSignal: "SIGKILL", forceKillAfter: 0 })
-      }))
-      const [exit, , stderr] = yield* Effect.all([Fiber.join(exited), Fiber.join(output), Fiber.join(errors)], { concurrency: "unbounded" })
-      const osAliveAfterExit = osPidIsAlive(Number(child.pid))
-      yield* Fiber.join(productKill)
-      const joinedMs = performance.now() - admittedAt
-      const runningAfter = yield* child.isRunning
+        if (control.kill) yield* control.kill
+      }), harnessScope)
+      const result = yield* Effect.gen(function* () {
+        const processes = yield* AppProcess.Service
+        const admittedAt = performance.now()
+        control.admittedAt = admittedAt
+        state.lastHeartbeat = admittedAt
+        Deferred.doneUnsafe(admitted, Effect.succeed(admittedAt))
+        const child = yield* processes.spawn(ChildProcess.make(executable, scenario.entry ? [] : [
+          "--no-env-file", `--config=${config}`, "-e", scenario.cpu ? cpuScript : ordinaryScript,
+        ], { cwd, env, extendEnv: false, shell: false, stdin: "ignore", stdout: "pipe", stderr: "pipe",
+          killSignal: "SIGKILL", forceKillAfter: 0 }))
+        control.kill = child.kill({ killSignal: "SIGKILL", forceKillAfter: 0 })
+        const messages = new Array<typeof Envelope.Type>()
+        const decoder = new TextDecoder()
+        const output = yield* Effect.forkChild(child.stdout.pipe(Stream.runForEach((chunk) => Effect.sync(() => {
+          state.bytes += chunk.length
+          if (state.bytes > maxBytes) { state.overflow = true; return }
+          const lines = (state.pending + decoder.decode(chunk, { stream: true })).split("\n")
+          state.pending = lines.pop() ?? ""
+          lines.filter(Boolean).forEach((line) => {
+            const json = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
+            const decoded = Option.flatMap(json, Schema.decodeUnknownOption(Envelope))
+            if (Option.isNone(decoded) || messages.length >= 4) { state.invalidOutput = true; return }
+            messages.push(decoded.value)
+            if (decoded.value.type === "CPU_ENTER" && state.enterMs === undefined) {
+              const now = performance.now()
+              state.enterMs = now - admittedAt
+              state.maxGapMs = Math.max(state.maxGapMs, now - state.lastHeartbeat)
+              state.lastHeartbeat = now
+            }
+          })
+        }))))
+        const errors = yield* Effect.forkChild(AppProcess.collectStream(child.stderr, maxBytes))
+        const exited = yield* Effect.forkChild(Effect.exit(child.exitCode).pipe(Effect.tap(() => Effect.sync(() => {
+          state.exitMs = performance.now() - admittedAt
+        }))))
+        const productKill = yield* Effect.forkChild(scenario.cpu ? Effect.gen(function* () {
+          yield* waitUntil(admittedAt + 1500)
+          state.liveBeforeKill = yield* child.isRunning
+          state.osAliveBeforeKill = osPidIsAlive(Number(child.pid))
+          if (!state.liveBeforeKill) return
+          state.killMs = performance.now() - admittedAt
+          yield* child.kill({ killSignal: "SIGKILL", forceKillAfter: 0 })
+          state.killJoinedMs = performance.now() - admittedAt
+        }) : Effect.void)
+        const [exit, , stderr] = yield* Effect.all([Fiber.join(exited), Fiber.join(output), Fiber.join(errors)], { concurrency: "unbounded" })
+        const readersJoinedMs = performance.now() - admittedAt
+        const osAliveAfterExit = osPidIsAlive(Number(child.pid))
+        yield* Fiber.join(productKill)
+        const joinedMs = performance.now() - admittedAt
+        const runningAfter = yield* child.isRunning
+        const terminal = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+        return { state, messages, stderr, exit, pid: Number(child.pid), joinedMs, readersJoinedMs, runningAfter, osAliveAfterExit,
+          terminalKind: terminal instanceof Error ? terminal.name : terminal === undefined ? null : typeof terminal }
+      }).pipe(Effect.scoped, Effect.provide(layer, { local: true }))
+      if (control.admittedAt === undefined) throw new Error("SETUP: missing spawn admission timestamp")
+      const fullScopeEndMs = performance.now() - control.admittedAt
+      const osAliveAfterScope = osPidIsAlive(result.pid)
+      const deadline = control.admittedAt + 3000
+      let finalOSAlive = osAliveAfterScope
+      let pidPolls = 0
+      while (finalOSAlive && performance.now() < deadline) {
+        yield* Effect.sleep(Math.max(0, Math.min(10, deadline - performance.now())))
+        finalOSAlive = osPidIsAlive(result.pid)
+        pidPolls++
+      }
+      const finalOSDeadTimeMs = finalOSAlive ? undefined : performance.now() - control.admittedAt
       yield* Fiber.interrupt(containment)
       yield* Fiber.interrupt(heartbeat)
-      if (state.enterMs !== undefined) state.maxGapMs = Math.max(state.maxGapMs, performance.now() - state.lastHeartbeat)
-      const terminal = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
-      return { state, messages, stderr, exit, pid: Number(child.pid), joinedMs, runningAfter, osAliveAfterExit,
-        terminalKind: terminal instanceof Error ? terminal.name : terminal === undefined ? null : typeof terminal }
-    }).pipe(Effect.scoped, Effect.provide(layer)))
+      return { ...result, fullScopeEndMs, osAliveAfterScope, finalOSAlive, finalOSDeadTimeMs, pidPolls,
+        admittedAt: control.admittedAt }
+    }).pipe(Effect.scoped))
+    const finalObservedAt = performance.now()
+    const finalObservationMs = finalObservedAt - observed.admittedAt
+    if (observed.state.enterMs !== undefined) {
+      observed.state.maxGapMs = Math.max(observed.state.maxGapMs, finalObservedAt - observed.state.lastHeartbeat)
+    }
     console.log(`E10_HARDENED_WITNESS ${JSON.stringify({ scenario: scenario.name, pid: observed.pid,
       records: observed.messages, ...observed.state, pending: observed.state.pending.length,
       exitCode: Exit.isSuccess(observed.exit) ? Number(observed.exit.value) : null,
       observedSignal: null, requestedSignal: scenario.cpu ? "SIGKILL" : null,
       terminalKind: observed.terminalKind, joinedMs: observed.joinedMs, runningAfter: observed.runningAfter,
-      osAliveAfterExit: observed.osAliveAfterExit,
+      osAliveAfterExit: observed.osAliveAfterExit, readersJoinedMs: observed.readersJoinedMs,
+      fullScopeEndMs: observed.fullScopeEndMs, osAliveAfterScope: observed.osAliveAfterScope,
+      finalOSAlive: observed.finalOSAlive, finalOSDeadTimeMs: observed.finalOSDeadTimeMs,
+      pidPolls: observed.pidPolls, finalObservationMs,
       stderrBytes: observed.stderr.buffer.length, stderrTruncated: observed.stderr.truncated })}`)
     const message = observed.messages[0]
     if (!message) throw new Error("CAPABILITY: expected child identity record was not produced")
@@ -223,7 +256,7 @@ cases.forEach((scenario) => test(scenario.name, async () => {
     expect(observed.stderr.buffer.length).toBe(0)
     expect(observed.stderr.truncated).toBe(false)
     expect(observed.runningAfter).toBe(false)
-    expect(observed.osAliveAfterExit).toBe(false)
+    expect(observed.finalOSAlive).toBe(false)
     expect(observed.state.outerWatchdog).toBe(false)
     expect(observed.messages).toHaveLength(1)
     expect(message.pid).toBe(observed.pid)
@@ -246,8 +279,15 @@ cases.forEach((scenario) => test(scenario.name, async () => {
     expect(observed.state.killMs).toBeDefined()
     expect(observed.state.killMs).toBeGreaterThanOrEqual(1500)
     expect(observed.state.killJoinedMs).toBeDefined()
+    expect(observed.state.killJoinedMs).toBeLessThan(3000)
     expect(observed.state.exitMs).toBeDefined()
+    expect(observed.state.exitMs).toBeLessThan(3000)
     expect(observed.joinedMs).toBeLessThan(3000)
+    expect(observed.readersJoinedMs).toBeLessThan(3000)
+    expect(observed.fullScopeEndMs).toBeLessThan(3000)
+    expect(observed.finalOSDeadTimeMs).toBeDefined()
+    expect(observed.finalOSDeadTimeMs).toBeLessThan(3000)
+    expect(finalObservationMs).toBeLessThan(3000)
     expect(observed.state.heartbeats).toBeGreaterThanOrEqual(3)
     expect(observed.state.maxGapMs).toBeLessThan(750)
   } finally {
