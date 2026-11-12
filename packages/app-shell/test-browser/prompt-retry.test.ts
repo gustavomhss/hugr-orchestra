@@ -271,8 +271,9 @@ test.each(["policy wait", "optimistic insertion"] as const)("E1 a local SET gene
       await policyFixture.server.sessionManagement.setSubagentModels("session-1", { mode: "inherit" })
       release.resolve()
     }
-    expect(await sending).toBe(false)
+    const sent = await sending
     expect(policyFixture.server.sessionManagement.subagentModelsWriteVersion("session-1")).toBe(1)
+    expect(sent).toBe(false)
     expect(promptInputs).toEqual([])
     insertion?.mockRestore()
     expect(await send(owner.submit)).toBe(true)
@@ -460,9 +461,10 @@ test("E1 concurrent identical action joins before real image preparation and reu
       gate.resolve()
       expect(await first).toBe(false)
       expect(await second).toBe(false)
+      expect(promptInputs.length, "fixture control: FileReader produced a request before coalescence assertions").toBeGreaterThan(0)
+      expect(inputAt(0).files).toEqual([{ uri: "data:image/png;base64,AQID", name: "example.png", mention: undefined }])
       expect(calls.gets).toBe(1)
       expect(promptInputs).toHaveLength(1)
-      expect(inputAt(0).files).toEqual([{ uri: "data:image/png;base64,AQID", name: "example.png", mention: undefined }])
       const parts = clone(optimistic[0]?.parts)
       owner.prompt.set(original)
       state.sendHook = async () => {}
