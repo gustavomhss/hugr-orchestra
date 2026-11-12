@@ -4,6 +4,7 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Exporting a diff no longer treats a failed patch load as a file with no patch text. That failure is shown.
 - Asking in Rag Studio no longer treats a failed source read as not recorded. That failure is shown.
 - Opening a folder in another app no longer treats a failed install check as not installed. That failure is shown.
 - Opening Rag Studio no longer treats a failed pipeline read as embedding off, or as the default pipeline. That failure is shown.
