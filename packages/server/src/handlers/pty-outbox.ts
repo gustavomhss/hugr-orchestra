@@ -1,6 +1,5 @@
 import { Buffer } from "node:buffer"
-import { Pty } from "@orchestra/core/pty"
-import { PtyProtocol } from "@orchestra/core/pty/protocol"
+import { Pty, PtyProtocol } from "@orchestra/core/pty"
 import { Deferred, Effect, Option, Queue } from "effect"
 import { Socket } from "effect/unstable/socket"
 
