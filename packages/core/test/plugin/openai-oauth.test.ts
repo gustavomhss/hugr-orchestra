@@ -1,5 +1,5 @@
 import { get } from "node:http"
-import { createServer } from "node:net"
+import { createConnection, createServer } from "node:net"
 import { describe, expect, spyOn, test } from "bun:test"
 import { Deferred, Effect, Exit, Fiber, Option, Scope } from "effect"
 import { authorizeBrowser } from "@orchestra/core/plugin/provider/openai"
@@ -31,6 +31,28 @@ function tokenExchange() {
     expect(body.get("code_verifier")?.length).toBe(43)
     expect(body.get("redirect_uri")).toMatch(/^http:\/\/localhost:\d+\/auth\/callback$/)
     return Response.json({ access_token: "dummy-access", refresh_token: "dummy-refresh", id_token: "" })
+  })
+}
+
+async function heldRequest(url: URL) {
+  const socket = createConnection({ port: Number(url.port), host: url.hostname })
+  // Seeing the 404 proves the server accepted this request. Its declared body
+  // remains incomplete while another connection delivers the real OAuth callback.
+  await new Promise<void>((resolve, reject) => {
+    socket.once("error", reject)
+    socket.once("data", () => resolve())
+    socket.once("connect", () => socket.write(
+      "POST /favicon.ico HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\nConnection: keep-alive\r\n\r\nx",
+    ))
+  })
+  expect(socket.destroyed).toBe(false)
+  return { socket, closed: new Promise<void>((resolve) => socket.once("close", () => resolve())) }
+}
+
+function bounded<T>(promise: Promise<T>) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("OAuth cleanup waited for an unrelated request")), 2000)
+    promise.then((value) => { clearTimeout(timer); resolve(value) }, (error) => { clearTimeout(timer); reject(error) })
   })
 }
 
@@ -98,6 +120,40 @@ describe("ChatGPT OAuth loopback callback", () => {
     const login = await attempt()
     await login.close()
     await expect(callback(login.url)).rejects.toBeDefined()
+  })
+
+  test("a held incomplete request cannot withhold credentials or listener cleanup", async () => {
+    const exchange = tokenExchange()
+    const login = await attempt()
+    const held = await heldRequest(login.url)
+    try {
+      login.url.search = new URLSearchParams({ code: "dummy-code", state: login.state }).toString()
+      const page = await callback(login.url)
+      expect(page.status).toBe(200)
+      expect(page.body).toContain("</html>")
+      const credential = await bounded(Effect.runPromise(login.flow.callback))
+      expect(credential.access).toBe("dummy-access")
+      expect(exchange).toHaveBeenCalledTimes(1)
+      await bounded(held.closed)
+      await expect(callback(login.url)).rejects.toBeDefined()
+    } finally {
+      held.socket.destroy()
+      await login.close()
+      exchange.mockRestore()
+    }
+  })
+
+  test("scope shutdown closes a held incomplete request and the listener", async () => {
+    const login = await attempt()
+    const held = await heldRequest(login.url)
+    try {
+      await bounded(login.close())
+      await bounded(held.closed)
+      await expect(callback(login.url)).rejects.toBeDefined()
+    } finally {
+      held.socket.destroy()
+      await login.close()
+    }
   })
 
   test("an occupied port retains the actionable sign-in conflict error", async () => {

@@ -1,4 +1,5 @@
 import { createServer } from "node:http"
+import type { Socket } from "node:net"
 import type { IntegrationOAuthMethodRegistration } from "@orchestra/plugin/v2/effect/integration"
 import { define } from "@orchestra/plugin/v2/effect/plugin"
 import { Deferred, Effect } from "effect"
@@ -84,7 +85,23 @@ export function authorizeBrowser(port = callbackPort) {
       Effect.runFork(Deferred.succeed(code, value))
       response.writeHead(200, { "Content-Type": "text/html" }).end(OauthCallbackPage.success({ provider: "ChatGPT" }))
     })
-    const close = Effect.promise(() => new Promise<void>((resolve) => server.close(() => resolve())))
+    const sockets = new Set<Socket>()
+    server.on("connection", (socket) => {
+      sockets.add(socket)
+      socket.once("close", () => sockets.delete(socket))
+    })
+    const close = Effect.promise(() => new Promise<void>((resolve) => {
+      // Stop accepting immediately; bound drainage so unrelated partial requests
+      // cannot withhold credentials or scope closure. Give callback HTML a flush turn.
+      const timer = setTimeout(() => {
+        for (const socket of sockets) socket.destroy()
+        resolve()
+      }, 100)
+      server.close(() => {
+        clearTimeout(timer)
+        resolve()
+      })
+    }))
     yield* Effect.addFinalizer(() => close)
     yield* Effect.callback<void, Error>((resume) => {
       server.once("error", (error: NodeJS.ErrnoException) =>
