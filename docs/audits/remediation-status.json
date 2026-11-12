@@ -171,11 +171,68 @@
     {
       "id": "E7",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "owner": "clients",
+      "status": "source_verified_wire_pending",
+      "runtime_reproduced": true,
+      "commits": [
+        "08aeb55758",
+        "73c4bd4852"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135005845",
+          "result": "15 behavioral failures; one omitted-default control was corrected separately"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134282791",
+          "result": "Canonical class identity absent"
+        },
+        {
+          "kind": "baseline_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135991053",
+          "result": "1 pass; real HTTP final JSON omits temperature and keeps existing route defaults"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136817655",
+          "result": "49 Core pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136818348",
+          "result": "91 LLM pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136816634",
+          "result": "6 Schema pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137315301",
+          "result": "5 plugin fixture pass after readonly stop projection correction"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE source; root independently read production diff"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Schema,LLM,Core final exit0",
+          "receipts": [
+            "/tmp/audit-variant-type-schema.exit",
+            "/tmp/audit-variant-type-llm.exit",
+            "/tmp/audit-variant-type-core-final.exit"
+          ]
+        },
+        {
+          "kind": "remaining_gate",
+          "result": "Official Client generation on combined L2/E7 baseline, idempotence and Client gates pending"
+        }
+      ]
     },
     {
       "id": "E8",
@@ -689,11 +746,31 @@
     {
       "id": "H7",
       "severity": "P1",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "security",
+      "status": "implementation_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134904734",
+          "result": "Historical actual SDK sends fictitious refresh/secret A to issuerB; original manager2fixtures invalid and excluded"
+        },
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137450064",
+          "snapshot_sha": "6638568d37f71815e317f8ce84b4345540a154e6",
+          "result": "1pass21fail: oauthfalsepositive; actual callbackcrosscancel and managerstate mismatch; missingBinding/scheduler APIs are not CAS execution proof"
+        },
+        {
+          "kind": "cold_acceptance_review",
+          "reviewers": [
+            "dr_house",
+            "leslie_lamport"
+          ],
+          "verdict": "APPROVE202c2924b002; production GO frozen92b99dff79"
+        }
+      ]
     },
     {
       "id": "H8",
@@ -899,18 +976,63 @@
       "id": "L2",
       "severity": "P1",
       "owner": "ui",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "ca5c8fa69b",
+        "63f7f303a4",
+        "33cd9abc3c",
+        "e7f0dd8580",
+        "8051c8c1af"
+      ],
       "evidence": [
         {
           "kind": "red",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813"
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138014275",
+          "result": "35 pass, 3 fail: exclusive success/failure budget8 return residual Busy; Session serial revert Busy. Budget32, cancellation, pending wake and failure recovery controls pass"
         },
         {
-          "kind": "red",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026869",
-          "result": "HTTP stage/clear/commit responses captured; stage 200 instead of 409"
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136455446",
+          "result": "2 Server tests, real409 stage/clear/commit"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136457342",
+          "result": "27 Client tests; typed Protocol.ConflictError decoding for all3reverts"
+        },
+        {
+          "kind": "generation",
+          "result": "Official Client generation exit0; diff adds409 only for stage/clear/commit, not message.diff"
+        },
+        {
+          "kind": "scope_limit",
+          "result": "Snapshot concurrency harness is non-Git; no Git restore claim"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138330714",
+          "result": "98 pass, 9 Core files, 54 real omni spawns, positive control pass; completion callers do not poll"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE final706899168f; exact-owner completion supersedes earlier FIX-FIRST"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Core, Server, Protocol, Client exit0",
+          "receipts": [
+            "/tmp/orchestra-session-integrity-core-type-completion.exit",
+            "/tmp/orchestra-session-integrity-server-type-seal.exit",
+            "/tmp/orchestra-session-integrity-protocol-type-seal.exit",
+            "/tmp/orchestra-session-integrity-client-type-seal.exit"
+          ]
+        },
+        {
+          "kind": "guards",
+          "result": "78 rules, 117 paths, 0 findings",
+          "receipt": "/tmp/orchestra-session-integrity-guards-seal-final.exit"
         }
       ]
     },
@@ -981,18 +1103,43 @@
       "id": "L10",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "ca5c8fa69b",
+        "63f7f303a4",
+        "7307c1dfad"
+      ],
       "evidence": [
         {
           "kind": "red",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813"
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136529953",
+          "result": "5 pass, 2 fail on exact final test harness: custom default and selectable fallback admit0 instead of1; no-info, changed default and explicit owner controls pass"
         },
         {
-          "kind": "red",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026869",
-          "result": "HTTP stage/clear/commit responses captured; stage 200 instead of 409"
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138330714",
+          "result": "98 pass, 9 Core files, 54 real omni spawns, positive control pass; completion callers do not poll"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE final706899168f; exact-owner completion supersedes earlier FIX-FIRST"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Core, Server, Protocol, Client exit0",
+          "receipts": [
+            "/tmp/orchestra-session-integrity-core-type-completion.exit",
+            "/tmp/orchestra-session-integrity-server-type-seal.exit",
+            "/tmp/orchestra-session-integrity-protocol-type-seal.exit",
+            "/tmp/orchestra-session-integrity-client-type-seal.exit"
+          ]
+        },
+        {
+          "kind": "guards",
+          "result": "78 rules, 117 paths, 0 findings",
+          "receipt": "/tmp/orchestra-session-integrity-guards-seal-final.exit"
         }
       ]
     },
@@ -1166,29 +1313,86 @@
     {
       "id": "M5",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "desktop",
+      "status": "acceptance_fix_first",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137375117",
+          "result": "42cases perOS,3pass39fail; journal/pins/batch/invalidFS behavioral, missingOptions observer faults are APIacceptance only"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137719365",
+          "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
+        },
+        {
+          "kind": "cold_acceptance_review",
+          "reviewers": [
+            "dr_house",
+            "rodney_mckay"
+          ],
+          "verdict": "FIX-FIRST: scratch physical storage bound, multiple legacy pins, repeated EEXIST startup and old filename expectations. Production not authorized."
+        }
+      ]
     },
     {
       "id": "M6",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "desktop",
+      "status": "acceptance_fix_first",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137375117",
+          "result": "42cases perOS,3pass39fail; journal/pins/batch/invalidFS behavioral, missingOptions observer faults are APIacceptance only"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137719365",
+          "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
+        },
+        {
+          "kind": "cold_acceptance_review",
+          "reviewers": [
+            "dr_house",
+            "rodney_mckay"
+          ],
+          "verdict": "FIX-FIRST: scratch physical storage bound, multiple legacy pins, repeated EEXIST startup and old filename expectations. Production not authorized."
+        }
+      ]
     },
     {
       "id": "M7",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "desktop",
+      "status": "acceptance_fix_first",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137375117",
+          "result": "42cases perOS,3pass39fail; journal/pins/batch/invalidFS behavioral, missingOptions observer faults are APIacceptance only"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137719365",
+          "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
+        },
+        {
+          "kind": "cold_acceptance_review",
+          "reviewers": [
+            "dr_house",
+            "rodney_mckay"
+          ],
+          "verdict": "FIX-FIRST: scratch physical storage bound, multiple legacy pins, repeated EEXIST startup and old filename expectations. Production not authorized."
+        }
+      ]
     },
     {
       "id": "M8",
@@ -1550,18 +1754,42 @@
       "id": "X3",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "ca5c8fa69b",
+        "1035907ebd"
+      ],
       "evidence": [
         {
           "kind": "red",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813"
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813",
+          "result": "Second independent Location performs physical read while first writer holds target; final green includes keyed-mutex cancellation/failure tests"
         },
         {
-          "kind": "red",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026869",
-          "result": "HTTP stage/clear/commit responses captured; stage 200 instead of 409"
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138330714",
+          "result": "98 pass, 9 Core files, 54 real omni spawns, positive control pass; completion callers do not poll"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE final706899168f; exact-owner completion supersedes earlier FIX-FIRST"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Core, Server, Protocol, Client exit0",
+          "receipts": [
+            "/tmp/orchestra-session-integrity-core-type-completion.exit",
+            "/tmp/orchestra-session-integrity-server-type-seal.exit",
+            "/tmp/orchestra-session-integrity-protocol-type-seal.exit",
+            "/tmp/orchestra-session-integrity-client-type-seal.exit"
+          ]
+        },
+        {
+          "kind": "guards",
+          "result": "78 rules, 117 paths, 0 findings",
+          "receipt": "/tmp/orchestra-session-integrity-guards-seal-final.exit"
         }
       ]
     }
@@ -1782,12 +2010,12 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 30,
+    "new_fixes_verified": 33,
     "already_fixed_verified": 1,
-    "remaining": 34,
+    "remaining": 31,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "98cda7b13b",
+  "integration_checkpoint": "73c4bd4852",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
