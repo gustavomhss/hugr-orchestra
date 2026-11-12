@@ -56,6 +56,16 @@ export type Operation = "pause" | "resume" | "remove" | "run"
 
 export const hourly = { name: "Authority acceptance", prompt: "Report status", cadence: { kind: "interval" as const, minutes: 60 }, timezone: "UTC" }
 
+/** Explicit test composition: beta83 onExit replaces a failed body when its finalizer fails. */
+export function withCombinedFinalizer<A, E, R, E2, R2>(self: Effect.Effect<A, E, R>,
+  finalizer: (exit: Exit.Exit<A, E>) => Effect.Effect<void, E2, R2>) {
+  return self.pipe(Effect.onExit((exit) => finalizer(exit).pipe(
+    Effect.catchCause((cause) => Effect.failCause(Cause.fromReasons<E | E2>(
+      Exit.isFailure(exit) ? [...exit.cause.reasons, ...cause.reasons] : cause.reasons,
+    ))),
+  )))
+}
+
 export function make() {
   return Effect.gen(function* () {
     const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
@@ -105,7 +115,7 @@ export function make() {
       if (options?.behavior === "immediate") {
         yield* checkpoint(settlement ? "settle-enter" : "writer-enter")
       }
-      const value = yield* body(tx).pipe(Effect.onExit((exit) => {
+      const value = yield* body(tx).pipe((body) => withCombinedFinalizer(body, (exit) => {
         if (!state.sqlFinalizer || Exit.isSuccess(exit)) return Effect.void
         state.sqlFinalizer = false
         // Genuine SQLite refusal in a finalizer; the real adapter must still roll back the original transaction.
@@ -171,7 +181,7 @@ export function make() {
           const committed = options?.commit ? options.commit(seq) : Effect.void
           yield* committed.pipe(
             Effect.tapCause((cause) => Effect.sync(() => { state.commitCauses.push(cause) })),
-            Effect.onExit(() => state.afterCommitFailure ? Effect.failCause(state.afterCommitFailure) : Effect.void),
+            (body) => withCombinedFinalizer(body, () => state.afterCommitFailure ? Effect.failCause(state.afterCommitFailure) : Effect.void),
           )
         }) }).pipe(
           Effect.tapCause((cause) => Effect.sync(() => { state.publicationCauses.push(cause) })),

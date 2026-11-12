@@ -243,7 +243,7 @@ describe("H8 direct safety", () => {
       Effect.tapError((error) => Effect.sync(() => { original.push(error) })),
       Effect.catchCause((cause) => Effect.failCause(Cause.fromReasons(cause.reasons.map((reason) =>
         reason.annotate(Context.makeUnsafe(new Map([["h8-validation", "real-policy"]]))))))),
-      Effect.onExit(() => Effect.failCause(Cause.fromReasons([
+      (body) => ScheduleAuthorityFixture.withCombinedFinalizer(body, () => Effect.failCause(Cause.fromReasons([
         Cause.makeDieReason(alien).annotate(Context.makeUnsafe(new Map([["h8-validation", "alien-finalizer"]]))),
       ]))),
     ) })
@@ -353,7 +353,7 @@ describe("H8 direct safety", () => {
       const original: ScheduledTask.NotFoundError[] = []
       const api = management(f, f.operators, { ...f.tasks.capability, pause: (...args) => f.tasks.capability.pause(...args).pipe(
         Effect.tapError((error) => Effect.sync(() => { original.push(error) })),
-        Effect.onExit(() => mixed ? Effect.die(alien) : Effect.void),
+        (body) => ScheduleAuthorityFixture.withCombinedFinalizer(body, () => mixed ? Effect.die(alien) : Effect.void),
       ) })
       yield* f.arm("placed")
       const pending = yield* f.fork(f.request(api.pause(f.placement, task.id)))
