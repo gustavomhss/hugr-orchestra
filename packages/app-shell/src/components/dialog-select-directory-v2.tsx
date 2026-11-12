@@ -91,7 +91,6 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
   const [held, setHeld] = createSignal<{ query: string; items: Array<{ absolute: string; type: "file" | "directory" }> }>()
   const [suggestions] = createResource(input, async (value) => {
     told = false
-    setSearchFailed(false)
     const cleaned = cleanPickerInput(value)
     const typed = cleaned.replace(/\/+$/, "")
     const current = displayPickerPath(root(), value, home()).replace(/\/+$/, "")
@@ -99,6 +98,8 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     const previous = held()
     try {
       const directories = (await search(value)).map((absolute) => ({ absolute, type: "directory" as const }))
+      if (input() !== value) return previous ?? { query: value, items: previous?.items ?? [] }
+      setSearchFailed(false)
       if (!policy.includeFiles) {
         const next = { query: value, items: directories.slice(0, 5) }
         setHeld(next)
@@ -138,10 +139,10 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
       setHeld(next)
       return next
     } catch (error) {
+      if (input() !== value) return previous ?? { query: value, items: previous?.items ?? [] }
       console.error(error)
       setSearchFailed(true)
-      if (previous) return previous
-      throw error
+      return previous ?? { query: value, items: previous?.items ?? [] }
     }
   })
   const currentSuggestions = createMemo(() => {
