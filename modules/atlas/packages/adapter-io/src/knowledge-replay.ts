@@ -46,22 +46,45 @@ export function replayKnowledge(
 ): KnowledgeReplay {
   const read = readKnowledge(repoPath)
   const projection = rehydrateProjection(disk)
-  const pending = [...read.rows.values()].filter(
-    (e) => !sameRow(projection.current.get(e.row.nodeKey), e.row),
-  )
-  const resolved = pending.filter((e) => restoreBlob(repoPath, disk, e))
-  const proven = resolved.filter((e) => {
-    const fact = disk.get(e.row.contentHash as Hash) as GroundedFact
-    return fact.seal === "proven" && actorInScope(policy, e.seat, e.row.scope) && reproven(e.row, fact)
+  const pending = [...read.rows.values()].filter((e) => !sameRow(projection.current.get(e.row.nodeKey), e.row))
+  const resolved = pending.flatMap((entry) => {
+    const fact = restoreBlob(repoPath, disk, entry)
+    // Capture the validated read, so absence cannot fall through into either proven or staging candidates.
+    return fact === undefined ? [] : [{ entry, fact: fact as GroundedFact }]
   })
-  const candidates = resolved.filter((e) => !proven.includes(e))
-  const applied = proven.length === 0 ? undefined : disk.commitProjection((p) => ({ out: proven.length, next: withRows(p, proven) }))
+  const proven = resolved.filter(
+    (item) =>
+      item.fact.seal === "proven" &&
+      actorInScope(policy, item.entry.seat, item.entry.row.scope) &&
+      reproven(item.entry.row, item.fact),
+  )
+  const candidates = resolved.filter((item) => !proven.includes(item))
+  const applied =
+    proven.length === 0
+      ? undefined
+      : disk.commitProjection((p) => ({
+          out: proven.length,
+          next: withRows(
+            p,
+            proven.map((item) => item.entry),
+          ),
+        }))
   const staged =
     candidates.length === 0
       ? undefined
       : disk.commitStaging((p) => {
-          const fresh = candidates.filter((e) => p.current.get(e.row.nodeKey)?.contentHash !== e.row.contentHash)
-          return fresh.length === 0 ? { out: 0 } : { out: fresh.length, next: withRows(p, fresh) }
+          const fresh = candidates.filter(
+            (item) => p.current.get(item.entry.row.nodeKey)?.contentHash !== item.entry.row.contentHash,
+          )
+          return fresh.length === 0
+            ? { out: 0 }
+            : {
+                out: fresh.length,
+                next: withRows(
+                  p,
+                  fresh.map((item) => item.entry),
+                ),
+              }
         })
   const refusal = [applied, staged].flatMap((r) => (r !== undefined && !r.settled ? [r.refusal] : []))[0]
   const counts = {
@@ -73,19 +96,25 @@ export function replayKnowledge(
   }
   const result = refusal === undefined ? counts : { ...counts, refusal }
   // Stderr only, so a command's stdout stays its answer; silent when nothing happened.
-  if (counts.applied + counts.staged + counts.missing + counts.rejected > 0 || read.unreadable === true || refusal !== undefined)
+  if (
+    counts.applied + counts.staged + counts.missing + counts.rejected > 0 ||
+    read.unreadable === true ||
+    refusal !== undefined
+  )
     console.error(`atlas: knowledge replay ${JSON.stringify(result)}`)
   return result
 }
 
-/** Put the row's committed bytes into the local CAS. False when they are absent or name another hash. */
-function restoreBlob(repoPath: string, disk: DiskStore, entry: KnowledgeEntry): boolean {
+/** Restore the row's bytes and return the actual guarded read, not merely the handle a put returned. */
+function restoreBlob(repoPath: string, disk: DiskStore, entry: KnowledgeEntry): CasObject | undefined {
   const hash = entry.row.contentHash as Hash
-  if (disk.get(hash) !== undefined) return true
+  const existing = disk.get(hash)
+  if (existing !== undefined) return existing
   try {
-    return disk.put(JSON.parse(readFileSync(blobPath(repoPath, hash), "utf8")) as CasObject) === hash
+    if (disk.put(JSON.parse(readFileSync(blobPath(repoPath, hash), "utf8")) as CasObject) !== hash) return undefined
+    return disk.get(hash)
   } catch {
-    return false
+    return undefined
   }
 }
 

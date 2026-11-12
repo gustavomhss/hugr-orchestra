@@ -53,6 +53,11 @@ No server and no database of its own. What Atlas knows is a set of append-only f
 | Public repositories keep hashes only | Card messages, decisions and continuity chunks keep only their hashes. Visibility is read from the GitHub remote, never configured; any doubt counts as public. |
 | Old layouts move forward | `atlas migrate-layout` converts the earlier single-file layout. |
 
+Atlas validates a local cached object before reusing it. A truncated or corrupt entry can be repaired from matching
+content on the next write or replay; valid entries are kept. A write that cannot publish and read back the complete
+object is refused before its projection advances. During replay, unavailable content is counted as missing and cannot
+become knowledge or a candidate until it can be restored. The existing scope and reproof checks still apply.
+
 ## What each task cost
 
 Every attempt at a card is metered, and the record lands in git next to the code it produced. When the merge queue lands a bundle it commits `chore(queue): record <label>`, and merge commits on the base branch carry `WP:` and `Attempt:` trailers pointing to the record. `git log` alone answers "who built this, with which model, and what did it cost?", from any clone, months later.
