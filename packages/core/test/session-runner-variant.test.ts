@@ -156,13 +156,13 @@ describe("E7 native canonical variants", () => {
   }))
 
   for (const variant of [undefined, "default"]) {
-    it.effect(`missing configured default fails for ${variant ?? "omitted"} selection`, () => Effect.gen(function* () {
+    it.effect(`rejects unavailable ${variant === undefined ? "configured default" : "literal default"} variant`, () => Effect.gen(function* () {
       const model = yield* configure([document({ request: { variant: "missing" } },
         { type: "aisdk", package: "@ai-sdk/openai", url: "https://variant.example/v1" })])
       const failure = yield* SessionRunnerModel.resolve(session(variant), model).pipe(
         Effect.match({ onFailure: (error) => error, onSuccess: () => undefined }),
       )
-      expect(failure).toMatchObject({ _tag: "SessionRunnerModel.VariantUnavailableError", variant: "missing" })
+      expect(failure).toMatchObject({ _tag: "SessionRunnerModel.VariantUnavailableError", variant: variant ?? "missing" })
     }))
   }
 
