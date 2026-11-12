@@ -70,7 +70,7 @@ export function make() {
     inputs: [] as Parameters<ExecutionHost.Turn["authorize"]>[0][],
     results: [] as Result[],
     observed: [] as string[],
-    safetyArgs: [] as Readonly<Record<string, unknown>>[],
+    safetyArgs: [] as unknown[],
     effects: 0,
     profile: undefined as ToolSafety.Profile | undefined,
     controller: new AbortController(),
