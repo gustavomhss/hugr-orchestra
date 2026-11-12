@@ -237,6 +237,124 @@ describe("layer node", () => {
     )
   })
 
+  for (const databaseFirst of [false, true]) {
+    test(
+      "hoists equivalent DB-rewritten clones and acquires their globals once, databaseFirst=" + databaseFirst,
+      async () => {
+        const tags = LayerNode.tags({ location: ["global"], global: [] })
+        const global = tags.make("global")
+        const location = tags.make("location")
+        const acquired = { database: 0, users: 0 }
+        const database = global({ service: Database, layer: Layer.succeed(Database, { name: "original" }), deps: [] })
+        const selected = Layer.effect(
+          Database,
+          Effect.sync(() => {
+            acquired.database++
+            return Database.of({ name: "selected" })
+          }),
+        )
+        const users = global({
+          service: Users,
+          layer: Layer.effect(
+            Users,
+            Effect.gen(function* () {
+              const database = yield* Database
+              acquired.users++
+              return Users.of({ list: Effect.succeed([database.name]) })
+            }),
+          ),
+          deps: [database],
+        })
+        const left = location({
+          service: Left,
+          layer: Layer.effect(
+            Left,
+            Effect.gen(function* () {
+              const users = yield* Users
+              return Left.of({ value: (yield* users.list).join(",") })
+            }),
+          ),
+          deps: [users],
+        })
+        const rightLayer = Layer.effect(
+          Right,
+          Effect.gen(function* () {
+            const users = yield* Users
+            return Right.of({ value: (yield* users.list).join(",") })
+          }),
+        )
+        const right = location({ service: Right, layer: rightLayer, deps: [users] })
+        const replacement = location({ service: Right, layer: rightLayer, deps: [users] })
+        const replacements: LayerNode.Replacements = databaseFirst
+          ? [
+              [database, selected],
+              [right, replacement],
+            ]
+          : [
+              [right, replacement],
+              [database, selected],
+            ]
+        const result = LayerNode.hoist(LayerNode.group([left, right]), tags.values.global, replacements)
+        const layer = LayerNode.compile(result.node).pipe(Layer.provide(LayerNode.compile(result.hoisted)))
+        const values = await Effect.runPromise(
+          Effect.gen(function* () {
+            const left = yield* Left
+            const right = yield* Right
+            return [left.value, right.value]
+          }).pipe(Effect.provide(layer)),
+        )
+        expect(values).toEqual(["selected", "selected"])
+        expect(acquired).toEqual({ database: 1, users: 1 })
+      },
+    )
+  }
+
+  test("rejects the same global Layer when its dependency implementation differs", () => {
+    const tags = LayerNode.tags({ location: ["global"], global: [] })
+    const global = tags.make("global")
+    const first = global({ service: Database, layer: Layer.succeed(Database, { name: "first" }), deps: [] })
+    const second = global({ service: Database, layer: Layer.succeed(Database, { name: "second" }), deps: [] })
+    const shared = Layer.effect(
+      Users,
+      Effect.map(Database, (database) => Users.of({ list: Effect.succeed([database.name]) })),
+    )
+    const left = global({ service: Users, layer: shared, deps: [first] })
+    const right = global({ service: Users, layer: shared, deps: [second] })
+    expect(() => LayerNode.hoist(LayerNode.group([left, right]), tags.values.global)).toThrow(
+      "Tag global has conflicting implementations for test/GraphUsers",
+    )
+  })
+
+  test("rejects different service identities with the same name and Layer", () => {
+    class OtherDatabase extends Context.Service<OtherDatabase, { readonly name: string }>()("test/GraphDatabase") {}
+    const tags = LayerNode.tags({ global: [] })
+    const global = tags.make("global")
+    const shared = Layer.succeed(Database, Database.of({ name: "shared" }))
+    const first = global({ service: Database, layer: shared, deps: [] })
+    const second = global({ service: OtherDatabase, layer: shared, deps: [] })
+    expect(first.name).toBe(second.name)
+    expect(first.service).not.toBe(second.service)
+    expect(() => LayerNode.hoist(LayerNode.group([first, second]), tags.values.global)).toThrow(
+      "Tag global has conflicting implementations for test/GraphDatabase",
+    )
+  })
+
+  for (const clones of [1, 2]) {
+    test("rejects cyclic global clones without replacements before equivalence, clones=" + clones, () => {
+      const tags = LayerNode.tags({ global: [] })
+      const global = tags.make("global")
+      const shared = Layer.succeed(Database, Database.of({ name: "cyclic" }))
+      const firstDependencies: LayerNode.Node<Database, never, typeof tags.values.global>[] = []
+      const secondDependencies: LayerNode.Node<Database, never, typeof tags.values.global>[] = []
+      const first = global({ service: Database, layer: shared, deps: firstDependencies })
+      const second = global({ service: Database, layer: shared, deps: secondDependencies })
+      firstDependencies.push(first)
+      secondDependencies.push(second)
+      const root = LayerNode.group(clones === 1 ? [first] : [first, second])
+      expect(() => LayerNode.hoist(root, tags.values.global)).toThrow("Cycle detected in layer tree")
+    })
+  }
+
   test("treats dependency groups as transparent while hoisting", () => {
     const tags = LayerNode.tags({ location: ["global"], global: [] })
     const global = tags.make("global")
