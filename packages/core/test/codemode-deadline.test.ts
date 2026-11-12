@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { Deferred, Effect, Exit, Fiber, Schema, Stream, type Scope } from "effect"
+import { Deferred, Effect, Exit, Fiber, Option, Schema, Stream, type Scope } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { AppProcess } from "../src/process"
@@ -203,6 +203,33 @@ test("CPU E10 compiled literal-test: bundled public index and adjacent worker se
 
 const assertDeadline = Effect.fn("CodeModeDeadline.assertDeadline")(function* (index: string, scenario: string) {
   const report = yield* runChild(index, scenario, true)
+  const mark = Schema.decodeUnknownOption(Schema.Struct({ elapsedToMark: Schema.Number }))(
+    report.messages.find((message) => message.type === "CPU_PHASE_ADMITTED")?.payload,
+  )
+  const status = Schema.decodeUnknownOption(Schema.Struct({
+    result: Schema.Struct({ ok: Schema.Boolean, error: Schema.optionalKey(Schema.Struct({ kind: Schema.String })) }),
+  }))(report.result)
+  const fixtureErrors = report.messages.filter((message) => message.type === "FIXTURE_ERROR")
+  const fixtureError = Schema.decodeUnknownOption(Schema.Struct({ name: Schema.String, message: Schema.String }))(
+    fixtureErrors.at(0)?.payload,
+  )
+  const witness = `E10_CPU_WITNESS ${JSON.stringify({
+    scenario, artifact: path.basename(index),
+    ready: report.messages.some((message) => message.type === "FIXTURE_READY"),
+    warmup: report.messages.some((message) => message.type === "WARMUP_READY"),
+    elapsedToMark: Option.isSome(mark) ? mark.value.elapsedToMark : null,
+    containmentKill: report.containmentKill, exitCode: report.exitCode ?? null, resultPresent: report.result !== undefined,
+    resultStatus: Option.isSome(status) ? status.value.result.ok ? "success" : "failure" : report.result === undefined ? "missing" : "invalid",
+    resultKind: Option.isSome(status) ? status.value.result.error?.kind.slice(0, 32) ?? null : null,
+    heartbeats: report.messages.filter((message) => message.type === "HEARTBEAT").length,
+    fixtureErrors: {
+      count: fixtureErrors.length,
+      first: Option.isSome(fixtureError)
+        ? { name: fixtureError.value.name.slice(0, 40), message: fixtureError.value.message.slice(0, 100) } : null,
+    },
+  })}\n`
+  if (Buffer.byteLength(witness) > 2048) return yield* Effect.die("SETUP: CPU witness exceeds 2KiB")
+  yield* Effect.promise(() => Bun.stderr.write(witness))
   assertSetup(report, true)
   // On the old implementation the marked CPU phase stalls this child. Killing it is containment, never enforcement.
   expect(report.result, "CodeMode must produce a result; an external watchdog kill is not its deadline").toBeDefined()
