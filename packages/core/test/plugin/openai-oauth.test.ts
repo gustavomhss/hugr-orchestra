@@ -24,14 +24,14 @@ async function attempt() {
 }
 
 function tokenExchange() {
-  return spyOn(globalThis, "fetch").mockImplementation(async (url, init) => {
+  return spyOn(globalThis, "fetch").mockImplementation(Object.assign(async (url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
     expect(String(url)).toBe("https://auth.openai.com/oauth/token")
     const body = new URLSearchParams(String(init?.body))
     expect(body.get("code")).toBe("dummy-code")
     expect(body.get("code_verifier")?.length).toBe(43)
     expect(body.get("redirect_uri")).toMatch(/^http:\/\/localhost:\d+\/auth\/callback$/)
     return Response.json({ access_token: "dummy-access", refresh_token: "dummy-refresh", id_token: "" })
-  })
+  }, { preconnect: fetch.preconnect }))
 }
 
 async function heldRequest(url: URL) {
@@ -158,7 +158,12 @@ describe("ChatGPT OAuth loopback callback", () => {
 
   test("an occupied port retains the actionable sign-in conflict error", async () => {
     const listener = createServer()
-    await new Promise<void>((resolve) => listener.listen(0, "localhost", resolve))
+    // Reserve both IPv6 and IPv4 loopback bindings: Bun HTTP and net can
+    // resolve localhost to different families, so a single-family bind is insufficient.
+    await new Promise<void>((resolve, reject) => {
+      listener.once("error", reject)
+      listener.listen({ port: 0, host: "::", ipv6Only: false, exclusive: true }, resolve)
+    })
     const address = listener.address()
     if (!address || typeof address === "string") throw new Error("Missing test listener address")
     const scope = Scope.makeUnsafe()
