@@ -24,7 +24,7 @@ export const uninstall = Effect.fn("cli.uninstall")(function* (
   executable = process.execPath,
   paths: Pick<typeof Global.Path, "data" | "cache" | "config" | "state"> = Global.Path,
 ) {
-  const installation = yield* Effect.tryPromise(() => installationMethod(executable))
+  const installation = yield* Effect.tryPromise({ try: () => installationMethod(executable), catch: (error) => error instanceof Error ? error : new Error(String(error)) })
   const targets = removalTargets(input, installation.method, paths)
 
   for (const target of targets.directories) {
@@ -50,7 +50,7 @@ export const uninstall = Effect.fn("cli.uninstall")(function* (
   }
 
   if (installation.method === "npm") {
-    const current = yield* Effect.tryPromise(() => installationMethod(executable))
+    const current = yield* Effect.tryPromise({ try: () => installationMethod(executable), catch: (error) => error instanceof Error ? error : new Error(String(error)) })
     if (current.method !== "npm" || current.prefix !== installation.prefix)
       return yield* Effect.fail(new Error("Installation ownership changed; no npm package was removed"))
     const result = yield* Spawn.run(["npm", "uninstall", "-g", "--prefix", installation.prefix, "@humanguardrail/cli"], { extendEnv: true })
@@ -154,8 +154,8 @@ export async function installationMethod(exec = process.execPath): Promise<Insta
   const launcher = path.join(prefix, "bin", "orchestra")
   if (!(await lstat(current).catch(() => null))?.isSymbolicLink() ||
       !(await lstat(launcher).catch(() => null))?.isSymbolicLink() ||
-      await readlink(current) !== `versions/${descriptor.version}-${descriptor.target}` ||
-      await readlink(launcher) !== "../current/bin/orchestra" ||
+      path.normalize(await readlink(current)) !== path.join("versions", `${descriptor.version}-${descriptor.target}`) ||
+      path.normalize(await readlink(launcher)) !== path.join("..", "current", "bin", "orchestra") ||
       await realpath(current) !== payload || await realpath(launcher) !== executable ||
       await realpath(path.dirname(launcher)) !== path.dirname(launcher)) throw unsupported()
   return { method: "archive", prefix, payload, executable }

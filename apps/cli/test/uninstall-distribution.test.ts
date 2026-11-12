@@ -1,11 +1,11 @@
 import { afterAll, expect, test } from "bun:test"
 import { Effect } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
-import { access, mkdtemp, mkdir, writeFile, readFile, symlink, rm } from "node:fs/promises"
+import { access, mkdtemp, mkdir, writeFile, readFile, symlink, rm, realpath } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
-const home = await mkdtemp(path.join(tmpdir(), "orchestra-uninstall-distribution-"))
+const home = await realpath(await mkdtemp(path.join(tmpdir(), "orchestra-uninstall-distribution-")))
 process.env.ORCHESTRA_TEST_HOME = home
 process.env.HOME = home
 process.env.XDG_DATA_HOME = path.join(home, "data")
