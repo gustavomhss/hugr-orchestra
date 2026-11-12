@@ -233,7 +233,10 @@ export class McpOAuthPendingProvider extends McpOAuthProvider {
           !McpAuth.sameIssuer(entry.staticClientBinding.issuer, issuer))
       )
         throw new McpAuth.ReauthRequired()
-      this.pendingClientInfo = { clientId: this.config.clientId, issuer, source: "configured" }
+      const identity = { clientId: this.config.clientId, issuer, source: "configured" as const }
+      // Bind public identity before the SDK can use the configured secret, even if exchange never commits.
+      await Effect.runPromise(this.auth.updateBinding(this.binding, { clientInfo: identity }))
+      this.pendingClientInfo = identity
       return { client_id: this.config.clientId, client_secret: this.config.clientSecret, issuer }
     }
     return this.pendingClientInfo
