@@ -7,6 +7,7 @@ import { AgentV2 } from "../../agent"
 import { Config } from "../../config"
 import { Location } from "../../location"
 import { AbsolutePath } from "../../schema"
+import { ConfigTrust } from "../trust"
 import { ConfigAgent } from "../agent"
 import { ConfigMarkdown } from "../markdown"
 import { FSUtil } from "../../fs-util"
@@ -84,8 +85,13 @@ export const Plugin = define({
             )
           })
         }).pipe(Effect.map((documents) => documents.flat()))
+        const approved = new Set(
+          location
+            ? ConfigTrust.runnable(documents, global.config, location.directory)
+            : documents.filter((document) => ConfigTrust.isUser(global.config, document)),
+        )
         const permissions = expandPermissions(
-          documents.flatMap((document) => document.info.permissions ?? []),
+          documents.filter((document) => approved.has(document)).flatMap((document) => document.info.permissions ?? []),
           global.home,
         )
         const configuredDefault = Config.latest(documents, "default_agent")
@@ -95,12 +101,13 @@ export const Plugin = define({
         }
 
         for (const document of documents) {
+          const trusted = approved.has(document)
           for (const [id, item] of Object.entries(document.info.agents ?? {})) {
             const agentID = AgentV2.ID.make(id)
             // Every session runs on Maestro, so no configuration source (a JSON document or an agent file) may disable
             // it or take it out of primary mode.
             const maestro = agentID === AgentV2.defaultID
-            if (item.disabled && !maestro) {
+            if (trusted && item.disabled && !maestro) {
               draft.remove(agentID)
               continue
             }
@@ -108,14 +115,14 @@ export const Plugin = define({
             const exists = draft.get(agentID) !== undefined
             draft.update(agentID, (agent) => {
               if (!exists) agent.permissions.push(...permissions)
-              if (item.model !== undefined) {
+              if (trusted && item.model !== undefined) {
                 const model = ModelV2.parse(item.model)
                 agent.model = { id: model.modelID, providerID: model.providerID, variant: agent.model?.variant }
               }
-              if (item.variant !== undefined && agent.model !== undefined) {
+              if (trusted && item.variant !== undefined && agent.model !== undefined) {
                 agent.model.variant = ModelV2.VariantID.make(item.variant)
               }
-              if (item.request !== undefined) {
+              if (trusted && item.request !== undefined) {
                 Object.assign(agent.request.headers, item.request.headers ?? {})
                 Object.assign(agent.request.body, item.request.body ?? {})
               }
@@ -123,13 +130,13 @@ export const Plugin = define({
               if (item.name !== undefined && !maestro) agent.name = item.name
               if (item.system !== undefined) agent.system = item.system
               if (item.description !== undefined) agent.description = item.description
-              if (item.engine !== undefined) agent.engine = item.engine
+              if (trusted && item.engine !== undefined) agent.engine = item.engine
               if (item.mode !== undefined && !maestro) agent.mode = item.mode
               if (item.hidden !== undefined) agent.hidden = item.hidden
               if (item.color !== undefined) agent.color = item.color
               if (item.avatar !== undefined) agent.avatar = item.avatar
               if (item.steps !== undefined) agent.steps = item.steps
-              if (item.permissions !== undefined) {
+              if (trusted && item.permissions !== undefined) {
                 agent.permissions.push(...expandPermissions(item.permissions, global.home))
               }
             })
