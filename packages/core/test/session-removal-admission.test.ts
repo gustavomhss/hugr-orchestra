@@ -12,10 +12,12 @@ import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { ProjectV2 } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionArchive } from "@orchestra/core/session/archive"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { SessionMessage } from "@orchestra/core/session/message"
+import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionRunCoordinator } from "@orchestra/core/session/run-coordinator"
 import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
 import { SessionStore } from "@orchestra/core/session/store"
@@ -430,6 +432,10 @@ it.live("an explicit resume whose row vanishes after validation fails typed befo
         [SessionStore.node, Layer.succeed(SessionStore.Service, store)],
         [LocationServiceMap.node, capturedLocations],
         [ProjectV2.node, f.projects],
+        // f.layer already installed these real projectors on the shared EventV2/DB.
+        // The fresh Session facade must reuse that registration rather than project each event twice.
+        [SessionProjector.node, Layer.empty],
+        [SessionArchive.node, Layer.empty],
       ] as const
       const local = Context.get(
         yield* Layer.build(AppNodeBuilder.build(SessionExecutionLocal.node, replacements).pipe(Layer.fresh)),
