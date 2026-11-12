@@ -9,6 +9,7 @@ import { ReviewRouting } from "../../src/review/routing"
 // de3254b1a1), hardcoded, not read back from the lists under test. The authored-tree
 // loader, runtime discovery and catalog check live in the maestro tree test. This file
 // does not close analyzer acquisition, the PR-slice route suite, or A9 source gaps.
+// Phase-3 membership remains required when later phases extend classes and languages.
 
 const catalog: ReviewCatalog.Catalog = ReviewCatalog.current
 const settings = { acceptedUnavailable: [] }
@@ -108,7 +109,7 @@ describe("phase 3 acceptance", () => {
     for (const [id, node, classes] of LENSES) {
       const entry = catalog.lenses.find((lens) => lens.id === id)
       expect(entry?.node).toBe(node)
-      expect(entry?.classes.toSorted()).toEqual([...classes].toSorted())
+      expect(entry?.classes).toEqual(expect.arrayContaining([...classes]))
     }
     expect(catalog.lenses.find((lens) => lens.id === "security")?.classes.toSorted()).toEqual([
       "security.boundary",
@@ -147,7 +148,7 @@ describe("phase 3 acceptance", () => {
       ...catalog.overlays.flatMap((overlay) => overlay.lenses),
     ])
     for (const [id] of LENSES) expect(routed.has(id)).toBe(true)
-    expect(catalog.languages.map((language) => language.id)).toEqual(["js-ts", "python", "go", "ruby", "php", "sql"])
+    expect(catalog.languages.map((language) => language.id)).toEqual(expect.arrayContaining(["js-ts", "python", "go", "ruby", "php", "sql"]))
     expect(catalog.route.tiers.map((tier) => [tier.id, tier.built, tier.runs])).toEqual([
       ["quick", true, "quick"],
       ["standard", true, "standard"],

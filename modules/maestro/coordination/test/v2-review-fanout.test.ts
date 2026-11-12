@@ -85,7 +85,7 @@ test("card-only returns the verifier-confirmed host identities shown in the fini
           )))
         : h.port.run(id, text, turn),
     }
-    const catalog = { ...ReviewCatalog.current, classes: ReviewCatalog.current.classes.map((item) => item.id === "logic.invariant"
+    const catalog = { ...h.input("standard").catalog, classes: h.input("standard").catalog.classes.map((item) => item.id === "logic.invariant"
       ? { ...item, options: { "*": [{ option: "quote", proves: "quote" }, { option: "tool:ast-grep", proves: "tool" }] } }
       : item) }
     const result = yield* ReviewFanoutV2.run(h.input("standard", { completion: "card-only", catalog }), port)

@@ -431,6 +431,8 @@ queued; the refusal applies at the next `board_queue`.
 | B9 | §10 test aliases | The plan names the `test:ci` alias `app-shell`; the module registry calls it `app` | WP 1.11's run is `bun run test:ci app src/pages/session/orchestra-governance-data.test.ts` |
 | B10 | K5 pack `gitleaks` | The pack runs with `--redact`, so two hits of one rule in one file share a snippet digest and the noise step merges them | Accepted for phase 1: the merged item still reaches the security lens with every source listed; a JSON output with line-keyed fingerprints is a catalog change if it proves noisy |
 
+| B11 | WP 4.1, jscpd | Exact duplication has no existing finding class; mapping it to security or an invariant would overstate the evidence | Add `change.duplication` under the existing `change` lens, with P3 probation candidates and quote/test/script proof options. A routed jscpd source scan binds that lens by path, within the existing cap. A clone alone proves no defect; a finding still needs harmful divergence or a written constraint. Other pack lens declarations remain outside routing. |
+
 ## 10. Work packages
 
 Owning seat: backend writes code, tests, catalog data and the prompt wiring; `archie` writes skill trees, the prompt

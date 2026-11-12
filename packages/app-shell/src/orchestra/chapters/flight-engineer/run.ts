@@ -6,6 +6,7 @@ import { useLanguage } from "@/context/language"
 import { showToast } from "@/utils/toast"
 import { devSeat } from "./dev"
 import type { StartOptions } from "./model"
+import { settleHotkeyRead } from "./hotkey"
 import { settleProtectionRead } from "./protection"
 import { refreshReadiness, settlePermissionAsk } from "./readiness"
 
@@ -27,9 +28,11 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     waiting: false,
     readinessFailed: false,
     protectionFailed: false,
+    hotkeysFailed: false,
   })
   const [now, setNow] = createSignal(Date.now())
   let protectionRead = 0
+  let hotkeyRead = 0
 
   const reportProtection = (error: unknown) => {
     console.error(error)
@@ -86,11 +89,21 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
       finish: () => setStore("waiting", false),
     })
 
-  const hotkeys = () =>
-    seat()
-      ?.getHotkeys()
-      .then((value) => setStore("hotkeys", value))
-      .catch(() => undefined)
+  const reportHotkeys = (error: unknown) => {
+    console.error(error)
+    if (!store.hotkeysFailed) showToast({ variant: "error", title: t("common.requestFailed") })
+    setStore("hotkeysFailed", true)
+  }
+  const hotkeys = () => {
+    const started = ++hotkeyRead
+    const current = seat()
+    return settleHotkeyRead({
+      read: current?.getHotkeys(),
+      current: () => started === hotkeyRead && seat() !== undefined,
+      apply: (value) => setStore({ hotkeys: value, hotkeysFailed: false }),
+      report: reportHotkeys,
+    })
+  }
 
   const elapsed = createMemo(() => (store.run.running ? Math.max(0, now() - store.run.startedAt) : 0))
 

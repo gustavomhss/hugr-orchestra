@@ -4,6 +4,12 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Changing a Flight Engineer hotkey, or resetting them, no longer hides a failed write. The keys stay as they were, and that failure is shown. Reloading them after the change, or when Flight Engineer opens, no longer hides a failed read.
+
+## 0.3.6 (2026-11-11)
+
+Command line and desktop release candidate, unsigned like 0.3.4. Publication reuses the exact artifacts validated for this cut; the release receipt records their source, runtime checks and SHA256 digests.
+
 - Late events and pending message reads no longer restore an evicted idle transcript. Opening the session loads it normally; usage and status still update.
 - Changing content protection no longer hides a failed write. The switch stays where it was, and that failure is shown. Reading it when Flight Engineer opens no longer hides a failed read. The switch stays disabled, and that failure is shown.
 - Provider startup overlaps snapshot capture while tool writes wait for the original snapshot. Cancelling a turn also cancels a pending capture; undo retains its changed-file list.

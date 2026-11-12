@@ -117,7 +117,7 @@ export const phase3 = {
     {
       id: "change",
       node: "lucy-lens-change",
-      classes: ["change.structure", "change.history", "change.merge", "change.provenance", "change.health"],
+      classes: ["change.structure", "change.history", "change.merge", "change.provenance", "change.health", "change.duplication"],
     },
     {
       id: "experience",
@@ -193,6 +193,12 @@ export const phase3 = {
       "the moved or split unit and the caller or build edge the move drops",
       "a test imports the previous path and fails on head",
       "a script prints the old and new module paths",
+    ),
+    quoted(
+      "change.duplication",
+      "the duplicated spans and the written constraint or harmful divergence they violate; a clone alone is not a defect",
+      "a test drives both copies and fails on their inconsistent behavior",
+      "a script prints both copies and their different outputs for the same contract",
     ),
     quoted(
       "change.history",

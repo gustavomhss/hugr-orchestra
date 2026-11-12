@@ -108,7 +108,13 @@ export const harness = (directory: string, prefix: string) =>
       request: { stage: "code", settings: { acceptedUnavailable: [] }, ...(tier ? { tier } : {}) },
       base: { files: ["package.json", "src/a.ts", "AGENTS.md"] },
       head: { files: ["package.json", "src/a.ts", "AGENTS.md"], changes: ReviewFanoutV2.changes(DIFF) },
-      catalog: ReviewCatalog.current,
+      // This fixture exercises the phase-one hunt protocol, independently of later analyzer and engagement additions.
+      catalog: {
+        ...ReviewCatalog.current,
+        route: { ...ReviewCatalog.current.route, profiles: ReviewCatalog.current.route.profiles.filter((profile) => !["audit", "diligence", "artifact", "compliance"].includes(profile.id)) },
+        packs: ReviewCatalog.current.packs.filter((pack) => ["gitleaks", "repo", "ast-grep"].includes(pack.id)),
+        rules: ReviewCatalog.current.rules.filter((rule) => ["gitleaks", "repo", "ast-grep"].includes(rule.pack)),
+      },
       stages: STAGES,
       skills,
       fs: files,

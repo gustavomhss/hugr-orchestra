@@ -1,4 +1,4 @@
-// Remaining language entries (design §7.4). Spread into entries.ts. Dotnet and swift stay out: the design gives no manifest list.
+// Remaining language entries (design §7.4). Spread into entries.ts. Detect dotnet and swift through project manifests.
 export const languagesRest = [
   {
     id: "rust",
@@ -26,5 +26,23 @@ export const languagesRest = [
       absent: [],
     },
     node: "team-stack-compiled-native",
+  },
+  {
+    id: "dotnet",
+    detection: {
+      manifests: ["*.csproj", "*.fsproj", "*.vbproj"],
+      extensions: [],
+      absent: [],
+    },
+    node: "team-stack-compiled-dotnet",
+  },
+  {
+    id: "swift",
+    detection: {
+      manifests: ["Package.swift"],
+      extensions: [],
+      absent: [],
+    },
+    node: "team-stack-compiled-swift",
   },
 ] as const

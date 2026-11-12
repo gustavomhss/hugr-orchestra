@@ -64,9 +64,10 @@ describe("review route", () => {
         { id: "oxlint", source: "catalog", lane: "no-build", status: "routed" },
         { id: "tsc", source: "catalog", lane: "build", status: "routed" },
         { id: "oxlint-type-aware", source: "catalog", lane: "build", status: "routed" },
+        { id: "jscpd", source: "catalog", lane: "no-build", status: "routed" },
       ],
       budget: { ...STANDARD, lensChildren: 6 },
-      deviations: [],
+      deviations: [deviation("change", "pack:jscpd")],
     })
     expect(Schema.decodeUnknownSync(ReviewRouting.Record)(record)).toEqual(record)
   })
@@ -289,7 +290,7 @@ describe("phase 3 overlays", () => {
   ] as const)("%s content on %s suggests and does not bind %s", (id, file, text, pattern, lens) => {
     const record = routed(file, [text])
     expect(found(record, id)).toEqual({ id, source: "content", signal: `${file}:1 ${pattern}` })
-    expect(record.lenses.some((entry) => entry.id === lens)).toBe(false)
+    expect(record.lenses.some((entry) => entry.id === lens && entry.because === `overlay:${id}`)).toBe(false)
   })
 
   test.each([
