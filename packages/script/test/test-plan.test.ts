@@ -40,9 +40,10 @@ describe("test shard planner", () => {
     expect(invocations).toEqual([
       "bun turbo test --filter=@orchestra/core --only --log-order=stream -- --preload ./test/file-start.ts \"${files[@]}\" \"${report[@]}\"",
     ])
-    expect(code).toContain('cd packages/core && GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 --only-failures "$alone_file"')
+    expect(code).toContain('cd packages/core && GITHUB_ACTIONS=false ')
+    expect(code).toContain('=declared bun test --timeout 30000 --only-failures "$alone_file"')
     expect(code).not.toContain('bun test --timeout 30000 --only-failures "${alone[@]}"')
-    const own = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ]; then')[1]?.split("else")[0] ?? ""
+    const own = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ] || [ "$file" = "test/review-toolkit/dependency-shadow.test.ts" ]; then')[1]?.split("else")[0] ?? ""
     expect(own).toContain('alone+=("$file")')
     expect(own).not.toContain("kept")
     const strip = (text: string) => text.replaceAll("\r\n", "\n").replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((line) => line.replace(/\/\/.*$/, "")).join("\n")

@@ -399,11 +399,12 @@ jobs:
             # (runs 43156203910 and 43217078756). Same split: own process, same step, no longer timeout.
             # tool-safety-loopback.test.ts prints its Windows proof and then does not return (runs 43232120353
             # and 43237306628). It exits itself. Leaving it in the shard would skip every file after that exit.
+            # dependency-shadow.test.ts started and did not finish before this step died (run 43307894859).
             alone=()
             if [ "$RUNNER_OS" = "Windows" ]; then
               kept=()
               for file in "${files[@]}"; do
-                if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ]; then
+                if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ] || [ "$file" = "test/review-toolkit/dependency-shadow.test.ts" ]; then
                   alone+=("$file")
                 else
                   kept+=("$file")
