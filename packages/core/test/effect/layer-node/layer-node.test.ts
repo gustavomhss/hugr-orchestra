@@ -344,12 +344,13 @@ describe("layer node", () => {
       const tags = LayerNode.tags({ global: [] })
       const global = tags.make("global")
       const shared = Layer.succeed(Database, Database.of({ name: "cyclic" }))
-      const firstDependencies: LayerNode.Node<Database, never, typeof tags.values.global>[] = []
-      const secondDependencies: LayerNode.Node<Database, never, typeof tags.values.global>[] = []
+      const seed = global({ service: Database, layer: shared, deps: [] })
+      const firstDependencies: [typeof seed] = [seed]
+      const secondDependencies: [typeof seed] = [seed]
       const first = global({ service: Database, layer: shared, deps: firstDependencies })
       const second = global({ service: Database, layer: shared, deps: secondDependencies })
-      firstDependencies.push(first)
-      secondDependencies.push(second)
+      firstDependencies[0] = first
+      secondDependencies[0] = second
       const root = LayerNode.group(clones === 1 ? [first] : [first, second])
       expect(() => LayerNode.hoist(root, tags.values.global)).toThrow("Cycle detected in layer tree")
     })
