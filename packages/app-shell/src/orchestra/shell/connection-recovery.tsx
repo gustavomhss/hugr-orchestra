@@ -17,6 +17,7 @@ export function ConnectionRecovery(props: {
   const language = useLanguage()
   const platform = usePlatform()
   const check = useCheckServerHealth()
+  let replaceRead = 0
   const [state, setState] = createStore({
     open: false,
     // The unreachable entry being edited. Saving a different address replaces it instead of adding a second one.
@@ -73,13 +74,15 @@ export function ConnectionRecovery(props: {
     if (state.replace && state.replace !== key) await replaceEntry(state.replace, key)
     props.onServerSelected?.(key)
   }
-  const replaceEntry = (previous: ServerConnection.Key, next: ServerConnection.Key) =>
-    moveDefaultWithReplacedEntry({
+  const replaceEntry = (previous: ServerConnection.Key, next: ServerConnection.Key) => {
+    const started = ++replaceRead
+    return moveDefaultWithReplacedEntry({
       previous,
       next,
       remove: (key) => server.remove(key),
       getDefault: platform.getDefaultServer,
       setDefault: platform.setDefaultServer,
+      current: () => started === replaceRead,
       report: (error) =>
         showToast({
           variant: "error",
@@ -87,6 +90,7 @@ export function ConnectionRecovery(props: {
           description: error instanceof Error ? error.message : String(error),
         }),
     })
+  }
   return (
     <section class="w-full max-w-sm shrink-0 flex flex-col gap-3" aria-label={language.t("status.popover.tab.servers")}>
       <div class="flex flex-col gap-2 items-center">
