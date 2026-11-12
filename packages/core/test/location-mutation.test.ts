@@ -29,6 +29,29 @@ function withTmp<A, E, R>(f: (directory: string) => Effect.Effect<A, E, R>) {
 }
 
 describe("LocationMutation", () => {
+  it.live("acquires without resolving a missing Location until a filesystem target is requested", () =>
+    withTmp((directory) =>
+      Effect.gen(function* () {
+        const mutation = yield* LocationMutation.Service
+        expect(mutation.resolve).toBeFunction()
+      }).pipe(provide(path.join(directory, "missing-location"))),
+    ),
+  )
+
+  it.live("fails actual resolution of a missing Location and retains that cached failure", () =>
+    withTmp((directory) => {
+      const missing = path.join(directory, "missing-location")
+      return Effect.gen(function* () {
+        const mutation = yield* LocationMutation.Service
+        const error = yield* Effect.flip(mutation.resolve({ path: "new.txt" }))
+        expect(error).toMatchObject({ _tag: "PlatformError", reason: { _tag: "NotFound" } })
+        yield* Effect.promise(() => fs.mkdir(missing))
+        const retry = yield* Effect.flip(mutation.resolve({ path: "new.txt" }))
+        expect(retry).toBe(error)
+      }).pipe(provide(missing))
+    }),
+  )
+
   it.live("resolves an active relative existing file target", () =>
     withTmp((directory) =>
       Effect.gen(function* () {
