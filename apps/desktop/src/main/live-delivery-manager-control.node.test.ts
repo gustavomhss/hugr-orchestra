@@ -115,8 +115,15 @@ export async function fixture(t: TestContext) {
   const owned: (() => void | Promise<void>)[] = []
   t.after(async () => {
     const failures: unknown[] = []
-    for (const cleanup of owned.reverse()) { try { await cleanup() } catch (error) { failures.push(error) } }
-    rmSync(root, { recursive: true, force: true })
+    for (const cleanup of owned.reverse()) {
+      const expired = Promise.withResolvers<never>()
+      const timer = setTimeout(() => expired.reject(new Error("manager IO not joined")), 1000)
+      try { await Promise.race([Promise.resolve().then(cleanup), expired.promise]) }
+      catch (error) { failures.push(error) }
+      finally { clearTimeout(timer) }
+    }
+    try { rmSync(root, { recursive: true, force: true }) }
+    catch (error) { failures.push(error) }
     if (failures.length) throw new AggregateError(failures, "Fixture cleanup failed")
   })
   const remote = await peer(t)
