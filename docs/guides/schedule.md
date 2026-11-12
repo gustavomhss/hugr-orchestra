@@ -51,3 +51,11 @@ Each row shows the task name, its cadence and a status: **Scheduled** or **Pause
 Schedules an agent creates through `schedule_manage` belong to that Session's effective agent and workspace. When the Session has no explicit agent, each dispatch checks its current selectable default. A selectable fallback is valid when the configured default is unavailable; a changed default or no selectable default disables the old schedule with `owner-missing`.
 
 A Session with an explicit agent keeps that identity when its default changes. Resolving an omitted agent does not save an explicit agent onto the owner Session.
+
+## Integrations managing Session schedules
+
+When an integration pauses, resumes, removes or manually runs a Session schedule, Orchestra checks its authority again before committing the operation. This includes resuming a schedule that is already enabled. Authority that expires or is revoked while the operation waits can therefore refuse the request.
+
+A new run also checks authority before a new Session or prompt is committed. Refusal before Session creation leaves no new Session. A later refusal can leave an empty Session that was already created, without admitting the new prompt. Installed hooks may already have run; refusal does not undo their effects.
+
+An already admitted run keeps its started receipt, including when a later wake or response fails. Repeating the same manual request returns that existing run. These checks do not undo work already admitted, or a write whose final authority check completed before revocation arrived.
