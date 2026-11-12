@@ -70,6 +70,7 @@ export function make() {
     inputs: [] as Parameters<ExecutionHost.Turn["authorize"]>[0][],
     results: [] as Result[],
     observed: [] as string[],
+    safetyArgs: [] as Readonly<Record<string, unknown>>[],
     effects: 0,
     profile: undefined as ToolSafety.Profile | undefined,
     controller: new AbortController(),
@@ -141,7 +142,10 @@ export function make() {
         return ToolSafety.Service.of({
           ...safety,
           before: (input) => bound(safety.before(input)),
-          run: (input, effect, observe, outcome) => bound(safety.run(input, effect, observe, outcome)),
+          run: (input, effect, observe, outcome) => {
+            state.safetyArgs.push(structuredClone(input.args))
+            return bound(safety.run(input, effect, observe, outcome))
+          },
         })
       }),
     ),
@@ -189,6 +193,7 @@ export function make() {
       state.inputs.length = 0
       state.results.length = 0
       state.observed.length = 0
+      state.safetyArgs.length = 0
       state.effects = 0
       state.profile = profile
       state.controllers.clear()

@@ -229,6 +229,29 @@ filesystem.it.live("a fresh Session edit deny wins over the agent's external/act
   }),
 )
 filesystem.it.live(
+  "the real ToolSafety profile receives the canonical alias target while SDK input stays original",
+  () =>
+    Effect.gen(function* () {
+      yield* filesystem.setup(filesystem.allow, [], { protectedWrites: [filesystem.paths.restricted] })
+      const alias = path.join(filesystem.paths.inside, "profile-alias.txt")
+      yield* Effect.promise(() => fs.symlink(filesystem.paths.restricted, alias, "file"))
+      const input = Object.freeze(filesystem.fileInput("Write", alias))
+      filesystem.state.during = async (options) => {
+        await filesystem.gates(options, {
+          tool: "Write",
+          args: input,
+          id: "canonical-profile",
+          effect: filesystem.write(alias),
+        })
+      }
+      yield* filesystem.run
+      filesystem.allRefused()
+      expect(yield* Effect.promise(() => Bun.file(filesystem.paths.restricted).text())).toBe("RESTRICTED")
+      expect(filesystem.state.safetyArgs).toEqual([{ filePath: filesystem.paths.restricted }])
+      expect(input).toEqual(filesystem.fileInput("Write", alias))
+    }),
+)
+filesystem.it.live(
   "the actual Location ToolSafety profile still denies an outside write after both permissions allow",
   () =>
     Effect.gen(function* () {
