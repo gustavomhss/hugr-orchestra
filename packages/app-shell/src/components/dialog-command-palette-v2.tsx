@@ -148,6 +148,7 @@ function CommandPaletteView(props: {
   const groupedEntries = createMemo(() => groups(visibleEntries()))
   const activeEntry = createMemo(() => visibleEntries()[active()])
   const status = () => {
+    if (entries.error) return language.t("common.requestFailed")
     if (visibleEntries().length > 0) return ""
     return entries.loading ? language.t("common.loading") : language.t("palette.empty")
   }
