@@ -175,7 +175,13 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await expect(dialog.getByText("Waiting for authorization...", { exact: true })).toBeVisible()
   await expect.poll(() => statusPolls(mock)).toBeGreaterThan(1)
   expect(mock.calls.some((call) => call.path.endsWith("/att-auto/complete"))).toBe(false)
+  const cancelled = page.waitForResponse(
+    (response) =>
+      response.request().method() === "DELETE" &&
+      new URL(response.url()).pathname === "/api/integration/openai/connect/oauth/att-auto",
+  )
   mock.auto = "failed"
+  expect((await cancelled).status()).toBe(204)
   await expect(dialog.getByText("Authorization failed: Denied by user", { exact: true })).toBeVisible()
   mock.auto = "complete"
   await dialog.getByRole("button", { name: "Try again" }).click()
@@ -398,7 +404,9 @@ async function setup(page: Page, mock: Mock, scheme: "dark" | "light" = "dark") 
         },
       })
     }
-    if (path === "/api/integration/openai/connect/oauth/att-auto") {
+    if (method === "DELETE" && /^\/api\/integration\/openai\/connect\/oauth\/[^/]+$/.test(path))
+      return route.fulfill({ status: 204 })
+    if (method === "GET" && path === "/api/integration/openai/connect/oauth/att-auto") {
       const time = { created: 1, expires: 9_999_999_999_999 }
       if (mock.auto === "failed")
         return json(route, { location, data: { status: "failed", message: "Denied by user", time } })

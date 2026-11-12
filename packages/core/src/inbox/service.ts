@@ -250,7 +250,7 @@ export const layer = (
               const waiting = jira?.connected === true && cooling?.retry_at != null && cooling.retry_at > started
               const acquired = waiting
                 ? { items: [] as Pulled[], error: undefined as unknown }
-                : yield* remotePull(credentials, owner).pipe(
+                : yield* remotePull(credentials, owner, options.workTransport).pipe(
                     Effect.map((items) => ({ items, error: undefined as unknown })),
                     Effect.catch((error) => Effect.succeed({ items: [] as Pulled[], error })),
                   )
@@ -367,7 +367,7 @@ export const layer = (
                       Effect.as(true),
                       Effect.catch(() => Effect.succeed(false)),
                     )
-                  : yield* remoteRelease(credentials, owner, row.source, row.threadId, row.actor, text).pipe(
+                  : yield* remoteRelease(credentials, owner, row.source, row.threadId, row.actor, text, options.workTransport).pipe(
                       Effect.as(true),
                       Effect.catch(() => Effect.succeed(false)),
                     )
