@@ -19,7 +19,6 @@ import { SessionExecution } from "@orchestra/core/session/execution"
 import { SkillV2 } from "@orchestra/core/skill"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import type { RelayArm } from "@orchestra/schema/relay-arm"
-import { SessionID } from "@orchestra/schema/session-id"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { WorkflowGateV2 } from "../governance/workflow"
 import { MaestroSeats } from "../seats-service"
@@ -27,6 +26,7 @@ import { WorkflowArmV2 } from "./arm"
 import { WorkflowRecordsV2 } from "./records"
 import { WorkflowRelayV2 } from "./relay"
 import { WorkflowSettlementV2 } from "./settlement"
+import { WorkflowTransferV2 } from "./transfer"
 
 // Workflow session host. The earlier runtime
 // built one host per armed receipt and kept it in memory; V2 keeps one stateless global host that resolves every call
@@ -223,55 +223,6 @@ const layer = Layer.effect(
         }),
       )
 
-    // The earlier runtime's moveArm: an arm still bound to another child moves here only when that child never ran a provider turn, and
-    // moves only forward. A move Relay made but Orchestra never recorded is recorded first, with this call as recorder.
-    const moveArm = (
-      relay: Relay.Interface,
-      bound: Bound,
-      arm: Parameters<Relay.Interface["create"]>[0] & { readonly agentID: string },
-      conflict: boolean,
-    ) =>
-      Effect.gen(function* () {
-        const held = Option.getOrUndefined(yield* relay.holder(bound.token))
-        const recorded = yield* WorkflowRecordsV2.holders(database.db, bound.token)
-        const authority = { authorityMessageID: bound.authorityMessageID, authorityCallID: bound.authorityCallID }
-        if (held && recorded.holder && held !== recorded.holder && !recorded.movedFrom.has(held))
-          yield* WorkflowRecordsV2.recordMove(
-            { db: database.db, events },
-            { executionSessionID: SessionID.make(held), from: SessionID.make(recorded.holder), token: bound.token, recoveredBy: authority },
-          )
-        if (!conflict) return
-        if (!held || held === bound.executionSessionID || recorded.movedFrom.has(bound.executionSessionID))
-          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })
-        if (yield* ranProviderTurn(held))
-          return yield* new RelayWorkflowBinding.Held({
-            reason: "WORKFLOW_ARM_BINDING_MISMATCH",
-            detail: `This arm is bound to Task session ${held}, which ran or is running. Arm a new contract for this Task.`,
-          })
-        yield* relay.rebind({ ...arm, from: held })
-        yield* WorkflowRecordsV2.recordMove(
-          { db: database.db, events },
-          { executionSessionID: bound.executionSessionID, from: SessionID.make(held), token: bound.token, ...authority },
-        )
-      })
-
-    // A child ran when it runs in this process now, a code-review hold was recorded for it, or a reply of it carries a
-    // finish or any content: the V2 runner persists an empty reply before its pre-model checks.
-    const ranProviderTurn = (executionSessionID: string) =>
-      Effect.gen(function* () {
-        if (Option.isNone(execution) || (yield* execution.value.active).has(SessionV2.ID.make(executionSessionID))) return true
-        if ((yield* WorkflowRecordsV2.reviewHolds(database.db, executionSessionID)).length > 0) return true
-        // A history that no longer decodes counts as run: an arm never moves on what Orchestra cannot read.
-        return yield* store.entries(SessionV2.ID.make(executionSessionID)).pipe(
-          Effect.map((entries) =>
-            entries.some(
-              (entry) => entry.message.type === "assistant" && (entry.message.finish !== undefined || entry.message.content.length > 0),
-            ),
-          ),
-          Effect.catch(() => Effect.succeed(true)),
-        )
-      })
-
     const admit = (bound: Bound, continuation: boolean) =>
       within(bound, (placement) =>
         Effect.gen(function* () {
@@ -317,7 +268,9 @@ const layer = Layer.effect(
                 (error) => error._tag === "ArmCreate.Conflict",
                 () => Effect.succeed("conflict" as const),
               ),
-              Effect.flatMap((created) => (created === "created" ? Effect.void : moveArm(placement.relay, record, arm, created === "conflict"))),
+              Effect.flatMap((created) => created === "created" ? Effect.void : WorkflowTransferV2.moveArm(
+                { db: database.db, events, store, execution }, placement.relay, record, arm, created === "conflict",
+              )),
               Effect.mapError((error) =>
                 error instanceof RelayWorkflowBinding.Held ? error : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" }),
               ),
