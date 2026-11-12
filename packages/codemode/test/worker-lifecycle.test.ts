@@ -252,3 +252,22 @@ test("absolute expiry rejects a real done event when parent acceptance is delaye
   expect(result).toEqual({ ok: false, error: { kind: "TimeoutExceeded", message: "Execution timed out after 1500ms." }, toolCalls: [] })
   expectExited(observed)
 }, 15_000)
+
+test("entry observes a real pre-program runtime rejection and exits with a safe failure", async () => {
+  const observed = lifetime()
+  const result = await Effect.runPromise(executeWithLimits({ code: 'return "unreachable"' }, unlimited, [], (worker) => {
+    observed.observe(worker)
+    const send = worker.postMessage.bind(worker)
+    // Local fault injection at the actual start boundary, before the runtime's program diagnostic handler.
+    worker.postMessage = (message: unknown) => {
+      if (message !== null && typeof message === "object" && "type" in message && message.type === "start") {
+        send({ ...message, namespaces: null })
+        return
+      }
+      send(message)
+    }
+  }).pipe(Effect.timeout("10 seconds")))
+  expect(result).toEqual({ ok: false, error: { kind: "ExecutionFailure", message: "CodeMode worker execution failed." }, toolCalls: [] })
+  expectExited(observed)
+  expect(observed.exits[0]).toBe(1)
+}, 15_000)
