@@ -172,3 +172,59 @@ test("spontaneous host interruption without a deadline preserves its actual Caus
   expect(state.endHooks).toBe(0)
   expectExited(observed)
 }, 15_000)
+
+test("absolute expiry prevents start after ready while the parent's timer callback is delayed", async () => {
+  const observed = lifetime()
+  const admittedAt = performance.now()
+  const timeoutMs = 1500
+  const state = { readyBeforeDeadline: false, starts: 0, hostEntries: 0 }
+  const tools = {
+    entry: Tool.make({
+      description: "Witness any admission after expiry", input, output: Schema.String,
+      run: () => Effect.sync(() => { state.hostEntries++; return "unexpected" }),
+    }),
+  }
+  const result = await Effect.runPromise(executeWithLimits({ tools, code: "return await tools.entry({})" },
+    { ...unlimited, timeoutMs }, ToolRuntime.searchIndex(tools), (worker) => {
+      observed.observe(worker)
+      const send = worker.postMessage.bind(worker)
+      // Local observation of this actual owned instance; every send still delegates to the real transport.
+      worker.postMessage = (message: unknown) => {
+        if (message !== null && typeof message === "object" && "type" in message && message.type === "start") state.starts++
+        send(message)
+      }
+      worker.on("message", (message: unknown) => {
+        if (message === null || typeof message !== "object" || !("type" in message) || message.type !== "ready") return
+        state.readyBeforeDeadline = performance.now() < admittedAt + timeoutMs
+        // The real ready event is already queued for the actor. Delay the timer callback across absolute expiry.
+        const unblockAt = performance.now() + timeoutMs + 50
+        while (performance.now() < unblockAt) {}
+      })
+    },
+  ).pipe(Effect.timeout("10 seconds")))
+  expect(state).toEqual({ readyBeforeDeadline: true, starts: 0, hostEntries: 0 })
+  expect(result).toEqual({ ok: false, error: { kind: "TimeoutExceeded", message: "Execution timed out after 1500ms." }, toolCalls: [] })
+  expectExited(observed)
+}, 15_000)
+
+test("local actual-worker postMessage fault produces a safe result and still joins worker exit", async () => {
+  const observed = lifetime()
+  const result = await Effect.runPromise(executeWithLimits({ code: 'return "unreachable"' }, unlimited, [], (worker) => {
+    observed.observe(worker)
+    // Fault injection is restricted to this owned Worker. No global or prototype is replaced.
+    worker.postMessage = () => { throw new Error("private transport failure /tmp/do-not-expose") }
+  }).pipe(Effect.timeout("10 seconds")))
+  expect(result).toEqual({ ok: false, error: { kind: "ExecutionFailure", message: "CodeMode worker execution failed." }, toolCalls: [] })
+  expectExited(observed)
+}, 15_000)
+
+test("unsupported private worker URL returns a safe constructor failure without network or leaked worker", async () => {
+  const observed = lifetime()
+  const result = await Effect.runPromise(executeWithLimits({ code: 'return "unreachable"' }, unlimited, [], observed.observe,
+    new URL("codemode-invalid://worker"),
+  ).pipe(Effect.timeout("10 seconds")))
+  expect(result).toEqual({ ok: false, error: { kind: "ExecutionFailure", message: "CodeMode worker execution failed." }, toolCalls: [] })
+  expect(observed.workers.length).toBeLessThanOrEqual(1)
+  expect(observed.exits).toHaveLength(observed.workers.length)
+  observed.workers.forEach((worker) => expect(worker.threadId).toBe(-1))
+}, 15_000)
