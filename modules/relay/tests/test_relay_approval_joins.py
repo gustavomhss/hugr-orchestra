@@ -1,5 +1,4 @@
 """Approval topology is validated before changing the graph or project files."""
-import copy
 import sys
 from pathlib import Path
 from typing import TypedDict
@@ -43,7 +42,11 @@ def joined(calls):
 
 
 def shape(builder):
-    return (dict(builder.nodes), set(builder.edges), set(builder.waiting_edges), copy.deepcopy(builder.branches))
+    return (
+        dict(builder.nodes), set(builder.edges), set(builder.waiting_edges),
+        {name: {key: (branch.path, dict(branch.ends) if branch.ends is not None else None, branch.input_schema)
+                for key, branch in branches.items()} for name, branches in builder.branches.items()},
+    )
 
 
 @pytest.mark.parametrize("existing_ignore", [False, True])

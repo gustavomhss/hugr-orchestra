@@ -423,6 +423,13 @@ structured JSON. Handle absent/unparseable output as an execution failure, not a
 
 ## 7. Authoring service and host boundary
 
+The separately packaged Python `lib/orchestra_relay` LangGraph gates preflight all requested gates
+before changing the builder or `.gitignore`. Approval gates reject incoming joins and conditional
+routes; route or join at a separate node with one static edge to the protected node. Check-only
+incoming joins remain supported. Gated outgoing joins, conditional edges and `Command` destinations
+remain unsupported. This graph-shape guard is not authenticated approval enforcement for native
+workflows or the ARM/CLI drivers.
+
 Orchestra's installed Workflows and Hooks screens use the native Server `HttpApi` through
 `packages/app/src/orchestra/relay/client.ts` and the generated Client. The Protocol groups in
 `packages/protocol/src/groups/relay-document.ts` and `relay-hook.ts` define `/api/relay/document`,
