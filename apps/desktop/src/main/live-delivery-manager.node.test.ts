@@ -432,6 +432,23 @@ for (const [status, reason] of [[401, "authentication"], [403, "authentication"]
   })
 }
 
+for (const [status, reason] of [[307, "target"], [401, "authentication"]] as const) {
+  check(`HTTP${status} headers block ${reason} without waiting for a held body or retrying`, async (t) => {
+    const f = await fixture(t), record = f.retained(), headers = gate()
+    f.remote.handlers.set("GET /api/meeting", (_, response) => {
+      response.writeHead(status, status === 307 ? { location: `${f.remote.url}/forbidden` } : {})
+      response.write("held-private-body"); headers.resolve()
+    })
+    const manager = attach(f); assert.deepEqual(manager.retry(record.id), { ok: true })
+    await headers.promise
+    await until(() => manager.snapshot().items[0]?.status === "blocked", "definitive headers classified before held body completes")
+    assert.equal(manager.snapshot().items[0]?.reason, reason); assert.equal(f.store.summary(record.id).failures, 0)
+    await until(() => f.remote.requests[0]?.closed === true, "definitive response reader/socket cancelled and joined")
+    assert.deepEqual(f.store.batch(record.id).segments, [segment()]); assert.equal(sends(f).length, 0)
+    await pause(60); assert.equal(f.remote.requests.length, 1)
+  })
+}
+
 for (const [remoteReason, reason] of [["missing_meeting", "missing"], ["missing_session", "missing"], ["active", "conflict"], ["unavailable", "conflict"]] as const) {
   check(`HTTP400 MeetingError ${remoteReason} maps bounded ${reason}`, async (t) => {
     const f = await fixture(t), record = f.retained()
