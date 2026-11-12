@@ -429,10 +429,13 @@ def test_existing_default_links_preserve_both_real_sentinels(drive, capsys, kind
 
 def test_existing_default_directory_is_preserved(drive, capsys):
     target = drive.work / "report.bin"
+    outside = drive.root / "outside.bin"
     target.mkdir()
     (target / "keep.bin").write_bytes(b"directory sentinel")
+    outside.write_bytes(b"outside sentinel")
     error = drive.attempt(drive.arguments())
     assert (target / "keep.bin").read_bytes() == b"directory sentinel"
+    assert outside.read_bytes() == b"outside sentinel"
     assert error is not None
     assert_no_success_json(capsys.readouterr().out)
     assert not drive.state.handles
