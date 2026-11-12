@@ -1,0 +1,70 @@
+{
+  "artifact": "s2.l3.design-tui",
+  "revision": 2,
+  "calls": [
+    {
+      "sequence": 1,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j1",
+      "part": 1,
+      "total": 2,
+      "envelope_file": "call-01-envelope.json",
+      "local_envelope_file_sha256": "c1867f4dcf1c3f8e53ee6bdfd58cd6b163eab6875552984b3c84e9994bae0410",
+      "observed_tool_result": "",
+      "observed_outcome": "Native call returned empty output with no reported error. No recipient response read.",
+      "hash_scope": "Local saved envelope only, not host serialization or recipient-side bytes.",
+      "known_failure": false,
+      "replacement_of": null
+    },
+    {
+      "sequence": 2,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j2",
+      "part": 1,
+      "total": 2,
+      "envelope_file": "call-02-envelope.json",
+      "local_envelope_file_sha256": "73b8583d3bee131e2ee0844b6266fd7a5187babb289bf195e2358c80c323c254",
+      "observed_tool_result": "",
+      "observed_outcome": "Native call returned empty output with no reported error. No recipient response read.",
+      "hash_scope": "Local saved envelope only, not host serialization or recipient-side bytes.",
+      "known_failure": false,
+      "replacement_of": null
+    },
+    {
+      "sequence": 3,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j1",
+      "part": 2,
+      "total": 2,
+      "envelope_file": "call-03-envelope.json",
+      "local_envelope_file_sha256": "2c5ac273b54ddec2334a69c35d37ead0d9816f3b991d083648d82521e4391bd6",
+      "observed_tool_result": "",
+      "observed_outcome": "Native call returned empty output with no reported error. No recipient response read.",
+      "hash_scope": "Local saved envelope only, not host serialization or recipient-side bytes.",
+      "known_failure": false,
+      "replacement_of": null
+    },
+    {
+      "sequence": 4,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j2",
+      "part": 2,
+      "total": 2,
+      "envelope_file": "call-04-envelope.json",
+      "local_envelope_file_sha256": "96829fed2c711277abbccf8066e27c119570579b54dc0eb1320a03400599d952",
+      "observed_tool_result": "",
+      "observed_outcome": "Native call returned empty output with no reported error. No recipient response read.",
+      "hash_scope": "Local saved envelope only, not host serialization or recipient-side bytes.",
+      "known_failure": false,
+      "replacement_of": null
+    }
+  ],
+  "actual_native_calls_recorded": 4,
+  "seal_sent": false,
+  "judges_activated": false,
+  "recipient_responses_read": false,
+  "known_failures": [],
+  "replacements": [],
+  "envelope_record_basis": "Saved textual copies of the supplied native invocation arguments. Actual native calls are recorded in the conversation transcript. Local JSON file hashes do not attest host-internal serialized message bytes or recipient-side bytes.",
+  "scope": "Transport only; no author changes, seal, judge activation, response inspection or L4."
+}

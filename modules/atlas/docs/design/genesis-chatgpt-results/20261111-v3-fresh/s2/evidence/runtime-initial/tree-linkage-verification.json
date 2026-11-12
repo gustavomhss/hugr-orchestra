@@ -1,0 +1,222 @@
+{
+  "method": "Git tree serialization over exact entries, bound through parent GitHub trees to exact commit tree pointers",
+  "proofs": [
+    {
+      "file": "github/baseline-root-tree.json",
+      "prefix": "",
+      "computed_tree_sha": "a522a53e5f046f1758151b0f558531bbded04592",
+      "expected_sha": "a522a53e5f046f1758151b0f558531bbded04592",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-apps.json",
+      "prefix": "apps/",
+      "computed_tree_sha": "167b1bf4c7f9f15c87b42e643a4e536ffe5881e9",
+      "expected_sha": "167b1bf4c7f9f15c87b42e643a4e536ffe5881e9",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-packages.json",
+      "prefix": "packages/",
+      "computed_tree_sha": "384adf76200c0931a1108fba9cd0b145ca4e637e",
+      "expected_sha": "384adf76200c0931a1108fba9cd0b145ca4e637e",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-schema.json",
+      "prefix": "schema/",
+      "computed_tree_sha": "c6030bc5f5588431d1c0fc6b2dee4dcf14c2bc58",
+      "expected_sha": "c6030bc5f5588431d1c0fc6b2dee4dcf14c2bc58",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-desktop.body.json",
+      "prefix": "apps/desktop/",
+      "computed_tree_sha": "2fcf4249386b652e2e3b26fe037f98eca4d5ce2e",
+      "expected_sha": "2fcf4249386b652e2e3b26fe037f98eca4d5ce2e",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-app-shell.body.json",
+      "prefix": "packages/app-shell/",
+      "computed_tree_sha": "cef63e69431f9fb74b519716f8a398a327357f32",
+      "expected_sha": "cef63e69431f9fb74b519716f8a398a327357f32",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-tui.body.json",
+      "prefix": "packages/tui/",
+      "computed_tree_sha": "11e6bd248fd80066c80fc51341d76e0e39d28db0",
+      "expected_sha": "11e6bd248fd80066c80fc51341d76e0e39d28db0",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-ui.body.json",
+      "prefix": "packages/ui/",
+      "computed_tree_sha": "74c7c1d2afe20843210ca65902d5851b931a4f5c",
+      "expected_sha": "74c7c1d2afe20843210ca65902d5851b931a4f5c",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-docs.body.json",
+      "prefix": "docs/",
+      "computed_tree_sha": "88ca1ab27ad7fd787e8343e9d1311be57aedc7ec",
+      "expected_sha": "88ca1ab27ad7fd787e8343e9d1311be57aedc7ec",
+      "matches": true
+    },
+    {
+      "file": "github/baseline-orchestra.body.json",
+      "prefix": ".orchestra/",
+      "computed_tree_sha": "27a5944fb03e2ca3fa7f8fc2bce8a0160e31ef17",
+      "expected_sha": "27a5944fb03e2ca3fa7f8fc2bce8a0160e31ef17",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-apps-cli.body.json",
+      "prefix": "apps/cli/",
+      "computed_tree_sha": "d632b45afc53885517e48cb37477475225d27670",
+      "expected_sha": "d632b45afc53885517e48cb37477475225d27670",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-apps-storybook.body.json",
+      "prefix": "apps/storybook/",
+      "computed_tree_sha": "e0a7e1132f28507ed4345c10b057028677b529cb",
+      "expected_sha": "e0a7e1132f28507ed4345c10b057028677b529cb",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-apps-web.body.json",
+      "prefix": "apps/web/",
+      "computed_tree_sha": "56623717d63cc1b68452c928661262111ab2ddb5",
+      "expected_sha": "56623717d63cc1b68452c928661262111ab2ddb5",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-packages-client.body.json",
+      "prefix": "packages/client/",
+      "computed_tree_sha": "a9b5a73d9844a9e823ffd3ab9284b1e6b6920587",
+      "expected_sha": "a9b5a73d9844a9e823ffd3ab9284b1e6b6920587",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-packages-core.body.json",
+      "prefix": "packages/core/",
+      "computed_tree_sha": "aa12f201a23079c26824bb3d15337257dfb76e84",
+      "expected_sha": "aa12f201a23079c26824bb3d15337257dfb76e84",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-packages-protocol.body.json",
+      "prefix": "packages/protocol/",
+      "computed_tree_sha": "5dfad355617c0d21f1ef51a346319d44bdb8be48",
+      "expected_sha": "5dfad355617c0d21f1ef51a346319d44bdb8be48",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-packages-schema.body.json",
+      "prefix": "packages/schema/",
+      "computed_tree_sha": "3ff4594eac5b7ec249ed9a261ee2aaba13e01f03",
+      "expected_sha": "3ff4594eac5b7ec249ed9a261ee2aaba13e01f03",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-packages-server.body.json",
+      "prefix": "packages/server/",
+      "computed_tree_sha": "a85da442f6574b5e38774e4bb517c1bcc9d06ac7",
+      "expected_sha": "a85da442f6574b5e38774e4bb517c1bcc9d06ac7",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-packages-session-ui.body.json",
+      "prefix": "packages/session-ui/",
+      "computed_tree_sha": "db59542d7361df459a108d1f7659b1a97a1ff489",
+      "expected_sha": "db59542d7361df459a108d1f7659b1a97a1ff489",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-docs-architecture.body.json",
+      "prefix": "docs/architecture/",
+      "computed_tree_sha": "338924e17855a4cc54fca8c8439027a478cc7a24",
+      "expected_sha": "338924e17855a4cc54fca8c8439027a478cc7a24",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-docs-guides.body.json",
+      "prefix": "docs/guides/",
+      "computed_tree_sha": "db92d2ee6c9fd44ab323035f0a08ac44ffec338c",
+      "expected_sha": "db92d2ee6c9fd44ab323035f0a08ac44ffec338c",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-docs-images.body.json",
+      "prefix": "docs/images/",
+      "computed_tree_sha": "cb808c7f9402dbcd14a2771822e71b51c9e4dddf",
+      "expected_sha": "cb808c7f9402dbcd14a2771822e71b51c9e4dddf",
+      "matches": true
+    },
+    {
+      "file": "github/source-baseline-docs-specs.body.json",
+      "prefix": "docs/specs/",
+      "computed_tree_sha": "6692fb688e4566eacd82275c7af4f9019b440227",
+      "expected_sha": "6692fb688e4566eacd82275c7af4f9019b440227",
+      "matches": true
+    },
+    {
+      "file": "github/source-root-github.body.json",
+      "prefix": ".github/",
+      "computed_tree_sha": "05f142b6ff354fcf668d02bd544bab307af41a7d",
+      "expected_sha": "05f142b6ff354fcf668d02bd544bab307af41a7d",
+      "matches": true
+    },
+    {
+      "file": "github/source-root-assets.body.json",
+      "prefix": "assets/",
+      "computed_tree_sha": "99328c12d8f3817cd6c888e74baf9957cd50b154",
+      "expected_sha": "99328c12d8f3817cd6c888e74baf9957cd50b154",
+      "matches": true
+    },
+    {
+      "file": "github/source-root-script.body.json",
+      "prefix": "script/",
+      "computed_tree_sha": "e6a88f72ed147d1d13e2780036e88918a2913775",
+      "expected_sha": "e6a88f72ed147d1d13e2780036e88918a2913775",
+      "matches": true
+    },
+    {
+      "file": "github/candidate-root-tree.json",
+      "prefix": "",
+      "computed_tree_sha": "9fb1964f17f7fce054455ae485b6b00848217ff6",
+      "expected_sha": "9fb1964f17f7fce054455ae485b6b00848217ff6",
+      "matches": true
+    },
+    {
+      "file": "github/candidate-modules.json",
+      "prefix": "modules/",
+      "computed_tree_sha": "e7cae2e28bf7155c8b508a57a768d80036e85491",
+      "expected_sha": "e7cae2e28bf7155c8b508a57a768d80036e85491",
+      "matches": true
+    },
+    {
+      "file": "github/candidate-atlas.body.json",
+      "prefix": "modules/atlas/",
+      "computed_tree_sha": "79644b2a9f9c0d997a9c815eee5f4fa03a307dab",
+      "expected_sha": "79644b2a9f9c0d997a9c815eee5f4fa03a307dab",
+      "matches": true
+    },
+    {
+      "file": "github/candidate-atlas-packages.body.json",
+      "prefix": "modules/atlas/packages/",
+      "computed_tree_sha": "e247005fb4f0f9293cf4b84d85ec6e55a733a6d9",
+      "expected_sha": "e247005fb4f0f9293cf4b84d85ec6e55a733a6d9",
+      "matches": true
+    },
+    {
+      "file": "github/candidate-atlas-scripts.body.json",
+      "prefix": "modules/atlas/scripts/",
+      "computed_tree_sha": "bfbd1d8a7b405d5d2d3703d0c2aac9c7b18e7697",
+      "expected_sha": "bfbd1d8a7b405d5d2d3703d0c2aac9c7b18e7697",
+      "matches": true
+    }
+  ]
+}

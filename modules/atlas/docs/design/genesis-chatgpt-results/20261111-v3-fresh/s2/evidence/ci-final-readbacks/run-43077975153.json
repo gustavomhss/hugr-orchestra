@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s2-sibling-ci-actual-readback/v1",
+  "observed_at": "2026-11-11T20:04:03.956354+00:00",
+  "run_id": 43077975153,
+  "run_attempt": 1,
+  "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "head_sha": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "head_branch": "genesis-fresh-s4",
+  "status": "completed",
+  "conclusion": "success",
+  "workflow_path": ".github/workflows/atlas-pilot.yml",
+  "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43077975153",
+  "created_at": "2026-11-11T18:27:38Z",
+  "updated_at": "2026-11-11T18:29:21Z",
+  "connector_response": {
+    "path": "evidence/ci-final-readbacks/run-43077975153-connector.json",
+    "sha256": "a7a48b5857383f97b5ba8abbd7b8db8be355a0224732552f42a06865d5958069"
+  },
+  "scope": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding.",
+  "historical_or_current_control": "Newer aggregate success at distinct common-controls candidate; native e3a sample binding not transferred"
+}

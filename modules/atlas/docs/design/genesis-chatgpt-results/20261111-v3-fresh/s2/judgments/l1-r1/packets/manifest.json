@@ -1,0 +1,372 @@
+{
+  "schema": "genesis-review-packet-parts/v1",
+  "stage": "L1",
+  "revision": 1,
+  "units": [
+    "desktop-web",
+    "app-session",
+    "design-tui"
+  ],
+  "parts": [
+    {
+      "file": "desktop-web-01-header-01.txt",
+      "unit": "desktop-web",
+      "section": "01-header",
+      "part": 1,
+      "parts": 2,
+      "byte_length": 14474,
+      "sha256": "548660113aa00ab1c70209d8867847e0263180fd876e47498322097121e724cc"
+    },
+    {
+      "file": "desktop-web-01-header-02.txt",
+      "unit": "desktop-web",
+      "section": "01-header",
+      "part": 2,
+      "parts": 2,
+      "byte_length": 2275,
+      "sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33"
+    },
+    {
+      "file": "desktop-web-02-body-01.txt",
+      "unit": "desktop-web",
+      "section": "02-body",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14185,
+      "sha256": "895518c356c2de74a8d77e9c7f0d020be528bad2ad03955ffed5f1ba728e0c23"
+    },
+    {
+      "file": "desktop-web-02-body-02.txt",
+      "unit": "desktop-web",
+      "section": "02-body",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 13755,
+      "sha256": "479535bf747e19210dc90f6f7337ab821700723e2170e8f22d53d6ef1191fc86"
+    },
+    {
+      "file": "desktop-web-02-body-03.txt",
+      "unit": "desktop-web",
+      "section": "02-body",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 883,
+      "sha256": "42752faeaeaa60b48fc1595f591d3f43d632f2c08104ba4c5fe5e60a640be99c"
+    },
+    {
+      "file": "desktop-web-03-evidence-01.txt",
+      "unit": "desktop-web",
+      "section": "03-evidence",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14436,
+      "sha256": "1edf320b96612984fee352ac56d44bde0b7a19fb23b6a909d1ff09c4f3051f0b"
+    },
+    {
+      "file": "desktop-web-03-evidence-02.txt",
+      "unit": "desktop-web",
+      "section": "03-evidence",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 14465,
+      "sha256": "3e0607c7cf96d013fe147275599bf88467a6f0e1d07d093adeb17438b7ba3d59"
+    },
+    {
+      "file": "desktop-web-03-evidence-03.txt",
+      "unit": "desktop-web",
+      "section": "03-evidence",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 9113,
+      "sha256": "9aa38e8b4a3b73e26a21ea4b259cb92d3409153442019e6122b43d9d49c179d6"
+    },
+    {
+      "file": "desktop-web-04-families-01.txt",
+      "unit": "desktop-web",
+      "section": "04-families",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14433,
+      "sha256": "707c467c698922967aa79cc4b9d6ad6014420f191f1f1521b2593b75aec59ff3"
+    },
+    {
+      "file": "desktop-web-04-families-02.txt",
+      "unit": "desktop-web",
+      "section": "04-families",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 14495,
+      "sha256": "9f1a5652a77a8001b4d9402121ce3ae189ecd0fa039b12d1cecf3e93214c1d40"
+    },
+    {
+      "file": "desktop-web-04-families-03.txt",
+      "unit": "desktop-web",
+      "section": "04-families",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 7998,
+      "sha256": "df3f7154a0b943d7ce2e99e562a3c9ab7e3d9cd41bbbd0f2c1667d0dc6977f62"
+    },
+    {
+      "file": "app-session-01-header-01.txt",
+      "unit": "app-session",
+      "section": "01-header",
+      "part": 1,
+      "parts": 2,
+      "byte_length": 14478,
+      "sha256": "16dfca2626ff79526642e01fe4d81cb53992411372b1932651c1c6fb85e22f3c"
+    },
+    {
+      "file": "app-session-01-header-02.txt",
+      "unit": "app-session",
+      "section": "01-header",
+      "part": 2,
+      "parts": 2,
+      "byte_length": 2275,
+      "sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33"
+    },
+    {
+      "file": "app-session-02-body-01.txt",
+      "unit": "app-session",
+      "section": "02-body",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14006,
+      "sha256": "9879007efdc86b2ec46c89c3236d4608fe35af56b9c1c27deed8b5249efe7219"
+    },
+    {
+      "file": "app-session-02-body-02.txt",
+      "unit": "app-session",
+      "section": "02-body",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 14129,
+      "sha256": "f8ab38814fdb9c067e416101b887c8a125c6ca340fe0c294314a0a09a5989c9b"
+    },
+    {
+      "file": "app-session-02-body-03.txt",
+      "unit": "app-session",
+      "section": "02-body",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 5763,
+      "sha256": "707e9e0d648829b5d449983de05037bca40a01450f8829f31ec04555a2046ba7"
+    },
+    {
+      "file": "app-session-03-evidence-01.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 1,
+      "parts": 5,
+      "byte_length": 14494,
+      "sha256": "333caafbe619d2270d41f724a1463eefb31162df28a6e96d1450070124f0b027"
+    },
+    {
+      "file": "app-session-03-evidence-02.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 2,
+      "parts": 5,
+      "byte_length": 14456,
+      "sha256": "163b1a935cf6b6832b47d03afc82472133cd7f66521c9fb2e1a807a7f4841a3f"
+    },
+    {
+      "file": "app-session-03-evidence-03.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 3,
+      "parts": 5,
+      "byte_length": 14483,
+      "sha256": "6d71b6db387cd9b9f4abdbc246e9692cea85d65fbe4e3993ed5d068912d72006"
+    },
+    {
+      "file": "app-session-03-evidence-04.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 4,
+      "parts": 5,
+      "byte_length": 14496,
+      "sha256": "f723bb1c5da6f7d50da97ea1b5e5947e86aa3b54476912a37419e2a3c0cb868f"
+    },
+    {
+      "file": "app-session-03-evidence-05.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 5,
+      "parts": 5,
+      "byte_length": 13551,
+      "sha256": "837b190aae8a5df6fe835f44cc5582a3f744b8479de1d491535bf4558781ca5f"
+    },
+    {
+      "file": "app-session-04-families-01.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 1,
+      "parts": 6,
+      "byte_length": 14499,
+      "sha256": "00d476ccd7df9a21547996659d027001bd1625a437427101bb04eade0def3758"
+    },
+    {
+      "file": "app-session-04-families-02.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 2,
+      "parts": 6,
+      "byte_length": 14422,
+      "sha256": "531e2316d7ee6d815cab7150271883410fd8f76813e93b72a43146e7301f7f65"
+    },
+    {
+      "file": "app-session-04-families-03.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 3,
+      "parts": 6,
+      "byte_length": 14478,
+      "sha256": "00a974b78c0734c4e1227907fddbea80d388d582f6c1274e6ad05e8a022a5efd"
+    },
+    {
+      "file": "app-session-04-families-04.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 4,
+      "parts": 6,
+      "byte_length": 14484,
+      "sha256": "e2bb9ed2a03a4aada1323b58c061866b3ac17969ca1444c53b294ea3eb33ea81"
+    },
+    {
+      "file": "app-session-04-families-05.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 5,
+      "parts": 6,
+      "byte_length": 14431,
+      "sha256": "b817acd605150ccf2268eb9836a54437c29aa505da2058c026a709c7da7b4723"
+    },
+    {
+      "file": "app-session-04-families-06.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 6,
+      "parts": 6,
+      "byte_length": 7103,
+      "sha256": "c9fdf29e72bd7d92777320b2a47e7a8fa308533471eacf9a367ba612932bd860"
+    },
+    {
+      "file": "design-tui-01-header-01.txt",
+      "unit": "design-tui",
+      "section": "01-header",
+      "part": 1,
+      "parts": 2,
+      "byte_length": 14475,
+      "sha256": "8b28b915d344f8bb9e6e510d50c232978a12d8a7170348fac831c14d0aeb0bcc"
+    },
+    {
+      "file": "design-tui-01-header-02.txt",
+      "unit": "design-tui",
+      "section": "01-header",
+      "part": 2,
+      "parts": 2,
+      "byte_length": 2275,
+      "sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33"
+    },
+    {
+      "file": "design-tui-02-body-01.txt",
+      "unit": "design-tui",
+      "section": "02-body",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14468,
+      "sha256": "64305e3169a586a2d866230fa41a7e81069e448d13e41640ae2c100419f22dae"
+    },
+    {
+      "file": "design-tui-02-body-02.txt",
+      "unit": "design-tui",
+      "section": "02-body",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 14060,
+      "sha256": "d43bc63a7a6cb6913159e7ce0d9131c14dbb9ee103817d28397822979260c976"
+    },
+    {
+      "file": "design-tui-02-body-03.txt",
+      "unit": "design-tui",
+      "section": "02-body",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 2770,
+      "sha256": "a816d39c5cf737219829f0fe59d9f022b56900ace1edef1541ca6b7ef15ca8b9"
+    },
+    {
+      "file": "design-tui-03-evidence-01.txt",
+      "unit": "design-tui",
+      "section": "03-evidence",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14492,
+      "sha256": "17e3a669295632e5ee5caa4ff8ed4c7657e09ed396e4fde1c3cc154895a4bf8f"
+    },
+    {
+      "file": "design-tui-03-evidence-02.txt",
+      "unit": "design-tui",
+      "section": "03-evidence",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 14456,
+      "sha256": "d06d3538d8c082a5515d04c2f34329e606e588edef433e410a380c56181f4c89"
+    },
+    {
+      "file": "design-tui-03-evidence-03.txt",
+      "unit": "design-tui",
+      "section": "03-evidence",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 3950,
+      "sha256": "bc961f73830ea6d01e7eed3f80640e6cdb61924253f34eba267aa9aa3180445e"
+    },
+    {
+      "file": "design-tui-04-families-01.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 1,
+      "parts": 5,
+      "byte_length": 14492,
+      "sha256": "a3884712271cf76214915b7209c9c4331beacd4d3d4bcd909df3488a3b69bd54"
+    },
+    {
+      "file": "design-tui-04-families-02.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 2,
+      "parts": 5,
+      "byte_length": 14497,
+      "sha256": "af8424dfe3a103f6b96c066b0e9e937824315f6c971fde41c76fa60620a351d8"
+    },
+    {
+      "file": "design-tui-04-families-03.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 3,
+      "parts": 5,
+      "byte_length": 14395,
+      "sha256": "ae87b932af263d78f3752a5c918600f7b61a833084f623d4b0025a8cb8894676"
+    },
+    {
+      "file": "design-tui-04-families-04.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 4,
+      "parts": 5,
+      "byte_length": 14459,
+      "sha256": "ad1c7ba7f3eac99beb92266b182f895640a29304086a4afceb60bf357668bf56"
+    },
+    {
+      "file": "design-tui-04-families-05.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 5,
+      "parts": 5,
+      "byte_length": 13213,
+      "sha256": "1618415ab46a8b02055aa43a1b7586209e12e96abc6f1287594b29ed77785e74"
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "schema": "genesis-s2-final-observable-usage-delta/v1",
+  "recorded_at": "2026-11-11T21:30:52.049587+00:00",
+  "actor": "/root/s2_final_usage_delta",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "scope": "Bounded reconciliation of current preserved receipts after the immutable 79-row closure snapshot. Not an exhaustive tool/conversation/provider inventory.",
+  "root_only": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "ledger_boundary": {
+    "immutable79": {
+      "path": "deliverable/history/ledger-at-final-closure-review.jsonl",
+      "sha256": "45a3d4abb9ba101af7e739ff17071b9b176f16c4704b958c5506474c32c22450",
+      "byte_length": 41884
+    },
+    "immutable79_prefix_verified": true,
+    "observed83_copy": {
+      "path": "closure-work/final-usage-delta/reconciled-01/ledger-observed-83-rows.jsonl",
+      "sha256": "62a8b2718bed50c02a5c36b05d1b7960f1848298a60434a66f80e2d2bc139a02",
+      "byte_length": 43849
+    },
+    "current_rows_at_local_read": 83,
+    "scope": "Only frozen rows 1–83 evaluated here. Subsequent root operations require their own event records."
+  },
+  "prior_index": {
+    "path": "deliverable/evidence/observable-usage-01/observable-usage-index.json",
+    "sha256": "8aacf330f988818aed40b5dc253d70c7fb1d514d92b9882b17930690f5135b45",
+    "byte_length": 47594
+  },
+  "source_receipt_manifest": {
+    "path": "closure-work/final-usage-delta/reconciled-01/source-receipt-manifest.json",
+    "sha256": "125b84e8b89b054542b9a40da264ca188a96e274192acf6603986cd4bf645a91",
+    "byte_length": 17299
+  },
+  "literal_review_transport": {
+    "prior_resumed_indexed_send_calls": 113,
+    "new_closure_send_calls": 13,
+    "combined_resumed_indexed_send_calls": 126,
+    "new_payload_dispositions": {
+      "ORIGINAL_NO_KNOWN_INVALIDATION": 11,
+      "INVALIDATED": 1,
+      "FULL_REPLACEMENT": 1
+    },
+    "combined_payload_dispositions": {
+      "ORIGINAL_NO_KNOWN_INVALIDATION": 114,
+      "INVALIDATED": 6,
+      "FULL_REPLACEMENT": 6
+    },
+    "prior_uncertain_return_flags": 3,
+    "new_uncertain_return_flags": 1,
+    "combined_uncertain_return_flags": 4,
+    "flags_are_overlapping_not_extra_calls": true,
+    "new_automatic_retries": 0,
+    "call_index": {
+      "path": "closure-work/final-usage-delta/reconciled-01/closure-call-index.json",
+      "sha256": "f5fd2334b09987698bdfe0df29f7b3a8c9b3e92dd8c6cf68eb25c65818455aaf",
+      "byte_length": 8718
+    },
+    "recipient_resolution": {
+      "both_actual_responses": "COMPLETE, parts 1–6",
+      "j2_part2": "Actual J2 response explicitly confirms complete receipt despite sender-side truncated returned result. Historical uncertainty flag retained.",
+      "j2_part5": "Actual J2 response explicitly uses the correct full replacement and discards the invalid initial send.",
+      "not_claimed": "No independently recomputed host serialized-byte attestation."
+    },
+    "already_recorded_in_current_ledger_row": 80,
+    "deduplication": "Copies and preservation operations are not new sends. Known-input replacement is a distinct actual send."
+  },
+  "review_activations": {
+    "new_actual_closure_activations": 2,
+    "new_receipts": [
+      {
+        "target": "/root/s2_resume_j1",
+        "actual_calls": 1,
+        "receipt": {
+          "path": "deliverable/judgments/final-closure-r1/seal-j1-dispatch-receipt.json",
+          "sha256": "0f183ee5735975562802fecb403fb7a5a54eb77ab03cf6f5cfcb23b4e270f007",
+          "byte_length": 883
+        },
+        "arguments": {
+          "path": "deliverable/judgments/final-closure-r1/seal-j1-visible-arguments.json",
+          "sha256": "897494345d5293239c447b22272acde8018791dfbb9830a509f7aa875965c2d3",
+          "byte_length": 6439
+        }
+      },
+      {
+        "target": "/root/s2_resume_j2",
+        "actual_calls": 1,
+        "receipt": {
+          "path": "deliverable/judgments/final-closure-r1/seal-j2-dispatch-receipt.json",
+          "sha256": "6464aecc4261f1791e78cdcb1aa8b2564ebd7c883a3db98339972b2b2a0d95c3",
+          "byte_length": 726
+        },
+        "arguments": {
+          "path": "deliverable/judgments/final-closure-r1/seal-j2-visible-arguments.json",
+          "sha256": "d9a4b75bd57e32b19005625438c39fd5b2443f198989957adc9d375693fbf1a6",
+          "byte_length": 7090
+        }
+      }
+    ],
+    "prior_explicit_saved_activation_request_or_dispatch_calls": 12,
+    "combined_explicit_saved_calls": 14,
+    "prior_additional_ledger_only_activations": 2,
+    "exact_all_review_activation_total": "UNKNOWN",
+    "already_recorded_in_current_ledger_row": 80,
+    "limits": "Standalone exact envelopes remain absent for initial L1 J2 desktop, initial J2 desktop/design r2, and both app r3 activations; prior actual responses remain preserved. Do not infer missing physical attempts."
+  },
+  "returned_reviews": {
+    "prior_artifact_review_response_documents": 18,
+    "prior_artifact_verdict_entries_including_history": 34,
+    "prior_artifact_verdict_counts": {
+      "PASS": 26,
+      "FIX-FIRST": 8
+    },
+    "current_accepted_artifacts": 13,
+    "current_accepted_artifact_pass_bindings": 26,
+    "new_closure_response_documents": 2,
+    "combined_review_documents_in_this_bounded_index": 20,
+    "responses": [
+      {
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "response": {
+          "path": "deliverable/judgments/final-closure-r1/j1.json",
+          "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339",
+          "byte_length": 22520
+        },
+        "response_kind": "FINAL_CLOSURE_ASSESSMENT",
+        "not_new_artifact_verdict_entries": true,
+        "transport_status": "COMPLETE",
+        "parts_confirmed": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "criterion_ids_count": 50,
+        "peer_reasoning_copied": false
+      },
+      {
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "response": {
+          "path": "deliverable/judgments/final-closure-r1/j2.json",
+          "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27",
+          "byte_length": 19521
+        },
+        "response_kind": "FINAL_CLOSURE_ASSESSMENT",
+        "not_new_artifact_verdict_entries": true,
+        "transport_status": "COMPLETE",
+        "parts_confirmed": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "criterion_ids_count": 50,
+        "peer_reasoning_copied": false
+      }
+    ],
+    "new_closure_docs_are_not_additional_artifact_verdicts": true,
+    "ledger_status_at83": "Actual returned closure decisions not yet separately appended; row80 still records pending recipient confirmation."
+  },
+  "read_only_github_observations": {
+    "new_calls": 7,
+    "post_native_dependency_calls": 3,
+    "repository_metadata_calls": 1,
+    "final_return_dependency_calls": 3,
+    "prior_named_recent_batches_calls": 9,
+    "combined_named_recent_batches_calls": 16,
+    "all_remote_read_call_total": "UNKNOWN",
+    "existing_rows": [
+      81,
+      82,
+      83
+    ],
+    "final_return_receipt": {
+      "path": "deliverable/evidence/final-return-remote-recheck/readback-receipt.json",
+      "sha256": "abf61a120a4c99e39b0ef429c4623bf5a231602789f916b4d1bb2706529b47dc",
+      "byte_length": 2837
+    },
+    "post_native_receipt": {
+      "path": "deliverable/evidence/post-native-remote-recheck/readback-receipt.json",
+      "sha256": "6c84df86e7cd1a67426130bdeafdadeeacc07f26ea7e9b16a2faba9e95a98a8e",
+      "byte_length": 2784
+    },
+    "repository_metadata_receipt": {
+      "path": "deliverable/evidence/final-repository-metadata.json",
+      "sha256": "bf7aa21e43cfd287a19b374e22629be5abefccad3e98a76cfe8347b3d4da8583",
+      "byte_length": 741
+    },
+    "additional_capture_hash_catalog": "42 distinct envelope hashes in prior catalog, NONADDITIVE and not a physical attempt count.",
+    "remote_writes_from_these_reads": 0,
+    "new_ci_runs": 0
+  },
+  "current_support_scope": {
+    "parent_reported_activations": [
+      {
+        "target": "/root/s2_closure_audit",
+        "operation": "followup_task for frozen S2-U1 binding audit",
+        "observed_count": 1,
+        "basis": "Parent task statement; exact host envelope not supplied to this support worker."
+      },
+      {
+        "target": "/root/s2_final_usage_delta",
+        "operation": "spawn_agent for this bounded accounting delta",
+        "observed_count": 1,
+        "basis": "This actual task delivery and resulting local work establish activation. In inherited parent transcript spawn result was marked aborted; do not erase that discrepancy or claim a normal host result."
+      }
+    ],
+    "bounded_parent_reported_activation_count": 2,
+    "all_support_coordination_call_total": "UNKNOWN",
+    "this_worker_actual_parent_status_messages_before_receipt": 2,
+    "root_to_worker_observed_coordination_messages": 1,
+    "limits": "A support activation is separate from a judge activation, artifact verdict or provider-attempt count. Additional final coordination and later root work are outside this snapshot."
+  },
+  "unchanged_operational_states": {
+    "native_prepare_invocations": 1,
+    "native_prepare_exit_code": 1,
+    "native_retries": 0,
+    "consumer_cases": 14,
+    "consumer_state": "NOT_RUN",
+    "update_case": "S2-U1",
+    "update_state": "NOT_RUN",
+    "candidate_id": null,
+    "binding_id": null,
+    "artifact_revision": null
+  },
+  "provider_telemetry": {
+    "physical_provider_attempts": "UNKNOWN",
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "cached_tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "global_history": "GLOBAL_UNRECONCILED",
+    "owner": "ROOT"
+  },
+  "historical_original_relay_calls": {
+    "count": 68,
+    "included_in_126": false,
+    "new_calls_from_preservation": 0,
+    "scope": "Original-session producer relay only, separate from resumed review transport.",
+    "history_state": "GLOBAL_UNRECONCILED",
+    "owner": "ROOT"
+  },
+  "remaining_precise_gaps": [
+    "No exact total for initial review activation calls: some standalone visible request/result envelopes were not found. Actual responses and partial ledger entries remain.",
+    "Current support/coordination and original source retrieval totals are not exhaustively indexed. Local file counts and capture hash counts cannot fill this gap.",
+    "Physical provider attempts, tokens, cache tokens, cost and billing are not exposed and remain UNKNOWN.",
+    "Historical campaign reconciliation and common reservation/adapter-envelope guarantees remain GLOBAL_UNRECONCILED/ROOT; no new budget compliance is inferred.",
+    "This record evaluates only receipts available at its bounded cutoff. Later root GETs, record-completion review or export operations must be recorded separately if performed."
+  ],
+  "suggested_ledger_appends": [
+    {
+      "event": "FINAL_CLOSURE_RESPONSES_PRESERVED_AND_TRANSPORT_CONFIRMED",
+      "new_actual_closure_response_documents": 2,
+      "j1_response": {
+        "path": "deliverable/judgments/final-closure-r1/j1.json",
+        "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339",
+        "byte_length": 22520
+      },
+      "j2_response": {
+        "path": "deliverable/judgments/final-closure-r1/j2.json",
+        "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27",
+        "byte_length": 19521
+      },
+      "recipient_completeness": "COMPLETE",
+      "historical_send_counts_unchanged": true,
+      "new_artifact_verdict_entries": 0,
+      "current_artifact_acceptances_unchanged": true
+    },
+    {
+      "event": "POST_SNAPSHOT_OBSERVABLE_USAGE_RECONCILED",
+      "bounded_combined_resumed_send_calls": 126,
+      "invalidated": 6,
+      "replacements": 6,
+      "uncertain_result_flags": 4,
+      "separate_closure_responses": 2,
+      "new_native_or_remote_operations_from_accounting": 0,
+      "telemetry": "UNKNOWN",
+      "history": "GLOBAL_UNRECONCILED",
+      "root_action": "Append this finalized receipt path/hash; do not duplicate already-recorded rows80–83 as new calls."
+    },
+    {
+      "event": "FINAL_RECORD_SUPPORT_ACTIVATIONS_OBSERVED",
+      "scope": "Two parent-reported bounded support activations, with the own-spawn aborted-return discrepancy retained; exact host envelopes not available to this worker.",
+      "count": 2,
+      "global_support_total": "UNKNOWN"
+    }
+  ],
+  "forbidden_inferences": [
+    "No filesystem-copy count is treated as another call.",
+    "No late archival observation is treated as a new send.",
+    "No token/billing/provider-attempt estimate is synthesized.",
+    "No semantic PASS is promoted to runtime, consumer, CI or global acceptance.",
+    "No raw judge reasoning or reserved consumer expected answers appear in this index.",
+    "No artifact verdict, closure disposition or expectation validation is treated as runtime acceptance.",
+    "No prior pending receipt is silently rewritten after actual recipient confirmation."
+  ],
+  "local_helper_attempts": {
+    "failed_attempt": {
+      "path": "closure-work/final-usage-delta/first-attempt-failure.json",
+      "sha256": "e92679208a10068d5ab3815cc4f5ff18129feeb75018095171797ec45d8cacb7",
+      "byte_length": 843
+    },
+    "failed_script": {
+      "path": "closure-work/final-usage-delta/reconcile_delta.py",
+      "sha256": "7bc6cc0eb74fb75f310fb0063b8e96226fb43cab89965497a223bbcec39da73c",
+      "byte_length": 17545
+    },
+    "correction": "One-based position19279 corrected to zero-based offset19278; exact literal bytes unchanged. New output directory preserves failed partial snapshot.",
+    "no_runtime_or_remote_execution": true
+  },
+  "writer": {
+    "path": "closure-work/final-usage-delta/reconcile_delta_v2.py",
+    "sha256": "d04c7f904a78376c99c64634a81af0885e774f3a3cebdd1ce28be571d1fdd51e",
+    "byte_length": 18829
+  }
+}

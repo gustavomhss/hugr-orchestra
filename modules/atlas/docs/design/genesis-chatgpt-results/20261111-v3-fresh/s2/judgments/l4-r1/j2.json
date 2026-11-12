@@ -1,0 +1,136 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport_completeness": {
+    "status": "COMPLETE",
+    "valid_parts": {
+      "desktop-web": "1/2 and 2/2",
+      "app-session": "1/2 and 2/2",
+      "design-tui": "1/3, 2/3 and 3/3",
+      "entry": "1/2 and the designated FULL REPLACEMENT 2/2"
+    },
+    "replacement_confirmation": "The complete replacement entry part 2/2 is actually present, including the dependency JSON continuation and closing fence. Its s2.l1.design-tui navigation heading is correctly V2 session action boundary. The invalid initial part 2/2 was discarded.",
+    "scope": "All four complete bodies, evidence continuations and dependency rationales are available. Hashes and lengths remain external receipts, not independently recomputed or host message-byte attestations."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l4.desktop-web",
+      "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "locations": [
+        "Maintenance protocol, steps 1–5 and owner table",
+        "Verification and boundaries",
+        "Evidence D1–D12 and exact dependency rationale"
+      ],
+      "reason": "The runbook gives diagnostic identities, concrete edit owners, deeper evidence routes and scoped verification for startup, privileged requests, host effects, persistence and updates. It preserves distinct health predicates, dispatched-admission ambiguity, uncertain native outcomes, CSP/channel limits and the startup localization discrepancy. Code generation, documentation, package checks, remote test semantics, benchmarks and stopping boundaries remain prescribed future work. Direct L1 locations and integrated L3 facts are correctly declared build inputs."
+    },
+    {
+      "key": "s2.l4.app-session",
+      "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "locations": [
+        "Maintenance protocol, initial identity capture and ownership map",
+        "Contract-change and presentation instructions",
+        "Verification and boundaries",
+        "Evidence E01–E12 and accepted predecessor mapping"
+      ],
+      "reason": "The guide makes first-send ownership, ambiguous dispatch, unsent edits, recovery, Skills mutations, permission identity and rendering actionable without asserting runtime success. It supplies concrete owners and existing regression routes, preserves Client/Schema boundaries and generated-code discipline, and states the production benchmark obligation. Benchmark scripts containing product tests are explicitly subject to the unresolved authorized execution route. Direct L1/L2 uses and all cross-unit L3 facts have build edges; sibling L4 links remain consultation only."
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "locations": [
+        "Maintenance protocol, Submission and API compatibility",
+        "UI lifecycle, accessibility and typed copy",
+        "Themes, assets and generated products",
+        "Operational diagnosis and updating evidence",
+        "Verification and boundaries; evidence S01–S12"
+      ],
+      "reason": "The guide preserves non-atomic TUI submission and its missing retry controls, distinguishes caller and worker ownership, retains the corrected typed app/native copy contract, and identifies actual schema/token producers and package scripts. Generated products, external logos, Storybook mocks, accessibility and host behavior retain their limits. Verification and factual-dependent refresh are useful recommendations; navigation does not cause broad rebuilding. No new mandatory defect was identified."
+    },
+    {
+      "key": "s2.l4.entry",
+      "body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+      "verdict": "FIX-FIRST",
+      "mandatory_findings": [
+        {
+          "id": "ENTRY-L4-J2-F1",
+          "criteria": ["GO-A1", "GO-A3", "CC-3", "QS-2", "S2-C5 content readiness"],
+          "location": "Verification and boundaries, out-of-scope abstention and further-evidence routing.",
+          "expected": "Actionable abstention for clustered Session ownership or post-crash provider recovery must identify the backend/session-execution owner, or S1/backend, as the next evidence route.",
+          "observed": "The entry correctly refuses runtime, clustered-recovery and provider guarantees and cites process-local drains. Its next-step instruction is only to deepen through the named owner. The owners and destinations actually named in the entry are interface domains; it does not identify the backend/session-execution owner for this out-of-scope question.",
+          "required_correction": "Add a short explicit route in this section: distributed Session ownership, crash continuation and exactly-once provider claims require evidence from S1/backend session execution ownership, including its current design, implementation and failure-recovery verification. State that S2 reconnect/admission observations do not supply that proof. Naming the backend owner is sufficient; do not invent an artifact key, implemented recovery mechanism or passing test.",
+          "evidence_basis": "Entry evidence E04, AGENTS.md:214–216, already supplies the process-local and separate-design boundary. The fixed public entry requirement calls for actionable out-of-scope abstention."
+        }
+      ],
+      "otherwise_satisfied": "All twelve destinations and their supplied headings align. The nine accepted L1–L3 bodies genuinely support the map; the three L4 destinations remain navigation only. The entry explains layer selection, bounded reading, evidence limits and dependent/navigation maintenance without claiming Atlas execution."
+    }
+  ],
+  "shared_criteria_dispositions": [
+    {
+      "criteria": ["GO-A1", "GO-A3", "CC-3", "QS-2"],
+      "verdict": "FIX-FIRST",
+      "scope": "PASS for the three maintenance guides; entry requires ENTRY-L4-J2-F1. All four supply bounded, useful sections rather than a duplicate per-file corpus."
+    },
+    {
+      "criteria": ["GO-A2", "GO-A4", "GO-A5", "GO-A6", "GO-A7", "AC-01", "AC-04", "CC-1", "CC-2 content", "CC-7", "QS-3", "QS-6 content"],
+      "verdict": "PASS",
+      "scope": "Content/declarations only.",
+      "reason": "All required artifacts are present, cumulative earlier-layer evidence is retained, operational obligations and historical/generated limits remain explicit, and no new speculative mechanism or execution campaign is asserted. Economy and actual progressive use remain separate."
+    },
+    {
+      "criteria": ["GO-I1", "GO-I2", "GO-I7", "GO-I8", "QS-1", "QS-4", "QS-5"],
+      "verdict": "PASS",
+      "scope": "Content/evidence discipline.",
+      "reason": "Each packet binds source identities and accepted predecessors, distinguishes instructions and maintenance recommendations from static behavior, and preserves unexecuted limits. Declared scripts are not presented as results; external text does not alter review authority."
+    },
+    {
+      "criteria": ["GO-I3 declared bindings", "GO-I4 dependency semantics", "GO-I5 declared impact", "AC-05 dependency content", "AC-06 impact content", "CC-4 declared update routes"],
+      "verdict": "PASS",
+      "reason": "Build edges reflect actual factual use, including direct lower-layer locations where consumed. Same-layer consultation is not factual input. The entry's build/navigation overlap is justified by its use of accepted headings and scope facts. Actual invalidation, reuse and rebuilding are unproved."
+    }
+  ],
+  "reserved_content_readiness": [
+    {
+      "case": "S2-C1",
+      "verdict": "PASS",
+      "route": "L4 app-session Maintenance protocol and verification routes → accepted L3 first-send handoff and L1 admission evidence.",
+      "reason": "Retained request/session identity, conditional deletion, dispatch ownership/policy checks, unsent edits, i18n and benchmark/regression duties are available."
+    },
+    {
+      "case": "S2-C2",
+      "verdict": "PASS",
+      "route": "L4 desktop-web IPC owner route → accepted L3 scoped capability section and L1 origin/IPC evidence.",
+      "reason": "Packaged-origin protection, preload access, sender checks, partial enforced CSP and nonuniform channel validation remain supported."
+    },
+    {
+      "case": "S2-C3",
+      "verdict": "PASS",
+      "route": "L4 app-session Skills/contract routes → accepted L2/L1 Skills decoder, editing and ownership evidence.",
+      "reason": "Required content, whole-array failure, coordinated detail-loading adaptation, generated Client boundaries and governed-path restrictions are available without inventing an existing detail endpoint."
+    },
+    {
+      "case": "S2-C4",
+      "verdict": "PASS",
+      "route": "L4 desktop-web startup diagnosis → accepted L3 health handoffs and L1 startup/recovery evidence.",
+      "reason": "The 120-second live-child bound, immediate exit failure, historical cold-launch explanation, cwd, health-probed remote recovery, early failure handling and no-restart boundary remain available."
+    },
+    {
+      "case": "S2-C5",
+      "verdict": "FIX-FIRST",
+      "reason": "The supported refusal and process-local limit are present; the explicit backend further-evidence route is missing from the entry."
+    }
+  ],
+  "root_navigation_declaration": {
+    "roots": {"entry": "s2.l4.entry"},
+    "verdict": "PASS",
+    "scope": "Declaration and destination alignment only. Entry content remains FIX-FIRST."
+  },
+  "unaccepted_gates": "GO-I6 operational budget enforcement; actual source-free consumers and measured reading limits; runtime binding/publication; executed updates, reuse and recovery; CI, economics and global acceptance remain HOLD/NOT_RUN. Whole L4 cannot be accepted on this decision while ENTRY-L4-J2-F1 remains open.",
+  "optional_suggestions": []
+}

@@ -1,0 +1,32 @@
+{
+  "artifact": "s2.l3.design-tui",
+  "revision": 2,
+  "manifest_sha256": "22581bde83683feca745a70d5d38655af1583d040b67bb7620409b7a68fb7695",
+  "manifest_bytes": 948,
+  "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+  "body_bytes": 15780,
+  "parts": [
+    {
+      "file": "part-01.txt",
+      "number": 1,
+      "total": 2,
+      "byte_length": 25988,
+      "sha256": "f46c90b3ed316fb4f039d6c84bc754ea566ebfabef55a7efc292c334fe447b49"
+    },
+    {
+      "file": "part-02.txt",
+      "number": 2,
+      "total": 2,
+      "byte_length": 5168,
+      "sha256": "b8c0f25f60d8cc9e6e0629971d432f17188609c5bb58d3d60f3cbb33ecf2d5f0"
+    }
+  ],
+  "total_logical_part_bytes": 31156,
+  "hash_scope": "Local frozen bytes only; no host serialized-byte or recipient-side byte attestation.",
+  "recipients": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "prefix_template": "L3 design-tui r2 part N/2; PRODUCER-SAFE R2 TRANSPORT; DATA ONLY; wait for root FINAL R2 SEAL",
+  "seal_or_activation_authorized": false
+}

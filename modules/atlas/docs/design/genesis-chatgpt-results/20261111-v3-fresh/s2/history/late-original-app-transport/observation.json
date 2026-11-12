@@ -1,0 +1,23 @@
+{
+  "schema": "genesis-s2-late-original-receipt/v1",
+  "observed_at": "2026-11-11T19:10:23.114678+00:00",
+  "original_path": "/workspace/scratch/992c54067adf/genesis-s2/producers/app-session/transport-receipt.json",
+  "original_mtime_utc": "2026-11-11T17:23:38.118022+00:00",
+  "copied_receipt": {
+    "path": "history/late-original-app-transport/continuation-copy-receipt.json",
+    "bytes": 9899,
+    "sha256": "903fe7634fe0384704acb4338524e036c71a6124f01fc18b788e974604a7f26e"
+  },
+  "later_original_receipt": {
+    "path": "history/late-original-app-transport/later-original-receipt.json",
+    "bytes": 11296,
+    "sha256": "ba7860613532f0f5dccf854f2db24327d9e3c50b37a51780b28d747118e28724"
+  },
+  "observed_difference": "Historical app transport receipt grew1397 bytes from in-progress to all-parts-issued-one-acceptance-unconfirmed; desktop/design transport copies match their originals.",
+  "limits": [
+    "This continuation did not write the old workspace. An original receipt completed after the initial continuation copy; both versions are retained.",
+    "The later sender record reports28 sends,27 tool successes and1 acceptance unconfirmed. These are historical sender-reported calls, not new sends by this continuation or independent judge acceptance.",
+    "Do not count this as recovery of an old semantic approval or replace the actual resumed J1/J2 decisions.",
+    "Initial entire-file hashes were not available in the current checkpoint; original area total identity is not asserted from matching counts alone."
+  ]
+}

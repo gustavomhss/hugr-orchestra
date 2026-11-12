@@ -1,0 +1,178 @@
+{
+  "unit": "s2.l3.design-tui",
+  "revision": 2,
+  "kind": "Mechanical bounded-correction observations; not a semantic verdict.",
+  "request": {
+    "path": "deliverable/requests/l3-design-tui-r2-correction.md",
+    "sha256": "15d91eb9a18a571488e912a56970783de61eb7d28fef8fce6e138a840d299274"
+  },
+  "body_delta": {
+    "r1_authored_files_before": {
+      "body.md": {
+        "byte_length": 15143,
+        "sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5"
+      },
+      "sources.json": {
+        "byte_length": 18108,
+        "sha256": "982dd9896c32842336fda4ff1c867993be974346d422ff4cb9cfc34931581c62"
+      },
+      "dependencies.json": {
+        "byte_length": 3917,
+        "sha256": "bbf98807d18cd9f8bed9d32ec6a524b7650863d1a3b1cd495a9abfbc36367855"
+      },
+      "decisive-evidence.md": {
+        "byte_length": 38616,
+        "sha256": "424ea704b58604af2404ff2bc7f53cfbea704f09e845f2b8a131907adfa7e190"
+      },
+      "response.md": {
+        "byte_length": 6869,
+        "sha256": "7cea345333be7979393876b3a93a0568be1c7a9e165d946e64f97b3785c0a3d7"
+      },
+      "author-checks.json": {
+        "byte_length": 9354,
+        "sha256": "c53b8b3ed8a0c6824ba2126de87077556ca1e1871a2f59e1b94c10c87f9431be"
+      },
+      "hashes.sha256": {
+        "byte_length": 487,
+        "sha256": "424843fb02a44a46a751718c8a66ef76e9f3635bbf1eb72eba6a20d55521644a"
+      }
+    },
+    "old_body_sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+    "old_body_bytes": 15143,
+    "new_body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+    "new_body_bytes": 15780,
+    "inserted_text": "**Instruction:** app callsites use `language.t(...)` for ordinary copy and `language.plural(...)` for counts; native main-process callsites consume shared typed translation bundles through `nativeT(...)`. Shared language/UI modules own locale selection, plural resolution, fallback and interpolation. Feature/native callsites must not branch on locale, choose plural categories or concatenate grammatical fragments. Preserve existing English keys and text byte-for-byte; extend the shared bundle/API for richer grammar. The documented startup exception remains. (`packages/app-shell/AGENTS.md:23–28`; `apps/desktop/AGENTS.md:5–9`.)\n\n",
+    "inserted_utf8_bytes": 637,
+    "language_heading": "## Language and appearance cross app and host contracts",
+    "old_language_section_sha256": "e10dfc9a08db71c9802624bd9b86c40f6f2e17d95d379af2a253a72944051eff",
+    "new_language_section_sha256": "581cd7f93fa985513c0d3e69cb2a103f7b004870d14893599187a8a4ea27ba2d",
+    "old_language_section_bytes": 2705,
+    "new_language_section_bytes": 3342,
+    "unchanged_prefix_bytes": 8939,
+    "unchanged_prefix_sha256": "e5eb651d9aac784c5c383a7182fd4d707fe96e330b924a37c9a4191ed54baa78",
+    "unchanged_suffix_bytes": 3499,
+    "unchanged_suffix_sha256": "97859852209ede4ed517bfa5918680b707738168796e85e3f72e9ca38a56f33e",
+    "body_diff_sha256": "71bcc6df1e428d213cc6c9670bd690faf16b89286eded0c8764d279a493a8190",
+    "only_one_paragraph_inserted": true
+  },
+  "r1_authored_files_after": {
+    "body.md": {
+      "byte_length": 15143,
+      "sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5"
+    },
+    "sources.json": {
+      "byte_length": 18108,
+      "sha256": "982dd9896c32842336fda4ff1c867993be974346d422ff4cb9cfc34931581c62"
+    },
+    "dependencies.json": {
+      "byte_length": 3917,
+      "sha256": "bbf98807d18cd9f8bed9d32ec6a524b7650863d1a3b1cd495a9abfbc36367855"
+    },
+    "decisive-evidence.md": {
+      "byte_length": 38616,
+      "sha256": "424ea704b58604af2404ff2bc7f53cfbea704f09e845f2b8a131907adfa7e190"
+    },
+    "response.md": {
+      "byte_length": 6869,
+      "sha256": "7cea345333be7979393876b3a93a0568be1c7a9e165d946e64f97b3785c0a3d7"
+    },
+    "author-checks.json": {
+      "byte_length": 9354,
+      "sha256": "c53b8b3ed8a0c6824ba2126de87077556ca1e1871a2f59e1b94c10c87f9431be"
+    },
+    "hashes.sha256": {
+      "byte_length": 487,
+      "sha256": "424843fb02a44a46a751718c8a66ef76e9f3635bbf1eb72eba6a20d55521644a"
+    }
+  },
+  "all_original_authored_hashes_unchanged": true,
+  "removing_exact_insertion_reproduces_r1": true,
+  "h2_sections": [
+    {
+      "heading": "Orientation and accepted ownership",
+      "utf8_bytes": 1196
+    },
+    {
+      "heading": "Terminal input becomes admission through ordered, separate operations",
+      "utf8_bytes": 2716
+    },
+    {
+      "heading": "Ambiguous sends, live projection and request decisions keep different identities",
+      "utf8_bytes": 2869
+    },
+    {
+      "heading": "Rendered state follows caller and resource lifetimes",
+      "utf8_bytes": 2083
+    },
+    {
+      "heading": "Language and appearance cross app and host contracts",
+      "utf8_bytes": 3343
+    },
+    {
+      "heading": "Generated products reach consumers through distinct maintenance paths",
+      "utf8_bytes": 2127
+    },
+    {
+      "heading": "Change impact and verification ownership",
+      "utf8_bytes": 1371
+    }
+  ],
+  "entire_body_within_16000_bytes": true,
+  "retained_source_records_unchanged": 22,
+  "new_source_records": 1,
+  "current_primary_capture_verification": [
+    {
+      "id": "S10",
+      "path": "packages/app-shell/AGENTS.md",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "lines": [
+        23,
+        28
+      ]
+    },
+    {
+      "id": "S23",
+      "path": "apps/desktop/AGENTS.md",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "lines": [
+        5,
+        9
+      ]
+    }
+  ],
+  "prior_exact_excerpt_blocks_retained": 37,
+  "new_exact_excerpt_blocks": 1,
+  "current_exact_excerpt_blocks": 38,
+  "build_keys_unchanged": [
+    "s2.l2.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.desktop-web"
+  ],
+  "navigation_keys_unchanged": [
+    "s2.l3.app-session",
+    "s2.l3.desktop-web"
+  ],
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    }
+  ],
+  "unexecuted": [
+    "product tests",
+    "runtime",
+    "CI",
+    "generation",
+    "production benchmark",
+    "source edit",
+    "GitHub writes",
+    "judge contact",
+    "L4"
+  ]
+}

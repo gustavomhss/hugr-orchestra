@@ -1,0 +1,184 @@
+name: atlas-pilot
+
+# Change-scoped development gate; does not replace the final integrated epic.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["pilot-check-*", "genesis-fresh-s4"]
+    paths:
+      - ".github/workflows/atlas-pilot.yml"
+      - "modules/atlas/**"
+      - "!modules/atlas/docs/design/genesis-chatgpt-results/**"
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun
+      - name: Install Atlas dependencies
+        working-directory: modules/atlas
+        run: npm ci
+      - name: Typecheck Atlas
+        working-directory: modules/atlas
+        run: bun typecheck
+      - name: Grouped ownership and existing door regressions
+        working-directory: modules/atlas
+        run: |
+          npx --no-install vitest run \
+            packages/knowledge/test/ownership-read.test.ts \
+            packages/knowledge/test/ownership-update-plan.test.ts \
+            packages/knowledge/test/fastpath-promotion-origin.test.ts \
+            packages/adapter-io/test/ownership-publication.test.ts \
+            packages/adapter-io/test/genesis-native.test.ts \
+            packages/adapter-io/test/genesis-native-recovery.test.ts \
+            packages/adapter-io/test/g3-recovery.test.ts \
+            packages/adapter-io/test/sidecar.test.ts \
+            packages/adapter-io/test/identity-schema.test.ts \
+            packages/adapter-io/test/store-provenance.test.ts \
+            packages/adapter-io/test/read-provenance-refusal.test.ts \
+            packages/adapter-io/test/migrate-layout.test.ts \
+            packages/adapter-io/test/ownership-update.test.ts \
+            packages/adapter-io/test/ownership-input.test.ts \
+            packages/adapter-io/test/ownership-observe.test.ts \
+            packages/adapter-io/test/ownership-rebuild.test.ts \
+            packages/adapter-io/test/wp-10.a3-check.test.ts \
+            packages/adapter-io/test/governed-promote.test.ts \
+            packages/adapter-io/test/travel-by-reproof-compose.test.ts \
+            packages/adapter-io/test/propose-template.test.ts \
+            packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts \
+            packages/e2e-blackbox/test/s14-mine.blackbox.test.ts \
+            packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts \
+            --reporter=default --reporter=json --outputFile=ownership-runtime-results.json
+      - name: Probe the new guards against named failing controls
+        working-directory: modules/atlas
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          probes = [
+            ('update-affected-order', 'packages/knowledge/src/ownership/update-plan.ts',
+             'affected: affectedOrder', 'affected: order.filter((key) => affected.has(key))',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-24 an unchanged prerequisite', False),
+            ('update-input', 'packages/knowledge/src/ownership/update-plan.ts',
+             'changes.push({ artifact: key, input: input.key, previous: input.version, observed: captured })', 'void 0',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-2 source drift', False),
+            ('update-dependency', 'packages/knowledge/src/ownership/update-plan.ts',
+             'if (direct.has(key) || receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key)))', 'if (direct.has(key))',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-2 source drift', False),
+            ('update-frontier', 'packages/knowledge/src/ownership/update-plan.ts',
+             'frontier: [...direct].filter((key) => !receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key))).sort()', 'frontier: [...direct].sort()',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-9 simultaneous upstream', False),
+            ('update-unavailable', 'packages/knowledge/src/ownership/update-plan.ts',
+             'observed.kind === "unavailable" ||', 'false ||',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-7 unavailable observations', False),
+            ('need-root', 'packages/knowledge/src/ownership/read.ts',
+             '  if (query.need !== undefined && selectedArtifact.artifact.need !== query.need)\n    return hold("ownership-selection", [selected, query.need, selectedArtifact.artifact.need])\n', '',
+             'packages/knowledge/test/ownership-read.test.ts', 'RP-1 refuses a need root bound to an artifact declaring another need', False),
+            ('current-input', 'packages/knowledge/src/ownership/read.ts',
+             'if (!query.historical)', 'if (false)',
+             'packages/knowledge/test/ownership-read.test.ts', 'IFIT-4 holds a changed required source', False),
+            ('composed-ratify', 'packages/knowledge/src/ratify/fastpath.ts',
+             ' && !composed', '',
+             'packages/knowledge/test/fastpath-promotion-origin.test.ts', 'IFIT-2 a composed ownership publication', False),
+            ('worker-ast', 'packages/cli/src/mine-worker.ts',
+             '  await initAst()', '',
+             'packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts', 'THE GUARD: every `::` site is visited and seeded', True),
+            ('observer-error-as-absent', 'packages/adapter-io/src/ownership-input.ts',
+             '} catch { return { kind: "unavailable" } }\n  let after: ReturnType<typeof lstatSync>', '} catch { return { kind: "absent" } }\n  let after: ReturnType<typeof lstatSync>',
+             'packages/adapter-io/test/ownership-observe.test.ts', 'HO-04 read errors', False),
+            ('observer-members-index-only', 'packages/adapter-io/src/ownership-input.ts',
+             '        if (!corroborateCandidateAbsent(raw)) return { kind: "unavailable" }\n        continue\n      }', '        if (!corroborateCandidateAbsent(raw)) return { kind: "unavailable" }\n        effective.push(raw); continue\n      }',
+             'packages/adapter-io/test/ownership-observe.test.ts', 'HO-08 unstaged deletion', False),
+            ('observer-accept-partial-git', 'packages/adapter-io/src/ownership-input.ts',
+             'if (strict.truncated) return { kind: "unavailable" }', 'if (strict.truncated) { }',
+             'packages/adapter-io/test/ownership-observe.test.ts', 'HO-10 incomplete Git', False),
+            ('rebuild-every-affected', 'packages/adapter-io/src/ownership-rebuild.ts',
+             'const precise = ownChanged || depChanged\n    if (!precise) continue', 'const precise = true\n    if (!precise) continue',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-08 equal result renews', False),
+            ('rebuild-return-old-result', 'packages/adapter-io/src/ownership-rebuild.ts',
+             'newResults.set(key, resultRef)', 'newResults.set(key, bound.resultRef)',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-02 source edit', False),
+            ('rebuild-body-only-stop', 'packages/adapter-io/src/ownership-rebuild.ts',
+             'const depChanged = recipe.required.some((dep) => newResults.get(dep) !== bound.receipt.dependencies.find((dependency) => dependency.key === dep)?.result)',
+             'const depChanged = recipe.required.some((dep) => (request.store.get(newResults.get(dep) as Hash) as OwnershipResult).body !== (request.store.get(bound.receipt.dependencies.find((dependency) => dependency.key === dep)?.result as Hash) as OwnershipResult).body)',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-12 full result identity', False),
+            ('rebuild-ignore-direct-child-change', 'packages/adapter-io/src/ownership-rebuild.ts',
+             'const precise = ownChanged || depChanged', 'const precise = depChanged',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-10 parent equality', False),
+            ('rebuild-omit-input', 'packages/adapter-io/src/ownership-rebuild.ts',
+             'if (!boundKeys.has(input)) return hold("malformed-ownership", [entry.key, input])', 'if (!boundKeys.has(input)) { }',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-14 an omitted declared input', False),
+            ('rebuild-omit-required-edge', 'packages/adapter-io/src/ownership-rebuild.ts',
+             'if (requiredSet.size !== recipe.required.length || depKeys.size !== requiredSet.size || [...requiredSet].some((dep) => !depKeys.has(dep)))', 'if (false)',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-15 an omitted required edge', False),
+            ('rebuild-accept-stale-review', 'packages/adapter-io/src/ownership-rebuild.ts',
+             '      reviews: evaluated.reviews,',
+             '      reviews: bound.receipt.reviews,',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-13 rejected or unbound', False),
+            ('rebuild-skip-preflight', 'packages/adapter-io/src/ownership-rebuild.ts',
+             'for (const key of captured.keys()) preflightMap.set(key, request.observe(key))', 'for (const key of captured.keys()) preflightMap.set(key, captured.get(key) as OwnershipInputObservation)',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'TC-01 drift before', False),
+            ('rebuild-skip-final-sweep', 'packages/adapter-io/src/ownership-rebuild.ts',
+             '  for (const key of captured.keys()) {\n    const fresh = request.observe(key)\n    if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key])\n  }\n  for (const [dir, listed] of initialMembers) {',
+             '  for (const key of captured.keys()) { const fresh = captured.get(key); if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key]) }\n  for (const [dir, listed] of initialMembers) {',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'TC-03 drift in a reused', False),
+            ('rebuild-read-live-path', 'packages/adapter-io/src/ownership-rebuild.ts',
+             '    bytes: new Map([...capturedBytes].map(([snapshotKey, snapshotValue]) => [snapshotKey, new Uint8Array(snapshotValue)] as [string, Uint8Array])),',
+             '    bytes: new Proxy(new Map<string, Uint8Array>(), { get: (target, prop) => prop === "get" ? ((key: string) => request.readCapturedBytes(key)) : (target as unknown as Record<string, unknown>)[prop as string] }),',
+             'packages/adapter-io/test/ownership-rebuild.test.ts', 'TC-05 ABA cannot', False),
+          ]
+          receipts = []
+          for name, path, before, after, test, title, compiled in probes:
+              source = pathlib.Path(path)
+              original = source.read_text()
+              if original.count(before) != 1:
+                  raise RuntimeError(f'{name}: mutation target absent or ambiguous')
+              report = pathlib.Path(f'ownership-probe-{name}.json')
+              try:
+                  source.write_text(original.replace(before, after))
+                  if compiled:
+                      subprocess.run(['npm', 'run', 'build'], check=True)
+                  run = subprocess.run(['npx', '--no-install', 'vitest', 'run', test, '-t', title, '--reporter=json', '--outputFile=' + str(report)])
+                  if not report.is_file():
+                      raise RuntimeError(f'{name}: no test report')
+                  data = json.loads(report.read_text())
+                  failures = [a for suite in data['testResults'] for a in suite['assertionResults'] if a['status'] == 'failed' and title in a['fullName']]
+                  if run.returncode == 0 or not failures:
+                      raise RuntimeError(f'{name}: named control did not reject the mutant')
+                  receipts.append({'probe': name, 'exitCode': run.returncode, 'namedFailures': [a['fullName'] for a in failures]})
+              finally:
+                  source.write_text(original)
+                  if compiled:
+                      subprocess.run(['npm', 'run', 'build'], check=True)
+          pathlib.Path('ownership-mutation-receipts.json').write_text(json.dumps(receipts, indent=2) + '\n')
+          PY
+      - name: Generate Atlas boundary from the checked sources
+        working-directory: modules/atlas/boundary
+        run: bun run generate
+      # Raw logs remain in the Actions archive; durable repository receipts record structured verdicts.
+      - name: Check repository guards on the candidate
+        run: |
+          set +e
+          bun run check:guards --base origin/dev > "$RUNNER_TEMP/ownership-guards.log" 2>&1
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/ownership-guards.log"
+          GUARD_EXIT="$code" node --input-type=module -e 'import { writeFileSync } from "node:fs"; writeFileSync("modules/atlas/ownership-guards.json", JSON.stringify({ command: "bun run check:guards --base origin/dev", exitCode: Number(process.env.GUARD_EXIT), candidate: process.env.GITHUB_SHA }) + "\n")'
+          exit "$code"
+      - name: Preserve exact gate and generated-boundary evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ownership-runtime-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            modules/atlas/ownership-*.json
+            ${{ runner.temp }}/ownership-guards.log
+            modules/atlas/boundary/src/generated
+          retention-days: 7

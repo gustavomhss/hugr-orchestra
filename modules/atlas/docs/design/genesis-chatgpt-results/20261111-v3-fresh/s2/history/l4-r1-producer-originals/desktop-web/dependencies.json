@@ -1,0 +1,70 @@
+{
+  "schema": "genesis-s2-l4-dependencies/v1",
+  "key": "s2.l4.desktop-web",
+  "build": [
+    "s2.l1.desktop-web",
+    "s2.l3.desktop-web"
+  ],
+  "navigation": [
+    "s2.l4.app-session",
+    "s2.l4.design-tui"
+  ],
+  "rationale": {
+    "s2.l1.desktop-web": "Direct factual build edge for precise source/test owners, unexecuted regression expectations including WAL negative control, and generated Dock corpus source/product distinctions.",
+    "s2.l3.desktop-web": "Direct factual build edge for integrated startup/health/recovery, credentials/admission, renderer/preload/main trust, browser/native/guest, Live/persistence/update and UI/distribution maintenance boundaries.",
+    "s2.l4.app-session": "Optional navigation only to the common Maintenance protocol heading for application/admission work. No same-layer body was read or used as evidence.",
+    "s2.l4.design-tui": "Optional navigation only to the common Maintenance protocol heading for TUI/shared-UI work. No same-layer body was read or used as evidence."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l1.desktop-web",
+      "path": "layers/l1/desktop-web/l1.md",
+      "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "byte_length": 29075,
+      "used_section_headings": [
+        "1. Startup, readiness and shutdown",
+        "2. Windows, persistence and IPC authority",
+        "4. Dock browser ownership and page tools",
+        "5. Native Dock identity and uncertain outcomes",
+        "6. Linux runtime, access RPC and WSL",
+        "7. Live capture and overlay",
+        "8. Response files, executable resources and updates",
+        "9. Web, languages, media and historical evidence"
+      ],
+      "read_scope": "Complete accepted content was read earlier in this producer session; canonical file reopened and hash-verified for L4, with L1 location/test paragraphs reread and L3 canonical equality checked."
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "path": "layers/l3/desktop-web/body.md",
+      "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715,
+      "used_section_headings": [
+        "Orientation and evidence boundaries",
+        "Launch, choose a server and identify the health decision",
+        "Reconnect without transferring work to a replacement owner",
+        "Cross renderer, preload and main with a scoped capability",
+        "Move from a visible Dock to a browser, native or guest effect",
+        "Finish capture, persistence and installation at the right boundary",
+        "Carry changes through shared UI and distribution",
+        "Verification status and remaining evidence"
+      ],
+      "read_scope": "Complete accepted content was read earlier in this producer session; canonical file reopened and hash-verified for L4, with L1 location/test paragraphs reread and L3 canonical equality checked."
+    }
+  ],
+  "ordering_note": "Build edges target only accepted earlier layers. L2 acceptance metadata is consumed as required lineage, while the L3 predecessor already binds its factual L2 dependencies. No pending same-layer body supplies evidence.",
+  "navigation_contract": "Exact heading Maintenance protocol is supplied by the public L4 dispatch; it does not imply that a pending counterpart body is already established."
+}

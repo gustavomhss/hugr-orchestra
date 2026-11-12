@@ -1,0 +1,39 @@
+{
+  "artifact": "s2.l4.design-tui",
+  "revision": 1,
+  "manifest_sha256": "9991a979322d9569af33055e023894cf53353b20fa70fdd2bf424b50283231d3",
+  "manifest_bytes": 1066,
+  "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+  "body_bytes": 11783,
+  "parts": [
+    {
+      "file": "part-01.txt",
+      "number": 1,
+      "total": 3,
+      "byte_length": 25883,
+      "sha256": "35d16aee6dd2bfec1e767dd0ad76aef08af9f8c7b20b34b11aa6fb85d43f5c9a"
+    },
+    {
+      "file": "part-02.txt",
+      "number": 2,
+      "total": 3,
+      "byte_length": 25887,
+      "sha256": "3258e582746ed280d56ef3d564ca163b1efe20fb2d32c0808ebc2ddfe2cdf2fe"
+    },
+    {
+      "file": "part-03.txt",
+      "number": 3,
+      "total": 3,
+      "byte_length": 900,
+      "sha256": "f5301d652223a4e059235b245fabfc93eb8d6e4e4f408fe5680ab3eba0ae181b"
+    }
+  ],
+  "total_logical_part_bytes": 52670,
+  "hash_scope": "Local frozen bytes only; no host serialized-byte or recipient-side byte attestation.",
+  "recipients": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "prefix_template": "L4 design-tui N/3; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+  "seal_or_activation_authorized": false
+}

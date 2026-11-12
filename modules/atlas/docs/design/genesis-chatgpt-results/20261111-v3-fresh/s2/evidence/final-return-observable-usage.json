@@ -1,0 +1,73 @@
+{
+  "schema": "genesis-s2-final-return-observable-usage/v1",
+  "recorded_at": "2026-11-11T21:47:05.172128+00:00",
+  "previous_bounded_delta": {
+    "path": "evidence/final-usage-delta/reconciled-01/observable-usage-delta.json",
+    "byte_length": 13952,
+    "sha256": "60ef81988c96b2f07c4acc4ffd96c82b823d6b256f5d31e6eba2267d78641feb"
+  },
+  "judge_send_message_calls_indexed": 126,
+  "invalidated_send_message_calls": 6,
+  "full_replacements": 6,
+  "uncertain_return_flags": 4,
+  "flags_overlap_calls": true,
+  "additional_record_check_followup_task_calls": 2,
+  "followup_calls_are_dispatch_and_activation_once": true,
+  "explicit_saved_review_activation_calls_indexed": 16,
+  "exact_all_review_activation_total": "UNKNOWN",
+  "artifact_review_response_documents": 18,
+  "final_closure_response_documents": 2,
+  "record_correction_response_documents": 2,
+  "artifact_verdict_entries_unchanged": 34,
+  "artifact_current_pass_bindings_unchanged": 26,
+  "post_79_snapshot_read_only_github_gets": 10,
+  "named_recent_indexed_gets": 19,
+  "all_github_get_total": "UNKNOWN",
+  "bounded_current_support_activations": 3,
+  "bounded_principal_to_usage_support_coordination_messages": 1,
+  "all_support_coordination_total": "UNKNOWN",
+  "original_session_relay_calls_separate": 68,
+  "native_prepare_invocations": 1,
+  "native_prepare_exit_code": 1,
+  "native_retries": 0,
+  "consumer_runs": 0,
+  "update_runs": 0,
+  "new_remote_writes_since_refusals": 0,
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN",
+  "historical_accounting": "GLOBAL_UNRECONCILED",
+  "historical_owner": "ROOT",
+  "record_check_receipt": {
+    "path": "judgments/final-record-check-r1/transport/receipt.json",
+    "byte_length": 4287,
+    "sha256": "e5672a9d9a4869e0329621fd068056bb190979ffabbd5cfb3ab799e3cee8c352"
+  },
+  "record_check_responses": {
+    "j1": {
+      "path": "judgments/final-record-check-r1/j1.json",
+      "byte_length": 8237,
+      "sha256": "bad85ea182a716a577e899caaaf4a5e12f5d0702e383bd5a58f9d98f2f2fc02e"
+    },
+    "j2": {
+      "path": "judgments/final-record-check-r1/j2.json",
+      "byte_length": 7253,
+      "sha256": "af892679a2fbde10e3b68c543178f0f6fb01b299b4789a36c1937422f615a84e"
+    }
+  },
+  "last_three_gets": {
+    "path": "evidence/return-readback-02/readback-receipt.json",
+    "byte_length": 2330,
+    "sha256": "dca5b54456c0fcf690e5be740ed2bfe4002f7494fa1db2e25a5d015bf72b7c01"
+  },
+  "support_observation_limits": {
+    "path": "evidence/principal-current-support-observation.json",
+    "byte_length": 1920,
+    "sha256": "dca6692f1951be57b5a86366163ad08fed81486f198faa6242e6ff28d1cd926a"
+  },
+  "limits": [
+    "No hidden/provider/total-native-call inventory is inferred.",
+    "Original missing activation envelopes, nonexhaustive support/source totals and worker/root visible-return discrepancy remain preserved.",
+    "Final export is a subsequent deterministic local file operation, recorded in its external actual receipt; it adds no model/runtime/provider call."
+  ]
+}

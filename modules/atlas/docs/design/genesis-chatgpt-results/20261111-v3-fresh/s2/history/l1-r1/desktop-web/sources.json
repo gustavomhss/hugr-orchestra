@@ -1,0 +1,3585 @@
+{
+  "schema": "genesis-source-captures/v1",
+  "source_repository": "gustavomhss/hugr-orchestra",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "hash_method": "Python hashlib SHA256 over exact UTF-8 source bytes; Git SHA1 over b\"blob \"+decimal byte length+b\"\\0\"+bytes; compared with connector blob and assigned tree when present.",
+  "inspection_note": "Line selections are retrieval/read locations, not a claim of exhaustive file review. Some early combined outputs were truncated; L1 claims and decisive excerpts identify the bounded content relied on. Original connector payload and full exact source bytes are retained.",
+  "sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/app-log-hygiene/SKILL.md",
+      "git_blob_sha": "685932db1df51c87be9e7174bbfe940a18c03a8c",
+      "sha256": "3a0fbf9ea92160cdd95eef1bdd445f6ea5fa68c7cacc59ad582761c0c64bc93d",
+      "byte_length": 3153,
+      "local_capture_file": "sources/.orchestra/skills/app-log-hygiene/SKILL.md",
+      "connector_response_file": "captures/.orchestra__skills__app-log-hygiene__SKILL.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "git_blob_sha": "ba3d5859d9109e104687f628bc3e96ad5e616d07",
+      "sha256": "6434f6ed07efb0c67275e3d1c30270c2a012aa77b46071239080ae8475dd42a9",
+      "byte_length": 6256,
+      "local_capture_file": "sources/.orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "connector_response_file": "captures/.orchestra__skills__desktop-startup-maintenance__SKILL.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "local_capture_file": "sources/AGENTS.md",
+      "connector_response_file": "captures/AGENTS.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": false,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/AGENTS.md",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "byte_length": 2801,
+      "local_capture_file": "sources/apps/desktop/AGENTS.md",
+      "connector_response_file": "captures/apps__desktop__AGENTS.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/README.md",
+      "git_blob_sha": "0e7745a83bd7f8618e989e55133264f6af4a92f9",
+      "sha256": "dd44471baebed427fbeb3339dd66b17d710c8d7354b56c0ef4759c8c53bb9e0f",
+      "byte_length": 6143,
+      "local_capture_file": "sources/apps/desktop/README.md",
+      "connector_response_file": "captures/apps__desktop__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/corpus/app-dock/00-invariant-register.md",
+      "git_blob_sha": "ba4e0948e3ea44b5285be61ffcea18f03656eb44",
+      "sha256": "c4fdc3bb090cf59750aed7b64e45719eee893185a47b90bf37a65215f638777b",
+      "byte_length": 29768,
+      "local_capture_file": "sources/apps/desktop/docs/corpus/app-dock/00-invariant-register.md",
+      "connector_response_file": "captures/apps__desktop__docs__corpus__app-dock__00-invariant-register.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/corpus/app-dock/generate-corpus.mjs",
+      "git_blob_sha": "4b9fc9841ff91f95437548022eb589af4b3bcfc0",
+      "sha256": "48c7c08012d6295992660b381665b49daa0eba9f6d6b2298ceccd912832b2241",
+      "byte_length": 26011,
+      "local_capture_file": "sources/apps/desktop/docs/corpus/app-dock/generate-corpus.mjs",
+      "connector_response_file": "captures/apps__desktop__docs__corpus__app-dock__generate-corpus.mjs.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          45
+        ],
+        [
+          600,
+          737
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/corpus/app-dock/invariants/https-only.md",
+      "git_blob_sha": "d9a2462bc5cce35fb67fc6c865a2a75d38bbe7a7",
+      "sha256": "f74c92e3ecb2bdb46c289805beadc199569bece39548bc642b646dacdbbb5f7d",
+      "byte_length": 566,
+      "local_capture_file": "sources/apps/desktop/docs/corpus/app-dock/invariants/https-only.md",
+      "connector_response_file": "captures/apps__desktop__docs__corpus__app-dock__invariants__https-only.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/corpus/app-dock/invariants/ipc-sender-validation.md",
+      "git_blob_sha": "9880bd8c34e88150bb16ed012a05263565b7d588",
+      "sha256": "56138c7aeb52356d7afa36f8952eb3cf70ad18a30d8715315e9e9cfcd2d08ed3",
+      "byte_length": 544,
+      "local_capture_file": "sources/apps/desktop/docs/corpus/app-dock/invariants/ipc-sender-validation.md",
+      "connector_response_file": "captures/apps__desktop__docs__corpus__app-dock__invariants__ipc-sender-validation.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/plans/dock-accessibility/closeout.md",
+      "git_blob_sha": "eb5d7f8ccaa438a364de52deda1cfc64911e9dc1",
+      "sha256": "0c34aa66c1ca06fe4e73fbcd5adb1fad1452532babc4fc69238b5952f1cd7e5d",
+      "byte_length": 24370,
+      "local_capture_file": "sources/apps/desktop/docs/plans/dock-accessibility/closeout.md",
+      "connector_response_file": "captures/apps__desktop__docs__plans__dock-accessibility__closeout.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/plans/dock-accessibility/contract.md",
+      "git_blob_sha": "e393bf50d0f10bac7071236c0a55485abff6fb2d",
+      "sha256": "4ec6fc3e38194ce747be6fdd7f782d14d9d7e61bd2959dc7d329dfefc2c91f09",
+      "byte_length": 16797,
+      "local_capture_file": "sources/apps/desktop/docs/plans/dock-accessibility/contract.md",
+      "connector_response_file": "captures/apps__desktop__docs__plans__dock-accessibility__contract.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/plans/linux-workspace/CAMPAIGN.md",
+      "git_blob_sha": "7a7319a3e5d024b828450e20fdeaad9e072d2f97",
+      "sha256": "be0a573bb521c7994df08fa538e49b360302798ad05864d49ff84f7fd9a37e54",
+      "byte_length": 16835,
+      "local_capture_file": "sources/apps/desktop/docs/plans/linux-workspace/CAMPAIGN.md",
+      "connector_response_file": "captures/apps__desktop__docs__plans__linux-workspace__CAMPAIGN.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/plans/linux-workspace/skeleton-handoff.md",
+      "git_blob_sha": "039d78a7b3fadfa24b8633390c2e2a56ba57435d",
+      "sha256": "5c9e8d707471e4fb2639b9660b9d765c57ce70b59d8af80833acd4fd7a0bd9ca",
+      "byte_length": 2510,
+      "local_capture_file": "sources/apps/desktop/docs/plans/linux-workspace/skeleton-handoff.md",
+      "connector_response_file": "captures/apps__desktop__docs__plans__linux-workspace__skeleton-handoff.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/electron-builder.config.ts",
+      "git_blob_sha": "89eb781c8878687670d0e83afdc9df8e98c49734",
+      "sha256": "91b330f08e0a933193ffbd8bd1d229de9a4fccb9df22a90910959d0ee87e4757",
+      "byte_length": 13038,
+      "local_capture_file": "sources/apps/desktop/electron-builder.config.ts",
+      "connector_response_file": "captures/apps__desktop__electron-builder.config.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          310
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/electron.vite.config.ts",
+      "git_blob_sha": "b90da178775d53d1c8779edb633a6ccc23758c82",
+      "sha256": "dc5fae1962859449c960f3896662f862c1f889f2a59f7bb40d21d74301e955ef",
+      "byte_length": 3159,
+      "local_capture_file": "sources/apps/desktop/electron.vite.config.ts",
+      "connector_response_file": "captures/apps__desktop__electron.vite.config.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/icons/README.md",
+      "git_blob_sha": "18b857381d278d91642dbf0d16176f477a607f22",
+      "sha256": "f83f7d402b086a7dc4e783013b0d3ef59031e97e38beee743fdbd1c272360446",
+      "byte_length": 1574,
+      "local_capture_file": "sources/apps/desktop/icons/README.md",
+      "connector_response_file": "captures/apps__desktop__icons__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/package.json",
+      "git_blob_sha": "a7dd0b12de0f8c3855c7f5b2f069416ef711f577",
+      "sha256": "cb11bc929a46b3bbeb1e5ed323f3fa06aa612bfa3f9743489f14f0de3e821d9f",
+      "byte_length": 3472,
+      "local_capture_file": "sources/apps/desktop/package.json",
+      "connector_response_file": "captures/apps__desktop__package.json.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux-runtime/Dockerfile",
+      "git_blob_sha": "785cdfe6ae44ea58416ab80eedbcf6ee8ec480a9",
+      "sha256": "e6ea24e1b7e0008a216b6e853025ab67ebaa86e8e8f2bd03c5e4c0f940884333",
+      "byte_length": 1244,
+      "local_capture_file": "sources/apps/desktop/resources/linux-runtime/Dockerfile",
+      "connector_response_file": "captures/apps__desktop__resources__linux-runtime__Dockerfile.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux-runtime/README.md",
+      "git_blob_sha": "3ba5a5b21e8bbaa780c6c85f19c6058ed6acb137",
+      "sha256": "7ddcacaa3ffce68a7f348446b33ad05ec9b5d8a58840a88ad3eb313c40d24577",
+      "byte_length": 3178,
+      "local_capture_file": "sources/apps/desktop/resources/linux-runtime/README.md",
+      "connector_response_file": "captures/apps__desktop__resources__linux-runtime__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux-runtime/browser-bridge.py",
+      "git_blob_sha": "3b34c5fa06de9b5990cb0aa8fe1419901f51aa45",
+      "sha256": "0844273a4318ded241b9259bd0db0536bbb2b95723847f424ba08565709b67ad",
+      "byte_length": 3184,
+      "local_capture_file": "sources/apps/desktop/resources/linux-runtime/browser-bridge.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux-runtime__browser-bridge.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux-runtime/workspace-access.py",
+      "git_blob_sha": "7cb239822bd7a88c361cacccf861b860aa248f54",
+      "sha256": "0e5bef9a6d6b30fb63e4de527dc78272b26ef3f893dc170a1ddba4922bb3063a",
+      "byte_length": 6165,
+      "local_capture_file": "sources/apps/desktop/resources/linux-runtime/workspace-access.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux-runtime__workspace-access.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux-runtime/workspace.py",
+      "git_blob_sha": "994ed493ffa0a76c7e2f4e6f32fda3f1bfc157d0",
+      "sha256": "42a173e891059dc9fe9ac881a6b1ef66b6606fef4c7d7b5fe158e2ceba5cc9eb",
+      "byte_length": 37478,
+      "local_capture_file": "sources/apps/desktop/resources/linux-runtime/workspace.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux-runtime__workspace.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          305,
+          370
+        ],
+        [
+          540,
+          610
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/actions.py",
+      "git_blob_sha": "0735c627b1596299d6b3b837b03149ab1d938a10",
+      "sha256": "aa64e55b4cf18858e4b8a2ee29cdce11e728710313ff1652085d50debbb1b214",
+      "byte_length": 19884,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/actions.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__actions.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/bindings.py",
+      "git_blob_sha": "9056fe6c1f1b637b568f145b96d7273e2c2e2b90",
+      "sha256": "2d321ebc76988d561ea0c4333777e817094a066bb8b9f8584b93856ebc405b2d",
+      "byte_length": 13846,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/bindings.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__bindings.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/context.py",
+      "git_blob_sha": "645abfe4c8d23cf7c5851dbfdbba2f797a52e38e",
+      "sha256": "216c316bc9306c81929dd9217c90af76df0d017f329b3061caf514478a614ec3",
+      "byte_length": 9409,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/context.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__context.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/main.py",
+      "git_blob_sha": "217facb96c2f0fe20fbdf19f23364514e153f14b",
+      "sha256": "ae7494ae838d70eab2d2021a2a5925ab3aeaf02bbfde9598a9f60d1b1c9ab38e",
+      "byte_length": 13475,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/main.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__main.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          80
+        ],
+        [
+          140,
+          235
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/refs.py",
+      "git_blob_sha": "0e7f345c9fb77f2f2b09025434c5d74fa32bcf47",
+      "sha256": "0119a0b5ed197ccb8fa5f6aa440d61c8c4377cf294b05ace3f3ce4b460b42ef4",
+      "byte_length": 19382,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/refs.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__refs.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/snapshot.py",
+      "git_blob_sha": "6f72716d93988bf57fb2e807bfcb50bd234bbfc4",
+      "sha256": "d97b0c8e3376da153a6c80991f232c40d4997d011644a8f45ef703ca2045bb26",
+      "byte_length": 29042,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/snapshot.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__snapshot.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/cli-staging.ts",
+      "git_blob_sha": "24ff9c3735921ec8e957930b86108cd4844e7238",
+      "sha256": "88adf9d177f9b05aa20249d80ede2a24617f1d6673f18d6c8fe4c7851947a494",
+      "byte_length": 9876,
+      "local_capture_file": "sources/apps/desktop/scripts/cli-staging.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__cli-staging.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/copy-icons.ts",
+      "git_blob_sha": "400f42757101a0c1ab5a00570f1d7a61cb8a58c3",
+      "sha256": "b77470e9c591fc60210aa4092a474c7f0025fb61c95bd4765e7a00e10a1ba4e8",
+      "byte_length": 367,
+      "local_capture_file": "sources/apps/desktop/scripts/copy-icons.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__copy-icons.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/mac-icons.py",
+      "git_blob_sha": "daa332480ca8dfa6288980cbe5a18fdcb828a67b",
+      "sha256": "2b022b342965b7a22de712e16f3f526fd9415e284ad5f8efe961f1f8b47bdf76",
+      "byte_length": 5781,
+      "local_capture_file": "sources/apps/desktop/scripts/mac-icons.py",
+      "connector_response_file": "captures/apps__desktop__scripts__mac-icons.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          55
+        ],
+        [
+          100,
+          122
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/prebuild.ts",
+      "git_blob_sha": "0943d4b9ca6a76d98de6570b4b270656a2149e17",
+      "sha256": "269f8554c7b5ff1cd4e4f0eb3e952bff6ae4f1c584488b27246fb94716133378",
+      "byte_length": 760,
+      "local_capture_file": "sources/apps/desktop/scripts/prebuild.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__prebuild.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/predev.ts",
+      "git_blob_sha": "f26316806f30975c1ec4652d7372d5768569973f",
+      "sha256": "444d7cbe0c28c42cd76858e9ff502c2f8d6ec1c2d91605b571b0f03f55703810",
+      "byte_length": 2514,
+      "local_capture_file": "sources/apps/desktop/scripts/predev.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__predev.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/README.md",
+      "git_blob_sha": "c8bec1560f6a6b3ea35ce85beadbcdad101ebffa",
+      "sha256": "f8f294268cc8a0ca93c6c38eb902dd244e425e4bf2dfb222536fadeaddce2b24",
+      "byte_length": 1784,
+      "local_capture_file": "sources/apps/desktop/src/main/README.md",
+      "connector_response_file": "captures/apps__desktop__src__main__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-browser.ts",
+      "git_blob_sha": "51cb0d5a2dad065b03344db018e6a3a8fd6411dc",
+      "sha256": "f7509e6cdf532990af154b928c550b13d190100e8ac3eae272ce77ec352e451a",
+      "byte_length": 33067,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-browser.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-browser.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          155
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-linux.ts",
+      "git_blob_sha": "16ef3dd88f455b4e1bf89708cadb015c08d6d157",
+      "sha256": "5213a311d3c5b68bb0cf5da672fdd97fed54b74aa35025f53e7dffde5c6f9fd3",
+      "byte_length": 33941,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-linux.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-linux.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-native-channel.ts",
+      "git_blob_sha": "8e82dda5e3cf2f070f11b5a73b6031a5b6ae8003",
+      "sha256": "998459c01a7b199d428e48cb6a343c9663c0e94427c793c75f2536826b6c9fe7",
+      "byte_length": 15028,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-native-channel.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-native-channel.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-native-client-admission.test.ts",
+      "git_blob_sha": "56f1d112e0856e56543e67ac96bb69ee880ea614",
+      "sha256": "753a2a8380faa9cf8343fd33df0c1722d7a01d1da533449140a89883a9e24e2a",
+      "byte_length": 20115,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-native-client-admission.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-native-client-admission.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          150
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-native-client.ts",
+      "git_blob_sha": "91711c50822cdf9ca0499c4ab63b1a8c39c69546",
+      "sha256": "1ddbd99745c12ab34417244858bbad45214e6d610af93d9c81e11102b9312be2",
+      "byte_length": 19006,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-native-client.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-native-client.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          115
+        ],
+        [
+          300,
+          390
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-native-protocol.ts",
+      "git_blob_sha": "6f0ad06defe16c3a26ba3a1797660a61f8100835",
+      "sha256": "fa43faf885fd5b76dc34259586edfff1cbae941b41b62abea92faa95a967dda0",
+      "byte_length": 7411,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-native-protocol.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-native-protocol.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          132
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-native-runtime.ts",
+      "git_blob_sha": "cd2ee1a8276cb585e1b22690e7d23e4d8b838e42",
+      "sha256": "4994e4a5b7027012d239319c33398726b5e5baf3fc2c34e99bb9209a0f822f6e",
+      "byte_length": 24066,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-native-runtime.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-native-runtime.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          90
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-native-workspace.ts",
+      "git_blob_sha": "b9178746ec036369a9ecfd9db3a425637ebdba4a",
+      "sha256": "cbd459ec825dd6749ac39bb48b274b6fe54f2b44d150560de1f050ee3f484e2c",
+      "byte_length": 2866,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-native-workspace.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-native-workspace.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-native.ts",
+      "git_blob_sha": "2e6db6ddb484ba4a2c94f49dbfab371b11b02478",
+      "sha256": "aff38cde5eb54e36a4e1928315aef20ce51c9fa909f786797304d3ce8e92f914",
+      "byte_length": 35731,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-native.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-native.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          160
+        ],
+        [
+          290,
+          375
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-navigation.ts",
+      "git_blob_sha": "b351c004a9c225cc733ce32ab7276aa08d54dcc9",
+      "sha256": "0a4eaea051e02021feb62434246eb96620215800eee69853923177806206a4af",
+      "byte_length": 4872,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-navigation.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-navigation.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          102
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-page.ts",
+      "git_blob_sha": "8d4d7dd531e2f33fa5566c86188ed5e2893fb003",
+      "sha256": "8e949cad09da7a48d25a9d5b6f169a04e0d62bd419a7f1f55f293f95d74f992d",
+      "byte_length": 12292,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-page.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-page.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          31,
+          39
+        ],
+        [
+          49,
+          68
+        ],
+        [
+          91,
+          101
+        ],
+        [
+          104,
+          111
+        ],
+        [
+          113,
+          120
+        ],
+        [
+          128,
+          135
+        ],
+        [
+          139,
+          164
+        ],
+        [
+          166,
+          211
+        ],
+        [
+          228,
+          236
+        ],
+        [
+          241,
+          246
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-popups.test.ts",
+      "git_blob_sha": "794ca6b35daedcf0324829a2ecdbf5aa2936bcd0",
+      "sha256": "cad2c1b2afd090dcbdf04db3c673a6a4a64573aa9eee9d1d0946f5e40e0ac9d6",
+      "byte_length": 6634,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-popups.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-popups.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-profile-registry.ts",
+      "git_blob_sha": "51b63ddc3a072b7734ccb281a4826dbd93237167",
+      "sha256": "c44c85c4c427449913504df36c1bbc41d56346e23032d3c778dcc8c52f0a1d6b",
+      "byte_length": 13333,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-profile-registry.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-profile-registry.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          130
+        ],
+        [
+          240,
+          325
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-rpc-workspace-rebind.test.ts",
+      "git_blob_sha": "6fff6dfa75b502662bb3e3ae3dce0daa835c720d",
+      "sha256": "115b2ae1af923fb5c3853683d3da485c4ad1e40f76dcf5734c022860d12e0e16",
+      "byte_length": 11968,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-rpc-workspace-rebind.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-rpc-workspace-rebind.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-rpc.ts",
+      "git_blob_sha": "0ce319c4aecf47e04a13d827058e363ffe0882df",
+      "sha256": "73978afafab2c4787cf933ee760c7e5bf456f6bf3f73399d9d57b8ecbe4501ae",
+      "byte_length": 41204,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-rpc.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-rpc.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          7,
+          22
+        ],
+        [
+          67,
+          131
+        ],
+        [
+          136,
+          146
+        ],
+        [
+          154,
+          161
+        ],
+        [
+          180,
+          267
+        ],
+        [
+          273,
+          285
+        ],
+        [
+          303,
+          314
+        ],
+        [
+          317,
+          335
+        ],
+        [
+          344,
+          369
+        ],
+        [
+          371,
+          381
+        ],
+        [
+          403,
+          410
+        ],
+        [
+          417,
+          557
+        ],
+        [
+          559,
+          570
+        ],
+        [
+          572,
+          680
+        ],
+        [
+          704,
+          740
+        ],
+        [
+          744,
+          756
+        ],
+        [
+          772,
+          784
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-runtime-backend.ts",
+      "git_blob_sha": "b4f0ba59436bb9e2969735f83f350b6f7530c36c",
+      "sha256": "a05f5f8fede08ce113c633632b68f4cb363b23432f3d0643158a7d92dd459973",
+      "byte_length": 5338,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-runtime-backend.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-runtime-backend.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-runtime-docker.ts",
+      "git_blob_sha": "c063259f3d97999f4c183338f6e34bf7c7b649eb",
+      "sha256": "3343458142ff2ef86765db4390f29c9b2b08f6aed7386177e56d9a8c4008afa7",
+      "byte_length": 13760,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-runtime-docker.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-runtime-docker.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-runtime-identity.test.ts",
+      "git_blob_sha": "2dc9631b131dcd96b2748bd9695fa39c25d8619a",
+      "sha256": "9345097aecc617370b63be71cfdb99e188cfe869f16e1c23954cdbf5f731b860",
+      "byte_length": 11332,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-runtime-identity.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-runtime-identity.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-runtime.ts",
+      "git_blob_sha": "41cdb60d605296a6101016d40ade22e34c70c36a",
+      "sha256": "4a10b176adc6115451e60643ed94a7e38b35f3dd35dcb4c7240352cd7ad2512a",
+      "byte_length": 28553,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-runtime.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-runtime.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          170
+        ],
+        [
+          300,
+          445
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-session.ts",
+      "git_blob_sha": "a54327e6094ba89eb1b15c9c2cd2d11dae456ec4",
+      "sha256": "1811d7a8f3d741bce0286093db39f349044dd37de72cec83690dcebfb1ba147b",
+      "byte_length": 7147,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-session.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-session.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          179
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-utils.ts",
+      "git_blob_sha": "620869f2544c2c5929a54c3f887b5b27535dcad9",
+      "sha256": "59596fc88132811e15a1a48e9d828929fe36780db0711f92fd198d672f825c84",
+      "byte_length": 2458,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-utils.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-utils.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock.ts",
+      "git_blob_sha": "e119706137b28191c176f3d034713ddf8fdb2100",
+      "sha256": "3300100db676fc68e39c24d7e96d8ed2581b7cbdeda51bf0547cf7c294caeef0",
+      "byte_length": 27951,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          230
+        ],
+        [
+          236,
+          340
+        ],
+        [
+          490,
+          605
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/attachment-picker.ts",
+      "git_blob_sha": "f2080cfe4d5e63716d16b82a8e40b45d4df46f11",
+      "sha256": "1be7d24297a28b831af0f18a365c78b99aba23e557ba53b8bc704c36263fb4a1",
+      "byte_length": 2220,
+      "local_capture_file": "sources/apps/desktop/src/main/attachment-picker.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__attachment-picker.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          57
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/background-cli.ts",
+      "git_blob_sha": "0b0079cab18397d329c1770afb56029bd2a47992",
+      "sha256": "4d75d663f6faa9f3dc9d77b7543d078a84432f5e522502683bd028ee5106f859",
+      "byte_length": 4862,
+      "local_capture_file": "sources/apps/desktop/src/main/background-cli.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__background-cli.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          95
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/caffeinate.ts",
+      "git_blob_sha": "c42053bbb44bb1d991e3cce3802dfd56bf49a54b",
+      "sha256": "5e13578880a9f19a037329e37271a0450b571194c1197c0155f9eb1128041f29",
+      "byte_length": 775,
+      "local_capture_file": "sources/apps/desktop/src/main/caffeinate.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__caffeinate.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/cli-artifacts.ts",
+      "git_blob_sha": "998fa6cc4168dbf9dcb3c469bd783b74df4dead5",
+      "sha256": "9e947d01ac45d32b34c485629e4236dc7e0f5410d4e0bda23781eed135968573",
+      "byte_length": 8866,
+      "local_capture_file": "sources/apps/desktop/src/main/cli-artifacts.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__cli-artifacts.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/cli-install.ts",
+      "git_blob_sha": "8633f0cba5aa23011dc11f3d616eb4dd28dcfe90",
+      "sha256": "4279b2f1eb7495be45092ea2be5c57c17d736de7fe967314576c2af72827dd60",
+      "byte_length": 4852,
+      "local_capture_file": "sources/apps/desktop/src/main/cli-install.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__cli-install.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/desktop-menu-actions.ts",
+      "git_blob_sha": "cfb6d901fd87bfb45a9c8a846ae0b73eebab18b6",
+      "sha256": "589e09c66a81c50264e01a7924f4ce6fa128efa62a85892620b2f064e31da31c",
+      "byte_length": 2082,
+      "local_capture_file": "sources/apps/desktop/src/main/desktop-menu-actions.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__desktop-menu-actions.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          84
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/draft-store.node.test.ts",
+      "git_blob_sha": "65f61a397984fb3c5d648d708caf4adf2b57768c",
+      "sha256": "589a5565f2247d42304c312962765bd83b4e817cb6f8692e2628415ba19d342a",
+      "byte_length": 6547,
+      "local_capture_file": "sources/apps/desktop/src/main/draft-store.node.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__draft-store.node.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/draft-store.ts",
+      "git_blob_sha": "839eff26afe682f771eea9e30c55fc0af78cfc08",
+      "sha256": "04d57ecb70b91c250ea1b5c7989b7ebe5b36754e4ca218cd74f745037c9c918a",
+      "byte_length": 2672,
+      "local_capture_file": "sources/apps/desktop/src/main/draft-store.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__draft-store.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/index.test.ts",
+      "git_blob_sha": "87c7951c35a4cc513036c77435f4af2703bf49af",
+      "sha256": "aa3ba9e5353bf4ef3bad672eae1e7444f864be85157611af14f171b2da0b507a",
+      "byte_length": 4862,
+      "local_capture_file": "sources/apps/desktop/src/main/index.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__index.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/index.ts",
+      "git_blob_sha": "2a00cd582c5917716fe9061a46ca614ed45d086e",
+      "sha256": "79e2de4c4f9e50a9b04cf78ad09b3d03585b1e49190943e230f1d45f49b08f11",
+      "byte_length": 19644,
+      "local_capture_file": "sources/apps/desktop/src/main/index.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__index.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          446,
+          475
+        ],
+        [
+          489,
+          508
+        ]
+      ],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/initialization.ts",
+      "git_blob_sha": "476abac7f5961452c593ab3834c0de78aa7d0b80",
+      "sha256": "2d78fabed408a448d0e7e48322533bf79a2db6ff5f5844c0ea77401c366dc1dc",
+      "byte_length": 283,
+      "local_capture_file": "sources/apps/desktop/src/main/initialization.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__initialization.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/install-state.ts",
+      "git_blob_sha": "484a7b9c1df09678588cb72c8af7fdad074f71d0",
+      "sha256": "e1d09eeb70001f6fca474ab771f67fffc67fba6fcc8f01712a4eb19883ae98ad",
+      "byte_length": 373,
+      "local_capture_file": "sources/apps/desktop/src/main/install-state.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__install-state.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          8
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/ipc-app-dock-validate.ts",
+      "git_blob_sha": "89c2192f3b9c6dd2afa78a0728e26b466552b682",
+      "sha256": "a6284b31fef9e2d5d96bc7bc41f1501fb30060720a7942a0a85d30183fe9c700",
+      "byte_length": 8738,
+      "local_capture_file": "sources/apps/desktop/src/main/ipc-app-dock-validate.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__ipc-app-dock-validate.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/ipc-app-dock.ts",
+      "git_blob_sha": "1323e958c305b2122353d7f7a9122e84ae40a210",
+      "sha256": "355a720d783ac9b40a85828ca26833839e32e4c498f66615bdce7b950a2430ed",
+      "byte_length": 15373,
+      "local_capture_file": "sources/apps/desktop/src/main/ipc-app-dock.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__ipc-app-dock.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          165
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/ipc.ts",
+      "git_blob_sha": "2214930f4cc822e565599b480ad9aad8cb29f200",
+      "sha256": "918fb622129d68d6654748697e68517d9ab21ef103cc08df06aaf19d1cc0c76c",
+      "byte_length": 15546,
+      "local_capture_file": "sources/apps/desktop/src/main/ipc.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__ipc.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          160
+        ],
+        [
+          280,
+          363
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/janitor.ts",
+      "git_blob_sha": "304be2cfaedec251e624477350fccdb9aa6a4864",
+      "sha256": "c6b7033601b6fbce594dd7828ffe6b256cd76608c20dd6e04f902b4b995bb3d6",
+      "byte_length": 2467,
+      "local_capture_file": "sources/apps/desktop/src/main/janitor.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__janitor.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/linux-workspace-access.ts",
+      "git_blob_sha": "1e909b8b01d04ef6278d6ef689d9d9a359012c86",
+      "sha256": "6a2aadc0287ebacb954426930710c6de2532facc3132f628aac95eb6af5961bb",
+      "byte_length": 17739,
+      "local_capture_file": "sources/apps/desktop/src/main/linux-workspace-access.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__linux-workspace-access.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          160
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/linux-workspace-files.ts",
+      "git_blob_sha": "b866874dd3e4bfb748fe409be468c03c156c86e9",
+      "sha256": "208b2b5e85eb22779685ba081f39f15d22324b6cb45ec3826e48af72a989ac16",
+      "byte_length": 3294,
+      "local_capture_file": "sources/apps/desktop/src/main/linux-workspace-files.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__linux-workspace-files.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/linux-workspace-omni.ts",
+      "git_blob_sha": "115f3bfc83ab07eac592bdf81eb5d12c67693403",
+      "sha256": "c8f85ae7001b917a95a1a442e4faee583595daec290b38460bea2342f7b6ad18",
+      "byte_length": 1992,
+      "local_capture_file": "sources/apps/desktop/src/main/linux-workspace-omni.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__linux-workspace-omni.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/linux-workspace-rpc.ts",
+      "git_blob_sha": "153c2b5b50c784b4ca81c157c4f19f87f598493d",
+      "sha256": "576b9380d1fe4bf4daf180368ad4fd51071ce81fff714a6809ca2b313eec72ff",
+      "byte_length": 6084,
+      "local_capture_file": "sources/apps/desktop/src/main/linux-workspace-rpc.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__linux-workspace-rpc.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          158
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-audio.ts",
+      "git_blob_sha": "4399819a4bb389ebece75f77efac470970beb199",
+      "sha256": "ce77fcab9561003519149f7dfbf990d14ad9c9ca7e9840761b90863551641151",
+      "byte_length": 3295,
+      "local_capture_file": "sources/apps/desktop/src/main/live-audio.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-audio.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          77
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-capture.ts",
+      "git_blob_sha": "a9dc48d2be8e0a79f442fe5c9035f11d4b739aa1",
+      "sha256": "b4181622413c75c2e4bd8cc12e6f25fa5a40000c4da86228e5d3bee574509e89",
+      "byte_length": 6889,
+      "local_capture_file": "sources/apps/desktop/src/main/live-capture.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-capture.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-ipc.ts",
+      "git_blob_sha": "fcb3903779ee6a88a813ba6c23f21829167ecfcb",
+      "sha256": "b5caff3ee7bf8ffc7663dc33db98cbe2400fc9d4af3614c7b7558eb6285db146",
+      "byte_length": 3264,
+      "local_capture_file": "sources/apps/desktop/src/main/live-ipc.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-ipc.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          58
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-key.ts",
+      "git_blob_sha": "b1a22d61949a3eb39d14d4e0ab2490683bfdda6a",
+      "sha256": "07a9161d80bcff408020f3eeca457dac37c3f9575e0039b8b279a60d0416ab29",
+      "byte_length": 1134,
+      "local_capture_file": "sources/apps/desktop/src/main/live-key.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-key.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-loop.ts",
+      "git_blob_sha": "c1d1ac751972b3cf78a2738cdab5177147f9fa72",
+      "sha256": "162413d661106e1fcdd126aae3fa8abc4a51e355f71609d8b4962465a0f141fb",
+      "byte_length": 17650,
+      "local_capture_file": "sources/apps/desktop/src/main/live-loop.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-loop.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          130
+        ],
+        [
+          210,
+          340
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-meeting-client.ts",
+      "git_blob_sha": "538792797d5805a8a24d694d976f6fbcaece88c3",
+      "sha256": "00c5b4825d14d274be75f77a2a118527c10bb6cd6c5550bed333021e232d7061",
+      "byte_length": 4420,
+      "local_capture_file": "sources/apps/desktop/src/main/live-meeting-client.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-meeting-client.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          108
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-overlay-state.ts",
+      "git_blob_sha": "f0d581b0080cde0502e7fdab3900eed5600222e9",
+      "sha256": "1c6e4013e4327210cfde8aded3b5590645c08e5d1d9aef1bd9252afe19e8eb84",
+      "byte_length": 6148,
+      "local_capture_file": "sources/apps/desktop/src/main/live-overlay-state.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-overlay-state.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          125
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-overlay.ts",
+      "git_blob_sha": "06543fff96b5cd528f2daaa75840faf12ed3ea0b",
+      "sha256": "3b4babc9ea42f4a3a682c403cc9b1d476748000c65228065e0c51a84868b6c17",
+      "byte_length": 11283,
+      "local_capture_file": "sources/apps/desktop/src/main/live-overlay.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-overlay.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          95
+        ],
+        [
+          205,
+          265
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-readiness.ts",
+      "git_blob_sha": "31d5fe7266b2a3168fe481682e32e125324270ce",
+      "sha256": "8dcbe5af47a6a7672c167eb618c37c9b1942f97e3205ca9e9ad046377025e3e0",
+      "byte_length": 2689,
+      "local_capture_file": "sources/apps/desktop/src/main/live-readiness.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-readiness.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-senses.ts",
+      "git_blob_sha": "bcdc5173d9d3a99cdfc0f443719f33b1e3cd9f6c",
+      "sha256": "43e7c5ea380deb911f61b6607d80d2c383c29296a551fc1dadd714ae7bdd7796",
+      "byte_length": 6365,
+      "local_capture_file": "sources/apps/desktop/src/main/live-senses.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-senses.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          168
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-session-client.ts",
+      "git_blob_sha": "72328cb3fb3552dc67ea471c4679b76658f1e601",
+      "sha256": "0972c9d061eb7d892f70878e32e832a4ef8ccf6809a8cfd2a9da2848a5b74879",
+      "byte_length": 4634,
+      "local_capture_file": "sources/apps/desktop/src/main/live-session-client.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-session-client.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-settings.test.ts",
+      "git_blob_sha": "80a0d59e79accfde946e6bfbabdf51bef3f4e3ec",
+      "sha256": "00946f928ed9d05605847d6827aaaaaaa3ab330046d20b450587543bfa4de603",
+      "byte_length": 4869,
+      "local_capture_file": "sources/apps/desktop/src/main/live-settings.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-settings.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-settings.ts",
+      "git_blob_sha": "eb039bb56147958e2bf00057c33f3294495f251f",
+      "sha256": "133126f31afe29f07057f8cae20c4caae4543d5d327a8d7ea9f080880ded12ae",
+      "byte_length": 7527,
+      "local_capture_file": "sources/apps/desktop/src/main/live-settings.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-settings.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          173
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-transcriber.ts",
+      "git_blob_sha": "ce7c538a7d3edbbbe2812b2215604a580fbf1974",
+      "sha256": "352e21eecb6f8d1fb4773354a48f2b8c07dfcd32a1a9a55066ae0e577697f606",
+      "byte_length": 6956,
+      "local_capture_file": "sources/apps/desktop/src/main/live-transcriber.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-transcriber.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          130
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/logging.ts",
+      "git_blob_sha": "ff51c9993872cca42837e38ea0a3ebb9ca4b9244",
+      "sha256": "5d14963196a01e46f4533ffffe20c4c252ba400aa65180664edc7fbf2bda5f9f",
+      "byte_length": 6979,
+      "local_capture_file": "sources/apps/desktop/src/main/logging.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__logging.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          135
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/migrate.ts",
+      "git_blob_sha": "6c05737deabd74bcb9d14e29d14cec6defde62f6",
+      "sha256": "1b773007313c45f0daa661fad8fd3051b56d94d714f036b099c800a83b040904",
+      "byte_length": 3210,
+      "local_capture_file": "sources/apps/desktop/src/main/migrate.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__migrate.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/native-translations.ts",
+      "git_blob_sha": "5913dd7bc0df13e90170e049e3c6eea58790aaf0",
+      "sha256": "146cceedea77950c17dbfc32f1d618e954c7a33b5901a7fa8b5218dae0902a7b",
+      "byte_length": 693,
+      "local_capture_file": "sources/apps/desktop/src/main/native-translations.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__native-translations.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/omni-boot.ts",
+      "git_blob_sha": "25522236ff89ff82cdaf5ad663d7aae3f5e6122a",
+      "sha256": "7301e33ae457951628572cb30c80759305278ab52c50de4ddcf061dae2ea40f1",
+      "byte_length": 691,
+      "local_capture_file": "sources/apps/desktop/src/main/omni-boot.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__omni-boot.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/omni-host.ts",
+      "git_blob_sha": "fcf0e0e99301273422d891ff5a544cf38649f04e",
+      "sha256": "b017084aac188fc734322dc21af8fa072f5cba5443e39add57f581e294262d1e",
+      "byte_length": 1817,
+      "local_capture_file": "sources/apps/desktop/src/main/omni-host.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__omni-host.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/omni-process.ts",
+      "git_blob_sha": "620940706189434db2e717e7baf0fa49343fa2d3",
+      "sha256": "4af2502a47002601b79ba35202486d0919d40f2772724f13d514fe89e67083a6",
+      "byte_length": 12598,
+      "local_capture_file": "sources/apps/desktop/src/main/omni-process.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__omni-process.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          135
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/onboarding.ts",
+      "git_blob_sha": "6f8fd478f1fdb26eb9aeaf9d06bb0211fc93e2eb",
+      "sha256": "aefb0b64a91b5f0e747a721d2b80b9727b8d0ee1cbbd47450e879df6e792d74b",
+      "byte_length": 1391,
+      "local_capture_file": "sources/apps/desktop/src/main/onboarding.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__onboarding.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/owned-serve.test.ts",
+      "git_blob_sha": "018937974c02e6d1158567cf9da52c4600822014",
+      "sha256": "60f64fd781c0e549be63c07c6de59a3dba1e6cc6b31038a0bb89d281aefb49fb",
+      "byte_length": 563,
+      "local_capture_file": "sources/apps/desktop/src/main/owned-serve.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__owned-serve.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/owned-serve.ts",
+      "git_blob_sha": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+      "sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+      "byte_length": 8511,
+      "local_capture_file": "sources/apps/desktop/src/main/owned-serve.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__owned-serve.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          70,
+          103
+        ]
+      ],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/renderer-origin.test.ts",
+      "git_blob_sha": "5ada32699f07f62b1ede8b132c91b487f5789095",
+      "sha256": "381fd14fd1ca68102f5c6cd55dc65b9ebf18b00b480eda4961fb2b89cc033d3b",
+      "byte_length": 1486,
+      "local_capture_file": "sources/apps/desktop/src/main/renderer-origin.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__renderer-origin.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/renderer-origin.ts",
+      "git_blob_sha": "34f5db54ee46ec5a2b7714b63d2a868fb13ca095",
+      "sha256": "ddccb06fef155c7d2fa5edc2693ecc4b3da9694c911fd52c4c5ee4db6929ad0b",
+      "byte_length": 1978,
+      "local_capture_file": "sources/apps/desktop/src/main/renderer-origin.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__renderer-origin.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          25,
+          45
+        ]
+      ],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/response-download.test.ts",
+      "git_blob_sha": "d65d6c7a539dece8364e650430ca578e83e00072",
+      "sha256": "f55141770f6496baa610878a6e4ea000e4d73a0250ed9c48e40f88d732edd58c",
+      "byte_length": 15754,
+      "local_capture_file": "sources/apps/desktop/src/main/response-download.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__response-download.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/response-download.ts",
+      "git_blob_sha": "cd869d37c96453d7692c83be51386bd559314449",
+      "sha256": "f6f8c2b73328cd76cc804f03b3ae2e164d926d8c599cf7612525351ace26d5af",
+      "byte_length": 9576,
+      "local_capture_file": "sources/apps/desktop/src/main/response-download.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__response-download.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          180
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/server.ts",
+      "git_blob_sha": "fb42ff61b06852549615af4766115607a86575d0",
+      "sha256": "ab7289c5aa387730565ffaeeab952231efde9d001ae11b2b7c22828a53522b41",
+      "byte_length": 3044,
+      "local_capture_file": "sources/apps/desktop/src/main/server.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__server.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/shell-env.ts",
+      "git_blob_sha": "082ed5e930dbde3901fb99fcf0e7811bc8470150",
+      "sha256": "eb36363c87ac3f4b6a13053fe845aef045545883b6fcee3e0f4a2517194b1daa",
+      "byte_length": 3091,
+      "local_capture_file": "sources/apps/desktop/src/main/shell-env.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__shell-env.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/store-cleanup.ts",
+      "git_blob_sha": "ab9db6049fe8ab758c4022468935d5d160a40bdb",
+      "sha256": "6e583ed785c39a39758bc5cdd39f94d6fc9a0b4f4c6ab17a9775b917830bf6f2",
+      "byte_length": 3420,
+      "local_capture_file": "sources/apps/desktop/src/main/store-cleanup.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__store-cleanup.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          102
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/store.ts",
+      "git_blob_sha": "8ae964c3cf3790451421bdde7098d92539e7cc99",
+      "sha256": "c32ef05cb816fb1c8350d45bd6d58a73446429f001c22262dd3d61833bb154ee",
+      "byte_length": 1255,
+      "local_capture_file": "sources/apps/desktop/src/main/store.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__store.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/updater-controller.test.ts",
+      "git_blob_sha": "42e806539dc33f740b249a17892cd5fd639d50f6",
+      "sha256": "476b495458a7e0e84f4eb7d46ad4b7c4f7ab887009158e7efcc89f67b9073cce",
+      "byte_length": 5310,
+      "local_capture_file": "sources/apps/desktop/src/main/updater-controller.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__updater-controller.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/updater-controller.ts",
+      "git_blob_sha": "02520c0aabcd9f85b72e5f293ec6007de807ed00",
+      "sha256": "ed978923ed992c33fb226c367bc2f3a387bc3bc9411c9c28a6e292fb8aa3e4a3",
+      "byte_length": 3926,
+      "local_capture_file": "sources/apps/desktop/src/main/updater-controller.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__updater-controller.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/updater.ts",
+      "git_blob_sha": "03c8ef3020f6bc2f46e9421ac60178f9a71f5f41",
+      "sha256": "881789bbce59112d00ca61b035fc0bd943f02a625704f090b63b8596f197d243",
+      "byte_length": 4499,
+      "local_capture_file": "sources/apps/desktop/src/main/updater.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__updater.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/window-flush.test.ts",
+      "git_blob_sha": "3f16a430748484cb51ae909e8caea1b55bc26395",
+      "sha256": "f578c45d5934e3cfa73f9620e42b7c6329daf82e5a974de2e029472876cd58f6",
+      "byte_length": 4468,
+      "local_capture_file": "sources/apps/desktop/src/main/window-flush.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__window-flush.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/window-flush.ts",
+      "git_blob_sha": "b222149f1511716cf51a31565a926a448cc8e691",
+      "sha256": "057e7cdb6622b8f08306d140dbc504fc163c2b5e7d9996f08d1ef450cb0bc626",
+      "byte_length": 2193,
+      "local_capture_file": "sources/apps/desktop/src/main/window-flush.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__window-flush.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/window-registry.ts",
+      "git_blob_sha": "d570472677de55c8b3f1ae1d641aebc6388a99cb",
+      "sha256": "e54356ab6a255042d94d9cd3d8ca07dec86bbd65029ad355ef278d8b244dce26",
+      "byte_length": 1937,
+      "local_capture_file": "sources/apps/desktop/src/main/window-registry.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__window-registry.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/windows.ts",
+      "git_blob_sha": "45eaa9166f53ede5be30391f3c937ec60508c366",
+      "sha256": "2fc019484e93ef85b274c86a0e94b4a3ad20522582d3646de7811e1026d6b3f5",
+      "byte_length": 22696,
+      "local_capture_file": "sources/apps/desktop/src/main/windows.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__windows.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          13,
+          20
+        ],
+        [
+          76,
+          120
+        ],
+        [
+          122,
+          129
+        ],
+        [
+          134,
+          141
+        ],
+        [
+          145,
+          160
+        ],
+        [
+          163,
+          203
+        ],
+        [
+          227,
+          238
+        ],
+        [
+          268,
+          275
+        ],
+        [
+          285,
+          309
+        ],
+        [
+          311,
+          318
+        ],
+        [
+          322,
+          336
+        ],
+        [
+          352,
+          375
+        ],
+        [
+          379,
+          396
+        ],
+        [
+          432,
+          439
+        ],
+        [
+          443,
+          458
+        ],
+        [
+          542,
+          549
+        ],
+        [
+          555,
+          565
+        ],
+        [
+          574,
+          588
+        ],
+        [
+          590,
+          603
+        ],
+        [
+          611,
+          618
+        ],
+        [
+          622,
+          638
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/wsl/artifact.ts",
+      "git_blob_sha": "e1460bab237adbf8fd82f5c47870a1915dbe9f46",
+      "sha256": "c535e41a2350aeeafbb4c9a309ac095e7f37b4915c0eded5ae1758f8183d071f",
+      "byte_length": 10265,
+      "local_capture_file": "sources/apps/desktop/src/main/wsl/artifact.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__wsl__artifact.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          120
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/wsl/ipc.ts",
+      "git_blob_sha": "e52af811a5078399011cfbe03ccd2620be5e5846",
+      "sha256": "d0a829f81da133aa865e613d94368dcd69c7fb0235e7c98fb5483a571169d4c0",
+      "byte_length": 4019,
+      "local_capture_file": "sources/apps/desktop/src/main/wsl/ipc.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__wsl__ipc.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/wsl/policy.ts",
+      "git_blob_sha": "13d4beef7d06cda53b2ac08a043571cf7c78e644",
+      "sha256": "635720e0b7fd06e89076e1a5c055614328f6d873d971d49656dcdd6ce0701216",
+      "byte_length": 1082,
+      "local_capture_file": "sources/apps/desktop/src/main/wsl/policy.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__wsl__policy.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/wsl/runtime.ts",
+      "git_blob_sha": "c2b44e7a79bd0b26854aae16ffcc5013222b5290",
+      "sha256": "66cbc01a5134db528481b58cb088531049fd61af63a2ea32fb81ef7d69f93cfa",
+      "byte_length": 13052,
+      "local_capture_file": "sources/apps/desktop/src/main/wsl/runtime.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__wsl__runtime.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/wsl/servers.ts",
+      "git_blob_sha": "40fd2c57d6d01e1948fb25cc4b4939ad77347d97",
+      "sha256": "04599b548f7cc3d1fe1af17eae5fa5cdc8b5660044fe7308f7f731a0aada067a",
+      "byte_length": 20282,
+      "local_capture_file": "sources/apps/desktop/src/main/wsl/servers.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__wsl__servers.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          140
+        ],
+        [
+          235,
+          365
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/wsl/sidecar.ts",
+      "git_blob_sha": "656d098c0c4219e89912647daf7b80a771b14adc",
+      "sha256": "b79f6d7bd33965cb9a4d144f2facc1452d5ee6dc71645a0cc238fe2ce95e224e",
+      "byte_length": 5462,
+      "local_capture_file": "sources/apps/desktop/src/main/wsl/sidecar.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__wsl__sidecar.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/wsl/startup.ts",
+      "git_blob_sha": "f4556cb47b38cf37c3b98a6c4003842a83c46e49",
+      "sha256": "16ee0730c7b9eaa644e5b678ee58afdaa3b490b7343be57ec8429c339ee1c3d7",
+      "byte_length": 1466,
+      "local_capture_file": "sources/apps/desktop/src/main/wsl/startup.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__wsl__startup.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/preload/index.ts",
+      "git_blob_sha": "d03c62bb17ae88d31b0e74c7be65b27226e68536",
+      "sha256": "fa34bb74659b29838bfedc6d3d6e220c63e5a29769df7664a1986176c20e25ac",
+      "byte_length": 14896,
+      "local_capture_file": "sources/apps/desktop/src/preload/index.ts",
+      "connector_response_file": "captures/apps__desktop__src__preload__index.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          190
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/preload/live-capture.ts",
+      "git_blob_sha": "6b534daefbfcd6193b9a4c887268afee8232ac5b",
+      "sha256": "28826628ed4de962a41e39a294de8aa29314c4dd30b81c6df9d46767676b8828",
+      "byte_length": 664,
+      "local_capture_file": "sources/apps/desktop/src/preload/live-capture.ts",
+      "connector_response_file": "captures/apps__desktop__src__preload__live-capture.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/preload/live.ts",
+      "git_blob_sha": "218295e1824e01be0eb2d614f15cf3b9cf8b0e7a",
+      "sha256": "1ddddf9c538c89f6f637c46149d4a8d3cc40bea2df1670ea77ff9708b12d311a",
+      "byte_length": 1336,
+      "local_capture_file": "sources/apps/desktop/src/preload/live.ts",
+      "connector_response_file": "captures/apps__desktop__src__preload__live.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/boot.tsx",
+      "git_blob_sha": "9843fb09772ac3e0f0eab54a0418297a186d8853",
+      "sha256": "feb32397b41ce5d7149d9074878ac2f500cac23ac4e00daeaa96beee3b94cb5b",
+      "byte_length": 856,
+      "local_capture_file": "sources/apps/desktop/src/renderer/boot.tsx",
+      "connector_response_file": "captures/apps__desktop__src__renderer__boot.tsx.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/i18n/ar.ts",
+      "git_blob_sha": "4ad120ca8edc5673b2f4439a0bfa143bad51abc0",
+      "sha256": "6dc023ff00903ecb58df272d157ee6eaef723f3b55b948770c6f71a8071f49de",
+      "byte_length": 1894,
+      "local_capture_file": "sources/apps/desktop/src/renderer/i18n/ar.ts",
+      "connector_response_file": "captures/apps__desktop__src__renderer__i18n__ar.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/i18n/en.ts",
+      "git_blob_sha": "378259cee2aefbdf3a08fab7c2d129326ae3976a",
+      "sha256": "b33df477baf055bd6853ab708ea42a30c58c58c9f9902cb3a65a51c711a24f2b",
+      "byte_length": 1561,
+      "local_capture_file": "sources/apps/desktop/src/renderer/i18n/en.ts",
+      "connector_response_file": "captures/apps__desktop__src__renderer__i18n__en.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/i18n/index.ts",
+      "git_blob_sha": "58e3c1e26b59ed06852c38f455b37d5ec180284b",
+      "sha256": "35b2d4853348e60dafb0e355b160eb96257862a00d1c1c6c1d8601d8b2a1e6b9",
+      "byte_length": 9088,
+      "local_capture_file": "sources/apps/desktop/src/renderer/i18n/index.ts",
+      "connector_response_file": "captures/apps__desktop__src__renderer__i18n__index.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          211
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/index.tsx",
+      "git_blob_sha": "7116017244ee4519180123a234caca1ed17fdcd7",
+      "sha256": "6e48a364e487b0e7c046d321ba14f0e3bbd49fdce045051a54f902efbb283015",
+      "byte_length": 16870,
+      "local_capture_file": "sources/apps/desktop/src/renderer/index.tsx",
+      "connector_response_file": "captures/apps__desktop__src__renderer__index.tsx.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          180
+        ],
+        [
+          310,
+          455
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/initialization.ts",
+      "git_blob_sha": "0f38a8910e9e0cdc949d0fca7988a0a80905f26c",
+      "sha256": "1744203a548abe3187bba2a9086652cf959106c10dcb5dd8a70f8879dd2b0823",
+      "byte_length": 2815,
+      "local_capture_file": "sources/apps/desktop/src/renderer/initialization.ts",
+      "connector_response_file": "captures/apps__desktop__src__renderer__initialization.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          71
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/live/index.tsx",
+      "git_blob_sha": "05a86284f538f6b942ec8c29e6bcaaab776edfa0",
+      "sha256": "f3831b9935daf5a5f672bec1f1ef6f3ba7ea73ca26d9911554e6f48bcc72d543",
+      "byte_length": 34938,
+      "local_capture_file": "sources/apps/desktop/src/renderer/live/index.tsx",
+      "connector_response_file": "captures/apps__desktop__src__renderer__live__index.tsx.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/response-download.ts",
+      "git_blob_sha": "3b281b1caee5cfb218dfed4244251266e8325568",
+      "sha256": "842de137dccebac41b21fd4463a0ac50e8c864e3e8665efe1fc53f43b7d110f3",
+      "byte_length": 4873,
+      "local_capture_file": "sources/apps/desktop/src/renderer/response-download.ts",
+      "connector_response_file": "captures/apps__desktop__src__renderer__response-download.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          115
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/splash/comet-splash.tsx",
+      "git_blob_sha": "49a9a89d6d3f6c5599c5f4c1748fb0317a0f953b",
+      "sha256": "2b096ed4f35374ded5e4196c0304e9d92c8593f5f48634d60ea63eb608d60a34",
+      "byte_length": 2796,
+      "local_capture_file": "sources/apps/desktop/src/renderer/splash/comet-splash.tsx",
+      "connector_response_file": "captures/apps__desktop__src__renderer__splash__comet-splash.tsx.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/wsl/connections.ts",
+      "git_blob_sha": "2a191d7fec203acf404aa026cad7d9db7d7b55b3",
+      "sha256": "7bee6551b3d2c0c674b9df835221f36da1a81c81f82b8934939925523cf6f7ef",
+      "byte_length": 936,
+      "local_capture_file": "sources/apps/desktop/src/renderer/wsl/connections.ts",
+      "connector_response_file": "captures/apps__desktop__src__renderer__wsl__connections.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/test/native/README.md",
+      "git_blob_sha": "af310c247f23b1c53ee81c8ab107d35e6d9a36fb",
+      "sha256": "32d28e19a87ddad44e00c28b34ce6522c5093e0463d60b46cfd177746303afe0",
+      "byte_length": 5625,
+      "local_capture_file": "sources/apps/desktop/test/native/README.md",
+      "connector_response_file": "captures/apps__desktop__test__native__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/test/native/apps/README.md",
+      "git_blob_sha": "38b7c9540137be3eb8a377f6becb50e8abad9acb",
+      "sha256": "e60b610aeefebb4bab597134fa767f9a1c4b260e5899b800a6a75fcacbf1387f",
+      "byte_length": 3334,
+      "local_capture_file": "sources/apps/desktop/test/native/apps/README.md",
+      "connector_response_file": "captures/apps__desktop__test__native__apps__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          54
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/test/omni-smoke/matrix.ts",
+      "git_blob_sha": "e895c88c28f1abbb8ceac6dbf082cfd101f5257d",
+      "sha256": "dd193f1cdb5b2a49f22b76cdb6b66ce926fbc3c0d06aabeaa1d6dbe10285ea65",
+      "byte_length": 22151,
+      "local_capture_file": "sources/apps/desktop/test/omni-smoke/matrix.ts",
+      "connector_response_file": "captures/apps__desktop__test__omni-smoke__matrix.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/AGENTS.md",
+      "git_blob_sha": "e8a89cb6ab3c95bf256e2226b9e8466f8d934220",
+      "sha256": "9c9edc98255ee4c4a9c96a742df1330eafb7ffc8f9f10bca640f5c6c7abfeaad",
+      "byte_length": 301,
+      "local_capture_file": "sources/apps/web/AGENTS.md",
+      "connector_response_file": "captures/apps__web__AGENTS.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/README.md",
+      "git_blob_sha": "5e685ac4857d022624d22f8c8741f6219490cac7",
+      "sha256": "8eec3b56309076dc5208ea7fe04277703efa524d61378dfb5235540186d3c2f9",
+      "byte_length": 2633,
+      "local_capture_file": "sources/apps/web/README.md",
+      "connector_response_file": "captures/apps__web__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/package.json",
+      "git_blob_sha": "e63f6bb31e454f1cae299f551eea1335b89e7592",
+      "sha256": "9600ebcb94c013599fd8264e213dc53c05bb08bdef1c0d1dee275abcefdfcc38",
+      "byte_length": 575,
+      "local_capture_file": "sources/apps/web/package.json",
+      "connector_response_file": "captures/apps__web__package.json.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/src/entry.tsx",
+      "git_blob_sha": "3b12a89db1e5b83c5692bfcf1482882fab94f7f6",
+      "sha256": "3f9fbf2d2c59b3b203f9cb74a0f9b33c0e24a511b931775b908d76645383aa56",
+      "byte_length": 5096,
+      "local_capture_file": "sources/apps/web/src/entry.tsx",
+      "connector_response_file": "captures/apps__web__src__entry.tsx.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          172
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/vite.config.ts",
+      "git_blob_sha": "31294d71c1bcd2cee8deb7fc78f6f8221ebfca98",
+      "sha256": "e2aa6913a006cfcf52938bcedd4b75f87ec5508326dcd9d65fbc5222cf71d9d3",
+      "byte_length": 1789,
+      "local_capture_file": "sources/apps/web/vite.config.ts",
+      "connector_response_file": "captures/apps__web__vite.config.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/architecture/phase-plans/70-90-briefs/RD-DESKTOP.md",
+      "git_blob_sha": "539608c5a392ae939cf05aaefb27472ea6b1f1fa",
+      "sha256": "ce7b199946c97df0d26a4718de3a1c5007a60b94fa8c4fa7b24e92c3491cc607",
+      "byte_length": 5295,
+      "local_capture_file": "sources/docs/architecture/phase-plans/70-90-briefs/RD-DESKTOP.md",
+      "connector_response_file": "captures/docs__architecture__phase-plans__70-90-briefs__RD-DESKTOP.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/guides/app-error-messages.md",
+      "git_blob_sha": "75b9372308589ef6df1fee86c9052bbb98aafd53",
+      "sha256": "1354c669e749e4898c466c9a86f32ca1d2fbd7186bac73b09a0d6719f8aae3db",
+      "byte_length": 2475,
+      "local_capture_file": "sources/docs/guides/app-error-messages.md",
+      "connector_response_file": "captures/docs__guides__app-error-messages.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/guides/desktop-startup.md",
+      "git_blob_sha": "ec75a75b0a9745fac769e62e578110345a73d287",
+      "sha256": "20ae7aa14d0a8783cd3e16f8025d5956544ca1fe6b1490858ce834de38601d53",
+      "byte_length": 1811,
+      "local_capture_file": "sources/docs/guides/desktop-startup.md",
+      "connector_response_file": "captures/docs__guides__desktop-startup.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/guides/first-run.md",
+      "git_blob_sha": "2faa9516480cf28ea6645ab1d82174fd1e8409cc",
+      "sha256": "754a5641344b133d922bb6e280bc8218b2bfcc3193e701f238b359c5751a18ec",
+      "byte_length": 2238,
+      "local_capture_file": "sources/docs/guides/first-run.md",
+      "connector_response_file": "captures/docs__guides__first-run.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/guides/keep-awake.md",
+      "git_blob_sha": "e637cc97c629e2f7bd5b7afbdfa47db56861caf5",
+      "sha256": "0bf7b167007219a9be13d3517bebc3168ba8061991e8fdf35dd65155aa8c4a32",
+      "byte_length": 689,
+      "local_capture_file": "sources/docs/guides/keep-awake.md",
+      "connector_response_file": "captures/docs__guides__keep-awake.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "earlier_direct_read": false
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "local_capture_file": "sources/packages/app-shell/AGENTS.md",
+      "connector_response_file": "captures/packages__app-shell__AGENTS.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": false,
+      "read_status": "read-in-bounded-selections-or-earlier-direct-read",
+      "selected_line_ranges": [],
+      "earlier_direct_read": true
+    }
+  ],
+  "captured_not_directly_inspected": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/linux-runtime.md",
+      "git_blob_sha": "952ab6fdba8820292a5a26c55702911c969bec16",
+      "sha256": "8cb078e772c8feb3d2804064140386a3342b79278a59074351bbd04675475227",
+      "byte_length": 19344,
+      "local_capture_file": "sources/apps/desktop/docs/linux-runtime.md",
+      "connector_response_file": "captures/apps__desktop__docs__linux-runtime.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/docs/linux-workspace-access.md",
+      "git_blob_sha": "77ed105539b86b62b11eb49bdf6b113bc12312e4",
+      "sha256": "9aee94459f5b4ccd3406d00e6910c62600b8b848a252add3395d864a861761b3",
+      "byte_length": 7219,
+      "local_capture_file": "sources/apps/desktop/docs/linux-workspace-access.md",
+      "connector_response_file": "captures/apps__desktop__docs__linux-workspace-access.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/entitlements.plist",
+      "git_blob_sha": "b61dc0222802fc47dc7d973b8872619839669081",
+      "sha256": "1986abdb18f64373b9de7e67ae6aa19cc12a955d286d8b23bbf49905529cf918",
+      "byte_length": 636,
+      "local_capture_file": "sources/apps/desktop/resources/entitlements.plist",
+      "connector_response_file": "captures/apps__desktop__resources__entitlements.plist.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/bus.py",
+      "git_blob_sha": "1a6c3c9834902f26b03c13c03b82e370e1a77ca3",
+      "sha256": "e2e3afb2e84e26ef9fe62c3905fd71fd163309fe96ef8742449bb946c25a2209",
+      "byte_length": 17526,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/bus.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__bus.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/resources/linux/app-dock-accessibility/keyboard.py",
+      "git_blob_sha": "23fa4df82a6f8ad210a4bf558f72f4f4b9b734bc",
+      "sha256": "5c9414b21098429f9ed9ded813888c2640ecdf870e0d2da0481379a011d23168",
+      "byte_length": 32768,
+      "local_capture_file": "sources/apps/desktop/resources/linux/app-dock-accessibility/keyboard.py",
+      "connector_response_file": "captures/apps__desktop__resources__linux__app-dock-accessibility__keyboard.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/app-dock-native-proof.ts",
+      "git_blob_sha": "d03d1739715bf67eb799b44ceae652749cbf033d",
+      "sha256": "e616859e1bb174e600a555007d266d42fe5e2c685d7fb55f3c0b88fe6f7ace93",
+      "byte_length": 44423,
+      "local_capture_file": "sources/apps/desktop/scripts/app-dock-native-proof.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__app-dock-native-proof.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/app-dock-workspace-proof.ts",
+      "git_blob_sha": "868e7e9ca6f7941703e87c059e8797d646bc1966",
+      "sha256": "b7ba40e1381568ec36e4ef71c0bf482f1483686a4b3a73def021fb75a3a7d225",
+      "byte_length": 59978,
+      "local_capture_file": "sources/apps/desktop/scripts/app-dock-workspace-proof.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__app-dock-workspace-proof.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/cli-packaging.ts",
+      "git_blob_sha": "5b2c17371837a38b5de23914a9e61e8ead3c8608",
+      "sha256": "ba18e596fea13fcc2b95e006552263b53bef7456abd98397e8754c20b1dca881",
+      "byte_length": 1912,
+      "local_capture_file": "sources/apps/desktop/scripts/cli-packaging.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__cli-packaging.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/finalize-latest-yml.ts",
+      "git_blob_sha": "aa8bf7eab28c48c1ae1e255bb45bf8ab2d8af5d0",
+      "sha256": "7d12d2933cbb39f3bf9e100e9ad303c671c8095a22141be75cdcd805feb9aa4e",
+      "byte_length": 5846,
+      "local_capture_file": "sources/apps/desktop/scripts/finalize-latest-yml.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__finalize-latest-yml.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/linux-runtime/README.md",
+      "git_blob_sha": "9d982d13878b521ab956aff4778c2116cf737f51",
+      "sha256": "1d9afc87400ea3d4ee3a44d6c8b1e69ef58391ab19a877d23258282cec308c1e",
+      "byte_length": 3487,
+      "local_capture_file": "sources/apps/desktop/scripts/linux-runtime/README.md",
+      "connector_response_file": "captures/apps__desktop__scripts__linux-runtime__README.md.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/linux-runtime/host.ts",
+      "git_blob_sha": "97a4f5d36e633b96b9d63f323a0450bd59db4054",
+      "sha256": "fdb3bb02ee3623277ada93bcf352ac95aeb16f6185711cf44c26e41f5472aea6",
+      "byte_length": 14725,
+      "local_capture_file": "sources/apps/desktop/scripts/linux-runtime/host.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__linux-runtime__host.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/linux-runtime/index.ts",
+      "git_blob_sha": "d131d470a591cfd12d6aab20b0e7670dda689e69",
+      "sha256": "935eaa8ac65fb0875c9f8c3ee1408d2991fe484abf6ca369ccb172cc25969522",
+      "byte_length": 2746,
+      "local_capture_file": "sources/apps/desktop/scripts/linux-runtime/index.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__linux-runtime__index.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/linux-workspace-cli.ts",
+      "git_blob_sha": "426bf27dbb9d06180d5e164ed07033279fb2d485",
+      "sha256": "09471b41ad683544005eee2143a89528f55e75f78bb525e091915cfa6f6c8b88",
+      "byte_length": 3228,
+      "local_capture_file": "sources/apps/desktop/scripts/linux-workspace-cli.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__linux-workspace-cli.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/resource-paths.ts",
+      "git_blob_sha": "0f7fdda3d1000df99a651c0c54fcecdab36ceb64",
+      "sha256": "5d6d13059c7513022022c44dbe07dba14d7f9d8ff18fa6e7fb9c9b74d3a31611",
+      "byte_length": 674,
+      "local_capture_file": "sources/apps/desktop/scripts/resource-paths.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__resource-paths.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/stage-claude.ts",
+      "git_blob_sha": "16d22b1f992a327cb383f432835e7fd4c8bd7ca7",
+      "sha256": "ea465d07dbb8ba208a9a87d2a69c9af57c0f9fbf4818fa8c4c683deb1757e404",
+      "byte_length": 6400,
+      "local_capture_file": "sources/apps/desktop/scripts/stage-claude.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__stage-claude.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/scripts/stage-omni.ts",
+      "git_blob_sha": "1502fc6a40ab8bfc0f80a098752acdb781ba4411",
+      "sha256": "147e826ebe71a71560cc88bf00700529b5b213c0404961961b077a4f82946f19",
+      "byte_length": 3043,
+      "local_capture_file": "sources/apps/desktop/scripts/stage-omni.ts",
+      "connector_response_file": "captures/apps__desktop__scripts__stage-omni.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-api.ts",
+      "git_blob_sha": "69aaf2da1ff8c614b5c7a1d453dd22a72f697697",
+      "sha256": "193a1b770a81f1c3489a9a621661a97f9da2d7a5522c3848c9e1125bdddc1ec3",
+      "byte_length": 4651,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-api.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-api.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-fullscreen.ts",
+      "git_blob_sha": "6eb40283692303e582c6b2591d24024c27538b5b",
+      "sha256": "6eba9684b6f6259f4aa47ce8401af53c12ecd44c0321cc66d936bc06f89186a3",
+      "byte_length": 10913,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-fullscreen.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-fullscreen.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-input.ts",
+      "git_blob_sha": "efee0bdaf8d71b67d629e8365b2a3357305455c1",
+      "sha256": "ae3e878e7f941529408608d7d497430d66950c1caeb3da0727346af126368ff8",
+      "byte_length": 18961,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-input.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-input.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/app-dock-url-bridge.ts",
+      "git_blob_sha": "5876bc428ce1af9c5b4b83cdf927e11b1a43f023",
+      "sha256": "9bd66a2fac43aa7a4d2f2ad80e2d88a5e69a1e43c86bf9efcef25785c457d999",
+      "byte_length": 2385,
+      "local_capture_file": "sources/apps/desktop/src/main/app-dock-url-bridge.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__app-dock-url-bridge.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/apps.ts",
+      "git_blob_sha": "cca4edea7636054330a521d6692c7bb61995de45",
+      "sha256": "f8bc10fa93e9c79bffbbea5ba6da137d345c38fa040889d39509d3405c59d616",
+      "byte_length": 6531,
+      "local_capture_file": "sources/apps/desktop/src/main/apps.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__apps.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/cli-env.ts",
+      "git_blob_sha": "8764c925bc66d0b976c290a34e4939a96b6e0548",
+      "sha256": "c66e9237b6bc14ad809192ad27af40b9f139676c072f348e8f1b70860b4380cb",
+      "byte_length": 457,
+      "local_capture_file": "sources/apps/desktop/src/main/cli-env.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__cli-env.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/deep-links.ts",
+      "git_blob_sha": "37aa20b971e9d903e3f8717f3fcbdfc3b7e9375f",
+      "sha256": "5688f52182e84846f262222b9ac4c9a242b0e8037d5998ea7d4ab10b3da345a6",
+      "byte_length": 663,
+      "local_capture_file": "sources/apps/desktop/src/main/deep-links.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__deep-links.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/dock-channel.ts",
+      "git_blob_sha": "15287ec0eabd38b1ea411fe344fd2d38b98b921c",
+      "sha256": "6532f96d549551433f21ef386de33e6897e0db89a882cf5f38ed06d34a2e1bb4",
+      "byte_length": 6317,
+      "local_capture_file": "sources/apps/desktop/src/main/dock-channel.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__dock-channel.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/docker-engine.ts",
+      "git_blob_sha": "bcc7d19a4d84a7f9c732deb9677cc611e9a8e4ab",
+      "sha256": "31fb299fe490932c7a017f707703f9942eabc673a11aacef45e48b3f286669a8",
+      "byte_length": 3523,
+      "local_capture_file": "sources/apps/desktop/src/main/docker-engine.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__docker-engine.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/external-url.ts",
+      "git_blob_sha": "9430a791b9ca21eed29243f2c2c8d16c39cbb66b",
+      "sha256": "fa6458cb0552306b5a27c9f9785207b9b4b42d51d9ebbb34d084c89b06a67e3f",
+      "byte_length": 567,
+      "local_capture_file": "sources/apps/desktop/src/main/external-url.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__external-url.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/janitor-ipc.ts",
+      "git_blob_sha": "012348dca649c5607587dcc7eb91858ff3d2b8ed",
+      "sha256": "e63de2e109bfcabac030305da643156ee31fe131dc22dfab6ae3ed28bf55dc57",
+      "byte_length": 5005,
+      "local_capture_file": "sources/apps/desktop/src/main/janitor-ipc.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__janitor-ipc.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-answer.ts",
+      "git_blob_sha": "6412cd2d4850509945ed2bcbc844266a4123e33b",
+      "sha256": "c9ff128803eadc6c11e3fab634307404817883b04cd7b2c8e496064890e0f0b1",
+      "byte_length": 4798,
+      "local_capture_file": "sources/apps/desktop/src/main/live-answer.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-answer.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-frame.ts",
+      "git_blob_sha": "a3babad9c08c3cca4ce1c4bf3ce78656f84f8a3c",
+      "sha256": "dc0900da0efff6417e5646e803b7044145bab54bac377bf4d6485a0ff0cd4226",
+      "byte_length": 1917,
+      "local_capture_file": "sources/apps/desktop/src/main/live-frame.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-frame.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-permissions.ts",
+      "git_blob_sha": "f045ee043f32385cfa12c3c1edf0477ac3278d54",
+      "sha256": "4af9274280a8fe57f2adf354f54d6e64916a2ed74b397d7da37cccac12996088",
+      "byte_length": 1363,
+      "local_capture_file": "sources/apps/desktop/src/main/live-permissions.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-permissions.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/live-segmenter.ts",
+      "git_blob_sha": "455cdda299f98023b15277ec2167e15c27d7af18",
+      "sha256": "c9b2813f0f04f9ef480f1b588613daff9230d0840f36e1fef8d7bfdfdd7e287b",
+      "byte_length": 2585,
+      "local_capture_file": "sources/apps/desktop/src/main/live-segmenter.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__live-segmenter.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/log-redact.ts",
+      "git_blob_sha": "45686e1cd16652d0936437a2eb86f6c0a13ad435",
+      "sha256": "317f9c0f8a03128eddb722501881d69842128214c15d057438e3ba82fce3cf06",
+      "byte_length": 618,
+      "local_capture_file": "sources/apps/desktop/src/main/log-redact.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__log-redact.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/menu.ts",
+      "git_blob_sha": "1abc1454daa265c0f1e695e8b47c169d68c1d851",
+      "sha256": "5a37758babbda80b1a47125309d7cf675227ebcc92d5ee12fb8835c97398462d",
+      "byte_length": 3066,
+      "local_capture_file": "sources/apps/desktop/src/main/menu.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__menu.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/ripgrep-env.ts",
+      "git_blob_sha": "af6a563fc43fd5f702fa0c5e7e80feb661769e44",
+      "sha256": "fc1da3fbe3d8b62ad19ec1c7b021b32fb0e6bf0127e98f59a8ff55a0f0fc8bcb",
+      "byte_length": 767,
+      "local_capture_file": "sources/apps/desktop/src/main/ripgrep-env.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__ripgrep-env.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/store-keys.ts",
+      "git_blob_sha": "3bffb37096837eb9d93bb1b389f765357a8db919",
+      "sha256": "96396a419b4d0502c7664365974e847df7e69162d3486a855dfbd5a0c249c0cf",
+      "byte_length": 702,
+      "local_capture_file": "sources/apps/desktop/src/main/store-keys.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__store-keys.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/unresponsive.ts",
+      "git_blob_sha": "b5778d9e912eb39d552f7214557641b9cacd934a",
+      "sha256": "bd599e3f7a90158eef99b903f85463a89c79ea9956665019cc6a95f8e78b5488",
+      "byte_length": 2188,
+      "local_capture_file": "sources/apps/desktop/src/main/unresponsive.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__unresponsive.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/window-permissions.ts",
+      "git_blob_sha": "a2163acf64f399f2af942a2f5ec619d1c49f83b6",
+      "sha256": "5ba4c24cd2d87e943010d70091bd71cb4adc82559097fadf0dd2e6c97cbad613",
+      "byte_length": 1374,
+      "local_capture_file": "sources/apps/desktop/src/main/window-permissions.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__window-permissions.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/window-recovery.test.ts",
+      "git_blob_sha": "1f179f8887d5684bdb9e3149977e8b520d0e7c70",
+      "sha256": "09ccc0c129e77fc3f3a19b1d79d90d5bd8d5518395f68a77f227326b8557f344",
+      "byte_length": 4541,
+      "local_capture_file": "sources/apps/desktop/src/main/window-recovery.test.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__window-recovery.test.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/window-state.ts",
+      "git_blob_sha": "8e4a9372fc0154c0f1ef54199456f65dabc60bd6",
+      "sha256": "7b9f7c7a8032945dfff91237651e94ba919c3c05971a06cc53f6f0b3fcf2f815",
+      "byte_length": 957,
+      "local_capture_file": "sources/apps/desktop/src/main/window-state.ts",
+      "connector_response_file": "captures/apps__desktop__src__main__window-state.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/preload/types.ts",
+      "git_blob_sha": "77d390ce4c95d9d89c9e0242c4a105222d3cedff",
+      "sha256": "d4f41e0e79b35843c46d2e55f8895b0356cddce84aa57adfc167bc30411fb33e",
+      "byte_length": 11684,
+      "local_capture_file": "sources/apps/desktop/src/preload/types.ts",
+      "connector_response_file": "captures/apps__desktop__src__preload__types.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/onboarding.tsx",
+      "git_blob_sha": "3c7ea567852b25033bf84d2b3e35995b420e52a2",
+      "sha256": "eb677707044229decc33de0ed1168267e3c14c7788091c67cc5f51532da92043",
+      "byte_length": 1583,
+      "local_capture_file": "sources/apps/desktop/src/renderer/onboarding.tsx",
+      "connector_response_file": "captures/apps__desktop__src__renderer__onboarding.tsx.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/renderer/open-path.ts",
+      "git_blob_sha": "abe679fdf1088d2118c42da5fe45336b1a81a287",
+      "sha256": "3f2c3ca185708a46144db9507560c4fa9487f32003e17906b18a5fbf67283992",
+      "byte_length": 555,
+      "local_capture_file": "sources/apps/desktop/src/renderer/open-path.ts",
+      "connector_response_file": "captures/apps__desktop__src__renderer__open-path.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/test/native/contract/replies.json",
+      "git_blob_sha": "a164580fba925a1748c5189310ae58dfea905de5",
+      "sha256": "bea9812e13ce094ad927ec54a873b568ee8511f92f42b2eee1aae287dd1659b9",
+      "byte_length": 455,
+      "local_capture_file": "sources/apps/desktop/test/native/contract/replies.json",
+      "connector_response_file": "captures/apps__desktop__test__native__contract__replies.json.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/test/native/test_runtime_session.py",
+      "git_blob_sha": "bc20ace26e1c4abd3a26d766e7d6ea138042880b",
+      "sha256": "b7491b856010c7fbb504da58a6539e7228de69582638d50fafc7417e6a045477",
+      "byte_length": 52350,
+      "local_capture_file": "sources/apps/desktop/test/native/test_runtime_session.py",
+      "connector_response_file": "captures/apps__desktop__test__native__test_runtime_session.py.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/test/omni-smoke/build.ts",
+      "git_blob_sha": "935642c90bce7be5af2f3e0c1ff766e37c87778c",
+      "sha256": "14d2ccacf2e961dd87ef91c02849294b9f052f917c25fae9f184e3a4a5864946",
+      "byte_length": 8208,
+      "local_capture_file": "sources/apps/desktop/test/omni-smoke/build.ts",
+      "connector_response_file": "captures/apps__desktop__test__omni-smoke__build.ts.json",
+      "git_blob_sha_verified": true,
+      "assigned_population": true,
+      "read_status": "captured-but-not-used-as-direct-inspection"
+    }
+  ],
+  "capture_errors": [
+    {
+      "path": "apps/desktop/src/renderer/i18n/pt.ts",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "GitHub API error 404: {\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/repos/contents#get-repository-content\",\"status\":\"404\"}"
+          }
+        ],
+        "structuredContent": {
+          "error": "GitHub API error 404: {\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/repos/contents#get-repository-content\",\"status\":\"404\"}",
+          "error_code": "NOT_FOUND",
+          "error_data": {
+            "message": "Not Found",
+            "documentation_url": "https://docs.github.com/rest/repos/contents#get-repository-content",
+            "status": "404"
+          }
+        },
+        "isError": true
+      }
+    }
+  ],
+  "unsuccessful_lookup_note": "One extra lookup of apps/desktop/src/renderer/i18n/pt.ts returned an error. That path is not in the assigned population; the actual locale index imports br.ts. Its error response is retained without fabricating source bytes.",
+  "verified_capture_count": 193,
+  "read_source_count": 148,
+  "captured_not_directly_inspected_count": 45
+}

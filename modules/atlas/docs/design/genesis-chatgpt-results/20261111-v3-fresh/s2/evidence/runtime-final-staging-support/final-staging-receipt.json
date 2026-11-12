@@ -1,0 +1,63 @@
+{
+  "schema": "genesis-s2-final-staging-support-receipt/v1",
+  "recorded_at": "2026-11-11T19:10:10.263268+00:00",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "scope": "deterministic-support-only",
+  "audited_package_sha256": "32b6cba13b3f4c5c6bb3e068ddda2c2aa41fcacab7883da51ee6255f07ce0270",
+  "utility_sha256": "7444339116752f208b0043c99e0b6ee52d3a13bf90ccc6887bc993c3dc46d2d8",
+  "inventory_exit_code": 0,
+  "files_resolved": 1315,
+  "materialized_originals_preserved": 641,
+  "reference_errors": [],
+  "additional_public_read_only_captures": [],
+  "runtime_compatibility": "HOLD_KNOWN_R1_INPUT_LIMIT",
+  "staging_executed": false,
+  "prepare_executed": false,
+  "cas_created": false,
+  "tests_executed": false,
+  "remote_writes": false,
+  "semantic_authoring_or_judgment": false,
+  "implementation_verification": "AST parse and actual read-only inventory; --apply intentionally unexecuted",
+  "artifacts": [
+    {
+      "path": "assembly-tools/stage_final_native.py",
+      "sha256": "7444339116752f208b0043c99e0b6ee52d3a13bf90ccc6887bc993c3dc46d2d8",
+      "byte_length": 30238
+    },
+    {
+      "path": "assembly-tools/final_staging.md",
+      "sha256": "1aa3c25adba557b55b1fce3b3d196d4d2c0480381ae61dcc89cce5d250e197c4",
+      "byte_length": 7570
+    },
+    {
+      "path": "assembly-tools/final-staging-request.md",
+      "sha256": "dec183c5b552c8c8400246de02979ff9c54390202e619d65e0a1606d1b83f5e5",
+      "byte_length": 2254
+    },
+    {
+      "path": "assembly-tools/final-staging-report.md",
+      "sha256": "39e91c612a2d65eb19df52207e31c0694bf2908a6a13b07106904e11b4485001",
+      "byte_length": 2692
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/command.json",
+      "sha256": "0f2e68a15eb6f30b6c881742d74f7b8a636f91b78f75bc018612539e9f96f689",
+      "byte_length": 815
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/inventory/staging-plan.json",
+      "sha256": "79d93df51807e8268d7133bffb27d2aaea4a5f6c15aaf276f3df7028a134d36a",
+      "byte_length": 2690668
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/inventory/prepare-request.json",
+      "sha256": "ebc6522f03eb0a5484d2a1e87c52af13182354507ad323863adaedbd8487b221",
+      "byte_length": 1597
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/prepare-execution-receipt-template.json",
+      "sha256": "23b02928a10beb09c7173531313fd9ce0afcb2ea21675f1708c4df65d061c909",
+      "byte_length": 1143
+    }
+  ]
+}

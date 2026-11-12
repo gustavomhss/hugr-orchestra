@@ -1,0 +1,239 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "unit": "s2.l4.design-tui",
+  "capture_indexes": [
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea",
+      "record_field": "captures"
+    },
+    {
+      "path": "producers/desktop-web/sources.json",
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8",
+      "record_field": "sources"
+    }
+  ],
+  "scope_note": "Only 12 directly used captured files are listed. Each complete capture was verified for Git blob SHA, SHA256 and length; semantic use is limited to the recorded ranges. TUI/UI/Storybook package scripts were inspected in bounded sections, with Storybook scripts reread completely after an earlier output truncation; no complete UI package inspection is claimed. Accepted L3 factual support is bound separately by dependencies.json. Captured maintenance skills are attributed instructions, not implementation/runtime verification; their external references were not fetched. No new source retrieval occurred.",
+  "sources": [
+    {
+      "id": "S01",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "capture_path": "producers/design-tui/sources/AGENTS.md",
+      "connector_response_path": "producers/design-tui/captures/AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 4
+        },
+        {
+          "start": 156,
+          "end": 167
+        },
+        {
+          "start": 207,
+          "end": 218
+        }
+      ],
+      "used_for": "Attributed public API/client-generation and runtime-dependency directions, exact CI-only product-test route and admission/execution/recovery limits."
+    },
+    {
+      "id": "S02",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/AGENTS.md",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769",
+      "byte_length": 2160,
+      "capture_path": "producers/design-tui/sources/packages/ui/AGENTS.md",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 10
+        }
+      ],
+      "used_for": "Attributed i18n keys/copy preservation, complete phrases, corpus verification and uncertainty obligations."
+    },
+    {
+      "id": "S03",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "capture_path": "producers/desktop-web/sources/packages/app-shell/AGENTS.md",
+      "connector_response_path": "producers/desktop-web/captures/packages__app-shell__AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 49
+        }
+      ],
+      "used_for": "Attributed benchmark requirement, prohibition on restarting app/server, typed language API ownership and localization review obligations."
+    },
+    {
+      "id": "S04",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/AGENTS.md",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "byte_length": 2801,
+      "capture_path": "producers/desktop-web/sources/apps/desktop/AGENTS.md",
+      "connector_response_path": "producers/desktop-web/captures/apps__desktop__AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 14
+        }
+      ],
+      "used_for": "Attributed preload/main registration and shared typed native-copy contract; no claim of universal implementation compliance."
+    },
+    {
+      "id": "S05",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173",
+      "byte_length": 4098,
+      "capture_path": "producers/design-tui/sources/.orchestra/skills/rtl-aware-development/SKILL.md",
+      "connector_response_path": "producers/design-tui/captures/.orchestra__skills__rtl-aware-development__SKILL.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 63
+        }
+      ],
+      "used_for": "Attributed direction-independent language, semantic DOM/logical layout and behavior verification matrix. External reference URLs were not followed."
+    },
+    {
+      "id": "S06",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/app-log-hygiene/SKILL.md",
+      "git_blob_sha": "685932db1df51c87be9e7174bbfe940a18c03a8c",
+      "sha256": "3a0fbf9ea92160cdd95eef1bdd445f6ea5fa68c7cacc59ad582761c0c64bc93d",
+      "byte_length": 3153,
+      "capture_path": "producers/desktop-web/sources/.orchestra/skills/app-log-hygiene/SKILL.md",
+      "connector_response_path": "producers/desktop-web/captures/.orchestra__skills__app-log-hygiene__SKILL.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 20
+        }
+      ],
+      "used_for": "Attributed diagnostic policy for immutable log evidence, describeError, frame resize observer, cleanup, rejection listeners and noise at its source. Helper implementations were not newly inspected."
+    },
+    {
+      "id": "S07",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/package.json",
+      "git_blob_sha": "154841de35b0368de58b0a573eaa2feee6da71f9",
+      "sha256": "38d10bd45fccfbc00c8e296eb6d4e0e324fc592dc3ea8b7e8075798573a59786",
+      "byte_length": 2717,
+      "capture_path": "producers/design-tui/sources/packages/tui/package.json",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__package.json.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 11
+        }
+      ],
+      "used_for": "Exact owning package and declared typecheck script tsgo --noEmit; local test script declaration is not permission to execute product tests."
+    },
+    {
+      "id": "S08",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/package.json",
+      "git_blob_sha": "15d012e5d16c1d7bd545e3b9e63a5ca41a8b771b",
+      "sha256": "fc3b68411a620337819460e2cd860a74781c9a1ea9e502eb81e20051d9dbffb7",
+      "byte_length": 10222,
+      "capture_path": "producers/design-tui/sources/packages/ui/package.json",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__package.json.json",
+      "inspected_line_ranges": [
+        {
+          "start": 196,
+          "end": 203
+        }
+      ],
+      "used_for": "Exact typecheck/build/generate script names and commands, including declaration build and the two independent token generators."
+    },
+    {
+      "id": "S09",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/package.json",
+      "git_blob_sha": "61a8b2cfa27ff15cc6a5bf113273fa6cb67ae98c",
+      "sha256": "9d3733d450e5e381b5e81c61034f27be017a053389a89214a78784495d529ec3",
+      "byte_length": 918,
+      "capture_path": "producers/design-tui/sources/apps/storybook/package.json",
+      "connector_response_path": "producers/design-tui/captures/apps__storybook__package.json.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 31
+        }
+      ],
+      "used_for": "Exact development/build scripts and absence of a declared typecheck script; no build or Storybook execution."
+    },
+    {
+      "id": "S10",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/component/prompt/index.tsx",
+      "git_blob_sha": "6cd7cc1bd79c141c2c821853a688438396fd1b80",
+      "sha256": "422c51904f556d388b4678ba0220b24b2c8618426ea83658102ec2fce03cd76f",
+      "byte_length": 56161,
+      "capture_path": "producers/design-tui/sources/packages/tui/src/component/prompt/index.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__src__component__prompt__index.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 919,
+          "end": 965
+        },
+        {
+          "start": 1039,
+          "end": 1089
+        }
+      ],
+      "used_for": "Precise composer edit owner; guarded submit entry and asynchronous prompt/history/input-clearing boundary corroborating accepted L3."
+    },
+    {
+      "id": "S11",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/config/index.tsx",
+      "git_blob_sha": "de463aa8b09ae8958d06f5de61c55d15b6df5c35",
+      "sha256": "759376006b5a391735829649abc30a0270cd81a02f8090e9eb5c0119f332ec51",
+      "byte_length": 6007,
+      "capture_path": "producers/design-tui/sources/packages/tui/src/config/index.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__src__config__index.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 80
+        }
+      ],
+      "used_for": "Precise TuiConfig.Info declaration owner and configuration schema type boundary for maintenance."
+    },
+    {
+      "id": "S12",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/script/schema-files.ts",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3",
+      "byte_length": 3409,
+      "capture_path": "producers/design-tui/sources/apps/cli/script/schema-files.ts",
+      "connector_response_path": "producers/design-tui/captures/apps__cli__script__schema-files.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 20
+        },
+        {
+          "start": 68,
+          "end": 80
+        }
+      ],
+      "used_for": "TUI config import and three schema outputs; TUI/config generation versus handwritten desktop-theme mirroring."
+    }
+  ]
+}

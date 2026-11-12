@@ -1,0 +1,16 @@
+# Pedido recebido
+
+Execute infraestrutura independente da retomada Genesis S2, sem produzir conhecimento L2–L4, revisar ou fazer escrita remota. Workspace exclusivo /workspace/scratch/7b5d6430f420/genesis-s2/runtime-work. Leia protocol/references/runtime.md, transport.md, judging.md e /workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/AGENTS.md. Execução 46d09d97-39a9-482a-a290-646ba1d94c99, repo gustavomhss/hugr-orchestra, baseline1cde2ff7a71bcf7aecb5d030917b577165135d38. Release S4 já observado em commit b42d14978c8b727310369920d4bfaf86145a2b80, arquivo modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json, candidato e3a8ab8cf56dbff1ee91272df51ffa398d882aa1. Por GitHub connector somente, confirme bytes/pins e materialize versão exata mínima do runtime para futura execução S2. Pode reutilizar caches locais SOMENTE leitura e verificar hashes contra objetos GitHub; /workspace/scratch/aff930d22ec7/s4/candidate contém módulos/atlas e node_modules, mas pode ter deltas não commitados, nunca presumir igualdade. /workspace/scratch/af8342ed59b1/orchestra tem git parcial com commit real baseline mas blobs ausentes; não afirmar checkout completo. Não modificar áreas alheias, não compartilhar .atlas/CAS/store. Monte fonte S2 isolada a partir de sources.json dos três produtores (640 captures); rejeite conflitos, confira blobs/SHA256. Pacote permanece semântico pendente, não publique nem invente reviews. Identifique operação prepare e eventuais erros estruturais de native-package atual (sem apagar fontes para passar), em particular schema/tui.json1131057 bytes vs observador256000; estudar solução mínima de uso compatível/feedback a S4 sem editar runtime fora da fatia. Entregue report.md, receipt.json e lista de comandos necessários/limites. Product tests exclusivamente Actions; build/executar operações reais de preparação é permitido após pacote aceito, ainda não execute prepare pendente. Sem gh/login/tokens, sem chamadas externas pagas, sem instalação não permitida, sem testar diretamente fornecedor. Não ler oracles reservados.
+
+## Complemento recebido
+
+Preserve também o texto integral do pedido recebido em request.md da sua área e a resposta pública final em response.md, sem raciocínio privado. Não use ferramentas de escrita remota: a revisão automática recusou anexar ZIPs à branch por suposto risco de divulgação; estou examinando uma alternativa mais segura com artefatos textuais e refs ao fonte público já existente. Isso não bloqueia materialização/leitura local.
+
+## Orientação de encerramento recebida
+
+Termine report/receipt e resposta final assim que materialização prevista estiver verificada; não espere pacote ou faça trabalho opcional. Precisamos liberar slot para juízes. Detalhe só limitações realmente existentes. A principal já corrigiu o formato evidence como stringsJSONcanônicas e recipefileeminput_keys, mantendo fontes e corpo; arquivo atual mudou após sua auditoria. Preserve seu snapshot/hash auditado original. Retomaremos se necessário.
+
+## Localização do snapshot indicada pela principal
+
+Snapshot original exato disponível em /workspace/scratch/7b5d6430f420/genesis-s2/deliverable/history/native-package-l1-r1.json, SHA256 d0bf942... confirmado antes da transformação pela principal. Pode copiar/verificar para seu registro e finalizar.
+

@@ -1,0 +1,233 @@
+{
+  "classification": "Observed tool results only; no judge replies were read and no semantic outcome is inferred.",
+  "observations": [
+    {
+      "native_send_order_within_design": 1,
+      "manifest_orders": [
+        1
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 2,
+      "manifest_orders": [
+        1
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 3,
+      "manifest_orders": [
+        2
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 4,
+      "manifest_orders": [
+        2
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 5,
+      "manifest_orders": [
+        3
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 6,
+      "manifest_orders": [
+        3
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 7,
+      "manifest_orders": [
+        4
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 8,
+      "manifest_orders": [
+        4
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 9,
+      "manifest_orders": [
+        5
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 10,
+      "manifest_orders": [
+        5
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 11,
+      "manifest_orders": [
+        6
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 12,
+      "manifest_orders": [
+        6
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 13,
+      "manifest_orders": [
+        7,
+        8
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 14,
+      "manifest_orders": [
+        7,
+        8
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 15,
+      "manifest_orders": [
+        9,
+        10
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 16,
+      "manifest_orders": [
+        9,
+        10
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 17,
+      "manifest_orders": [
+        11,
+        12
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 18,
+      "manifest_orders": [
+        11,
+        12
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 19,
+      "manifest_orders": [
+        13,
+        14
+      ],
+      "target": "/root/s2_resume_j1",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    },
+    {
+      "native_send_order_within_design": 20,
+      "manifest_orders": [
+        13,
+        14
+      ],
+      "target": "/root/s2_resume_j2",
+      "native_tool": "collaboration.send_message",
+      "observed_result": "returned without visible error; empty tool response",
+      "request_record": "local reconstruction of issued visible text, not a host serialization capture",
+      "seal_or_judgment_requested": false
+    }
+  ]
+}

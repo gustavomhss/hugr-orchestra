@@ -1,0 +1,57 @@
+{
+  "unit": "s2.l3.app-session",
+  "build": [
+    "s2.l2.app-session",
+    "s2.l2.desktop-web",
+    "s2.l2.design-tui",
+    "s2.l1.app-session"
+  ],
+  "navigation": [
+    "s2.l3.desktop-web",
+    "s2.l3.design-tui"
+  ],
+  "rationale": {
+    "s2.l2.app-session": "Primary factual predecessor: composition, credential/generation ownership, admission and draft handoff, stream/canonical recovery, requests/terminals, settings/Skills, rendering and maintenance limits. L3 relates those accepted local mechanisms into user journeys; it does not enlarge the family audit.",
+    "s2.l2.desktop-web": "Actual cross-unit evidence for Electron-main readiness before renderer publication, host/preload trust boundaries, stored-remote fallback, stable-exit restart discrepancy, and native SQLite draft persistence. These facts are used in entry and draft journeys, not merely linked for navigation.",
+    "s2.l2.design-tui": "Actual cross-unit evidence for shared UI caller/dialog lifetimes, locale versus layout direction, segmented-control direction limit, browser-theme preview ownership, and generated-output boundaries. No TUI runtime or pending L3 account is used as evidence.",
+    "s2.l1.app-session": "Directly consumes Assets, localization and verification evidence for exact existing test paths/assertion scopes and performance-test exclusion. Those source-backed observations provide proposed verification routes; no product test was run.",
+    "s2.l3.desktop-web": "Optional next consultation for the separate desktop/host journey. Its eventual body is not a factual input, accepted predecessor or build edge here.",
+    "s2.l3.design-tui": "Optional next consultation for the separate TUI/shared-design journey. Its eventual body is not a factual input, accepted predecessor or build edge here."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l2.app-session",
+      "body_path": "layers/l2/app-session/body.md",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_path": "layers/l2/desktop-web/body.md",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "byte_length": 18440
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_path": "layers/l2/design-tui/body.md",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "byte_length": 21535
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_path": "layers/l1/app-session/l1.md",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047
+    }
+  ]
+}

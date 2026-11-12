@@ -1,0 +1,197 @@
+- Use locator actions, Playwright auto-waiting, and web-first assertions for observable readiness and outcomes.
+- NEVER use `waitForTimeout`, `setTimeout`, sleeps, animation-frame counts, or other wall-clock delays to synchronize a test. Wait for the specific UI state, request, response, event, or application outcome instead.
+- Do not treat navigation, a network response, DOM attachment, or visibility alone as proof that asynchronously rendered UI is ready. Assert the state the next action actually requires.
+- Register event and network waits before the action that triggers them.
+- Do not retry state-changing actions. Retry idempotent readiness checks, then perform the action once and assert its outcome.
+- Keep action and assertion timeouts adaptive. Do not use short timeouts as readiness probes or rely on retries to hide flakes.
+- Assert exact outcomes and identities so stale state, duplicate rendering, and interactions with the wrong element cannot pass.
+```
+
+### E06: packages/app-shell/e2e/performance/AGENTS.md:7–13
+
+Attributed serial production diagnostics, lossless data, completion-only assertions and separate normal discovery.
+
+Excerpt SHA256 `0661dc69d3758c808adeeae64ecb2778d50cc9fe8b6126f3fb4c9db8de709879`; 406 bytes.
+
+```text
+- Run benchmarks serially to avoid cross-test contention.
+- Run benchmarks against production builds.
+- Keep detailed profiling opt-in when it changes workload behavior.
+- Preserve raw diagnostic data or use lossless representations.
+- Do not enforce machine-dependent performance thresholds.
+- Assert scenario completion and metric collection only.
+- Keep normal test discovery free of manual benchmarks.
+```
+
+### E07: packages/schema/AGENTS.md:71–83
+
+Attributed ID-compatibility and focused contract-change obligations; no migration or contract change was implemented.
+
+Excerpt SHA256 `d3e76e4d2c54c7946f299c54bff9ce700406523f339504bb95ae4eb2115e66ae`; 1090 bytes.
+
+```text
+## IDs And Identifiers
+
+- Current ID constructors expose `create()`.
+- Directional constructors such as `ascending()` or `descending()` remain only where ordering semantics are part of the public contract or compatibility requires the old method.
+- New generated ID schemas must validate exactly the prefix they emit, including the underscore.
+- Do not tighten legacy loose ID validators without an explicit compatibility and migration decision; existing callers and tests may rely on accepted non-canonical IDs.
+- Reusable exported public schemas get stable, domain-qualified identifiers such as `Model.Ref` or `Agent.Color`.
+- Public schema identifiers and brands must be unique and stable. Private one-use nested schemas may remain anonymous.
+
+## Tests For Contract Changes
+
+- Add focused tests when changing contract behavior or generated surface.
+- Cover optional properties omitting `undefined`, no accidental current-contract `Schema.Any`, stable and unique public identifiers, exact facade/schema identity, and current Protocol manifests holding only events a current client needs.
+```
+
+### E08: AGENTS.md:146–154
+
+Attributed shipped versus repository-only knowledge and user-guide update boundary.
+
+Excerpt SHA256 `8fa4debd4f7a4a28198b8620029467c1cd1f107c3645ff0157969b637a752721`; 1131 bytes.
+
+```text
+## What Ships and What Stays in the Repo
+
+The release carries only what someone who installs and uses Orchestra needs. Material for people who change the code stays in the repository.
+
+- Ships: compiled code, including seat prompts (`modules/maestro/coordination/src/seats/prompt/*.txt`); the skill trees a seat lists in `seat.skills` (`Seats.skillSource`, embedded at build time by `modules/maestro/coordination/src/seat-skills-module.ts`); Maestro playbooks (`modules/maestro/coordination/playbooks`), including the Orchestra guide under `maestro-orchestra`; the `extraResources` in `apps/desktop/electron-builder.config.ts`; the CLI package's `bin`.
+- Repo-only: `.orchestra/skills/*` (maintenance, ownership and contributor usage skills, seen only when this repository is the open project), `docs/` (specs and guides), and this file.
+- Knowledge an agent needs at runtime goes in its prompt or a shipped seat skill, never only in `.orchestra/skills`.
+- Never add a maintenance or ownership skill to a seat's `skills`.
+- `docs/guides` is written for users but is not published yet; a user-facing change still updates its guide.
+```
+
+### E09: packages/app-shell/package.json:21–21
+
+New declared-script precision: app typecheck uses tsgo -b; not an executed result.
+
+Excerpt SHA256 `fa3986ff4e93993a5e0e06eef16fd397b6103c3bbcf6323b83bd277b131cf175`; 28 bytes.
+
+```text
+    "typecheck": "tsgo -b",
+```
+
+### E10: packages/session-ui/package.json:44–44
+
+New declared-script precision: session-UI typecheck uses tsgo --noEmit; not an executed result.
+
+Excerpt SHA256 `f97ed21fa3b73e2720ba13fe9eaeaa0ab62caefe17c8c82315c60fb679bad42e`; 34 bytes.
+
+```text
+    "typecheck": "tsgo --noEmit",
+```
+
+### E11: packages/app-shell/package.json:33–33
+
+New declared-script precision: the manual benchmark includes Bun test and Playwright execution, so manual classification alone does not establish permission to execute it here.
+
+Excerpt SHA256 `9c509385d8b8f9aef2619be36d46a719a0ed5ec3b93d9582013fe20057e0c604`; 117 bytes.
+
+```text
+    "test:bench": "bun test ./e2e/performance/unit && playwright test --config e2e/performance/playwright.config.ts"
+```
+
+### E12: .orchestra/skills/agent-screen-maintenance/SKILL.md:32–41
+
+Attributed deferred Atlas loading, stable seat IDs, secret-free presentation, localization and protocol-generation obligations.
+
+Excerpt SHA256 `dcf279f4d9867db199a547e92e3740cb07e4e670457c77aee82eec02105a3d5d`; 835 bytes.
+
+```text
+- Loading: the roster paints as soon as `agents.list` resolves. The Atlas snapshot (`["agent-atlas", directory]` in `agents.tsx`) is the only source of per-agent memory counts and is large, so its query is enabled after the first paint, never alongside the list. Keep new detail reads out of the list's critical path the same way.
+
+## Invariants
+
+- Code, tests and copy refer to a seat by id or role, never a default display name.
+- The screen never shows secrets: the prompt is the agent's own text, and engine rows show only manifest fields and
+  install status.
+- Every label goes through `language.t`; the agent chapter's keys exist in every locale it ships.
+- The roster's skill count is the tab's row count: roots plus catalog skills, never every node.
+- After changing the protocol, run `bun run generate` in `packages/client`.
+```
+
+## Preserved limits and unexecuted work
+
+Accepted representative coverage remains representative. Preserve admission ambiguity and unsent edits, bounded SSE without replay, local receipt versus canonical policy provenance, non-atomic TUI calls, desktop/WSL health differences and stable-exit restart discrepancy, native/browser durability differences, partial IPC evidence, request UI versus authorization, terminal buffer growth, uninspected SkillV2 filesystem enforcement and visual/translation/asset limits. Root test:ci package-selector implementation was not inspected, so the official <package> placeholder is retained rather than inventing an alias. A permitted benchmark execution route remains to be established before a future session/timeline change claims that gate; its manual script includes product tests. No current permission or execution is inferred from repository commands.
+
+No product tests, typecheck, guards, benchmark, generation, browser/desktop/terminal session, native/provider calls, source changes, remote writes or CI ran. No new remote source was fetched. No private oracle/judgment/closure material, review packets or transport receipts were read during this L4 authoring. No judge contact, agent inventory or additional subagent occurred.
+
+
+## Exact dependency rationale
+```json
+{
+  "unit": "s2.l4.app-session",
+  "build": [
+    "s2.l3.app-session",
+    "s2.l3.desktop-web",
+    "s2.l3.design-tui",
+    "s2.l2.app-session",
+    "s2.l1.app-session"
+  ],
+  "navigation": [
+    "s2.l4.desktop-web",
+    "s2.l4.design-tui",
+    "s2.l4.entry"
+  ],
+  "rationale": {
+    "s2.l3.app-session": "Build: primary accepted journey evidence for retained identities, first-send/admission, canonical recovery, requests/terminal, Skills and rendering failure/stop boundaries.",
+    "s2.l3.desktop-web": "Build: actual host facts used for startup/health, WSL distinction, remote fallback and stable-exit discrepancy; owner handoffs and remaining host evidence bound app-side diagnosis.",
+    "s2.l3.design-tui": "Build: actual TUI ordered/non-atomic prompt/retry compatibility and distinct generated-presentation consumer chains; shared UI ownership/verification limits prevent app overreach.",
+    "s2.l2.app-session": "Build: settings controller ownership, current feature boundaries and verification-depth limits directly referenced in the maintenance map.",
+    "s2.l1.app-session": "Build: concrete request/terminal/rendering source ownership, palette producer chain and exact existing test/benchmark assertion scopes.",
+    "s2.l4.desktop-web": "Navigation only: separate host maintenance protocol under common declared headings; no pending sibling prose used as evidence.",
+    "s2.l4.design-tui": "Navigation only: separate terminal/shared-design maintenance protocol under common declared headings; no pending sibling prose used as evidence.",
+    "s2.l4.entry": "Navigation only: compact cross-unit reading map; the separately authored entry is not a factual input to this unit."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l3.app-session",
+      "body_path": "layers/l3/app-session/body.md",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "body_path": "layers/l3/desktop-web/body.md",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_path": "layers/l3/design-tui/body.md",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_path": "layers/l2/app-session/body.md",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_path": "layers/l1/app-session/l1.md",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047
+    }
+  ],
+  "same_layer_factual_inputs": []
+}
+
+```

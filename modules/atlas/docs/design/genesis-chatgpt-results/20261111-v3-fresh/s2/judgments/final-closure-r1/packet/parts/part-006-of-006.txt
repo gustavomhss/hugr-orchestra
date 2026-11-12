@@ -1,0 +1,171 @@
+GENESIS S2 FINAL CLOSURE — LITERAL PART 000006/000006
+packet_sha256=069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410
+payload_bytes=000000008807; payload_sha256=9f3e150c601a1e8b7fcec4ff7aeb55cae1d1958fab82b6a3ffc101ac53412f79
+Transport only. No tools. Await the principal's separate seal/request before judging.
+--- EXACT PAYLOAD SEGMENT FOLLOWS ---
+"bd85a37e17ffa9c8d0f0ea1fa1e7dd4a688b1c29a100b24609eb37c084b92dc3"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/history/late-original-app-transport/continuation-copy-receipt.json",
+        "byte_length": 9899,
+        "sha256": "903fe7634fe0384704acb4338524e036c71a6124f01fc18b788e974604a7f26e"
+      }
+    ],
+    "scope": "The existing receipt verifies all 1231 initial files. This renderer binds its archive/override bytes; late transport information is not old semantic acceptance."
+  },
+  "accounting": {
+    "ledger": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/history/ledger-at-final-closure-review.jsonl",
+      "byte_length": 41884,
+      "sha256": "45a3d4abb9ba101af7e739ff17071b9b176f16c4704b958c5506474c32c22450"
+    },
+    "visible_ledger_rows": 79,
+    "event_counts": {
+      "ALL13_ACCEPTED_AND_ONE_NATIVE_PREPARE_FAILED": 1,
+      "BOUNDED_OBSERVABLE_USAGE_RECONCILED": 1,
+      "FINAL_RENDER_REFUSAL_RESOLVED": 1,
+      "L4_ENTRY_R2_ACTUAL_REVIEW_ACTIVATIONS_ACCOUNTED": 1,
+      "L4_ENTRY_R2_ACTUAL_TRANSPORT_ACCOUNTED": 1,
+      "L4_ENTRY_R2_INTEGRATED_AND_REVIEW_TRANSPORT_REQUESTED": 1,
+      "actual_ci_final_readbacks": 1,
+      "app_l1_correction_dispatch": 1,
+      "app_r3_integrated_and_delta_transport_dispatched": 1,
+      "authorized_resume": 1,
+      "auto_review_rejection": 2,
+      "bootstrap": 1,
+      "bounded_transport_dispatch": 3,
+      "correction_dispatch": 1,
+      "dispatch": 5,
+      "freeze": 1,
+      "incidental_completed_judge_response_exposure": 1,
+      "judge_decisions": 1,
+      "judge_dispatch_failed": 1,
+      "judge_evaluation_dispatch": 7,
+      "l1_r2_transport_completed": 1,
+      "l2_all_units_mechanically_integrated": 1,
+      "l2_producer_dispatches": 1,
+      "l2_r1_transport_completed": 1,
+      "l3_all_units_mechanically_integrated": 1,
+      "l3_design_r2_actual_transport_preserved": 1,
+      "l3_design_r2_integrated_and_review_packet_frozen": 1,
+      "l3_producer_dispatch": 1,
+      "l3_producer_dispatches": 1,
+      "l3_r1_transport_completed": 1,
+      "l3_same_pair_decisions_and_correction_dispatch": 1,
+      "l4_actual_transport_preserved_and_seal_prepared": 1,
+      "l4_app_and_entry_integrated_frozen_transport_dispatched": 1,
+      "l4_design_integrated_frozen_and_transport_dispatched": 1,
+      "l4_desktop_integrated_frozen_and_transport_dispatched": 1,
+      "l4_native_production_dispatched": 1,
+      "l4_same_pair_decisions_preserved_and_entry_correction_dispatched": 1,
+      "late_original_transport_receipt_preserved": 1,
+      "native_followup_capacity_failure": 1,
+      "native_prepare_provenance_preparation": 1,
+      "persistent_judge_ready": 2,
+      "preproduction_contract_freeze": 1,
+      "principal_mechanical_verification": 1,
+      "producer_correction_complete": 1,
+      "production_return": 3,
+      "resume_judge_dispatch": 2,
+      "runtime_build_complete": 1,
+      "runtime_preparation_followup": 1,
+      "s4_new_release_discovered": 1,
+      "s4_post_l3_pinned_discovery_recheck": 1,
+      "s4_r3_independent_support_audit_completed": 1,
+      "same_pair_actual_decision_preserved": 1,
+      "same_pair_l3_complete_acceptance": 1,
+      "semantic_layer_accepted": 2,
+      "semantic_unit_decisions": 1,
+      "shared_ci_readback": 1,
+      "staging_reference_inspection_and_bounded_diagnostic": 1,
+      "transport_complete": 1,
+      "transport_continuation": 1,
+      "transport_dispatch": 1,
+      "uncertain_transport_acknowledgment_reconciliation_dispatched": 1
+    },
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN",
+    "historical_accounting": "GLOBAL_UNRECONCILED",
+    "historical_owner": "ROOT",
+    "limit": "Visible event counts are not provider attempts, token usage, dollars, a hard adapter guarantee or current agent liveness."
+  }
+}
+
+----- END SECTION CONTENT -----
+
+===== 13 PINNED LOCAL COMPLETION PROTOCOL =====
+content_bytes=4497; content_sha256=087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/completion.md; source_sha256=087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd
+----- EXACT SECTION CONTENT -----
+# Conclusão: entregar tudo da fatia
+
+Os [axiomas e critérios](principles.md) orientam a execução. Esta lista estabelece
+a auditoria final, sem exigir uma pilha de documentos antes da primeira produção.
+
+## Critério de entrega local
+
+Declarar `DELIVERY_COMPLETE` somente quando todos estes pontos tiverem evidência:
+
+1. Toda a população atribuída está classificada e suas necessidades obrigatórias atendidas; nenhuma exclusão silenciosa.
+2. Todos os artefatos L1–L4 necessários foram realmente produzidos, são úteis e têm fonte, autoria e dependências exatas.
+3. Os dois juízes persistentes cobriram o pacote final e seus critérios; correções obrigatórias foram resolvidas e reavaliadas.
+4. Código estritamente necessário de responsabilidade da fatia foi aplicado e verificado no candidato correto; proposta sozinha não basta.
+5. Importação, leitura e consumidores próprios exigidos foram executados; provas comuns reutilizadas têm vínculo válido com S4.
+6. Casos de manutenção e gates atribuídos foram cumpridos; nenhum teste/CI não executado aparece aprovado.
+7. Uso novo, reservas e limitações observáveis estão registrados; histórico desconhecido não foi zerado.
+8. Matriz final de critérios, artefatos, decisões e recibos estão completos, commitados, selados e relidos no GitHub.
+
+Não repetir a suíte comum de S4 cinco vezes. Aplicar a matriz de [campaign.md](campaign.md):
+cada domínio prova seus casos e consome as provas comuns compatíveis; ROOT prova a união.
+Falta de reader, consumidor, revisão ou gate próprio não pode ser transferida para ROOT.
+
+## Axiomas orientam; evidência decide a conclusão
+
+Uma matriz de aceitação basta: critério/obrigação, estado local, evidência/juízos e
+complemento exclusivamente global. Preservar os 50 IDs do [registro](criteria.json),
+agrupando referências quando útil. Não criar 50 documentos ou repetir leis em cada WP.
+PASS local não fecha a união. N/A exige razão real de escopo e revisão; não significa
+que a ferramenta faltou ou que houve pouco tempo. Obrigações globais nomeiam ROOT.
+
+Aceite humano, landing, ativação em produção e gates da união são etapas globais,
+não pré-requisitos artificiais para a entrega local completa. A fonte normativa
+continua exigindo-os para conclusão global; não autoatribuir aceite do dono.
+
+## Não encerrar prematuramente
+
+Delegar, abrir fila, preparar ambiente, produzir propostas, completar um lote,
+receber dois pareceres parciais ou salvar checkpoint não encerra a missão.
+Continuar enquanto houver obrigação própria executável; não perguntar se pode
+prosseguir no trabalho autorizado. Esperar subagentes ativos por ferramentas reais.
+
+Refinar inventário semântico em paralelo com produção é permitido. Antes de cada
+unidade, fixar sua necessidade/critério/oracle; antes de fechar a camada/domínio,
+reconciliar a união. Não transformar uma amostra útil em cobertura total.
+
+Após os dois pareceres finais, reler a fila e procurar pendências atuais: TODO,
+NOT_RUN, HOLD, FIX-FIRST, REQUEST_EVIDENCE e promessas. Distinguir histórico preservado
+de obrigação atual. Executar o que falta; não apagar o rótulo para aparentar sucesso.
+Parar aperfeiçoamento opcional quando a barra fixa estiver satisfeita.
+
+## Impedimento material
+
+Verificar capacidades realmente expostas, releases/recibos disponíveis e rotas já
+autorizadas. Implementar correções necessárias dentro do escopo. Uma ausência de
+`gh`, quota antiga de bootstrap ou regra de coordenação anterior não é impedimento.
+
+Se depender de S4, consultar `runtime-release.json` e fixar capacidades prontas;
+continuar todo trabalho independente. Antes de devolver controle, conferir de novo
+a dependência. Não fazer polling infinito nem declarar impossibilidade por uma única
+ausência momentânea ou número arbitrário de consultas.
+
+Se a obrigação continuar impossível, registrar `INCOMPLETE_BLOCKED`: item, operação,
+erro/estado observado, rotas autorizadas tentadas, evidência e condição exata de
+desbloqueio. Esgotar o trabalho independente e preservar o handoff. Isso é incompleto,
+nunca PASS ou DELIVERY_COMPLETE. Não inventar capacidade nem contornar uma guarda.
+
+Persistir para retomar após compactação ou nova interação; não prometer execução
+em background depois de terminar o turno. A resposta final aponta commit/handoff,
+cobertura, juízes, correções, execução, gates e eventuais obrigações abertas.
+
+----- END SECTION CONTENT -----

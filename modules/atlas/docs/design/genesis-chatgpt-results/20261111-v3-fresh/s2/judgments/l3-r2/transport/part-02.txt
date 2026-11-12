@@ -1,0 +1,91 @@
+- Prefer complete translated phrases with only irreducible dynamic placeholders. If native UI needs richer grammar, deepen the shared bundle/API instead of adding locale branches to desktop feature code.
+```
+
+Public accepted L2 corroboration was limited to `s2.l2.desktop-web` decisive evidence §E10 — Native copy instruction, file SHA256 `a8845c781ecf752a755eca55a8f0dc76658fa5928bc3c8c71cbb2f28e8acc15d`. No peer L3 content or full review response was read. No product tests, runtime, CI, generation, source edit, GitHub write, reviewer contact or L4 production occurred.
+
+
+## Exact complete current dependency rationale
+```json
+{
+  "unit": "s2.l3.design-tui",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "build": [
+    "s2.l2.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.desktop-web"
+  ],
+  "navigation": [
+    "s2.l3.app-session",
+    "s2.l3.desktop-web"
+  ],
+  "rationale": {
+    "build": {
+      "s2.l2.design-tui": {
+        "path": "deliverable/layers/l2/design-tui/body.md",
+        "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+        "sections": [
+          "Orientation",
+          "Terminal lifetime and synchronized navigation",
+          "V2 actions and prompt admission",
+          "Terminal configuration, persistence and extensions",
+          "Terminal display, native integrations and simulation",
+          "Browser UI ownership, lifecycle and accessibility",
+          "Localization, direction and two theme systems",
+          "Generated products and asset provenance",
+          "Storybook, design intent and verification limits"
+        ],
+        "reason": "Factual foundation for terminal selection/context/admission ordering, input and projection timing, local persistence, permission ownership, caller/worker/dialog lifetime, language and theme boundaries, generation ownership and inherited evidence limits.",
+        "byte_length": 21535
+      },
+      "s2.l2.app-session": {
+        "path": "deliverable/layers/l2/app-session/body.md",
+        "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+        "sections": [
+          "Composition, identity and asynchronous ownership",
+          "Durable admission, optimistic state and draft storage",
+          "Transport, liveness and canonical recovery",
+          "Permission requests and terminal boundaries",
+          "Shared rendering, files and evidence interpretation",
+          "Visual resources and prescribed maintenance"
+        ],
+        "reason": "Actual cross-unit factual use: browser first-send and ambiguous-outcome ownership, exact retry reconciliation and admission/promotion distinction, reconnect/canonical recovery, request ownership, consumer Markdown sanitization, app language/native-copy integration and separate palette generation. These browser mechanisms are explicitly not imported as TUI guarantees.",
+        "byte_length": 24434
+      },
+      "s2.l2.desktop-web": {
+        "path": "deliverable/layers/l2/desktop-web/body.md",
+        "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+        "sections": [
+          "Orientation and ownership",
+          "Live separates readiness, capture and delivery",
+          "Host adapters own platform differences and copy"
+        ],
+        "reason": "Actual cross-unit factual use: native host ownership and the limits of app language propagation, including the hardcoded-English startup failure and the Live overlay’s separate system-language copy path. This is not merely a navigation edge. R2 makes the attributed shared typed native-translation bundle/nativeT contract explicit; the named public E10 evidence and captured desktop instructions corroborate that existing host-copy dependency.",
+        "byte_length": 18440,
+        "additional_public_evidence": {
+          "path": "deliverable/layers/l2/desktop-web/decisive-evidence.md",
+          "sha256": "a8845c781ecf752a755eca55a8f0dc76658fa5928bc3c8c71cbb2f28e8acc15d",
+          "section": "E10 — Native copy instruction",
+          "used_for": "Precise public correction support for the shared typed native copy contract; no peer L3 body or response consumed."
+        }
+      }
+    },
+    "navigation": {
+      "s2.l3.app-session": "Optional consultation for the peer integrated browser first-send, request, routing, stream and settings journey; no peer L3 body was consumed as evidence.",
+      "s2.l3.desktop-web": "Optional consultation for the peer startup, recovery, trust and host journey; no peer L3 body was consumed as evidence."
+    }
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    }
+  ],
+  "manifest_path_base": "deliverable/",
+  "lineage_note": "The L1 manifest was consumed as the dispatched lineage pin. Factual build edges are the three accepted L2 bodies actually read and used; no direct L1 body or pending L3 body is an additional build dependency."
+}
+
+```

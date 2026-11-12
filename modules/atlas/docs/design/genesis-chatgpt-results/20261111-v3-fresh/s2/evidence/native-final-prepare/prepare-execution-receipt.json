@@ -1,0 +1,84 @@
+{
+  "schema": "genesis-s2-native-prepare-execution/v1",
+  "operation": "prepare",
+  "state": "PREPARE_FAILED",
+  "recorded_at": "2026-11-11T20:48:52.214348+00:00",
+  "started_at": "2026-11-11T20:48:51.158507+00:00",
+  "ended_at": "2026-11-11T20:48:52.041873+00:00",
+  "duration_seconds": 0.8833769949997077,
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "argv": [
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+  "prepare_executed": true,
+  "exit_code": 1,
+  "launch_error": null,
+  "attempt": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare-attempt.json",
+    "sha256": "e6fac91c9594451daff1f91203a661f02c87fafe72a891b28f0b6f02eea4f8ce",
+    "byte_length": 1227
+  },
+  "preflight": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/preflight.json",
+    "sha256": "ff088c74ff156b579434a176af272a79cebeecda9700027eda5f661c0b885d2b",
+    "byte_length": 4588
+  },
+  "stdout": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "byte_length": 0
+  },
+  "stderr": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stderr",
+    "sha256": "43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079",
+    "byte_length": 158
+  },
+  "cas_before": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/cas-before.json",
+    "sha256": "595613c86288edb30a8c9b055da1c3e94fc1adb9b635239d12caa364922e1c92",
+    "byte_length": 155
+  },
+  "cas_after": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/cas-after.json",
+    "sha256": "efd444011f22bddbfb9bb4783add68dc503a3d7fddb00ab8ad06c2cb04e63dc8",
+    "byte_length": 4403
+  },
+  "cas_created": true,
+  "partial_cas_preserved": true,
+  "cas_file_count_after": 13,
+  "post_operation_integrity": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/post-operation-integrity.json",
+    "sha256": "e30d69982afe6707f57e8126277bccc043e1cc796eef73c146e28a859e062d53",
+    "byte_length": 93
+  },
+  "output": null,
+  "parsed_output_error": null,
+  "candidate_id": null,
+  "candidate_id_basis": null,
+  "binding_id": null,
+  "publish_executed": false,
+  "tests_executed": false,
+  "runtime_acceptance": "UNACCEPTED",
+  "git_checkout": false,
+  "observed_head": null,
+  "membership_observation_ready": false,
+  "automatic_retries": 0,
+  "cas_deleted": false,
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN",
+  "limits": [
+    "Prepare is not binding, publication, consumer acceptance, CI or a product test.",
+    "CAS inventory records exact observed bytes, including partial state; no cleanup occurs.",
+    "An interrupted wrapper may leave marker/logs without a final receipt; inspect and preserve, never rerun automatically."
+  ]
+}

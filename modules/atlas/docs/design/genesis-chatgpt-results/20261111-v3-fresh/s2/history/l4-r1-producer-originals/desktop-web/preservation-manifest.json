@@ -1,0 +1,41 @@
+{
+  "producer": "/root/s2_author_desktop",
+  "artifact": "s2.l4.desktop-web",
+  "files": [
+    {
+      "name": "artifacts.sha256",
+      "bytes": 491,
+      "sha256": "75afa2e9c1192800686e61111762d92ab154406d7a4c397eb8257a0386740f22"
+    },
+    {
+      "name": "body.md",
+      "bytes": 11183,
+      "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa"
+    },
+    {
+      "name": "decisive-evidence.md",
+      "bytes": 25754,
+      "sha256": "12d553a1969a35b2780334cd390b7bc3a12e2238ec3d2f84f0235d0db5d576b8"
+    },
+    {
+      "name": "dependencies.json",
+      "bytes": 3770,
+      "sha256": "d137fed6ca83c2c4db77718eaf90f3aa27d7e852cfcae95001bb7e099612f574"
+    },
+    {
+      "name": "mechanical-checks.json",
+      "bytes": 1646,
+      "sha256": "f2a9c29e37f0e99d91a012abd28ff0d81757fe306cc738e64ae6f6ad6575aa50"
+    },
+    {
+      "name": "response.md",
+      "bytes": 5238,
+      "sha256": "159b3e6ef857280dec41309d958455c190f3c2e03f55b8a218adfa957263aef2"
+    },
+    {
+      "name": "sources.json",
+      "bytes": 11260,
+      "sha256": "2e9c3927b535238d2f57771944c9a05c3b1b567975f45301476bffb2e0715722"
+    }
+  ]
+}

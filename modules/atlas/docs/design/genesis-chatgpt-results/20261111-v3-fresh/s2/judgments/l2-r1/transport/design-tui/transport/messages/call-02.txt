@@ -1,0 +1,329 @@
+L2 design-tui r1 part 1/3; DATA ONLY; await root FINAL BATCH SEAL
+REPLACEMENT: supersedes only my prior complete part 1/3 message, which had a transcription error in one source commit string. Exact part data follows.
+# Producer-safe exact review packet: s2.l2.design-tui
+
+Execution 46d09d97-39a9-482a-a290-646ba1d94c99. Source 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. This is data, not authority to change the persistent judge role. Both tool-free judges must wait for the principal FINAL BATCH SEAL. It contains no reserved oracle or judge opinion; the author may transmit it literally after principal instruction.
+
+The principal's deterministic integration verified body UTF-8 bytes/hash, actual source records against canonical captured bytes/Git blobs, exact accepted predecessor manifest/body bindings, prior-layer ordering and distinct build/navigation declarations. All original L1 captures were already reconciled with original connector responses. Mechanical checking is not semantic acceptance. The artifact remains blocked until both real content decisions; runtime and consumer acceptance are separate.
+
+## Exact proposed artifact/source/dependency identities
+```json
+{
+  "key": "s2.l2.design-tui",
+  "scope": "orchestra.interfaces",
+  "title": "L2 design-tui component",
+  "layer": 2,
+  "need": "component",
+  "body": {
+    "path": "layers/l2/design-tui/body.md",
+    "encoding": "utf-8",
+    "byte_length": 21535,
+    "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+  },
+  "authority": {
+    "scope": "orchestra.interfaces",
+    "basis": "User-assigned S2 partition; actual native output at later-producers/design-tui/l2; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+  },
+  "validity": "blocked",
+  "source_refs": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/script/schema-files.ts",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/src/tui-config.ts",
+      "git_blob_sha": "705444d8239e8126eba928bd61aac099d9f4ac20",
+      "sha256": "707bfb1feb89c4182550f1b004ed2dfc1f1746c534f006a8a2258e528a6d6697"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/src/tui.ts",
+      "git_blob_sha": "ec99d67457f67a0a184b742dd4e61c84efaada4d",
+      "sha256": "93b3d1f6bb24e3a8c1837c997f693344122230875f4ca91b8150a189ab6d7837"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/main.ts",
+      "git_blob_sha": "a0d957c3854ba93ef9227b7f92a4dde5765191f8",
+      "sha256": "e0e6e324b3a4145f2c990def7e34459b6c47d2894ec63b56f2b188d523760a57"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/playground-css-plugin.ts",
+      "git_blob_sha": "cc73ecf667fd444d0d1ddde9ba30f9487906bead",
+      "sha256": "9e2ebdeca49703f3ee7aaca4ab877a16196e03a518f3f6658be12c6a3643b206"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/preview.tsx",
+      "git_blob_sha": "a6052bf222a2146b2aca63109d3583f1cef399fd",
+      "sha256": "40729070062b15c71dc84047c6950c340e107d35c92f0e3753cec0434e545db1"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/images/readme/src/render.sh",
+      "git_blob_sha": "2e3769d9b7c6577c7252d85bce9110ab0c3c92e8",
+      "sha256": "b246641ae0b401a7ab0b0c22f72fb44c5acdf6f857ef0378e7354df828b73b12"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/permission.ts",
+      "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+      "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/session.ts",
+      "git_blob_sha": "5830f50001c8dc01227a920f04276054c0e29570",
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/README.md",
+      "git_blob_sha": "3033116c72a3a39851f35f48536b79728305596f",
+      "sha256": "42fb77fe64fc57cfc62be447154d7aa5c5ada2e1bc134abaa78322658ffde85d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/app.tsx",
+      "git_blob_sha": "8471637f416eece3baf17e66e8653c59676b1d8f",
+      "sha256": "0ed7508e3b274c348332058d082e66ffd8e2acff944213ecba405343446a2488"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/component/prompt/index.tsx",
+      "git_blob_sha": "6cd7cc1bd79c141c2c821853a688438396fd1b80",
+      "sha256": "422c51904f556d388b4678ba0220b24b2c8618426ea83658102ec2fce03cd76f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/config/index.tsx",
+      "git_blob_sha": "de463aa8b09ae8958d06f5de61c55d15b6df5c35",
+      "sha256": "759376006b5a391735829649abc30a0270cd81a02f8090e9eb5c0119f332ec51"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/session-actions.ts",
+      "git_blob_sha": "255420d1e93ce0fca21b941c673abdede087e91e",
+      "sha256": "e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/sync.tsx",
+      "git_blob_sha": "d780ec3db53f6adbd36131e9342d5899b0b517a5",
+      "sha256": "4693a3077d846c3f210b76596e669eb93fe9aa604161b921603ff9bc8aa139fe"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/theme.tsx",
+      "git_blob_sha": "0ada1f058529bc0bd026e9f28bef3fb938ad7254",
+      "sha256": "4cb523098191d07245aa0298a5931eefa12036cad21cc1c0d55a070574f32b56"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/plugin/api.ts",
+      "git_blob_sha": "8591ef36024aeeda7785127710d920e9dad236c0",
+      "sha256": "9716adfb55de5ea8b054704094bede7ddd4ed96cd94706cceff978e12920544e"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/plugin/runtime.tsx",
+      "git_blob_sha": "75ea3c25cf4b30879a04438761c0aa388f1d4e50",
+      "sha256": "1f05179254d0b68f5123924bf6d24f9e253734b4f4d7dd176135a1452eda0ac6"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/theme/index.ts",
+      "git_blob_sha": "bcdeff3a46e498bf1aadbcac39d6c149030657fb",
+      "sha256": "799bd9b6637c72af4eaff1174907e377251facc48b644aa2fa0fa6158202980b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/util/transcript.ts",
+      "git_blob_sha": "55e9f1e52a00fb4336753bffec52c66043db28f3",
+      "sha256": "c70f193e1b63bf933ae2430eea4f243f4f3eda5bbdb2872a7880d79625b8a789"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/AGENTS.md",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/README.md",
+      "git_blob_sha": "2df8fea30c8cb417e32b3b3a3bbc37bd0f137c16",
+      "sha256": "34ef183bbc612887214a3fe5b5635ca880feeab06dd7edd2b9e004507633fb96"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/build-oc2-v2-overrides.ts",
+      "git_blob_sha": "e5dae76ef374a90e940e32812715b939c69c0c1d",
+      "sha256": "4ad3bf3fe1eaf3c5030896cca81b3ec0d571fd2f82441149d8fcf2cef4d14e29"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/tailwind.ts",
+      "git_blob_sha": "6e558a8fa11cc024b71d2e311f4d27ebc89c0cf8",
+      "sha256": "3b71ac2b9558b53397534f0ba476879715bd35779f939c415a70051af4699722"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/components/font.tsx",
+      "git_blob_sha": "f89dfafe1db32114fde53f9581a7c46992512092",
+      "sha256": "61b8068512255a5c0524334d545543b4af20c9401dcf68ecc52a208118d60bfd"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/dialog.tsx",
+      "git_blob_sha": "5f29db9a7937b353754659f1c63c6f7e0ea1bb97",
+      "sha256": "dbf846b187040405655aba89e6e16dcc5694120a884e6a78c147c100015b7406"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/helper.tsx",
+      "git_blob_sha": "172fed460ec63fc373e616fcbef40d8cb21be5ee",
+      "sha256": "cb4af7568973cdf46af691804398a016a69e638daf8cb376eabe6de4200a2946"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.tsx",
+      "git_blob_sha": "757083f8f7842815c6e835d722a9f8887a9088bc",
+      "sha256": "e91e04c63c2b9d767bf3ee0180ea968782b882d5ad2eb166aa4a1f077f74b834"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/worker-pool.tsx",
+      "git_blob_sha": "5f788f7866abfd25e701e37ea377d416f87a4e4f",
+      "sha256": "d79c61272e84266658040aa32b85ce4f86089f1b3e19cd5bdea23b49c7778918"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/context.tsx",
+      "git_blob_sha": "eb21b015ea2f6b1bbd1abc5c51eeec7f98718e90",
+      "sha256": "e51c86dc8fb695dedab9b512e0fc38c7c449dda6d377154528bf87ef48bf8a46"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/loader.ts",
+      "git_blob_sha": "198d351221121a6bfeedbbb2ceb4591c914a4966",
+      "sha256": "ef53b0866ae75b695ac369dda09098e35f5dce7218f2d377807f375a34422021"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/v2/components/field-v2.tsx",
+      "git_blob_sha": "45b5a70b2efb0ae179d41b70e1dd39f4b0ba53cb",
+      "sha256": "0321e5492f82402ede76b7640936cdf3622bb377bd2d5323a14ed47e105ac7b2"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/v2/components/segmented-control-v2.tsx",
+      "git_blob_sha": "006b28394f3e611c52746ddf26e88b7a8288a1d5",
+      "sha256": "6b4312d3a949262fa3bd43b0f003cb4d7e38f81f827fa73f4c6a2e94c2036b60"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/vite.config.ts",
+      "git_blob_sha": "b89c666ae19be83a567d525687404fb6bc137857",
+      "sha256": "c869fbd57f4de3ff9aa64ec7c927e56331e1cee557ab97b80d9135eecfe55688"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+    "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40"
+  },
+  "build_dependencies": [
+    {
+      "key": "s2.l1.design-tui",
+      "same_package": true
+    }
+  ],
+  "navigation": [
+    "s2.l2.app-session",
+    "s2.l2.desktop-web"
+  ],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+    "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/design-tui/response.md",
+    "sha256": "486bec496eb2e8e83e90f931d319ae82469891ddc43c82c26aebc8b60b20f745"
+  }
+}
+```
+
+## Exact complete body
+BEGIN EXACT BODY s2.l2.design-tui
+# Design and terminal UI — L2 behavior and maintenance boundaries
+
+## Orientation
+
+This unit explains how the terminal application and shared browser UI behave, where their responsibilities end, and which changes require evidence beyond these sources. The baseline is `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. **L1** below means the accepted artifact `s2.l1.design-tui`, body SHA256 `fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da`; acceptance is bound by `accepted/l1.json`, SHA256 `8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8`.
+
+The 2,087 assigned paths span 67 families. L1 distinguishes 185 directly inspected entries, 1,889 family-supported entries and 13 metadata-only entries. The explanations retain those limits; the accompanying evidence map accounts for every family without implying that every leaf was read. Statements about implementation are static observations. Policy, protocol descriptions and historical intent are attributed; maintenance implications are interpretations. No product execution occurred. (`s2.l1.design-tui`, **Scope and evidence strength** and **Remaining gaps and safe use of this evidence**.)
+
+Use this unit for terminal interaction and UI-library ownership. `s2.l2.app-session` and `s2.l2.desktop-web` are consultation destinations for application/server composition and host-platform behavior, not evidence consumed by this artifact.
+
+## Terminal lifetime and synchronized navigation
+
+The TUI owns the OpenTUI/Solid application and runs through the CLI's injected transport, configuration and plugin host. Current ownership permits Core dependencies because it runs in the backend process. The older extraction proposal's SDK-only target describes historical intent. Another real discrepancy remains: the package README says there are no assets/generated files, although theme imports and the assigned inventory contain 33 presets. Maintain against the pinned manifest, implementation and inventory together. (`packages/tui/README.md:7–30`; `s2.l1.design-tui`, **Terminal application / Entry, ownership and lifetime**.)
+
+`run` scopes renderer acquisition, keymap registration, plugin/audio cleanup and SIGHUP listener removal. Renderer destruction releases the shutdown wait before the epilogue is printed. Plugin startup marks the application ready in `finally`, including after startup failure; readiness is not proof that plugins loaded. Routes are home/session/plugin. Continue waits for bootstrap, while an explicit-session fork waits for complete synchronization to avoid the documented reconciliation race. (`packages/tui/src/app.tsx:180–359,384–416,474–533`; `s2.l1.design-tui`, **Terminal application / Entry, ownership and lifetime**.)
+
+The terminal's SDK provider either consumes injected events or manages an abortable SSE reconnect loop; their connection monitoring differs. Event-envelope decoding and directory/workspace filtering are separate responsibilities. Sync projects only hydrated or hydrating sessions, merges event-touched messages over an in-flight history result, and coalesces concurrent hydration. A history failure becomes an empty list, so a synchronized session can still lack history. The displayed projection is bounded to the latest 100 rows. The separate DataProvider caches by directory/workspace identity and logs settled refresh failures. **Maintenance implication:** diagnose transport, location selection, bootstrap and history projection independently before treating a blank session as an empty server journal. (`packages/tui/src/context/sync.tsx:498–537`; `s2.l1.design-tui`, **Terminal application / V2 transport, hydration and state**.)
+
+## V2 actions and prompt admission
+
+The terminal session-action adapter translates inputs to V2 client calls; it has no legacy-route fallback. Before prompt or command, it awaits agent selection and then model selection. A truthy editor context adds an awaited synthetic request with `resume: false` before the final prompt. The protocol declares prompt success as durable input admission, not completed provider execution. These awaits order one invocation but provide no transaction, cross-caller lock, rollback or retry. (`packages/tui/src/context/session-actions.ts:7–79`; `packages/protocol/src/groups/session.ts:301–374,464–479`; `s2.l1.design-tui`, **V2 session action boundary**.)
+
+Creation forwards location only when directory is truthy; workspaceID alone is omitted. Model `modelID` becomes `id`. File `url`/`filename` become `uri`/`name`, and only the optional text span is retained from file-source metadata. Mention spans similarly rename `value` to `text`. Prompt requires files and agents arrays; command exposes files and arguments but no context or agents input. Neither wrapper exposes the protocol's optional prompt/command id, delivery or resume controls. **Maintenance implication:** an ambiguous failure cannot be treated as a reconciled stable-ID retry at this boundary. (`packages/tui/src/context/session-actions.ts:19–92`; `packages/protocol/src/groups/session.ts:333–367`; `s2.l1.design-tui`, **V2 session action boundary**.)
+
+| Operation | Declared boundary and adapter behavior |
+|---|---|
+| Interrupt / compact | Interrupt addresses execution owned by the current process; idle interruption is a declared no-op. Compact uses the session model, can report no compaction, and declares running sessions busy. |
+| Shell | Sends a command without agent/model; the protocol describes recording command/output in the session location without starting a turn. |
+| Permission reply | Sends sessionID, requestID and once/always/reject; the adapter omits the protocol's optional message. UI confirmation does not establish server authorization. |
+| Revert / unrevert | Stages a reversible boundary with `files: true` or clears it. The wrapper does not call the separately declared commit route. |
+
+These are pinned declarations and call selections, not observed server outcomes. (`packages/tui/src/context/session-actions.ts:55–63`; `packages/protocol/src/groups/session.ts:379–394,431–443,550–582,655–665`; `packages/protocol/src/groups/permission.ts:119–134`; `s2.l1.design-tui`, **V2 session action boundary**.)
+
+At the prompt, an in-flight guard protects overlapping submission; IME text, autocomplete ownership, agent/model selection and new-session directory resolution precede dispatch. Extmarks supply text/file/agent parts. Demo, shell, slash command and ordinary prompt take different branches. Several action promises only attach rejection handlers; history append, input clearing and navigation can occur before acceptance. The submit-race test mirrors the production shape rather than mounting the prompt. **Gap:** actual prompt integration and failure recovery remain unexecuted. (`packages/tui/src/component/prompt/index.tsx:919–1089`; `s2.l1.design-tui`, **Terminal interaction and supporting contracts / Selection, local persistence and prompt admission**.)
+
+## Terminal configuration, persistence and extensions
+
+`TuiConfig.Info` controls input, appearance, scrolling, plugins and attention. Resolution defaults mouse on and attention off; unsupported terminal suspension disables that binding and adds Ctrl-Z undo. CLI loading decodes each file, lets later scalar keys win and merges keybinding/plugin-enabled maps. File discovery remains Core-owned; repository examples and user guides do not prove the entire discovery path. (`packages/tui/src/config/index.tsx:61–75,101–135`; `apps/cli/src/tui-config.ts:10–30`; `s2.l1.design-tui`, **Terminal interaction and supporting contracts / Configuration, keys, dialogs and plugins** and **Storybook, fixtures and design records**.)
+
+Selection validates catalog choices, retains stable agent IDs independently of display names, and caps recent models at ten. KV, preferences, prompt history and stash live under Global state paths. Same-process serialization, locking and temporary-file rename protect writes without establishing cross-process merge safety. History/stash cap at 50 and tolerate damaged records; they serve local recall, not durable conversation ownership. Compatibility prompt-history/stash/frecency exports and the empty `component/prompt/cwd.ts` are boundaries to preserve, not separate persistence mechanisms. (`s2.l1.design-tui`, **Terminal interaction and supporting contracts / Selection, local persistence and prompt admission**; instruction: `AGENTS.md`, **Agent Names**.)
+
+Keymap aliases, leader timing and a disposable mode stack mediate dialogs, focused controls and autocomplete. Plugin routes stack by name, with removal restoring earlier registrations; slots require setup. Builtins provide home/sidebar/system features, including diff views, which-key and notifications, but installation and activation are separate. The inspected CLI host has empty start/dispose methods; the API lifecycle signal has no abort here and `onDispose` is a no-op. **Maintenance implication:** feature files do not establish active features or complete cleanup. Trace the injected host before changing a plugin. (`apps/cli/src/tui.ts:27–40`; `packages/tui/src/plugin/api.ts:11–51`; `packages/tui/src/plugin/runtime.tsx:12–69`; `s2.l1.design-tui`, **Terminal interaction and supporting contracts / Configuration, keys, dialogs and plugins**.)
+
+## Terminal display, native integrations and simulation
+
+Session entry synchronizes its location, editor, catalog and history; load failure returns home with a toast. Root-session views aggregate child permission/question requests and suppress normal prompt interaction while requests are pending. Permission decisions retain session/request identity; questions preserve answer order and allow rejection. Tool rendering has recognized-name dispatch and a generic fallback, while preferences and disclosure are local display state. Transcript export sorts selected message kinds and optionally includes reasoning/tool details/metadata; omitted kinds make it a presentation projection. (`packages/tui/src/util/transcript.ts:22–82`; `s2.l1.design-tui`, **Terminal interaction and supporting contracts / Session rendering and interactive requests** and **Supporting contracts: display, export, demos and replay**.)
+
+Small helpers carry meaningful contracts: duration units differ between formatters, model parsing preserves slashes, Windows paths have a realpath fallback, previews bound Unicode code points, and patch summaries return empty on failure. Error formatting can set `process.exitCode`. Renderer helpers clear titles, cache frame-local layout, choose scroll behavior and clean timers; selection clears before asynchronous clipboard success. Parser declarations mix pinned URLs with moving query branches. **Maintenance implication:** preserve these units, side effects and provenance when changing apparently cosmetic code. (`s2.l1.design-tui`, **Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay**.)
+
+Clipboard combines OSC52 with platform commands. External editing suspends the renderer and restores it in `finally`; editor integration owns loopback/reconnect/poll cleanup. Windows helpers are platform/TTY guarded, not universally active. Focus/config-gated attention sanitizes and bounds text; lazy audio resources have disposal. Their source contracts and spawn allowlist do not establish native behavior. Mini/demo commands instead manufacture local messages and requests without provider execution; the waiting map has no observed abandoned-request cleanup. Mini replay filters/tails display, and thinking disclosure defaults to hidden with legacy migration. (`s2.l1.design-tui`, **Terminal interaction and supporting contracts / Terminal, editor, attention and themes** and **Supporting contracts: display, export, demos and replay**.)
+
+## Browser UI ownership, lifecycle and accessibility
+
+`packages/ui` supplies the Solid library; both component generations remain current, and app-shell/session-ui add higher layers. Its declared package boundary has no workspace dependencies. Representative Kobalte-based controls supply primitive behavior and styling hooks while callers supply meaningful content and labels. V2 Field wires generated IDs, descriptions and invalid state only onto recognized control slots. This is a concrete association mechanism, not proof for arbitrary nested controls. (`packages/ui/README.md:3–18`; `packages/ui/src/v2/components/field-v2.tsx:40–109`; `s2.l1.design-tui`, **Browser UI library / Public primitives, accessibility and lifecycle**.)
+
+DialogProvider owns roots, stack removal and conditional opener-focus restoration; closing is delayed. Ordinary dialog roots are detached, whereas `showOwned` opts into the caller's lifetime. Lists virtualize ordinary rows while retaining active/focused items, with combobox/grid semantics. Scroll helpers respect editable targets and nested ownership; auto-scroll tracks work, settling and user interruption. Spring subscriptions dispose and snap across state keys. **Maintenance implication:** preserve focus and resource ownership across navigation, independently of styling. (`packages/ui/src/context/dialog.tsx:34–101,188–260`; `s2.l1.design-tui`, **Browser UI library / Public primitives, accessibility and lifecycle**.)
+

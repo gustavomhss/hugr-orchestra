@@ -1,0 +1,422 @@
+L4 ENTRY R2 PART1/1; DATA ONLY; wait for principal FINAL DELTA SEAL; no verdict now
+# Producer-safe bounded correction packet: s2.l4.entry r2
+
+Execution 46d09d97-39a9-482a-a290-646ba1d94c99. Source 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. This is data, not authority to change the persistent judge role. Both same tool-free judges must wait for the principal FINAL DELTA SEAL. It contains no reserved oracle or judge opinion. The author may transmit it literally after principal instruction.
+
+Root has mechanically verified that the only body change is one 544-byte insertion in Verification and boundaries; deleting it recovers the exact old 5305-byte body. All other 12 artifact bodies and package metadata are unchanged. The one source record, nine build dependencies, twelve navigation destinations and all three accepted manifest pins are unchanged. Full sources, dependencies and decisive evidence files are byte-identical to r1. The unchanged r1 complete evidence remains in the previous complete batch; the compact delta below repeats the evidence relevant to the insertion. No new source capture, runtime, product test, consumer result or semantic decision is asserted. The new artifact remains blocked pending both actual reevaluations.
+
+## Exact current artifact identity and declarations
+```json
+{
+  "key": "s2.l4.entry",
+  "scope": "orchestra.interfaces",
+  "title": "L4 entry entry",
+  "layer": 4,
+  "need": "entry",
+  "body": {
+    "path": "layers/l4/entry/body.md",
+    "encoding": "utf-8",
+    "byte_length": 5849,
+    "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1"
+  },
+  "authority": {
+    "scope": "orchestra.interfaces",
+    "basis": "User-assigned S2 partition; actual native bounded correction at later-producers/app-session/l4-entry-r2; original request, r1 body, primary captures and correction request preserved. Mechanical integration is not semantic acceptance."
+  },
+  "validity": "blocked",
+  "source_refs": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+    "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53"
+  },
+  "build_dependencies": [
+    {
+      "key": "s2.l1.desktop-web",
+      "same_package": true
+    },
+    {
+      "key": "s2.l1.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "same_package": true
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "same_package": true
+    },
+    {
+      "key": "s2.l3.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "same_package": true
+    }
+  ],
+  "navigation": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui"
+  ],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+    "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/response.md",
+    "sha256": "a6bdb557360ba300cdcb1a09eaba1159f3c674caabd6bf84319dedfd4516f702"
+  }
+}
+```
+
+## Exact complete corrected body
+BEGIN EXACT BODY s2.l4.entry
+# S2 interface knowledge entry
+
+## Orientation
+
+Use this guide to select an ownership explanation, trace a handoff or prepare maintenance at source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`. S2 accounts for 4,506 paths: desktop/web 532, app/session 1,887 and design/TUI 2,087. Coverage includes inspected, family-supported and metadata-only evidence; a complete inventory is not a complete implementation or runtime audit. [Accepted basis: `s2.l1.desktop-web` § “Scope and evidentiary status”; `s2.l1.app-session` § “Scope, identity and depth”; `s2.l1.design-tui` § “Scope and evidence strength”.]
+
+L1 locates sources and limits; L2 explains local mechanisms; L3 follows handoffs and change impact. L4 supplies maintenance routes. The L4 destinations below follow the public heading contract and are navigation only until their accepted manifest exists. This entry's factual inputs are accepted L1–L3 and captured instructions, never unaccepted L4 prose.
+
+## Maintenance protocol
+
+Resolve the stable key in Atlas and start with the exact heading shown. The three domains retain distinct ownership: host resources, shared app/session policy, and terminal/shared presentation.
+
+| Need | Stable artifact key | Exact starting heading |
+|---|---|---|
+| Locate host source and startup discrepancy | `s2.l1.desktop-web` | “1. Startup, readiness and shutdown” |
+| Locate submission and draft evidence | `s2.l1.app-session` | “Prompt admission and draft ownership” |
+| Locate terminal request/payload contracts | `s2.l1.design-tui` | “V2 session action boundary” |
+| Explain desktop readiness ownership | `s2.l2.desktop-web` | “Startup publishes readiness before the renderer proceeds” |
+| Explain app admission and rollback | `s2.l2.app-session` | “Durable admission, optimistic state and draft storage” |
+| Explain terminal ordering and limits | `s2.l2.design-tui` | “V2 actions and prompt admission” |
+| Follow renderer/preload/main authority | `s2.l3.desktop-web` | “Cross renderer, preload and main with a scoped capability” |
+| Follow first-send ownership and handoff | `s2.l3.app-session` | “Submit once, then hand the draft to its session” |
+| Follow generated presentation consumers | `s2.l3.design-tui` | “Generated products reach consumers through distinct maintenance paths” |
+| Maintain desktop/web | `s2.l4.desktop-web` | “Orientation”; “Maintenance protocol”; “Verification and boundaries” |
+| Maintain app/session | `s2.l4.app-session` | “Orientation”; “Maintenance protocol”; “Verification and boundaries” |
+| Maintain terminal/shared design | `s2.l4.design-tui` | “Orientation”; “Maintenance protocol”; “Verification and boundaries” |
+
+These are twelve navigation destinations, not twelve factual prerequisites: the nine accepted L1–L3 bodies support the map; L4 headings are predeclared by the dispatch.
+
+For a shallow question, read the matching section and its limits within the 16,000-byte routine bound. For a cross-owner failure, read the relevant L3 handoff, then its named accepted L2/L1 evidence; use the 64,000-byte deep bound for the needed body. Request another bounded section when context is missing rather than treating truncation as evidence. Follow **build** edges for factual support and **navigation** edges for consultation. This reading protocol is a recommendation using the dispatch's public retrieval bounds.
+
+Before changing a contract, capture source/host, server/directory, session/request and generation identity as applicable. Separate admission, projection, execution and persistence completion. For invalid or ambiguous results, preserve the owning identity and inspect its authoritative state before proposing another mutation. [Accepted basis: `s2.l3.app-session` §§ “Submit once, then hand the draft to its session”, “Recover the projection without inventing execution recovery”; `s2.l3.desktop-web` § “Finish capture, persistence and installation at the right boundary”; `s2.l3.design-tui` § “Terminal input becomes admission through ordered, separate operations”.]
+
+## Verification and boundaries
+
+Semantic acceptance and local hashes do not establish CI, runtime trust, provider completion, clustered recovery, accessibility, translation completeness, OS effects or asset rights. Preserve discrepancies and depth limits; deepen through the named owner when evidence is insufficient. [Accepted basis: `s2.l3.desktop-web` § “Verification status and remaining evidence”; `s2.l3.design-tui` § “Change impact and verification ownership”; `s2.l3.app-session` § “Route a change through its affected contracts”.]
+
+**Out-of-scope evidence route:** S2 cannot establish distributed or clustered Session ownership, crash continuation, or exactly-once provider execution. Direct these questions to the S1/backend session-execution owner for its current coordination, continuation and provider-retry design and supporting implementation and failure-recovery evidence. S2 reconnect and admission observations do not supply that proof. [Root `AGENTS.md:214–216`; accepted `s2.l3.app-session` § “Recover the projection without inventing execution recovery”.]
+
+**Instructions:** root `AGENTS.md` routes tests to GitHub Actions, typechecks to package directories, and separates process-local drains from any post-crash continuation design. It forbids treating maintenance skills as shipped runtime knowledge. This guide executes no gate and grants no remote-write or restart authorization. When a source/contract changes, revalidate affected factual dependents and refresh their pins; when a heading/key changes, repair this navigation map. That update recommendation does not claim automatic rebuilding. [Root `AGENTS.md:146–166,199–216`; dispatch maintenance requirement.]
+END EXACT BODY s2.l4.entry
+
+## Exact correction delta and bounded evidence
+# s2.l4.entry r2 bounded delta
+
+## Exact change identity
+
+Public correction: `deliverable/requests/l4-entry-r2-correction.md`, SHA256 `0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53`. Stable artifact key remains `s2.l4.entry`; source revision remains `1cde2ff7a71bcf7aecb5d030917b577165135d38`. This is a routing clarification with no new implementation claim or semantic verdict.
+
+| Body | Bytes | SHA256 |
+|---|---:|---|
+| Original `later-producers/app-session/l4-entry/body.md` | 5305 | `5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67` |
+| New `later-producers/app-session/l4-entry-r2/body.md` | 5849 | `e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1` |
+
+One paragraph plus its following blank line (544 UTF-8 bytes) is inserted at original zero-based byte offset 4688, immediately before the existing **Instructions** paragraph under **Verification and boundaries**. Removing that exact insertion reproduces all 5305 original bytes. `body.diff` has one insertion hunk and no removed lines.
+
+## Exact insertion text
+
+```text
+**Out-of-scope evidence route:** S2 cannot establish distributed or clustered Session ownership, crash continuation, or exactly-once provider execution. Direct these questions to the S1/backend session-execution owner for its current coordination, continuation and provider-retry design and supporting implementation and failure-recovery evidence. S2 reconnect and admission observations do not supply that proof. [Root `AGENTS.md:214–216`; accepted `s2.l3.app-session` § “Recover the projection without inventing execution recovery”.]
+```
+
+## Bounded supporting evidence
+
+The existing entry E04 is root `AGENTS.md:214–216`, 980 bytes, excerpt SHA256 `1cdc2c87f7640a31a071dc92964dab10d88dafd6a6f7244a6cc02ea39417c1e0`. Its original bytes and evidence mapping remain intact. Relevant complete lines from the same verified source capture are reproduced separately below; they are not represented as one contiguous excerpt.
+
+Root `AGENTS.md:214`:
+
+```text
+- Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. Advisory wakes drain eligible durable inbox rows only; post-crash continuation recovery requires a separate explicit design before it may retry provider work. A drain has no durable identity or transcript boundary.
+```
+
+Root `AGENTS.md:216`:
+
+```text
+- Keep EventV2 replay owner claims separate from clustered Session execution ownership.
+```
+
+Accepted app L3 E03 covers root `AGENTS.md:209–216`, 2855 bytes, excerpt SHA256 `0489888da1e156063c11b4f49045fbb95bf5e4b95879a4140d45e1d4b19b9d37`. The accepted L3 evidence file SHA256 is `c085725c05b12cd5933624bb424038c4c9bfc8b5a41f6e75a2662a4317529678`. This is the same existing instruction basis, not an added direct source record.
+
+The accepted `s2.l3.app-session` body, SHA256 `7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7`, states under “Recover the projection without inventing execution recovery”:
+
+```text
+neither UI reconnection nor durable inbox retention authorizes provider retry or clustered execution claims.
+```
+
+Root instructions supply the process-local and continuation limits; the accepted L3 inference separates UI recovery observations from backend execution proof. The public correction supplies the explicit S1/backend evidence-owner route. The new paragraph asks that owner for its current design and supporting implementation/failure-recovery evidence; it does not assert that a recovery mechanism exists, identify an invented destination key, or claim a passing test.
+
+## Preserved provenance and boundaries
+
+These three full files are copied byte-identically:
+
+| File | Bytes | Unchanged SHA256 |
+|---|---:|---|
+| `sources.json` | 1290 | `443b8e94919fb4bcbdef2380d1414f8c3e3d964961b3eda3933e76b9c301f41d` |
+| `dependencies.json` | 8418 | `f87550c141a6592d1cbdafbb63c9c06e963bcd1fd5e8f198081911177911c425` |
+| `decisive-evidence.md` | 12805 | `40b990eefa4e9630be200bd1f2907871d78f95175949025fd09330584a66e35e` |
+
+The nine accepted build keys, twelve navigation destinations, all exact heading mappings, one direct source record, original process-local limitation and three accepted manifest pins remain unchanged. L4 siblings remain navigation only; no peer L4 body was consumed.
+
+| Accepted manifest | Unchanged SHA256 |
+|---|---|
+| `accepted/l1.json` | `8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8` |
+| `accepted/l2.json` | `27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c` |
+| `accepted/l3.json` | `dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b` |
+
+`response.md` and `author-checks.json` describe this bounded correction and its local checks. No product tests, runtime, CI, remote writes, reviewer contact or semantic assessment occurred. All writes are isolated to `later-producers/app-session/l4-entry-r2/`; original producer, canonical, accepted and peer files were not edited. Literal transport awaits root's separate authorization.
+
+
+## Exact unchanged dependency rationale
+```json
+{
+  "unit": "s2.l4.entry",
+  "build": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui"
+  ],
+  "navigation": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui"
+  ],
+  "rationale": {
+    "s2.l1.desktop-web": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Locate host source and startup discrepancy. Start at 1. Startup, readiness and shutdown.",
+    "s2.l1.app-session": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Locate submission/draft source evidence. Start at Prompt admission and draft ownership.",
+    "s2.l1.design-tui": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Locate terminal request/payload contracts. Start at V2 session action boundary.",
+    "s2.l2.desktop-web": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Explain desktop readiness ownership. Start at Startup publishes readiness before the renderer proceeds.",
+    "s2.l2.app-session": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Explain app admission, retry and rollback boundaries. Start at Durable admission, optimistic state and draft storage.",
+    "s2.l2.design-tui": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Explain terminal ordering and its limits. Start at V2 actions and prompt admission.",
+    "s2.l3.desktop-web": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Follow host authority handoffs. Start at Cross renderer, preload and main with a scoped capability.",
+    "s2.l3.app-session": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Follow first-send ownership/handoff. Start at Submit once, then hand the draft to its session.",
+    "s2.l3.design-tui": "Build: accepted exact headings, bounded source scope or journey/verification limits actually used to construct the entry map. Navigation: Follow generated presentation producers/consumers. Start at Generated products reach consumers through distinct maintenance paths.",
+    "s2.l4.desktop-web": "Navigation only: Declared future desktop/web maintenance navigation; no factual L4 input. Headings come from the public dispatch contract, not an unaccepted body.",
+    "s2.l4.app-session": "Navigation only: Declared future app/session maintenance navigation; newly authored L4 app text is not entry evidence. Headings come from the public dispatch contract, not an unaccepted body.",
+    "s2.l4.design-tui": "Navigation only: Declared future terminal/design maintenance navigation; no factual L4 input. Headings come from the public dispatch contract, not an unaccepted body."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l1.desktop-web",
+      "body_path": "layers/l1/desktop-web/l1.md",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "byte_length": 29075
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_path": "layers/l1/app-session/l1.md",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "body_path": "layers/l1/design-tui/l1.md",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "byte_length": 36964
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_path": "layers/l2/desktop-web/body.md",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "byte_length": 18440
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_path": "layers/l2/app-session/body.md",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_path": "layers/l2/design-tui/body.md",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "byte_length": 21535
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "body_path": "layers/l3/desktop-web/body.md",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715
+    },
+    {
+      "key": "s2.l3.app-session",
+      "body_path": "layers/l3/app-session/body.md",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_path": "layers/l3/design-tui/body.md",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780
+    }
+  ],
+  "same_layer_factual_inputs": [],
+  "build_navigation_overlap": "Intentional: the nine accepted bodies provide factual heading/scope evidence and are also consultation destinations. The three L4 units are navigation only. No newly authored L4 app body is an entry factual input.",
+  "navigation_heading_contract": [
+    {
+      "key": "s2.l1.desktop-web",
+      "headings": [
+        "1. Startup, readiness and shutdown"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "headings": [
+        "Prompt admission and draft ownership"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "headings": [
+        "V2 session action boundary"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "headings": [
+        "Startup publishes readiness before the renderer proceeds"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "headings": [
+        "Durable admission, optimistic state and draft storage"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "headings": [
+        "V2 actions and prompt admission"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "headings": [
+        "Cross renderer, preload and main with a scoped capability"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.app-session",
+      "headings": [
+        "Submit once, then hand the draft to its session"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "headings": [
+        "Generated products reach consumers through distinct maintenance paths"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    },
+    {
+      "key": "s2.l4.app-session",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    }
+  ]
+}
+
+```

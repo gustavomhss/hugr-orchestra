@@ -1,0 +1,258 @@
+    "consumer_implications": "Chapter view and request controls use immutable selections and receipt refresh after ambiguity.",
+    "maintenance_implications": "Keep idempotent receipt recovery separate from blindly reissuing state-changing commands; sanitize provider errors.",
+    "limits": "Individual views and all command outcomes are family-supported; host action execution is not inspected end-to-end.",
+    "path_count": 73,
+    "classification_counts": {
+      "test-unexecuted": 27,
+      "implementation": 45,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "family-supported": 70,
+      "inspected": 3
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "relay",
+    "title": "Relay workflow and hook editing",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/relay/client.ts",
+      "packages/app-shell/src/orchestra/relay/editor.tsx",
+      "packages/app-shell/src/context/permission-auto-respond.ts"
+    ],
+    "source_implications": "Relay client wraps generated document/publication/hook routes and classifies unsupported/offline/conflict/missing errors; editor keys document frames by ID.",
+    "consumer_implications": "Workflow/hook chapters consume Relay; hook Ask appears through explicit permission UI.",
+    "maintenance_implications": "Separate draft, publication and live request identities; never auto-answer hook Ask.",
+    "limits": "Compiler, publication authority and every editor/history branch are not reviewed.",
+    "path_count": 65,
+    "classification_counts": {
+      "implementation": 56,
+      "test-unexecuted": 9
+    },
+    "evidence_depth_counts": {
+      "family-supported": 63,
+      "inspected": 2
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "atlas",
+    "title": "Atlas memory and review chapter",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/atlas/atlas-api.ts",
+      "packages/app-shell/src/orchestra/chapters/atlas/atlas-controller.ts",
+      "packages/app-shell/src/orchestra/chapters/agents.tsx"
+    ],
+    "source_implications": "Generated Atlas methods are location-scoped. Controller cancels prior owners, rejects stale responses and separates unavailable/error/empty.",
+    "consumer_implications": "Atlas pages and agent Memory views use this boundary; numerous sheets/views share it.",
+    "maintenance_implications": "Keep owner generation and normalized directory checks for read/write results.",
+    "limits": "The large visualization/sheet family is supported through controller/transport seams, not every UI action.",
+    "path_count": 87,
+    "classification_counts": {
+      "implementation": 68,
+      "test-unexecuted": 18,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 2,
+      "family-supported": 85
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "integrations",
+    "title": "Integration connection and binding management",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/integrations-api.ts",
+      "packages/app-shell/src/orchestra/chapters/integrations-model.ts"
+    ],
+    "source_implications": "Transport pins host/location, schema-decodes pages and sends idempotency keys; model isolates credentials outside reactive presentation state and gates late operations.",
+    "consumer_implications": "Integration screens manage connection, target and session-binding state.",
+    "maintenance_implications": "Retain generation/abort checks, pagination limits and unknown-outcome recovery without exposing secret values.",
+    "limits": "All connection providers, paging and mutation scenarios have not been individually traced or run.",
+    "path_count": 20,
+    "classification_counts": {
+      "implementation": 7,
+      "test-unexecuted": 12,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 2,
+      "family-supported": 18
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "lean",
+    "title": "Lean coverage dashboard",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/lean-controller.ts"
+    ],
+    "source_implications": "Controller owns selected native transport; validates directory and history item IDs, serial-orders accepted snapshots, and reconciles writes with a fresh GET.",
+    "consumer_implications": "Lean view consumes server dashboard facts, not inferred session-cache totals.",
+    "maintenance_implications": "Preserve read/write error separation and cancellation on selection/dispose.",
+    "limits": "Transport schema and all dashboard widgets are family-supported; no dashboard runtime was exercised.",
+    "path_count": 8,
+    "classification_counts": {
+      "test-unexecuted": 1,
+      "implementation": 7
+    },
+    "evidence_depth_counts": {
+      "family-supported": 7,
+      "inspected": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "board",
+    "title": "Board issue lanes and review decisions",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/board/model.ts"
+    ],
+    "source_implications": "Pure model groups issues by stage, orders shipped entries and derives age/spend/decision presentation from Board schemas.",
+    "consumer_implications": "Board chapter consumes these derived values; router permits no project selected.",
+    "maintenance_implications": "Keep unknown/blocked decisions distinct from successful completion and preserve stable issue joins.",
+    "limits": "Board API/controller and complete mutation lifecycle were not inspected; this family is only model-supported.",
+    "path_count": 13,
+    "classification_counts": {
+      "implementation": 11,
+      "test-unexecuted": 2
+    },
+    "evidence_depth_counts": {
+      "family-supported": 12,
+      "inspected": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "guardrails",
+    "title": "Guardrail verdict model",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/guardrails/model.ts",
+      "packages/app-shell/src/orchestra/chapter-route.tsx"
+    ],
+    "source_implications": "Verdict logic distinguishes missing repo/base, error, no rules, blocked, warning and clean.",
+    "consumer_implications": "A guardrails source family exists, but chapterPages at the pin does not register a guardrails route.",
+    "maintenance_implications": "Do not call these files a reachable standalone chapter based only on directory existence.",
+    "limits": "All consumers of this family are not resolved; current route non-registration is the bounded observation.",
+    "path_count": 6,
+    "classification_counts": {
+      "implementation": 5,
+      "test-unexecuted": 1
+    },
+    "evidence_depth_counts": {
+      "family-supported": 5,
+      "inspected": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "schedule",
+    "title": "Scheduled tasks and migration",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/schedule-server.ts",
+      "packages/app-shell/src/orchestra/chapters/schedule-model.ts"
+    ],
+    "source_implications": "Server schedule lists recorded runs, polls while mounted and migrates device tasks using stable IDs. Pure model defines once/hourly/daily/weekly slots and deterministic retry IDs.",
+    "consumer_implications": "Schedule UI can fall back when an older server lacks routes.",
+    "maintenance_implications": "Distinguish server scheduling from legacy device execution; keep DST/local-calendar and one-off lateness semantics.",
+    "limits": "Full device scheduler/claims and Core scheduling execution are not reviewed.",
+    "path_count": 10,
+    "classification_counts": {
+      "implementation": 7,
+      "test-unexecuted": 3
+    },
+    "evidence_depth_counts": {
+      "family-supported": 8,
+      "inspected": 2
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "rag",
+    "title": "RAG Studio source and retrieval controls",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/rag-studio/page.tsx",
+      "packages/app-shell/src/orchestra/chapters/rag-studio/files.tsx",
+      "packages/app-shell/src/orchestra/chapters/rag-studio/question.tsx",
+      "packages/app-shell/src/orchestra/chapters/rag-studio/maintain.tsx"
+    ],
+    "source_implications": "Files admits/parses sources; Question creates a revision then asks and fetches cited source span; Maintain issues scoped pipeline passes and boundary changes.",
+    "consumer_implications": "RAG screen shows corpus/search/model-delivery states from generated SDK responses.",
+    "maintenance_implications": "Preserve server/directory arguments and source span identity; display retrieval-optional/embedding-off copy as UI facts.",
+    "limits": "Server retrieval quality, maintenance atomicity and error/late-response behavior are not established.",
+    "path_count": 4,
+    "classification_counts": {
+      "implementation": 4
+    },
+    "evidence_depth_counts": {
+      "inspected": 4
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "mcp-skills",
+    "title": "MCP and skill configuration screens",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/mcp-actions.ts",
+      "packages/app-shell/src/orchestra/chapters/skills.tsx",
+      ".orchestra/skills/hugr-composer-maintenance/SKILL.md",
+      "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+      "packages/protocol/src/groups/skill.ts",
+      "packages/server/src/handlers/skill.ts"
+    ],
+    "source_implications": "MCP actions deduplicate per-name pending calls; auth waits own abort controllers. Directly inspected Skills code decodes the whole unknown catalog array, requires name/location/content strings and declares optional nullable description/mtime/internal fields; malformed input fails the load. The page scopes warm data by server/directory, distinguishes unavailable/error/empty, and applies visibility/source/access helpers before rendering. Save/remove orchestration and the dialog's path/mtime payload, busy state and disposed-result handling are inspected, as are the pinned skill API declarations and handler error/delegation boundary.",
+    "consumer_implications": "Chapters configure server-provided capabilities; the Composer integration is an external MCP declaration. The Skills editor consumes catalog content and uses file location, not display name, for existing-file writes and saved-file matching. UI access classes expose project edits only for the inspected allowed roots and keep global, builtin, Atlas-governed and fixed entries read-only in the normal dialog.",
+    "maintenance_implications": "Preserve cancellation and name-safe maps; do not classify repository maintainer skills as runtime configuration. Changes to catalog shape/content affect the decoder and editor together. Preserve the server/directory cache identity, path/mtime edit mapping and explicit governed-root distinction. Lexical UI access classification and suppression of late UI results do not substitute for server filesystem enforcement or cancellation of an already sent write.",
+    "limits": "The Skills decoder, catalog visibility/access helpers, page save/remove orchestration, dialog payload and protocol/handler boundary are directly inspected from exact pinned captures. The underlying SkillV2/SkillFile filesystem implementation, Skill.SaveInput schema internals, filesystem path/symlink enforcement, concurrent-write behavior and actual UI/network outcomes were not established. MCP source/edit leaves remain family-supported. No product tests or writes ran, and these selected reads do not establish exhaustive branch or leaf coverage.",
+    "path_count": 14,
+    "classification_counts": {
+      "implementation": 11,
+      "test-unexecuted": 3
+    },
+    "evidence_depth_counts": {
+      "family-supported": 10,
+      "inspected": 4
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "plugins",
+    "title": "Profile behavior plugins",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/plugins.tsx",
+      "packages/app-shell/src/utils/llm-behaviors.ts"
+    ],
+    "source_implications": "Page persists behavior set and serially pushes instructions to server; only latest answer marks supported/applied. Built-in behavior starts disabled.",
+    "consumer_implications": "Composer/project sessions consume server-applied instructions, while UI distinguishes saved from active.",
+    "maintenance_implications": "Keep server rejection/unsupported status visible; behavior draft state alone is not execution authorization.",
+    "limits": "Underlying server application and every behavior storage branch are not traced.",
+    "path_count": 5,
+    "classification_counts": {
+      "implementation": 4,
+      "test-unexecuted": 1
+    },
+    "evidence_depth_counts": {
+      "family-supported": 3,
+      "inspected": 2
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "workspace-tools",
+    "title": "Workspace naming, environment documents and legacy CI runner",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/workspaces-store.ts",

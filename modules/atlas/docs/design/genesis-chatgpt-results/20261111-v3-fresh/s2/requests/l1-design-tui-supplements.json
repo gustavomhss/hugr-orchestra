@@ -1,0 +1,10 @@
+{
+  "unit": "L1-design-tui",
+  "kind": "original-visible-root-instructions",
+  "messages": [
+    "Confirmed via untruncated baseline Git tree: packages root contains only package directories, no packages/AGENTS.md. apps tree has only desktop/AGENTS.md and web/AGENTS.md; no apps/AGENTS.md. Root AGENTS governs. Keep gaps precise without labeling unread behavioral families semantically complete; root will verify capture hashes and all path mappings.",
+    "Baseline untruncated apps tree gives exact CLI boundary paths: apps/cli/src/tui.ts; apps/cli/src/tui-config.ts; apps/cli/src/commands/handlers/attach.ts; apps/cli/src/commands/handlers/run.ts; relevant test siblings attach.test.ts, run.test.ts and apps/cli/test/tui-config.test.ts. Root source baseline is exact 1cde2ff7….",
+    "Baseline exact generator candidates found in apps tree: apps/cli/script/generate.ts; apps/cli/script/schema-files.ts; apps/cli/script/schema.ts; regression witnesses apps/cli/test/schema-files.test.ts and schema.test.ts. Please capture/verify actual generator relationship. Good catch on 1,131,057-byte tui schema; keep oversize observer incompatibility as transport/runtime limitation distinct from semantic source availability (current ownership observer caps file bytes at 256000).",
+    "Root mechanical check passes all 2087 paths, SHAs/modes and captured representatives (62 families). Required L1 completeness correction before judgment: tui-auxiliary-unread (22), tui-demo-replay-unread (4), and ui-context-unread (5) currently leave active behavior as semantic gaps. Preserve coverage v1, then close this finite implementation set with bounded pinned reads and exported-purpose/contract evidence, grouped into meaningful families. Image pixels/license/declarations and the unverified app-sprite generator can retain justified limits; do not invent provenance. This is fixed-bar completeness work, not optional expansion or L2."
+  ]
+}

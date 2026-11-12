@@ -1,0 +1,599 @@
+GENESIS S2 — BOUNDED FINAL RECORD-CORRECTION DELTA
+The exact accepted package and content bodies are unchanged. This asks only whether the independent local record findings are now satisfied, and what material blockers remain. Do not re-review content or infer operational approval. Remain TOOL-FREE: no tools, files, browsing, execution or delegation. Peer original opinions are not supplied.
+SOURCE 1cde2ff7a71bcf7aecb5d030917b577165135d38; PROTOCOL ee2521a5b966bd505cc95bd1c733e09e12f33531; EXECUTION 46d09d97-39a9-482a-a290-646ba1d94c99.
+Unchanged native package SHA256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b. Prior complete packet069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410.
+
+01 ACTUAL RECORD IDENTITIES (externally measured)
+{
+  "schema": "genesis-s2-final-record-review-input/v1",
+  "recorded_at": "2026-11-11T21:35:59.584938+00:00",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "prior_packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "records": [
+    {
+      "path": "work.md",
+      "byte_length": 25446,
+      "sha256": "335b5277098c14ffacd0456a9926dbeb512f0682d43e5641fc1b4cb1fda7be2e"
+    },
+    {
+      "path": "handoff.json",
+      "byte_length": 18854,
+      "sha256": "17a6f55d2c4712879a7ea5a9242e1422a962f7ff35f7fb1b4a68747e66712d5f"
+    },
+    {
+      "path": "execution-ledger.jsonl",
+      "byte_length": 47300,
+      "sha256": "c38acd169bc550babc87211c278f29f2370222f6b2fcae4449a4d80515e10578"
+    },
+    {
+      "path": "evidence/final-criterion-matrix.json",
+      "byte_length": 108664,
+      "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20"
+    },
+    {
+      "path": "evidence/final-local-gates.json",
+      "byte_length": 6902,
+      "sha256": "fb2aad45351f3c03c59bb69458560d79aab07b56dff78a16e2006d7dae6a3f88"
+    },
+    {
+      "path": "evidence/final-record-consolidation.json",
+      "byte_length": 1585,
+      "sha256": "7c4a4cbc4e0dd591788e37ad76f852e9c9a336e2321c0d9ba10275aba5f0ce3a"
+    }
+  ],
+  "disclosure_inventory": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/disclosure-inventory-reviewed.json",
+    "byte_length": 209036,
+    "sha256": "327c1f57e66606672a7790a1cc13c97cd47eb79e7b3c50e9ed4d5c380fda650e"
+  },
+  "current_accounting_scope": {
+    "ledger_rows": 89,
+    "indexed_judge_send_calls": 126,
+    "closure_activations": 2,
+    "actual_closure_response_documents": 2,
+    "semantic_response_documents": 18,
+    "post_snapshot_gets": 7,
+    "named_recent_gets": 16,
+    "current_support_activations": 2,
+    "principal_support_coordination_calls": 1,
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN",
+    "historical": "GLOBAL_UNRECONCILED"
+  },
+  "preserved_reference_correction": {
+    "path": "evidence/final-record-reference-correction.json",
+    "byte_length": 882,
+    "sha256": "fb055e2504292de3477b7c03de3699c1d3d01ca86d36c7dc7820695d78ce01cc"
+  },
+  "limitations": "Hashes externally computed. No new semantic/runtime/consumer/CI/publication PASS. This record review and final export have not run when this input is frozen."
+}
+
+02 CRITERION MATRIX DISPOSITION RECORD
+The saved108664-byte matrix retains each of the50 exact normative lines, local obligations, actual J1/J2 group pointers, original satisfied/outstanding portions, and ROOT global complements. Neither raw peer group reasoning nor prior artifact opinions are copied here. Public disposition labels below are bookkeeping, not peer reasoning. Intersection PASS9/HOLD41; GO-A7 and QS-3 remain HOLD because J2 design-only PASS and J1 runtime-integration HOLD have different scopes. No attempt is made to erase either.
+GO-A1: local=HOLD; J1=HOLD; J2=HOLD
+GO-A2: local=PASS; J1=PASS; J2=PASS
+GO-A3: local=HOLD; J1=HOLD; J2=HOLD
+GO-A4: local=HOLD; J1=HOLD; J2=HOLD
+GO-A5: local=HOLD; J1=HOLD; J2=HOLD
+GO-A6: local=HOLD; J1=HOLD; J2=HOLD
+GO-A7: local=HOLD; J1=HOLD; J2=PASS
+GO-I1: local=PASS; J1=PASS; J2=PASS
+GO-I2: local=PASS; J1=PASS; J2=PASS
+GO-I3: local=HOLD; J1=HOLD; J2=HOLD
+GO-I4: local=HOLD; J1=HOLD; J2=HOLD
+GO-I5: local=HOLD; J1=HOLD; J2=HOLD
+GO-I6: local=HOLD; J1=HOLD; J2=HOLD
+GO-I7: local=HOLD; J1=HOLD; J2=HOLD
+GO-I8: local=PASS; J1=PASS; J2=PASS
+AC-01: local=PASS; J1=PASS; J2=PASS
+AC-02: local=HOLD; J1=HOLD; J2=HOLD
+AC-03: local=HOLD; J1=HOLD; J2=HOLD
+AC-04: local=HOLD; J1=HOLD; J2=HOLD
+AC-05: local=HOLD; J1=HOLD; J2=HOLD
+AC-06: local=HOLD; J1=HOLD; J2=HOLD
+AC-07: local=HOLD; J1=HOLD; J2=HOLD
+AC-08: local=HOLD; J1=HOLD; J2=HOLD
+AC-09: local=HOLD; J1=HOLD; J2=HOLD
+AC-10: local=HOLD; J1=HOLD; J2=HOLD
+CC-1: local=PASS; J1=PASS; J2=PASS
+CC-2: local=HOLD; J1=HOLD; J2=HOLD
+CC-3: local=PASS; J1=PASS; J2=PASS
+CC-4: local=HOLD; J1=HOLD; J2=HOLD
+CC-5: local=HOLD; J1=HOLD; J2=HOLD
+CC-6: local=HOLD; J1=HOLD; J2=HOLD
+CC-7: local=HOLD; J1=HOLD; J2=HOLD
+SC-1: local=HOLD; J1=HOLD; J2=HOLD
+SC-2: local=HOLD; J1=HOLD; J2=HOLD
+SC-3: local=HOLD; J1=HOLD; J2=HOLD
+SC-4: local=HOLD; J1=HOLD; J2=HOLD
+SC-5: local=HOLD; J1=HOLD; J2=HOLD
+QS-1: local=PASS; J1=PASS; J2=PASS
+QS-2: local=PASS; J1=PASS; J2=PASS
+QS-3: local=HOLD; J1=HOLD; J2=PASS
+QS-4: local=HOLD; J1=HOLD; J2=HOLD
+QS-5: local=HOLD; J1=HOLD; J2=HOLD
+QS-6: local=HOLD; J1=HOLD; J2=HOLD
+DOD-1: local=HOLD; J1=HOLD; J2=HOLD
+DOD-2: local=HOLD; J1=HOLD; J2=HOLD
+DOD-3: local=HOLD; J1=HOLD; J2=HOLD
+DOD-4: local=HOLD; J1=HOLD; J2=HOLD
+DOD-5: local=HOLD; J1=HOLD; J2=HOLD
+DOD-6: local=HOLD; J1=HOLD; J2=HOLD
+DOD-7: local=HOLD; J1=HOLD; J2=HOLD
+
+03 COMPLETE CURRENT LOCAL GATE RECORD
+{
+  "schema": "genesis-s2-final-local-gates/v1",
+  "recorded_at": "2026-11-11T21:33:48.987115+00:00",
+  "gates": [
+    {
+      "id": "G-LAYERS",
+      "state": "PASS_CONTENT_ONLY",
+      "applicability": "All thirteen assigned artifacts.",
+      "existing_evidence": [
+        "accepted/l1.json",
+        "accepted/l2.json",
+        "accepted/l3.json",
+        "accepted/l4.json",
+        "evidence/final-semantic-reconciliation.json"
+      ],
+      "remaining": "None for exact accepted bodies. Operational obligations below remain separate.",
+      "blocked_by": []
+    },
+    {
+      "id": "G-RUNTIME",
+      "state": "FAIL",
+      "applicability": "Complete exact S2 native package and mandatory inputs.",
+      "existing_evidence": [
+        "evidence/native-final-prepare/prepare-execution-receipt.json",
+        "evidence/native-final-input-cap-diagnosis.json",
+        "evidence/final-return-remote-recheck/readback-receipt.json"
+      ],
+      "remaining": "Authorized pinned compatible S4 implementation with relevant proof; new isolated exact-package prepare. Preserve mandatory complete inputs, failed attempt and partial CAS. Establish current input/membership observation without fabricated Git HEAD.",
+      "blocked_by": [
+        "B-RUNTIME"
+      ]
+    },
+    {
+      "id": "G-BINDING",
+      "state": "NOT_RUN",
+      "applicability": "Exact native candidate, independent binding decisions and governed Atlas reader publication.",
+      "existing_evidence": [
+        "evidence/native-final-prepare/prepare-execution-receipt.json"
+      ],
+      "remaining": "Actual candidate_id/binding_id, both exact same-pair runtime binding decisions and authorized publication receipts. No candidate exists from the failed prepare.",
+      "blocked_by": [
+        "B-RUNTIME"
+      ]
+    },
+    {
+      "id": "G-CONSUMERS",
+      "state": "NOT_RUN",
+      "applicability": "All fourteen frozen S2-C and S2-I consumer cases.",
+      "existing_evidence": [
+        "requests/consumer-question-deck.json",
+        "oracles/ownership-v1.json",
+        "oracles/layers-addendum.json"
+      ],
+      "remaining": "Fresh Atlas-only contexts, actual index/read traces, exact versions, bounded reads and independent evaluation; preserve consumer isolation from source/oracles.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "G-BINDING"
+      ]
+    },
+    {
+      "id": "G-UPDATE",
+      "state": "NOT_RUN_EXPECTATION_VALIDATED_ONLY",
+      "applicability": "S2-U1 and compatible local-use maintenance controls.",
+      "existing_evidence": [
+        "oracles/update-final-graph-expectation.json",
+        "evidence/u1-final-binding/receipt.json",
+        "judgments/final-closure-r1/j1.json",
+        "judgments/final-closure-r1/j2.json"
+      ],
+      "remaining": "Actual mutation, invalidation, restoration, reuse and proposer-call comparison. Bind existing frozen intent and explicitly missing concrete mutation/observable definitions before execution. Validate expected potential closure without assuming nine interpretation calls. Bind common controls for add/remove, intent/recipe, missing input/edge, authority/validity/gap, receipt refresh and unchanged-result stopping.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "G-BINDING"
+      ]
+    },
+    {
+      "id": "G-RECOVERY",
+      "state": "HOLD",
+      "applicability": "S2 coherence, stale-current refusal, rollback, durable resume and independent valid scope.",
+      "existing_evidence": [
+        "evidence/final-closure-support/s4-observations-full.json",
+        "evidence/s4-discovery-r3/support/ci-summary.json"
+      ],
+      "remaining": "Relevant compatible common-control bindings and S2 local-use proof on an actual exact candidate. S4 sample is not S2 execution.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "G-BINDING"
+      ]
+    },
+    {
+      "id": "G-CI",
+      "state": "HOLD",
+      "applicability": "Required S2 final-payload remote gates; exact implementation compatibility.",
+      "existing_evidence": [
+        "evidence/ci-final-readbacks/run-43065851373.json",
+        "evidence/ci-final-readbacks/run-43077975153.json",
+        "evidence/guards-remote-plan.json",
+        "verification/guards.test.ts"
+      ],
+      "remaining": "Actual authorized S2 payload and applicable GitHub Actions results. S4 run43065851373 failed at e3a; run43077975153 passed at7102. Neither is S2 final-payload CI. Do not transfer the different candidate verdict.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "B-PUBLICATION"
+      ]
+    },
+    {
+      "id": "G-PROVENANCE",
+      "state": "LOCAL_RECORDS_RECONCILED_WITH_DECLARED_LIMITS",
+      "applicability": "Current observable requests/responses, transport corrections, source/body provenance and accounting.",
+      "existing_evidence": [
+        "evidence/final-usage-delta/reconciled-01/observable-usage-delta.json",
+        "evidence/final-closure-response-preservation.json",
+        "evidence/original-preservation-final.json",
+        "execution-ledger.jsonl"
+      ],
+      "remaining": "Retain missing original activation envelopes, nonexhaustive source/support/provider totals, UNKNOWN telemetry and historical GLOBAL_UNRECONCILED. Applicable shared route/reservation/adapter guarantee remains unevidenced; current scoped bookkeeping is complete through the named receipts.",
+      "blocked_by": [
+        "B-SHARED-ACCOUNTING-GUARANTEE"
+      ]
+    },
+    {
+      "id": "G-PUBLICATION",
+      "state": "BLOCKED_AUTOMATIC_APPROVAL",
+      "applicability": "Public GitHub payload P, separate handoff seal H, leased branch update and exact readback.",
+      "existing_evidence": [
+        "evidence/archive-publication-rejection.json",
+        "evidence/remote-publication-rejection.json",
+        "evidence/final-repository-metadata.json"
+      ],
+      "remaining": "Explicit informed authorization for the complete concrete public-disclosure package, or an authorized safer destination. Then fresh HEAD B, P descendant of B, H descendant of P, expected_sha=B/force:false, exact readback. No retry before authorization.",
+      "blocked_by": [
+        "B-PUBLICATION"
+      ]
+    },
+    {
+      "id": "G-CLOSURE",
+      "state": "INCOMPLETE_BLOCKED",
+      "applicability": "All eight local completion requirements in pinned completion.md.",
+      "existing_evidence": [
+        "evidence/final-criterion-matrix.json",
+        "evidence/final-closure-response-preservation.json",
+        "work.md",
+        "handoff.json"
+      ],
+      "remaining": "Operational gates above remain open. Local blocked records are prepared; the same pair may assess only the completed record corrections. Full DELIVERY_COMPLETE remains false.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "B-PUBLICATION",
+        "B-SHARED-ACCOUNTING-GUARANTEE"
+      ]
+    }
+  ],
+  "limits": "No open item becomes N/A because the runtime or permission is absent."
+}
+
+
+04 EXISTING FROZEN S2-U1 BINDING — COMPLETE AUDIT NOTE
+# S2-U1 final binding audit
+
+The frozen case binds an **isolated behavior edit in `apps/desktop/src/main/owned-serve.ts`**, its required controls, and a prediction-only final dependency graph. **It does not specify an exact mutation patch, replacement value, or mutant hash.** No mutation was invented or executed by this audit. Actual mutation, update, restoration, rebinding, and call-count observation remain **NOT_RUN**.
+
+## Exact records
+
+| Existing record | SHA-256 |
+| --- | --- |
+| `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/ownership-v1.json` | `87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1` |
+| `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json` | `716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f` |
+| `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/native-package.json` | `9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b` |
+| `/workspace/scratch/7b5d6430f420/genesis-s2/corpus/apps/desktop/src/main/owned-serve.ts` | `0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5` |
+| `/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md` | `6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697` |
+
+The receipt pins all other cited request/protocol/tree inputs, their byte lengths, and literal original excerpts with line ranges. The frozen case is `ownership-v1.json` `/impact_case` (lines 247–258). Its operation is literally “isolated behavior edit in apps/desktop/src/main/owned-serve.ts”; the restoration control is literally “restore exact source and rebind, no stale fallback”.
+
+## Potential affected closure, not interpretation-call count
+
+The saved graph matches the current native-package hash, direct input declarations, build edges, potential closure, and independent set. The target is a direct input of `s2.l1.desktop-web` and `s2.l2.desktop-web`. Its **nine potential affected artifacts** are both of those, all three L3 artifacts, all three L4 unit artifacts, and `s2.l4.entry`. The four outside this build closure are L1/L2 app-session and design-tui. The original oracle protects units that *only navigate* to desktop; it does not promise that higher layers with declared cross-unit build dependencies are unaffected.
+
+Nine candidates do not imply nine model calls. The normative ownership plan, lines 96–102, permits deterministic discharge and stops downstream propagation only when the validated canonical consumer-visible result is unchanged. AC-05 (line 142) requires zero proposer calls for identical valid inputs/recipe and permits receipt-only binding refresh without downstream interpretation; equal prose with changed authority, validity, or gaps must propagate. SC-3 (line 171) retains the no-unnecessary-interpretation requirement. Actual S2-U1 interpretation calls have not been observed.
+
+## Existing restoration semantics and missing specifics
+
+The exact baseline is **8,511 bytes**, Git blob `31d70c15aafdc91ebccc1c5cd25da153cfac84ed`, SHA-256 `0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5`, at source `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Its captured bytes agree with the frozen desktop tree and both native-package source references. This identifies what “restore exact source” can bind to; the source already being at baseline is not evidence of a completed mutation/restoration cycle. Rebinding and compatible current reads still require actual receipts.
+
+Missing from the inspected frozen S2-U1 records are the exact edit and mutant bytes/hash, case-specific post-mutation canonical-result expectations, and exact omission/control fixtures. Generic requirements exist; their execution does not. The baseline `READY_TIMEOUT = 120_000` line is not a frozen instruction to change that constant. The campaign references `genesis-update-plan-contract.md`, but it is absent at the expected local corpus path recorded in the receipt; no remote search was performed.
+
+This audit reports no mismatch among the compared saved graph, current package, and baseline identities. It does not repair the missing mutation specification or issue a semantic verdict. ROOT supplied the scope that both final judges cover the declared expected graph only; no judge opinion or runtime success is inferred here. Only this new receipt and note were written.
+
+
+05 CURRENT OBSERVABLE ACCOUNTING
+{
+  "literal_review_transport": {
+    "prior_resumed_indexed_send_calls": 113,
+    "new_closure_send_calls": 13,
+    "combined_resumed_indexed_send_calls": 126,
+    "new_payload_dispositions": {
+      "ORIGINAL_NO_KNOWN_INVALIDATION": 11,
+      "INVALIDATED": 1,
+      "FULL_REPLACEMENT": 1
+    },
+    "combined_payload_dispositions": {
+      "ORIGINAL_NO_KNOWN_INVALIDATION": 114,
+      "INVALIDATED": 6,
+      "FULL_REPLACEMENT": 6
+    },
+    "prior_uncertain_return_flags": 3,
+    "new_uncertain_return_flags": 1,
+    "combined_uncertain_return_flags": 4,
+    "flags_are_overlapping_not_extra_calls": true,
+    "new_automatic_retries": 0,
+    "call_index": {
+      "path": "closure-work/final-usage-delta/reconciled-01/closure-call-index.json",
+      "sha256": "f5fd2334b09987698bdfe0df29f7b3a8c9b3e92dd8c6cf68eb25c65818455aaf",
+      "byte_length": 8718
+    },
+    "recipient_resolution": {
+      "both_actual_responses": "COMPLETE, parts 1–6",
+      "j2_part2": "Actual J2 response explicitly confirms complete receipt despite sender-side truncated returned result. Historical uncertainty flag retained.",
+      "j2_part5": "Actual J2 response explicitly uses the correct full replacement and discards the invalid initial send.",
+      "not_claimed": "No independently recomputed host serialized-byte attestation."
+    },
+    "already_recorded_in_current_ledger_row": 80,
+    "deduplication": "Copies and preservation operations are not new sends. Known-input replacement is a distinct actual send."
+  },
+  "read_only_github_observations": {
+    "new_calls": 7,
+    "post_native_dependency_calls": 3,
+    "repository_metadata_calls": 1,
+    "final_return_dependency_calls": 3,
+    "prior_named_recent_batches_calls": 9,
+    "combined_named_recent_batches_calls": 16,
+    "all_remote_read_call_total": "UNKNOWN",
+    "existing_rows": [
+      81,
+      82,
+      83
+    ],
+    "final_return_receipt": {
+      "path": "deliverable/evidence/final-return-remote-recheck/readback-receipt.json",
+      "sha256": "abf61a120a4c99e39b0ef429c4623bf5a231602789f916b4d1bb2706529b47dc",
+      "byte_length": 2837
+    },
+    "post_native_receipt": {
+      "path": "deliverable/evidence/post-native-remote-recheck/readback-receipt.json",
+      "sha256": "6c84df86e7cd1a67426130bdeafdadeeacc07f26ea7e9b16a2faba9e95a98a8e",
+      "byte_length": 2784
+    },
+    "repository_metadata_receipt": {
+      "path": "deliverable/evidence/final-repository-metadata.json",
+      "sha256": "bf7aa21e43cfd287a19b374e22629be5abefccad3e98a76cfe8347b3d4da8583",
+      "byte_length": 741
+    },
+    "additional_capture_hash_catalog": "42 distinct envelope hashes in prior catalog, NONADDITIVE and not a physical attempt count.",
+    "remote_writes_from_these_reads": 0,
+    "new_ci_runs": 0
+  },
+  "remaining_precise_gaps": [
+    "No exact total for initial review activation calls: some standalone visible request/result envelopes were not found. Actual responses and partial ledger entries remain.",
+    "Current support/coordination and original source retrieval totals are not exhaustively indexed. Local file counts and capture hash counts cannot fill this gap.",
+    "Physical provider attempts, tokens, cache tokens, cost and billing are not exposed and remain UNKNOWN.",
+    "Historical campaign reconciliation and common reservation/adapter-envelope guarantees remain GLOBAL_UNRECONCILED/ROOT; no new budget compliance is inferred.",
+    "This record evaluates only receipts available at its bounded cutoff. Later root GETs, record-completion review or export operations must be recorded separately if performed."
+  ],
+  "local_helper_attempts": {
+    "failed_attempt": {
+      "path": "closure-work/final-usage-delta/first-attempt-failure.json",
+      "sha256": "e92679208a10068d5ab3815cc4f5ff18129feeb75018095171797ec45d8cacb7",
+      "byte_length": 843
+    },
+    "failed_script": {
+      "path": "closure-work/final-usage-delta/reconcile_delta.py",
+      "sha256": "7bc6cc0eb74fb75f310fb0063b8e96226fb43cab89965497a223bbcec39da73c",
+      "byte_length": 17545
+    },
+    "correction": "One-based position19279 corrected to zero-based offset19278; exact literal bytes unchanged. New output directory preserves failed partial snapshot.",
+    "no_runtime_or_remote_execution": true
+  }
+}
+Both full original closure responses are now saved: J1 22520bytes SHA30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339; J2 19521bytes SHA22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27. Both have50uniqueIDs and COMPLETE parts1–6. Actual closure responses are separately counted; no new artifact verdicts were created.
+Rows1–79 preserved byte-for-byte. Rows80–83 retain original actual13sends/2activations and7GETs. Rows84–89 append current support, both actual responses, U1binding, usage delta, final work/handoff preparation, and the observed reference correction. Historical ledger pending labels were retained, then resolved by append-only receipts.
+Root-visible support spawn result was {"task_name":"/root/s2_final_usage_delta"}; the worker inherited-context report of aborted return is preserved as a differing observation, not accepted as proof of a failed activation. Actual delivered work proves activation; host internals remain UNKNOWN. Two support activations and one root-to-support coordination message are bounded current observations, not the complete campaign total.
+The reference correction preserved original work/handoff/gate/consolidation/script and ledger88. Two extra deliverable/ prefixes were removed from current paths; dependent hashes updated. No accepted content or actual operation receipt changed.
+All current support receipt gaps remain explicitly bounded. The common adapter/reservation/envelope guarantee remains unevidenced. This review dispatch/results and final export will be recorded separately after real occurrence; that cannot be preclaimed.
+
+06 COMPLETE PUBLIC-DISCLOSURE APPROVAL BRIEF
+# Genesis S2 — autorização para divulgação pública
+
+O destino proposto é o repositório público `gustavomhss/hugr-orchestra`, branch `genesis-fresh-s2`, sob `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/`.
+
+O pedido abrange o pacote completo de revisão que acompanha este arquivo, com todos os membros enumerados e hasheados no manifesto externo `genesis-s2-review-manifest.json`. O ZIP preserva a árvore inteira de `deliverable/`, sem exclusões. Esse manifesto e o recibo de exportação são externos para evitar autorreferência de hashes. Uma aprovação só se aplica aos bytes efetivamente apresentados; alteração material exige nova revisão do escopo.
+
+## Conteúdo que se tornaria público
+
+- Os 13 artefatos L1–L4, suas fontes/dependências e o índice native-package.json.
+- Inventários dos 4.506 paths, árvores congeladas, trechos e cópias completas de fontes, respostas de captura e arquivos ZIP de preservação.
+- Pedidos, respostas e decisões originais de autores e juízes, casos/oracles reservados à avaliação, correções, reprovações históricas e envelopes de transporte disponíveis.
+- execution-ledger.jsonl, work.md, matriz de critérios, handoff.json, IDs de execução/agentes, caminhos locais do workspace, commits e estados de branches, limites de uso conhecidos e desconhecidos.
+- Código e ferramentas de preparação preservados, recibos de CI, stdout/stderr, estado parcial CAS, arquivos da tentativa que falhou e diagnósticos de compatibilidade.
+- As duas rejeições anteriores de publicação e a evidência posterior de que o repositório continua público.
+
+Não há alegação de sanitização integral nem de auditoria de segredos. A revisão automática rejeitou a divulgação externa desses registros porque o pedido de retomar a sessão não autorizava explicitamente a exposição desses dados. A recusa permanece válida; este documento apenas torna o escopo concreto para decisão do usuário.
+
+## Pergunta de autorização
+
+Você autoriza publicar esse pacote completo, incluindo fontes, capturas e registros operacionais internos acima, nesse repositório público e nessa branch?
+
+Essa autorização é independente da correção de runtime S4 ainda necessária. Ela não aprova merge, force push, ativação de produção ou alterações fora de S2. A publicação deverá preservar o estado INCOMPLETE_BLOCKED enquanto os gates operacionais permanecerem abertos, usar os commits separados de payload e handoff, atualização com expected_sha/force:false e releitura exata.
+
+
+07 CONCRETE DISCLOSURE INVENTORY AND LOCAL HANDOFF
+Inventory currently enumerates 1065 exact regular files totaling 85210340 bytes, exclusions=[]; SHA256 327c1f57e66606672a7790a1cc13c97cd47eb79e7b3c50e9ed4d5c380fda650e. The scope is the entire deliverable tree, including archived source/capture/native-state/original-review/history/internal identifiers. Final ZIP will include subsequent record-check receipts and use its external complete file manifest. No upload is performed.
+{
+  "schema": "genesis-s2-blocked-handoff/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "s2",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-fresh-s2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "artifact_revision": null,
+  "observed_branch_head": "ac972ff8dc1126b02f8a16f3942a142e417039ed",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+    "byte_length": 332594
+  },
+  "work_identity": {
+    "path": "work.md",
+    "byte_length": 25446,
+    "sha256": "335b5277098c14ffacd0456a9926dbeb512f0682d43e5641fc1b4cb1fda7be2e"
+  },
+  "ledger_identity": {
+    "path": "execution-ledger.jsonl",
+    "byte_length": 47300,
+    "sha256": "c38acd169bc550babc87211c278f29f2370222f6b2fcae4449a4d80515e10578"
+  },
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "delivery_complete": false,
+  "semantic_content": {
+    "artifacts": 13,
+    "both_judges": "PASS",
+    "scope": "Exact content only"
+  },
+  "runtime": {
+    "state": "PREPARE_FAILED",
+    "receipt": {
+      "path": "evidence/native-final-prepare/prepare-execution-receipt.json",
+      "byte_length": 4187,
+      "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410"
+    },
+    "candidate_id": null,
+    "binding_id": null,
+    "attempt_count": 1,
+    "partial_cas_files": 13,
+    "partial_cas_accepted": false
+  },
+  "update": {
+    "case": "S2-U1",
+    "state": "NOT_RUN",
+    "expectation": "PASS_DECLARED_GRAPH_EXPECTATION_ONLY_BOTH_JUDGES",
+    "frozen_specification_binding": {
+      "path": "evidence/u1-final-binding/receipt.json",
+      "byte_length": 23481,
+      "sha256": "52d68d6aa2eb4b7bcfcf55f860e73de4d85a72271e502a97f5ce5d415b94a8fb"
+    }
+  },
+  "independent_record_work": {
+    "status": "PREPARED_FOR_BOUNDED_RECORD_CORRECTION_CHECK",
+    "same_pair_review_findings": [
+      "J1-CLOSURE-04",
+      "CLOSURE-J2-F3"
+    ],
+    "completed": [
+      "Actual closure responses and exact fifty-ID matrix preserved",
+      "Post-snapshot bounded usage and unknowns reconciled",
+      "Existing S2-U1 specification and missing details explicitly bound",
+      "Concrete public-disclosure scope prepared",
+      "Canonical work and local blocked handoff created"
+    ],
+    "remaining_local_delivery_mechanics": [
+      "Record any actual final record-correction responses without reopening accepted content",
+      "Export and verify the unchanged complete tree; retain external manifest and receipt"
+    ]
+  },
+  "accounting": {
+    "current_bounded_delta": {
+      "path": "evidence/final-usage-delta/reconciled-01/observable-usage-delta.json",
+      "byte_length": 13952,
+      "sha256": "60ef81988c96b2f07c4acc4ffd96c82b823d6b256f5d31e6eba2267d78641feb"
+    },
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN",
+    "historical": "GLOBAL_UNRECONCILED",
+    "historical_owner": "ROOT"
+  },
+  "publication": {
+    "state": "BLOCKED_AUTOMATIC_APPROVAL",
+    "authorized": false,
+    "artifact_commit": null,
+    "seal_commit": null,
+    "remote_readback": null,
+    "disclosure_brief": {
+      "path": "publication-approval-brief.md",
+      "byte_length": 2576,
+      "sha256": "654f9bb0bee9c2df9545d0775525b6367177ae02d2da1fde31517f8234180469"
+    },
+    "scope": "Entire presented review ZIP tree, including internal source/capture/judgment/operational/history records.",
+    "sequence_after_authorization": [
+      "Fresh own HEAD B",
+      "Payload P descendant of B",
+      "Separate handoff H descendant of P; artifact_revision=P",
+      "Update own branch expected_sha=B and force:false",
+      "Exact readback of H and referenced P bytes"
+    ],
+    "rejections": [
+      {
+        "path": "evidence/archive-publication-rejection.json",
+        "byte_length": 820,
+        "sha256": "e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709"
+      },
+      {
+        "path": "evidence/remote-publication-rejection.json",
+        "byte_length": 884,
+        "sha256": "a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21"
+      }
+    ]
+  },
+  "consumed_dependencies": [
+    {
+      "session": "S4",
+      "discovery": {
+        "commit": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+        "git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+        "byte_length": 28282,
+        "release_id": "20261111-v3-fresh-s4-r3",
+        "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+      },
+      "readback": {
+        "path": "evidence/final-return-remote-recheck/readback-receipt.json",
+        "byte_length": 2837,
+        "sha256": "abf61a120a4c99e39b0ef429c4623bf5a231602789f916b4d1bb2706529b47dc"
+      },
+      "compatibility": "NOT_COMPATIBLE_FOR_COMPLETE_S2_INPUTS"
+    }
+  ],
+  "global_integration": {
+    "owner": "ROOT",
+    "status": "NOT_REVIEWED",
+    "separate_states": [
+      "owner acceptance",
+      "union integration",
+      "landing",
+      "production activation"
+    ]
+  },
+  "supersedes": null,
+  "limits": [
+    "This local checkpoint is not a committed/sealed Git handoff.",
+    "No self handoff commit SHA is assigned.",
+    "Faithful bookkeeping does not approve the remaining runtime, consumer, update, recovery, CI or publication gates."
+  ]
+}
+
+08 RETURN SCOPE
+Assess only the fulfilled independent bookkeeping obligations (J1-CLOSURE-04 for J1; CLOSURE-J2-F3 for J2). The mutation specificity absence is explicitly preserved, as permitted; no frozen case is rewritten. Original runtime, consumers/update/recovery, compatible CI and public-disclosure blockers remain. Do not relabel any runtime gate PASS.
+If sufficient, state that the local record correction is satisfied and that an honest INCOMPLETE_BLOCKED return is permitted after the mechanical complete export and faithful recording of this response. If a concrete independently executable correction remains, identify it precisely. No repeated content review is requested. Return concise JSON: reviewer, input_manifest/record pins as supplied, record_finding_status, remaining_material_blockers, ready_for_INCOMPLETE_BLOCKED_after_export, delivery_complete:false, exact limits.

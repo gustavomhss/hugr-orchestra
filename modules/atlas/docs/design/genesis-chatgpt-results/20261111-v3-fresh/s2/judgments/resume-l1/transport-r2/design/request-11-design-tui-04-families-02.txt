@@ -1,0 +1,303 @@
+TRANSPORT ONLY: unit=design-tui r2 section=04-families part=2/5; manifest-order=11/14.
+BEGIN EXACT FILE BODY design-tui-04-families-02.txt
+      "inspected": 6,
+      "family-supported": 15
+    },
+    "classification_counts": {
+      "implementation": 21
+    }
+  },
+  {
+    "id": "tui-terminal-editor",
+    "purpose": "Native terminal, clipboard and editor integration",
+    "representative_source_paths": [
+      "packages/tui/src/terminal-win32.ts",
+      "packages/tui/src/editor.ts",
+      "packages/tui/src/context/editor.ts",
+      "packages/tui/src/clipboard.ts",
+      "script/spawn-allowlist.json"
+    ],
+    "source_implications": "Platform-guarded Windows handling, OSC52/native clipboard, external editor suspend/resume and loopback editor integration.",
+    "consumer_implications": "Prompt receives pending editor context and attachments; terminal renderer owns suspension/cleanup.",
+    "maintenance_implications": "Preserve finally/cleanup behavior and explicit subprocess allowlist ownership.",
+    "semantic_limits": "No OS, clipboard, websocket, Zed or real terminal validation; editor-zed leaf adapter is not independently read.",
+    "metadata_only": false,
+    "path_count": 6,
+    "byte_count": 34814,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "implementation": 6
+    }
+  },
+  {
+    "id": "tui-attention-audio",
+    "purpose": "Focus-aware notifications and lazy audio resources",
+    "representative_source_paths": [
+      "packages/tui/src/attention.ts",
+      "packages/tui/src/audio.ts",
+      "packages/tui/src/config/index.tsx",
+      "packages/tui/src/feature-plugins/system/notifications.ts"
+    ],
+    "source_implications": "Attention is disabled by default; normalizes content, chooses sound fallbacks and disposes listeners; audio lazily caches loads.",
+    "consumer_implications": "Feature notifications call attention; mp3 bytes are exported from UI package.",
+    "maintenance_implications": "Preserve disabled/no-audio behavior, listener disposal and sanitized bounded notification text.",
+    "semantic_limits": "No audio audition or native notification execution.",
+    "metadata_only": false,
+    "path_count": 3,
+    "byte_count": 10496,
+    "depth_counts": {
+      "inspected": 2,
+      "family-supported": 1
+    },
+    "classification_counts": {
+      "implementation": 2,
+      "type-declaration": 1
+    }
+  },
+  {
+    "id": "tui-theme-engine",
+    "purpose": "Terminal palette loading, theme resolution and reload lifecycle",
+    "representative_source_paths": [
+      "packages/tui/src/theme/index.ts",
+      "packages/tui/src/context/theme.tsx",
+      "packages/tui/test/theme.test.ts"
+    ],
+    "source_implications": "Terminal ThemeJson defs/theme format is separate from DesktopTheme; built-in/plugin/custom/system precedence is explicit.",
+    "consumer_implications": "Renderer palette and theme context feed widgets and plugin adapters.",
+    "maintenance_implications": "Preserve fallback, config/KV precedence and reload listeners; do not validate terminal presets with desktop schema.",
+    "semantic_limits": "Not all palette branches or preset values are individually evaluated.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 37629,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "implementation": 2
+    }
+  },
+  {
+    "id": "tui-theme-data",
+    "purpose": "Checked-in terminal preset and example theme data",
+    "representative_source_paths": [
+      "packages/tui/src/theme/assets/aura.json",
+      "packages/tui/src/theme/index.ts",
+      "packages/tui/src/context/theme.tsx",
+      ".orchestra/themes/mytheme.json"
+    ],
+    "source_implications": "Thirty-three preset JSONs are imported; representative custom example has terminal format.",
+    "consumer_implications": "Theme resolver consumes this data; preset filenames alone do not imply generator provenance.",
+    "maintenance_implications": "Preserve terminal schema shape; upstream preset authorship/generation is unverified.",
+    "semantic_limits": "Representative parse and consumer inspection; no per-theme contrast/appearance audit.",
+    "metadata_only": false,
+    "path_count": 34,
+    "byte_count": 156925,
+    "depth_counts": {
+      "inspected": 2,
+      "family-supported": 32
+    },
+    "classification_counts": {
+      "configuration-example": 1,
+      "theme-data": 33
+    }
+  },
+  {
+    "id": "tui-presentation-helpers",
+    "purpose": "Model/file/path/locale labels, epilogue art and environment descriptions",
+    "representative_source_paths": [
+      "packages/tui/src/logo.ts",
+      "packages/tui/src/util/format.ts",
+      "packages/tui/src/util/locale.ts",
+      "packages/tui/src/util/model.ts",
+      "packages/tui/src/util/filetype.ts",
+      "packages/tui/src/util/path.ts",
+      "packages/tui/src/util/presentation.ts",
+      "packages/tui/src/util/session.ts",
+      "packages/tui/src/util/system.ts",
+      "packages/tui/src/component/prompt/index.tsx",
+      "packages/tui/src/routes/session/tool.tsx"
+    ],
+    "source_implications": "Explicit pure-format helpers except environment/path reads: duration units, model provider parsing, extension mapping, Windows realpath fallback, default-title regex and ANSI epilogue.",
+    "consumer_implications": "Prompt/tool/session/app use compact labels, paths, model names and session continuation presentation.",
+    "maintenance_implications": "Keep duration units distinct, stable IDs separate from display names, and platform-dependent path behavior explicit.",
+    "semantic_limits": "All leaf source contracts inspected; environment rendering and locale/timezone output unexecuted. Related util tests are inventoried, not executed.",
+    "metadata_only": false,
+    "path_count": 9,
+    "byte_count": 9703,
+    "depth_counts": {
+      "inspected": 9
+    },
+    "classification_counts": {
+      "implementation": 9
+    }
+  },
+  {
+    "id": "tui-message-export-helpers",
+    "purpose": "Tool state extraction, bounded previews, revert summaries and Markdown transcript export",
+    "representative_source_paths": [
+      "packages/tui/src/util/collapse-tool-output.ts",
+      "packages/tui/src/util/session-message.ts",
+      "packages/tui/src/util/tool-display.ts",
+      "packages/tui/src/util/revert-diff.ts",
+      "packages/tui/src/util/transcript.ts",
+      "packages/tui/src/routes/session/index.tsx",
+      "packages/tui/src/routes/session/tool.tsx"
+    ],
+    "source_implications": "Helpers distinguish pending/running/settled tool state, bound previews by lines/code points, parse revert file counts and format ordered transcripts with explicit omission/options.",
+    "consumer_implications": "Session copy/export and tool/revert renderers consume derived display data; they do not modify server history.",
+    "maintenance_implications": "Preserve synthetic/system-message omission in exports, metadata precedence and graceful malformed-patch fallback.",
+    "semantic_limits": "All leaf contracts inspected; parser dependency behavior and actual clipboard/file export unexecuted. Matching util tests inventoried.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 6952,
+    "depth_counts": {
+      "inspected": 5
+    },
+    "classification_counts": {
+      "implementation": 5
+    }
+  },
+  {
+    "id": "tui-render-input-helpers",
+    "purpose": "Renderer destruction, pre-layout geometry, selection copy, scroll and reactive timers",
+    "representative_source_paths": [
+      "packages/tui/src/util/layout.ts",
+      "packages/tui/src/util/renderer.ts",
+      "packages/tui/src/util/scroll.ts",
+      "packages/tui/src/util/selection.ts",
+      "packages/tui/src/util/signal.ts",
+      "packages/tui/src/app.tsx",
+      "packages/tui/src/component/prompt/index.tsx"
+    ],
+    "source_implications": "Helpers cache previous siblings per frame, clear title before guarded destroy, choose acceleration/speed, handle selection Ctrl-C/Escape and clean debounce/fade timers.",
+    "consumer_implications": "App selection keys and prompt animation use these contracts; renderer owns actual terminal geometry.",
+    "maintenance_implications": "Preserve early pre-layout timing and event ownership; asynchronous copy clears selection before write settles.",
+    "semantic_limits": "All leaf implementations inspected; no real frame timing, clipboard, animation or native terminal execution.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 5368,
+    "depth_counts": {
+      "inspected": 5
+    },
+    "classification_counts": {
+      "implementation": 5
+    }
+  },
+  {
+    "id": "tui-error-shapes",
+    "purpose": "Unknown-error decoding and logging/presentation contracts",
+    "representative_source_paths": [
+      "packages/tui/src/util/error.ts",
+      "packages/tui/src/util/record.ts",
+      "packages/tui/src/component/prompt/index.tsx",
+      "packages/tui/src/routes/session/index.tsx"
+    ],
+    "source_implications": "Formats Error/tagged/wire objects, config/provider messages and enumerable/nonenumerable data; CliError decoding can set process.exitCode.",
+    "consumer_implications": "Prompt and route failures show concise errorMessage; structured formatter supports diagnostic callers.",
+    "maintenance_implications": "Do not assume all formatters are pure: preserve the explicit exitCode side effect and cancellation empty-string convention.",
+    "semantic_limits": "Full source inspected; wording may reflect older server capabilities and is not current MCP feature proof; util/error test unexecuted.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 6519,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "implementation": 2
+    }
+  },
+  {
+    "id": "tui-parser-config",
+    "purpose": "Additional terminal syntax parser declarations and query ownership",
+    "representative_source_paths": [
+      "packages/tui/src/parsers-config.ts",
+      "packages/tui/src/routes/session/index.tsx",
+      "packages/tui/src/util/filetype.ts"
+    ],
+    "source_implications": "Default export lists 34 parser configurations; session module registers them through addDefaultParsers. Built-in Markdown/JS/TS are excluded in the comment.",
+    "consumer_implications": "Terminal code/diff rendering can load declared WASM and query URLs; filetype helper maps extensions to renderer language IDs.",
+    "maintenance_implications": "Respect query inheritance/version compatibility; query URLs mix revision/release pins and moving master refs.",
+    "semantic_limits": "Parser records structurally inventoried with selected query/provenance cases inspected. No download, checksum, parser compatibility or syntax rendering validation.",
+    "metadata_only": false,
+    "path_count": 1,
+    "byte_count": 16277,
+    "depth_counts": {
+      "inspected": 1
+    },
+    "classification_counts": {
+      "configuration-source": 1
+    }
+  },
+  {
+    "id": "tui-demo-runtime",
+    "purpose": "Provider-free demo command construction and local request settlement",
+    "representative_source_paths": [
+      "packages/tui/src/context/demo.ts",
+      "packages/tui/src/context/demo-run.ts",
+      "packages/tui/src/context/sdk.tsx",
+      "packages/tui/src/context/sync.tsx",
+      "packages/tui/src/component/prompt/index.tsx"
+    ],
+    "source_implications": "mini+demo prompt branch parses fmt/permission/question commands, constructs synthetic messages with demo_ IDs and emits local asked/replied events; waiting map entries are deleted by settle.",
+    "consumer_implications": "Permission/question UI can be demonstrated without provider calls; SDK intercepts demo request IDs and Sync patches synthetic tools.",
+    "maintenance_implications": "Keep demo IDs and interception aligned; unmatched input continues through normal dispatch; unanswered waiting entries have no cleanup shown here.",
+    "semantic_limits": "Full demo source inspected, no demo run; synthetic fixture content is not an actual provider/tool execution result. context/demo test inventoried.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 13658,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "implementation": 2
+    }
+  },
+  {
+    "id": "tui-replay-thinking",
+    "purpose": "Mini replay projection and persisted reasoning disclosure mode",
+    "representative_source_paths": [
+      "packages/tui/src/context/replay.ts",
+      "packages/tui/src/context/thinking.ts",
+      "packages/tui/src/routes/session/index.tsx"
+    ],
+    "source_implications": "replayWindow leaves ordinary sessions unchanged and filters/slices mini messages; thinking defaults hide, migrates legacy boolean/minimal values, and splits a bold summary heading.",
+    "consumer_implications": "Session route consumes replay arguments and KV-backed disclosure preference; reasoning content is display metadata.",
+    "maintenance_implications": "Preserve openedAt boundary and preference migration; helper does not validate CLI limit constraints.",
+    "semantic_limits": "Full helper source inspected; replay/thinking test files inventoried and unexecuted; no live reasoning stream verification.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 3400,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "implementation": 2
+    }
+  },
+  {
+    "id": "tui-tests",
+    "purpose": "Terminal regression sources read or inventoried, all unexecuted",
+    "representative_source_paths": [
+      "packages/tui/test/app-lifecycle.test.tsx",
+      "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "packages/tui/test/cli/tui/prompt-submit-race.test.ts",
+      "packages/tui/test/context/session-actions.test.ts",
+      "packages/tui/test/keymap.test.tsx",
+      "packages/tui/test/config.test.tsx",
+      "packages/tui/test/plugin/runtime.test.ts",
+      "packages/tui/test/theme.test.ts"
+    ],
+    "source_implications": "Read tests provide intended assertions; mounted/mock-renderer, real helper and mirrored prompt tests have different evidentiary strength.",
+    "consumer_implications": "Maintainers can use the permitted CI workflow after the appropriate phase.",
+    "maintenance_implications": "Do not report source assertions or historical results as this task's execution result.",
+    "semantic_limits": "Unread tests are identified inventory only; their assertions are not claimed.",
+    "metadata_only": false,
+    "path_count": 55,
+    "byte_count": 207171,
+    "depth_counts": {
+      "inspected": 8,
+
+END EXACT FILE BODY design-tui-04-families-02.txt

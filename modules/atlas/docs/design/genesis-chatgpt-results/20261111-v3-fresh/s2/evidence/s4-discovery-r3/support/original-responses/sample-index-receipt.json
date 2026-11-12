@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "{\n  \"command\": [\n    \"/workspace/scratch/aff930d22ec7/s4/tools/node_modules/.bin/bun\",\n    \"scripts/genesis-native.ts\",\n    \"index\",\n    \"/workspace/scratch/aff930d22ec7/s4/candidate\",\n    \"/workspace/scratch/aff930d22ec7/s4/runtime-state/sample-index-query.json\"\n  ],\n  \"cwd\": \"/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas\",\n  \"start_utc\": \"2026-11-11T17:56:10.507898+00:00\",\n  \"duration_seconds\": 0.3111615760008135,\n  \"exit_code\": 0,\n  \"stdout_sha256\": \"fa0ea100eadc0531ba1c5c5a7186be75d7086437319092a47161ac3080ad58c7\",\n  \"stderr_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n  \"candidate_revision\": \"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1\"\n}\n",
+    "encoding": "utf-8",
+    "sha": "3acc43077ec955b551c288e8a9c920f190e4d50d",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/6e43247103ac36e5adb635f2fccde2e61480c56d/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.receipt.json",
+    "display_title": "sample-index-v1.receipt.json"
+  },
+  "isError": false
+}

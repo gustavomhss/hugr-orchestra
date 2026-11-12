@@ -1,0 +1,512 @@
+{
+  "schema": "genesis-s2-final-closure-literal-packet/v1",
+  "packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "packet_byte_length": 136972,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "part_count": 6,
+  "max_part_bytes": 26000,
+  "parts": [
+    {
+      "filename": "part-001-of-006.txt",
+      "number": 1,
+      "of": 6,
+      "byte_length": 26000,
+      "sha256": "2dd6222f0a52433f859261033ca518bf6118c364fbb797ad901987074bdbad3f",
+      "header_byte_length": 367,
+      "payload_offset": 0,
+      "payload_byte_length": 25633,
+      "payload_sha256": "5b6bf95a27cd6b0491d4d14b8ef75e34a754290ac22e88a6cf42f9cd707e2c9d"
+    },
+    {
+      "filename": "part-002-of-006.txt",
+      "number": 2,
+      "of": 6,
+      "byte_length": 26000,
+      "sha256": "9187be41e480a99883dd2f8e339cb483936a1170944f2f2c1a9a1b458107ba28",
+      "header_byte_length": 367,
+      "payload_offset": 25633,
+      "payload_byte_length": 25633,
+      "payload_sha256": "a7827c72a42bba0102b543ae856258474cb655345bd4d6d29bad82af6b251ec7"
+    },
+    {
+      "filename": "part-003-of-006.txt",
+      "number": 3,
+      "of": 6,
+      "byte_length": 26000,
+      "sha256": "b06146b616e1e8ec58e167556bf9918faf443a1bb608cc622a493406f9d37a01",
+      "header_byte_length": 367,
+      "payload_offset": 51266,
+      "payload_byte_length": 25633,
+      "payload_sha256": "5d23701e60343d502c904e26519f256bb1a3015874315ec37986a465e7f43479"
+    },
+    {
+      "filename": "part-004-of-006.txt",
+      "number": 4,
+      "of": 6,
+      "byte_length": 26000,
+      "sha256": "f542755da654473d627446af9e35043980e2fe904f9295fc7c5aa0f61d1cf796",
+      "header_byte_length": 367,
+      "payload_offset": 76899,
+      "payload_byte_length": 25633,
+      "payload_sha256": "649dbfc649ebcc61f06a7b02430539e5428dcfd4b7191893596f252b90749066"
+    },
+    {
+      "filename": "part-005-of-006.txt",
+      "number": 5,
+      "of": 6,
+      "byte_length": 26000,
+      "sha256": "bfe7efb7bfb52570c39aa1f3ebc8ac3f56d21952b5e704a53f69a47a9335ecf5",
+      "header_byte_length": 367,
+      "payload_offset": 102532,
+      "payload_byte_length": 25633,
+      "payload_sha256": "6c2def109cac3d7389c4db75c02a2d20dfb03d10aeacbdd5004520bb71742f04"
+    },
+    {
+      "filename": "part-006-of-006.txt",
+      "number": 6,
+      "of": 6,
+      "byte_length": 9174,
+      "sha256": "f37ef2e42f31c408cd93a8e468ea0963e6b35f54788aea23104db097f0466ab4",
+      "header_byte_length": 367,
+      "payload_offset": 128165,
+      "payload_byte_length": 8807,
+      "payload_sha256": "9f3e150c601a1e8b7fcec4ff7aeb55cae1d1958fab82b6a3ffc101ac53412f79"
+    }
+  ],
+  "sections": [
+    {
+      "name": "00 PACKET SCOPE AND IDENTITIES",
+      "content_offset": 178,
+      "content_byte_length": 1413,
+      "content_sha256": "5e3dcd9d53923bdb6a6e9fe0b2187b1be6e1a0e246c2a149b9a6e707faa50dc9",
+      "source": null
+    },
+    {
+      "name": "01 COMPLETE FINAL-RENDER WORK.MD — DRAFT, NOT A VERDICT",
+      "content_offset": 2002,
+      "content_byte_length": 27792,
+      "content_sha256": "19843333b96ba17a6fddedd756a1e840df09adeeefde0895b5430d2eb8b7cc44",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-render-02/work.md",
+        "byte_length": 27792,
+        "sha256": "19843333b96ba17a6fddedd756a1e840df09adeeefde0895b5430d2eb8b7cc44"
+      }
+    },
+    {
+      "name": "02 ALL FIFTY EXACT NORMATIVE LINES AND LOCAL OBLIGATIONS",
+      "content_offset": 30226,
+      "content_byte_length": 25430,
+      "content_sha256": "a89ebab7bf4b20bd0638a91f18e7b146271198a88fb5c6956f3f63dbb48a0ab3",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "byte_length": 28267,
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      }
+    },
+    {
+      "name": "03 THIRTEEN BODY IDENTITIES AND FOUR ACCEPTED MANIFEST PINS — PUBLIC METADATA ONLY",
+      "content_offset": 55922,
+      "content_byte_length": 12172,
+      "content_sha256": "1c4a37c1d150c8753b6752ca064e0d796236c38c5ca5a339ac7306676dc8e2e0",
+      "source": null
+    },
+    {
+      "name": "04 ACTUAL NATIVE OPERATION RECEIPT — SCOPE IS THE RECORDED OPERATION ONLY",
+      "content_offset": 68558,
+      "content_byte_length": 4187,
+      "content_sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+        "byte_length": 4187,
+        "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410"
+      }
+    },
+    {
+      "name": "05 EXACT ACTUAL RUNTIME STDOUT",
+      "content_offset": 73195,
+      "content_byte_length": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stdout",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "06 EXACT ACTUAL RUNTIME STDERR",
+      "content_offset": 73647,
+      "content_byte_length": 158,
+      "content_sha256": "43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stderr",
+        "byte_length": 158,
+        "sha256": "43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079"
+      }
+    },
+    {
+      "name": "07 ACTUAL READBACK AND CI OBSERVATIONS AT SUPPLIED PINS",
+      "content_offset": 74042,
+      "content_byte_length": 10043,
+      "content_sha256": "296702e17d439df422fd46fd11a2d6b6ae79fff7eec10efed5bcd7098a9812ed",
+      "source": null
+    },
+    {
+      "name": "08.01 BOUNDED SUPPLIED S4 CI/COMPATIBILITY OBSERVATIONS",
+      "content_offset": 84528,
+      "content_byte_length": 11549,
+      "content_sha256": "cfbd2c7e890c04142c482f300346c3f6e8b82f0902fc682938a2a9204ed73da4",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/s4-observations-review.json",
+        "byte_length": 11549,
+        "sha256": "cfbd2c7e890c04142c482f300346c3f6e8b82f0902fc682938a2a9204ed73da4"
+      }
+    },
+    {
+      "name": "08B.01 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS",
+      "content_offset": 96523,
+      "content_byte_length": 11533,
+      "content_sha256": "6a00443c0c02156edefc184eacec575e00192ad2900f32343971d9dd95773c78",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/observable-usage-review.json",
+        "byte_length": 11533,
+        "sha256": "6a00443c0c02156edefc184eacec575e00192ad2900f32343971d9dd95773c78"
+      }
+    },
+    {
+      "name": "08B.02 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS",
+      "content_offset": 108503,
+      "content_byte_length": 3230,
+      "content_sha256": "33087116edd0024e4bc0c4f646fb3d92a498af56f515db0c7e0466c7bc63b3f4",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/current-operations-review.json",
+        "byte_length": 3230,
+        "sha256": "33087116edd0024e4bc0c4f646fb3d92a498af56f515db0c7e0466c7bc63b3f4"
+      }
+    },
+    {
+      "name": "08B.03 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS",
+      "content_offset": 112162,
+      "content_byte_length": 6260,
+      "content_sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json",
+        "byte_length": 6260,
+        "sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f"
+      }
+    },
+    {
+      "name": "09.01 EXACT ORIGINAL PUBLIC-WRITE REFUSAL — HISTORICAL EVIDENCE",
+      "content_offset": 118858,
+      "content_byte_length": 820,
+      "content_sha256": "e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/archive-publication-rejection.json",
+        "byte_length": 820,
+        "sha256": "e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709"
+      }
+    },
+    {
+      "name": "09.02 EXACT ORIGINAL PUBLIC-WRITE REFUSAL — HISTORICAL EVIDENCE",
+      "content_offset": 120113,
+      "content_byte_length": 884,
+      "content_sha256": "a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/remote-publication-rejection.json",
+        "byte_length": 884,
+        "sha256": "a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21"
+      }
+    },
+    {
+      "name": "10 S2-U1 DECLARED-GRAPH PREDICTION, SEPARATE FROM ANY ACTUAL EXECUTION",
+      "content_offset": 121248,
+      "content_byte_length": 1063,
+      "content_sha256": "2a09cf31ee3661eafa491de3e5c678c5e3392c418f648ebaca66250b209faac3",
+      "source": null
+    },
+    {
+      "name": "11 CONSUMER OBLIGATION METADATA ONLY — NO QUESTIONS OR ANSWER KEYS",
+      "content_offset": 122560,
+      "content_byte_length": 3113,
+      "content_sha256": "66f839d8f7dc7a01c5a3a19b22582f40f5cf1c62459f99a7c730a77c60ed4f87",
+      "source": null
+    },
+    {
+      "name": "12 SOURCE PRESERVATION AND HONEST USAGE — RECEIPT SCOPE",
+      "content_offset": 125911,
+      "content_byte_length": 6146,
+      "content_sha256": "91481b50dc5d97c1eafd6e0451d2d7d2d91fbee1ed5769f484643fe190aee9e1",
+      "source": null
+    },
+    {
+      "name": "13 PINNED LOCAL COMPLETION PROTOCOL",
+      "content_offset": 132442,
+      "content_byte_length": 4497,
+      "content_sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+      "source": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/completion.md",
+        "byte_length": 4497,
+        "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd"
+      }
+    }
+  ],
+  "criterion_ids": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "root_request_template": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/closure-review-tools/root-seal-request.template.md",
+    "byte_length": 5371,
+    "sha256": "1c5536f66fc60521f8b9a47e9154ba0ed7aae5475f960d70302da5eafb53df99"
+  },
+  "artifact_keys": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.entry"
+  ],
+  "snapshot_input_files": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/closure-review-tools/root-seal-request.template.md",
+      "byte_length": 5371,
+      "sha256": "1c5536f66fc60521f8b9a47e9154ba0ed7aae5475f960d70302da5eafb53df99"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-render-02/final-obligations.json",
+      "byte_length": 2227586,
+      "sha256": "43b0f8e749711917cbb57a22aba84c479e1fbea0e1b9dcfbfa6ea5abc622641b"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-render-02/work.md",
+      "byte_length": 27792,
+      "sha256": "19843333b96ba17a6fddedd756a1e840df09adeeefde0895b5430d2eb8b7cc44"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/obligations.json",
+      "byte_length": 62342,
+      "sha256": "e97ef99bf67d691faa197991cea9a8f9c8b30f5861a01fdb8b76b9e41f03b3ad"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/render_final_work.py",
+      "byte_length": 46710,
+      "sha256": "63d2f8a28747a562e9d78cefd5b21ce93321ffb221bbae778db2bc3c0853d30f"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+      "byte_length": 2963,
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+      "byte_length": 2847,
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+      "byte_length": 2847,
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+      "byte_length": 3558,
+      "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/archive-publication-rejection.json",
+      "byte_length": 820,
+      "sha256": "e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/current-operations-review.json",
+      "byte_length": 3230,
+      "sha256": "33087116edd0024e4bc0c4f646fb3d92a498af56f515db0c7e0466c7bc63b3f4"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/observable-usage-review.json",
+      "byte_length": 11533,
+      "sha256": "6a00443c0c02156edefc184eacec575e00192ad2900f32343971d9dd95773c78"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/s4-observations-review.json",
+      "byte_length": 11549,
+      "sha256": "cfbd2c7e890c04142c482f300346c3f6e8b82f0902fc682938a2a9204ed73da4"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+      "byte_length": 4187,
+      "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/remote-publication-rejection.json",
+      "byte_length": 884,
+      "sha256": "a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/l1.md",
+      "byte_length": 42047,
+      "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/l1.md",
+      "byte_length": 36964,
+      "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/l1.md",
+      "byte_length": 29075,
+      "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/app-session/body.md",
+      "byte_length": 24434,
+      "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/design-tui/body.md",
+      "byte_length": 21535,
+      "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/desktop-web/body.md",
+      "byte_length": 18440,
+      "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/app-session/body.md",
+      "byte_length": 14334,
+      "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/design-tui/body.md",
+      "byte_length": 15780,
+      "sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/desktop-web/body.md",
+      "byte_length": 14715,
+      "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/app-session/body.md",
+      "byte_length": 11220,
+      "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/design-tui/body.md",
+      "byte_length": 11783,
+      "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/desktop-web/body.md",
+      "byte_length": 11183,
+      "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/entry/body.md",
+      "byte_length": 5849,
+      "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/native-package.json",
+      "byte_length": 332594,
+      "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/ownership-v1.json",
+      "byte_length": 12869,
+      "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json",
+      "byte_length": 6260,
+      "sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/completion.md",
+      "byte_length": 4497,
+      "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/criteria.json",
+      "byte_length": 4001,
+      "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stderr",
+      "byte_length": 158,
+      "sha256": "43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stdout",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "transport_limit": "Exact local literal bytes only; host message serialization, actual sends and judge receipt are not observed by this builder.",
+  "no_dispatch": true,
+  "no_judgment": true,
+  "no_handoff_seal": true
+}

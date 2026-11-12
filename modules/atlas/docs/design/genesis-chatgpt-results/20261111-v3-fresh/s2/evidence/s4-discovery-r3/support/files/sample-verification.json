@@ -1,0 +1,43 @@
+{
+  "schema": "s4-native-path-verification/v1",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+  "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+  "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+  "receipt": "e58b1c0529ce4f0e885c04e632ae2662febd9a3415b0c072485bbeb827bf72c9",
+  "body_byte_length": 17959,
+  "body_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+  "body_equals_original_native_production": true,
+  "read_historical": false,
+  "index_returns_body": false,
+  "gates": [
+    {
+      "gate": "shape",
+      "pass": true
+    },
+    {
+      "gate": "truth",
+      "pass": true
+    },
+    {
+      "gate": "authz",
+      "pass": true
+    },
+    {
+      "gate": "ratify",
+      "pass": true
+    }
+  ],
+  "actual_operator": "/root",
+  "actual_reviewers": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "source_copy_observed_head": null,
+  "limits": [
+    "One artifact; full S4 L1-L4 still incomplete.",
+    "Principal performed these operations; independent Atlas-only consumer remains a later obligation.",
+    "Local policy is authorized isolated responsibility; no production activation or cryptographic identity authentication.",
+    "Prior CI for this V1 remains overall failed; later corrected implementation/control candidate has separately recorded successful CI."
+  ]
+}

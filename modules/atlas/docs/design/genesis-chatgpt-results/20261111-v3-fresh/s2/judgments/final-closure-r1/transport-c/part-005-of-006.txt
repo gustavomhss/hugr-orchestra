@@ -1,0 +1,798 @@
+GENESIS S2 FINAL CLOSURE — LITERAL PART 000005/000006
+packet_sha256=069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410
+payload_bytes=000000025633; payload_sha256=6c2def109cac3d7389c4db75c02a2d20dfb03d10aeacbdd5004520bb71742f04
+Transport only. No tools. Await the principal's separate seal/request before judging.
+--- EXACT PAYLOAD SEGMENT FOLLOWS ---
+alls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "l4-app-r1",
+        "logical_calls": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-design-r1",
+        "logical_calls": 6,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-entry-r1",
+        "logical_calls": 5,
+        "invalidated_calls": 1,
+        "full_replacements": 1,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "l4-entry-r2",
+        "logical_calls": 2,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      }
+    ]
+  },
+  "judges": {
+    "actual_semantic_response_documents": 18,
+    "artifact_verdict_entries_including_superseded_revisions": 34,
+    "verdict_counts_including_history": {
+      "PASS": 26,
+      "FIX-FIRST": 8
+    },
+    "current_accepted_artifacts": 13,
+    "current_accepted_pass_bindings": 26,
+    "explicit_saved_activation_request_or_dispatch_calls": 12,
+    "additional_ledger_only_review_activations": [
+      {
+        "ledger_row": 23,
+        "target": "/root/s2_resume_j1",
+        "batch": "desktop L1r1"
+      },
+      {
+        "ledger_row": 34,
+        "target": "/root/s2_resume_j1",
+        "batch": "desktop/design L1r2"
+      }
+    ],
+    "exact_total_review_activation_calls": null,
+    "one_failed_activation": {
+      "ledger_row": 22,
+      "target": "/root/s2_resume_j1",
+      "result": "thread-capacity rejection; later dispatched once"
+    },
+    "judge_context_initializations_separate_from_reviews": {
+      "original_ready_records": [
+        12,
+        13
+      ],
+      "resumed_ready_dispatch_records": [
+        15,
+        16
+      ],
+      "old_handles_not_found_record": 14
+    },
+    "limits": "Response documents are real preserved results, not inferred executions. Initial L1 J2 desktop, J2 desktop/design and both app-r3 review activations lack standalone dispatched-call receipts in this bounded index; their actual response documents remain present. Closure review is outside this preclosure snapshot."
+  },
+  "native_prepare": {
+    "logical_cli_invocations": 1,
+    "receipt": {
+      "path": "deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+      "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410",
+      "byte_length": 4187
+    },
+    "state": "PREPARE_FAILED",
+    "exit_code": 1,
+    "started_at": "2026-11-11T20:48:51.158507+00:00",
+    "ended_at": "2026-11-11T20:48:52.041873+00:00",
+    "automatic_retries": 0,
+    "candidate_id": null,
+    "binding_id": null,
+    "partial_cas_preserved": true,
+    "scope": "Own S2 final package only; prior setup/typecheck and other-session sample operations are not additional S2 prepare calls"
+  },
+  "readbacks": {
+    "captured_returns_in_these_four_batches": 9,
+    "additional_capture_catalog_file": "additional-connector-capture-index.json",
+    "additional_distinct_envelope_hashes": 42,
+    "total_remote_read_calls": null,
+    "new_ci_runs_from_readbacks": false,
+    "limits": "The four named batches are9 captured logical GET results, not a global read total. The additional catalog is non-additive: matching hashes collapse preserved copies, but separate repeated GETs can produce identical bytes. Initial source captures, all historical reads and every root/support tool call are not fully reconciled here.",
+    "named_batches": [
+      {
+        "batch": "s4-r3-discovery",
+        "observed_connector_returns": 2
+      },
+      {
+        "batch": "s4-post-l3",
+        "observed_connector_returns": 2
+      },
+      {
+        "batch": "ci-final-two-runs",
+        "observed_connector_returns": 2
+      },
+      {
+        "batch": "final-s4-s2",
+        "observed_connector_returns": 3
+      }
+    ]
+  },
+  "historical_original_session": {
+    "reported_producer_relay_calls": 68,
+    "included_in_resumed113": false,
+    "global_history_state": "GLOBAL_UNRECONCILED",
+    "owner": "ROOT",
+    "limit": "These68 historical producer-relay calls are retained evidence, not newly issued calls and not the full original-session or campaign total."
+  },
+  "local_gap_disposition": [
+    {
+      "gap": "Missing separate ledger events for the already recorded L4 entry-r2 sends and activations",
+      "state": "RESOLVED_BY_APPENDING_EXISTING_RECEIPT_REFERENCES",
+      "new_calls": 0
+    },
+    {
+      "gap": "Some original L1 activation request/result envelopes missing from bounded index",
+      "state": "UNKNOWN_NOT_FABRICATED",
+      "observation": "Root searched current preserved judgment/correction seal, dispatch, activation and request paths plus ledger; no additional standalone original activation envelope was found. Actual original semantic response files remain preserved.",
+      "effect": "Do not infer an exact activation total or unobserved spend."
+    },
+    {
+      "gap": "Global/support/source-retrieval call totals beyond indexed receipts",
+      "state": "OUTSIDE_CAPTURED_TOTAL_UNKNOWN",
+      "effect": "Index does not claim exhaustive native/provider accounting; historical ROOT reconciliation remains open."
+    }
+  ],
+  "snapshot_note": "The source index captures the prior76-row ledger, whose exact immutable copy is preserved. The principal appended3 accounting events with no new transport/review calls before freezing the next closure ledger."
+}
+
+----- END SECTION CONTENT -----
+
+===== 08B.02 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS =====
+content_bytes=3230; content_sha256=33087116edd0024e4bc0c4f646fb3d92a498af56f515db0c7e0466c7bc63b3f4
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/current-operations-review.json; source_sha256=33087116edd0024e4bc0c4f646fb3d92a498af56f515db0c7e0466c7bc63b3f4
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-independent-closure-current-operations/v1",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "observed_prepare": {
+    "exit_code": 1,
+    "error": "native-input-unavailable: file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json",
+    "candidate_id": null,
+    "binding_id": null,
+    "partial_cas_files_preserved": 13,
+    "native_attempts": 1,
+    "automatic_retries": 0
+  },
+  "staging": {
+    "first_attempt": "Failed cross-parent rename of read-only temporary root",
+    "reconciliation": "Preserved original temporary payload; copied exact 888 files to exclusive final target; verified 1,542 staged files and 641 originals; no native execution until sealed",
+    "same_package_bytes_preserved": true
+  },
+  "independent_local_preparation_completed": [
+    "All 13 content acceptances and roots reconciled",
+    "Source and failed staging/runtime bytes preserved",
+    "Concrete S4 compatibility request prepared locally; not sent externally",
+    "Current scoped S4 CI readbacks and implementation limits reconciled",
+    "Fourteen frozen consumer cases retained as NOT_RUN; no raw Markdown substitution",
+    "Final same-pair closure assessment is the next review, not yet an outcome"
+  ],
+  "current_blockers": [
+    "Native input cap prevents a complete candidate/binding",
+    "Prior automatic approval refusals remain; no new authorization or public write occurred"
+  ],
+  "exact_runtime_unblock": "New pinned compatible S4 implementation and relevant proof, preserving all mandatory complete input bytes, then a new isolated exact-package preparation; no silent change to current failed candidate.",
+  "refs": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+      "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410",
+      "byte_length": 4187
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-input-cap-diagnosis.json",
+      "sha256": "849fca9c9d25a4de2fcba1c4d21e68b9b1274516cd94c2f5ee9cebb675452500",
+      "byte_length": 7733
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-staging-first-attempt-failure.json",
+      "sha256": "9f14dbb51a14677bfa159def2cff8ca3b69f301616cf2f8c7881e97c655d2bfb",
+      "byte_length": 1371
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-staging-reconciliation.json",
+      "sha256": "8ca8bab684dcb18e58ea4e8ea58cfe5f161cf99fb998cc970b3e56c32385c462",
+      "byte_length": 1233
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/preservation.json",
+      "sha256": "7006d079f0f724fc2ad3a4083c67fa4a89dcc92c93992acdfd05bf0334889d18",
+      "byte_length": 730255
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/requests/runtime-compatibility-after-native-failure.md",
+      "sha256": "5058caeb2706c1cb630f0e838880379457cd386fa16bf6bf9fe651947f1d04fc",
+      "byte_length": 4237
+    }
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 08B.03 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS =====
+content_bytes=6260; content_sha256=716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json; source_sha256=716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-update-expectation/v1",
+  "case": "S2-U1",
+  "frozen_before_execution": true,
+  "recorded_at": "2026-11-11T20:46:20.653439+00:00",
+  "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+  "direct_input_artifacts": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web"
+  ],
+  "build_affected_closure": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "outside_build_closure": [
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "build_edges": [
+    {
+      "consumer": "s2.l2.desktop-web",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l2.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l2.design-tui",
+      "dependency": "s2.l1.design-tui"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.desktop-web",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.desktop-web",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.design-tui"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.design-tui"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.design-tui"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.design-tui"
+    }
+  ],
+  "navigation_edges": [
+    {
+      "from": "s2.l2.desktop-web",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l2.desktop-web",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l2.app-session",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l2.app-session",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l2.design-tui",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l2.design-tui",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l3.app-session",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l3.app-session",
+      "to": "s2.l3.design-tui"
+    },
+    {
+      "from": "s2.l3.design-tui",
+      "to": "s2.l3.app-session"
+    },
+    {
+      "from": "s2.l3.design-tui",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l4.desktop-web",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.desktop-web",
+      "to": "s2.l4.design-tui"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.entry"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.design-tui"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.entry"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.design-tui"
+    }
+  ],
+  "status": "EXPECTED_ONLY_NOT_EXECUTED",
+  "limits": [
+    "This graph calculation is a frozen expectation, not runtime update, reuse, invalidation or reader proof.",
+    "Navigation alone does not add an artifact to the expected build closure."
+  ],
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+}
+
+----- END SECTION CONTENT -----
+
+===== 09.01 EXACT ORIGINAL PUBLIC-WRITE REFUSAL — HISTORICAL EVIDENCE =====
+content_bytes=820; content_sha256=e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/archive-publication-rejection.json; source_sha256=e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709
+----- EXACT SECTION CONTENT -----
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "This action was rejected due to unacceptable risk.\nReason: This action uploads three ZIP archives containing internal L1 evidence and source/capture artifacts to the GitHub repository, which is an external/unverified destination; the user only authorized resuming the session, not disclosing these potentially sensitive artifacts there.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval."
+    }
+  ],
+  "isError": true
+}
+
+----- END SECTION CONTENT -----
+
+===== 09.02 EXACT ORIGINAL PUBLIC-WRITE REFUSAL — HISTORICAL EVIDENCE =====
+content_bytes=884; content_sha256=a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/remote-publication-rejection.json; source_sha256=a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21
+----- EXACT SECTION CONTENT -----
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "This action was rejected due to unacceptable risk.\nReason: Although this is narrower than the rejected ZIP upload, it still transmits and stores internal execution records—including workspace paths, execution identifiers, judge/agent details, branch state, and operational history—in a public GitHub repository; the user's request to resume the session did not authorize publishing these records.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval."
+    }
+  ],
+  "isError": true
+}
+
+----- END SECTION CONTENT -----
+
+===== 10 S2-U1 DECLARED-GRAPH PREDICTION, SEPARATE FROM ANY ACTUAL EXECUTION =====
+content_bytes=1063; content_sha256=2a09cf31ee3661eafa491de3e5c678c5e3392c418f648ebaca66250b209faac3
+----- EXACT SECTION CONTENT -----
+{
+  "id": "S2-U1",
+  "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+  "prediction_only": {
+    "direct_input_consumers": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web"
+    ],
+    "build_dependent_closure": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "unaffected_by_build_graph": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ],
+    "navigation_edges_do_not_propagate": true,
+    "scope": "Mechanical prediction from the final declared graph; requires independent expected-set validation."
+  },
+  "prediction_limit": "Mechanical closure of the final declared build graph; not independently validated semantic affected set and not execution/rebuild/reuse proof.",
+  "recorded_execution_state": "NOT_RUN",
+  "actual_execution": null,
+  "recorded_set_comparison": "NOT_RUN"
+}
+
+----- END SECTION CONTENT -----
+
+===== 11 CONSUMER OBLIGATION METADATA ONLY — NO QUESTIONS OR ANSWER KEYS =====
+content_bytes=3113; content_sha256=66f839d8f7dc7a01c5a3a19b22582f40f5cf1c62459f99a7c730a77c60ed4f87
+----- EXACT SECTION CONTENT -----
+{
+  "cases": [
+    {
+      "id": "S2-C1",
+      "kind": "permitted-change",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C2",
+      "kind": "contract-violation",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C3",
+      "kind": "cross-component-impact",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C4",
+      "kind": "operational-failure",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C5",
+      "kind": "out-of-scope",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I1D",
+      "kind": "direct-L1",
+      "target": "s2.l1.desktop-web",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I1A",
+      "kind": "direct-L1",
+      "target": "s2.l1.app-session",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I1U",
+      "kind": "direct-L1",
+      "target": "s2.l1.design-tui",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I2D",
+      "kind": "direct-L2",
+      "target": "s2.l2.desktop-web",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I2A",
+      "kind": "direct-L2",
+      "target": "s2.l2.app-session",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I2U",
+      "kind": "direct-L2",
+      "target": "s2.l2.design-tui",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I3D",
+      "kind": "direct-L3",
+      "target": "s2.l3.desktop-web",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I3A",
+      "kind": "direct-L3",
+      "target": "s2.l3.app-session",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I3U",
+      "kind": "direct-L3",
+      "target": "s2.l3.design-tui",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    }
+  ],
+  "frozen_read_limits": {
+    "routine": {
+      "index_calls": 2,
+      "read_calls": 2,
+      "body_bytes_total": 16000
+    },
+    "deep": {
+      "index_calls": 6,
+      "read_calls": 5,
+      "body_bytes_total": 64000
+    },
+    "whole_suite": {
+      "source_access": "forbidden for consumer",
+      "context_isolation": "fresh context; instruction boundary observable, not claimed technical sandbox"
+    }
+  }
+}
+
+----- END SECTION CONTENT -----
+
+===== 12 SOURCE PRESERVATION AND HONEST USAGE — RECEIPT SCOPE =====
+content_bytes=6146; content_sha256=91481b50dc5d97c1eafd6e0451d2d7d2d91fbee1ed5769f484643fe190aee9e1
+----- EXACT SECTION CONTENT -----
+{
+  "coverage": {
+    "receipt": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/l1-principal-verification.json",
+      "byte_length": 4795,
+      "sha256": "c66487e308988efb8706c22ad761d39b42fbb470064273d81676d94e594a3385"
+    },
+    "coverage": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/coverage.tsv",
+      "byte_length": 526354,
+      "sha256": "7b834316156150c0df2df15ac172ea28ed8514025c3b79f9cc8734d8b8ef14ec"
+    },
+    "population": 4506,
+    "paths_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+    "families": 156,
+    "depth_counts": {
+      "inspected": 565,
+      "metadata-only": 48,
+      "family-supported": 3893
+    },
+    "unit_counts": {
+      "design-tui": 2087,
+      "app-session": 1887,
+      "desktop-web": 532
+    },
+    "scope": "Mechanical coverage/provenance only, not semantic sufficiency"
+  },
+  "preservation": {
+    "receipt": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/original-preservation-final.json",
+      "byte_length": 1989,
+      "sha256": "a1405ade3d5c3c30daf6fb75c4e66bb245446ff6e07e6922a67473b54e0bf577"
+    },
+    "observed_fields": [
+      {
+        "field": "schema",
+        "value": "genesis-s2-original-preservation-verification/v1"
+      },
+      {
+        "field": "recorded_at",
+        "value": "2026-11-11T19:11:24.737719+00:00"
+      },
+      {
+        "field": "initial_capture_manifest.recorded_at",
+        "value": "2026-11-11T17:19:24.895279+00:00"
+      },
+      {
+        "field": "result",
+        "value": "Every initial snapshot file has exact bytes recoverable from the preserved current-original archive, with the one explicit initial receipt override. No initial source/body file differs."
+      }
+    ],
+    "verified_reference_files": [
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/resumption.json",
+        "byte_length": 252415,
+        "sha256": "5f8757dd7e90fc964446de0fca5a3a07c9c4241b4ea593f88fac7879d95d3e72"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/archives/original-session-current-observation.zip",
+        "byte_length": 10553222,
+        "sha256": 

@@ -1,0 +1,170 @@
+{
+  "source_body_sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc",
+  "operations": [
+    {
+      "id": "authority-normative-disposition",
+      "kind": "insertion",
+      "anchor": "The eight historical proposals are evidence of earlier intent:",
+      "old": "",
+      "new": "App-shell's local AGENTS fixes the priority order as **stability, simplicity, performance**. Before changing session or timeline code, it requires recording a production benchmark baseline and comparing it after the change. Session UI's local AGENTS separately requires i18n keys for production-visible copy, preserves existing English text byte-for-byte during migration and forbids changing English text or keys to facilitate translation. These are attributed maintenance obligations; this L1 correction records them without modifying product code or executing a benchmark. (`A/AGENTS.md:1\u20134`; `S/AGENTS.md:1\u20137`.)\n\n",
+      "section": "Authority, composition and identity",
+      "public_findings": [
+        "J1-AS-01",
+        "J2-F1/F2"
+      ],
+      "old_byte_length": 0,
+      "new_byte_length": 621,
+      "old_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "new_sha256": "04308364747ef68b95ee593a661eb90f95d51a023fef0b6d5dc6bea623727aa1"
+    },
+    {
+      "id": "client-generated-runtime-boundary",
+      "kind": "insertion",
+      "anchor": "The app adapter wraps the generated client and maps wire results into app view contracts.",
+      "old": "",
+      "new": "The generated Client has its own runtime dependency rule: root AGENTS permits Client dependencies on Schema and Protocol and forbids dependencies on Core or Server at runtime. This Client prohibition is distinct from the explicitly permitted `platform:browserSafe` Core-helper exception for the UI layer described above; that UI exception does not authorize a Client runtime dependency. After a public Protocol or Server `HttpApi` change, root AGENTS requires `bun run generate` from `packages/client`; raw `packages/client/src/generated` and `packages/client/src/generated-effect` files must never be hand-edited. These are prescribed change requirements; no Client generation or product change was performed here. (`AGENTS.md:1\u20132`.)\n\n",
+      "section": "Transport, stream health and canonical recovery",
+      "public_findings": [
+        "J1-AS-01",
+        "J2-F1/F2"
+      ],
+      "old_byte_length": 0,
+      "new_byte_length": 738,
+      "old_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "new_sha256": "e4c08db2f07b25b85ceb1f6e3129ac93e8156f98392501147834da9d4f6069c4"
+    },
+    {
+      "id": "retry-equivalence-correction",
+      "kind": "replacement",
+      "anchor": "Core checks an existing ID, rejects a different equivalent payload, publishes the admission event, requires a durable aggregate sequence and finds the projected record before returning.",
+      "old": "Core checks an existing ID, rejects a different equivalent payload, publishes the admission event, requires a durable aggregate sequence and finds the projected record before returning.",
+      "new": "Core returns the previous admission when an existing ID has an equivalent session, encoded prompt and delivery; non-equivalent reuse rejects with `LifecycleConflict`. When it creates a new admission, Core publishes the admission event, requires a durable aggregate sequence and finds the projected record before returning.",
+      "section": "Prompt admission and draft ownership",
+      "public_findings": [
+        "J1-AS-02"
+      ],
+      "old_byte_length": 185,
+      "new_byte_length": 322,
+      "old_sha256": "46b53c35b69450d6ce4f57c70d204a6e8d42f6d0009d1912b1be3cf2880528bd",
+      "new_sha256": "f62844bf63e84ce2c92d89d86d8a4c4b39f6b965191fc41539220c8f19139b60"
+    },
+    {
+      "id": "benchmark-prescription-versus-execution",
+      "kind": "insertion",
+      "anchor": "The packet's limit is explicit:",
+      "old": "",
+      "new": "The local benchmark condition remains specific and mandatory for app-shell session or timeline changes: record a **production benchmark baseline before the change** and **compare it after the change**. The performance directory's normal-run exclusion and the diagnostic interpretation above do not remove that prescribed condition. This documentation correction changes no session/timeline product code and executes no benchmark or product test. (`A/AGENTS.md:1\u20134`.)\n\n",
+      "section": "Assets, localization and verification evidence",
+      "public_findings": [
+        "J1-AS-01",
+        "J2-F1/F2"
+      ],
+      "old_byte_length": 0,
+      "new_byte_length": 470,
+      "old_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "new_sha256": "8275e9ba4ebc007b700d59da3d81d4e34452347523972186be528e252a24d02b"
+    }
+  ],
+  "equal_remainder_segments": [
+    {
+      "kind": "equal",
+      "original_byte_start": 0,
+      "original_byte_end": 3554,
+      "revised_byte_start": 0,
+      "revised_byte_end": 3554,
+      "original_bytes": 3554,
+      "revised_bytes": 3554,
+      "sha256": "73112c5b45d06005f9d9ffd6e793f020d77b96fa69cd3c71cb6f45f891e93d47"
+    },
+    {
+      "kind": "equal",
+      "original_byte_start": 3554,
+      "original_byte_end": 6702,
+      "revised_byte_start": 4175,
+      "revised_byte_end": 7323,
+      "original_bytes": 3148,
+      "revised_bytes": 3148,
+      "sha256": "c3f826968ebce80144053fc06c1bcff1bc2ede8499d5203e0d03e42fa9de6a0e"
+    },
+    {
+      "kind": "equal",
+      "original_byte_start": 6702,
+      "original_byte_end": 12681,
+      "revised_byte_start": 8061,
+      "revised_byte_end": 14040,
+      "original_bytes": 5979,
+      "revised_bytes": 5979,
+      "sha256": "43b99c811b6b11c15e63dc9bb3ac2cfc77fe070957433e7ec7548ffcfb776dc3"
+    },
+    {
+      "kind": "equal",
+      "original_byte_start": 12866,
+      "original_byte_end": 39399,
+      "revised_byte_start": 14362,
+      "revised_byte_end": 40895,
+      "original_bytes": 26533,
+      "revised_bytes": 26533,
+      "sha256": "14c4e7ff5f906324929434e1853ca1f371e7db3e4799510b2ecf161e25c74d4b"
+    },
+    {
+      "kind": "equal",
+      "original_byte_start": 39399,
+      "original_byte_end": 40081,
+      "revised_byte_start": 41365,
+      "revised_byte_end": 42047,
+      "original_bytes": 682,
+      "revised_bytes": 682,
+      "sha256": "b204938ac8adcdba39d50b8b9cd3b5faac6fe9d4e859ba801fb0e69a3a28808a"
+    }
+  ],
+  "byte_diff_segments": [
+    {
+      "kind": "insertion",
+      "operation_id": "authority-normative-disposition",
+      "original_byte_start": 3554,
+      "original_byte_end": 3554,
+      "revised_byte_start": 3554,
+      "revised_byte_end": 4175,
+      "original_bytes": 0,
+      "revised_bytes": 621,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "revised_sha256": "04308364747ef68b95ee593a661eb90f95d51a023fef0b6d5dc6bea623727aa1"
+    },
+    {
+      "kind": "insertion",
+      "operation_id": "client-generated-runtime-boundary",
+      "original_byte_start": 6702,
+      "original_byte_end": 6702,
+      "revised_byte_start": 7323,
+      "revised_byte_end": 8061,
+      "original_bytes": 0,
+      "revised_bytes": 738,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "revised_sha256": "e4c08db2f07b25b85ceb1f6e3129ac93e8156f98392501147834da9d4f6069c4"
+    },
+    {
+      "kind": "replacement",
+      "operation_id": "retry-equivalence-correction",
+      "original_byte_start": 12681,
+      "original_byte_end": 12866,
+      "revised_byte_start": 14040,
+      "revised_byte_end": 14362,
+      "original_bytes": 185,
+      "revised_bytes": 322,
+      "original_sha256": "46b53c35b69450d6ce4f57c70d204a6e8d42f6d0009d1912b1be3cf2880528bd",
+      "revised_sha256": "f62844bf63e84ce2c92d89d86d8a4c4b39f6b965191fc41539220c8f19139b60"
+    },
+    {
+      "kind": "insertion",
+      "operation_id": "benchmark-prescription-versus-execution",
+      "original_byte_start": 39399,
+      "original_byte_end": 39399,
+      "revised_byte_start": 40895,
+      "revised_byte_end": 41365,
+      "original_bytes": 0,
+      "revised_bytes": 470,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "revised_sha256": "8275e9ba4ebc007b700d59da3d81d4e34452347523972186be528e252a24d02b"
+    }
+  ]
+}

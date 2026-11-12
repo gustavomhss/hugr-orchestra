@@ -1,0 +1,30 @@
+{
+  "schema": "genesis-s2-native-review-dispatch/v1",
+  "recorded_at": "2026-11-11T20:31:17.248913+00:00",
+  "layer": 4,
+  "revision": 1,
+  "request_path": "judgments/l4-r1/seal-message-dispatched.txt",
+  "request_sha256": "c5fc15090596c03f540a9e75bb59ea3dc7cc5ee04c58711967c2d03269c68fc0",
+  "prepared_template_path": "judgments/l4-r1/seal-message.txt",
+  "prepared_template_sha256": "2a95a2fddb4be697b43c8fe6f4003364515caae04ff06c5edb8ff3e16d19d9f2",
+  "visible_request_record_method": "Exact visible root request reconstruction with the JSON array/object whitespace normalization and blank-line normalization used in both native followup calls; reserved JSON equality verified. Original prepared template preserved.",
+  "reserved_checks_unchanged": true,
+  "calls": [
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j1",
+      "observed_tool_result": "",
+      "reported_error": false,
+      "visible_argument_file": "judgments/l4-r1/seal-dispatch-j1-visible-request.json"
+    },
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j2",
+      "observed_tool_result": "",
+      "reported_error": false,
+      "visible_argument_file": "judgments/l4-r1/seal-dispatch-j2-visible-request.json"
+    }
+  ],
+  "host_serialized_request_byte_attestation": "NOT_EXPOSED",
+  "state": "RUNNING; actual completeness and verdicts pending"
+}

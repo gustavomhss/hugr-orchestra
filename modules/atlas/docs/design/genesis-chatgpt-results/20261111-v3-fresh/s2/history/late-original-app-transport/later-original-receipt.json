@@ -1,0 +1,273 @@
+{
+  "schema": "genesis-l1-literal-transport-receipt/v1",
+  "unit": "app-session",
+  "task": "Frozen L1 sections 02, 03 and 04 only; no evaluation authority",
+  "files": [
+    {
+      "filename": "app-session-02-body-01.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-02-body-01.txt",
+      "byte_length": 14006,
+      "sha256": "9879007efdc86b2ec46c89c3236d4608fe35af56b9c1c27deed8b5249efe7219",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-02-body-02.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-02-body-02.txt",
+      "byte_length": 14129,
+      "sha256": "f8ab38814fdb9c067e416101b887c8a125c6ca340fe0c294314a0a09a5989c9b",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-02-body-03.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-02-body-03.txt",
+      "byte_length": 5763,
+      "sha256": "707e9e0d648829b5d449983de05037bca40a01450f8829f31ec04555a2046ba7",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-03-evidence-01.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-03-evidence-01.txt",
+      "byte_length": 14494,
+      "sha256": "333caafbe619d2270d41f724a1463eefb31162df28a6e96d1450070124f0b027",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-03-evidence-02.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-03-evidence-02.txt",
+      "byte_length": 14456,
+      "sha256": "163b1a935cf6b6832b47d03afc82472133cd7f66521c9fb2e1a807a7f4841a3f",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-03-evidence-03.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-03-evidence-03.txt",
+      "byte_length": 14483,
+      "sha256": "6d71b6db387cd9b9f4abdbc246e9692cea85d65fbe4e3993ed5d068912d72006",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-03-evidence-04.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-03-evidence-04.txt",
+      "byte_length": 14496,
+      "sha256": "f723bb1c5da6f7d50da97ea1b5e5947e86aa3b54476912a37419e2a3c0cb868f",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-03-evidence-05.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-03-evidence-05.txt",
+      "byte_length": 13551,
+      "sha256": "837b190aae8a5df6fe835f44cc5582a3f744b8479de1d491535bf4558781ca5f",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-04-families-01.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-04-families-01.txt",
+      "byte_length": 14499,
+      "sha256": "00d476ccd7df9a21547996659d027001bd1625a437427101bb04eade0def3758",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-04-families-02.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-04-families-02.txt",
+      "byte_length": 14422,
+      "sha256": "531e2316d7ee6d815cab7150271883410fd8f76813e93b72a43146e7301f7f65",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-04-families-03.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-04-families-03.txt",
+      "byte_length": 14478,
+      "sha256": "00a974b78c0734c4e1227907fddbea80d388d582f6c1274e6ad05e8a022a5efd",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-04-families-04.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-04-families-04.txt",
+      "byte_length": 14484,
+      "sha256": "e2bb9ed2a03a4aada1323b58c061866b3ac17969ca1444c53b294ea3eb33ea81",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-issued-result-display-truncated",
+          "result": "Complete literal send call issued; tool result display said Output exceeded the available model context and was truncated. No explicit send rejection was exposed; acceptance is unconfirmed."
+        }
+      ]
+    },
+    {
+      "filename": "app-session-04-families-05.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-04-families-05.txt",
+      "byte_length": 14431,
+      "sha256": "b817acd605150ccf2268eb9836a54437c29aa505da2058c026a709c7da7b4723",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    },
+    {
+      "filename": "app-session-04-families-06.txt",
+      "path": "/workspace/scratch/992c54067adf/genesis-s2/deliverable/judgments/l1-r1/packets/app-session-04-families-06.txt",
+      "byte_length": 7103,
+      "sha256": "c9fdf29e72bd7d92777320b2a47e7a8fa308533471eacf9a367ba612932bd860",
+      "sends": [
+        {
+          "recipient": "/root/judge_j1",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        },
+        {
+          "recipient": "/root/judge_j2",
+          "status": "send-tool-success",
+          "result": "collaboration.send_message completed without error; no reserialized bytes exposed"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "The host does not expose reserialized message bytes. Source file hashes and send acceptance are recorded; message-byte equality is not independently verifiable.",
+    "No 01-header, oracle, other-unit packet or judgment is read."
+  ],
+  "status": "all-parts-issued-one-acceptance-unconfirmed",
+  "summary": {
+    "file_count": 14,
+    "send_calls_issued": 28,
+    "send_tool_success_count": 27,
+    "acceptance_unconfirmed_count": 1,
+    "explicit_send_rejection_count": 0,
+    "source_reverification": "all exact file byte lengths and SHA-256 hashes still match receipt"
+  },
+  "message_bytes_verified": false
+}

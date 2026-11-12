@@ -1,0 +1,100 @@
+{
+  "method": "static inspection of exact package fields and pinned source code; no product validator or prepare execution",
+  "original": {
+    "sha256": "d0bf942164e6b69c3cd89e9d4a0808a5f4ddcbb450d6c40045b2d0952c9aa0cd",
+    "byte_length": 228059,
+    "package_state": "IN_PROGRESS",
+    "artifacts": [
+      {
+        "key": "s2.l1.desktop-web",
+        "evidence_items_are_strings": false,
+        "recipe_is_input": false,
+        "semantic_review_count": 0,
+        "validity": "blocked",
+        "source_refs": 148,
+        "input_keys": 148
+      },
+      {
+        "key": "s2.l1.app-session",
+        "evidence_items_are_strings": false,
+        "recipe_is_input": false,
+        "semantic_review_count": 0,
+        "validity": "blocked",
+        "source_refs": 251,
+        "input_keys": 251
+      },
+      {
+        "key": "s2.l1.design-tui",
+        "evidence_items_are_strings": false,
+        "recipe_is_input": false,
+        "semantic_review_count": 0,
+        "validity": "blocked",
+        "source_refs": 196,
+        "input_keys": 196
+      }
+    ],
+    "required_count": 12,
+    "missing_required": [
+      "s2.l2.desktop-web",
+      "s2.l2.app-session",
+      "s2.l2.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui"
+    ],
+    "roots": {},
+    "oracle_content_read": false
+  },
+  "current": {
+    "sha256": "9dacfc3c7837655b1de7b16adf953465c481e207ddc8df8afda74baea342f8ff",
+    "byte_length": 228283,
+    "package_state": "IN_PROGRESS",
+    "artifacts": [
+      {
+        "key": "s2.l1.desktop-web",
+        "evidence_items_are_strings": true,
+        "recipe_is_input": true,
+        "semantic_review_count": 0,
+        "validity": "blocked",
+        "source_refs": 148,
+        "input_keys": 149
+      },
+      {
+        "key": "s2.l1.app-session",
+        "evidence_items_are_strings": true,
+        "recipe_is_input": true,
+        "semantic_review_count": 0,
+        "validity": "blocked",
+        "source_refs": 251,
+        "input_keys": 252
+      },
+      {
+        "key": "s2.l1.design-tui",
+        "evidence_items_are_strings": true,
+        "recipe_is_input": true,
+        "semantic_review_count": 0,
+        "validity": "blocked",
+        "source_refs": 196,
+        "input_keys": 197
+      }
+    ],
+    "required_count": 13,
+    "missing_required": [
+      "s2.l2.desktop-web",
+      "s2.l2.app-session",
+      "s2.l2.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.entry"
+    ],
+    "roots": {},
+    "oracle_content_read": false
+  }
+}

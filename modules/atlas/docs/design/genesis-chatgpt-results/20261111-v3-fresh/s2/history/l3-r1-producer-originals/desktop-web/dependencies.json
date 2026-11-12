@@ -1,0 +1,76 @@
+{
+  "schema": "genesis-s2-l3-dependencies/v1",
+  "key": "s2.l3.desktop-web",
+  "build": [
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "navigation": [],
+  "rationale": {
+    "s2.l2.desktop-web": "Supplies host startup/readiness, recovery, renderer/preload/main admission, browser/native/Linux/WSL identities, Live delivery, persistence, executable/update and localization evidence plus retained discrepancies and evidence limits.",
+    "s2.l2.app-session": "Direct factual cross-unit dependency: supplies server-key versus credential ownership, A-to-B-to-A expiry, app startup/ongoing-health discrepancy, SSE/canonical-recovery and ambiguous-admission outcomes, renderer Dock revision/generation and optional host contracts.",
+    "s2.l2.design-tui": "Direct factual cross-unit dependency: supplies dialog/worker resource ownership, locale/direction and theme-schema distinctions, bounded generated-product ownership, and Storybook/accessibility limits used in change-impact routes."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l2.desktop-web",
+      "path": "layers/l2/desktop-web/body.md",
+      "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "byte_length": 18440,
+      "used_section_headings": [
+        "Orientation and ownership",
+        "Startup publishes readiness before the renderer proceeds",
+        "Persistence and recovery have several owners",
+        "Privilege is checked at each request boundary",
+        "Browser Dock operates on current tab observations",
+        "Native Dock preserves identity and uncertain outcomes",
+        "Linux workspaces and WSL have different lifetimes",
+        "Live separates readiness, capture and delivery",
+        "Executable staging and update state are separate evidence",
+        "Host adapters own platform differences and copy",
+        "Maintenance evidence retains its original limits"
+      ],
+      "read_scope": "Complete accepted body read; cited sections used for this synthesis."
+    },
+    {
+      "key": "s2.l2.app-session",
+      "path": "layers/l2/app-session/body.md",
+      "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434,
+      "used_section_headings": [
+        "Composition, identity and asynchronous ownership",
+        "Durable admission, optimistic state and draft storage",
+        "Transport, liveness and canonical recovery",
+        "Host capabilities and auxiliary lifetimes",
+        "Verification limits and ownership use"
+      ],
+      "read_scope": "Complete accepted body read; cited sections used for this synthesis."
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "path": "layers/l2/design-tui/body.md",
+      "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "byte_length": 21535,
+      "used_section_headings": [
+        "Browser UI ownership, lifecycle and accessibility",
+        "Localization, direction and two theme systems",
+        "Generated products and asset provenance",
+        "Storybook, design intent and verification limits"
+      ],
+      "read_scope": "Cited browser-UI sections read in full; other headings used only for orientation."
+    }
+  ],
+  "ordering_note": "Only accepted L2 bodies provide predecessor facts. The accepted L1 manifest was read as required dispatch lineage metadata; no new direct L1 body dependency is introduced. No pending L3 or L4 artifact supplies evidence.",
+  "navigation_note": "No optional navigation-only edge is needed: each consulted L2 counterpart contributes actual factual build evidence."
+}

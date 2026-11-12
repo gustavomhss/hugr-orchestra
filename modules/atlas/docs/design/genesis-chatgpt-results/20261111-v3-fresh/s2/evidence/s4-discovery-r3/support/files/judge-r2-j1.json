@@ -1,0 +1,105 @@
+{
+  "agent_id": "/root/judge_j1",
+  "identity_role": "parallel-v3-fresh/S4/J1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "verdict_semantic_L1": "PASS",
+  "verdict_runtime_controls": "PASS",
+  "identities": {
+    "key": "S4:L1:native-runtime-delta",
+    "body_bytes": 11980,
+    "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+    "metadata_v3_sha256": "9d52d55e90b3e81a4ae8b0df78b43d45e855efaed2a29a13b889841fd47f8660",
+    "test_correction_commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+    "final_code_commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "recovery_test_sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4",
+    "oracle_R1_sha256": "d7ae8f97f8b78926b545ac4def549ecf44a9f68f626efa8b0b6f0250ca1cead4",
+    "run_id": 43077975153,
+    "job_id": 130722742703,
+    "receipt_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+  },
+  "finding_dispositions": [
+    {
+      "id": "R1-J1-01",
+      "status": "RESOLVED",
+      "reason": "Os timestamps agora delimitam somente a chamada principal de ownership.read, e a asserção usa esse intervalo. A leitura independente e o intervalo entre chamadas deixam de poder satisfazer a condição indevidamente. O controle corrigido passou no run final."
+    },
+    {
+      "id": "J2-R1-01",
+      "status": "RESOLVED",
+      "reason": "O trecho original solicitado foi recebido. A correção satisfaz seu esperado e sua ação: timestamps próprios da leitura principal, interseção com activation.start/end, preservação das verificações de manifestos e scope independente, nova execução remota e referências atualizadas com histórico preservado."
+    }
+  ],
+  "criteria_semantic_L1": [
+    {
+      "ids": ["QS-1", "QS-2", "QS-3", "QS-5", "CC-3", "GO-I2", "GO-I3", "GO-I5", "GO-I7", "GO-I8"],
+      "verdict": "PASS",
+      "reason": "O corpo inalterado agora corresponde também ao controle NR1-04 corrigido. Continua explicando transformação, identidades, limites e manutenção sem atribuir o adapter ao baseline ou converter semântica em autoridade. Metadata-v3 vincula os bytes corrigidos e conserva autoria, versões e decisões anteriores; NOT_RUN histórico não é reescrito pelo recibo posterior."
+    }
+  ],
+  "criteria_runtime_controls": [
+    {
+      "ids": ["AC-04", "AC-05", "AC-06", "AC-09", "CC-5"],
+      "verdict": "PASS",
+      "reason": "A evidência compatível de RB/UP/TC e os controles de mutação permanece aplicável e foi exercitada no conjunto final. Cobre reuso sem callback, propagação por identidade completa do resultado, renovação de receipt, mudanças de fonte/receita/intenção/membership e dependências distintas de navegação."
+    },
+    {
+      "ids": ["AC-07", "AC-10", "CC-4", "QS-4", "GO-I4"],
+      "verdict": "PASS",
+      "reason": "NR1-01/02/03 preservam retomada, recusa de rollback incompatível e isolamento. NR1-04 exige agora sobreposição do intervalo da chamada principal, mantendo resultados completos old/new/HOLD e leitura do scope independente. Ambos os findings obrigatórios foram resolvidos na barra originalmente fixada."
+    },
+    {
+      "ids": ["QS-5", "GO-I3", "GO-I5", "GO-I7"],
+      "verdict": "PASS",
+      "reason": "O recibo identifica revisão e execução finais: 220 testes aprovados, 22 mutantes recusados e paridade dos 18 gerados. Falhas anteriores e dois WARN atuais permanecem explícitos. Indisponibilidade, estado histórico, bindings atuais e autoridade sintética dos testes não são confundidos."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "R1-1",
+      "verdict": "PASS",
+      "evidence": "NR1-01 e controles G3/sidecar.",
+      "reason": "Candidato/CAS duráveis precedem ativação; interrupção deixa HOLD ou manifesto antigo válido; retomada reutiliza trabalho preservado sem repetir autoria sintética."
+    },
+    {
+      "id": "R1-2",
+      "verdict": "PASS",
+      "evidence": "NR1-02.",
+      "reason": "Drift seguido de falha produz HOLD na leitura atual; leitura histórica permanece rotulada, sem apresentar a versão incompatível como atual."
+    },
+    {
+      "id": "R1-3",
+      "verdict": "PASS",
+      "evidence": "Diff corrigido e NR1-04 do run 43077975153.",
+      "reason": "mainStarted/mainFinished circundam a leitura principal e são usados na interseção com o intervalo posterior à barreira. O envelope agregado que motivou FIX-FIRST foi eliminado."
+    },
+    {
+      "id": "R1-4",
+      "verdict": "PASS",
+      "evidence": "NR1-02; prepare e validação de binding.",
+      "reason": "Rollback com fontes ou approvals incompatíveis é recusado. Reuso exige compatibilidade dos bindings pertinentes."
+    },
+    {
+      "id": "R1-5",
+      "verdict": "PASS",
+      "evidence": "NR1-03; histórico de versões e metadata-v3.",
+      "reason": "Formato legado inválido, scope incoerente, approval antigo incompatível e candidato adulterado não substituem a seleção aceita. Não se inventa proibição cronológica universal de rollback compatível."
+    },
+    {
+      "id": "R1-6",
+      "verdict": "PASS",
+      "evidence": "NR1-02/03/04 e controles existentes de corrupção do sidecar.",
+      "reason": "Scope independente permanece legível nos casos registrados; corrupção e fallback conservam as recusas e verificações existentes."
+    }
+  ],
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "optional_suggestions": [],
+  "limits": [
+    "PASS limitado à semântica desta unidade e à suficiência dos controles nomeados; não é runtime-import-binding, consumo ou conclusão S4.",
+    "O controle demonstra a execução registrada com um Worker e um writer. Exceção no seam não demonstra power-loss, queda arbitrária ou concorrência universal.",
+    "Fixtures de autoria, revisão e ratificação não fornecem decisões ou autoridade desta campanha.",
+    "O guard final teve exitCode 0, zero gate, dois WARN large-file e zero erros. Os WARN correspondem à produção original L1B e ao censo integral preservados; não foram suprimidos nem convertidos em inputs runtime.",
+    "O run antigo de 673b90 e os FIX-FIRST continuam históricos. A sobreposição corrigida é sustentada pelos novos bytes e pelo novo run.",
+    "Medições, associação dos commits e execução remota foram fornecidas pelo principal. Este juiz não utilizou ferramentas, delegou, editou ou executou testes."
+  ]
+}

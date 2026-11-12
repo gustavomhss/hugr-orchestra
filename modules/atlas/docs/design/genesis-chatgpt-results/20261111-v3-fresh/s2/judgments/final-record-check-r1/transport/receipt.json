@@ -1,0 +1,88 @@
+{
+  "schema": "genesis-s2-final-record-correction-transport/v1",
+  "recorded_at": "2026-11-11T21:40:49.777225+00:00",
+  "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/record-correction-packet.txt",
+  "source_byte_length": 32906,
+  "source_sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae",
+  "source_unchanged_after_calls": true,
+  "counts": {
+    "actual_followup_task_calls": 2,
+    "literal_message_dispatches": 2,
+    "judge_followup_activations_requested": 2,
+    "actual_send_message_calls": 0,
+    "automatic_retries": 0,
+    "replacement_calls": 0,
+    "visible_truncation_returns": 0,
+    "local_message_bytes_across_calls": 65812
+  },
+  "calls": [
+    {
+      "call_number": 1,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j1",
+      "request_json": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.request.json",
+        "byte_length": 34567,
+        "sha256": "58675548f1946c997419ac752a013342eb8fc9f7d7e56ceaa411cc5476f26baa"
+      },
+      "message_text": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.message.txt",
+        "byte_length": 32906,
+        "sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae"
+      },
+      "visible_result_file": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.result.txt",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "observation": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.observation.json",
+        "byte_length": 1404,
+        "sha256": "e45070a3d8f1ab969b845c66505555983397833f92e297e08353fd79825f9e1e"
+      },
+      "visible_return": "EMPTY",
+      "recipient_confirmation": false
+    },
+    {
+      "call_number": 2,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j2",
+      "request_json": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.request.json",
+        "byte_length": 34567,
+        "sha256": "cdee3b24802a6ec77d6e4d966790468e4be557c818c8c13f34c2057f24a22671"
+      },
+      "message_text": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.message.txt",
+        "byte_length": 32906,
+        "sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae"
+      },
+      "visible_result_file": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.result.txt",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "observation": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.observation.json",
+        "byte_length": 1404,
+        "sha256": "fec0368cf81ae050defd1acb3569e648cd2bfa88da464aec5ef7d35a2508e7ab"
+      },
+      "visible_return": "EMPTY",
+      "recipient_confirmation": false
+    }
+  ],
+  "support_activation_scope": "This parent-assigned final record-correction transport is one new support activation, distinct from the prior usage-delta cutoff. Each followup_task call combines one literal message dispatch and one activation request; those descriptions must not be added as separate calls.",
+  "recipient_confirmations_observed": 0,
+  "recipient_response_read_or_preserved_by_helper": false,
+  "root_owns_actual_response_preservation": true,
+  "host_usage": {
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN"
+  },
+  "uncertainties": [
+    "Neither empty tool return proves complete recipient receipt or substantive confirmation.",
+    "Host wire serialization and any unexposed processing are not independently attested."
+  ],
+  "scope": "Only the exact assigned packet was delivered, once each, to the same J1/J2. No content authoring, runtime, tests, remote operations, or canonical edits."
+}

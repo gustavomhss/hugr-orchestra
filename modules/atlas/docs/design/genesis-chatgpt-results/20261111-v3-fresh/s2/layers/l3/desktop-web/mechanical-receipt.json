@@ -1,0 +1,280 @@
+{
+  "schema": "genesis-s2-native-layer-mechanical/v1",
+  "artifact_key": "s2.l3.desktop-web",
+  "layer": 3,
+  "producer_root": "later-producers/desktop-web/l3",
+  "destination": "layers/l3/desktop-web",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "package_before_sha256": "32b6cba13b3f4c5c6bb3e068ddda2c2aa41fcacab7883da51ee6255f07ce0270",
+  "utility_sha256": "664bbd0c1be81d9ec8606eb6a8f8909cb8434c1e17be3114c3ad1165750ff918",
+  "body": {
+    "method": "ATX headings outside fenced blocks; each slice ends at the next heading; no semantic completeness assertion",
+    "byte_length": 14715,
+    "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+    "line_count": 81,
+    "sections": [
+      {
+        "level": 1,
+        "heading": "Genesis S2 — desktop/web journeys and change impact",
+        "line": 1,
+        "byte_start": 0,
+        "byte_end_exclusive": 57,
+        "sha256": "4fa2b94b0d73d988d4e859d87344c11485d45b7eb0b2e9021b9fe130690e1597"
+      },
+      {
+        "level": 2,
+        "heading": "Orientation and evidence boundaries",
+        "line": 3,
+        "byte_start": 57,
+        "byte_end_exclusive": 1327,
+        "sha256": "f7feb89ccd414356554abd05992adf3ef2fc500333815806ad80b24cdafdd1d9"
+      },
+      {
+        "level": 2,
+        "heading": "Launch, choose a server and identify the health decision",
+        "line": 9,
+        "byte_start": 1327,
+        "byte_end_exclusive": 3971,
+        "sha256": "41071aa3421084de1f8f4b003c5332ae99a007d85736883f04f16b0c1ef8b9d3"
+      },
+      {
+        "level": 2,
+        "heading": "Reconnect without transferring work to a replacement owner",
+        "line": 23,
+        "byte_start": 3971,
+        "byte_end_exclusive": 5921,
+        "sha256": "b10b4f59d6eaeb28921cf7eb90b5014751b489cfcf9010de567603b172b44d08"
+      },
+      {
+        "level": 2,
+        "heading": "Cross renderer, preload and main with a scoped capability",
+        "line": 31,
+        "byte_start": 5921,
+        "byte_end_exclusive": 7825,
+        "sha256": "8c821fc01a6ff3a05d7bada663da295505904821b8bf12811c1196c8dacdc9d1"
+      },
+      {
+        "level": 2,
+        "heading": "Move from a visible Dock to a browser, native or guest effect",
+        "line": 43,
+        "byte_start": 7825,
+        "byte_end_exclusive": 9898,
+        "sha256": "866e2f7d671c8277a1d715f50b15dde0409d87c551cf1fd6852479b0ffa94484"
+      },
+      {
+        "level": 2,
+        "heading": "Finish capture, persistence and installation at the right boundary",
+        "line": 55,
+        "byte_start": 9898,
+        "byte_end_exclusive": 11730,
+        "sha256": "56c3dc30db459c1598cc9d931a0b42a62bbf8067ea34a1e79ceda04da27087a0"
+      },
+      {
+        "level": 2,
+        "heading": "Carry changes through shared UI and distribution",
+        "line": 65,
+        "byte_start": 11730,
+        "byte_end_exclusive": 13820,
+        "sha256": "e41280e4aa4455ba4688120260387e351d6ed94d193b0f3c5310320b927e403b"
+      },
+      {
+        "level": 2,
+        "heading": "Verification status and remaining evidence",
+        "line": 77,
+        "byte_start": 13820,
+        "byte_end_exclusive": 14715,
+        "sha256": "52a2098ffd1bea0dc684589866e87b0024aebfe9e2b7ff870e8751e4874e03ff"
+      }
+    ]
+  },
+  "source_checks": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "canonical_capture": "producers/desktop-web/sources/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/AGENTS.md",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "byte_length": 2801,
+      "canonical_capture": "producers/desktop-web/sources/apps/desktop/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/AGENTS.md",
+      "git_blob_sha": "e8a89cb6ab3c95bf256e2226b9e8466f8d934220",
+      "sha256": "9c9edc98255ee4c4a9c96a742df1330eafb7ffc8f9f10bca640f5c6c7abfeaad",
+      "byte_length": 301,
+      "canonical_capture": "producers/desktop-web/sources/apps/web/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "canonical_capture": "producers/desktop-web/sources/packages/app-shell/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "git_blob_sha": "ba3d5859d9109e104687f628bc3e96ad5e616d07",
+      "sha256": "6434f6ed07efb0c67275e3d1c30270c2a012aa77b46071239080ae8475dd42a9",
+      "byte_length": 6256,
+      "canonical_capture": "producers/desktop-web/sources/.orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/app-log-hygiene/SKILL.md",
+      "git_blob_sha": "685932db1df51c87be9e7174bbfe940a18c03a8c",
+      "sha256": "3a0fbf9ea92160cdd95eef1bdd445f6ea5fa68c7cacc59ad582761c0c64bc93d",
+      "byte_length": 3153,
+      "canonical_capture": "producers/desktop-web/sources/.orchestra/skills/app-log-hygiene/SKILL.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    }
+  ],
+  "canonical_source_manifests": [
+    {
+      "path": "producers/desktop-web/sources.json",
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+    },
+    {
+      "path": "producers/app-session/sources.json",
+      "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+    },
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea"
+    }
+  ],
+  "build_dependencies": [
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "accepted_manifests": [
+        "accepted/l2.json"
+      ],
+      "supported": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "accepted_manifests": [
+        "accepted/l2.json"
+      ],
+      "supported": true
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "accepted_manifests": [
+        "accepted/l2.json"
+      ],
+      "supported": true
+    }
+  ],
+  "navigation": [],
+  "navigation_targets_pending": [],
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "layer": 1,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    },
+    {
+      "path": "accepted/l2.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c",
+      "layer": 2,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    }
+  ],
+  "recipe": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+    "sha256": "ff214eb6c55241300affe3932ca99403ad9913302804bffc04c64f367e7a1f7e"
+  },
+  "producer_files": [
+    {
+      "name": "body.md",
+      "byte_length": 14715,
+      "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e"
+    },
+    {
+      "name": "sources.json",
+      "byte_length": 6441,
+      "sha256": "cf9b4f4c94b9a33e19a28cee70c26aaf16eaf7d6ccb152c73a0a7d080788a5f9"
+    },
+    {
+      "name": "dependencies.json",
+      "byte_length": 3929,
+      "sha256": "224a337c15eafaf43fb0699839090d7b609dd28772e0a2b34e2acc16210d110d"
+    },
+    {
+      "name": "decisive-evidence.md",
+      "byte_length": 19466,
+      "sha256": "b37d2a894fb2087b3a984981962807060eb3c5a72ccf337b6594660b0eb6b8ae"
+    },
+    {
+      "name": "response.md",
+      "byte_length": 5455,
+      "sha256": "5478e9b7a069cbc9cf2a1d2870d11aa00b79b4d9ce4b9b3674df42a261bcb70f"
+    }
+  ],
+  "earlier_artifacts_unchanged": [
+    {
+      "key": "s2.l1.desktop-web",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "artifact_metadata_sha256": "537063a45589e162d694019d0e6a01a0ca893d3522af9f9210faa68651f39abf"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "artifact_metadata_sha256": "9738fecf0c280a7e0455839bc86be22fefc7a82c5cdcd017ab874579d1779f9a"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "artifact_metadata_sha256": "229652ae8a60e6eafc70bd4d75d82e811e49a305ac4d0efcdfa8b0037b2304b0"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "artifact_metadata_sha256": "c516a8627655539840a7a6c060926c2b33d2c311e894af7238b966789dd5e09c"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "artifact_metadata_sha256": "0acf73c277cc9a429c1ded3ba45009f5c875c6f0764fbd302678d2929c7a7ad4"
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "artifact_metadata_sha256": "24af4cc5eb9b8a33f37a350a9750d4903c445b76b52678d81ce96bde3a131db4"
+    }
+  ],
+  "semantic_status": "PENDING_ACTUAL_JUDGMENTS",
+  "runtime_status": "NOT_RUN",
+  "limits": [
+    "Mechanical identity and dependency bookkeeping only; no semantic judgment or new acceptance gate.",
+    "Manifest consumption is explicitly declared, not inferred or authenticated by this utility.",
+    "Declared build dependency completeness and navigation usefulness remain for the actual judgments."
+  ]
+}

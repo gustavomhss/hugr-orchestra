@@ -1,0 +1,288 @@
+      "packages/app-shell/src/orchestra/chapters/env-document.ts",
+      "packages/app-shell/src/orchestra/chapters/cicd-runner.ts",
+      "packages/app-shell/src/orchestra/chapter-route.tsx"
+    ],
+    "source_implications": "Workspace preferences are server-scoped; env parser retains BOM, comments and unknown syntax. Legacy pipeline runner persists per profile and keeps PTY streams beyond page lifetime.",
+    "consumer_implications": "Workspaces/env pages consume these. Router currently maps cicd to Actions, so legacy runner existence does not prove current menu reachability.",
+    "maintenance_implications": "Preserve opaque env text and scoped identities; distinguish retained source from active routing.",
+    "limits": "Workspace copy operations, env server writes and complete legacy CI reachability are not established.",
+    "path_count": 14,
+    "classification_counts": {
+      "test-unexecuted": 3,
+      "implementation": 11
+    },
+    "evidence_depth_counts": {
+      "family-supported": 11,
+      "inspected": 3
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "live",
+    "title": "Flight Engineer live capture and meetings",
+    "representative_source_paths": [
+      "packages/app-shell/src/live.ts",
+      "packages/app-shell/src/context/platform.tsx",
+      "packages/app-shell/src/orchestra/live/commands.tsx",
+      "packages/app-shell/src/orchestra/chapters/flight-engineer/run.ts",
+      "packages/app-shell/src/orchestra/chapters/flight-engineer/source.ts"
+    ],
+    "source_implications": "Native LiveSeatPlatform owns capture/readiness/permissions/settings; window shared run state subscribes and asks consent per start. Meeting list/read operations use server client.",
+    "consumer_implications": "Sidebar, Home card and chapter share run state; capability absent means unavailable; dev fixture path is separate.",
+    "maintenance_implications": "Keep consent dialog and platform permission distinct; do not expose write-only transcription keys as renderer-readable values.",
+    "limits": "OS audio capture, secret storage, native consent enforcement and transcription execution are not verified.",
+    "path_count": 16,
+    "classification_counts": {
+      "implementation": 15,
+      "test-unexecuted": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 5,
+      "family-supported": 11
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "wsl",
+    "title": "WSL host state",
+    "representative_source_paths": [
+      "packages/app-shell/src/wsl/context.tsx",
+      "packages/app-shell/src/context/server.tsx"
+    ],
+    "source_implications": "Query is enabled only when Platform.wslServers exists; host subscriptions update one infinite-stale-time query and cleanup on owner disposal.",
+    "consumer_implications": "WSL settings/add-server views consume host state; server identity includes distro.",
+    "maintenance_implications": "Retain native optionality and subscription cleanup.",
+    "limits": "Install/probe actions and actual Windows/WSL host behavior are not reviewed.",
+    "path_count": 7,
+    "classification_counts": {
+      "implementation": 6,
+      "test-unexecuted": 1
+    },
+    "evidence_depth_counts": {
+      "family-supported": 6,
+      "inspected": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "cockpit",
+    "title": "Session evidence, governance, tasks and artifacts",
+    "representative_source_paths": [
+      "packages/app-shell/src/pages/session/orchestra-evidence.tsx",
+      "packages/app-shell/src/pages/session/orchestra-governance.tsx",
+      "packages/app-shell/src/pages/session/process-control-data.ts",
+      "packages/app-shell/src/pages/session/tasks-data.ts",
+      "packages/app-shell/src/pages/session/artifacts-api.ts",
+      "packages/app-shell/src/pages/session/orchestra-cockpit-state.ts"
+    ],
+    "source_implications": "Evidence replaces shell rendering only when parser yields evidence; process rows report last observed transcript state. Governance dialog offers reads/navigation, not approval controls. Artifact transport pins session/location/revision.",
+    "consumer_implications": "Cockpit aggregates synced task/agent/session facts and read-only governance; artifact mutations use idempotency keys.",
+    "maintenance_implications": "Avoid presenting historic process results or partial tasks as live certainty; retain source/session anchors and stale callback protection.",
+    "limits": "Parsers and every artifact controller state are not exhaustively audited; fixture logs are not app test results.",
+    "path_count": 42,
+    "classification_counts": {
+      "implementation": 28,
+      "test-unexecuted": 13,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 6,
+      "family-supported": 36
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "session-ui-contract",
+    "title": "Session UI view contracts and general components",
+    "representative_source_paths": [
+      "packages/session-ui/src/transcript-model.ts",
+      "packages/session-ui/src/context/data.tsx",
+      "packages/session-ui/src/components/message-part.tsx",
+      "packages/session-ui/package.json"
+    ],
+    "source_implications": "Transcript is explicitly a renderer view model, not the wire contract; DataProvider takes caller state and navigation/artifact callbacks. Message rendering dispatches through tool/part components.",
+    "consumer_implications": "App-shell projects server state into this package; Storybook may inject fixtures.",
+    "maintenance_implications": "Keep UI contracts free from server ownership and preserve public export discipline.",
+    "limits": "Most specialized tool cards/styles are family-supported at entry seams, not individually inspected.",
+    "path_count": 46,
+    "classification_counts": {
+      "test-support-or-story": 12,
+      "implementation": 28,
+      "test-unexecuted": 6
+    },
+    "evidence_depth_counts": {
+      "family-supported": 43,
+      "inspected": 3
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "session-ui-markdown",
+    "title": "Markdown parsing, caching and worker lifecycle",
+    "representative_source_paths": [
+      "packages/session-ui/src/components/markdown.tsx",
+      "packages/session-ui/src/components/markdown-cache.tsx",
+      "packages/session-ui/src/components/markdown-worker-queue.ts",
+      "packages/session-ui/src/components/markdown-worker-queue.test.ts"
+    ],
+    "source_implications": "Markdown uses sanitized parsed HTML, bounded cache, keyed blocks and latest-per-key worker queue with ordered disposal.",
+    "consumer_implications": "Message/review components consume Markdown with streaming/cache keys.",
+    "maintenance_implications": "Preserve sanitization fail-closed behavior and worker ownership; generated HTML is runtime output, not checked-in generated source.",
+    "limits": "No browser security test, performance benchmark or full worker parser audit was run.",
+    "path_count": 19,
+    "classification_counts": {
+      "implementation": 11,
+      "test-unexecuted": 6,
+      "style": 1,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 4,
+      "family-supported": 15
+    },
+    "representative_tests_read": [
+      "packages/session-ui/src/components/markdown-worker-queue.test.ts"
+    ],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "session-ui-editor",
+    "title": "Reusable prompt editor interaction",
+    "representative_source_paths": [
+      "packages/session-ui/src/v2/components/prompt-input/machine.ts",
+      "packages/session-ui/src/v2/components/prompt-input/store.ts",
+      "packages/app-shell/src/components/prompt-input-v2.tsx"
+    ],
+    "source_implications": "Pure interaction machine returns commands for normal/shell mode, completion popovers, navigation and IME-aware Enter; store is caller-supplied reactive state.",
+    "consumer_implications": "App composer binds this UI to persistence, policy and network submission.",
+    "maintenance_implications": "Do not move durable admission ownership into generic editor state; preserve attachment/model/context contracts.",
+    "limits": "All DOM/clipboard/paste and drag/drop variants are family-supported.",
+    "path_count": 10,
+    "classification_counts": {
+      "style": 1,
+      "implementation": 6,
+      "test-unexecuted": 2,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "family-supported": 8,
+      "inspected": 2
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "session-ui-review",
+    "title": "Session review, file and Pierre rendering",
+    "representative_source_paths": [
+      "packages/session-ui/src/components/file.tsx",
+      "packages/session-ui/src/components/session-review.tsx",
+      "packages/session-ui/src/pierre/file-runtime.ts"
+    ],
+    "source_implications": "File/diff views integrate Pierre, virtualizer and shadow-root readiness; review exposes selected-line comments and normalized diff shapes.",
+    "consumer_implications": "App review/file panels and injected UI file component use these renderers.",
+    "maintenance_implications": "Observe host/theme changes and remove observers; honor readiness ownership tokens and file/diff identities.",
+    "limits": "Geometry, media rendering, annotation and text-selection correctness are not proven by source reads.",
+    "path_count": 39,
+    "classification_counts": {
+      "test-unexecuted": 4,
+      "implementation": 30,
+      "style": 3,
+      "test-support-or-story": 2
+    },
+    "evidence_depth_counts": {
+      "family-supported": 36,
+      "inspected": 3
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "palette-source",
+    "title": "Theme runtime and palette generator inputs",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/palette/context.tsx",
+      "packages/app-shell/src/orchestra/palette/generate.ts",
+      "packages/app-shell/script/orchestra-palettes.ts",
+      "packages/app-shell/vite.js",
+      "packages/app-shell/public/oc-theme-preload.js"
+    ],
+    "source_implications": "Runtime loads selected generated CSS with latest-request guard. Generator names source CSS inputs and contrast checks; Vite inlines first-paint and preload code.",
+    "consumer_implications": "App shell renders selected palettes before content; source CSS remains authored input.",
+    "maintenance_implications": "Regenerate palette outputs through the verified script; do not label all CSS generated.",
+    "limits": "Contrast pass and byte reproduction were not executed; source headers retain an old package path.",
+    "path_count": 15,
+    "classification_counts": {
+      "implementation": 11,
+      "maintenance-tool": 1,
+      "test-unexecuted": 2,
+      "style": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 4,
+      "family-supported": 10,
+      "metadata-only": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "palette-generated",
+    "title": "Generated palette styles",
+    "representative_source_paths": [
+      "packages/app-shell/script/orchestra-palettes.ts",
+      "packages/app-shell/src/orchestra/palette/generate.ts",
+      "packages/app-shell/src/orchestra/palette/generated/first-paint.css",
+      "packages/app-shell/src/orchestra/palette/context.tsx"
+    ],
+    "source_implications": "Seven checked-in outputs have a verified generator path and explicit generated header on inspected representative.",
+    "consumer_implications": "Palette provider dynamically imports palette CSS; Vite embeds first-paint CSS.",
+    "maintenance_implications": "Edit inputs/generator then regenerate; preserve full generated population in coverage.",
+    "limits": "No regeneration or all-output content comparison was performed.",
+    "path_count": 7,
+    "classification_counts": {
+      "generated": 7
+    },
+    "evidence_depth_counts": {
+      "inspected": 1,
+      "family-supported": 6
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "styles",
+    "title": "Authored layout and component styles",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/palette/generate.ts",
+      "packages/app-shell/src/app.tsx",
+      "packages/session-ui/src/components/file.tsx"
+    ],
+    "source_implications": "Source styles support component/shell layouts and act as explicit palette-generation inputs for listed files.",
+    "consumer_implications": "App and session-ui import these through package/component entrypoints.",
+    "maintenance_implications": "Treat non-generated CSS as maintained source unless a generator is positively identified.",
+    "limits": "Styles were accounted by consumer/family and generator inventory; pixel-level layout and provenance of each rule are not reviewed.",
+    "path_count": 71,
+    "classification_counts": {
+      "style": 71
+    },
+    "evidence_depth_counts": {
+      "family-supported": 71
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "localization",
+    "title": "Localization dictionaries and translation workflow",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/language.tsx",
+      "packages/app-shell/src/i18n/en.ts",
+      "packages/app-shell/src/i18n/ar.ts",
+      "packages/app-shell/src/i18n/lean/en.ts",
+      "packages/app-shell/src/i18n/orchestra-chapters/agents.ts",

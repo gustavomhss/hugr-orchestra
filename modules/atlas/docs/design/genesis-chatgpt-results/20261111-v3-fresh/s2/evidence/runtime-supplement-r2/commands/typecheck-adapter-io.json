@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T17:50:50.239435+00:00",
+  "ended_at": "2026-11-11T17:50:54.705536+00:00",
+  "duration_seconds": 4.466113295999094,
+  "exit_code": 0,
+  "resolved_executable": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+  "stdout": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/typecheck-adapter-io.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "byte_length": 0
+  },
+  "stderr": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/typecheck-adapter-io.stderr",
+    "sha256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f",
+    "byte_length": 9
+  }
+}

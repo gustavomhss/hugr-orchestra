@@ -1,0 +1,670 @@
+GENESIS S2 FINAL CLOSURE — LITERAL PART 000003/000006
+packet_sha256=069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410
+payload_bytes=000000025633; payload_sha256=5d23701e60343d502c904e26519f256bb1a3015874315ec37986a465e7f43479
+Transport only. No tools. Await the principal's separate seal/request before judging.
+--- EXACT PAYLOAD SEGMENT FOLLOWS ---
+bal complement owner: ROOT
+Review integrated engineering/governance controls.
+
+### QS-5 — normative source line 184
+Normative line (verbatim):
+- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.
+Local obligation (verbatim from final-render draft):
+Use fixed independent semantic bar and actual controls with bounded proof.
+Exclusively global complement owner: ROOT
+Review union evidence and anti-vacuity coverage.
+
+### QS-6 — normative source line 185
+Normative line (verbatim):
+- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.
+Local obligation (verbatim from final-render draft):
+Reuse preserved context/completions and record bounded work honestly.
+Exclusively global complement owner: ROOT
+Reconcile campaign economics and reusable completions.
+
+### DOD-1 — normative source line 223
+Normative line (verbatim):
+- **DOD-1:** CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.
+Local obligation (verbatim from final-render draft):
+Link every local CC/SC disposition to actual evidence and decisions.
+Exclusively global complement owner: ROOT
+Resolve union CC/SC and named global acceptance.
+
+### DOD-2 — normative source line 224
+Normative line (verbatim):
+- **DOD-2:** all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.
+Local obligation (verbatim from final-render draft):
+Review applicable invariants/QS and demonstrate rejecting controls.
+Exclusively global complement owner: ROOT
+Review global invariants/QS and integrated rejecting controls.
+
+### DOD-3 — normative source line 225
+Normative line (verbatim):
+- **DOD-3:** real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.
+Local obligation (verbatim from final-render draft):
+Verify accepted local consumption and end-to-end maintenance/publication use.
+Exclusively global complement owner: ROOT
+Verify integrated end-to-end union path.
+
+### DOD-4 — normative source line 226
+Normative line (verbatim):
+- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.
+Local obligation (verbatim from final-render draft):
+Reconcile actual local scoped gates without promoting unrun gates.
+Exclusively global complement owner: ROOT
+Run final integrated epic and report enforcement separately.
+
+### DOD-5 — normative source line 227
+Normative line (verbatim):
+- **DOD-5:** real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.
+Local obligation (verbatim from final-render draft):
+Reconcile all authorized new visible usage and unresolved requests.
+Exclusively global complement owner: ROOT
+Reconcile historical aggregate/envelope with no resets.
+
+### DOD-6 — normative source line 228
+Normative line (verbatim):
+- **DOD-6:** docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.
+Local obligation (verbatim from final-render draft):
+Deliver accurate guides, local compatibility/preservation and complete independent review.
+Exclusively global complement owner: ROOT
+Resolve historical migration/rollback and governed landing review.
+
+### DOD-7 — normative source line 229
+Normative line (verbatim):
+- **DOD-7:** owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.
+Local obligation (verbatim from final-render draft):
+Report honest local completion and governed sealed transport.
+Exclusively global complement owner: ROOT
+Record owner acceptance, governed integration, landing and production activation as distinct states.
+
+----- END SECTION CONTENT -----
+
+===== 03 THIRTEEN BODY IDENTITIES AND FOUR ACCEPTED MANIFEST PINS — PUBLIC METADATA ONLY =====
+content_bytes=12172; content_sha256=1c4a37c1d150c8753b6752ca064e0d796236c38c5ca5a339ac7306676dc8e2e0
+----- EXACT SECTION CONTENT -----
+{
+  "artifacts": [
+    {
+      "key": "s2.l1.desktop-web",
+      "layer": 1,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/l1.md",
+        "byte_length": 29075,
+        "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+        "byte_length": 2963,
+        "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.app-session",
+      "layer": 1,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/l1.md",
+        "byte_length": 42047,
+        "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+        "byte_length": 2963,
+        "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "layer": 1,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/l1.md",
+        "byte_length": 36964,
+        "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+        "byte_length": 2963,
+        "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "layer": 2,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/desktop-web/body.md",
+        "byte_length": 18440,
+        "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+        "byte_length": 2847,
+        "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.app-session",
+      "layer": 2,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/app-session/body.md",
+        "byte_length": 24434,
+        "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+        "byte_length": 2847,
+        "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "layer": 2,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/design-tui/body.md",
+        "byte_length": 21535,
+        "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+        "byte_length": 2847,
+        "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "layer": 3,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/desktop-web/body.md",
+        "byte_length": 14715,
+        "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+        "byte_length": 2847,
+        "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.app-session",
+      "layer": 3,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/app-session/body.md",
+        "byte_length": 14334,
+        "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+        "byte_length": 2847,
+        "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "layer": 3,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/design-tui/body.md",
+        "byte_length": 15780,
+        "sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+        "byte_length": 2847,
+        "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/desktop-web/body.md",
+        "byte_length": 11183,
+        "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.app-session",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/app-session/body.md",
+        "byte_length": 11220,
+        "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/design-tui/body.md",
+        "byte_length": 11783,
+        "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.entry",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/entry/body.md",
+        "byte_length": 5849,
+        "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    }
+  ],
+  "accepted_manifests": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+      "byte_length": 2963,
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+      "byte_length": 2847,
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+      "byte_length": 2847,
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+      "byte_length": 3558,
+      "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+    }
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 04 ACTUAL NATIVE OPERATION RECEIPT — SCOPE IS THE RECORDED OPERATION ONLY =====
+content_bytes=4187; content_sha256=234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json; source_sha256=234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-native-prepare-execution/v1",
+  "operation": "prepare",
+  "state": "PREPARE_FAILED",
+  "recorded_at": "2026-11-11T20:48:52.214348+00:00",
+  "started_at": "2026-11-11T20:48:51.158507+00:00",
+  "ended_at": "2026-11-11T20:48:52.041873+00:00",
+  "duration_seconds": 0.8833769949997077,
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "argv": [
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+  "prepare_executed": true,
+  "exit_code": 1,
+  "launch_error": null,
+  "attempt": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare-attempt.json",
+    "sha256": "e6fac91c9594451daff1f91203a661f02c87fafe72a891b28f0b6f02eea4f8ce",
+    "byte_length": 1227
+  },
+  "preflight": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/preflight.json",
+    "sha256": "ff088c74ff156b579434a176af272a79cebeecda9700027eda5f661c0b885d2b",
+    "byte_length": 4588
+  },
+  "stdout": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "byte_length": 0
+  },
+  "stderr": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stderr",
+    "sha256": "43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079",
+    "byte_length": 158
+  },
+  "cas_before": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/cas-before.json",
+    "sha256": "595613c86288edb30a8c9b055da1c3e94fc1adb9b635239d12caa364922e1c92",
+    "byte_length": 155
+  },
+  "cas_after": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/cas-after.json",
+    "sha256": "efd444011f22bddbfb9bb4783add68dc503a3d7fddb00ab8ad06c2cb04e63dc8",
+    "byte_length": 4403
+  },
+  "cas_created": true,
+  "partial_cas_preserved": true,
+  "cas_file_count_after": 13,
+  "post_operation_integrity": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/post-operation-integrity.json",
+    "sha256": "e30d69982afe6707f57e8126277bccc043e1cc796eef73c146e28a859e062d53",
+    "byte_length": 93
+  },
+  "output": null,
+  "parsed_output_error": null,
+  "candidate_id": null,
+  "candidate_id_basis": null,
+  "binding_id": null,
+  "publish_executed": false,
+  "tests_executed": false,
+  "runtime_acceptance": "UNACCEPTED",
+  "git_checkout": false,
+  "observed_head": null,
+  "membership_observation_ready": false,
+  "automatic_retries": 0,
+  "cas_deleted": false,
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN",
+  "limits": [
+    "Prepare is not binding, publication, consumer acceptance, CI or a product test.",
+    "CAS inventory records exact observed bytes, including partial state; no cleanup occurs.",
+    "An interrupted wrapper may leave marker/logs without a final receipt; inspect and preserve, never rerun automatically."
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 05 EXACT ACTUAL RUNTIME STDOUT =====
+content_bytes=0; content_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stdout; source_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+----- EXACT SECTION CONTENT -----
+
+----- END SECTION CONTENT -----
+
+===== 06 EXACT ACTUAL RUNTIME STDERR =====
+content_bytes=158; content_sha256=43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stderr; source_sha256=43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079
+----- EXACT SECTION CONTENT -----
+{"kind":"error","error":"native-input-unavailable: file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json"}
+
+----- END SECTION CONTENT -----
+
+===== 07 ACTUAL READBACK AND CI OBSERVATIONS AT SUPPLIED PINS =====
+content_bytes=10043; content_sha256=296702e17d439df422fd46fd11a2d6b6ae79fff7eec10efed5bcd7098a9812ed
+----- EXACT SECTION CONTENT -----
+{
+  "runtime_observed_fields": [
+    {
+      "field": "schema",
+      "value": "genesis-s2-native-prepare-execution/v1"
+    },
+    {
+      "field": "operation",
+      "value": "prepare"
+    },
+    {
+      "field": "state",
+      "value": "PREPARE_FAILED"
+    },
+    {
+      "field": "recorded_at",
+      "value": "2026-11-11T20:48:52.214348+00:00"
+    },
+    {
+      "field": "started_at",
+      "value": "2026-11-11T20:48:51.158507+00:00"
+    },
+    {
+      "field": "ended_at",
+      "value": "2026-11-11T20:48:52.041873+00:00"
+    },
+    {
+      "field": "native_package_sha256",
+      "value": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+    },
+    {
+      "field": "candidate_revision",
+      "value": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+    },
+    {
+      "field": "source_revision",
+      "value": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "field": "protocol_revision",
+      "value": "ee2521a5b966bd505cc95bd1c733e09e12f33531"
+    },
+    {
+      "field": "argv[0]",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun"
+    },
+    {
+      "field": "argv[1]",
+      "value": "scripts/genesis-native.ts"
+    },
+    {
+      "field": "argv[2]",
+      "value": "prepare"
+    },
+    {
+      "field": "argv[3]",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root"
+    },
+    {
+      "field": "argv[4]",
+      "value": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json"
+    },
+    {
+      "field": "argv[5]",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json"
+    },
+    {
+      "field": "cwd",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas"
+    },
+    {
+      "field": "prepare_executed",
+      "value": true
+    },
+    {
+      "field": "exit_code",
+      "value": 1
+    },
+    {
+      "field": "cas_created",
+      "value": true
+    },
+    {
+      "field": "candidate_id",
+      "value": null
+    },
+    {
+      "field": "publish_executed",
+      "value": false
+    },
+    {
+      "field": "git_checkout",
+      "value": false
+    },
+    {
+      "field": "observed_head",
+      "value": null
+    },
+    {
+      "field": "membership_observation_ready",
+      "value": false
+    }
+  ],
+  "runtime_scope": "Only observed receipt fields are quoted. A successful prepare exit/output does not establish binding, governed publication, readers, consumers, update/recovery or CI acceptance.",
+  "final_remote_readback": {
+    "receipt": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-remote-recheck-01/readback-receipt.json",
+      "byte_length": 3635,
+      "sha256": "845546f3fdd62986

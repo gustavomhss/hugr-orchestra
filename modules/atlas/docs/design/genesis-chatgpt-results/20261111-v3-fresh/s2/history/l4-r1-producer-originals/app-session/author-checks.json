@@ -1,0 +1,44 @@
+{
+  "kind": "documentation packaging only; not product testing or semantic judgment",
+  "unit": "s2.l4.app-session",
+  "dispatch": {
+    "path": "deliverable/requests/l4-app-session-dispatch.md",
+    "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f",
+    "verified": true
+  },
+  "accepted_manifest_count": 3,
+  "accepted_body_count": 5,
+  "accepted_manifest_and_body_pins_verified": true,
+  "source_count": 9,
+  "source_sha256_git_blob_and_lengths_verified": true,
+  "build_keys_are_accepted_prior_layers": true,
+  "same_layer_factual_inputs": [],
+  "navigation_count": 3,
+  "exact_predecessor_headings_verified": true,
+  "common_h2_headings_verified": true,
+  "body": {
+    "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+    "byte_length": 11220,
+    "whitespace_word_count": 1246,
+    "sections": [
+      {
+        "heading": "Orientation",
+        "byte_length": 951
+      },
+      {
+        "heading": "Maintenance protocol",
+        "byte_length": 6636
+      },
+      {
+        "heading": "Verification and boundaries",
+        "byte_length": 3594
+      }
+    ]
+  },
+  "all_sections_under_16000_bytes": true,
+  "body_under_64000_bytes": true,
+  "literal_excerpt_count": 12,
+  "literal_excerpt_readback_hashes_verified": true,
+  "json_parse_checked": true,
+  "product_or_remote_execution": false
+}

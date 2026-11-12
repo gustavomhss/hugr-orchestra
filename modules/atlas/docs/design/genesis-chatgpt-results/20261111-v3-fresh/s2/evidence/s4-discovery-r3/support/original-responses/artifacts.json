@@ -1,0 +1,22 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "{\"total_count\":1,\"artifacts\":[{\"id\":13883635728,\"node_id\":\"MDg6QXJ0aWZhY3QxMzg4MzYzNTcyOA==\",\"name\":\"ownership-runtime-7102f2e3a1a9a3822bcd0ae054b36ecffe9da553\",\"size_in_bytes\":431413,\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/13883635728\",\"archive_download_url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/13883635728/zip\",\"expired\":false,\"digest\":\"sha256:cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd\",\"created_at\":\"2026-11-11T18:29:18Z\",\"updated_at\":\"2026-11-11T18:29:18Z\",\"expires_at\":\"2026-11-18T18:29:17Z\",\"workflow_run\":{\"id\":43077975153,\"repository_id\":1405035578,\"head_repository_id\":1405035578,\"head_branch\":\"genesis-fresh-s4\",\"head_sha\":\"7102f2e3a1a9a3822bcd0ae054b36ecffe9da553\"}}]}",
+    "title": "artifacts",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43077975153/artifacts",
+    "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43077975153/artifacts",
+    "display_title": "artifacts",
+    "structuredContent": {
+      "title": "artifacts",
+      "content": "{\"total_count\":1,\"artifacts\":[{\"id\":13883635728,\"node_id\":\"MDg6QXJ0aWZhY3QxMzg4MzYzNTcyOA==\",\"name\":\"ownership-runtime-7102f2e3a1a9a3822bcd0ae054b36ecffe9da553\",\"size_in_bytes\":431413,\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/13883635728\",\"archive_download_url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/13883635728/zip\",\"expired\":false,\"digest\":\"sha256:cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd\",\"created_at\":\"2026-11-11T18:29:18Z\",\"updated_at\":\"2026-11-11T18:29:18Z\",\"expires_at\":\"2026-11-18T18:29:17Z\",\"workflow_run\":{\"id\":43077975153,\"repository_id\":1405035578,\"head_repository_id\":1405035578,\"head_branch\":\"genesis-fresh-s4\",\"head_sha\":\"7102f2e3a1a9a3822bcd0ae054b36ecffe9da553\"}}]}",
+      "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43077975153/artifacts"
+    }
+  },
+  "isError": false
+}

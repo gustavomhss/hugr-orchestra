@@ -1,0 +1,563 @@
+{
+  "schema": "genesis-s2-native-layer-mechanical/v1",
+  "artifact_key": "s2.l2.design-tui",
+  "layer": 2,
+  "producer_root": "later-producers/design-tui/l2",
+  "destination": "layers/l2/design-tui",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "package_before_sha256": "88f6d5b3d3092f43c9a13c6f3500358f1c2021f048309fcea18a75b8d33dc12d",
+  "utility_sha256": "664bbd0c1be81d9ec8606eb6a8f8909cb8434c1e17be3114c3ad1165750ff918",
+  "body": {
+    "method": "ATX headings outside fenced blocks; each slice ends at the next heading; no semantic completeness assertion",
+    "byte_length": 21535,
+    "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+    "line_count": 92,
+    "sections": [
+      {
+        "level": 1,
+        "heading": "Design and terminal UI — L2 behavior and maintenance boundaries",
+        "line": 1,
+        "byte_start": 0,
+        "byte_end_exclusive": 69,
+        "sha256": "5e6b745b54b83be24e04137d80fdde2f4bc125eb83c23e303a5db1c9deae28de"
+      },
+      {
+        "level": 2,
+        "heading": "Orientation",
+        "line": 3,
+        "byte_start": 69,
+        "byte_end_exclusive": 1445,
+        "sha256": "292e242eea297dd8df28119952eb696ebf2071a026a6d74f54370794044c1a25"
+      },
+      {
+        "level": 2,
+        "heading": "Terminal lifetime and synchronized navigation",
+        "line": 11,
+        "byte_start": 1445,
+        "byte_end_exclusive": 3705,
+        "sha256": "fe1c22544892e2515c479607543418ff417b4aeab680784b0cbafda5b660f888"
+      },
+      {
+        "level": 2,
+        "heading": "V2 actions and prompt admission",
+        "line": 19,
+        "byte_start": 3705,
+        "byte_end_exclusive": 7024,
+        "sha256": "16f6cfa65290d626f54ec8c3414ff32aa59429347e3a07d433f94287bb64a7c7"
+      },
+      {
+        "level": 2,
+        "heading": "Terminal configuration, persistence and extensions",
+        "line": 36,
+        "byte_start": 7024,
+        "byte_end_exclusive": 9377,
+        "sha256": "5d4f7f960252586d5177827b9ae2c9ccc6aaafde943e89e9bf18572604f6049d"
+      },
+      {
+        "level": 2,
+        "heading": "Terminal display, native integrations and simulation",
+        "line": 44,
+        "byte_start": 9377,
+        "byte_end_exclusive": 11887,
+        "sha256": "60db93edf42d9e7238fcf02303c1144443e2cb986181747487b02612b1569e66"
+      },
+      {
+        "level": 2,
+        "heading": "Browser UI ownership, lifecycle and accessibility",
+        "line": 52,
+        "byte_start": 11887,
+        "byte_end_exclusive": 14625,
+        "sha256": "c5a0a5e3a58035fbfa8477f88aecc2bf3eeeeecbf0b7ea0b616e71cb0d0aa52c"
+      },
+      {
+        "level": 2,
+        "heading": "Localization, direction and two theme systems",
+        "line": 62,
+        "byte_start": 14625,
+        "byte_end_exclusive": 16873,
+        "sha256": "f164e7f9cbd670cd8c50bc96bdf43be5b20dd877292c0f38c2594c5068a095ae"
+      },
+      {
+        "level": 2,
+        "heading": "Generated products and asset provenance",
+        "line": 70,
+        "byte_start": 16873,
+        "byte_end_exclusive": 19211,
+        "sha256": "1bb178c6f8abfd6d9c587ae531468621e661bdfb3b37e844bc424f4077a015b9"
+      },
+      {
+        "level": 2,
+        "heading": "Storybook, design intent and verification limits",
+        "line": 86,
+        "byte_start": 19211,
+        "byte_end_exclusive": 21535,
+        "sha256": "2939465ac5cb9b9488bcdf12b0955d7865c5bf777ca081d3e3274b7665c564bc"
+      }
+    ]
+  },
+  "source_checks": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173",
+      "byte_length": 4098,
+      "canonical_capture": "producers/design-tui/sources/.orchestra/skills/rtl-aware-development/SKILL.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "canonical_capture": "producers/desktop-web/sources/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/script/schema-files.ts",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3",
+      "byte_length": 3409,
+      "canonical_capture": "producers/design-tui/sources/apps/cli/script/schema-files.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/src/tui-config.ts",
+      "git_blob_sha": "705444d8239e8126eba928bd61aac099d9f4ac20",
+      "sha256": "707bfb1feb89c4182550f1b004ed2dfc1f1746c534f006a8a2258e528a6d6697",
+      "byte_length": 1263,
+      "canonical_capture": "producers/design-tui/sources/apps/cli/src/tui-config.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/src/tui.ts",
+      "git_blob_sha": "ec99d67457f67a0a184b742dd4e61c84efaada4d",
+      "sha256": "93b3d1f6bb24e3a8c1837c997f693344122230875f4ca91b8150a189ab6d7837",
+      "byte_length": 1072,
+      "canonical_capture": "producers/design-tui/sources/apps/cli/src/tui.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/main.ts",
+      "git_blob_sha": "a0d957c3854ba93ef9227b7f92a4dde5765191f8",
+      "sha256": "e0e6e324b3a4145f2c990def7e34459b6c47d2894ec63b56f2b188d523760a57",
+      "byte_length": 3877,
+      "canonical_capture": "producers/design-tui/sources/apps/storybook/.storybook/main.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/playground-css-plugin.ts",
+      "git_blob_sha": "cc73ecf667fd444d0d1ddde9ba30f9487906bead",
+      "sha256": "9e2ebdeca49703f3ee7aaca4ab877a16196e03a518f3f6658be12c6a3643b206",
+      "byte_length": 4943,
+      "canonical_capture": "producers/design-tui/sources/apps/storybook/.storybook/playground-css-plugin.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/preview.tsx",
+      "git_blob_sha": "a6052bf222a2146b2aca63109d3583f1cef399fd",
+      "sha256": "40729070062b15c71dc84047c6950c340e107d35c92f0e3753cec0434e545db1",
+      "byte_length": 3288,
+      "canonical_capture": "producers/design-tui/sources/apps/storybook/.storybook/preview.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/images/readme/src/render.sh",
+      "git_blob_sha": "2e3769d9b7c6577c7252d85bce9110ab0c3c92e8",
+      "sha256": "b246641ae0b401a7ab0b0c22f72fb44c5acdf6f857ef0378e7354df828b73b12",
+      "byte_length": 1188,
+      "canonical_capture": "producers/design-tui/sources/docs/images/readme/src/render.sh",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/permission.ts",
+      "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+      "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab",
+      "byte_length": 5828,
+      "canonical_capture": "producers/design-tui/sources/packages/protocol/src/groups/permission.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/session.ts",
+      "git_blob_sha": "5830f50001c8dc01227a920f04276054c0e29570",
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+      "byte_length": 29273,
+      "canonical_capture": "producers/app-session/sources/packages/protocol/src/groups/session.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/README.md",
+      "git_blob_sha": "3033116c72a3a39851f35f48536b79728305596f",
+      "sha256": "42fb77fe64fc57cfc62be447154d7aa5c5ada2e1bc134abaa78322658ffde85d",
+      "byte_length": 2180,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/README.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/app.tsx",
+      "git_blob_sha": "8471637f416eece3baf17e66e8653c59676b1d8f",
+      "sha256": "0ed7508e3b274c348332058d082e66ffd8e2acff944213ecba405343446a2488",
+      "byte_length": 36073,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/app.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/component/prompt/index.tsx",
+      "git_blob_sha": "6cd7cc1bd79c141c2c821853a688438396fd1b80",
+      "sha256": "422c51904f556d388b4678ba0220b24b2c8618426ea83658102ec2fce03cd76f",
+      "byte_length": 56161,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/component/prompt/index.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/config/index.tsx",
+      "git_blob_sha": "de463aa8b09ae8958d06f5de61c55d15b6df5c35",
+      "sha256": "759376006b5a391735829649abc30a0270cd81a02f8090e9eb5c0119f332ec51",
+      "byte_length": 6007,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/config/index.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/session-actions.ts",
+      "git_blob_sha": "255420d1e93ce0fca21b941c673abdede087e91e",
+      "sha256": "e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd",
+      "byte_length": 4172,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/context/session-actions.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/sync.tsx",
+      "git_blob_sha": "d780ec3db53f6adbd36131e9342d5899b0b517a5",
+      "sha256": "4693a3077d846c3f210b76596e669eb93fe9aa604161b921603ff9bc8aa139fe",
+      "byte_length": 19005,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/context/sync.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/theme.tsx",
+      "git_blob_sha": "0ada1f058529bc0bd026e9f28bef3fb938ad7254",
+      "sha256": "4cb523098191d07245aa0298a5931eefa12036cad21cc1c0d55a070574f32b56",
+      "byte_length": 9859,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/context/theme.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/plugin/api.ts",
+      "git_blob_sha": "8591ef36024aeeda7785127710d920e9dad236c0",
+      "sha256": "9716adfb55de5ea8b054704094bede7ddd4ed96cd94706cceff978e12920544e",
+      "byte_length": 1362,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/plugin/api.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/plugin/runtime.tsx",
+      "git_blob_sha": "75ea3c25cf4b30879a04438761c0aa388f1d4e50",
+      "sha256": "1f05179254d0b68f5123924bf6d24f9e253734b4f4d7dd176135a1452eda0ac6",
+      "byte_length": 2323,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/plugin/runtime.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/theme/index.ts",
+      "git_blob_sha": "bcdeff3a46e498bf1aadbcac39d6c149030657fb",
+      "sha256": "799bd9b6637c72af4eaff1174907e377251facc48b644aa2fa0fa6158202980b",
+      "byte_length": 27770,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/theme/index.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/util/transcript.ts",
+      "git_blob_sha": "55e9f1e52a00fb4336753bffec52c66043db28f3",
+      "sha256": "c70f193e1b63bf933ae2430eea4f243f4f3eda5bbdb2872a7880d79625b8a789",
+      "byte_length": 3343,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/util/transcript.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/AGENTS.md",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769",
+      "byte_length": 2160,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/README.md",
+      "git_blob_sha": "2df8fea30c8cb417e32b3b3a3bbc37bd0f137c16",
+      "sha256": "34ef183bbc612887214a3fe5b5635ca880feeab06dd7edd2b9e004507633fb96",
+      "byte_length": 2590,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/README.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/build-oc2-v2-overrides.ts",
+      "git_blob_sha": "e5dae76ef374a90e940e32812715b939c69c0c1d",
+      "sha256": "4ad3bf3fe1eaf3c5030896cca81b3ec0d571fd2f82441149d8fcf2cef4d14e29",
+      "byte_length": 1413,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/script/build-oc2-v2-overrides.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/tailwind.ts",
+      "git_blob_sha": "6e558a8fa11cc024b71d2e311f4d27ebc89c0cf8",
+      "sha256": "3b71ac2b9558b53397534f0ba476879715bd35779f939c415a70051af4699722",
+      "byte_length": 576,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/script/tailwind.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/components/font.tsx",
+      "git_blob_sha": "f89dfafe1db32114fde53f9581a7c46992512092",
+      "sha256": "61b8068512255a5c0524334d545543b4af20c9401dcf68ecc52a208118d60bfd",
+      "byte_length": 31,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/components/font.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/dialog.tsx",
+      "git_blob_sha": "5f29db9a7937b353754659f1c63c6f7e0ea1bb97",
+      "sha256": "dbf846b187040405655aba89e6e16dcc5694120a884e6a78c147c100015b7406",
+      "byte_length": 7985,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/dialog.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/helper.tsx",
+      "git_blob_sha": "172fed460ec63fc373e616fcbef40d8cb21be5ee",
+      "sha256": "cb4af7568973cdf46af691804398a016a69e638daf8cb376eabe6de4200a2946",
+      "byte_length": 1255,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/helper.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.tsx",
+      "git_blob_sha": "757083f8f7842815c6e835d722a9f8887a9088bc",
+      "sha256": "e91e04c63c2b9d767bf3ee0180ea968782b882d5ad2eb166aa4a1f077f74b834",
+      "byte_length": 2564,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/i18n.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/worker-pool.tsx",
+      "git_blob_sha": "5f788f7866abfd25e701e37ea377d416f87a4e4f",
+      "sha256": "d79c61272e84266658040aa32b85ce4f86089f1b3e19cd5bdea23b49c7778918",
+      "byte_length": 573,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/worker-pool.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/context.tsx",
+      "git_blob_sha": "eb21b015ea2f6b1bbd1abc5c51eeec7f98718e90",
+      "sha256": "e51c86dc8fb695dedab9b512e0fc38c7c449dda6d377154528bf87ef48bf8a46",
+      "byte_length": 12536,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/theme/context.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/loader.ts",
+      "git_blob_sha": "198d351221121a6bfeedbbb2ceb4591c914a4966",
+      "sha256": "ef53b0866ae75b695ac369dda09098e35f5dce7218f2d377807f375a34422021",
+      "byte_length": 3097,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/theme/loader.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/v2/components/field-v2.tsx",
+      "git_blob_sha": "45b5a70b2efb0ae179d41b70e1dd39f4b0ba53cb",
+      "sha256": "0321e5492f82402ede76b7640936cdf3622bb377bd2d5323a14ed47e105ac7b2",
+      "byte_length": 6688,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/v2/components/field-v2.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/v2/components/segmented-control-v2.tsx",
+      "git_blob_sha": "006b28394f3e611c52746ddf26e88b7a8288a1d5",
+      "sha256": "6b4312d3a949262fa3bd43b0f003cb4d7e38f81f827fa73f4c6a2e94c2036b60",
+      "byte_length": 6199,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/v2/components/segmented-control-v2.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/vite.config.ts",
+      "git_blob_sha": "b89c666ae19be83a567d525687404fb6bc137857",
+      "sha256": "c869fbd57f4de3ff9aa64ec7c927e56331e1cee557ab97b80d9135eecfe55688",
+      "byte_length": 1465,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/vite.config.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    }
+  ],
+  "canonical_source_manifests": [
+    {
+      "path": "producers/desktop-web/sources.json",
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+    },
+    {
+      "path": "producers/app-session/sources.json",
+      "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+    },
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea"
+    }
+  ],
+  "build_dependencies": [
+    {
+      "key": "s2.l1.design-tui",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "accepted_manifests": [
+        "accepted/l1.json"
+      ],
+      "supported": true
+    }
+  ],
+  "navigation": [
+    "s2.l2.app-session",
+    "s2.l2.desktop-web"
+  ],
+  "navigation_targets_pending": [],
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "layer": 1,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    }
+  ],
+  "recipe": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+    "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40"
+  },
+  "producer_files": [
+    {
+      "name": "body.md",
+      "byte_length": 21535,
+      "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+    },
+    {
+      "name": "sources.json",
+      "byte_length": 29559,
+      "sha256": "f79315087069efc9d88acf629f8cfb7a744f768b968a90602b2e51dee287e262"
+    },
+    {
+      "name": "dependencies.json",
+      "byte_length": 2145,
+      "sha256": "587f33ed309b185def4977a4818895be123b108ac2101bcb09a8b21ca28df49c"
+    },
+    {
+      "name": "decisive-evidence.md",
+      "byte_length": 39394,
+      "sha256": "8d2e149e8afda625cb3deef7a7b6b53c95014853fb637358f118021561a97071"
+    },
+    {
+      "name": "response.md",
+      "byte_length": 7026,
+      "sha256": "486bec496eb2e8e83e90f931d319ae82469891ddc43c82c26aebc8b60b20f745"
+    }
+  ],
+  "earlier_artifacts_unchanged": [
+    {
+      "key": "s2.l1.desktop-web",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "artifact_metadata_sha256": "537063a45589e162d694019d0e6a01a0ca893d3522af9f9210faa68651f39abf"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "artifact_metadata_sha256": "9738fecf0c280a7e0455839bc86be22fefc7a82c5cdcd017ab874579d1779f9a"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "artifact_metadata_sha256": "229652ae8a60e6eafc70bd4d75d82e811e49a305ac4d0efcdfa8b0037b2304b0"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "artifact_metadata_sha256": "0f0d4cfc3d90e37ad2bf67691c9c9a95be40ad86704dd80684955b3fedd2968e"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "artifact_metadata_sha256": "f6be80070a83a1e4ef76ad0d4118a9611e8913fade0f4483bc63ec6cf48a9a9b"
+    }
+  ],
+  "semantic_status": "PENDING_ACTUAL_JUDGMENTS",
+  "runtime_status": "NOT_RUN",
+  "limits": [
+    "Mechanical identity and dependency bookkeeping only; no semantic judgment or new acceptance gate.",
+    "Manifest consumption is explicitly declared, not inferred or authenticated by this utility.",
+    "Declared build dependency completeness and navigation usefulness remain for the actual judgments."
+  ]
+}

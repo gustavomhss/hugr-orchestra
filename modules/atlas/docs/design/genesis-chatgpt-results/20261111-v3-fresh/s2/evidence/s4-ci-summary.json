@@ -1,0 +1,84 @@
+{
+  "schema": "genesis-s2-shared-ci-readback/v1",
+  "read_operation": "GitHub connector read-only; no run initiated or retried",
+  "run_id": 43065851373,
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43065851373",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "run_attempt": 1,
+  "status": "completed",
+  "conclusion": "failure",
+  "job_id": 130680453252,
+  "steps": [
+    {
+      "number": 1,
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "number": 2,
+      "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+      "conclusion": "success"
+    },
+    {
+      "number": 3,
+      "name": "Run ./.github/actions/setup-bun",
+      "conclusion": "success"
+    },
+    {
+      "number": 4,
+      "name": "Install Atlas dependencies",
+      "conclusion": "success"
+    },
+    {
+      "number": 5,
+      "name": "Typecheck Atlas",
+      "conclusion": "success"
+    },
+    {
+      "number": 6,
+      "name": "Grouped ownership and existing door regressions",
+      "conclusion": "success"
+    },
+    {
+      "number": 7,
+      "name": "Probe the new guards against named failing controls",
+      "conclusion": "success"
+    },
+    {
+      "number": 8,
+      "name": "Generate Atlas boundary from the checked sources",
+      "conclusion": "success"
+    },
+    {
+      "number": 9,
+      "name": "Check repository guards on the candidate",
+      "conclusion": "failure"
+    },
+    {
+      "number": 10,
+      "name": "Preserve exact gate and generated-boundary evidence",
+      "conclusion": "success"
+    },
+    {
+      "number": 19,
+      "name": "Post Run ./.github/actions/setup-bun",
+      "conclusion": "success"
+    },
+    {
+      "number": 20,
+      "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+      "conclusion": "success"
+    },
+    {
+      "number": 21,
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ],
+  "guard_failure": "agent-scratch gate on modules/atlas/ownership-guards.log; 78 rules, 717 changed paths, 1 gate and 3 warnings, exit1",
+  "limits": [
+    "S4 candidate result is not an S2 final-payload run.",
+    "Individual grouped regression and mutation steps succeeded; overall workflow failed.",
+    "No native S2 import, binding, consumer or end-to-end incremental/recovery acceptance follows from these CI results."
+  ]
+}

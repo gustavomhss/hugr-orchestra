@@ -1,0 +1,64 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport_completeness": {
+    "status": "COMPLETE",
+    "received": "L4 ENTRY R2 PART1/1",
+    "observed_content": "The complete corrected body, exact insertion, bounded supporting excerpts and complete dependency rationale are actually present, including the closing dependency JSON. The packet supplements the retained complete r1 evidence.",
+    "identity_limit": "Lengths and hashes are external mechanical receipts. I did not recompute them or attest to host-internal serialized message bytes."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l4.entry",
+      "body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+      "body_bytes_external_receipt": 5849,
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "resolved_findings": [
+        {
+          "id": "ENTRY-L4-J2-F1",
+          "disposition": "RESOLVED",
+          "location": "Verification and boundaries, inserted Out-of-scope evidence route paragraph.",
+          "reason": "The entry now explicitly directs distributed or clustered Session ownership, crash continuation and exactly-once provider questions to the S1/backend session-execution owner. It requests the current coordination, continuation and provider-retry design together with supporting implementation and failure-recovery evidence. This supplies the previously missing actionable next step while expressly refusing to treat S2 reconnect and admission observations as proof.",
+          "evidence": [
+            "Existing entry E04: AGENTS.md:214–216, with the process-local drain and separate continuation-design limits.",
+            "Accepted s2.l3.app-session, Recover the projection without inventing execution recovery.",
+            "Bounded correction packet, Exact insertion text and Bounded supporting evidence."
+          ]
+        }
+      ],
+      "content_readiness": {
+        "case": "S2-C5",
+        "verdict": "PASS",
+        "reason": "A reader can now give the supported refusal, distinguish UI recovery and durable admission from backend execution guarantees, and identify the responsible further-evidence owner. The existing Instructions paragraph retains the process-local limitation. No destination artifact key, implemented distributed-recovery mechanism or passing test is invented.",
+        "actual_consumer_execution": "NOT_RUN"
+      },
+      "criteria_dispositions": [
+        {
+          "criteria": ["GO-A1", "GO-A3", "CC-3", "QS-2"],
+          "verdict": "PASS",
+          "location": "Verification and boundaries.",
+          "reason": "The correction completes the required out-of-scope maintenance route without enlarging S2's authority or evidence scope."
+        },
+        {
+          "criteria": ["GO-I1", "GO-I2", "GO-I3 declared bindings", "GO-I4 dependency semantics", "GO-I7", "GO-I8", "QS-1", "QS-4", "QS-5"],
+          "verdict": "PASS",
+          "location": "Corrected body, bounded evidence and unchanged dependency rationale.",
+          "reason": "The route is a request for further evidence, not a claim that backend evidence was consumed. Existing source attribution, nine factual build inputs, twelve navigation destinations and accepted predecessor pins remain coherent."
+        }
+      ],
+      "regression_assessment": "No new mandatory issue identified. The insertion preserves the existing map, layer distinctions, bounded-reading guidance, process-local limit and unexecuted verification boundaries. Other applicable content and declaration dispositions from the r1 review remain PASS.",
+      "required_local_scope_resolved": true,
+      "acceptance_scope": "Semantic content and declarations for this exact corrected entry body. The original r1 FIX-FIRST decision remains preserved."
+    }
+  ],
+  "root_navigation_declaration": {
+    "roots": {"entry": "s2.l4.entry"},
+    "verdict": "PASS",
+    "reason": "The declared root and all twelve previously checked destination/heading mappings remain unchanged. No backend artifact key was added."
+  },
+  "unchanged_peer_decisions": "The previously issued L4 desktop-web, app-session and design-tui PASS decisions remain unchanged; this delta does not re-review their bodies.",
+  "unaccepted_gates": "Actual consumers and measured read budgets, runtime binding/publication, executed update/reuse/recovery, operational budget enforcement, CI, economics and global acceptance remain HOLD/NOT_RUN. Complete L4 acceptance remains for the principal to record after both independent entry-r2 decisions.",
+  "optional_suggestions": []
+}

@@ -1,0 +1,537 @@
+{
+  "artifact_key": "s2.l2.design-tui",
+  "kind": "mechanical-author-checks-not-semantic-judgment",
+  "body": {
+    "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+    "byte_length": 21535,
+    "whitespace_word_count": 2489,
+    "utf8_decodes": true,
+    "level_two_sections": [
+      {
+        "heading": "Orientation",
+        "utf8_bytes": 1376
+      },
+      {
+        "heading": "Terminal lifetime and synchronized navigation",
+        "utf8_bytes": 2260
+      },
+      {
+        "heading": "V2 actions and prompt admission",
+        "utf8_bytes": 3319
+      },
+      {
+        "heading": "Terminal configuration, persistence and extensions",
+        "utf8_bytes": 2353
+      },
+      {
+        "heading": "Terminal display, native integrations and simulation",
+        "utf8_bytes": 2510
+      },
+      {
+        "heading": "Browser UI ownership, lifecycle and accessibility",
+        "utf8_bytes": 2738
+      },
+      {
+        "heading": "Localization, direction and two theme systems",
+        "utf8_bytes": 2248
+      },
+      {
+        "heading": "Generated products and asset provenance",
+        "utf8_bytes": 2338
+      },
+      {
+        "heading": "Storybook, design intent and verification limits",
+        "utf8_bytes": 2324
+      }
+    ],
+    "maximum_section_bytes": 3319,
+    "every_section_within_routine_16000_byte_body_budget": true
+  },
+  "dispatch_sha256_matches": true,
+  "accepted_manifest_sha256_matches": true,
+  "accepted_predecessor_body_sha256_matches": true,
+  "used_source_count": 36,
+  "all_used_capture_sha256_git_blob_and_byte_lengths_match_recorded_provenance": true,
+  "all_original_connector_response_paths_exist": true,
+  "original_connector_responses_newly_redecoded": false,
+  "family_count": 67,
+  "assigned_paths_from_mapped_families": 2087,
+  "metadata_only_assigned_paths": 13,
+  "family_ids_equal_predecessor_ledger": true,
+  "family_mapping": [
+    {
+      "family": "tui-package",
+      "path_count": 4,
+      "body_section": "Terminal lifetime and synchronized navigation",
+      "accepted_predecessor_section": "Terminal application / Entry, ownership and lifetime",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-lifecycle-routes",
+      "path_count": 23,
+      "body_section": "Terminal lifetime and synchronized navigation",
+      "accepted_predecessor_section": "Terminal application / Entry, ownership and lifetime",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-v2-transport-state",
+      "path_count": 8,
+      "body_section": "Terminal lifetime and synchronized navigation",
+      "accepted_predecessor_section": "Terminal application / V2 transport, hydration and state; V2 session action boundary",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-selection-persistence",
+      "path_count": 5,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Selection, local persistence and prompt admission",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-prompt",
+      "path_count": 7,
+      "body_section": "V2 actions and prompt admission",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Selection, local persistence and prompt admission",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-prompt-history",
+      "path_count": 6,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Selection, local persistence and prompt admission",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-empty-placeholder",
+      "path_count": 1,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Selection, local persistence and prompt admission",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-session-view",
+      "path_count": 14,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Session rendering and interactive requests",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-permission-question",
+      "path_count": 3,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Session rendering and interactive requests; V2 session action boundary",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-config-keymap",
+      "path_count": 3,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Configuration, keys, dialogs and plugins",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-dialogs-widgets",
+      "path_count": 27,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Configuration, keys, dialogs and plugins",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-plugin-facade",
+      "path_count": 5,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Configuration, keys, dialogs and plugins",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-feature-plugins",
+      "path_count": 21,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Configuration, keys, dialogs and plugins",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-terminal-editor",
+      "path_count": 6,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Terminal, editor, attention and themes",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-attention-audio",
+      "path_count": 3,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Terminal, editor, attention and themes",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-theme-engine",
+      "path_count": 2,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Terminal, editor, attention and themes",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-theme-data",
+      "path_count": 34,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Terminal, editor, attention and themes",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-presentation-helpers",
+      "path_count": 9,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-message-export-helpers",
+      "path_count": 5,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-render-input-helpers",
+      "path_count": 5,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-error-shapes",
+      "path_count": 2,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-parser-config",
+      "path_count": 1,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-demo-runtime",
+      "path_count": 2,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-replay-thinking",
+      "path_count": 2,
+      "body_section": "Terminal display, native integrations and simulation",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Supporting contracts: display, export, demos and replay",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-tests",
+      "path_count": 55,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Scope and evidence strength; Terminal application; Terminal interaction and supporting contracts; Remaining gaps and safe use of this evidence",
+      "metadata_only": false
+    },
+    {
+      "family": "tui-test-fixtures",
+      "path_count": 8,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Scope and evidence strength; Terminal application / Entry, ownership and lifetime; Terminal application / V2 transport, hydration and state",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-package",
+      "path_count": 8,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-license-unread",
+      "path_count": 1,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Remaining gaps and safe use of this evidence",
+      "metadata_only": true
+    },
+    {
+      "family": "ui-primitives",
+      "path_count": 33,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-v2-primitives",
+      "path_count": 31,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-motion",
+      "path_count": 6,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-list-scroll",
+      "path_count": 5,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-dialog-context",
+      "path_count": 1,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-markdown",
+      "path_count": 4,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-context-services",
+      "path_count": 5,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-i18n-runtime",
+      "path_count": 1,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Browser UI library / Localization and desktop themes",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-localization-data",
+      "path_count": 63,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Browser UI library / Localization and desktop themes",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-theme-engine",
+      "path_count": 13,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Browser UI library / Localization and desktop themes",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-theme-data",
+      "path_count": 37,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Browser UI library / Localization and desktop themes",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-styles",
+      "path_count": 82,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle; Browser UI library / Localization and desktop themes",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-tailwind-generation",
+      "path_count": 3,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-oc2-generation",
+      "path_count": 1,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-icon-consumers",
+      "path_count": 4,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-generated-icon-products",
+      "path_count": 4,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-app-sprite-provenance",
+      "path_count": 2,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership; Remaining gaps and safe use of this evidence",
+      "metadata_only": true
+    },
+    {
+      "family": "ui-file-icon-assets",
+      "path_count": 1089,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-provider-icon-assets",
+      "path_count": 105,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-app-image-assets",
+      "path_count": 30,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-font-assets",
+      "path_count": 2,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-audio-assets",
+      "path_count": 90,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-stories-fixtures",
+      "path_count": 70,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "ui-tests",
+      "path_count": 4,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle; Remaining gaps and safe use of this evidence",
+      "metadata_only": false
+    },
+    {
+      "family": "storybook-config-ci",
+      "path_count": 10,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "storybook-mocks",
+      "path_count": 21,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "schemas",
+      "path_count": 2,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "repo-tui-examples",
+      "path_count": 2,
+      "body_section": "Terminal configuration, persistence and extensions",
+      "accepted_predecessor_section": "Terminal interaction and supporting contracts / Configuration, keys, dialogs and plugins; Terminal interaction and supporting contracts / Terminal, editor, attention and themes",
+      "metadata_only": false
+    },
+    {
+      "family": "glossary-policy",
+      "path_count": 17,
+      "body_section": "Localization, direction and two theme systems",
+      "accepted_predecessor_section": "Browser UI library / Localization and desktop themes",
+      "metadata_only": false
+    },
+    {
+      "family": "rtl-policy",
+      "path_count": 1,
+      "body_section": "Browser UI ownership, lifecycle and accessibility",
+      "accepted_predecessor_section": "Browser UI library / Public primitives, accessibility and lifecycle",
+      "metadata_only": false
+    },
+    {
+      "family": "user-guides",
+      "path_count": 2,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "historical-plans",
+      "path_count": 6,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Terminal application / Entry, ownership and lifetime; Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "visual-recovery-history",
+      "path_count": 10,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "projects-board-design",
+      "path_count": 5,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "projects-board-mock-assets",
+      "path_count": 9,
+      "body_section": "Storybook, design intent and verification limits",
+      "accepted_predecessor_section": "Storybook, fixtures and design records; Remaining gaps and safe use of this evidence",
+      "metadata_only": false
+    },
+    {
+      "family": "brand-assets",
+      "path_count": 7,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "readme-render-sources",
+      "path_count": 12,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership; Storybook, fixtures and design records",
+      "metadata_only": false
+    },
+    {
+      "family": "readme-generated-images",
+      "path_count": 18,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership",
+      "metadata_only": false
+    },
+    {
+      "family": "readme-other-images",
+      "path_count": 10,
+      "body_section": "Generated products and asset provenance",
+      "accepted_predecessor_section": "Generation, assets and source ownership; Remaining gaps and safe use of this evidence",
+      "metadata_only": true
+    }
+  ],
+  "direct_source_excerpt_count": 20,
+  "accepted_predecessor_body_count": 1,
+  "consumed_layer_manifest_count": 1,
+  "product_execution_performed": false,
+  "semantic_judgment_performed": false
+}

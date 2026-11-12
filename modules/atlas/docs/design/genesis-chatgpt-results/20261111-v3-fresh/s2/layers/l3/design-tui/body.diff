@@ -1,0 +1,11 @@
+--- l3/body.md
++++ l3-r2/body.md
+@@ -47,6 +47,8 @@
+ 
+ Shared browser language and terminal language are separate: the captured TUI remains English-only. UI translation falls back to English and has plural logic, while layout can follow `layoutLocale` independently of content locale. The app composes UI/domain dictionaries, sets document language/direction and updates native copy. Main-process startup failures and the scoped Live overlay follow separate copy paths; the known hardcoded-English startup failure remains outside the app’s translation guarantee. [Accepted basis: `s2.l2.design-tui` §Localization, direction and two theme systems; `s2.l2.app-session` §Visual resources and prescribed maintenance; `s2.l2.desktop-web` §Host adapters own platform differences and copy and §Live separates readiness, capture and delivery.]
+ 
++**Instruction:** app callsites use `language.t(...)` for ordinary copy and `language.plural(...)` for counts; native main-process callsites consume shared typed translation bundles through `nativeT(...)`. Shared language/UI modules own locale selection, plural resolution, fallback and interpolation. Feature/native callsites must not branch on locale, choose plural categories or concatenate grammatical fragments. Preserve existing English keys and text byte-for-byte; extend the shared bundle/API for richer grammar. The documented startup exception remains. (`packages/app-shell/AGENTS.md:23–28`; `apps/desktop/AGENTS.md:5–9`.)
++
+ | Handoff and owner | Stable contract | Failure observation and affected artifacts | Verification route, unexecuted |
+ | --- | --- | --- | --- |
+ | Dictionaries → UI/app/host | Translation keys, interpolation/plural arguments, content locale and layout locale | Missing copy falls back; module counts do not establish complete translations. Logical layout and keyboard order can disagree: the inspected segmented control uses DOM-order arrows. | English LTR, forced RTL, an RTL locale and mixed code/path text; verify focus, arrows, resizing and native copy. |

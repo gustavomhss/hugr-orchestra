@@ -1,0 +1,117 @@
+{
+  "schema": "genesis-s2-runtime-setup-receipt/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "agent_role": "s2_runtime_setup",
+  "recorded_at": "2026-11-11T17:34:37.787432+00:00",
+  "state": "MATERIALIZED_PREPARE_HOLD",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "release": {
+    "commit": "b42d14978c8b727310369920d4bfaf86145a2b80",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "release_id": "20261111-v3-fresh-s4-r1",
+    "git_blob_sha": "6d02108e688e488f0ca86075fba37bce7f4bc6b2",
+    "sha256": "47deabb52ee93e18de06c68c1c27a0ff810a4e779a5087581080e87d6756979f",
+    "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "latest_branch_recheck_same_bytes": true
+  },
+  "source": {
+    "root": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+    "capture_records": 640,
+    "unique_files": 636,
+    "unique_bytes": 6428924,
+    "conflicts": 0,
+    "sha256_and_blob_checks": "PASS",
+    "commit_tree_linkage": "PASS",
+    "receipt": "source-materialization.json"
+  },
+  "runtime": {
+    "root": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code",
+    "verified_source_files": 406,
+    "cache_mismatches": 0,
+    "receipt": "runtime-materialization.json",
+    "generated_dist_copied": false
+  },
+  "dependencies": {
+    "packages": 152,
+    "files": 6287,
+    "offline_archive_integrity_checks": "PASS",
+    "lockfile_sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f",
+    "omitted_optional_platform_packages": 23,
+    "package_scripts_executed": false,
+    "receipt": "dependency-materialization.json"
+  },
+  "observed_versions": {
+    "bun": "1.3.14",
+    "node": "v24.22.1",
+    "typescript": "5.9.3",
+    "version_command_host_chunk": "959c8e"
+  },
+  "bun_executable": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+  "git_checkout": false,
+  "observed_head": null,
+  "membership_observation_ready": false,
+  "package_audit": "package-structure-audit.json",
+  "original_audited_package_sha256": "d0bf942164e6b69c3cd89e9d4a0808a5f4ddcbb450d6c40045b2d0952c9aa0cd",
+  "current_package_snapshot_sha256": "9dacfc3c7837655b1de7b16adf953465c481e207ddc8df8afda74baea342f8ff",
+  "oracle_content_read": false,
+  "remote_writes": 0,
+  "build_executed": false,
+  "tests_executed": false,
+  "prepare_executed": false,
+  "publish_executed": false,
+  "semantic_judgments_authored": 0,
+  "runtime_reviews_authored": 0,
+  "cas_created": false,
+  "state_shared_with_other_session": false,
+  "blocking_conditions": [
+    "Latest snapshot has 13 required artifacts with ten missing, including s2.l4.entry; main S2 package remains IN_PROGRESS with empty roots, blocked validity and no semantic review references.",
+    "Pinned r1 refuses schema/tui.json at 1,131,057 bytes in source reads and file observation; no runtime configuration option raises the 256,000-byte limit.",
+    "Before future accepted preparation, stage the exact accepted package, bodies, protocol, recipe and preserved review/oracle references under the isolated source root; this worker did not read or copy the reserved oracle.",
+    "Build the isolated adapter project and its references after acceptance; generated dist was not reused."
+  ],
+  "prior_format_findings_now_resolved_in_current_snapshot": [
+    "evidence is canonical JSON text rather than reference objects",
+    "all three recipe paths are live file input keys"
+  ],
+  "materialization_commands": [
+    {
+      "argv": [
+        "python",
+        "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/materialize.py",
+        "sources"
+      ],
+      "exit_code": 0,
+      "host_chunk": "6c6ae7"
+    },
+    {
+      "argv": [
+        "python",
+        "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/materialize.py",
+        "runtime"
+      ],
+      "exit_code": 0,
+      "host_chunk": "bdbb9d"
+    },
+    {
+      "argv": [
+        "python",
+        "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/restore-dependencies.py"
+      ],
+      "exit_code": 0,
+      "host_chunk": "fb3922"
+    }
+  ],
+  "local_capture_corrections": [
+    {
+      "files": [
+        "github/runtime-release.json",
+        "support/transport.md"
+      ],
+      "issue": "One extra LF introduced by patch serialization was detected before final verification.",
+      "correction": "Restored exact UTF-8 bytes from the preserved original connector content; retained pre-correction files with .initial-extra-newline suffix.",
+      "final_blob_and_sha256_checks": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,296 @@
+[
+  {
+    "sha256": "fd79890a519f7b5420725a1eb25cb7e606e38fa5ccf9f69006d783a257d22277",
+    "byte_length": 106718,
+    "paths": [
+      "deliverable/evidence/s4-ci-job-log-readback.json"
+    ]
+  },
+  {
+    "sha256": "d33bb05e8bec33255f53a95464b3376923bb70081edbc28d77908b177b643dc5",
+    "byte_length": 7927,
+    "paths": [
+      "deliverable/evidence/s4-ci-jobs-readback.json"
+    ]
+  },
+  {
+    "sha256": "89bc579ada65513dd1900dda7bca2d4cb078bd6ae0c164256afb07ba80bd4562",
+    "byte_length": 27857,
+    "paths": [
+      "deliverable/evidence/s4-ci-run-readback.json"
+    ]
+  },
+  {
+    "sha256": "390b497db3436df87a80af7d364cd401f6b589610480b358ce4d01774732ad7a",
+    "byte_length": 2341,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/artifacts.json"
+    ]
+  },
+  {
+    "sha256": "92f0d192dd7697929cd4de7f888de569fb8b349db3bf99ad6ad25a5cc0a1e320",
+    "byte_length": 404353,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/base-generated-mine.json"
+    ]
+  },
+  {
+    "sha256": "30f84d7292777efb479282baeb112ef8f8238a18d32e780ab2698530b8c05eb9",
+    "byte_length": 48180,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/base-generated-native-header.json"
+    ]
+  },
+  {
+    "sha256": "80612699d29b3eb44b1af9328a82f3a089a20a3f9ae63e181896bc8559bd4bad",
+    "byte_length": 566766,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/base-generated-surface.json"
+    ]
+  },
+  {
+    "sha256": "2f7544b57aa6220b7567afc910db34fe2cace00eff4efe9c991f177465c2933e",
+    "byte_length": 14070,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/base-workflow.json"
+    ]
+  },
+  {
+    "sha256": "e0fcd7c10a43554d4ac8f326cd85528496c5745f3a4494533b7061bd030e8c1a",
+    "byte_length": 5882,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/candidate-binding.json"
+    ]
+  },
+  {
+    "sha256": "cfc11afe19890b8ce6e6becf6b4fb936b5dff4c897c24d5bec9ee25d79a68f6d",
+    "byte_length": 14405,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/candidate-format.json"
+    ]
+  },
+  {
+    "sha256": "95ba55a15288cb9aa4009bc74ad4735849c881fd0232ed5d0f435803d84ae21f",
+    "byte_length": 404363,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/candidate-generated-mine.json"
+    ]
+  },
+  {
+    "sha256": "a453dc0eae1ce17c4549c09530bbf7c7767e654a55d004dbc87d34a046e5020b",
+    "byte_length": 48190,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/candidate-generated-native-header.json"
+    ]
+  },
+  {
+    "sha256": "9538cebf815bee2942ff968e914f8bc47d517167cc3f9b07b8afaac28163d9d7",
+    "byte_length": 572202,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/candidate-generated-surface.json"
+    ]
+  },
+  {
+    "sha256": "db961a9ae01ec135baaaf128bf337e2c78f0fff9ba6fdc3e9f302f2429e7f638",
+    "byte_length": 24406,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/candidate-recovery-test.json"
+    ]
+  },
+  {
+    "sha256": "17467268393e26a9a7d0573cddce528311eeacd1a1d8414c8f04f634de127bd5",
+    "byte_length": 14326,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/candidate-workflow.json"
+    ]
+  },
+  {
+    "sha256": "780a29312eb327dc813c6f77448bc1c12e8d21398dc3a42ab61d951f9b707657",
+    "byte_length": 7929,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/ci-receipt.json"
+    ]
+  },
+  {
+    "sha256": "82e7042cf2392f95932305938bdf7ef289cddc7ac7a842077cad6d8b1230ba9d",
+    "byte_length": 47087,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/compare.json"
+    ]
+  },
+  {
+    "sha256": "f52d5702b31e128e13bbe8b8c2f6b6c7549bc2e465d875896cd9aeb0257c4328",
+    "byte_length": 106130,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/job-logs.json"
+    ]
+  },
+  {
+    "sha256": "82cb70748e23be391a3b740e73a61f9e0e886480849ba6119ba461f235e3af91",
+    "byte_length": 2762,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/jobs.json"
+    ]
+  },
+  {
+    "sha256": "1afbaed3175c7b43b183be79e9485e07cfca90491378fc3040e1194df555d9c8",
+    "byte_length": 7350,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/judge-r2-j1.json"
+    ]
+  },
+  {
+    "sha256": "4837fb74375a058b00e446ca5b5def7b7df0882d51ba8080518b69dfa3fbdbe5",
+    "byte_length": 8329,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/judge-r2-j2.json"
+    ]
+  },
+  {
+    "sha256": "a7a48b5857383f97b5ba8abbd7b8db8be355a0224732552f42a06865d5958069",
+    "byte_length": 27833,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/run.json"
+    ]
+  },
+  {
+    "sha256": "25d056a1e866080bb63adb0c5aee43bf480f8c9c453274d180f398bc4e2f18e2",
+    "byte_length": 1274,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/sample-index-receipt.json"
+    ]
+  },
+  {
+    "sha256": "6e848215df4ad3653363fddcabba2d141a430a71b281d57fcc7d84f05c77b2fe",
+    "byte_length": 1518,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/sample-index-stdout.json"
+    ]
+  },
+  {
+    "sha256": "a4e6ad8bbff9d56f5aa7b628ebdae3dcad8d4ddfa4c9dcfcf183f25c2ec1ec46",
+    "byte_length": 1583,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/sample-publish-receipt.json"
+    ]
+  },
+  {
+    "sha256": "e1066e2f1260255ca07514557ebcc5e72d9dc81c211ed257d1980816c91b5ba9",
+    "byte_length": 1445,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/sample-publish-stdout.json"
+    ]
+  },
+  {
+    "sha256": "3651e4ecbd5f7a594007f9c85f7fcf3a12368a25ac94890b4525bb92983a238d",
+    "byte_length": 1271,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/sample-read-receipt.json"
+    ]
+  },
+  {
+    "sha256": "4f9df804fe8c440aa58c706f09605d1ebf8d67c73210341ef6b76c2b2a07ab0d",
+    "byte_length": 21023,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/sample-read-stdout.json"
+    ]
+  },
+  {
+    "sha256": "13dc80d7a4609004d749b9cd906bc447ced7f9206e8003c9804b97266d06ce0f",
+    "byte_length": 2121,
+    "paths": [
+      "deliverable/evidence/s4-discovery-r3/support/original-responses/sample-verification.json"
+    ]
+  },
+  {
+    "sha256": "430d8ee9cf31f6b47bb2cf6a7eb276de6ff7cd98a8f4545d6ea84fb9eb5bc301",
+    "byte_length": 3063,
+    "paths": [
+      "runtime-work/github/baseline-apps.json"
+    ]
+  },
+  {
+    "sha256": "192dbdd33c98a51bc83d2485e08cb3d54787030263e756ac938d4c82c0c7f53e",
+    "byte_length": 3513,
+    "paths": [
+      "runtime-work/github/baseline-commit.json"
+    ]
+  },
+  {
+    "sha256": "b29424f5168cca6e2dbe2d4f2c3faa2a7d73a1032ec10c3f74c3aec52f164509",
+    "byte_length": 9175,
+    "paths": [
+      "runtime-work/github/baseline-packages.json"
+    ]
+  },
+  {
+    "sha256": "7ccd706073d83d91573799a24aad386bbf042d084729e4e155d4078127e4c58d",
+    "byte_length": 22077,
+    "paths": [
+      "runtime-work/github/baseline-root-tree.json"
+    ]
+  },
+  {
+    "sha256": "9492675be22f96b4a2fbc90f92c20b45e751456750c45a9c39f0df01539f00a9",
+    "byte_length": 2753,
+    "paths": [
+      "runtime-work/github/baseline-schema.json"
+    ]
+  },
+  {
+    "sha256": "11c77937f11f8fc6785348101d14d4cb58853d550800d53fb8a4386504f2b2a5",
+    "byte_length": 3345,
+    "paths": [
+      "runtime-work/github/candidate-commit.json"
+    ]
+  },
+  {
+    "sha256": "da40c6032fb451f58e08655dbf89f150ebb1bdafc9017385c89394de7d43dc65",
+    "byte_length": 3560,
+    "paths": [
+      "runtime-work/github/candidate-genesis-native-connector.json"
+    ]
+  },
+  {
+    "sha256": "ef9be76d2d4e88d5e994123c3eecf4eb748a80f10fce62e8557a40e30527d8eb",
+    "byte_length": 5921,
+    "paths": [
+      "runtime-work/github/candidate-modules.json"
+    ]
+  },
+  {
+    "sha256": "97cf8176cddfe4942df36b68bf1faa8cddff2e9e282bfda18b88e0f8786a82eb",
+    "byte_length": 22077,
+    "paths": [
+      "runtime-work/github/candidate-root-tree.json"
+    ]
+  },
+  {
+    "sha256": "33b44fa9208f62e43a290f4353b85f70e5c557a980ea718c06bb0fa3428cc9ca",
+    "byte_length": 7969,
+    "paths": [
+      "runtime-work/github/runtime-release-connector.json"
+    ]
+  },
+  {
+    "sha256": "fe9d841977a89fdb579b86081ae8b4ed8fe3989934aa8058c090873dbf637bc6",
+    "byte_length": 7945,
+    "paths": [
+      "runtime-work/github/s4-latest-release-recheck.json"
+    ]
+  },
+  {
+    "sha256": "f6ccfa3c82eba707bbddb6b3db98712f16afb2829971f7dde48dbe4029ef9d7e",
+    "byte_length": 3609,
+    "paths": [
+      "runtime-work/github/s4-prepare-receipt-connector.json"
+    ]
+  },
+  {
+    "sha256": "5e696ba1c0bc7c2893bcd8d5ceecf163fcaccbf55d159a8eacd8e95d93fc4849",
+    "byte_length": 9250,
+    "paths": [
+      "runtime-work/github/transport-contract-connector.json"
+    ]
+  }
+]

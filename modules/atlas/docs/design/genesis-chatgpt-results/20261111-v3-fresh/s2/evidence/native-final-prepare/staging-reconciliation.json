@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-s2-staging-failure-reconciliation/v1",
+  "recorded_at": "2026-11-11T20:48:19.407995+00:00",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "stage_plan_sha256": "095cb57bc9cb5178f3168d069a257b8ef962572dba2a1e8f631aa74e186e0f70",
+  "failure_receipt": "evidence/final-staging-first-attempt-failure.json",
+  "failure_receipt_sha256": "9f14dbb51a14677bfa159def2cff8ca3b69f301616cf2f8c7881e97c655d2bfb",
+  "utility_sha256": "0a9a585b7e2c84dda609761b7172f8d5f560570eb2eb35d9a8124cbd0be0a59f",
+  "action": "Copied the exact retained temporary payload into the exclusive final destination and reverified every planned file and materialized original.",
+  "temporary_payload_preserved": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/payload-kml4b26g",
+  "retained_temporary_file_count": 888,
+  "resolved_file_count": 1542,
+  "originals_preserved": 641,
+  "all_final_and_retained_temporary_payload_bytes_equal": true,
+  "all_planned_file_hashes_match": true,
+  "runtime_or_product_tests_executed": false,
+  "cas_exists": false,
+  "runtime_compatibility": "HOLD_KNOWN_INPUT_LIMIT"
+}

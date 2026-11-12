@@ -1,0 +1,266 @@
+# Complete semantic family map; full path accounting mechanically reconciled above
+[
+  {
+    "id": "authority",
+    "title": "Package contracts and maintenance authority",
+    "representative_source_paths": [
+      "packages/app-shell/AGENTS.md",
+      "packages/app-shell/README.md",
+      "packages/app-shell/package.json",
+      "packages/session-ui/README.md",
+      "packages/session-ui/package.json"
+    ],
+    "source_implications": "Package manifests declare exported entrypoints and tasks; AGENTS establishes local maintenance rules. README module-contract blocks have a verified generator.",
+    "consumer_implications": "Desktop/web import app-shell; app-shell and Storybook use session-ui. Module architecture permits explicit browserSafe Core helpers.",
+    "maintenance_implications": "Reconcile manifest and executable boundary policy before treating prose as import prohibition. Tests are CI-only in this run.",
+    "limits": "Build/config siblings are accounted structurally; no build, typecheck, or boundary runner was executed.",
+    "path_count": 18,
+    "classification_counts": {
+      "configuration-or-declaration": 11,
+      "documentation": 4,
+      "test-support": 1,
+      "maintenance-tool": 2
+    },
+    "evidence_depth_counts": {
+      "metadata-only": 11,
+      "inspected": 7
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "history",
+    "title": "Historical migration and reactive-refactor proposals",
+    "representative_source_paths": [
+      "docs/architecture/phase-plans/70-90-briefs/EXP-SESSIONUI.md",
+      "docs/architecture/phase-plans/70-90-briefs/FAC-APP-CTX.md",
+      "docs/architecture/phase-plans/70-90-briefs/RN-SESSIONUI.md",
+      "packages/app-shell/create-effect-simplification-spec.md"
+    ],
+    "source_implications": "Phase cards refer to an older base, worktree and expected mechanical outputs. The createEffect spec addresses the old packages/app path.",
+    "consumer_implications": "Useful provenance for earlier modularization intent, never evidence that current code meets each acceptance statement.",
+    "maintenance_implications": "Keep historical commands as document content; do not execute their push or mutation instructions.",
+    "limits": "Historical completion and all original acceptance outputs are not verified.",
+    "path_count": 8,
+    "classification_counts": {
+      "historical-proposal": 8
+    },
+    "evidence_depth_counts": {
+      "inspected": 8
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "skills",
+    "title": "Maintainer and onboarding skills",
+    "representative_source_paths": [
+      ".orchestra/skills/agent-avatars-maintenance/SKILL.md",
+      ".orchestra/skills/agent-screen-maintenance/SKILL.md",
+      ".orchestra/skills/hugr-composer-maintenance/SKILL.md",
+      ".orchestra/skills/onboarding-usage/SKILL.md",
+      ".orchestra/skills/settings-usage/SKILL.md"
+    ],
+    "source_implications": "These prescribe feature ownership and intended user workflows. HuGR Composer is described as an external MCP server for the backend seat.",
+    "consumer_implications": "Maintainers consume these; they are not application runtime skills or evidence of installed external services.",
+    "maintenance_implications": "Use stable seat IDs; distinguish bundled portraits, uploaded avatars and the unrelated prompt composer.",
+    "limits": "External Composer repository/installability and full native-seat tool grants are outside inspected implementation.",
+    "path_count": 5,
+    "classification_counts": {
+      "skill": 5
+    },
+    "evidence_depth_counts": {
+      "inspected": 5
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "guides",
+    "title": "User guides",
+    "representative_source_paths": [
+      "docs/guides/home.md",
+      "docs/guides/settings.md",
+      "docs/guides/shortcuts.md",
+      "docs/guides/agent-screen.md",
+      "docs/guides/agent-avatars.md",
+      "docs/guides/hugr-composer.md"
+    ],
+    "source_implications": "Guides state navigation, configuration and operational intent; several statements are cross-checked in current controllers.",
+    "consumer_implications": "Readers see expected Home, settings, agents and shortcut interactions.",
+    "maintenance_implications": "Document the Composer guide warning about its unavailable dependency as a guide claim, not a fresh installation result.",
+    "limits": "No walkthrough, installation, restart or remote mutation was performed.",
+    "path_count": 6,
+    "classification_counts": {
+      "documentation": 6
+    },
+    "evidence_depth_counts": {
+      "inspected": 6
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "bootstrap",
+    "title": "App composition, route entry and host contracts",
+    "representative_source_paths": [
+      "packages/app-shell/src/app.tsx",
+      "packages/app-shell/src/index.ts",
+      "packages/app-shell/src/context/platform.tsx",
+      "packages/app-shell/src/pages/directory-layout.tsx",
+      "packages/app-shell/src/orchestra/shell/ingress.tsx",
+      "packages/app-shell/src/desktop-menu.ts",
+      "packages/app-shell/src/components/orchestra/native-frame.ts"
+    ],
+    "source_implications": "AppBaseProviders and AppInterface compose shared providers; server-target and draft routes own distinct keyed subtrees. Public host types cover menu, updater, titlebar, live and App Dock Linux bridges. Native titlebar measurement uses coalesced animation frames, host capability and disconnect/fullscreen cleanup; the native host owns zoom conversion.",
+    "consumer_implications": "Web/desktop supply Platform; session-ui receives DataProvider state and callbacks from DirectoryDataProvider. Native ingress chooses the local server.",
+    "maintenance_implications": "Keep server/directory ownership explicit; do not collapse a host type contract into evidence that the host implementation is present.",
+    "limits": "Native main-process implementations, packed releases and platform runtime behavior are not verified.",
+    "path_count": 55,
+    "classification_counts": {
+      "implementation": 46,
+      "test-unexecuted": 8,
+      "documentation": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 13,
+      "family-supported": 42
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "transport",
+    "title": "Server identity, SDK, readiness and event transport",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/server.tsx",
+      "packages/app-shell/src/context/global.tsx",
+      "packages/app-shell/src/context/server-sdk.tsx",
+      "packages/app-shell/src/utils/server.ts",
+      "packages/app-shell/src/utils/server-health.ts",
+      "packages/app-shell/src/utils/server-ready.ts",
+      "packages/app-shell/src/utils/server-stream-liveness.ts",
+      "packages/app-shell/src/utils/scoped-fetch.ts"
+    ],
+    "source_implications": "Server keys and credential identity have different lifetimes. Generated client calls and event stream share lifetime abort. Health polling considers raw stream liveness.",
+    "consumer_implications": "Per-server contexts serve shell/directory callers; adapter exposes app view contracts while protocol/schema own wire contracts.",
+    "maintenance_implications": "Preserve credential replacement disposal, retryable readiness and cancellation composition. Heartbeat bytes matter even without decoded events.",
+    "limits": "Network scenarios and retained-stream behavior are source-level observations; not observed live.",
+    "path_count": 27,
+    "classification_counts": {
+      "implementation": 16,
+      "test-unexecuted": 11
+    },
+    "evidence_depth_counts": {
+      "family-supported": 16,
+      "inspected": 11
+    },
+    "representative_tests_read": [
+      "packages/app-shell/src/utils/server-health.test.ts"
+    ],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "sync",
+    "title": "Canonical session cache, projection and recovery",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/server-sync.tsx",
+      "packages/app-shell/src/context/server-session.ts",
+      "packages/app-shell/src/context/server-session-v2-reducer.ts",
+      "packages/app-shell/src/context/server-event-native.ts",
+      "packages/app-shell/src/context/session-recovery.ts",
+      "packages/app-shell/src/context/global-sync/event-reducer.ts",
+      "packages/app-shell/src/utils/session.ts"
+    ],
+    "source_implications": "One server-local cache reconciles page fetches with touched streamed state and generation fences; native events adapt to rendering projections. Session normalization preserves unknown cost; policy merge distinguishes canonical read receipts, durable sequence and timestamps.",
+    "consumer_implications": "Directory stores and timeline consume retained sessions/messages/parts; mounted session ownership pins cache entries.",
+    "maintenance_implications": "Protect policy reads from intervening events and distinguish pending admitted input from promoted transcript messages.",
+    "limits": "No proof of complete replay, cross-process ordering, exhaustive reducer coverage or runtime losslessness.",
+    "path_count": 42,
+    "classification_counts": {
+      "implementation": 23,
+      "test-unexecuted": 19
+    },
+    "evidence_depth_counts": {
+      "family-supported": 31,
+      "inspected": 9,
+      "metadata-only": 2
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "prompt",
+    "title": "Prompt composer, admission and attachment construction",
+    "representative_source_paths": [
+      "packages/app-shell/src/components/prompt-input-v2.tsx",
+      "packages/app-shell/src/components/prompt-input/submit.ts",
+      "packages/app-shell/src/components/prompt-input/submission-policy.ts",
+      "packages/app-shell/src/components/prompt-input/submission-admission.ts",
+      "packages/app-shell/src/components/prompt-input/submission-state.ts",
+      "packages/app-shell/src/components/prompt-input/build-request-parts.ts",
+      "packages/app-shell/src/components/prompt-input/submit-admission.suite.ts",
+      "packages/app-shell/src/utils/prompt.ts",
+      "packages/app-shell/src/utils/worktree.ts"
+    ],
+    "source_implications": "App composer owns submission and session selection; policy/owner barriers and admission state survive async creation, receipt waits and remounts. Undo restoration rebuilds text/file/agent/image parts; worktree readiness coalesces waiters and retains terminal ready/failed status.",
+    "consumer_implications": "Session-ui editor emits interaction; app constructs prompt payload and consumes durable admission receipts.",
+    "maintenance_implications": "Preserve IDs for ambiguous retries, generation checks across ABA, draft edits and canonical policy confirmation.",
+    "limits": "Representative admission tests were read only. All attachment/history input variants are not individually traced.",
+    "path_count": 57,
+    "classification_counts": {
+      "implementation": 33,
+      "test-unexecuted": 23,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "family-supported": 44,
+      "inspected": 11,
+      "metadata-only": 2
+    },
+    "representative_tests_read": [
+      "packages/app-shell/src/components/prompt-input/submit-admission.suite.ts"
+    ],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "persistence",
+    "title": "Prompt drafts, tabs, scopes and storage",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/prompt.tsx",
+      "packages/app-shell/src/context/prompt-state.ts",
+      "packages/app-shell/src/context/tabs.tsx",
+      "packages/app-shell/src/components/prompt-input/draft-session.ts",
+      "packages/app-shell/src/utils/persist.ts",
+      "packages/app-shell/src/utils/draft-store.ts",
+      "packages/app-shell/src/utils/server-scope.ts"
+    ],
+    "source_implications": "Scoped keys isolate server/workspace/session or draft identity. Draft persistence can use IndexedDB documents/blobs and migration/version guards.",
+    "consumer_implications": "Prompt, terminal, layout, model preferences and comment state use these facilities; tab-owned memory outlives composer mount.",
+    "maintenance_implications": "Treat canonical local migration and remote namespaces separately; preserve edits during async hydration and blob write ordering.",
+    "limits": "Browser quota, migration on real user stores and crash consistency were not exercised.",
+    "path_count": 19,
+    "classification_counts": {
+      "implementation": 12,
+      "test-unexecuted": 7
+    },
+    "evidence_depth_counts": {
+      "family-supported": 13,
+      "inspected": 6
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "requests",
+    "title": "Permission, question and composer request ownership",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/permission.tsx",
+      "packages/app-shell/src/context/permission-auto-respond.ts",
+      "packages/app-shell/src/pages/session/composer/session-request-tree.ts",
+      "packages/app-shell/src/pages/session/composer/session-permission-dock.tsx",
+      "packages/app-shell/src/pages/session/composer/session-question-dock.tsx",
+      "packages/app-shell/src/components/settings-v2/view/saved-permissions-section.tsx"
+    ],
+    "source_implications": "Request tree walks current session descendants; permission responses are server scoped and de-duplicated. Explicit false lineage overrides defeat directory fallback; Relay hook asks require live replies.",
+    "consumer_implications": "Composer docks display pending requests and callbacks; saved-permission settings mutate server records.",

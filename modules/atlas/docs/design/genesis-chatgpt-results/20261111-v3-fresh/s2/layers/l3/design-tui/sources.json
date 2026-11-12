@@ -1,0 +1,442 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "unit": "s2.l3.design-tui",
+  "capture_indexes": [
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea",
+      "record_field": "captures"
+    },
+    {
+      "path": "producers/desktop-web/sources.json",
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8",
+      "record_field": "sources"
+    }
+  ],
+  "scope_note": "Revision 2 retains all 22 actually used r1 capture records without alteration and adds only apps/desktop/AGENTS.md (S23), directly inspected at lines 5–9. This correction reread packages/app-shell/AGENTS.md lines 23–28 (existing S10) and the named public accepted L2 E10 evidence. Whole-blob byte identity and semantic inspection ranges remain separate. No fresh source retrieval, source change or product execution occurred; prior evidence and its limits remain in force.",
+  "sources": [
+    {
+      "id": "S01",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/session-actions.ts",
+      "git_blob_sha": "255420d1e93ce0fca21b941c673abdede087e91e",
+      "sha256": "e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd",
+      "byte_length": 4172,
+      "capture_path": "producers/design-tui/sources/packages/tui/src/context/session-actions.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__src__context__session-actions.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 10,
+          "end": 53
+        },
+        {
+          "start": 55,
+          "end": 92
+        }
+      ],
+      "used_for": "Sequential agent/model selection, separate admit-only context, wrapper input/payload limits, file/mention mapping and permission identity."
+    },
+    {
+      "id": "S02",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/session.ts",
+      "git_blob_sha": "5830f50001c8dc01227a920f04276054c0e29570",
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+      "byte_length": 29273,
+      "capture_path": "producers/design-tui/sources/packages/protocol/src/groups/session.ts",
+      "connector_response_path": "producers/design-tui/captures/resume-r2/packages__protocol__src__groups__session.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 333,
+          "end": 367
+        },
+        {
+          "start": 464,
+          "end": 479
+        }
+      ],
+      "used_for": "Declared prompt/synthetic endpoints, optional identity/delivery/resume fields and admission response; contract rather than executed server outcome."
+    },
+    {
+      "id": "S03",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/context/session-actions.test.ts",
+      "git_blob_sha": "9d22d47f255e6a1c73a1ce2bfe40ce87c467a27a",
+      "sha256": "48423aa811be59b328fc29d306cca600f8aa9aaa91a96e1e53b832cb59e39e42",
+      "byte_length": 5839,
+      "capture_path": "producers/design-tui/sources/packages/tui/test/context/session-actions.test.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__test__context__session-actions.test.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 27
+        },
+        {
+          "start": 30,
+          "end": 85
+        },
+        {
+          "start": 88,
+          "end": 149
+        }
+      ],
+      "used_for": "Request-recorder verification route exercises the real action adapter and client request paths; no test execution."
+    },
+    {
+      "id": "S04",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/app-lifecycle.test.tsx",
+      "git_blob_sha": "7a32ed20d7c0d220070a4a93415863d375ee0b2a",
+      "sha256": "4bcb258ce72742e03239985f78e7a0aa19249b3fa4baeaf89998140e7470fda4",
+      "byte_length": 3934,
+      "capture_path": "producers/design-tui/sources/packages/tui/test/app-lifecycle.test.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__test__app-lifecycle.test.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 118
+        }
+      ],
+      "used_for": "Lifecycle verification route is an injected-host/renderer harness with SIGHUP and disposal assertions, not a real terminal run."
+    },
+    {
+      "id": "S05",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "git_blob_sha": "de09c3c7d6a229963050b82e428fee12e6c2c33e",
+      "sha256": "932db6f13478db87f40c5bcf2fa4b50631452a723e0fc15353fa6133d28739c2",
+      "byte_length": 7180,
+      "capture_path": "producers/design-tui/sources/packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__test__cli__cmd__tui__sync-live-hydration.test.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 137,
+          "end": 189
+        }
+      ],
+      "used_for": "Delayed history/live-event and nonhydrated-session verification route; production providers in an unexecuted test."
+    },
+    {
+      "id": "S06",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/cli/tui/prompt-submit-race.test.ts",
+      "git_blob_sha": "fb85a7f5b1288b111be7ea2679003104f3092f0d",
+      "sha256": "e26ac22aea38d16282587697f8b78ea9adbc18b198827c296424a0856e672e00",
+      "byte_length": 3410,
+      "capture_path": "producers/design-tui/sources/packages/tui/test/cli/tui/prompt-submit-race.test.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__tui__test__cli__tui__prompt-submit-race.test.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 20
+        },
+        {
+          "start": 52,
+          "end": 97
+        }
+      ],
+      "used_for": "Test explicitly mirrors submission shape; separate helper cannot establish mounted composer behavior."
+    },
+    {
+      "id": "S07",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "capture_path": "producers/design-tui/sources/AGENTS.md",
+      "connector_response_path": "producers/design-tui/captures/AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 4
+        },
+        {
+          "start": 156,
+          "end": 167
+        },
+        {
+          "start": 207,
+          "end": 218
+        }
+      ],
+      "used_for": "Attributed client-generation/test instructions and durable admission/process-local execution/recovery distinctions."
+    },
+    {
+      "id": "S08",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/AGENTS.md",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769",
+      "byte_length": 2160,
+      "capture_path": "producers/design-tui/sources/packages/ui/AGENTS.md",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 10
+        }
+      ],
+      "used_for": "Attributed localization maintenance policy: keys, preserved English, complete phrases, corpus verification and recorded uncertainty."
+    },
+    {
+      "id": "S09",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173",
+      "byte_length": 4098,
+      "capture_path": "producers/design-tui/sources/.orchestra/skills/rtl-aware-development/SKILL.md",
+      "connector_response_path": "producers/design-tui/captures/.orchestra__skills__rtl-aware-development__SKILL.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 63
+        }
+      ],
+      "used_for": "Attributed independent direction/language policy and behavior-oriented RTL verification matrix; external references not followed."
+    },
+    {
+      "id": "S10",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "capture_path": "producers/desktop-web/sources/packages/app-shell/AGENTS.md",
+      "connector_response_path": "producers/desktop-web/captures/packages__app-shell__AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 49
+        }
+      ],
+      "used_for": "Attributed before/after production benchmark requirement and shared typed language ownership, not executed work."
+    },
+    {
+      "id": "S11",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.test.ts",
+      "git_blob_sha": "fe9bc0aaea38192958fedb9929ee33e51fa8fc65",
+      "sha256": "d0515ba8faee1b3304bd23837589b821b954202f37f750280ab989aebc601591",
+      "byte_length": 629,
+      "capture_path": "producers/design-tui/sources/packages/ui/src/context/i18n.test.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__src__context__i18n.test.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 22
+        }
+      ],
+      "used_for": "Plural-category test scope does not establish translation completeness or UI geometry."
+    },
+    {
+      "id": "S12",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/dialog.tsx",
+      "git_blob_sha": "5f29db9a7937b353754659f1c63c6f7e0ea1bb97",
+      "sha256": "dbf846b187040405655aba89e6e16dcc5694120a884e6a78c147c100015b7406",
+      "byte_length": 7985,
+      "capture_path": "producers/design-tui/sources/packages/ui/src/context/dialog.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__src__context__dialog.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 247,
+          "end": 260
+        }
+      ],
+      "used_for": "Detached show versus caller-owned showOwned dialog lifetime."
+    },
+    {
+      "id": "S13",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/worker-pool.tsx",
+      "git_blob_sha": "5f788f7866abfd25e701e37ea377d416f87a4e4f",
+      "sha256": "d79c61272e84266658040aa32b85ce4f86089f1b3e19cd5bdea23b49c7778918",
+      "byte_length": 573,
+      "capture_path": "producers/design-tui/sources/packages/ui/src/context/worker-pool.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__src__context__worker-pool.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 20
+        }
+      ],
+      "used_for": "Context forwards injected unified/split workers; it does not create or dispose them."
+    },
+    {
+      "id": "S14",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.tsx",
+      "git_blob_sha": "757083f8f7842815c6e835d722a9f8887a9088bc",
+      "sha256": "e91e04c63c2b9d767bf3ee0180ea968782b882d5ad2eb166aa4a1f077f74b834",
+      "byte_length": 2564,
+      "capture_path": "producers/design-tui/sources/packages/ui/src/context/i18n.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__src__context__i18n.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 64,
+          "end": 68
+        }
+      ],
+      "used_for": "layoutLocale fallback for the UI locale provider; independent layout/content contract."
+    },
+    {
+      "id": "S15",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/loader.ts",
+      "git_blob_sha": "198d351221121a6bfeedbbb2ceb4591c914a4966",
+      "sha256": "ef53b0866ae75b695ac369dda09098e35f5dce7218f2d377807f375a34422021",
+      "byte_length": 3097,
+      "capture_path": "producers/design-tui/sources/packages/ui/src/theme/loader.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__src__theme__loader.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 78,
+          "end": 84
+        }
+      ],
+      "used_for": "External theme fetch uses response.json without a runtime schema decoder at this boundary."
+    },
+    {
+      "id": "S16",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/context.tsx",
+      "git_blob_sha": "eb21b015ea2f6b1bbd1abc5c51eeec7f98718e90",
+      "sha256": "e51c86dc8fb695dedab9b512e0fc38c7c449dda6d377154528bf87ef48bf8a46",
+      "byte_length": 12536,
+      "capture_path": "producers/design-tui/sources/packages/ui/src/theme/context.tsx",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__src__theme__context.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 337,
+          "end": 379
+        }
+      ],
+      "used_for": "Provider guards stale previews and supports commit/cancel; those mechanisms do not validate the separate URL loader."
+    },
+    {
+      "id": "S17",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/script/schema-files.ts",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3",
+      "byte_length": 3409,
+      "capture_path": "producers/design-tui/sources/apps/cli/script/schema-files.ts",
+      "connector_response_path": "producers/design-tui/captures/apps__cli__script__schema-files.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 68,
+          "end": 80
+        }
+      ],
+      "used_for": "Config/TUI schema generation versus handwritten desktop-theme schema byte mirroring."
+    },
+    {
+      "id": "S18",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/tailwind.ts",
+      "git_blob_sha": "6e558a8fa11cc024b71d2e311f4d27ebc89c0cf8",
+      "sha256": "3b71ac2b9558b53397534f0ba476879715bd35779f939c415a70051af4699722",
+      "byte_length": 576,
+      "capture_path": "producers/design-tui/sources/packages/ui/script/tailwind.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__script__tailwind.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "used_for": "colors.txt token input and generated Tailwind CSS output ownership."
+    },
+    {
+      "id": "S19",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/build-oc2-v2-overrides.ts",
+      "git_blob_sha": "e5dae76ef374a90e940e32812715b939c69c0c1d",
+      "sha256": "4ad3bf3fe1eaf3c5030896cca81b3ec0d571fd2f82441149d8fcf2cef4d14e29",
+      "byte_length": 1413,
+      "capture_path": "producers/design-tui/sources/packages/ui/script/build-oc2-v2-overrides.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__script__build-oc2-v2-overrides.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 6,
+          "end": 29
+        }
+      ],
+      "used_for": "OC-2 v2Overrides-only update and explicit exclusions for font/fixed-avatar foreground tokens."
+    },
+    {
+      "id": "S20",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/vite.config.ts",
+      "git_blob_sha": "b89c666ae19be83a567d525687404fb6bc137857",
+      "sha256": "c869fbd57f4de3ff9aa64ec7c927e56331e1cee557ab97b80d9135eecfe55688",
+      "byte_length": 1465,
+      "capture_path": "producers/design-tui/sources/packages/ui/vite.config.ts",
+      "connector_response_path": "producers/design-tui/captures/packages__ui__vite.config.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 10,
+          "end": 24
+        },
+        {
+          "start": 35,
+          "end": 58
+        }
+      ],
+      "used_for": "Paired sprite/type generation and external provider-logo refresh boundary."
+    },
+    {
+      "id": "S21",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/preview.tsx",
+      "git_blob_sha": "a6052bf222a2146b2aca63109d3583f1cef399fd",
+      "sha256": "40729070062b15c71dc84047c6950c340e107d35c92f0e3753cec0434e545db1",
+      "byte_length": 3288,
+      "capture_path": "producers/design-tui/sources/apps/storybook/.storybook/preview.tsx",
+      "connector_response_path": "producers/design-tui/captures/apps__storybook__.storybook__preview.tsx.json",
+      "inspected_line_ranges": [
+        {
+          "start": 98,
+          "end": 110
+        }
+      ],
+      "used_for": "Storybook accessibility configuration remains todo; no accessibility run claimed."
+    },
+    {
+      "id": "S22",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/playground-css-plugin.ts",
+      "git_blob_sha": "cc73ecf667fd444d0d1ddde9ba30f9487906bead",
+      "sha256": "9e2ebdeca49703f3ee7aaca4ab877a16196e03a518f3f6658be12c6a3643b206",
+      "byte_length": 4943,
+      "capture_path": "producers/design-tui/sources/apps/storybook/.storybook/playground-css-plugin.ts",
+      "connector_response_path": "producers/design-tui/captures/apps__storybook__.storybook__playground-css-plugin.ts.json",
+      "inspected_line_ranges": [
+        {
+          "start": 116,
+          "end": 122
+        }
+      ],
+      "used_for": "Playground applies edits to source CSS; verification must inspect resulting source mutation."
+    },
+    {
+      "id": "S23",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/AGENTS.md",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "byte_length": 2801,
+      "capture_path": "producers/desktop-web/sources/apps/desktop/AGENTS.md",
+      "connector_response_path": "producers/desktop-web/captures/apps__desktop__AGENTS.md.json",
+      "inspected_line_ranges": [
+        {
+          "start": 5,
+          "end": 9
+        }
+      ],
+      "used_for": "R2 attributed native copy contract: renderer app-language API, shared typed native-translation bundles consumed by nativeT, shared locale/grammar ownership, no native locale/plural-category/fragment logic and preserved English keys/text. No implementation correction or runtime outcome inferred."
+    }
+  ]
+}

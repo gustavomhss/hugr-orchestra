@@ -1,0 +1,88 @@
+**Source:** `apps/storybook/.storybook/preview.tsx:98–110` · blob `a6052bf222a2146b2aca63109d3583f1cef399fd`
+
+```typescript
+  parameters: {
+    actions: {
+      argTypesRegex: "^on.*",
+    },
+    controls: {
+      matchers: {
+        color: /(background|color)$/i,
+        date: /Date$/i,
+      },
+    },
+    a11y: {
+      test: "todo",
+    },
+```
+
+## E26. Workbench CSS editing writes source
+
+The development middleware is capable of source mutation; no middleware request was made.
+
+**Source:** `apps/storybook/.storybook/playground-css-plugin.ts:113–124` · blob `cc73ecf667fd444d0d1ddde9ba30f9487906bead`
+
+```typescript
+              continue
+            }
+
+            try {
+              const content = fs.readFileSync(abs, "utf-8")
+              const applied = applyEdits(content, edits)
+              results.push(...applied.results)
+
+              if (applied.results.some((r) => r.ok)) {
+                fs.writeFileSync(abs, applied.content, "utf-8")
+              }
+            } catch (err) {
+```
+
+## E27. Historical verification is explicitly limited
+
+This past receipt is not a current product test result.
+
+**Source:** `docs/specs/frontend-recovery-receipt.json:66–71` · blob `ab453aa29c818d7c84e0d9e50502c519d7429c6c`
+
+```json
+  "explicitLimits": [
+    "CI was not run or published in this task.",
+    "No live model turns using owner credentials were performed.",
+    "Packaged desktop behavior on Windows/Linux and real screen-reader coverage remain unverified.",
+    "Core V2 model policy and Task enforcement are implemented. CCSDK execution requires its host consumer of the same guard; native Task explicitly rejects unsupported CC targets.",
+    "Older V2 servers lacking the new endpoints receive explanatory unsupported states; current V2 supports model policy, archive, archived listing and restore."
+```
+
+## E28. README render relationship is explicit
+
+Only assigned output basenames matching HTML inputs are mapped to this loop; binary equivalence is unverified.
+
+**Source:** `docs/images/readme/src/render.sh:1–19` · blob `2e3769d9b7c6577c7252d85bce9110ab0c3c92e8`
+
+```bash
+#!/bin/sh
+# Renders each diagram in src/ to ../<name>-dark.png and ../<name>-light.png at 2x with headless Chrome,
+# sized to the canvas, then quantizes the PNG to keep the README light.
+# Usage: sh docs/images/readme/src/render.sh [name...]
+set -e
+dir=$(cd "$(dirname "$0")" && pwd)
+chrome="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
+names=${*:-$(cd "$dir" && ls *.html | sed 's/\.html$//')}
+for name in $names; do
+  height=$("$chrome" --headless=new --disable-gpu --window-size=1200,900 --virtual-time-budget=3000 \
+    --dump-dom "file://$dir/$name.html" 2>/dev/null | sed -n 's:.*<title>\([0-9]*\)</title>.*:\1:p' | head -1)
+  for theme in dark light; do
+    out="$dir/../$name-$theme.png"
+    "$chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=2 \
+      --window-size=1200,"${height:-900}" --virtual-time-budget=3000 \
+      --screenshot="$out" "file://$dir/$name.html#$theme" >/dev/null 2>&1
+    python3 -c "import sys; from PIL import Image; Image.open(sys.argv[1]).convert('RGB').quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(sys.argv[1], optimize=True)" "$out"
+  done
+done
+```
+
+## Evidence integrity and unresolved transport boundary
+
+The initial `fetch_file` response for `schema/tui.json` supplied an empty body. A second read using the assigned exact blob SHA recovered 1,131,057 bytes and passed Git blob SHA verification. Both original responses remain in the capture record. The controller-reported 256,000-byte observer limit is an import/runtime constraint; the semantic source is available here.
+
+This document contains 28 critical-claim groups, 40 bounded source slices and 535 quoted source lines. No historical PASS label has been promoted to a result of this task.
+END DECISIVE SOURCE EVIDENCE design-tui

@@ -1,0 +1,29 @@
+{
+  "schema": "genesis-s2-resumption/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "recorded_at": "2026-11-11T17:19:24.895279+00:00",
+  "authorization": "User requests continuing the stalled named S2 session from its stopping point",
+  "source_workspace": "/workspace/scratch/992c54067adf/genesis-s2",
+  "continuation_workspace": "/workspace/scratch/7b5d6430f420/genesis-s2",
+  "remote_head": "ac972ff8dc1126b02f8a16f3942a142e417039ed",
+  "read_only_original": true,
+  "prior_judge_recovery": {
+    "/root/judge_j1": "live agent path not found",
+    "/root/judge_j2": "live agent path not found"
+  },
+  "prior_semantic_decisions_found": 0,
+  "new_pair_policy": "Fresh continuation contexts, no inherited approval or replaced veto; prior receipts preserved",
+  "verified_snapshot": {
+    "files": 1231,
+    "bytes": 41076291,
+    "manifest_sha256": "5f8757dd7e90fc964446de0fca5a3a07c9c4241b4ea593f88fac7879d95d3e72"
+  },
+  "new_judges": {
+    "J1": "/root/s2_resume_j1",
+    "J2": "/root/s2_resume_j2",
+    "fork_turns": "none",
+    "tools_allowed": false,
+    "prior_decisions_inherited": false
+  },
+  "remote_archive_write": "AUTO_REVIEW_REJECTED; no archive uploaded; safer text-only publication under review"
+}

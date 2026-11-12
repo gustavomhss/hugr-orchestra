@@ -1,0 +1,25 @@
+{
+  "schema": "genesis-s2-transport-exact-byte-diff/v1",
+  "status": "INVALIDATED",
+  "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-packet-01/parts/part-005-of-006.txt",
+  "arguments_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-c/part-005-judge-2-arguments.json",
+  "source_sha256": "bfe7efb7bfb52570c39aa1f3ebc8ac3f56d21952b5e704a53f69a47a9335ecf5",
+  "actual_message_sha256": "2794c5fb5b93d56666ae11a3396ecf4393d46457390c4b1f9bcadef2781498be",
+  "source_byte_length": 26000,
+  "actual_message_byte_length": 26000,
+  "byte_difference_count": 1,
+  "differences": [
+    {
+      "zero_based_byte_offset": 19278,
+      "one_based_byte_position": 19279,
+      "expected_byte": 93,
+      "actual_byte": 125,
+      "expected_character": "]",
+      "actual_character": "}"
+    }
+  ],
+  "expected_context_utf8": "ct_input_consumers\": [\n      \"s2.l1.desktop-web\",\n      \"s2.l2.desktop-web\"\n    ],\n    \"build_dependent_closure\": [\n      \"s2.l1.desktop-web\",\n      \"s2.l2.desk",
+  "actual_context_utf8": "ct_input_consumers\": [\n      \"s2.l1.desktop-web\",\n      \"s2.l2.desktop-web\"\n    },\n    \"build_dependent_closure\": [\n      \"s2.l1.desktop-web\",\n      \"s2.l2.desk",
+  "automatic_retry": false,
+  "principal_reconciliation_pending": true
+}

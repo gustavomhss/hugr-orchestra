@@ -1,0 +1,130 @@
+{
+  "schema": "genesis-s2-principal-verification/v1",
+  "population": 4506,
+  "paths_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+  "families": 156,
+  "depth_counts": {
+    "inspected": 565,
+    "metadata-only": 48,
+    "family-supported": 3893
+  },
+  "units": [
+    {
+      "unit": "desktop-web",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "verification_actor": "/root",
+      "method": "Independent deterministic reconciliation against frozen input trees; hash exact source bytes and compare to original GitHub connector bodies. No product tests, semantic judgments or runtime acceptance.",
+      "paths": 532,
+      "families": 30,
+      "depth_counts": {
+        "inspected": 146,
+        "metadata-only": 5,
+        "family-supported": 381
+      },
+      "source_captures": 193,
+      "source_bytes": 1657730,
+      "original_connector_bodies_verified": 193,
+      "artifact_hashes": {
+        "l1.md": {
+          "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+          "byte_length": 29075
+        },
+        "coverage.json": {
+          "sha256": "4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9",
+          "byte_length": 496639
+        },
+        "sources.json": {
+          "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8",
+          "byte_length": 143730
+        },
+        "decisive-evidence.md": {
+          "sha256": "05f2ae3305948cbe4dbaeabb06496b70b33e07cb868417673c53be37ec1bf290",
+          "byte_length": 50617
+        },
+        "response.md": {
+          "sha256": "3abcc717515572a75bb61fcfd5e6f85d541292159e11d52707b99dc017705765",
+          "byte_length": 3162
+        }
+      },
+      "result": "PASS_MECHANICAL_ONLY"
+    },
+    {
+      "unit": "app-session",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "verification_actor": "/root",
+      "method": "Independent deterministic reconciliation against frozen input trees; hash exact source bytes and compare to original GitHub connector bodies. No product tests, semantic judgments or runtime acceptance.",
+      "paths": 1887,
+      "families": 59,
+      "depth_counts": {
+        "inspected": 234,
+        "metadata-only": 30,
+        "family-supported": 1623
+      },
+      "source_captures": 255,
+      "source_bytes": 2475675,
+      "original_connector_bodies_verified": 255,
+      "artifact_hashes": {
+        "l1.md": {
+          "sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc",
+          "byte_length": 40081
+        },
+        "coverage.json": {
+          "sha256": "cd690438b304f50bf7c3a820531e3a2711aa58511993979169b8ef1cd0c6c1d4",
+          "byte_length": 1622191
+        },
+        "sources.json": {
+          "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d",
+          "byte_length": 323410
+        },
+        "decisive-evidence.md": {
+          "sha256": "dc57d2d404e62b3fdfc5012939481f5dcc3ecc2d845dde899ce6edc69bee8e50",
+          "byte_length": 91982
+        },
+        "response.md": {
+          "sha256": "3abcc717515572a75bb61fcfd5e6f85d541292159e11d52707b99dc017705765",
+          "byte_length": 3162
+        }
+      },
+      "result": "PASS_MECHANICAL_ONLY"
+    },
+    {
+      "unit": "design-tui",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "verification_actor": "/root",
+      "method": "Independent deterministic reconciliation against frozen input trees; hash exact source bytes and compare to original GitHub connector bodies. No product tests, semantic judgments or runtime acceptance.",
+      "paths": 2087,
+      "families": 67,
+      "depth_counts": {
+        "inspected": 185,
+        "family-supported": 1889,
+        "metadata-only": 13
+      },
+      "source_captures": 198,
+      "source_bytes": 2385890,
+      "original_connector_bodies_verified": 198,
+      "artifact_hashes": {
+        "l1.md": {
+          "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+          "byte_length": 36964
+        },
+        "coverage.json": {
+          "sha256": "d7048239a9907676dee0ee6819ade51a3b06152f9e366c308a2efe7aaea63744",
+          "byte_length": 1836738
+        },
+        "sources.json": {
+          "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea",
+          "byte_length": 156036
+        },
+        "decisive-evidence.md": {
+          "sha256": "0e8581ab0e610f19d500803a7a601101d2038c52916c2953252bb205afa09d92",
+          "byte_length": 53364
+        },
+        "response.md": {
+          "sha256": "3abcc717515572a75bb61fcfd5e6f85d541292159e11d52707b99dc017705765",
+          "byte_length": 3162
+        }
+      },
+      "result": "PASS_MECHANICAL_ONLY"
+    }
+  ]
+}

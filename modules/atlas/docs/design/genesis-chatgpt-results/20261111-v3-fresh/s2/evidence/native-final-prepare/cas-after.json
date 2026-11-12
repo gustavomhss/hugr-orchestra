@@ -1,0 +1,146 @@
+{
+  "root": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root/.atlas",
+  "exists": true,
+  "entries": [
+    {
+      "relative_path": ".",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/2f",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/2f/2f3c2464a482eb4089e33c6d4586ac805422642a8797fc4e2ab488a50117ffe6",
+      "kind": "file",
+      "byte_length": 37454,
+      "sha256": "9c03376d97ee35b2ad1d8cd3fbd8984d6c5048fcb1dd5453a39625a268070f2c"
+    },
+    {
+      "relative_path": "cas/35",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/35/3585498d51ea14a376935dd52ca7f09466052f673fbb7824849edccf333d4112",
+      "kind": "file",
+      "byte_length": 30535,
+      "sha256": "ccd2a47dd83623706cc263ecc49bd28575525d3f43ddb14109eabcc7f85e3fd1"
+    },
+    {
+      "relative_path": "cas/40",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/40/40bd4973ae445c868b853e539845e205fc0f3253c2738ad10722ca7e1c413aa6",
+      "kind": "file",
+      "byte_length": 106369,
+      "sha256": "14da5e3f482084fa93542d3c9ee826d38c89775ea5956c1d234d9b376ffda907"
+    },
+    {
+      "relative_path": "cas/49",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/49/490fd74ea9400d9adfdeec902deb406327fbc4568855bce59fc1873284a5c4da",
+      "kind": "file",
+      "byte_length": 11404,
+      "sha256": "06c747dca091915ccf960f66055cbcdb616146ef00daedb430d6d5a95a279185"
+    },
+    {
+      "relative_path": "cas/6e",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/6e/6ec34371be6c265f23cadf50932ceba7692af6d6dd51f70a946721dd2fda867e",
+      "kind": "file",
+      "byte_length": 24372,
+      "sha256": "04255528bb2bcdff6568ee6911c5a73b37013e46798a911753fb323c8fa0964e"
+    },
+    {
+      "relative_path": "cas/75",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/75/75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "kind": "file",
+      "byte_length": 1678,
+      "sha256": "e015206b9dad7fbc8d0aa06785b12ceeae00aec5f973c2919ea182eac5281cb8"
+    },
+    {
+      "relative_path": "cas/9f",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/9f/9f3829c9ebdd70aa303b9eb1f167bda77adf2f3b1988e98a973205d712ddfce2",
+      "kind": "file",
+      "byte_length": 159,
+      "sha256": "f451d729594e53b75766b659e7bff08f49d39f08a64bc00f2f6c31ed06f56a3f"
+    },
+    {
+      "relative_path": "cas/a8",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/a8/a81c82b0a82cff391776d152b327d0810b7d38a1cf10006716367b7765da0835",
+      "kind": "file",
+      "byte_length": 21210,
+      "sha256": "8fb5bc623ffad88792002c433755e0741ac722814be22b3d62babe51c25e16d1"
+    },
+    {
+      "relative_path": "cas/aa",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/aa/aaa42fa8834cdfefb1710a56a668a07cfc52c9145a98594546f494d5122c0c43",
+      "kind": "file",
+      "byte_length": 35252,
+      "sha256": "c79556657de1af850decc9d94178a392e1a090cd5597f2633b532c4378f5fac8"
+    },
+    {
+      "relative_path": "cas/ab",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/ab/ab1bdc7d41e499cdaef978e88325e7a3f5430a8c038149d0ac443379f434431c",
+      "kind": "file",
+      "byte_length": 45777,
+      "sha256": "bdccb1daa34a2db25dd866a32920ed4205eb69de2aa6a89bea4372973e39d6d5"
+    },
+    {
+      "relative_path": "cas/c8",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/c8/c89a9fc74876fba54d153f690fe35dcb32338721a1dd2b6dd7fc0a3ceddcce9e",
+      "kind": "file",
+      "byte_length": 22918,
+      "sha256": "4cf4f952146e7e76193319da5e00a24ae69101f1c1659c12fb03214e3897f65a"
+    },
+    {
+      "relative_path": "cas/d6",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/d6/d6448ec59847ae824fc828ff01f5d3de1040d6c9b86d1da7fa9d5eb264574b2d",
+      "kind": "file",
+      "byte_length": 6812,
+      "sha256": "54c9b687fa3e67b6baa2995c92419361266870888465da336913f9b3425316b7"
+    },
+    {
+      "relative_path": "cas/ff",
+      "kind": "directory"
+    },
+    {
+      "relative_path": "cas/ff/ff63396615c8407c1b045231cdb2c5d1b6bae5d2886a90d89d38e694c0cbe817",
+      "kind": "file",
+      "byte_length": 11435,
+      "sha256": "3e8ec26d00dc76d668600e54559d668c2087d9aedcd8e8da55505f3045d14346"
+    }
+  ],
+  "files": 13,
+  "bytes": 355375
+}

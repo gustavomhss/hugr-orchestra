@@ -1,0 +1,47 @@
+{
+  "kind": "documentation packaging only; not product testing or semantic judgment",
+  "unit": "s2.l4.entry",
+  "dispatch": {
+    "path": "deliverable/requests/l4-entry-dispatch.md",
+    "sha256": "77249172b64d05aad8b344bce1d6dbadca80901b01579c67ed0137623d836b68",
+    "verified": true
+  },
+  "accepted_manifest_count": 3,
+  "accepted_body_count": 9,
+  "accepted_manifest_and_body_pins_verified": true,
+  "source_count": 1,
+  "source_sha256_git_blob_and_lengths_verified": true,
+  "build_keys_are_accepted_prior_layers": true,
+  "same_layer_factual_inputs": [],
+  "navigation_count": 12,
+  "exact_predecessor_headings_verified": true,
+  "common_h2_headings_verified": true,
+  "body": {
+    "sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+    "byte_length": 5305,
+    "whitespace_word_count": 674,
+    "sections": [
+      {
+        "heading": "Orientation",
+        "byte_length": 951
+      },
+      {
+        "heading": "Maintenance protocol",
+        "byte_length": 3149
+      },
+      {
+        "heading": "Verification and boundaries",
+        "byte_length": 1173
+      }
+    ]
+  },
+  "all_sections_under_16000_bytes": true,
+  "body_under_64000_bytes": true,
+  "literal_excerpt_count": 4,
+  "literal_excerpt_readback_hashes_verified": true,
+  "json_parse_checked": true,
+  "product_or_remote_execution": false,
+  "all_twelve_unit_navigation_keys_present": true,
+  "l4_navigation_headings_basis": "Public declaration only; peer L4 bodies were not read to substantiate this entry.",
+  "accepted_build_navigation_overlap_intentional": true
+}

@@ -1,0 +1,210 @@
+[
+  {
+    "id": "skills-decoder",
+    "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+    "start_line": 3,
+    "end_line": 28,
+    "excerpt_bytes": 827,
+    "excerpt_sha256": "23501d9af3b820199be99218d681c7f24ba317ad1bd4647af5936bfeab9b718d"
+  },
+  {
+    "id": "skills-visibility",
+    "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+    "start_line": 30,
+    "end_line": 49,
+    "excerpt_bytes": 973,
+    "excerpt_sha256": "e96655ef63054ea1d997f40c280302f434c32d0a6e34534ca4be3b415c46a812"
+  },
+  {
+    "id": "skills-access",
+    "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+    "start_line": 51,
+    "end_line": 99,
+    "excerpt_bytes": 2307,
+    "excerpt_sha256": "14b4894ebefff558f8e58978d5dfe71471593f51d73d08775b049f2c3f749331"
+  },
+  {
+    "id": "skills-page-identity",
+    "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+    "start_line": 29,
+    "end_line": 55,
+    "excerpt_bytes": 1355,
+    "excerpt_sha256": "d4cda72839cf933b6d1c27741b75393b061e4e1f280c56843711e29fb2a91043"
+  },
+  {
+    "id": "skills-page-identity",
+    "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+    "start_line": 69,
+    "end_line": 97,
+    "excerpt_bytes": 1422,
+    "excerpt_sha256": "e9fdb8ee0ecddfd3f1c1e4a204694ff44751a1413e770d91be7043de882e6e77"
+  },
+  {
+    "id": "skills-page-writes",
+    "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+    "start_line": 100,
+    "end_line": 137,
+    "excerpt_bytes": 1503,
+    "excerpt_sha256": "7f52f0f807d43f3f24bee50b19d291b1f38fef3f4cca06a50794ede9bb1f0a50"
+  },
+  {
+    "id": "skills-page-writes",
+    "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+    "start_line": 175,
+    "end_line": 187,
+    "excerpt_bytes": 753,
+    "excerpt_sha256": "b40e6726a05c1b133e86824432afe106b57eb2ec989431b15a2d81becc8dec10"
+  },
+  {
+    "id": "skills-page-writes",
+    "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+    "start_line": 208,
+    "end_line": 210,
+    "excerpt_bytes": 225,
+    "excerpt_sha256": "340a713ab10b4a63b4405534e07c18786bff4770b0a3d939f80ca21436581382"
+  },
+  {
+    "id": "skills-page-writes",
+    "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+    "start_line": 219,
+    "end_line": 238,
+    "excerpt_bytes": 782,
+    "excerpt_sha256": "1095fd11a8daeda2e3ee2472d09433dddaf6570dcdb1354fc1ef3d37cf33e80d"
+  },
+  {
+    "id": "skills-dialog",
+    "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+    "start_line": 5,
+    "end_line": 26,
+    "excerpt_bytes": 1077,
+    "excerpt_sha256": "531f79cacdd4edfd114eb0c553da4c340542d7de13e10a661d13d461f59e7d22"
+  },
+  {
+    "id": "skills-dialog",
+    "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+    "start_line": 34,
+    "end_line": 57,
+    "excerpt_bytes": 863,
+    "excerpt_sha256": "32a9c405052a0424b220853645d5ef0fb83d9d208169b6ed72b7bcd411720850"
+  },
+  {
+    "id": "skills-dialog",
+    "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+    "start_line": 134,
+    "end_line": 175,
+    "excerpt_bytes": 1880,
+    "excerpt_sha256": "94a30721b1bfa2669152bf31ca07126c58c6e0158208ca0b6f174aec060151f3"
+  },
+  {
+    "id": "skills-protocol",
+    "path": "packages/protocol/src/groups/skill.ts",
+    "start_line": 8,
+    "end_line": 56,
+    "excerpt_bytes": 1762,
+    "excerpt_sha256": "aeb349b08776f07be408aa0dfa36c6b3298da72a63bcdb29a010d580e4cc15ee"
+  },
+  {
+    "id": "skills-handler",
+    "path": "packages/server/src/handlers/skill.ts",
+    "start_line": 10,
+    "end_line": 46,
+    "excerpt_bytes": 1476,
+    "excerpt_sha256": "ddea93bb0fe9b5df8f42b9b9998cbc99e0176e6a39f8e2ec144b249d30b62a57"
+  },
+  {
+    "id": "tui-adapter",
+    "path": "packages/tui/src/context/session-actions.ts",
+    "start_line": 4,
+    "end_line": 92,
+    "excerpt_bytes": 4037,
+    "excerpt_sha256": "23a32ba825f1a076392c32ac0b0025286df304b3f4a116fed456f3cd606a951f"
+  },
+  {
+    "id": "tui-session-protocol-create-select-admit",
+    "path": "packages/protocol/src/groups/session.ts",
+    "start_line": 157,
+    "end_line": 165,
+    "excerpt_bytes": 404,
+    "excerpt_sha256": "71c1e876af222213a3be235401dd9913c7d5bbd2e4f780609260cc1c06cc7ac6"
+  },
+  {
+    "id": "tui-session-protocol-create-select-admit",
+    "path": "packages/protocol/src/groups/session.ts",
+    "start_line": 301,
+    "end_line": 394,
+    "excerpt_bytes": 3901,
+    "excerpt_sha256": "25fe631f1dda1ad9bb652059460c29394a5936ddd04d7f7a0be97d729775dc8c"
+  },
+  {
+    "id": "tui-session-protocol-other-actions",
+    "path": "packages/protocol/src/groups/session.ts",
+    "start_line": 431,
+    "end_line": 443,
+    "excerpt_bytes": 678,
+    "excerpt_sha256": "ffefb8da0a1471d194683a50713331734bdac12679ba9d79aa8c47b27724cb59"
+  },
+  {
+    "id": "tui-session-protocol-other-actions",
+    "path": "packages/protocol/src/groups/session.ts",
+    "start_line": 464,
+    "end_line": 479,
+    "excerpt_bytes": 763,
+    "excerpt_sha256": "50005169cd14bf17ea8b94107a47c8e6f3ab71e87aecd19e3762824762e034ff"
+  },
+  {
+    "id": "tui-session-protocol-other-actions",
+    "path": "packages/protocol/src/groups/session.ts",
+    "start_line": 550,
+    "end_line": 582,
+    "excerpt_bytes": 1566,
+    "excerpt_sha256": "ccd969a13ebae7ff7ef3424530ea90ff3ac0432159780396a16e824ef1a4bf8b"
+  },
+  {
+    "id": "tui-session-protocol-other-actions",
+    "path": "packages/protocol/src/groups/session.ts",
+    "start_line": 655,
+    "end_line": 665,
+    "excerpt_bytes": 539,
+    "excerpt_sha256": "381f2a8f3366eb9db10a1ac558120832bc176ee836a1669cb73223fb282a6d18"
+  },
+  {
+    "id": "tui-permission-protocol",
+    "path": "packages/protocol/src/groups/permission.ts",
+    "start_line": 119,
+    "end_line": 134,
+    "excerpt_bytes": 752,
+    "excerpt_sha256": "710adee3f9d627a250b3856220d4681f5cfdada0f4ddd9f7ef9849d4a2b58569"
+  },
+  {
+    "id": "tui-request-assertions",
+    "path": "packages/tui/test/context/session-actions.test.ts",
+    "start_line": 5,
+    "end_line": 27,
+    "excerpt_bytes": 1205,
+    "excerpt_sha256": "d6ac5a66b8282437ea427b388d3e08ac7ca2e69cacabbf729a1705f78b212fd6"
+  },
+  {
+    "id": "tui-request-assertions",
+    "path": "packages/tui/test/context/session-actions.test.ts",
+    "start_line": 30,
+    "end_line": 62,
+    "excerpt_bytes": 1584,
+    "excerpt_sha256": "25c9d74e5f8eadb8f8198ac304b73a397e4a4158cd030db9c682b276bac6f144"
+  },
+  {
+    "id": "tui-request-assertions",
+    "path": "packages/tui/test/context/session-actions.test.ts",
+    "start_line": 65,
+    "end_line": 85,
+    "excerpt_bytes": 739,
+    "excerpt_sha256": "5e13e2a843b2bcd3b673ddc784160546d355ad31239d83c1b6b2830b52668ffc"
+  },
+  {
+    "id": "tui-request-assertions",
+    "path": "packages/tui/test/context/session-actions.test.ts",
+    "start_line": 88,
+    "end_line": 149,
+    "excerpt_bytes": 2137,
+    "excerpt_sha256": "4ecaaaeb494910f2c269a07102b5a79bf38a75135005224af90879c7d511917e"
+  }
+]

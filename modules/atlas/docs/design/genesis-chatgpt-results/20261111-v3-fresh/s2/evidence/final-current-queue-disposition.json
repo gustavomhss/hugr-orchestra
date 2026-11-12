@@ -1,0 +1,27 @@
+{
+  "schema": "genesis-s2-final-current-queue-disposition/v1",
+  "recorded_at": "2026-11-11T21:47:05.173114+00:00",
+  "current_files": [
+    "work.md",
+    "handoff.json",
+    "native-package.json",
+    "evidence/final-local-gates.json",
+    "evidence/final-criterion-matrix.json"
+  ],
+  "current_open_operational_gates": [
+    "G-RUNTIME",
+    "G-BINDING",
+    "G-CONSUMERS",
+    "G-UPDATE",
+    "G-RECOVERY",
+    "G-CI",
+    "G-PUBLICATION",
+    "G-CLOSURE"
+  ],
+  "current_accounting_gap": "G-PROVENANCE retains shared route/reservation/adapter proof and explicitly unavailable telemetry; current bounded records reconciled.",
+  "current_independent_record_findings": [],
+  "current_mechanical_action": "Complete ZIP export and actual external integrity receipt after freezing these records.",
+  "historical_open_labels": "Prior DRAFT, FIX-FIRST, REQUEST_EVIDENCE, pending transport acknowledgments and PLANNED_ABSENT labels remain in original requests, decisions, snapshots and archives. Superseding exact responses/current records resolve their bookkeeping scopes; they are not silently erased.",
+  "remaining_specification_detail": "S2-U1 exact mutation/result/control fixtures absent from frozen records, explicitly identified; bind before future execution, without rewriting the original oracle.",
+  "no_claim": "No current open operational obligation is relabeled N/A, PASS or delegated away."
+}

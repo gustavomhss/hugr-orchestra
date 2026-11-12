@@ -1,0 +1,332 @@
+      "family-supported": 47
+    },
+    "classification_counts": {
+      "test-unexecuted": 55
+    }
+  },
+  {
+    "id": "tui-test-fixtures",
+    "purpose": "Test harnesses, fake transports and stored snapshot fixture",
+    "representative_source_paths": [
+      "packages/tui/test/cli/cmd/tui/sync-fixture.tsx",
+      "packages/tui/test/fixture/tui-sdk.ts",
+      "packages/tui/test/app-lifecycle.test.tsx"
+    ],
+    "source_implications": "Fixtures fake transport/environment/rendering to isolate UI state.",
+    "consumer_implications": "Regression tests use these instead of a real terminal/backend.",
+    "maintenance_implications": "Keep mocks aligned with contracts; snapshot generation history is unverified.",
+    "semantic_limits": "Fixture depth is representative; no fixture/test was executed.",
+    "metadata_only": false,
+    "path_count": 8,
+    "byte_count": 14458,
+    "depth_counts": {
+      "inspected": 2,
+      "family-supported": 6
+    },
+    "classification_counts": {
+      "fixture": 8
+    }
+  },
+  {
+    "id": "ui-package",
+    "purpose": "Solid UI package ownership, exports and build boundaries",
+    "representative_source_paths": [
+      "packages/ui/README.md",
+      "packages/ui/AGENTS.md",
+      "packages/ui/package.json",
+      "packages/ui/vite.config.ts",
+      "script/module-readme.ts"
+    ],
+    "source_implications": "Both component generations are current; exports are explicit plus asset/style wildcards; no workspace dependencies.",
+    "consumer_implications": "App-shell/session-ui add higher layers; Storybook, desktop and TUI consume the library.",
+    "maintenance_implications": "Preserve public exports, i18n policy and generated module-contract block.",
+    "semantic_limits": "Ancillary TypeScript/bun/ignore configuration not individually audited.",
+    "metadata_only": false,
+    "path_count": 8,
+    "byte_count": 17783,
+    "depth_counts": {
+      "family-supported": 4,
+      "inspected": 4
+    },
+    "classification_counts": {
+      "configuration": 5,
+      "documentation": 2,
+      "implementation": 1
+    }
+  },
+  {
+    "id": "ui-license-unread",
+    "purpose": "License notice retained in exact path inventory",
+    "representative_source_paths": [
+      "packages/ui/README.md"
+    ],
+    "source_implications": "README explicitly instructs preserving LICENSE; full license text not captured.",
+    "consumer_implications": "Distribution obligations cannot be inferred from package role.",
+    "maintenance_implications": "Read license before redistribution/licensing conclusions.",
+    "semantic_limits": "No legal analysis or license compliance claim.",
+    "metadata_only": true,
+    "path_count": 1,
+    "byte_count": 1065,
+    "depth_counts": {
+      "metadata-only": 1
+    },
+    "classification_counts": {
+      "license-notice": 1
+    }
+  },
+  {
+    "id": "ui-primitives",
+    "purpose": "First-generation controls and overlay presentation",
+    "representative_source_paths": [
+      "packages/ui/src/components/button.tsx",
+      "packages/ui/src/components/dialog.tsx",
+      "packages/ui/src/components/tooltip.tsx",
+      "packages/ui/src/context/dialog.tsx",
+      "packages/ui/README.md"
+    ],
+    "source_implications": "Representative controls wrap Kobalte and use data attributes for styling; dialogs translate close labels and manage focus.",
+    "consumer_implications": "Higher-level applications supply content, labels and state.",
+    "maintenance_implications": "Preserve public props and styling hooks; inspect each leaf before changing its semantics.",
+    "semantic_limits": "Other controls, media, logo and feedback components are supported at library-family level only; no universal accessibility claim.",
+    "metadata_only": false,
+    "path_count": 33,
+    "byte_count": 125474,
+    "depth_counts": {
+      "family-supported": 30,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "implementation": 33
+    }
+  },
+  {
+    "id": "ui-v2-primitives",
+    "purpose": "Second-generation controls, composed fields and keyboard interactions",
+    "representative_source_paths": [
+      "packages/ui/src/v2/components/field-v2.tsx",
+      "packages/ui/src/v2/components/dialog-v2.tsx",
+      "packages/ui/src/v2/components/segmented-control-v2.tsx",
+      "packages/ui/README.md"
+    ],
+    "source_implications": "Field wires control IDs/labels/descriptions/errors; dialog composes slots; segmented control supports controlled state and DOM-order arrows.",
+    "consumer_implications": "New-layout consumers use v2 data slots/CSS contracts.",
+    "maintenance_implications": "Preserve label wiring; verify RTL keyboard behavior rather than assuming visual mirroring establishes it.",
+    "semantic_limits": "Remaining v2 leaf controls/styles family-supported; no screen-reader/browser test.",
+    "metadata_only": false,
+    "path_count": 31,
+    "byte_count": 105915,
+    "depth_counts": {
+      "family-supported": 28,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "implementation": 31
+    }
+  },
+  {
+    "id": "ui-motion",
+    "purpose": "Spring and text/number animation components",
+    "representative_source_paths": [
+      "packages/ui/src/components/motion-spring.tsx",
+      "packages/ui/src/styles/animations.css",
+      "packages/ui/README.md"
+    ],
+    "source_implications": "Representative spring helper attaches Motion values, snaps on a state key and destroys subscriptions on cleanup.",
+    "consumer_implications": "Animated controls consume animation helpers/CSS.",
+    "maintenance_implications": "Preserve snap/cleanup semantics; inspect individual animation and reduced-motion behavior before changing it.",
+    "semantic_limits": "Text/number animation leaves are not individually inspected; no motion or reduced-motion visual validation.",
+    "metadata_only": false,
+    "path_count": 6,
+    "byte_count": 14675,
+    "depth_counts": {
+      "family-supported": 5,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "implementation": 6
+    }
+  },
+  {
+    "id": "ui-list-scroll",
+    "purpose": "Virtualized lists, scroll ownership and auto-scroll hooks",
+    "representative_source_paths": [
+      "packages/ui/src/components/list.tsx",
+      "packages/ui/src/components/scroll-view.tsx",
+      "packages/ui/src/hooks/create-auto-scroll.tsx",
+      "packages/ui/src/hooks/use-filtered-list.tsx",
+      "packages/ui/src/components/scroll-view.test.ts"
+    ],
+    "source_implications": "List limits visible range with active/focused exceptions; scroll helper avoids stealing nested or editable input; auto-scroll tracks user interruption.",
+    "consumer_implications": "Consumers own selection/filtering and scroll content.",
+    "maintenance_implications": "Preserve focus retention, nested scroll boundaries and resize/cleanup behavior.",
+    "semantic_limits": "Read helper tests are unexecuted; no layout or browser input confirmation.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 47565,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 1
+    },
+    "classification_counts": {
+      "implementation": 5
+    }
+  },
+  {
+    "id": "ui-dialog-context",
+    "purpose": "Overlay stack ownership, focus and removal lifecycle",
+    "representative_source_paths": [
+      "packages/ui/src/context/dialog.tsx",
+      "packages/ui/src/components/dialog.tsx",
+      "packages/ui/src/v2/components/dialog-v2.tsx"
+    ],
+    "source_implications": "Provider stacks owned roots; show replaces stack, showOwned couples caller lifetime; removal attempts focus restoration.",
+    "consumer_implications": "Both UI generations and Storybook use the provider.",
+    "maintenance_implications": "Preserve root disposal and focus restoration around delayed closing.",
+    "semantic_limits": "No DOM or assistive-technology execution.",
+    "metadata_only": false,
+    "path_count": 1,
+    "byte_count": 7985,
+    "depth_counts": {
+      "inspected": 1
+    },
+    "classification_counts": {
+      "implementation": 1
+    }
+  },
+  {
+    "id": "ui-markdown",
+    "purpose": "Markdown parser, syntax themes and math rendering context",
+    "representative_source_paths": [
+      "packages/ui/src/context/marked.tsx",
+      "packages/ui/src/context/marked-parser.tsx",
+      "packages/ui/src/context/marked-theme.tsx",
+      "packages/ui/src/context/marked-parser.test.ts"
+    ],
+    "source_implications": "Marked custom links, Shiki highlighting and KaTeX are configured; language load failures fall back to text.",
+    "consumer_implications": "Screens/Storybook provide theme and highlighter context.",
+    "maintenance_implications": "Preserve parser/highlighter contracts; separately inspect final HTML sanitization/rendering boundary.",
+    "semantic_limits": "No renderer-wide sanitization assurance; worker support not covered by this family.",
+    "metadata_only": false,
+    "path_count": 4,
+    "byte_count": 12677,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 1
+    },
+    "classification_counts": {
+      "implementation": 4
+    }
+  },
+  {
+    "id": "ui-context-services",
+    "purpose": "Readiness-gated contexts, injected file component and caller-owned worker pools",
+    "representative_source_paths": [
+      "packages/ui/src/context/helper.tsx",
+      "packages/ui/src/context/file.tsx",
+      "packages/ui/src/context/worker-pool.tsx",
+      "packages/ui/src/context/index.ts",
+      "packages/ui/src/custom-elements.d.ts"
+    ],
+    "source_implications": "createSimpleContext initializes once, optionally gates children on reactive ready, and throws for missing/falsy context; file/pool providers inject caller values; JSX declaration adds diffs-container typing.",
+    "consumer_implications": "Consumers select injected file component or unified/split diff pool; barrel reexports helper/file/dialog/i18n.",
+    "maintenance_implications": "Pool provider neither creates nor disposes workers: caller owns lifetime; TypeScript declaration does not register custom element runtime.",
+    "semantic_limits": "Complete small sources inspected; no worker execution, custom-element runtime or DOM readiness test. No dedicated test captured for these wrappers.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 2687,
+    "depth_counts": {
+      "inspected": 5
+    },
+    "classification_counts": {
+      "implementation": 4,
+      "type-declaration": 1
+    }
+  },
+  {
+    "id": "ui-i18n-runtime",
+    "purpose": "Locale provider, English fallback and plural/template helpers",
+    "representative_source_paths": [
+      "packages/ui/src/context/i18n.tsx",
+      "packages/ui/src/context/i18n.test.ts",
+      "packages/ui/AGENTS.md",
+      "packages/ui/src/i18n/edit-review.ts"
+    ],
+    "source_implications": "Provider separates layoutLocale from locale, templates parameters and caches Intl plural rules; fallback is English.",
+    "consumer_implications": "Controls use useI18n; applications provide translations/layout locale.",
+    "maintenance_implications": "Preserve visible-string key policy and plural categories; dictionaries are not strict exhaustiveness proof.",
+    "semantic_limits": "Plural tests read, unexecuted; translation quality not audited.",
+    "metadata_only": false,
+    "path_count": 1,
+    "byte_count": 2564,
+    "depth_counts": {
+      "inspected": 1
+    },
+    "classification_counts": {
+      "implementation": 1
+    }
+  },
+  {
+    "id": "ui-localization-data",
+    "purpose": "Locale dictionaries and shared edit-review copy",
+    "representative_source_paths": [
+      "packages/ui/src/i18n/en.ts",
+      "packages/ui/src/i18n/ar.ts",
+      "packages/ui/src/i18n/edit-review.ts",
+      "packages/ui/src/context/i18n.tsx",
+      ".orchestra/glossary/README.md"
+    ],
+    "source_implications": "Sixty-three files in i18n include locale and shared-copy modules; representative English/Arabic key/template data inspected.",
+    "consumer_implications": "UI provider/app translation adapters consume copy; TUI explicitly has a separate English-only policy.",
+    "maintenance_implications": "Apply locale/glossary policy; require locale review for semantic changes.",
+    "semantic_limits": "Repetitive dictionaries receive family support, not language-by-language correctness or completeness claims.",
+    "metadata_only": false,
+    "path_count": 63,
+    "byte_count": 869702,
+    "depth_counts": {
+      "family-supported": 60,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "localization": 63
+    }
+  },
+  {
+    "id": "ui-theme-engine",
+    "purpose": "Desktop theme schema, color resolution and provider/loader APIs",
+    "representative_source_paths": [
+      "packages/ui/src/theme/types.ts",
+      "packages/ui/src/theme/context.tsx",
+      "packages/ui/src/theme/loader.ts",
+      "packages/ui/src/theme/resolve.ts",
+      "packages/ui/src/theme/color.ts",
+      "packages/ui/src/theme/v2/resolve.ts",
+      "packages/ui/src/theme/default-themes.ts",
+      "packages/ui/src/theme/desktop-theme.schema.json"
+    ],
+    "source_implications": "DesktopTheme light/dark seeds or palettes resolve v1/v2 CSS; provider persists preferences, follows media/storage and supports previews.",
+    "consumer_implications": "Browser surfaces and Storybook consume themes; imperative loader has a separate style element/API.",
+    "maintenance_implications": "Preserve preview identity/commit/cancel and data/storage keys; distinguish terminal format.",
+    "semantic_limits": "No palette-by-palette contrast check; URL loader returns JSON without runtime schema validation.",
+    "metadata_only": false,
+    "path_count": 13,
+    "byte_count": 86998,
+    "depth_counts": {
+      "inspected": 8,
+      "family-supported": 5
+    },
+    "classification_counts": {
+      "implementation": 12,
+      "handwritten-schema": 1
+    }
+  },
+  {
+    "id": "ui-theme-data",
+    "purpose": "Desktop preset data including partially generated oc-2 overrides",
+    "representative_source_paths": [
+      "packages/ui/src/theme/themes/oc-2.json",
+      "packages/ui/src/theme/default-themes.ts",
+      "packages/ui/src/theme/context.tsx",
+      "packages/ui/script/build-oc2-v2-overrides.ts"
+    ],
+    "source_implications": "Thirty-seven checked-in preset files are discoverable; only oc-2 v2Overrides has a verified rewrite generator here.",
+    "consumer_implications": "Theme provider lazily imports presets.",

@@ -1,0 +1,285 @@
+# Decisive evidence for s2.l3.app-session
+## Evidence status
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. This is a producer evidence record, not a semantic verdict. The L3 contribution is the relation between accepted local mechanisms: who owns each transition, which identity survives, how a failure is observed, and where a change must be checked. No runtime result, remote action or new filesystem-security proof was produced.
+Most factual statements are inherited from the exact accepted predecessor sections mapped below. Two narrow implementation refinements are supported directly: the target-server route predicate/fallback (E01) and request selection by action key plus acknowledged policy revision (E02). Root process-local/post-crash policy is reproduced as attributed instruction (E03), not promoted to a source-execution finding. E04–E09 corroborate accepted behavior or precisely attribute instructions. Other directly used captures support the bounded ownership/classification/maintenance observations listed in sources.json.
+## Accepted predecessor identities
+| Key | Exact body path, relative to deliverable | SHA256 | Bytes |
+|---|---|---|---:|
+| `s2.l2.app-session` | `layers/l2/app-session/body.md` | `302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7` | 24434 |
+| `s2.l2.desktop-web` | `layers/l2/desktop-web/body.md` | `03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457` | 18440 |
+| `s2.l2.design-tui` | `layers/l2/design-tui/body.md` | `21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1` | 21535 |
+| `s2.l1.app-session` | `layers/l1/app-session/l1.md` | `67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e` | 42047 |
+
+The two consumed accepted-layer manifest hashes are recorded exactly in dependencies.json. Review references inside those permitted manifests were not followed. No pending L3 unit supplies evidence.
+
+## Section-to-evidence map
+
+### Reading the handoffs
+
+Evidence contract and inherited scope; no new runtime or coverage finding.
+
+- `s2.l2.app-session` § “Orientation and evidence status”.
+- `s2.l2.app-session` § “Verification limits and ownership use”.
+
+### Enter the intended server and workspace
+
+Integrated handoff inference from accepted host/app observations; exact route gate is a bounded direct-source refinement. Trust workflow is attributed instruction.
+
+- `s2.l2.desktop-web` § “Orientation and ownership”.
+- `s2.l2.desktop-web` § “Startup publishes readiness before the renderer proceeds”.
+- `s2.l2.desktop-web` § “Persistence and recovery have several owners”.
+- `s2.l2.desktop-web` § “Privilege is checked at each request boundary”.
+- `s2.l2.app-session` § “Composition, identity and asynchronous ownership”.
+- `s2.l2.app-session` § “Navigation, settings and feature controllers”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `packages/app-shell/src/app.tsx`; `packages/app-shell/src/context/global.tsx`; `packages/app-shell/src/pages/session/session-ownership.ts`; `.orchestra/skills/onboarding-usage/SKILL.md`; `.orchestra/skills/settings-usage/SKILL.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Submit once, then hand the draft to its session
+
+Relates inherited admission, retry, rollback and persistence boundaries. Exact request selection by action key/receipt revision is directly corroborated and bounded; no execution observation.
+
+- `s2.l2.app-session` § “Durable admission, optimistic state and draft storage”.
+- `s2.l2.desktop-web` § “Persistence and recovery have several owners”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `packages/app-shell/src/components/prompt-input/submit.ts`; `AGENTS.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Recover the projection without inventing execution recovery
+
+Cross-stage inference distinguishes transport liveness, canonical projection and provider execution. Explicit root process-local/post-crash policy is attributed instruction, not an implementation or runtime proof.
+
+- `s2.l2.app-session` § “Transport, liveness and canonical recovery”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `packages/app-shell/src/context/session-recovery.ts`; `AGENTS.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Answer requests without transferring server authority to the UI
+
+Relates inherited request/terminal ownership; proposed verification is unexecuted. Slow-reader risk and server authorization limit remain.
+
+- `s2.l2.app-session` § “Permission requests and terminal boundaries”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+### Change settings and Skills under the original owner
+
+Integrates inherited controller/mutation boundaries with direct corroboration. Trust is attributed guidance; lexical classification is not filesystem authorization; SkillV2 enforcement remains uninspected.
+
+- `s2.l2.app-session` § “Navigation, settings and feature controllers”.
+- `s2.l2.app-session` § “Skills catalog, content and editing ownership”.
+
+Directly used captures: `.orchestra/skills/settings-usage/SKILL.md`; `packages/app-shell/src/orchestra/chapters/skills-data.ts`; `packages/app-shell/src/orchestra/chapters/skills.tsx`; `packages/app-shell/src/orchestra/chapters/skills-dialog.tsx`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Render and localize under caller-owned lifetimes
+
+Actual shared-UI/theme cross-unit build dependency. Localization requirements are instructions; rendering, direction and generated-output facts remain static observations with visual/accessibility limits.
+
+- `s2.l2.app-session` § “Shared rendering, files and evidence interpretation”.
+- `s2.l2.app-session` § “Visual resources and prescribed maintenance”.
+- `s2.l2.design-tui` § “Browser UI ownership, lifecycle and accessibility”.
+- `s2.l2.design-tui` § “Localization, direction and two theme systems”.
+- `s2.l2.design-tui` § “Generated products and asset provenance”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `packages/app-shell/AGENTS.md`; `packages/session-ui/AGENTS.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Route a change through its affected contracts
+
+Maintenance inference and attributed dependency/codegen/benchmark instructions. Optional L3 destinations supply no factual evidence.
+
+- `s2.l2.app-session` § “Visual resources and prescribed maintenance”.
+- `s2.l2.app-session` § “Verification limits and ownership use”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `AGENTS.md`; `packages/app-shell/AGENTS.md`; `packages/session-ui/AGENTS.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+## Bounded exact source excerpts
+
+Each code block preserves the captured UTF-8 excerpt bytes, including final newline. Its hash is the excerpt hash, distinct from the complete source hash in sources.json. Line numbers are metadata outside the literal excerpt.
+
+### E01: packages/app-shell/src/app.tsx:105–115
+
+Direct refinement: the target route requires resolved server identity and otherwise navigates home. The conditional, not the comment alone, bounds the statement.
+
+Excerpt SHA256 `f4bdabcf56e84997c675eb78f5809de4f7a59593d570b5c88760fac2a2699215`; 642 bytes.
+
+```text
+  return (
+    // Owns the server-identity remount. Session changes must NOT remount this
+    // subtree (SessionRouteErrorBoundary resets and createSessionLineage
+    // re-resolves reactively instead); both rely on this key for server changes.
+    // A malformed key or a removed server leaves instead of loading against the selected server, which only
+    // resolves its own key.
+    <Show when={(conn() || key() === server.key) && key()} keyed fallback={<Navigate href="/" />}>
+      <ServerSDKProvider server={conn}>
+        <ServerSyncProvider server={conn}>{props.children}</ServerSyncProvider>
+      </ServerSDKProvider>
+    </Show>
+```
+
+### E02: packages/app-shell/src/components/prompt-input/submit.ts:513–523
+
+Direct precision: request identity is replaced when the action key or policy receipt revision changes; L3 only describes retention for an unchanged pair.
+
+Excerpt SHA256 `9b38c75016cd355c37a042ee4dc0539effdc10217237930dbf468816b5861f07`; 512 bytes.
+
+```text
+    const actionKey = JSON.stringify({ currentPrompt, context, images, mode, agent, model, variant, worktreeSelection })
+    const selectRequest = () => {
+      if (admission.request?.key !== actionKey || admission.request.revision !== receipt.revision) {
+        admission.request = {
+          key: actionKey,
+          id: mode === "shell" ? Event.ID.create() : Identifier.ascending("message"),
+          admitted: false,
+          revision: receipt.revision,
+        }
+      }
+      return admission.request
+```
+
+### E03: AGENTS.md:209–216
+
+Attributed instruction: admission/execution separation, process-local drains and the explicit need for a separate post-crash provider-continuation design. This is not a demonstration of implemented crash recovery.
+
+Excerpt SHA256 `0489888da1e156063c11b4f49045fbb95bf5e4b95879a4140d45e1d4b19b9d37`; 2855 bytes.
+
+```text
+- Keep durable prompt admission separate from model execution. `SessionV2.prompt(...)` admits one durable `session_input` row before scheduling advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. The serialized runner promotes admitted inputs into visible user messages at safe boundaries.
+- Reusing a Session ID adopts the existing Session. Reusing a prompt message ID reconciles an exact retry only when Session, prompt, and delivery mode match; conflicting reuse fails. Historical projected prompts lazily synthesize promoted inbox records during exact retry.
+- Keep `SessionExecution` process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement through `SessionStore` plus `LocationServiceMap.get(session.location)` only when a drain starts; no layer should take a Session ID. V2 interruption targets the active process-local ownership chain for that Session; idle or missing interruption is a no-op.
+- Keep `SessionRunner`, model resolution, tool registry, permissions, and filesystem Location-scoped. Omitted `Location.workspaceID` means implicit-local placement; explicit workspace identity remains reserved for future placement semantics.
+- Preserve one explicit `llm.stream(request)` call per provider turn and reload projected history before durable continuation. Do not bridge through legacy `SessionPrompt.loop(...)` or delegate orchestration to an in-memory tool loop. The one exception is an agent whose `engine` names a registered `ExecutionHost` (today only `claude-code`): its single `ExecutionHost.stream(turn)` call is that provider turn, its internal tool calls persist as provider-executed events, Orchestra tools it invokes settle through the runner's `turn.execute`, and its `query()` always keeps the `claude_code` system prompt preset.
+- Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. Advisory wakes drain eligible durable inbox rows only; post-crash continuation recovery requires a separate explicit design before it may retry provider work. A drain has no durable identity or transcript boundary.
+- Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
+- Keep EventV2 replay owner claims separate from clustered Session execution ownership.
+```
+
+### E04: packages/app-shell/src/context/session-recovery.ts:45–60
+
+Corroboration of accepted recovery: superseded owner and policy-generation checks, compatibility snapshot limit and local receipt.
+
+Excerpt SHA256 `97c860d23fa61dc20e3dfaa67e93f1023f9746271b4fab741adba01ecb972907`; 1131 bytes.
+
+```text
+    const state = { policyGeneration: {}, policy: floor ?? fences.get(sessionID) ?? cached }
+    const request = (): Promise<AppSession> => {
+      const policyGeneration = state.policyGeneration
+      return input.request(sessionID).then((result) => {
+        if (input.generations.get(sessionID) !== active) throw new DOMException("Session recovery superseded", "AbortError")
+        if (state.policyGeneration !== policyGeneration) return request()
+        const observed = mergeSessionManagementInfo(state.policy,
+          mergeSessionManagementInfo(fences.get(sessionID), input.read(sessionID) ?? result))
+        // Compatibility SDK snapshots carry no canonical V2 policy provenance.
+        if (input.source === "snapshot") return input.retain(mergeSessionManagementInfo(observed, result))
+        local.receipt = Math.max(local.receipt, observed.subagentModelsReadReceipt ?? 0) + 1
+        return input.retain({
+          ...result,
+          subagentModelsChangedAt: observed.subagentModelsChangedAt,
+          subagentModelsRevision: observed.subagentModelsRevision,
+          subagentModelsReadReceipt: local.receipt,
+```
+
+### E05: packages/app-shell/src/orchestra/chapters/skills.tsx:100–125
+
+Corroboration of accepted mutation boundary: no page abort signal is passed to save/remove; disposal is checked after completion and suppresses UI work.
+
+Excerpt SHA256 `c86663f9835c1576d1eb02c7a99af006b356b2d988388a075f0a0546de4fff72`; 997 bytes.
+
+```text
+  async function save(current: SkillDialogState, input: SkillSaveInput) {
+    const result = await sdk()
+      .orchestra.skills.save({ location: { directory: props.directory }, ...input })
+      .then(
+        (saved) => ({ saved, error: undefined }),
+        (error: unknown) => ({ saved: undefined, error }),
+      )
+    if (!result.saved) return writeFailure(result.error)
+    if (abort.signal.aborted) return
+    close(current)
+    setState("pending", result.saved.data.location)
+    await load().catch(() => refresh())
+  }
+
+  async function remove(current: SkillDialogState, skill: SkillEntry) {
+    const error = await sdk()
+      .orchestra.skills.remove({ location: { directory: props.directory }, path: skill.location })
+      .then(
+        () => undefined,
+        (error: unknown) => ({ error }),
+      )
+    if (error) return writeFailure(error.error)
+    if (abort.signal.aborted) return
+    close(current)
+    setState("pending", undefined)
+    await load().catch(() => refresh())
+```
+
+### E06: packages/app-shell/src/orchestra/chapters/skills-dialog.tsx:44–56
+
+Corroboration of accepted edit payload identity: path and optional mtime accompany the editor fields.
+
+Excerpt SHA256 `b4e0319af9fb9781fa14d0fd50b99ae4e56f99ee7aa2182cb41bfa85f78eb8d1`; 555 bytes.
+
+```text
+  function submit(event: SubmitEvent & { currentTarget: HTMLFormElement }) {
+    event.preventDefault()
+    const state = props.state
+    if (state.type === "remove") return void run(() => props.onRemove(state.skill))
+    const data = new FormData(event.currentTarget)
+    void run(() =>
+      props.onSave({
+        name: String(data.get("name") ?? ""),
+        description: String(data.get("description") ?? ""),
+        content: String(data.get("instructions") ?? ""),
+        path: skill?.location,
+        mtime: skill?.mtime ?? undefined,
+      }),
+```
+
+### E07: .orchestra/skills/onboarding-usage/SKILL.md:35–40
+
+Attributed proposed manual checks for folder trust and provider setup, not a performed walkthrough.
+
+Excerpt SHA256 `5fea6a4dfc5f1e2be52d59c815f2b9fa660d73c46ed0f4a09093c1c109a36159`; 511 bytes.
+
+```text
+## Checking it by hand
+
+- Clear the first-launch state, then launch with no project: expect the folder step, not a Default Project.
+- Pick a folder: the folder is trusted before it appears as a project. A refused trust shows an error and adds nothing.
+- Choose Claude mode while signed out: the engine in Providers stays on Orchestra until the sign-in finishes.
+- Choose Claude mode while signed in, then open Chat without reloading: the composer shows a Claude model and the picker lists the Anthropic models.
+```
+
+### E08: .orchestra/skills/settings-usage/SKILL.md:23–31
+
+Attributed trust capability and inherited-parent revocation guidance, not verified filesystem behavior.
+
+Excerpt SHA256 `2bc4a3694eec72bd9f87122d2821197a048d9ffa8bdcde831455ef2b7f72b545`; 573 bytes.
+
+```text
+## Blocked project
+
+- A local server from a project that is not trusted stays blocked. The MCP page then shows a banner with **Trust this project**. Approving it starts the blocked servers and refreshes the page.
+- Do not trust a project only to make a banner go away. Trust lets its config run commands on this machine.
+
+## Revoking trust
+
+- Settings > Trusted projects lists each approved folder. **Revoke** removes that folder's own entry and stops its running local MCP servers.
+- A folder trusted only through a parent stays trusted. Revoke the parent folder instead.
+```
+
+### E09: AGENTS.md:1–2
+
+Attributed client-generation and runtime dependency rules; no generator or product check was executed.
+
+Excerpt SHA256 `d106c475e9cb2805443695dc5d251d955b070bbdc991d59c29477328a71d5fc2`; 405 bytes.
+
+```text
+- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
+- Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.
+```
+
+## Unexecuted verification and unresolved evidence
+
+Test paths/assertion scopes are consumed from accepted s2.l1.app-session, not new raw test inspections or execution. No product tests, typecheck, benchmark, CI, browser/desktop walkthrough, provider call, source generator or server restart ran. Preserved limits include ambiguous admission responses, divergent browser/native draft durability, bounded SSE without replay IDs, snapshot policy provenance, desktop stable-exit restart and IPC coverage discrepancies, terminal slow-reader buffering, uninspected SkillV2 filesystem enforcement, and unverified translation/geometry/focus/contrast. The handoff and maintenance recommendations are inferences; optional L3 destinations are navigation only.

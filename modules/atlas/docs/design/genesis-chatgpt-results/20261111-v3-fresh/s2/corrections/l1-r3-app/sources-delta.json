@@ -1,0 +1,142 @@
+{
+  "schema": "genesis-s2-l1-correction-sources/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "revision": "l1-r3-app",
+  "repository": "gustavomhss/hugr-orchestra",
+  "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "canonical_r2_body": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/l1.md",
+    "bytes": 40081,
+    "sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc"
+  },
+  "captures": [
+    {
+      "path": "packages/app-shell/AGENTS.md",
+      "bytes": 4508,
+      "byte_length": 4508,
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/app-shell/AGENTS.md",
+      "connector_response_file": "original-responses/reused-batch-01.json",
+      "connector_response_pointer": {
+        "array_index": 0,
+        "value_key": "value"
+      },
+      "connector_response_bytes": 122893,
+      "connector_response_sha256": "da64a03b9d1202f3bed925fbec18108f0e2fadc657e6722afa46edca963e47b1",
+      "original_source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/app-session/sources/packages/app-shell/AGENTS.md",
+      "original_connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/app-session/captures/batch-01.json",
+      "acquisition": "reuse existing exact connector capture; source and response roundtrip plus SHA256/Git blob verified",
+      "new_unique_capture": false,
+      "assigned_population_member": true,
+      "incorporation": "retain existing canonical source record; add normative excerpt/read-span provenance only",
+      "read_ranges": [
+        [
+          1,
+          4
+        ]
+      ]
+    },
+    {
+      "path": "packages/session-ui/AGENTS.md",
+      "bytes": 1404,
+      "byte_length": 1404,
+      "sha256": "60bfa8f3ae4ad8e65a15247074ae0c105712b352990dac4b1f9463c1de4a58e7",
+      "git_blob_sha": "678ae1bf90d8466fc47859eb01678d9e31586133",
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/session-ui/AGENTS.md",
+      "connector_response_file": "original-responses/reused-batch-01.json",
+      "connector_response_pointer": {
+        "array_index": 1,
+        "value_key": "value"
+      },
+      "connector_response_bytes": 122893,
+      "connector_response_sha256": "da64a03b9d1202f3bed925fbec18108f0e2fadc657e6722afa46edca963e47b1",
+      "original_source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/app-session/sources/packages/session-ui/AGENTS.md",
+      "original_connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/app-session/captures/batch-01.json",
+      "acquisition": "reuse existing exact connector capture; source and response roundtrip plus SHA256/Git blob verified",
+      "new_unique_capture": false,
+      "assigned_population_member": true,
+      "incorporation": "retain existing canonical source record; add normative excerpt/read-span provenance only",
+      "read_ranges": [
+        [
+          1,
+          7
+        ]
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 16501,
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/AGENTS.md",
+      "connector_response_file": "original-responses/reused-batch-05.json",
+      "connector_response_pointer": {
+        "array_index": 0,
+        "value_key": "value"
+      },
+      "connector_response_bytes": 319449,
+      "connector_response_sha256": "cc44e8571e8c51062dbbce9abb252f1a5be66983562fd5289d02048369ea759d",
+      "original_source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/app-session/sources/AGENTS.md",
+      "original_connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/app-session/captures/batch-05.json",
+      "acquisition": "reuse existing exact connector capture; source and response roundtrip plus SHA256/Git blob verified",
+      "new_unique_capture": false,
+      "assigned_population_member": false,
+      "incorporation": "retain existing canonical source record; add normative excerpt/read-span provenance only",
+      "read_ranges": [
+        [
+          1,
+          2
+        ]
+      ]
+    }
+  ],
+  "existing_evidence_reused": [
+    {
+      "path": "packages/core/src/session/input.ts",
+      "bytes": 13624,
+      "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "canonical_source_index": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/sources.json",
+      "canonical_decisive_evidence_file": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/decisive-evidence.md",
+      "canonical_decisive_evidence_sha256": "dc57d2d404e62b3fdfc5012939481f5dcc3ecc2d845dde899ce6edc69bee8e50",
+      "section": "E15 \u2014 Core admission and retry equivalence",
+      "verified_ranges": [
+        [
+          59,
+          62
+        ],
+        [
+          291,
+          316
+        ]
+      ],
+      "new_unique_capture": false,
+      "note": "The correction uses the already-preserved E15 support; no additional source or test is introduced for retry equivalence."
+    }
+  ],
+  "counts": {
+    "new_unique_sources": 0,
+    "new_assigned_paths": 0,
+    "assigned_depth_changes": 0,
+    "canonical_unique_sources": 255,
+    "assigned_source_captures": 238,
+    "boundary_source_captures": 17,
+    "assigned_population": 1887,
+    "inspected": 234,
+    "family_supported": 1623,
+    "metadata_only": 30
+  },
+  "limits": [
+    "Three normative captures are reused, not appended as new unique sources.",
+    "No source generation, benchmark or product test was performed."
+  ]
+}

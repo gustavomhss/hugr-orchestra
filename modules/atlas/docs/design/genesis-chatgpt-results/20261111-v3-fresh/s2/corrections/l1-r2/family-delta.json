@@ -1,0 +1,22 @@
+{
+  "schema": "genesis-s2-l1-family-delta/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "unit": "app-session",
+  "family_id": "mcp-skills",
+  "updates": {
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/mcp-actions.ts",
+      "packages/app-shell/src/orchestra/chapters/skills.tsx",
+      ".orchestra/skills/hugr-composer-maintenance/SKILL.md",
+      "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+      "packages/protocol/src/groups/skill.ts",
+      "packages/server/src/handlers/skill.ts"
+    ],
+    "source_implications": "MCP actions deduplicate per-name pending calls; auth waits own abort controllers. Directly inspected Skills code decodes the whole unknown catalog array, requires name/location/content strings and declares optional nullable description/mtime/internal fields; malformed input fails the load. The page scopes warm data by server/directory, distinguishes unavailable/error/empty, and applies visibility/source/access helpers before rendering. Save/remove orchestration and the dialog's path/mtime payload, busy state and disposed-result handling are inspected, as are the pinned skill API declarations and handler error/delegation boundary.",
+    "consumer_implications": "Chapters configure server-provided capabilities; the Composer integration is an external MCP declaration. The Skills editor consumes catalog content and uses file location, not display name, for existing-file writes and saved-file matching. UI access classes expose project edits only for the inspected allowed roots and keep global, builtin, Atlas-governed and fixed entries read-only in the normal dialog.",
+    "maintenance_implications": "Preserve cancellation and name-safe maps; do not classify repository maintainer skills as runtime configuration. Changes to catalog shape/content affect the decoder and editor together. Preserve the server/directory cache identity, path/mtime edit mapping and explicit governed-root distinction. Lexical UI access classification and suppression of late UI results do not substitute for server filesystem enforcement or cancellation of an already sent write.",
+    "limits": "The Skills decoder, catalog visibility/access helpers, page save/remove orchestration, dialog payload and protocol/handler boundary are directly inspected from exact pinned captures. The underlying SkillV2/SkillFile filesystem implementation, Skill.SaveInput schema internals, filesystem path/symlink enforcement, concurrent-write behavior and actual UI/network outcomes were not established. MCP source/edit leaves remain family-supported. No product tests or writes ran, and these selected reads do not establish exhaustive branch or leaf coverage."
+  },
+  "reconciliation_note": "No family ID, membership, population or count is changed here. The principal recalculates evidence_depth_counts from the existing entries after promoting skills-data.ts and skills-dialog.tsx: inspected 4 and family-supported 10; path_count remains 14. All three test entries retain their original unexecuted disposition."
+}

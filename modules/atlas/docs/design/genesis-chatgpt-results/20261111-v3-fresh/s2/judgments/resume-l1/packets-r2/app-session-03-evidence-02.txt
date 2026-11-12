@@ -1,0 +1,311 @@
+ 128 |   if (!input.current() || input.signal.aborted) return false
+ 129 |   const management = input.management
+ 130 |   if (!management.waitSubagentModels) throw new SessionManagementUnsupported()
+ 131 |   const join = () => waitForSubmission(management.waitSubagentModels!(input.sessionID), input.signal).catch((cause: unknown) => {
+ 132 |     if (!input.retry || input.retry.cause !== cause || input.retry.version === undefined ||
+ 133 |       management.subagentModelsWriteVersion?.(input.sessionID) !== input.retry.version ||
+ 134 |       !input.current() || input.signal.aborted) throw cause
+ 135 |   })
+ 136 |   while (input.current() && !input.signal.aborted) {
+ 137 |     await join()
+ 138 |     if (!input.current() || input.signal.aborted) return false
+ 139 |     const expected = input.expected?.()
+ 140 |     if (!expected) return true
+ 141 |     if (!management.subagentModelsWriteVersion) throw new SessionManagementUnsupported()
+ 142 |     const version = management.subagentModelsWriteVersion(input.sessionID)
+ 143 |     const canonical = await waitForSubmission(management.readSubagentModels(input.sessionID), input.signal)
+ 144 |     await join()
+ 145 |     if (!input.current() || input.signal.aborted) return false
+ 146 |     if (management.subagentModelsWriteVersion(input.sessionID) !== version) continue
+ 147 |     if (!sameModelPolicy(canonical.policy, expected)) throw new Error(input.failedMessage)
+ 148 |     return true
+ 149 |   }
+ 150 |   return false
+ 151 | }
+```
+
+## E10 — Ambiguous first-send cleanup
+
+Dispatched attempts retain session/message identity; only confirmed empty, never-dispatched session can be deleted.
+
+Source: `packages/app-shell/src/components/prompt-input/submit.ts`. Git blob: `71747d3fc9f907ed5376ccee834e2f0dbec5af9a`.
+
+Lines 455–476:
+
+```text
+ 455 |     // A first send that fails leaves the Session this draft created behind, empty, in the sidebar. The draft itself
+ 456 |     // (text, context, subagent models, worktree) stays as it was for the next try.
+ 457 |     // Once the prompt was dispatched, the Session is kept and labelled: the server may have admitted it before the
+ 458 |     // failure (an admitted input is not a message until it is promoted), so the retry must reuse this Session and
+ 459 |     // message ID. Only a send that never left (its policy write failed) deletes a Session the server confirms empty.
+ 460 |     const settleEmptySession = async (dispatched: boolean) => {
+ 461 |       const created = admission.session
+ 462 |       if (!isNewSession || !created || admission.request?.admitted) return
+ 463 |       const empty = await sessionHasNoMessages(server, created.id, sessionDirectory).catch(() => undefined)
+ 464 |       if (empty === false) return
+ 465 |       const removed = !dispatched && empty === true &&
+ 466 |         (await api.remove({ sessionID: created.id, directory: sessionDirectory }).then(() => true, () => false))
+ 467 |       if (!removed) return seed(serverState, sessionDirectory, { ...created, title: language.t("orchestra.chat.send.emptySession") })
+ 468 |       const [, setStore] = serverState.child(sessionDirectory)
+ 469 |       setStore("session", (list: Session[]) => list.filter((item) => item.id !== created.id))
+ 470 |       // The next try creates a new Session, so nothing tied to the deleted one may carry over.
+ 471 |       admission.session = undefined
+ 472 |       admission.request = undefined
+ 473 |       admission.policyWritten = undefined
+ 474 |       admission.acknowledgedPolicy = undefined
+ 475 |       admission.failedWrite = undefined
+ 476 |     }
+```
+
+## E11 — Admission and draft handoff
+
+Final dispatch checks ownership/policy; promotion requires admitted state and preserves edits made in flight.
+
+Source: `packages/app-shell/src/components/prompt-input/submit.ts`. Git blob: `71747d3fc9f907ed5376ccee834e2f0dbec5af9a`.
+
+Lines 530–540:
+
+```text
+ 530 |         if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
+ 531 |         if (!ownsSource() || controller.signal.aborted) return false
+ 532 |         if (pendingSnapshot(rulesKey).revision !== receipt.revision) continue
+ 533 |         const request = selectRequest()
+ 534 |         if (!request.admitted) {
+ 535 |           request.revision = receipt.revision
+ 536 |           // Store observers can change ownership or policy; validate again after those mutations, at the API call.
+ 537 |           const sent = await send(request, () => ownsSource() && !controller.signal.aborted && pendingSnapshot(rulesKey).revision === receipt.revision)
+ 538 |           if (sent === false) continue
+ 539 |           request.admitted = true
+ 540 |         }
+```
+
+Lines 545–575:
+
+```text
+ 545 |     const promote = async () => {
+ 546 |       if (!isNewSession || !admission.request?.admitted || admission.promoted || !ownsSource()) return
+ 547 |       // Subagent models picked while the prompt was in flight are acknowledged on its Session before the handoff.
+ 548 |       if (pendingSnapshot(rulesKey).revision !== admission.request.revision) await waitPolicy()
+ 549 |       await startTransition(() => {
+ 550 |         if (!ownsSource() || controller.signal.aborted || admission.promoted) return
+ 551 |         const request = admission.request
+ 552 |         if (!request?.admitted || request.revision === undefined) return
+ 553 |         // An admitted prompt always hands the draft off to its Session, so Enter on the draft can never post it again.
+ 554 |         // Edits made during the send (text, context, model, agent) move into the Session composer unsent.
+ 555 |         clearPending(rulesKey, receipt.revision ?? request.revision)
+ 556 |         const selectedModel = modelSelection.current()
+ 557 |         const selectedAgent = local.agent.current()
+ 558 |         const next = prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id })
+ 559 |         handoffAdmission(next, draftSessionKey(directorySDK.scope, sessionDirectory), sourceAdmission(target, rulesKey).source)
+ 560 |         batch(() => {
+ 561 |           admission.promoted = true
+ 562 |           submission.retarget(next)
+ 563 |           submission.clear("comments")
+ 564 |           input.setMode("normal")
+ 565 |           input.setPopover(null)
+ 566 |           input.onNewSessionWorktreeReset?.()
+ 567 |           input.onSubmit?.()
+ 568 |           local.session.promote(sessionDirectory, session.id, selectedModel && selectedAgent ? {
+ 569 |             agent: agentKey(selectedAgent),
+ 570 |             model: { modelID: selectedModel.id, providerID: selectedModel.provider.id },
+ 571 |             variant: modelSelection.variant.current() ?? null,
+ 572 |           } : { agent, model, variant: variant ?? null })
+ 573 |           layout.handoff.setTabs(base64Encode(sessionDirectory), session.id)
+ 574 |           if (draftID && draftServer) tabs.promoteDraft(draftID, { server: draftServer, sessionId: session.id })
+ 575 |           if (!draftID) navigate(`/${base64Encode(sessionDirectory)}/session/${session.id}`)
+```
+
+## E12 — Wire admission receipt
+
+Schema explicitly distinguishes admitted and optional promoted sequence.
+
+Source: `packages/schema/src/session-input.ts`. Git blob: `b024750506e151e7f14f559f979e5c52d46e3833`.
+
+Lines 15–25:
+
+```text
+  15 | export interface Admitted extends Schema.Schema.Type<typeof Admitted> {}
+  16 | export const Admitted = Schema.Struct({
+  17 |   admittedSeq: NonNegativeInt,
+  18 |   id: SessionMessage.ID,
+  19 |   sessionID: SessionID,
+  20 |   prompt: Prompt,
+  21 |   promptContext: PromptContext.Info.pipe(optional),
+  22 |   delivery: Delivery,
+  23 |   timeCreated: DateTimeUtcFromMillis,
+  24 |   promotedSeq: NonNegativeInt.pipe(optional),
+  25 | }).annotate({ identifier: "SessionInput.Admitted" })
+```
+
+## E13 — Protocol prompt endpoint
+
+Protocol declares receipt result and separately describes scheduling execution.
+
+Source: `packages/protocol/src/groups/session.ts`. Git blob: `5830f50001c8dc01227a920f04276054c0e29570`.
+
+Lines 333–351:
+
+```text
+ 333 |       HttpApiEndpoint.post("session.prompt", "/api/session/:sessionID/prompt", {
+ 334 |         params: { sessionID: Session.ID },
+ 335 |         payload: Schema.Struct({
+ 336 |           id: SessionMessage.ID.pipe(Schema.optional),
+ 337 |           prompt: PromptInput.Prompt,
+ 338 |           delivery: SessionInput.Delivery.pipe(Schema.optional),
+ 339 |           resume: Schema.Boolean.pipe(Schema.optional),
+ 340 |         }),
+ 341 |         success: Schema.Struct({ data: SessionInput.Admitted }),
+ 342 |         error: [ConflictError, SessionNotFoundError],
+ 343 |       })
+ 344 |         .middleware(sessionLocationMiddleware)
+ 345 |         .annotateMerge(
+ 346 |           OpenApi.annotations({
+ 347 |             identifier: "v2.session.prompt",
+ 348 |             summary: "Send message",
+ 349 |             description: "Durably admit one session input and schedule agent-loop execution unless resume is false.",
+ 350 |           }),
+ 351 |         ),
+```
+
+## E14 — Server admission delegation
+
+Prompt handler forwards supplied ID, prompt, delivery and resume to its admission helper.
+
+Source: `packages/server/src/handlers/session.ts`. Git blob: `1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb`.
+
+Lines 246–258:
+
+```text
+ 246 |       .handle(
+ 247 |         "session.prompt",
+ 248 |         Effect.fn(function* (ctx) {
+ 249 |           return {
+ 250 |             data: yield* admit({
+ 251 |               sessionID: ctx.params.sessionID,
+ 252 |               id: ctx.payload.id,
+ 253 |               prompt: ctx.payload.prompt,
+ 254 |               delivery: ctx.payload.delivery,
+ 255 |               resume: ctx.payload.resume,
+ 256 |             }),
+ 257 |           }
+ 258 |         }),
+```
+
+## E15 — Core admission and retry equivalence
+
+Existing ID requires equivalent session/prompt/delivery; admitted result requires durable event and projected record. Projection comparison has additional context/time fields.
+
+Source: `packages/core/src/session/input.ts`. Git blob: `d945b00cf43d03b923cc90d51970d47e2dd3a9c2`.
+
+Lines 48–94:
+
+```text
+  48 | export const admit = Effect.fn("SessionInput.admit")(function* (
+  49 |   db: DatabaseService,
+  50 |   events: EventV2.Interface,
+  51 |   input: {
+  52 |     readonly id: SessionMessage.ID
+  53 |     readonly sessionID: SessionSchema.ID
+  54 |     readonly prompt: Prompt
+  55 |     readonly promptContext?: PromptContext.Info
+  56 |     readonly delivery: Delivery
+  57 |   },
+  58 | ) {
+  59 |   const existing = yield* find(db, input.id)
+  60 |   if (existing !== undefined) {
+  61 |     if (!equivalent(existing, input)) return yield* Effect.die(new LifecycleConflict({ id: input.id }))
+  62 |     return existing
+  63 |   }
+  64 |   const historical = yield* reconcileHistorical(db, input)
+  65 |   if (historical !== undefined) return historical
+  66 |   const timestamp = yield* DateTime.now
+  67 |   return yield* events
+  68 |     .publish(SessionEvent.PromptAdmitted, {
+  69 |       messageID: input.id,
+  70 |       sessionID: input.sessionID,
+  71 |       timestamp,
+  72 |       prompt: input.prompt,
+  73 |       promptContext: input.promptContext,
+  74 |       delivery: input.delivery,
+  75 |     })
+  76 |     .pipe(
+  77 |       Effect.flatMap((event) =>
+  78 |         event.durable === undefined
+  79 |           ? Effect.die("Prompt admission event is missing aggregate sequence")
+  80 |           : find(db, input.id).pipe(
+  81 |               Effect.flatMap((stored) =>
+  82 |                 stored === undefined ? Effect.die("Prompt admission projection is missing") : Effect.succeed(stored),
+  83 |               ),
+  84 |             ),
+  85 |       ),
+  86 |       Effect.catchDefect((defect) =>
+  87 |         find(db, input.id).pipe(
+  88 |           Effect.flatMap((stored) =>
+  89 |             stored && equivalent(stored, input) ? Effect.succeed(stored) : Effect.die(defect),
+  90 |           ),
+  91 |         ),
+  92 |       ),
+  93 |     )
+  94 | })
+```
+
+Lines 291–316:
+
+```text
+ 291 | export const equivalent = (
+ 292 |   input: Admitted,
+ 293 |   expected: {
+ 294 |     readonly sessionID: SessionSchema.ID
+ 295 |     readonly prompt: Prompt
+ 296 |     readonly delivery: Delivery
+ 297 |   },
+ 298 | ) => input.delivery === expected.delivery && matchesPrompt(input, expected)
+ 299 | 
+ 300 | const matchesPrompt = (input: Admitted, expected: { readonly sessionID: SessionSchema.ID; readonly prompt: Prompt }) =>
+ 301 |   input.sessionID === expected.sessionID &&
+ 302 |   JSON.stringify(encodePrompt(input.prompt)) === JSON.stringify(encodePrompt(expected.prompt))
+ 303 | 
+ 304 | const matchesProjection = (
+ 305 |   input: Admitted,
+ 306 |   expected: {
+ 307 |     readonly sessionID: SessionSchema.ID
+ 308 |     readonly prompt: Prompt
+ 309 |     readonly promptContext?: PromptContext.Info
+ 310 |     readonly delivery: Delivery
+ 311 |     readonly timeCreated: DateTime.Utc
+ 312 |   },
+ 313 | ) =>
+ 314 |   equivalent(input, expected) &&
+ 315 |   JSON.stringify(input.promptContext) === JSON.stringify(expected.promptContext) &&
+ 316 |   DateTime.toEpochMillis(input.timeCreated) === DateTime.toEpochMillis(expected.timeCreated)
+```
+
+## E16 — Remount-stable submission state
+
+Admission source is a WeakMap-backed store; draft-to-session handoff shares busy state but resets selection map.
+
+Source: `packages/app-shell/src/components/prompt-input/submission-admission.ts`. Git blob: `a4b90f8c61949a012c37dae7ab3dd2d3b75f65fb`.
+
+Lines 21–45:
+
+```text
+  21 | type AdmissionSource = {
+  22 |   state: { busy: boolean }
+  23 |   setBusy: (busy: boolean) => void
+  24 |   selections: Map<string, Admission>
+  25 | }
+  26 | 
+  27 | const admissions = new WeakMap<object, Map<string, AdmissionSource>>()
+  28 | 
+  29 | // The store exists before the composer first reads busy, and survives a draft owner remount.
+  30 | export function sourceAdmission(target: object, key: string) {
+  31 |   const scoped = admissions.get(target) ?? new Map<string, AdmissionSource>()
+  32 |   admissions.set(target, scoped)
+  33 |   const previous = scoped.get(key)
+  34 |   if (previous) return { key, scoped, source: previous }
+  35 |   const [state, setState] = createStore({ busy: false })
+  36 |   const source = { state, setBusy: (busy: boolean) => setState("busy", busy), selections: new Map<string, Admission>() }
+  37 |   scoped.set(key, source)
+  38 |   return { key, scoped, source }
+  39 | }
+  40 | 

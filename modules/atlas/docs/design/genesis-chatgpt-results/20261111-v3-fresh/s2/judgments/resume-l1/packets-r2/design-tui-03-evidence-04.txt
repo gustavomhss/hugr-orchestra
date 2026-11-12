@@ -1,0 +1,260 @@
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Struct({ id: SessionMessage.ID }) }),
+        error: [SessionNotFoundError, ConflictError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.synthetic",
+            summary: "Add synthetic context",
+            description: "Record text as synthetic context, then run a turn unless resume is false.",
+```
+
+Exact lines 550–582:
+
+```ts
+      HttpApiEndpoint.post("session.revert.stage", "/api/session/:sessionID/revert/stage", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ messageID: SessionMessage.ID, files: Schema.Boolean.pipe(Schema.optional) }),
+        success: Schema.Struct({ data: Revert.State }),
+        error: [MessageNotFoundError, SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.revert.stage",
+            summary: "Stage session revert",
+            description: "Stage or move a reversible session boundary and optionally apply its file changes.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.revert.clear", "/api/session/:sessionID/revert/clear", {
+        params: { sessionID: Session.ID },
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(OpenApi.annotations({ identifier: "v2.session.revert.clear", summary: "Clear staged revert" })),
+    )
+    .add(
+      HttpApiEndpoint.post("session.revert.commit", "/api/session/:sessionID/revert/commit", {
+        params: { sessionID: Session.ID },
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({ identifier: "v2.session.revert.commit", summary: "Commit staged revert" }),
+```
+
+Exact lines 655–665:
+
+```ts
+      HttpApiEndpoint.post("session.interrupt", "/api/session/:sessionID/interrupt", {
+        params: { sessionID: Session.ID },
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.interrupt",
+            summary: "Interrupt session execution",
+            description: "Interrupt active execution owned by this Orchestra process. Idle interruption is a no-op.",
+```
+
+## tui-permission-protocol
+
+Both IDs, reply payload, optional message and declared missing-session/request errors.
+
+Source: `packages/protocol/src/groups/permission.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `a34d8726146a5cdc1b989b583a4943290584d34b`; SHA-256 `9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab`.
+
+Exact lines 119–134:
+
+```ts
+      HttpApiEndpoint.post("session.permission.reply", "/api/session/:sessionID/permission/:requestID/reply", {
+        params: { sessionID: Session.ID, requestID: Permission.ID },
+        payload: Schema.Struct({
+          reply: Permission.Reply,
+          message: Schema.String.pipe(Schema.optional),
+        }),
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, PermissionNotFoundError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.permission.reply",
+            summary: "Reply to pending permission request",
+            description: "Respond to a pending permission request owned by a session.",
+          }),
+```
+
+## tui-request-assertions
+
+Real-client/replaced-transport assertions for paths, bodies and order; read only, never run.
+
+Source: `packages/tui/test/context/session-actions.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `9d22d47f255e6a1c73a1ce2bfe40ce87c467a27a`; SHA-256 `48423aa811be59b328fc29d306cca600f8aa9aaa91a96e1e53b832cb59e39e42`.
+
+Exact lines 5–27:
+
+```ts
+// The real client builds every request; only the transport is replaced, to record what it sends.
+function recorder() {
+  const calls: { method: string; path: string; body: unknown }[] = []
+  const fetch = Object.assign(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init)
+      calls.push({
+        method: request.method,
+        path: new URL(request.url).pathname,
+        body: request.body ? await request.json() : undefined,
+      })
+      if (request.url.endsWith("/compact")) return Response.json({ data: { compacted: true } })
+      if (request.url.endsWith("/prompt") || request.url.endsWith("/synthetic"))
+        return Response.json({ data: { id: "msg_1" } })
+      if (request.method === "POST" && request.url.endsWith("/api/session"))
+        return Response.json({ data: { id: "ses_new" } })
+      return request.url.endsWith("/revert/stage") || request.url.endsWith("/command")
+        ? Response.json({ data: {} })
+        : new Response(null, { status: 204 })
+    },
+    { preconnect: globalThis.fetch.preconnect },
+  )
+  return { calls, actions: createSessionActions(Orchestra.make({ baseUrl: "http://localhost:1", fetch })) }
+```
+
+Exact lines 30–62:
+
+```ts
+test("interrupt, compact, shell, revert and unrevert hit the V2 session routes", async () => {
+  const { calls, actions } = recorder()
+  await actions.interrupt("ses_1")
+  await actions.compact("ses_1")
+  await actions.shell({ sessionID: "ses_1", command: "ls" })
+  await actions.revert({ sessionID: "ses_1", messageID: "msg_1" })
+  await actions.unrevert("ses_1")
+  expect(calls).toEqual([
+    { method: "POST", path: "/api/session/ses_1/interrupt", body: undefined },
+    { method: "POST", path: "/api/session/ses_1/compact", body: undefined },
+    { method: "POST", path: "/api/session/ses_1/shell", body: { command: "ls" } },
+    { method: "POST", path: "/api/session/ses_1/revert/stage", body: { messageID: "msg_1", files: true } },
+    { method: "POST", path: "/api/session/ses_1/revert/clear", body: undefined },
+  ])
+})
+
+test("command selects the agent and model, then maps file parts to V2 files", async () => {
+  const { calls, actions } = recorder()
+  await actions.command({
+    sessionID: "ses_1",
+    command: "review",
+    arguments: "src",
+    agent: "build",
+    model: { providerID: "p", modelID: "m", variant: "high" },
+    files: [{ url: "file:///a.ts", filename: "a.ts", source: undefined }],
+  })
+  expect(calls.map((call) => call.path)).toEqual([
+    "/api/session/ses_1/agent",
+    "/api/session/ses_1/model",
+    "/api/session/ses_1/command",
+  ])
+  expect(calls[1].body).toEqual({ model: { providerID: "p", id: "m", variant: "high" } })
+  expect(calls[2].body).toEqual({ command: "review", arguments: "src", files: [{ uri: "file:///a.ts", name: "a.ts" }] })
+```
+
+Exact lines 65–85:
+
+```ts
+test("create places the Session in the given directory with the chosen agent and model", async () => {
+  const { calls, actions } = recorder()
+  await actions.create({
+    agent: "build",
+    model: { providerID: "p", modelID: "m" },
+    directory: "/repo/app",
+    workspaceID: "ws_1",
+  })
+  await actions.create({ agent: "build", model: { providerID: "p", modelID: "m" } })
+  expect(calls).toEqual([
+    {
+      method: "POST",
+      path: "/api/session",
+      body: {
+        agent: "build",
+        model: { providerID: "p", id: "m" },
+        location: { directory: "/repo/app", workspaceID: "ws_1" },
+      },
+    },
+    { method: "POST", path: "/api/session", body: { agent: "build", model: { providerID: "p", id: "m" } } },
+  ])
+```
+
+Exact lines 88–149:
+
+```ts
+test("prompt selects agent and model, admits editor context without waking, then sends the prompt", async () => {
+  const { calls, actions } = recorder()
+  await actions.prompt({
+    sessionID: "ses_1",
+    text: "fix @a.ts with @review",
+    context: "selection: line 3",
+    agent: "build",
+    model: { providerID: "p", modelID: "m", variant: "high" },
+    files: [
+      {
+        url: "file:///a.ts",
+        filename: "a.ts",
+        source: { type: "file", path: "a.ts", text: { start: 4, end: 9, value: "@a.ts" } },
+      },
+    ],
+    agents: [{ name: "review", source: { start: 15, end: 22, value: "@review" } }],
+  })
+  expect(calls).toEqual([
+    { method: "POST", path: "/api/session/ses_1/agent", body: { agent: "build" } },
+    {
+      method: "POST",
+      path: "/api/session/ses_1/model",
+      body: { model: { providerID: "p", id: "m", variant: "high" } },
+    },
+    { method: "POST", path: "/api/session/ses_1/synthetic", body: { text: "selection: line 3", resume: false } },
+    {
+      method: "POST",
+      path: "/api/session/ses_1/prompt",
+      body: {
+        prompt: {
+          text: "fix @a.ts with @review",
+          files: [{ uri: "file:///a.ts", name: "a.ts", source: { start: 4, end: 9, text: "@a.ts" } }],
+          agents: [{ name: "review", source: { start: 15, end: 22, text: "@review" } }],
+        },
+      },
+    },
+  ])
+})
+
+test("prompt without editor context sends no synthetic input", async () => {
+  const { calls, actions } = recorder()
+  await actions.prompt({
+    sessionID: "ses_1",
+    text: "hi",
+    agent: "build",
+    model: { providerID: "p", modelID: "m" },
+    files: [],
+    agents: [],
+  })
+  expect(calls.map((call) => call.path)).toEqual([
+    "/api/session/ses_1/agent",
+    "/api/session/ses_1/model",
+    "/api/session/ses_1/prompt",
+  ])
+})
+
+test("reply answers the permission request on the V2 route", async () => {
+  const { calls, actions } = recorder()
+  await actions.reply({ sessionID: "ses_1", requestID: "per_1", reply: "once" })
+  expect(calls).toEqual([
+    { method: "POST", path: "/api/session/ses_1/permission/per_1/reply", body: { reply: "once" } },
+  ])
+```
+
+END DECISIVE SOURCE EVIDENCE design-tui

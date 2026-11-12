@@ -1,0 +1,65 @@
+{
+  "schema": "genesis-s2-independent-decision-bindings/v1",
+  "layer": 1,
+  "scope": "Semantic artifact decisions only; all actual original responses remain referenced and unchanged.",
+  "reviews": [
+    {
+      "judge": "/root/s2_resume_j1",
+      "artifacts": [
+        {
+          "key": "s2.l1.desktop-web",
+          "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/resume-l1/desktop-design-r2-j1.json",
+          "response_sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8"
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/resume-l1/desktop-design-r2-j1.json",
+          "response_sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/resume-l1/app-session-r3-j1.json",
+          "response_sha256": "7507d5d7b5a893750f7a341e930bfae5af9be4d1d08482d8bfdf41a0f3321e2e"
+        }
+      ]
+    },
+    {
+      "judge": "/root/s2_resume_j2",
+      "artifacts": [
+        {
+          "key": "s2.l1.desktop-web",
+          "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/resume-l1/desktop-design-r2-j2.md",
+          "response_sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0"
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/resume-l1/desktop-design-r2-j2.md",
+          "response_sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/resume-l1/app-session-r3-j2.json",
+          "response_sha256": "89e853a37f7001fd37cc612217d330db8e8a18a3497de48ccb56b2c178f3c0f4"
+        }
+      ]
+    }
+  ]
+}

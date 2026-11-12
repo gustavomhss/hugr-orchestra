@@ -1,0 +1,339 @@
+BEGIN DECISIVE SOURCE EVIDENCE app-session
+# Decisive evidence — app-session L1
+
+Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Protocol pin: `ee2521a5b966bd505cc95bd1c733e09e12f33531`. These are exact captured source lines with a line-number prefix added. Discontinuous intervals use separate blocks. Code, comments and test assertions retain their original evidentiary status; no tests or product code were executed. `sources.json` gives complete SHA-256, byte lengths and original connector-response locations.
+
+This packet concentrates on decisive lifecycle and boundary claims. Family breadth, limits and all 1,887 entry dispositions are in `l1.md` and `coverage.json`; an excerpt is not a whole-file audit.
+
+## E01 — Executable UI boundary policy
+
+UI allows explicit browserSafe platform exports; this is narrower than an unrestricted Core import.
+
+Source: `script/module-architecture.json`. Git blob: `c189ab9762c33d19c72f2a9ffa683c0985d09448`.
+
+Lines 15–17:
+
+```text
+  15 |     "ui": ["foundation", "contract", "client", "ui", "platform:browserSafe"],
+  16 |     "terminal-ui": ["foundation", "contract", "client", "extension-api", "library", "platform", "ui"],
+  17 |     "app": ["foundation", "native", "contract", "client", "extension-api", "library", "tooling", "module", "platform", "product", "composition", "ui", "terminal-ui"]
+```
+
+Lines 194–201:
+
+```text
+ 194 |     "core": {
+ 195 |       "layer": "platform",
+ 196 |       "status": "canonical",
+ 197 |       "owner": "core platform maintainer",
+ 198 |       "summary": "Reusable platform and domain services for the application and server layers, including the V2 Session core.",
+ 199 |       "exportsPolicy": "demanded",
+ 200 |       "sourceWildcards": {"./*": "./src/*.ts"},
+ 201 |       "browserSafe": ["src/util/path.ts", "src/util/encode.ts", "src/util/binary.ts", "src/util/retry.ts", "src/util/task-tool.ts", "src/util/array.ts"],
+```
+
+## E02 — Server context credential lifetime
+
+A stable server key does not keep a context alive after credential identity changes.
+
+Source: `packages/app-shell/src/context/global.tsx`. Git blob: `13386451ef1a4350a9dda37af92a76b93b92f54d`.
+
+Lines 68–107:
+
+```text
+  68 | // Tab/project identity stays stable; transport credentials belong to a disposable context lifetime.
+  69 | export function createServerContextCache<T>(
+  70 |   servers: Accessor<ServerConnection.Any[]>,
+  71 |   create: (conn: ServerConnection.Any) => T,
+  72 | ) {
+  73 |   const owner = getOwner()
+  74 |   const contexts = new Map<ServerConnection.Key, { identity: string; dispose: () => void; value: T }>()
+  75 |   const ensure = (input: ServerConnection.Any) => {
+  76 |     const key = ServerConnection.key(input)
+  77 |     // Callers may still hold a previous connection object after editing the same server.
+  78 |     const conn = servers().find((item) => ServerConnection.key(item) === key) ?? input
+  79 |     const identity = JSON.stringify([
+  80 |       conn.type,
+  81 |       conn.http.url,
+  82 |       conn.http.username,
+  83 |       conn.http.password,
+  84 |       conn.type === "http" && conn.authToken,
+  85 |     ])
+  86 |     const existing = contexts.get(key)
+  87 |     if (existing?.identity === identity) return existing.value
+  88 |     existing?.dispose()
+  89 |     const root = createRoot(
+  90 |       (dispose) => ({
+  91 |         identity,
+  92 |         dispose,
+  93 |         value: create({ ...conn, http: { ...conn.http } }),
+  94 |       }),
+  95 |       owner,
+  96 |     )
+  97 |     contexts.set(key, root)
+  98 |     return root.value
+  99 |   }
+ 100 |   createEffect(() => {
+ 101 |     const list = servers()
+ 102 |     list.forEach(ensure)
+ 103 |     contexts.forEach((context, key) => {
+ 104 |       if (list.some((conn) => ServerConnection.key(conn) === key)) return
+ 105 |       context.dispose()
+ 106 |       contexts.delete(key)
+ 107 |     })
+```
+
+## E03 — Workspace identity and providers
+
+Server/directory workspace identity is separate from the currently viewed session.
+
+Source: `packages/app-shell/src/pages/session.tsx`. Git blob: `9ab69e4f6c572d1f96932c6cef2979f69ffae63b`.
+
+Lines 229–239:
+
+```text
+ 229 | // Owns the workspace-identity remount. Must not include the session ID in the
+ 230 | // key: SessionPage handles session changes reactively, and remounting here
+ 231 | // destroys workspace-scoped state (terminal PTYs, file/prompt providers).
+ 232 | function TargetSessionPage() {
+ 233 |   const sdk = useSDK()
+ 234 |   const serverSDK = useServerSDK()
+ 235 |   return (
+ 236 |     <Show when={`${serverSDK().scope}\0${sdk().directory}`} keyed>
+ 237 |       <SessionPage />
+ 238 |     </Show>
+ 239 |   )
+```
+
+Lines 264–272:
+
+```text
+ 264 | function SessionProviders(props: ParentProps) {
+ 265 |   return (
+ 266 |     <TerminalProvider>
+ 267 |       <FileProvider>
+ 268 |         <PromptProvider>
+ 269 |           <CommentsProvider>{props.children}</CommentsProvider>
+ 270 |         </PromptProvider>
+ 271 |       </FileProvider>
+ 272 |     </TerminalProvider>
+```
+
+## E04 — Permanent asynchronous owner departure
+
+Generation captures do not revive after an A→B→A value change.
+
+Source: `packages/app-shell/src/components/prompt-input/submission-policy.ts`. Git blob: `5a07c61c5c0e73836c59856d3db7ae2ac64478ed`.
+
+Lines 23–43:
+
+```text
+  23 | export function createSubmissionOwner<T extends Record<string, unknown>>(read: () => T) {
+  24 |   const identity = createMemo(read, undefined, {
+  25 |     equals: (left, right) => !!left && Object.keys(right).every((key) => left[key] === right[key]),
+  26 |   })
+  27 |   const state = { generation: 0, disposed: false, handoff: undefined as ((next: T) => boolean) | undefined }
+  28 |   createComputed(() => {
+  29 |     const next = identity()
+  30 |     if (!state.handoff?.(next)) state.generation++
+  31 |     state.handoff = undefined
+  32 |   })
+  33 |   onCleanup(() => { state.disposed = true; state.generation++; state.handoff = undefined })
+  34 |   return {
+  35 |     capture() {
+  36 |       const generation = state.generation
+  37 |       return {
+  38 |         current: () => !state.disposed && state.generation === generation,
+  39 |         handoff: (accept?: (next: T) => boolean) => { state.handoff = accept },
+  40 |       }
+  41 |     },
+  42 |     disposed: () => state.disposed,
+  43 |   }
+```
+
+## E05 — Adjacent delta coalescing
+
+Only adjacent events with equal directory and delta identity combine.
+
+Source: `packages/app-shell/src/context/server-sdk.tsx`. Git blob: `8163d68ab02ddbc65e968be3f20f8742bb1e1397`.
+
+Lines 86–119:
+
+```text
+  86 | export function coalesceServerEvents(events: QueuedServerEvent[]) {
+  87 |   const output: QueuedServerEvent[] = []
+  88 |   events.forEach((event) => {
+  89 |     const current = currentDelta(event.payload.current)
+  90 |     if (current) {
+  91 |       const previous = output[output.length - 1]
+  92 |       const prior = currentDelta(previous?.payload.current)
+  93 |       if (
+  94 |         previous &&
+  95 |         prior &&
+  96 |         previous.directory === event.directory &&
+  97 |         currentDeltaKey(prior) === currentDeltaKey(current)
+  98 |       ) {
+  99 |         const fragment = currentDeltaFragment(prior) + currentDeltaFragment(current)
+ 100 |         const data =
+ 101 |           current.type === "session.compaction.delta"
+ 102 |             ? { ...current.data, text: fragment }
+ 103 |             : { ...current.data, delta: fragment }
+ 104 |         output[output.length - 1] = {
+ 105 |           directory: event.directory,
+ 106 |           payload: {
+ 107 |             ...event.payload,
+ 108 |             properties: data,
+ 109 |             current: { ...current, data } as CurrentDelta,
+ 110 |           } as ServerEvent,
+ 111 |         }
+ 112 |         return
+ 113 |       }
+ 114 |       output.push(event)
+ 115 |       return
+ 116 |     }
+ 117 |     output.push(event)
+ 118 |   })
+ 119 |   return output
+```
+
+## E06 — SSE subscription and heartbeat
+
+Bounded subscription precedes connected; heartbeat is a comment frame. This does not prove durable replay.
+
+Source: `packages/server/src/handlers/event.ts`. Git blob: `d644f36bdd6aa93cd538f560dab63337c2436022`.
+
+Lines 13–20:
+
+```text
+  13 | export const eventFrames = (encode: (data: unknown) => string = encodeEvent) => {
+  14 |   const frames = new WeakMap<object, string>()
+  15 |   return (data: object): Sse.Event => {
+  16 |     const cached = frames.get(data)
+  17 |     const json = cached ?? encode(data)
+  18 |     if (cached === undefined) frames.set(data, json)
+  19 |     return { _tag: "Event", event: "message", id: undefined, data: json }
+  20 |   }
+```
+
+Lines 26–43:
+
+```text
+  26 | export const subscriberCapacity = 4096
+  27 | 
+  28 | export const eventStream = (events: EventV2.Interface, frame = eventFrames()) => {
+  29 |   const connected = {
+  30 |     id: EventV2.ID.create(),
+  31 |     type: "server.connected",
+  32 |     data: {},
+  33 |   }
+  34 |   const output = Stream.unwrap(
+  35 |     Effect.gen(function* () {
+  36 |       // Acquiring the bounded stream installs its listener before readiness is observable.
+  37 |       const live = yield* EventV2.allBounded(events, subscriberCapacity)
+  38 |       return Stream.make(connected).pipe(Stream.concat(live))
+  39 |     }),
+  40 |   ).pipe(Stream.map(frame), Stream.pipeThroughChannel(Sse.encode()))
+  41 |   // A comment frame keeps idle connections open and tells the client the server is alive.
+  42 |   const heartbeat = Stream.tick("15 seconds").pipe(Stream.map(() => ": heartbeat\n\n"))
+  43 |   return output.pipe(Stream.merge(heartbeat, { haltStrategy: "left" }), Stream.encodeText)
+```
+
+## E07 — Recovery read fencing
+
+Superseded generation rejects; an intervening policy change repeats the read; local receipt differs from durable revision.
+
+Source: `packages/app-shell/src/context/session-recovery.ts`. Git blob: `1ea5ce6efe88b2625edfd17562011c738833fe68`.
+
+Lines 39–64:
+
+```text
+  39 |   const resolve = (sessionID: string, options?: { force?: boolean }, floor?: SessionManagementInfo): Promise<AppSession> => {
+  40 |     const cached = input.read(sessionID)
+  41 |     if (cached && !options?.force) return Promise.resolve(cached)
+  42 |     const pending = input.requests.get(sessionID)
+  43 |     if (pending) return pending
+  44 |     const active = generation(sessionID)
+  45 |     const state = { policyGeneration: {}, policy: floor ?? fences.get(sessionID) ?? cached }
+  46 |     const request = (): Promise<AppSession> => {
+  47 |       const policyGeneration = state.policyGeneration
+  48 |       return input.request(sessionID).then((result) => {
+  49 |         if (input.generations.get(sessionID) !== active) throw new DOMException("Session recovery superseded", "AbortError")
+  50 |         if (state.policyGeneration !== policyGeneration) return request()
+  51 |         const observed = mergeSessionManagementInfo(state.policy,
+  52 |           mergeSessionManagementInfo(fences.get(sessionID), input.read(sessionID) ?? result))
+  53 |         // Compatibility SDK snapshots carry no canonical V2 policy provenance.
+  54 |         if (input.source === "snapshot") return input.retain(mergeSessionManagementInfo(observed, result))
+  55 |         local.receipt = Math.max(local.receipt, observed.subagentModelsReadReceipt ?? 0) + 1
+  56 |         return input.retain({
+  57 |           ...result,
+  58 |           subagentModelsChangedAt: observed.subagentModelsChangedAt,
+  59 |           subagentModelsRevision: observed.subagentModelsRevision,
+  60 |           subagentModelsReadReceipt: local.receipt,
+  61 |         })
+  62 |       }, (error: unknown) => {
+  63 |         if (input.generations.get(sessionID) === active && state.policyGeneration !== policyGeneration) return request()
+  64 |         throw error
+```
+
+## E08 — Admission is not transcript promotion
+
+Admitted input is pending; promotion materializes a message and missing context is explicit.
+
+Source: `packages/app-shell/src/context/server-session-v2-reducer.ts`. Git blob: `98d7cec6721eeff58802fd688a57504550bb5750`.
+
+Lines 16–47:
+
+```text
+  16 | export function createV2SessionReducer() {
+  17 |   const pending = new Map<string, SessionPendingMessage>()
+  18 | 
+  19 |   const reduce = (source: readonly SessionMessageInfo[], event: ServerCurrentEvent): V2SessionReduction | undefined => {
+  20 |     if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
+  21 |     const sessionID = event.data.sessionID
+  22 |     const result = (messages: SessionMessageInfo[], touched: string[] = []): V2SessionReduction => ({
+  23 |       sessionID,
+  24 |       messages,
+  25 |       touched,
+  26 |     })
+  27 |     const append = (message: SessionMessageInfo) =>
+  28 |       result(source.some((item) => item.id === message.id) ? [...source] : [...source, message], [message.id])
+  29 | 
+  30 |     switch (event.type) {
+  31 |       case "session.input.admitted":
+  32 |         pending.set(key(sessionID, event.data.inputID), event.data.input)
+  33 |         return result([...source])
+  34 |       case "session.input.promoted": {
+  35 |         const input = pending.get(key(sessionID, event.data.inputID))
+  36 |         pending.delete(key(sessionID, event.data.inputID))
+  37 |         if (!input) return { ...result([...source]), missing: event.data.inputID }
+  38 |         if (input.type === "user")
+  39 |           return append({
+  40 |             id: event.data.inputID,
+  41 |             type: "user",
+  42 |             metadata: input.data.metadata,
+  43 |             text: input.data.text,
+  44 |             files: input.data.files,
+  45 |             agents: input.data.agents,
+  46 |             time: { created: event.created },
+  47 |           })
+```
+
+## E09 — Policy barrier
+
+Canonical read must span a stable serialized-write generation.
+
+Source: `packages/app-shell/src/components/prompt-input/submission-policy.ts`. Git blob: `5a07c61c5c0e73836c59856d3db7ae2ac64478ed`.
+
+Lines 118–151:
+
+```text
+ 118 | /** A canonical response is ready only across a stable per-Session SET generation. */
+ 119 | export async function waitForSubagentPolicy(input: {
+ 120 |   sessionID: string
+ 121 |   management: SubmissionManagement
+ 122 |   current: () => boolean
+ 123 |   signal: AbortSignal
+ 124 |   expected?: () => SubagentModelPolicy | undefined
+ 125 |   failedMessage?: string
+ 126 |   retry?: FailedPolicyWrite
+ 127 | }) {

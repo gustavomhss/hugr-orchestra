@@ -1,0 +1,102 @@
+{
+  "state": "VERIFIED_NOT_EXECUTED",
+  "recorded_at": "2026-11-11T20:48:51.091162+00:00",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "stage_plan": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/stage-plan.json",
+    "sha256": "095cb57bc9cb5178f3168d069a257b8ef962572dba2a1e8f631aa74e186e0f70",
+    "byte_length": 3236643
+  },
+  "seal": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/sealed.json",
+    "sha256": "91a5952071ebae63490476dddcb8718662e93ace2e4fb9fd6b811283fbbdced9",
+    "byte_length": 624
+  },
+  "canonical_package": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/native-package.json",
+    "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+    "byte_length": 332594
+  },
+  "runtime_materialization": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-materialization.json",
+    "sha256": "9ba791b332abab7bba4b6949aedce9363a13dbb87ab3a4aa58ad485b695bea60",
+    "byte_length": 188462
+  },
+  "dependency_materialization": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/dependency-materialization.json",
+    "sha256": "973e1414bdc71833420da907e15c1183bc0d452de70f8f7044b7f850cfc29e20",
+    "byte_length": 1598078
+  },
+  "prior_build": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/build-receipt-initial.json",
+    "sha256": "cf284f3645bf605be0500716db346e55cb9241374b7b1ecd9042d4cecb5a1022",
+    "byte_length": 5240
+  },
+  "bun": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "sha256": "9fd36f87e4b90b07632b987a2e4ec81ca15a62c81bf983190cea6d715be2ad74",
+    "byte_length": 92752752
+  },
+  "staged_files_verified": 1542,
+  "original_files_verified": 641,
+  "native_source_files_verified": 406,
+  "dependency_files_verified": 6287,
+  "known_oversized_inputs": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json",
+      "sha256": "3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6",
+      "byte_length": 369462,
+      "origin": "deliverable/inputs/app-session-tree.json",
+      "roles": [
+        "runtime-input",
+        "transitive-payload-reference",
+        "transitive-input_file"
+      ],
+      "git_blob_sha": null
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/design-tui-tree.json",
+      "sha256": "371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9",
+      "byte_length": 390775,
+      "origin": "deliverable/inputs/design-tui-tree.json",
+      "roles": [
+        "runtime-input",
+        "transitive-payload-reference",
+        "transitive-input_file"
+      ],
+      "git_blob_sha": null
+    },
+    {
+      "path": "schema/tui.json",
+      "sha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+      "byte_length": 1131057,
+      "origin": "producers/design-tui/sources/schema/tui.json",
+      "roles": [
+        "runtime-source",
+        "runtime-input",
+        "transitive-source-reference",
+        "source-capture-alias"
+      ],
+      "git_blob_sha": "9250e2ec0c6e433ade0d5a172e8156087022f217"
+    }
+  ],
+  "runtime_compatibility": "HOLD_KNOWN_INPUT_LIMIT",
+  "argv": [
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+  "prepare_executed": false,
+  "limits": [
+    "This verifies recorded bytes, not provenance beyond the retained receipts.",
+    "Known cap incompatibility is preserved; no source is omitted or truncated.",
+    "No product tests or new version command execute during preflight."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "s2-r2-app-desktop-transport-completion/v1",
+  "actor": "/root/s2_transport",
+  "source_manifest_sha256": "c3e213b9013d1dfdcf88024e48775c509589a038438c7d49dfbb76a2fd42a754",
+  "counts": {
+    "app_session_parts_each_recipient": 18,
+    "desktop_delta_parts_each_recipient": 1,
+    "recipients": 2,
+    "scoped_unique_source_parts": 19,
+    "send_message_calls": 22,
+    "logical_local_source_bytes_each_recipient": 248456,
+    "app_local_source_bytes": 230189
+  },
+  "all_scoped_local_hashes_and_sizes_match": true,
+  "pending_parts": [],
+  "known_corrections": [
+    {
+      "target": "/root/s2_resume_j2",
+      "file": "app-session-02-body-03.txt",
+      "error": "extra period after inspected in Assets paragraph",
+      "correction": "explicit invalidation plus full part retransmission"
+    },
+    {
+      "target": "/root/s2_resume_j1",
+      "file": "app-session-03-evidence-02.txt",
+      "error": "duplicated Context in expected.promptContext at line 315",
+      "correction": "explicit invalidation plus full part retransmission"
+    }
+  ],
+  "response_observation_gap": {
+    "sequence": 12,
+    "target": "/root/s2_resume_j2",
+    "files": [
+      "app-session-03-evidence-02.txt",
+      "app-session-03-evidence-03.txt"
+    ],
+    "visible_response": "Output exceeded the available model context and was truncated",
+    "scope": "Full literal request was issued; response truncation does not establish delivered-body truncation or recipient read."
+  },
+  "limitations": [
+    "Request text recorded from the visible literal calls and frozen files; not a host-exported byte transcript.",
+    "Empty send_message responses show no visible error but expose neither host internal delivered bytes nor recipient read confirmation.",
+    "External local-file SHA256 values validate packet files only; no end-to-end transport byte equality is asserted."
+  ],
+  "seal_or_activation_performed": false
+}

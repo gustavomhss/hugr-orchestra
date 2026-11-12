@@ -1,0 +1,370 @@
+    expect(pluralCategory(locale, count)).toBe(expected)
+```
+
+### S12 — `packages/ui/src/context/dialog.tsx`
+
+Detached show versus caller-owned showOwned dialog lifetime.
+
+Exact capture lines 247–260:
+
+```tsx
+    // A closed dialog stays on the stack until its exit animation ends, but it no longer owns the keyboard.
+    get open() {
+      return ctx.stack().some((item) => !item.closing())
+    },
+    show(element: DialogElement, onClose?: () => void) {
+      const base = ctx.stack().at(-1)?.owner ?? owner
+      return startTransition(() => ctx.show(element, base, onClose))
+    },
+    // Dialog roots are detached. Opt in to the calling owner's lifetime, never the active stack owner.
+    showOwned(element: DialogElement, onClose?: () => void) {
+      return startTransition(() => {
+        if (owned.disposed) return
+        owned.id = ctx.show(element, owner, onClose)
+      })
+```
+
+### S13 — `packages/ui/src/context/worker-pool.tsx`
+
+Context forwards injected unified/split workers; it does not create or dispose them.
+
+Exact capture lines 6–20:
+
+```tsx
+  split: WorkerPoolManager | undefined
+}
+
+const ctx = createSimpleContext<WorkerPools, { pools: WorkerPools }>({
+  name: "WorkerPool",
+  init: (props) => props.pools,
+})
+
+export const WorkerPoolProvider = ctx.provider
+
+export function useWorkerPool(diffStyle: "unified" | "split" | undefined) {
+  const pools = ctx.use()
+  if (diffStyle === "split") return pools.split
+  return pools.unified
+}
+```
+
+### S14 — `packages/ui/src/context/i18n.tsx`
+
+layoutLocale fallback for the UI locale provider; independent layout/content contract.
+
+Exact capture lines 64–68:
+
+```tsx
+function UiI18nProvider(props: ParentProps<{ value: UiI18n }>) {
+  return (
+    <I18nProvider locale={(props.value.layoutLocale ?? props.value.locale)()}>
+      <Context.Provider value={props.value}>{props.children}</Context.Provider>
+    </I18nProvider>
+```
+
+### S15 — `packages/ui/src/theme/loader.ts`
+
+External theme fetch uses response.json without a runtime schema decoder at this boundary.
+
+Exact capture lines 78–84:
+
+```typescript
+export async function loadThemeFromUrl(url: string): Promise<DesktopTheme> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to load theme from ${url}: ${response.statusText}`)
+  }
+  return response.json()
+}
+```
+
+### S16 — `packages/ui/src/theme/context.tsx`
+
+Provider guards stale previews and supports commit/cancel; those mechanisms do not validate the separate URL loader.
+
+Exact capture lines 337–350:
+
+```tsx
+      previewTheme: (id: string) => {
+        const next = normalize(id)
+        if (!next) return
+        if (next !== "oc-2" && !knownThemes().has(next) && !store.themes[next]) return
+        setStore("previewThemeId", next)
+        void load(next).then((theme) => {
+          if (!theme || store.previewThemeId !== next) return
+          const mode = store.previewScheme
+            ? store.previewScheme === "system"
+              ? getSystemMode()
+              : store.previewScheme
+            : store.mode
+          applyTheme(theme, next, mode, store.previewScheme ?? store.colorScheme)
+        })
+```
+
+Exact capture lines 363–379:
+
+```tsx
+      commitPreview: () => {
+        if (store.previewThemeId) {
+          setTheme(store.previewThemeId)
+        }
+        if (store.previewScheme) {
+          setColorScheme(store.previewScheme)
+        }
+        setStore("previewThemeId", null)
+        setStore("previewScheme", null)
+      },
+      cancelPreview: () => {
+        setStore("previewThemeId", null)
+        setStore("previewScheme", null)
+        void load(store.themeId).then((theme) => {
+          if (!theme) return
+          applyTheme(theme, store.themeId, store.mode, store.colorScheme)
+        })
+```
+
+### S17 — `apps/cli/script/schema-files.ts`
+
+Config/TUI schema generation versus handwritten desktop-theme schema byte mirroring.
+
+Exact capture lines 68–80:
+
+```typescript
+export const configSchemaFile = path.resolve(import.meta.dir, "../../../schema/config.json")
+export const tuiSchemaFile = path.resolve(import.meta.dir, "../../../schema/tui.json")
+export const themeSchemaFile = path.resolve(import.meta.dir, "../../../schema/theme.json")
+export const themeSchemaSource = path.resolve(import.meta.dir, "../../../packages/ui/src/theme/desktop-theme.schema.json")
+
+export const configSchemaText = () => JSON.stringify(generateEffect(Config.Info), null, 2)
+export const tuiSchemaText = () => JSON.stringify(generateEffect(TuiConfig.Info), null, 2)
+
+// schema/ is what editors fetch through the $schema URLs; the theme schema is hand-written in packages/ui and mirrored verbatim.
+if (import.meta.main) {
+  await Bun.write(configSchemaFile, configSchemaText())
+  await Bun.write(tuiSchemaFile, tuiSchemaText())
+  await Bun.write(themeSchemaFile, Bun.file(themeSchemaSource))
+```
+
+### S18 — `packages/ui/script/tailwind.ts`
+
+colors.txt token input and generated Tailwind CSS output ownership.
+
+Exact capture lines 3–23:
+
+```typescript
+const colors = await Bun.file(import.meta.dir + "/colors.txt").text()
+
+const variables = []
+for (const line of colors.split("\n")) {
+  if (!line.trim()) continue
+  const [variable] = line.trim().split(":")
+  const name = variable!.trim().substring(2)
+  variables.push(`--color-${name}: var(--${name});`)
+}
+
+const output = `
+/* Generated by script/tailwind.ts */
+/* Do not edit this file manually */
+
+@theme {
+  --color-*: initial;
+  ${variables.join("\n  ")}
+}
+`
+
+await Bun.file(import.meta.dir + "/../src/styles/tailwind/colors.css").write(output.trim())
+```
+
+### S19 — `packages/ui/script/build-oc2-v2-overrides.ts`
+
+OC-2 v2Overrides-only update and explicit exclusions for font/fixed-avatar foreground tokens.
+
+Exact capture lines 6–19:
+
+```typescript
+const themePath = import.meta.dir + "/../src/theme/themes/oc-2.json"
+const theme = (await Bun.file(themePath).json()) as DesktopTheme
+const css = await Bun.file(import.meta.dir + "/../src/v2/styles/theme.css").text()
+
+const light = { ...V2_PRIMITIVES_DEFAULT, ...readTokens("light") }
+const dark = { ...V2_PRIMITIVES_DEFAULT, ...readTokens("dark") }
+
+const next: DesktopTheme = {
+  ...theme,
+  light: { ...theme.light, v2Overrides: light },
+  dark: { ...theme.dark, v2Overrides: dark },
+}
+
+await Bun.write(themePath, JSON.stringify(next, null, 2) + "\n")
+```
+
+Exact capture lines 22–29:
+
+```typescript
+function readTokens(mode: "light" | "dark") {
+  const selector = mode === "light" ? ":root" : `\\[data-color-scheme="${mode}"\\]`
+  const block = css.match(new RegExp(`${selector} \\{([\\s\\S]*?)\\n  \\}`))?.[1]
+  if (!block) throw new Error(`Missing ${mode} OC-2 tokens`)
+  return Object.fromEntries(
+    [...block.matchAll(/--(v2-[\w-]+):\s*([^;]+);/g)]
+      // Fonts and the fixed avatar foreground remain global CSS rather than theme overrides.
+      .filter(([, key]) => key !== "v2-avatar-fg" && key !== "v2-font-family-sans")
+```
+
+### S20 — `packages/ui/vite.config.ts`
+
+Paired sprite/type generation and external provider-logo refresh boundary.
+
+Exact capture lines 10–24:
+
+```typescript
+    iconsSpritesheet([
+      {
+        withTypes: true,
+        inputDir: "src/assets/icons/file-types",
+        outputDir: "src/components/file-icons",
+        formatter: "prettier",
+      },
+      {
+        withTypes: true,
+        inputDir: "src/assets/icons/provider",
+        outputDir: "src/components/provider-icons",
+        formatter: "prettier",
+        iconNameTransformer: (iconName) => iconName,
+      },
+    ]),
+```
+
+Exact capture lines 47–58:
+
+```typescript
+async function fetchProviderIcons() {
+  const url = process.env.ORCHESTRA_MODELS_URL || "https://models.dev"
+  const providers = await fetch(`${url}/api.json`)
+    .then((res) => res.json())
+    .then((json) => Object.keys(json))
+  await Promise.all(
+    providers.map((provider) =>
+      fetch(`${url}/logos/${provider}.svg`)
+        .then((res) => res.text())
+        .then((svg) => fs.writeFileSync(`./src/assets/icons/provider/${provider}.svg`, svg)),
+    ),
+  )
+```
+
+### S21 — `apps/storybook/.storybook/preview.tsx`
+
+Storybook accessibility configuration remains todo; no accessibility run claimed.
+
+Exact capture lines 108–110:
+
+```tsx
+    a11y: {
+      test: "todo",
+    },
+```
+
+### S22 — `apps/storybook/.storybook/playground-css-plugin.ts`
+
+Playground applies edits to source CSS; verification must inspect resulting source mutation.
+
+Exact capture lines 116–122:
+
+```typescript
+            try {
+              const content = fs.readFileSync(abs, "utf-8")
+              const applied = applyEdits(content, edits)
+              results.push(...applied.results)
+
+              if (applied.results.some((r) => r.ok)) {
+                fs.writeFileSync(abs, applied.content, "utf-8")
+```
+
+## Preserved limits and unexecuted routes
+
+The design/TUI family accounting remains inherited accepted evidence: 185 inspected, 1,889 family-supported and 13 metadata-only paths across 67 families. This L3 introduces no new population classification. The metadata-only license, app sprite/type and unmatched README image paths remain outside semantic/visual provenance claims. Native platform behavior, assets/fonts/audio, translation quality, accessibility and actual providers remain unexecuted or otherwise bounded by the accepted predecessor. Historical plans, design intent and fixture data are not runtime authority.
+
+Known limits relevant to these handoffs remain explicit: no atomic selection/context/prompt transaction or stable-ID retry control in the TUI wrapper; input clearing before acceptance; history failure represented as an empty result; local history distinct from admission; injected worker ownership; detached versus caller-owned dialogs; generic parsing distinct from consumer sanitization; TUI English-only copy; DOM-order arrow handling; separate terminal/desktop theme models; unchecked external theme JSON; partial OC-2 generation; external-logo refresh; mock Storybook boundaries and a11y todo; source-mutating playground; unresolved app sprite provenance and README visual equivalence. The host startup English discrepancy and separate Live locale path are inherited through an actual desktop-web build edge.
+
+Verification columns describe work a future authorized maintainer must perform at the corresponding boundary. Product tests are prescribed through GitHub Actions by root AGENTS; app session/timeline changes additionally require production benchmark comparison. This turn ran only artifact/source byte verification and Markdown/JSON structural checks. It ran no product tests locally or remotely, no regeneration, no benchmark, no application, no provider call and no remote asset refresh. No semantic self-verdict or reviewer acceptance is recorded here.
+
+
+## Exact dependency rationale
+```json
+{
+  "unit": "s2.l3.design-tui",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "build": [
+    "s2.l2.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.desktop-web"
+  ],
+  "navigation": [
+    "s2.l3.app-session",
+    "s2.l3.desktop-web"
+  ],
+  "rationale": {
+    "build": {
+      "s2.l2.design-tui": {
+        "path": "deliverable/layers/l2/design-tui/body.md",
+        "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+        "sections": [
+          "Orientation",
+          "Terminal lifetime and synchronized navigation",
+          "V2 actions and prompt admission",
+          "Terminal configuration, persistence and extensions",
+          "Terminal display, native integrations and simulation",
+          "Browser UI ownership, lifecycle and accessibility",
+          "Localization, direction and two theme systems",
+          "Generated products and asset provenance",
+          "Storybook, design intent and verification limits"
+        ],
+        "reason": "Factual foundation for terminal selection/context/admission ordering, input and projection timing, local persistence, permission ownership, caller/worker/dialog lifetime, language and theme boundaries, generation ownership and inherited evidence limits.",
+        "byte_length": 21535
+      },
+      "s2.l2.app-session": {
+        "path": "deliverable/layers/l2/app-session/body.md",
+        "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+        "sections": [
+          "Composition, identity and asynchronous ownership",
+          "Durable admission, optimistic state and draft storage",
+          "Transport, liveness and canonical recovery",
+          "Permission requests and terminal boundaries",
+          "Shared rendering, files and evidence interpretation",
+          "Visual resources and prescribed maintenance"
+        ],
+        "reason": "Actual cross-unit factual use: browser first-send and ambiguous-outcome ownership, exact retry reconciliation and admission/promotion distinction, reconnect/canonical recovery, request ownership, consumer Markdown sanitization, app language/native-copy integration and separate palette generation. These browser mechanisms are explicitly not imported as TUI guarantees.",
+        "byte_length": 24434
+      },
+      "s2.l2.desktop-web": {
+        "path": "deliverable/layers/l2/desktop-web/body.md",
+        "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+        "sections": [
+          "Orientation and ownership",
+          "Live separates readiness, capture and delivery",
+          "Host adapters own platform differences and copy"
+        ],
+        "reason": "Actual cross-unit factual use: native host ownership and the limits of app language propagation, including the hardcoded-English startup failure and the Live overlay’s separate system-language copy path. This is not merely a navigation edge.",
+        "byte_length": 18440
+      }
+    },
+    "navigation": {
+      "s2.l3.app-session": "Optional consultation for the peer integrated browser first-send, request, routing, stream and settings journey; no peer L3 body was consumed as evidence.",
+      "s2.l3.desktop-web": "Optional consultation for the peer startup, recovery, trust and host journey; no peer L3 body was consumed as evidence."
+    }
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    }
+  ],
+  "manifest_path_base": "deliverable/",
+  "lineage_note": "The L1 manifest was consumed as the dispatched lineage pin. Factual build edges are the three accepted L2 bodies actually read and used; no direct L1 body or pending L3 body is an additional build dependency."
+}
+
+```

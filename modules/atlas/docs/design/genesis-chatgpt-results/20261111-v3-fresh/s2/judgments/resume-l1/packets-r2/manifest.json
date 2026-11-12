@@ -1,0 +1,304 @@
+{
+  "schema": "genesis-review-packet-parts/v1",
+  "stage": "L1",
+  "revision": 2,
+  "units": [
+    "app-session",
+    "design-tui"
+  ],
+  "parts": [
+    {
+      "file": "app-session-01-header-01.txt",
+      "unit": "app-session",
+      "section": "01-header",
+      "part": 1,
+      "parts": 2,
+      "byte_length": 14478,
+      "sha256": "9bf43353e5d4a654d7ffc69826570b66465c5775fd2a2f49d8b7090a8f3d7515"
+    },
+    {
+      "file": "app-session-01-header-02.txt",
+      "unit": "app-session",
+      "section": "01-header",
+      "part": 2,
+      "parts": 2,
+      "byte_length": 2275,
+      "sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33"
+    },
+    {
+      "file": "app-session-02-body-01.txt",
+      "unit": "app-session",
+      "section": "02-body",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14281,
+      "sha256": "67f90bdb8914710771604a60e71969c88f1cf5a8872a61ff5cd2348da02f106c"
+    },
+    {
+      "file": "app-session-02-body-02.txt",
+      "unit": "app-session",
+      "section": "02-body",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 14129,
+      "sha256": "f8ab38814fdb9c067e416101b887c8a125c6ca340fe0c294314a0a09a5989c9b"
+    },
+    {
+      "file": "app-session-02-body-03.txt",
+      "unit": "app-session",
+      "section": "02-body",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 11739,
+      "sha256": "9f11263a4e7dac6ca3ef1c26d6abd506555859009c4314bd218d23a59f860f54"
+    },
+    {
+      "file": "app-session-03-evidence-01.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 1,
+      "parts": 7,
+      "byte_length": 14494,
+      "sha256": "333caafbe619d2270d41f724a1463eefb31162df28a6e96d1450070124f0b027"
+    },
+    {
+      "file": "app-session-03-evidence-02.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 2,
+      "parts": 7,
+      "byte_length": 14456,
+      "sha256": "163b1a935cf6b6832b47d03afc82472133cd7f66521c9fb2e1a807a7f4841a3f"
+    },
+    {
+      "file": "app-session-03-evidence-03.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 3,
+      "parts": 7,
+      "byte_length": 14483,
+      "sha256": "6d71b6db387cd9b9f4abdbc246e9692cea85d65fbe4e3993ed5d068912d72006"
+    },
+    {
+      "file": "app-session-03-evidence-04.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 4,
+      "parts": 7,
+      "byte_length": 14496,
+      "sha256": "f723bb1c5da6f7d50da97ea1b5e5947e86aa3b54476912a37419e2a3c0cb868f"
+    },
+    {
+      "file": "app-session-03-evidence-05.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 5,
+      "parts": 7,
+      "byte_length": 14460,
+      "sha256": "af7bfe5f0909992b9b1f073bf5e5f5eece78f234e8b9d81c6221a12dac4de3e4"
+    },
+    {
+      "file": "app-session-03-evidence-06.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 6,
+      "parts": 7,
+      "byte_length": 14484,
+      "sha256": "8283f8a84f20567a2c502cb7a0d8e0350ee1976544d21c4aac060c942473ea2d"
+    },
+    {
+      "file": "app-session-03-evidence-07.txt",
+      "unit": "app-session",
+      "section": "03-evidence",
+      "part": 7,
+      "parts": 7,
+      "byte_length": 5193,
+      "sha256": "317b8bba291710b195fa741c949b6ef8ac555040e3c085f76ed941a9b7b735e5"
+    },
+    {
+      "file": "app-session-04-families-01.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 1,
+      "parts": 6,
+      "byte_length": 14499,
+      "sha256": "00d476ccd7df9a21547996659d027001bd1625a437427101bb04eade0def3758"
+    },
+    {
+      "file": "app-session-04-families-02.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 2,
+      "parts": 6,
+      "byte_length": 14422,
+      "sha256": "531e2316d7ee6d815cab7150271883410fd8f76813e93b72a43146e7301f7f65"
+    },
+    {
+      "file": "app-session-04-families-03.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 3,
+      "parts": 6,
+      "byte_length": 14459,
+      "sha256": "dc8c480dfaaea0faea79a00bfab65b5bc8a689ece9de4c8c28e2595559723fb8"
+    },
+    {
+      "file": "app-session-04-families-04.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 4,
+      "parts": 6,
+      "byte_length": 14464,
+      "sha256": "f59025a6f237f04d0a32d51d69652629d402e3f4186fa5e577211b4700f2406c"
+    },
+    {
+      "file": "app-session-04-families-05.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 5,
+      "parts": 6,
+      "byte_length": 14352,
+      "sha256": "e57dab724217222ab5336c82104b4995770dcd7475fc4c777a941449aa65508a"
+    },
+    {
+      "file": "app-session-04-families-06.txt",
+      "unit": "app-session",
+      "section": "04-families",
+      "part": 6,
+      "parts": 6,
+      "byte_length": 9025,
+      "sha256": "5f86d835a576c4348d6ca9ad197a57a2a2b22a5f7ead87267dd597a5a13fab0a"
+    },
+    {
+      "file": "design-tui-01-header-01.txt",
+      "unit": "design-tui",
+      "section": "01-header",
+      "part": 1,
+      "parts": 2,
+      "byte_length": 14475,
+      "sha256": "77f00f78de2fecebcab258fdfc0aed24259c5a040f45bbdb79bc0e840f7615ad"
+    },
+    {
+      "file": "design-tui-01-header-02.txt",
+      "unit": "design-tui",
+      "section": "01-header",
+      "part": 2,
+      "parts": 2,
+      "byte_length": 2275,
+      "sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33"
+    },
+    {
+      "file": "design-tui-02-body-01.txt",
+      "unit": "design-tui",
+      "section": "02-body",
+      "part": 1,
+      "parts": 3,
+      "byte_length": 14141,
+      "sha256": "dc23fec729214f82d944a9b60f04ff00e57e80f235167c55d800d52fb6471a0f"
+    },
+    {
+      "file": "design-tui-02-body-02.txt",
+      "unit": "design-tui",
+      "section": "02-body",
+      "part": 2,
+      "parts": 3,
+      "byte_length": 13742,
+      "sha256": "fdce4d6d47fdb9bcc3c865aa4ea2fe0d8ffa88370937aa8cf014a2ed0252f008"
+    },
+    {
+      "file": "design-tui-02-body-03.txt",
+      "unit": "design-tui",
+      "section": "02-body",
+      "part": 3,
+      "parts": 3,
+      "byte_length": 9147,
+      "sha256": "bc1cff0d82af8675d3af53453119cc9ed64216ab9d715808e1a73f50ed177deb"
+    },
+    {
+      "file": "design-tui-03-evidence-01.txt",
+      "unit": "design-tui",
+      "section": "03-evidence",
+      "part": 1,
+      "parts": 4,
+      "byte_length": 14492,
+      "sha256": "17e3a669295632e5ee5caa4ff8ed4c7657e09ed396e4fde1c3cc154895a4bf8f"
+    },
+    {
+      "file": "design-tui-03-evidence-02.txt",
+      "unit": "design-tui",
+      "section": "03-evidence",
+      "part": 2,
+      "parts": 4,
+      "byte_length": 14456,
+      "sha256": "d06d3538d8c082a5515d04c2f34329e606e588edef433e410a380c56181f4c89"
+    },
+    {
+      "file": "design-tui-03-evidence-03.txt",
+      "unit": "design-tui",
+      "section": "03-evidence",
+      "part": 3,
+      "parts": 4,
+      "byte_length": 14466,
+      "sha256": "a6900e2ec87f55952e99eb47d52369dd6f4907971e3202be525acc4bdbbb8d69"
+    },
+    {
+      "file": "design-tui-03-evidence-04.txt",
+      "unit": "design-tui",
+      "section": "03-evidence",
+      "part": 4,
+      "parts": 4,
+      "byte_length": 10032,
+      "sha256": "48085e74b1f875128889836f57491d2220f28e80e6a080945883865fc455c04a"
+    },
+    {
+      "file": "design-tui-04-families-01.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 1,
+      "parts": 5,
+      "byte_length": 14492,
+      "sha256": "a3884712271cf76214915b7209c9c4331beacd4d3d4bcd909df3488a3b69bd54"
+    },
+    {
+      "file": "design-tui-04-families-02.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 2,
+      "parts": 5,
+      "byte_length": 14497,
+      "sha256": "af8424dfe3a103f6b96c066b0e9e937824315f6c971fde41c76fa60620a351d8"
+    },
+    {
+      "file": "design-tui-04-families-03.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 3,
+      "parts": 5,
+      "byte_length": 14395,
+      "sha256": "ae87b932af263d78f3752a5c918600f7b61a833084f623d4b0025a8cb8894676"
+    },
+    {
+      "file": "design-tui-04-families-04.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 4,
+      "parts": 5,
+      "byte_length": 14459,
+      "sha256": "ad1c7ba7f3eac99beb92266b182f895640a29304086a4afceb60bf357668bf56"
+    },
+    {
+      "file": "design-tui-04-families-05.txt",
+      "unit": "design-tui",
+      "section": "04-families",
+      "part": 5,
+      "parts": 5,
+      "byte_length": 13213,
+      "sha256": "1618415ab46a8b02055aa43a1b7586209e12e96abc6f1287594b29ed77785e74"
+    }
+  ],
+  "desktop_delta": {
+    "file": "desktop-web-r2-delta.txt",
+    "bytes": 18267,
+    "sha256": "9431999b33481a9bc731d30b848fa4be0be2929fcd1dcac2b57e0e76e6a06786"
+  }
+}

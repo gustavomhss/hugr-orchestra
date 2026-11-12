@@ -1,0 +1,1020 @@
+{
+  "artifact_key": "s2.l2.app-session",
+  "inherited_coverage": {
+    "path": "producers/app-session/coverage.json",
+    "sha256": "c93eff70f252f2e7c4cb6f4676a0a193b2b64eccc7a836001033ce3656c34759",
+    "accepted_body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+  },
+  "meaning": "A mapping of accepted family dispositions to L2 explanations; no individual-file depth is upgraded.",
+  "family_count": 59,
+  "assigned_path_count": 1887,
+  "families": [
+    {
+      "family_id": "authority",
+      "family_title": "Package contracts and maintenance authority",
+      "inherited_path_count": 18,
+      "inherited_evidence_depth_counts": {
+        "metadata-only": 11,
+        "inspected": 7
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity"
+      ],
+      "preserved_family_limit": "Build/config siblings are accounted structurally; no build, typecheck, or boundary runner was executed."
+    },
+    {
+      "family_id": "history",
+      "family_title": "Historical migration and reactive-refactor proposals",
+      "inherited_path_count": 8,
+      "inherited_evidence_depth_counts": {
+        "inspected": 8
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity"
+      ],
+      "preserved_family_limit": "Historical completion and all original acceptance outputs are not verified."
+    },
+    {
+      "family_id": "skills",
+      "family_title": "Maintainer and onboarding skills",
+      "inherited_path_count": 5,
+      "inherited_evidence_depth_counts": {
+        "inspected": 5
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity"
+      ],
+      "preserved_family_limit": "External Composer repository/installability and full native-seat tool grants are outside inspected implementation."
+    },
+    {
+      "family_id": "guides",
+      "family_title": "User guides",
+      "inherited_path_count": 6,
+      "inherited_evidence_depth_counts": {
+        "inspected": 6
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity"
+      ],
+      "preserved_family_limit": "No walkthrough, installation, restart or remote mutation was performed."
+    },
+    {
+      "family_id": "bootstrap",
+      "family_title": "App composition, route entry and host contracts",
+      "inherited_path_count": 55,
+      "inherited_evidence_depth_counts": {
+        "inspected": 13,
+        "family-supported": 42
+      },
+      "body_sections": [
+        "Composition, identity and asynchronous ownership"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity"
+      ],
+      "preserved_family_limit": "Native main-process implementations, packed releases and platform runtime behavior are not verified."
+    },
+    {
+      "family_id": "transport",
+      "family_title": "Server identity, SDK, readiness and event transport",
+      "inherited_path_count": 27,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 16,
+        "inspected": 11
+      },
+      "body_sections": [
+        "Transport, liveness and canonical recovery"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Transport, stream health and canonical recovery"
+      ],
+      "preserved_family_limit": "Network scenarios and retained-stream behavior are source-level observations; not observed live. The Client dependency/generation rules are prescribed maintenance constraints; no generator, dependency checker or product code ran here."
+    },
+    {
+      "family_id": "sync",
+      "family_title": "Canonical session cache, projection and recovery",
+      "inherited_path_count": 42,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 31,
+        "inspected": 9,
+        "metadata-only": 2
+      },
+      "body_sections": [
+        "Transport, liveness and canonical recovery"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Transport, stream health and canonical recovery"
+      ],
+      "preserved_family_limit": "No proof of complete replay, cross-process ordering, exhaustive reducer coverage or runtime losslessness."
+    },
+    {
+      "family_id": "prompt",
+      "family_title": "Prompt composer, admission and attachment construction",
+      "inherited_path_count": 57,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 44,
+        "inspected": 11,
+        "metadata-only": 2
+      },
+      "body_sections": [
+        "Durable admission, optimistic state and draft storage"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Prompt admission and draft ownership"
+      ],
+      "preserved_family_limit": "Representative admission tests were read only. All attachment/history input variants are not individually traced."
+    },
+    {
+      "family_id": "persistence",
+      "family_title": "Prompt drafts, tabs, scopes and storage",
+      "inherited_path_count": 19,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 13,
+        "inspected": 6
+      },
+      "body_sections": [
+        "Durable admission, optimistic state and draft storage"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Prompt admission and draft ownership"
+      ],
+      "preserved_family_limit": "Browser quota, migration on real user stores and crash consistency were not exercised."
+    },
+    {
+      "family_id": "requests",
+      "family_title": "Permission, question and composer request ownership",
+      "inherited_path_count": 10,
+      "inherited_evidence_depth_counts": {
+        "inspected": 7,
+        "family-supported": 3
+      },
+      "body_sections": [
+        "Permission requests and terminal boundaries"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Requests, terminals and auxiliary lifetimes"
+      ],
+      "preserved_family_limit": "Backend authorization enforcement and all keyboard/accessibility flows are not established by these UI reads."
+    },
+    {
+      "family_id": "session-route",
+      "family_title": "Session route ownership and layout lifetime",
+      "inherited_path_count": 34,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 31,
+        "inspected": 3
+      },
+      "body_sections": [
+        "Composition, identity and asynchronous ownership"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity"
+      ],
+      "preserved_family_limit": "The large session page was inspected at owner/composition seams, not line-by-line across all layout affordances."
+    },
+    {
+      "family_id": "timeline",
+      "family_title": "App transcript projection, rows and navigation",
+      "inherited_path_count": 47,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 44,
+        "inspected": 2,
+        "metadata-only": 1
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "Scroll anchoring, virtualization geometry and every projection variant were not individually inspected or benchmarked."
+    },
+    {
+      "family_id": "files",
+      "family_title": "Files, review and comment integration",
+      "inherited_path_count": 39,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 36,
+        "inspected": 3
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "Full tree, media, selection and diff interaction implementations are only family-supported."
+    },
+    {
+      "family_id": "terminal",
+      "family_title": "Workspace terminals and PTY transport",
+      "inherited_path_count": 16,
+      "inherited_evidence_depth_counts": {
+        "metadata-only": 1,
+        "inspected": 6,
+        "family-supported": 9
+      },
+      "body_sections": [
+        "Permission requests and terminal boundaries"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Requests, terminals and auxiliary lifetimes"
+      ],
+      "preserved_family_limit": "No PTY process, websocket or slow-reader experiment was run. Mid-file cell/style conversion is not exhaustively reviewed; the xterm.js port header is provenance intent, not verified equivalence."
+    },
+    {
+      "family_id": "dock",
+      "family_title": "App Dock browser and Linux host integration",
+      "inherited_path_count": 13,
+      "inherited_evidence_depth_counts": {
+        "inspected": 3,
+        "family-supported": 10
+      },
+      "body_sections": [
+        "Host capabilities and auxiliary lifetimes"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Requests, terminals and auxiliary lifetimes"
+      ],
+      "preserved_family_limit": "Native browser/LXC/Electron behavior and all overlay/resizer races were not executed."
+    },
+    {
+      "family_id": "home",
+      "family_title": "Home, project selection and server navigation",
+      "inherited_path_count": 39,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 30,
+        "inspected": 8,
+        "metadata-only": 1
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Detailed KPI arithmetic, all Home controller branches and real provider account flows are not exhaustively traced."
+    },
+    {
+      "family_id": "commands",
+      "family_title": "Commands, shortcut catalog and shell navigation",
+      "inherited_path_count": 15,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 12,
+        "inspected": 3
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "No native-menu or keyboard interaction was run; every individual command is not reviewed."
+    },
+    {
+      "family_id": "settings",
+      "family_title": "Settings, model catalogs and provider selection",
+      "inherited_path_count": 66,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 56,
+        "inspected": 10
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Provider OAuth/credential storage, server-side trust effects and all model policy controls remain outside exhaustive review."
+    },
+    {
+      "family_id": "agents",
+      "family_title": "Agent screens, identity and avatars",
+      "inherited_path_count": 7,
+      "inherited_evidence_depth_counts": {
+        "inspected": 3,
+        "family-supported": 4
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Agent-file save/toolkit/skill-tree details are only family-supported; full native registry is outside this unit."
+    },
+    {
+      "family_id": "actions",
+      "family_title": "Actions chapter and native command receipts",
+      "inherited_path_count": 73,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 70,
+        "inspected": 3
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Individual views and all command outcomes are family-supported; host action execution is not inspected end-to-end."
+    },
+    {
+      "family_id": "relay",
+      "family_title": "Relay workflow and hook editing",
+      "inherited_path_count": 65,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 63,
+        "inspected": 2
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Compiler, publication authority and every editor/history branch are not reviewed."
+    },
+    {
+      "family_id": "atlas",
+      "family_title": "Atlas memory and review chapter",
+      "inherited_path_count": 87,
+      "inherited_evidence_depth_counts": {
+        "inspected": 2,
+        "family-supported": 85
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "The large visualization/sheet family is supported through controller/transport seams, not every UI action."
+    },
+    {
+      "family_id": "integrations",
+      "family_title": "Integration connection and binding management",
+      "inherited_path_count": 20,
+      "inherited_evidence_depth_counts": {
+        "inspected": 2,
+        "family-supported": 18
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "All connection providers, paging and mutation scenarios have not been individually traced or run."
+    },
+    {
+      "family_id": "lean",
+      "family_title": "Lean coverage dashboard",
+      "inherited_path_count": 8,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 7,
+        "inspected": 1
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Transport schema and all dashboard widgets are family-supported; no dashboard runtime was exercised."
+    },
+    {
+      "family_id": "board",
+      "family_title": "Board issue lanes and review decisions",
+      "inherited_path_count": 13,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 12,
+        "inspected": 1
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Board API/controller and complete mutation lifecycle were not inspected; this family is only model-supported."
+    },
+    {
+      "family_id": "guardrails",
+      "family_title": "Guardrail verdict model",
+      "inherited_path_count": 6,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 5,
+        "inspected": 1
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "All consumers of this family are not resolved; current route non-registration is the bounded observation."
+    },
+    {
+      "family_id": "schedule",
+      "family_title": "Scheduled tasks and migration",
+      "inherited_path_count": 10,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 8,
+        "inspected": 2
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Full device scheduler/claims and Core scheduling execution are not reviewed."
+    },
+    {
+      "family_id": "rag",
+      "family_title": "RAG Studio source and retrieval controls",
+      "inherited_path_count": 4,
+      "inherited_evidence_depth_counts": {
+        "inspected": 4
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Server retrieval quality, maintenance atomicity and error/late-response behavior are not established."
+    },
+    {
+      "family_id": "mcp-skills",
+      "family_title": "MCP and skill configuration screens",
+      "inherited_path_count": 14,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 10,
+        "inspected": 4
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers",
+        "Skills catalog, content and editing ownership"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition",
+        "Skills catalog, editing and ownership"
+      ],
+      "preserved_family_limit": "The Skills decoder, catalog visibility/access helpers, page save/remove orchestration, dialog payload and protocol/handler boundary are directly inspected from exact pinned captures. The underlying SkillV2/SkillFile filesystem implementation, Skill.SaveInput schema internals, filesystem path/symlink enforcement, concurrent-write behavior and actual UI/network outcomes were not established. MCP source/edit leaves remain family-supported. No product tests or writes ran, and these selected reads do not establish exhaustive branch or leaf coverage."
+    },
+    {
+      "family_id": "plugins",
+      "family_title": "Profile behavior plugins",
+      "inherited_path_count": 5,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 3,
+        "inspected": 2
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Underlying server application and every behavior storage branch are not traced."
+    },
+    {
+      "family_id": "workspace-tools",
+      "family_title": "Workspace naming, environment documents and legacy CI runner",
+      "inherited_path_count": 14,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 11,
+        "inspected": 3
+      },
+      "body_sections": [
+        "Navigation, settings and feature controllers"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Navigation, settings and feature-family disposition"
+      ],
+      "preserved_family_limit": "Workspace copy operations, env server writes and complete legacy CI reachability are not established."
+    },
+    {
+      "family_id": "live",
+      "family_title": "Flight Engineer live capture and meetings",
+      "inherited_path_count": 16,
+      "inherited_evidence_depth_counts": {
+        "inspected": 5,
+        "family-supported": 11
+      },
+      "body_sections": [
+        "Host capabilities and auxiliary lifetimes"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Requests, terminals and auxiliary lifetimes"
+      ],
+      "preserved_family_limit": "OS audio capture, secret storage, native consent enforcement and transcription execution are not verified."
+    },
+    {
+      "family_id": "wsl",
+      "family_title": "WSL host state",
+      "inherited_path_count": 7,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 6,
+        "inspected": 1
+      },
+      "body_sections": [
+        "Host capabilities and auxiliary lifetimes"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Requests, terminals and auxiliary lifetimes"
+      ],
+      "preserved_family_limit": "Install/probe actions and actual Windows/WSL host behavior are not reviewed."
+    },
+    {
+      "family_id": "cockpit",
+      "family_title": "Session evidence, governance, tasks and artifacts",
+      "inherited_path_count": 42,
+      "inherited_evidence_depth_counts": {
+        "inspected": 6,
+        "family-supported": 36
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "Parsers and every artifact controller state are not exhaustively audited; fixture logs are not app test results."
+    },
+    {
+      "family_id": "session-ui-contract",
+      "family_title": "Session UI view contracts and general components",
+      "inherited_path_count": 46,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 43,
+        "inspected": 3
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "Most specialized tool cards/styles are family-supported at entry seams, not individually inspected."
+    },
+    {
+      "family_id": "session-ui-markdown",
+      "family_title": "Markdown parsing, caching and worker lifecycle",
+      "inherited_path_count": 19,
+      "inherited_evidence_depth_counts": {
+        "inspected": 4,
+        "family-supported": 15
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "No browser security test, performance benchmark or full worker parser audit was run."
+    },
+    {
+      "family_id": "session-ui-editor",
+      "family_title": "Reusable prompt editor interaction",
+      "inherited_path_count": 10,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 8,
+        "inspected": 2
+      },
+      "body_sections": [
+        "Durable admission, optimistic state and draft storage"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Prompt admission and draft ownership"
+      ],
+      "preserved_family_limit": "All DOM/clipboard/paste and drag/drop variants are family-supported."
+    },
+    {
+      "family_id": "session-ui-review",
+      "family_title": "Session review, file and Pierre rendering",
+      "inherited_path_count": 39,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 36,
+        "inspected": 3
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "Geometry, media rendering, annotation and text-selection correctness are not proven by source reads."
+    },
+    {
+      "family_id": "palette-source",
+      "family_title": "Theme runtime and palette generator inputs",
+      "inherited_path_count": 15,
+      "inherited_evidence_depth_counts": {
+        "inspected": 4,
+        "family-supported": 10,
+        "metadata-only": 1
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "Contrast pass and byte reproduction were not executed; source headers retain an old package path."
+    },
+    {
+      "family_id": "palette-generated",
+      "family_title": "Generated palette styles",
+      "inherited_path_count": 7,
+      "inherited_evidence_depth_counts": {
+        "inspected": 1,
+        "family-supported": 6
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "No regeneration or all-output content comparison was performed."
+    },
+    {
+      "family_id": "styles",
+      "family_title": "Authored layout and component styles",
+      "inherited_path_count": 71,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 71
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "Styles were accounted by consumer/family and generator inventory; pixel-level layout and provenance of each rule are not reviewed."
+    },
+    {
+      "family_id": "localization",
+      "family_title": "Localization dictionaries and translation workflow",
+      "inherited_path_count": 190,
+      "inherited_evidence_depth_counts": {
+        "inspected": 9,
+        "family-supported": 181
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "Representative English/Arabic/domain reads support the family; other languages are not linguistically audited."
+    },
+    {
+      "family_id": "avatars",
+      "family_title": "Bundled agent portrait assets",
+      "inherited_path_count": 90,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 90
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "90 files are family-supported; sampled seat portrait is 256 square, so documented generic 128px guidance is not universal measured fact."
+    },
+    {
+      "family_id": "wallpaper-assets",
+      "family_title": "Wallpaper imagery and catalog",
+      "inherited_path_count": 79,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 78,
+        "inspected": 1
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "Image metadata/hash checked for mountain only; other imagery creator/license/provenance not established."
+    },
+    {
+      "family_id": "brand-assets",
+      "family_title": "Brand, public-web and help assets",
+      "inherited_path_count": 18,
+      "inherited_evidence_depth_counts": {
+        "metadata-only": 2,
+        "family-supported": 15,
+        "inspected": 1
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "Other public asset provenance and deployment header semantics are metadata-only where no direct consumer witness exists."
+    },
+    {
+      "family_id": "zen-assets",
+      "family_title": "Third-party Zen texture",
+      "inherited_path_count": 2,
+      "inherited_evidence_depth_counts": {
+        "inspected": 1,
+        "family-supported": 1
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "No visual comparison to original upstream revision or legal conclusion is made."
+    },
+    {
+      "family_id": "evidence-fixtures",
+      "family_title": "Execution-output parser fixtures",
+      "inherited_path_count": 37,
+      "inherited_evidence_depth_counts": {
+        "inspected": 1,
+        "family-supported": 36
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation",
+        "Verification limits and ownership use"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts",
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "No fixture runner was executed and byte-level provenance of each log was not independently recreated."
+    },
+    {
+      "family_id": "browser-tests",
+      "family_title": "Browser-environment test harness and suites",
+      "inherited_path_count": 106,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 104,
+        "inspected": 2
+      },
+      "body_sections": [
+        "Verification limits and ownership use"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "All remaining browser suite files are family-supported by harness role; no suite ran and not every assertion was read."
+    },
+    {
+      "family_id": "e2e-tests",
+      "family_title": "Playwright product regressions and fixtures",
+      "inherited_path_count": 155,
+      "inherited_evidence_depth_counts": {
+        "inspected": 5,
+        "family-supported": 150
+      },
+      "body_sections": [
+        "Verification limits and ownership use"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "No Playwright execution, visual validation or full test discovery audit was performed."
+    },
+    {
+      "family_id": "benchmarks",
+      "family_title": "Manual performance diagnostics",
+      "inherited_path_count": 53,
+      "inherited_evidence_depth_counts": {
+        "inspected": 2,
+        "family-supported": 51
+      },
+      "body_sections": [
+        "Visual resources and prescribed maintenance",
+        "Verification limits and ownership use"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity",
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "Implementation internals and collected results are metadata/family supported only; no benchmark ran. The prescribed benchmark condition is not evidence of collected measurements or performance acceptance."
+    },
+    {
+      "family_id": "test-support",
+      "family_title": "Shared test support and stories",
+      "inherited_path_count": 2,
+      "inherited_evidence_depth_counts": {
+        "family-supported": 2
+      },
+      "body_sections": [
+        "Verification limits and ownership use"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Assets, localization and verification evidence"
+      ],
+      "preserved_family_limit": "Some support/story files only have tree-level purpose evidence; individual scenarios are not all inspected."
+    },
+    {
+      "family_id": "entry-recovery",
+      "family_title": "Shell entry, draft readiness and renderer recovery",
+      "inherited_path_count": 5,
+      "inherited_evidence_depth_counts": {
+        "metadata-only": 1,
+        "inspected": 4
+      },
+      "body_sections": [
+        "Composition, identity and asynchronous ownership"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Authority, composition and identity"
+      ],
+      "preserved_family_limit": "Selected error/layout spans were read; native restart, updater installation and debug export were not performed or exhaustively traced."
+    },
+    {
+      "family_id": "janitor",
+      "family_title": "Janitor reports and scoped assistant pocket",
+      "inherited_path_count": 6,
+      "inherited_evidence_depth_counts": {
+        "inspected": 4,
+        "metadata-only": 2
+      },
+      "body_sections": [
+        "Host capabilities and auxiliary lifetimes"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Requests, terminals and auxiliary lifetimes"
+      ],
+      "preserved_family_limit": "Native scanning implementation and complete widget markup were not inspected. No Janitor report or session was generated."
+    },
+    {
+      "family_id": "controls",
+      "family_title": "Confirmation, secret and external-link controls",
+      "inherited_path_count": 4,
+      "inherited_evidence_depth_counts": {
+        "inspected": 4
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "No credential-storage guarantee, URL sanitizer, focus/accessibility proof or browser interaction result is inferred."
+    },
+    {
+      "family_id": "diagnostics",
+      "family_title": "Renderer performance and focus diagnostics",
+      "inherited_path_count": 1,
+      "inherited_evidence_depth_counts": {
+        "inspected": 1
+      },
+      "body_sections": [
+        "Host capabilities and auxiliary lifetimes"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Requests, terminals and auxiliary lifetimes"
+      ],
+      "preserved_family_limit": "Performance observer implementation and metric accuracy were not fully audited; no measurements were collected."
+    },
+    {
+      "family_id": "identity-utils",
+      "family_title": "Path, display and local identifier helpers",
+      "inherited_path_count": 9,
+      "inherited_evidence_depth_counts": {
+        "inspected": 7,
+        "metadata-only": 2
+      },
+      "body_sections": [
+        "Composition, identity and asynchronous ownership"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "All listed helper bodies were read; platform filesystem equality and caller correctness are not proven."
+    },
+    {
+      "family_id": "dom-input",
+      "family_title": "DOM scheduling, menu dismissal and input adapters",
+      "inherited_path_count": 7,
+      "inherited_evidence_depth_counts": {
+        "metadata-only": 2,
+        "inspected": 5
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "Search selection helper tail and all caller interactions were not individually read or executed."
+    },
+    {
+      "family_id": "feedback",
+      "family_title": "Downloads, sounds, labels, toasts and rejection handling",
+      "inherited_path_count": 7,
+      "inherited_evidence_depth_counts": {
+        "inspected": 6,
+        "metadata-only": 1
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "No file save, audio playback, toast interaction or real error-reporting transport was exercised."
+    },
+    {
+      "family_id": "pull-request",
+      "family_title": "Server pull-request payload adapter",
+      "inherited_path_count": 2,
+      "inherited_evidence_depth_counts": {
+        "metadata-only": 1,
+        "inspected": 1
+      },
+      "body_sections": [
+        "Shared rendering, files and evidence interpretation"
+      ],
+      "accepted_predecessor": "s2.l1.app-session",
+      "accepted_predecessor_sections": [
+        "Rendering, evidence and reusable utility contracts"
+      ],
+      "preserved_family_limit": "Server CLI execution and every caller were not inspected. No pull request, CLI or remote mutation was invoked."
+    }
+  ]
+}

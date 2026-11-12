@@ -1,0 +1,27 @@
+{
+  "schema": "genesis-s2-resumed-finite-plan/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "recorded_at": "2026-11-11T17:51:16.993924+00:00",
+  "prior_layer_gate": "Both persistent independent judges must accept every required artifact in the complete predecessor layer before dispatch.",
+  "producer_assignments": {
+    "desktop-web": "one isolated native producer reused for L2-L4",
+    "app-session": "existing correction producer reused for L2-L4, plus L4 entry",
+    "design-tui": "one isolated native producer reused for L2-L4"
+  },
+  "reserved_dispatches": {
+    "L2": 3,
+    "L3": 3,
+    "L4": 3,
+    "semantic_judge_evaluations": 6,
+    "literal_transport_waves": 3
+  },
+  "correction_policy": "One bounded correction/reevaluation round per layer initially; replan any additional necessary correction visibly, never drop mandatory findings or replace judge veto.",
+  "reason": "Three disjoint domain producers run concurrently after complete layer acceptance; same two tool-free judges review all units independently, preserving acceptance gates.",
+  "remaining_runtime_consumers": "Execute only with compatible pinned actual runtime and real publication/binding; no substitute markdown reads. Frozen cases remain reserved from producers.",
+  "provider_usage": {
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "internal_attempts": "UNKNOWN",
+    "paid_external_route": "NOT_USED"
+  }
+}

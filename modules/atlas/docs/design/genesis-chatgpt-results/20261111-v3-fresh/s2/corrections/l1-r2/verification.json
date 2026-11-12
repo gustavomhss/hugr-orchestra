@@ -1,0 +1,189 @@
+{
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "producer_status": "ready for principal reconciliation and independent judgment",
+  "semantic_verdict": null,
+  "product_tests_executed": false,
+  "runtime_executions": 0,
+  "remote_writes": 0,
+  "source_capture_count": 14,
+  "fresh_file_captures": 8,
+  "reused_exact_file_captures": 6,
+  "verified_source_bytes": 120553,
+  "source_sha256_and_git_blob_checks": "verified",
+  "excerpt_count": 26,
+  "excerpt_integrity": "generated directly from verified source spans",
+  "original_files_unchanged": true,
+  "coverage_population": {
+    "app-session": 1887,
+    "design-tui": 2087,
+    "desktop-web": 532
+  },
+  "coverage_union_paths": 4506,
+  "coverage_union_unique_paths": 4506,
+  "coverage_path_hash_method": "SHA256 of sorted path strings joined by LF with final LF",
+  "coverage_path_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+  "new_h2_sections_below_routine_16000_bytes": true,
+  "sections": {
+    "app-session": [
+      {
+        "heading": "Scope, identity and depth",
+        "utf8_bytes": 2541
+      },
+      {
+        "heading": "Authority, composition and identity",
+        "utf8_bytes": 4062
+      },
+      {
+        "heading": "Transport, stream health and canonical recovery",
+        "utf8_bytes": 3291
+      },
+      {
+        "heading": "Prompt admission and draft ownership",
+        "utf8_bytes": 4257
+      },
+      {
+        "heading": "Requests, terminals and auxiliary lifetimes",
+        "utf8_bytes": 3851
+      },
+      {
+        "heading": "Rendering, evidence and reusable utility contracts",
+        "utf8_bytes": 5180
+      },
+      {
+        "heading": "Navigation, settings and feature-family disposition",
+        "utf8_bytes": 6083
+      },
+      {
+        "heading": "Skills catalog, editing and ownership",
+        "utf8_bytes": 5976
+      },
+      {
+        "heading": "Assets, localization and verification evidence",
+        "utf8_bytes": 4793
+      }
+    ],
+    "design-tui": [
+      {
+        "heading": "Scope and evidence strength",
+        "utf8_bytes": 1871
+      },
+      {
+        "heading": "Terminal application",
+        "utf8_bytes": 5143
+      },
+      {
+        "heading": "V2 session action boundary",
+        "utf8_bytes": 5817
+      },
+      {
+        "heading": "Terminal interaction and supporting contracts",
+        "utf8_bytes": 11795
+      },
+      {
+        "heading": "Browser UI library",
+        "utf8_bytes": 5374
+      },
+      {
+        "heading": "Generation, assets and source ownership",
+        "utf8_bytes": 3101
+      },
+      {
+        "heading": "Storybook, fixtures and design records",
+        "utf8_bytes": 2330
+      },
+      {
+        "heading": "Remaining gaps and safe use of this evidence",
+        "utf8_bytes": 1255
+      }
+    ],
+    "desktop-web": [
+      {
+        "heading": "Scope and evidentiary status",
+        "utf8_bytes": 2060
+      },
+      {
+        "heading": "1. Startup, readiness and shutdown",
+        "utf8_bytes": 4227
+      },
+      {
+        "heading": "2. Windows, persistence and IPC authority",
+        "utf8_bytes": 3309
+      },
+      {
+        "heading": "3. Host adapters, recovery and native integration",
+        "utf8_bytes": 2040
+      },
+      {
+        "heading": "4. Dock browser ownership and page tools",
+        "utf8_bytes": 2142
+      },
+      {
+        "heading": "5. Native Dock identity and uncertain outcomes",
+        "utf8_bytes": 2949
+      },
+      {
+        "heading": "6. Linux runtime, access RPC and WSL",
+        "utf8_bytes": 3053
+      },
+      {
+        "heading": "7. Live capture and overlay",
+        "utf8_bytes": 2203
+      },
+      {
+        "heading": "8. Response files, executable resources and updates",
+        "utf8_bytes": 2728
+      },
+      {
+        "heading": "9. Web, languages, media and historical evidence",
+        "utf8_bytes": 3420
+      },
+      {
+        "heading": "Open evidence and maintenance consequences",
+        "utf8_bytes": 897
+      }
+    ]
+  },
+  "inherited_app_assets_verification_tail_unchanged": true,
+  "inherited_tui_selection_through_final_tail_unchanged": true,
+  "later_layers": "L2-L4 remain blocked until complete L1 judgment",
+  "artifacts": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r2/app-session/l1.md",
+      "bytes": 40081,
+      "sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r2/design-tui/l1.md",
+      "bytes": 36964,
+      "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r2/desktop-web/l1.md",
+      "bytes": 29075,
+      "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+    }
+  ],
+  "limitations": [
+    "No semantic PASS is issued by the producer.",
+    "Hash equality and section size establish form/provenance only.",
+    "No product, backend or UI behavior was executed.",
+    "No oracles or judge packets were accessed."
+  ],
+  "desktop_excerpt_count": 12,
+  "desktop_single_paragraph_change": true,
+  "desktop_original_reproduced_by_reversing_two_replacements": true,
+  "final_source_roundtrip_checked": true,
+  "quoted_excerpts_independently_reparsed_and_matched": 38,
+  "inherited_citations": {
+    "app-session": {
+      "inherited_cited_paths_removed": []
+    },
+    "design-tui": {
+      "inherited_cited_paths_removed": []
+    },
+    "desktop-web": {
+      "inherited_cited_paths_removed": []
+    }
+  },
+  "inherited_unchanged_tails_compared_as_bytes": true
+}

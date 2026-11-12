@@ -1,0 +1,35 @@
+{
+  "schema": "genesis-producer-safe-review-parts/v1",
+  "artifact": "s2.l2.app-session",
+  "revision": 1,
+  "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "parts": [
+    {
+      "file": "part-01.txt",
+      "number": 1,
+      "total": 3,
+      "byte_length": 25980,
+      "sha256": "6cfe3c1ae273d92f94d79b855358c7487e7216dd472979039bd6722b0baaa5dc"
+    },
+    {
+      "file": "part-02.txt",
+      "number": 2,
+      "total": 3,
+      "byte_length": 25957,
+      "sha256": "2ac76bb9b9fd0417f6a01acce1028122d779c56a6e83315a96e7f5777d8055c1"
+    },
+    {
+      "file": "part-03.txt",
+      "number": 3,
+      "total": 3,
+      "byte_length": 21821,
+      "sha256": "fcc6e115e4e0ca7c7af20556b2fbee0c43ff6466d13bdcab246230ba9ca33e07"
+    }
+  ],
+  "notes": [
+    "Parts may split Markdown fences; concatenate in numbered order.",
+    "No reserved oracle or judge opinion is included.",
+    "These local hashes do not attest host-internal serialized message bytes."
+  ]
+}

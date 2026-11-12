@@ -1,0 +1,103 @@
+{
+  "schema": "genesis-s2-s4-runtime-compatibility/v1",
+  "base": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "head": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "ahead_commits": 8,
+  "files_in_comparison": 161,
+  "docs_evidence_changes": 154,
+  "non_document_files": [
+    {
+      "filename": ".github/workflows/atlas-pilot.yml",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 3,
+      "changes": 9,
+      "previous_filename": null
+    },
+    {
+      "filename": "modules/atlas/boundary/src/generated/mine.js",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "previous_filename": null
+    },
+    {
+      "filename": "modules/atlas/boundary/src/generated/native-header.js",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "previous_filename": null
+    },
+    {
+      "filename": "modules/atlas/boundary/src/generated/surface.js",
+      "status": "modified",
+      "additions": 13,
+      "deletions": 12,
+      "changes": 25,
+      "previous_filename": null
+    },
+    {
+      "filename": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "changes": 0,
+      "previous_filename": null
+    },
+    {
+      "filename": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "changes": 0,
+      "previous_filename": null
+    },
+    {
+      "filename": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "status": "added",
+      "additions": 0,
+      "deletions": 0,
+      "changes": 0,
+      "previous_filename": null
+    }
+  ],
+  "materialized_source_files_reverified": 406,
+  "materialized_source_files_not_listed_changed": 404,
+  "changed_materialized_files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+      "git_blob_sha": "5d8ebda609634ec02c4cdaff09499d1d615e2ec9",
+      "listed_as_changed_in_pinned_comparison": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "git_blob_sha": "9920e6b26bc68c392386b13146e352753c08aef1",
+      "listed_as_changed_in_pinned_comparison": true
+    }
+  ],
+  "static_behavior_assessment": "The only checked-source changes are three return expressions in binding/format. nativeRecord returns the original object; the returned value is identical. This is a static equivalence inference, not a new test of e3a. Raw source bytes and recorded implementation identity differ.",
+  "generated_artifacts": "Three committed JS bundles differ; surface includes regenerated strict membership observation. Do not call entire generated runtime byte-identical. The S2 native CLI imports adapter source; no changed bundles were installed.",
+  "native_identity_effect": "format and binding are in prepared.candidate.implementation; adopting changed bytes requires a new candidate and independent exact bindings.",
+  "common_controls": "Runtime behavioral evidence may be cited for verified unchanged source paths and stated assumptions; exact run/aggregate PASS remains 7102-specific.",
+  "file_limit": 256000,
+  "s2_oversized_inputs_unchanged": [
+    [
+      "schema/tui.json",
+      1131057
+    ],
+    [
+      "payload/inputs/app-session-tree.json",
+      369462
+    ],
+    [
+      "payload/inputs/design-tui-tree.json",
+      390775
+    ]
+  ],
+  "runtime_mutated": false,
+  "prepare_executed": false
+}

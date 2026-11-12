@@ -1,0 +1,89 @@
+{
+  "schema": "s2-transport-recipient-receipt/v1",
+  "actor": "/root/s2_transport",
+  "target": "/root/s2_resume_j1",
+  "unit": "desktop-web",
+  "stage": "L1",
+  "revision": 1,
+  "status": "all-11-parts-sent-visible-no-error; recipient acknowledgement not captured here",
+  "parts": [
+    {
+      "file": "desktop-web-01-header-01.txt",
+      "external_manifest_sha256": "548660113aa00ab1c70209d8867847e0263180fd876e47498322097121e724cc",
+      "byte_length": 14474,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-01-header-02.txt",
+      "external_manifest_sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33",
+      "byte_length": 2275,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-02-body-01.txt",
+      "external_manifest_sha256": "895518c356c2de74a8d77e9c7f0d020be528bad2ad03955ffed5f1ba728e0c23",
+      "byte_length": 14185,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-02-body-02.txt",
+      "external_manifest_sha256": "479535bf747e19210dc90f6f7337ab821700723e2170e8f22d53d6ef1191fc86",
+      "byte_length": 13755,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-02-body-03.txt",
+      "external_manifest_sha256": "42752faeaeaa60b48fc1595f591d3f43d632f2c08104ba4c5fe5e60a640be99c",
+      "byte_length": 883,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-03-evidence-01.txt",
+      "external_manifest_sha256": "1edf320b96612984fee352ac56d44bde0b7a19fb23b6a909d1ff09c4f3051f0b",
+      "byte_length": 14436,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-03-evidence-02.txt",
+      "external_manifest_sha256": "3e0607c7cf96d013fe147275599bf88467a6f0e1d07d093adeb17438b7ba3d59",
+      "byte_length": 14465,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-03-evidence-03.txt",
+      "external_manifest_sha256": "9aa38e8b4a3b73e26a21ea4b259cb92d3409153442019e6122b43d9d49c179d6",
+      "byte_length": 9113,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-04-families-01.txt",
+      "external_manifest_sha256": "707c467c698922967aa79cc4b9d6ad6014420f191f1f1521b2593b75aec59ff3",
+      "byte_length": 14433,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-04-families-02.txt",
+      "external_manifest_sha256": "9f1a5652a77a8001b4d9402121ce3ae189ecd0fa039b12d1cecf3e93214c1d40",
+      "byte_length": 14495,
+      "sent": true
+    },
+    {
+      "file": "desktop-web-04-families-03.txt",
+      "external_manifest_sha256": "df3f7154a0b943d7ce2e99e562a3c9ab7e3d9cd41bbbd0f2c1667d0dc6977f62",
+      "byte_length": 7998,
+      "sent": true
+    }
+  ],
+  "send_call_count": 7,
+  "unique_part_count": 11,
+  "local_file_bytes": 120512,
+  "host_internal_bytes_exposed": false,
+  "limitations": [
+    "The collaboration tool returned an empty visible response for each send_message call, with no visible error. It did not expose host internal bytes or a recipient delivery/read receipt.",
+    "Local SHA256 values are externally computed from frozen packet files. They are not hashes computed by the judges or of the host-delivered message stream.",
+    "The recorded request strings are reconstructions from the visible calls and source packet files, not an independently exported tool transcript. A faithful local reconstruction does not prove end-to-end byte equality.",
+    "One observed first-attempt indentation error added four spaces before the unexecuted-tests allowed-unknown line in desktop-web-01-header-01.txt sent to J1. It was explicitly invalidated and the whole part retransmitted.",
+    "No final batch seal, semantic verdict, acceptance, code execution, candidate edit, or remote write is asserted by this transport record."
+  ],
+  "visible_requests_file": "desktop-web-visible-requests.json"
+}

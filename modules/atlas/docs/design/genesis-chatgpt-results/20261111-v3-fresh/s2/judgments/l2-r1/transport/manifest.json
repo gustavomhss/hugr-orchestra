@@ -1,0 +1,222 @@
+{
+  "schema": "genesis-s2-preserved-transport/v1",
+  "layer": 2,
+  "recorded_at": "2026-11-11T19:02:42.892029+00:00",
+  "files": [
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/packet/manifest.json",
+      "byte_length": 879,
+      "sha256": "6970cbfd39c2726bebc24149e752e550b877b6d8e72581d2104d08f15b0c6df4"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/packet/part-01.txt",
+      "byte_length": 25426,
+      "sha256": "9a500eec2f03f738f04216e71e2d0c8152f97f41d9db6983c1c6f92b2f3975a8"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/packet/part-02.txt",
+      "byte_length": 22822,
+      "sha256": "adf7d955814e003416f3361ec7c451a405ba69633cb886e586f5ecca77c48133"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/frozen-manifest-copy.json",
+      "byte_length": 879,
+      "sha256": "6970cbfd39c2726bebc24149e752e550b877b6d8e72581d2104d08f15b0c6df4"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/principal-freeze-notice.txt",
+      "byte_length": 1370,
+      "sha256": "e624403823cee24702deebbc23c8552654c3b8a4a4b3fdb0e4545f9563b81a9b"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/response.md",
+      "byte_length": 1879,
+      "sha256": "18107e797d9ff0eafbc6b6943052b8c0109fb3d4db0ec9df0ca8d83f1ba96115"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-01-message.txt",
+      "byte_length": 25482,
+      "sha256": "319a89ff3b149985c8666f655041e5c3e39a400f9741c50ccaa0301abc91f196"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-01-request.json",
+      "byte_length": 26081,
+      "sha256": "d635fdb20b795f2d52b3543a147147116aa4fc5f6a778d78cbcfa844eed3cb30"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-02-message.txt",
+      "byte_length": 25482,
+      "sha256": "319a89ff3b149985c8666f655041e5c3e39a400f9741c50ccaa0301abc91f196"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-02-request.json",
+      "byte_length": 26081,
+      "sha256": "b24c3a742e4fe1731ab9fe80ca870ac063da8d8ff9e4658503c8920c42dc6229"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-03-message.txt",
+      "byte_length": 22878,
+      "sha256": "880084b6efdedfba53feda816a2f5055c7deca05167733aaf3190b9395935f45"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-03-request.json",
+      "byte_length": 23455,
+      "sha256": "314fa105289e1e5b8cd515cabbf71b07817015bc09d0c6d2eee428c03824840e"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-04-message.txt",
+      "byte_length": 22878,
+      "sha256": "880084b6efdedfba53feda816a2f5055c7deca05167733aaf3190b9395935f45"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/send-04-request.json",
+      "byte_length": 23455,
+      "sha256": "c22c5bfba86a0c40f4b715ab4e6dbc624eef2b88a01ea63511700454080dfed8"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/transport-record.json",
+      "byte_length": 5456,
+      "sha256": "7be008349057452645ecd29a93a24eb39d0116d9a69d192aad499793500026db"
+    },
+    {
+      "path": "judgments/l2-r1/transport/desktop-web/transport/transport.sha256",
+      "byte_length": 1044,
+      "sha256": "6641913a04db5c803286f1d7a72b1cd7c6f0a803a8e8df2651d8e63f43c2b269"
+    },
+    {
+      "path": "judgments/l2-r1/transport/app-session/packet/manifest.json",
+      "byte_length": 1069,
+      "sha256": "d3c31ddb4c6f31de0ef54f1962eaa52257335ec6348ef9bc930e3d1ce11f777c"
+    },
+    {
+      "path": "judgments/l2-r1/transport/app-session/packet/part-01.txt",
+      "byte_length": 25980,
+      "sha256": "6cfe3c1ae273d92f94d79b855358c7487e7216dd472979039bd6722b0baaa5dc"
+    },
+    {
+      "path": "judgments/l2-r1/transport/app-session/packet/part-02.txt",
+      "byte_length": 25957,
+      "sha256": "2ac76bb9b9fd0417f6a01acce1028122d779c56a6e83315a96e7f5777d8055c1"
+    },
+    {
+      "path": "judgments/l2-r1/transport/app-session/packet/part-03.txt",
+      "byte_length": 21821,
+      "sha256": "fcc6e115e4e0ca7c7af20556b2fbee0c43ff6466d13bdcab246230ba9ca33e07"
+    },
+    {
+      "path": "judgments/l2-r1/transport/app-session/transport/receipt.json",
+      "byte_length": 6635,
+      "sha256": "9dd318eb23a046165dd808fff9d44d232938cbb6eb598d8088118aca58de5f53"
+    },
+    {
+      "path": "judgments/l2-r1/transport/app-session/transport/receipt.md",
+      "byte_length": 2164,
+      "sha256": "290b079fd47500ef9eacdd3901610fbcb89a2ada25c24b84189814eee900f273"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/packet/manifest.json",
+      "byte_length": 1068,
+      "sha256": "0d8b1cab18d0859f94991da76a6020b660eddb5613e3b91737d6ed3f051a3282"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/packet/part-01.txt",
+      "byte_length": 25831,
+      "sha256": "98ccc17f4b409a45d126ffc5bdffa481c4b567292f8dc3cffc9e53a3dd1d289b"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/packet/part-02.txt",
+      "byte_length": 25908,
+      "sha256": "86f180ae87e78084aae5829792539b75f64b86c8d4871eed76c62c9d1c6bb426"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/packet/part-03.txt",
+      "byte_length": 23935,
+      "sha256": "c1bceab498ae7f3acf6f1da4901325b0cb2cab5187c0559a78c6f9e5a1886741"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/author-preservation-check.json",
+      "byte_length": 762,
+      "sha256": "6c16442cf8e7e9fe9116c465dc68b71b70fbda58b1087c4cc4ef8b5b4b46475d"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/frozen-manifest.json",
+      "byte_length": 1068,
+      "sha256": "0d8b1cab18d0859f94991da76a6020b660eddb5613e3b91737d6ed3f051a3282"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/hashes.sha256",
+      "byte_length": 1286,
+      "sha256": "61e25b494cb1da8d3d194c2e585ebd44517ca17d1139ce4b4ddf00f6fb1bdc4b"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/local-checks.json",
+      "byte_length": 1173,
+      "sha256": "9ed2384022fdb2a02197d264fc9ef0b21e169afc51e3c969450da57698357ebd"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/messages/call-01.txt",
+      "byte_length": 25894,
+      "sha256": "4cedcae20e157983ff79cd142d1f689c7462e068db6b66d541fed461b7039f5c"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/messages/call-02.txt",
+      "byte_length": 26048,
+      "sha256": "f934a0487b1e74d029ca258c59e740f19e39ac9e3f50ff8bd599a91fb085c744"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/messages/call-03.txt",
+      "byte_length": 25897,
+      "sha256": "7a208095cd91a4ed69fc15a3b7d5c3542fdd5ba363af903164c610d8e2f10c40"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/messages/call-04.txt",
+      "byte_length": 25974,
+      "sha256": "9eca2e5bc46781621a9ab8bea07df53c084643d85df7b813f12b4576b2db01a9"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/messages/call-05.txt",
+      "byte_length": 25974,
+      "sha256": "9eca2e5bc46781621a9ab8bea07df53c084643d85df7b813f12b4576b2db01a9"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/messages/call-06.txt",
+      "byte_length": 24001,
+      "sha256": "a31c885edf78e236b30b641248005a814becde75367c9eb4163275f88a6bd154"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/messages/call-07.txt",
+      "byte_length": 24001,
+      "sha256": "a31c885edf78e236b30b641248005a814becde75367c9eb4163275f88a6bd154"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/native-call-log.json",
+      "byte_length": 7147,
+      "sha256": "4785f3f3c32ad9c750762cb6f7994ae3053eb139eaee2caed77e5d6858b9c60f"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/part-01.txt",
+      "byte_length": 25831,
+      "sha256": "98ccc17f4b409a45d126ffc5bdffa481c4b567292f8dc3cffc9e53a3dd1d289b"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/part-02.txt",
+      "byte_length": 25908,
+      "sha256": "86f180ae87e78084aae5829792539b75f64b86c8d4871eed76c62c9d1c6bb426"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/part-03.txt",
+      "byte_length": 23935,
+      "sha256": "c1bceab498ae7f3acf6f1da4901325b0cb2cab5187c0559a78c6f9e5a1886741"
+    },
+    {
+      "path": "judgments/l2-r1/transport/design-tui/transport/transport-response.md",
+      "byte_length": 2488,
+      "sha256": "713b9ba58b047a959cb23eb14dc8241278a08763cccccf0bd440a6f19cbf89d8"
+    }
+  ],
+  "limits": [
+    "Exact local copies and hashes; no host-internal serialization or received-byte hashes are exposed.",
+    "Completion is based on the sender's actual native-call receipts and root review, not inferred from the existence of packet files.",
+    "Native tokens, billing and provider physical attempts remain UNKNOWN."
+  ]
+}

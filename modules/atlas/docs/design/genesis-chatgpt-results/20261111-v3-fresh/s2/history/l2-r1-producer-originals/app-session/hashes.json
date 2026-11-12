@@ -1,0 +1,47 @@
+{
+  "artifact_key": "s2.l2.app-session",
+  "hash_algorithm": "sha256",
+  "files": [
+    {
+      "path": "body.md",
+      "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434
+    },
+    {
+      "path": "sources.json",
+      "sha256": "852bd8483abb09e825405ea16acd668793491aa44ebad164eb8f473e5d7c61b0",
+      "byte_length": 27895
+    },
+    {
+      "path": "dependencies.json",
+      "sha256": "e464e32f4d62ffdafcece335ede5fad8557f6dc856a5b143064e9aa47b930e61",
+      "byte_length": 1639
+    },
+    {
+      "path": "decisive-evidence.md",
+      "sha256": "b9613f49ded8e990814cd0e4ee0825bd6bd4888c53070939a8beb5b7fc3f4efa",
+      "byte_length": 36071
+    },
+    {
+      "path": "response.md",
+      "sha256": "647f82048ce49bb811acbc15f5077e97a1dba307ddb1a0345db79e577eddd253",
+      "byte_length": 5641
+    },
+    {
+      "path": "family-map.json",
+      "sha256": "1083e528587c98e535ed7a2dae8cf1412cbbfb34b7a166f9d0006fd6d7a94649",
+      "byte_length": 38986
+    },
+    {
+      "path": "author-checks.json",
+      "sha256": "9f8232dd20e86221d1e67efe2c344ed8a34c96c0f933df9ef2a892abba14dc5f",
+      "byte_length": 7933
+    },
+    {
+      "path": "author_artifacts.py",
+      "sha256": "935ba39d8611a05c601ee204446793839bf7c3b8733d4bdab9b1256038f3e9b8",
+      "byte_length": 32817
+    }
+  ],
+  "note": "This list omits its own recursive hash; the producer final response reports hashes.json separately."
+}

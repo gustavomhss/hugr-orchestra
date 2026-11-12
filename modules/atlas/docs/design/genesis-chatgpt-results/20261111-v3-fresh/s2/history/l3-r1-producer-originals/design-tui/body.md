@@ -1,0 +1,75 @@
+# Terminal submission and shared presentation across ownership boundaries
+
+## Orientation and accepted ownership
+
+This unit connects the TUI V2 input journey to session state, reusable browser UI, language, themes and generated products at source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`. It builds on accepted `s2.l2.design-tui`, `s2.l2.app-session` and `s2.l2.desktop-web`; `s2.l3.app-session` and `s2.l3.desktop-web` are navigation only. These are static source relationships, not observed runtime outcomes.
+
+The design/TUI predecessor accounts for 2,087 paths in 67 families. This synthesis inherits its scope, including 13 metadata-only paths and unverified asset appearance, rights and platform behavior. The browser app supplies submission policy and host adapters; reusable UI does not acquire those responsibilities merely because the app renders it. Current TUI ownership permits Core dependencies; the older SDK-only target is historical. Its README’s no-assets/generated-files claim conflicts with the 33 theme presets. [Accepted basis: `s2.l2.design-tui` §Orientation and §Terminal lifetime and synchronized navigation; `s2.l2.app-session` §Composition, identity and asynchronous ownership; `s2.l2.desktop-web` §Orientation and ownership.]
+
+## Terminal input becomes admission through ordered, separate operations
+
+The TUI composer resolves input modes, creates a session when required and captures prompt content before invoking its action adapter. The adapter awaits agent selection, then model selection using `providerID`, `modelID` and optional variant. Truthy context becomes a separate synthetic message with `resume: false` before the prompt is admitted. File URLs become URI fields and source spans survive the adapter. Commands share selection and file mapping but do not inherit the prompt wrapper’s context/agent-mention path. [Accepted basis: `s2.l2.design-tui` §V2 actions and prompt admission; direct source: `packages/tui/src/context/session-actions.ts`.]
+
+| Handoff and owner | Stable identity or payload | Failure observation and affected component | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Composer → TUI action adapter | Created session ID; captured text, files, mention spans and selection | History append, input clearing and navigation can occur before asynchronous acceptance; the adapter supplies no rollback. The composer must not equate clearing with delivery. | Exercise a mounted composer with delayed/rejected sends and consecutive Enter presses. |
+| Adapter → V2 selection/context/prompt endpoints | Same session ID; ordered agent/model choice; synthetic context explicitly disables resume | Operations are sequential within one invocation, without an atomic transaction or cross-caller lock. A later rejection can follow an earlier successful change; context insertion and prompt admission are separate requests. | Inject failure at each request boundary and inspect exact request order and retained state. |
+| Prompt endpoint → session runner/projection | Server admission record; optional protocol prompt ID, delivery and resume fields | `SessionInput.Admitted` confirms admission, not promotion, model completion or transcript visibility. The TUI wrapper does not expose those retry controls. | Compare admission with subsequent canonical state and execution events; preserve request identity when testing retry. |
+
+The protocol contract specifies durable admission and scheduling unless resume is false; root guidance assigns later promotion to the runner. Exact server retry reconciliation requires the same session, prompt identity, encoded prompt and delivery. Do not assume a newly constructed TUI retry meets that contract. Context surviving a later prompt failure is a consequence of the separate requests, not an observed incident. Sources: `packages/protocol/src/groups/session.ts`; `AGENTS.md`; accepted `s2.l2.app-session` §Durable admission, optimistic state and draft storage.
+
+## Ambiguous sends, live projection and request decisions keep different identities
+
+The browser app captures connection credentials, directory, draft/tab ownership and generation before submission. Its admission record survives remount; the inspected failure path can restore consumed input while retaining a dispatched session/request. A failed response may follow successful admission; restoration is not established for every failure branch. Only never-dispatched, confirmed-empty sessions qualify for deletion in that path. Later unsent edits have separate ownership. Those browser mechanisms are an actual cross-unit dependency, not guarantees supplied by the thinner TUI adapter. [Accepted basis: `s2.l2.app-session` §Composition, identity and asynchronous ownership and §Durable admission, optimistic state and draft storage.]
+
+| Handoff and owner | Identity retained | Failure observation and affected component | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Events/history → TUI synchronization | Directory/workspace scope and hydrated or hydrating session ID | Late history must preserve live-touched fields; failed history reads can collapse to an empty result. Unhydrated sessions do not acquire transcript state simply from an event. | Delay history, deliver deltas, then resolve history; include an unrelated session. |
+| Input/history → local TUI persistence | Local model IDs, history/stash entries and Global state files | The 50-entry prompt history is not the server journal; locking and atomic rename do not merge independent writers. | Check restart restoration and concurrent writers separately from server admission. |
+| Browser reconnect → canonical recovery | Connection/scope generation, active session and admission identity | Heartbeats and reconnect indicate transport liveness; canonical reads repair state. They do not establish durable event replay or clustered execution recovery. | Force disconnect and late reads; verify stale owners cannot update a replacement scope. |
+| TUI permission UI → action/API | Owning session ID, request ID and reply value | Root views can display descendant requests; replying against the visible route’s session can target the wrong owner. Rendering a decision does not prove backend authorization. | Record the request’s owning session and reply endpoint; test request removal and rejection. |
+
+Sources: accepted `s2.l2.design-tui` §Terminal lifetime and synchronized navigation, §Terminal configuration, persistence and extensions, and §Terminal display, native integrations and simulation; `s2.l2.app-session` §Transport, liveness and canonical recovery and §Permission requests and terminal boundaries. The TUI hydration test exercises live text against delayed history; it is source evidence only (`packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx`).
+
+## Rendered state follows caller and resource lifetimes
+
+Reusable browser UI receives state and callbacks; app directory/session providers own the corresponding asynchronous authority. Returning from A to B to A does not revive an expired generation. The session UI consumer sanitizes rendered Markdown, whereas the generic UI parser configuration alone supplies no final-sanitization guarantee. Moving rendering between those layers therefore changes the security work the receiving owner must supply. [Accepted basis: `s2.l2.app-session` §Composition, identity and asynchronous ownership and §Shared rendering, files and evidence interpretation; `s2.l2.design-tui` §Browser UI ownership, lifecycle and accessibility.]
+
+| Boundary | Owner/identity and affected component | Failure observation | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Caller → dialog stack | `show` uses detached dialog roots; `showOwned` binds to the caller’s reactive owner | A route disposal need not close a detached dialog; choosing the API is a lifetime decision. | Dispose the caller while each kind is open and inspect callback/closure behavior. |
+| Host → worker-pool context | Provider forwards supplied split/unified pools; the creator retains resource ownership | Injection does not create a disposer. Replacing a consumer cannot be assumed to terminate workers. | Track creator disposal and stale completions across owner changes. |
+| Host → terminal application | App run owns renderer/event subscriptions and cleanup; injected host owns its contract | A cleanup harness is not evidence for every OS/real terminal; plugin readiness can resolve through a failure path. | Use the lifecycle harness, then the affected real host environment. |
+
+Sources: `packages/ui/src/context/dialog.tsx`, `packages/ui/src/context/worker-pool.tsx`; accepted `s2.l2.design-tui` §Terminal lifetime and synchronized navigation. Accessible labels, focus, virtualization and direction also require their own behavior checks; existing components are not a general accessibility certificate.
+
+## Language and appearance cross app and host contracts
+
+Shared browser language and terminal language are separate: the captured TUI remains English-only. UI translation falls back to English and has plural logic, while layout can follow `layoutLocale` independently of content locale. The app composes UI/domain dictionaries, sets document language/direction and updates native copy. Main-process startup failures and the scoped Live overlay follow separate copy paths; the known hardcoded-English startup failure remains outside the app’s translation guarantee. [Accepted basis: `s2.l2.design-tui` §Localization, direction and two theme systems; `s2.l2.app-session` §Visual resources and prescribed maintenance; `s2.l2.desktop-web` §Host adapters own platform differences and copy and §Live separates readiness, capture and delivery.]
+
+| Handoff and owner | Stable contract | Failure observation and affected artifacts | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Dictionaries → UI/app/host | Translation keys, interpolation/plural arguments, content locale and layout locale | Missing copy falls back; module counts do not establish complete translations. Logical layout and keyboard order can disagree: the inspected segmented control uses DOM-order arrows. | English LTR, forced RTL, an RTL locale and mixed code/path text; verify focus, arrows, resizing and native copy. |
+| Terminal config → terminal theme | `defs/theme` shape and default/plugin/custom/system precedence | This is a different model from desktop `light/dark` tokens. Treating one schema as the other loses meaning. | Check override precedence and terminal reload behavior independently of browser preview. |
+| Browser selection/preview → theme styles | Desktop theme ID and scheme; current preview ownership | Provider guards suppress superseded preview application, but the separate URL loader parses JSON without runtime schema validation. Persistence and validation are different responsibilities. | Race two previews, cancel/commit, reload, and submit malformed external theme data. |
+
+Direct sources: `packages/ui/src/context/i18n.tsx`, `packages/ui/src/theme/context.tsx` and `packages/ui/src/theme/loader.ts`. The app palette has a separate generated first-paint/runtime chain; late-load guards do not make all app styling generated (accepted `s2.l2.app-session` §Visual resources and prescribed maintenance). Maintenance requires translation keys, preserved existing English copy, complete phrases and recorded uncertainty; RTL checks must include behavior, not screenshots alone (`packages/ui/AGENTS.md`; `packages/app-shell/AGENTS.md`; `.orchestra/skills/rtl-aware-development/SKILL.md`).
+
+## Generated products reach consumers through distinct maintenance paths
+
+The following directions are source ownership, not a single generator covering all presentation. Each row includes the downstream failure to check before publishing an artifact. [Accepted basis: `s2.l2.design-tui` §Generated products and asset provenance.]
+
+| Source owner → generated/derived consumer | Stable payload and failure boundary | Verification route, unexecuted |
+| --- | --- | --- |
+| TUI config schema → `schema/tui.json`; handwritten desktop schema → `schema/theme.json` | The first is generated; the second is mirrored verbatim. Editing the mirror alone drifts from its owner. | Regenerate and compare the intended schema bytes; inspect `apps/cli/script/schema-files.ts`. |
+| UI `colors.txt` → Tailwind colors CSS; V2 CSS/defaults → OC-2 theme | Token names connect CSS consumers. The OC-2 script updates only `v2Overrides`; fonts/fixed avatar foreground remain outside those overrides. | Review generated diffs and token consumers; inspect `packages/ui/script/tailwind.ts` and `packages/ui/script/build-oc2-v2-overrides.ts`. |
+| File/provider SVG inputs → sprites and types | Vite generates paired products; provider refresh fetches external logos. Generated types cannot prove visual identity, rights or reproducible remote content. | Compare paired outputs and inspect refresh provenance in `packages/ui/vite.config.ts`. |
+| Shared UI → Storybook fixtures/playground | Real UI providers coexist with mock app/router boundaries. The accessibility setting is `todo`; the CSS playground writes source files. | Inspect isolated fixture behavior and resulting CSS diff; validate app/host integration separately. |
+
+Storybook sources: `apps/storybook/.storybook/preview.tsx` and `apps/storybook/.storybook/playground-css-plugin.ts`; accepted `s2.l2.design-tui` §Storybook, design intent and verification limits. The app sprite/type provenance remains unresolved; README image basename mappings do not prove visual equivalence. These retained limits prevent generated-file labels from becoming unsupported provenance claims.
+
+## Change impact and verification ownership
+
+A public Protocol/Server HttpApi change requires client regeneration from `packages/client` and review of generated diffs; maintainers must not hand-edit generated client trees. Prompt changes affect ordering, composition and projection, so use both request-recorder and mounted integration routes. The recorder asserts the real adapter’s requests; the race test explicitly mirrors submission shape and cannot replace a mounted composer check. Lifecycle tests cover disposal signals; plural tests cover categories, not complete language or layout quality. Sources: `AGENTS.md`; `packages/tui/test/context/session-actions.test.ts`; `packages/tui/test/cli/tui/prompt-submit-race.test.ts`; `packages/tui/test/app-lifecycle.test.tsx`; `packages/ui/src/context/i18n.test.ts`.
+
+Repository guidance routes product tests through GitHub Actions, not this machine. App session/timeline changes additionally require before/after production benchmarks (`packages/app-shell/AGENTS.md`). All routes above are future verification obligations: no tests, regeneration, benchmark, browser/terminal session, CI run, provider call or remote asset refresh was executed for this synthesis. Static mechanisms and accepted semantic explanations remain distinct from runtime, accessibility, translation, asset provenance and backend recovery proof.

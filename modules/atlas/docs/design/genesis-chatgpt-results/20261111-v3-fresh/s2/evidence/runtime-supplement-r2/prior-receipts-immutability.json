@@ -1,0 +1,65 @@
+{
+  "checks": [
+    {
+      "path": "report.md",
+      "sha256": "6cca3eaa95292356be18b9ecc852489b1b7c9287544771c3a65967c88b94afb4",
+      "unchanged": true
+    },
+    {
+      "path": "receipt.json",
+      "sha256": "8f898f05f82a6c421b10f647d56d1c90835f74dcb0a8bc4bd27b2eb8d1f8bdba",
+      "unchanged": true
+    },
+    {
+      "path": "commands.md",
+      "sha256": "1da08852059558c9d3b3be19f587a8050ebf88fe3dcd54431063266da8fc12e6",
+      "unchanged": true
+    },
+    {
+      "path": "request.md",
+      "sha256": "34964866fe4c475ca82401c221e729015e40131a889f75665e6f4abfd9799b23",
+      "unchanged": true
+    },
+    {
+      "path": "response.md",
+      "sha256": "3d5653be786ecc6da99bd3872cb2368e4464823d5dae5c897c047a2d75073593",
+      "unchanged": true
+    },
+    {
+      "path": "source-materialization.json",
+      "sha256": "93b23a71c4896142e757b33a709bc91442a33111e0a0b7c59925e3f3e6ac8d4c",
+      "unchanged": true
+    },
+    {
+      "path": "runtime-materialization.json",
+      "sha256": "9ba791b332abab7bba4b6949aedce9363a13dbb87ab3a4aa58ad485b695bea60",
+      "unchanged": true
+    },
+    {
+      "path": "dependency-materialization.json",
+      "sha256": "973e1414bdc71833420da907e15c1183bc0d452de70f8f7044b7f850cfc29e20",
+      "unchanged": true
+    },
+    {
+      "path": "tree-linkage-verification.json",
+      "sha256": "f3992b052f29008017f752b3ed52b6471bf3cc5e58275b96bca509ed9a5e84ac",
+      "unchanged": true
+    },
+    {
+      "path": "package-structure-audit.json",
+      "sha256": "eed4a04a139d34f829efad84467a161f817ce4ec4ec63382dd7d10f1d72c545c",
+      "unchanged": true
+    },
+    {
+      "path": "inspection/native-package-original.json",
+      "sha256": "d0bf942164e6b69c3cd89e9d4a0808a5f4ddcbb450d6c40045b2d0952c9aa0cd",
+      "unchanged": true
+    },
+    {
+      "path": "inspection/native-package-current.json",
+      "sha256": "9dacfc3c7837655b1de7b16adf953465c481e207ddc8df8afda74baea342f8ff",
+      "unchanged": true
+    }
+  ],
+  "all_unchanged": true
+}

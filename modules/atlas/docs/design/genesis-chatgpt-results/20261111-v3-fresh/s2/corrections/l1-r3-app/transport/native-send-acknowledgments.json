@@ -1,0 +1,44 @@
+[
+  {
+    "send_sequence": 1,
+    "tool": "collaboration.send_message",
+    "target": "/root/s2_resume_j1",
+    "parts": 1,
+    "part_label": "app-session L1 r3 delta1/1; wait for principal seal",
+    "locally_recorded_request_file": "send-1-request.json",
+    "locally_recorded_request_sha256": "3cbf12e891549f35f4208bad4e4491071dbdb90fbd30f76125590679ce9bcf6b",
+    "message_payload_local_file": "message-payload.txt",
+    "message_payload_local_bytes": 23204,
+    "message_payload_local_sha256": "00af2caf2eba40377c82ffe69af112010ec4f6e6c2eb98b1b6776d66ddabe08a",
+    "native_acknowledgment": {
+      "visible_response_text": "",
+      "returned_without_visible_error": true,
+      "message_id": null,
+      "send_time_utc": null,
+      "receiver_byte_count": null,
+      "receiver_checksum": null
+    },
+    "acknowledgment_limit": "The native tool returned an empty visible response with no surfaced error. It did not expose a payload echo, native message ID, exact serialized bytes, per-send timestamp or recipient receipt. This is not a cryptographic proof of receiver bytes or semantic acceptance."
+  },
+  {
+    "send_sequence": 2,
+    "tool": "collaboration.send_message",
+    "target": "/root/s2_resume_j2",
+    "parts": 1,
+    "part_label": "app-session L1 r3 delta1/1; wait for principal seal",
+    "locally_recorded_request_file": "send-2-request.json",
+    "locally_recorded_request_sha256": "08f712084f42795c17c07e8e8680e418d192e70be128e01d90228be40d98831d",
+    "message_payload_local_file": "message-payload.txt",
+    "message_payload_local_bytes": 23204,
+    "message_payload_local_sha256": "00af2caf2eba40377c82ffe69af112010ec4f6e6c2eb98b1b6776d66ddabe08a",
+    "native_acknowledgment": {
+      "visible_response_text": "",
+      "returned_without_visible_error": true,
+      "message_id": null,
+      "send_time_utc": null,
+      "receiver_byte_count": null,
+      "receiver_checksum": null
+    },
+    "acknowledgment_limit": "The native tool returned an empty visible response with no surfaced error. It did not expose a payload echo, native message ID, exact serialized bytes, per-send timestamp or recipient receipt. This is not a cryptographic proof of receiver bytes or semantic acceptance."
+  }
+]

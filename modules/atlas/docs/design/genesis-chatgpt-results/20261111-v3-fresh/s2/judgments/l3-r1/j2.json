@@ -1,0 +1,143 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "complete": true,
+    "received": {
+      "desktop-web": "2/2 partes, com corpo completo, evidências e dependências.",
+      "app-session": "2/2 partes, com corpo completo, evidências e dependências.",
+      "design-tui": "3/3 partes, com corpo completo, evidências e dependências."
+    },
+    "missing_parts": [],
+    "integrity_limit": "Hashes, reconciliação e ordenação são recibos externos. Não recomputei bytes nem certifiquei a serialização interna das mensagens."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l3.desktop-web",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "reason": "As relações explicam proprietário, identidade, falha, impacto e verificação futura. Distinguem readiness local, seleção remota, credenciais, admissão por canal e conclusão de efeitos, preservando os limites anteriores.",
+      "locations": [
+        "Launch, choose a server and identify the health decision",
+        "Reconnect without transferring work to a replacement owner",
+        "Cross renderer, preload and main with a scoped capability",
+        "Move from a visible Dock to a browser, native or guest effect",
+        "Finish capture, persistence and installation at the right boundary",
+        "Carry changes through shared UI and distribution"
+      ],
+      "direct_use_readiness": {
+        "case": "S2-I3D",
+        "decision": "PASS",
+        "location": "Cross renderer, preload and main with a scoped capability; G3–G4.",
+        "reason": "Expõe packaged ignorando a URL de desenvolvimento, window.api via preload, origem verificada no wrapper principal e validações específicas de identidade/capacidade. Mantém explícitas as diferenças entre canais.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": {
+        "decision": "PASS",
+        "reason": "Os três L2 são dependências semânticas reais: host, estado compartilhado e UI contribuem fatos. Nenhum L3 pendente é usado como evidência.",
+        "location": "Direct cross-unit factual edges; Exact dependency rationale."
+      },
+      "optional_suggestions": []
+    },
+    {
+      "key": "s2.l3.app-session",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "reason": "Relaciona entrada, envio, recuperação, decisões, edição e renderização por autoridade e identidade. Os refinamentos de route fallback e seleção do request possuem suporte direto, sem ampliar garantias de execução.",
+      "locations": [
+        "Enter the intended server and workspace",
+        "Submit once, then hand the draft to its session",
+        "Recover the projection without inventing execution recovery",
+        "Change settings and Skills under the original owner",
+        "Render and localize under caller-owned lifetimes",
+        "E01–E09"
+      ],
+      "direct_use_readiness": {
+        "case": "S2-I3A",
+        "decision": "PASS",
+        "location": "Submit once, then hand the draft to its session; E02; predecessor L2 app-session, Durable admission.",
+        "reason": "Conecta captura de credenciais/owner, confirmação da política e revisão no dispatch à admissão distinta da mensagem visível. A passagem do draft preserva edições posteriores como não enviadas e impede reenvio pelo draft antigo.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": {
+        "decision": "PASS",
+        "reason": "Os três L2 fornecem fatos; o L1 app-session adicional sustenta caminhos e escopos dos testes citados. Peers L3 são somente navegação.",
+        "location": "Accepted predecessor identities; Section-to-evidence map; Exact dependency rationale."
+      },
+      "optional_suggestions": []
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+      "verdict": "FIX-FIRST",
+      "mandatory_findings": [
+        {
+          "id": "DESIGN-L3-J2-F1",
+          "decision": "FIX-FIRST",
+          "criteria": ["GO-A1", "GO-A3", "AC-01: conteúdo", "CC-3", "CC-7", "QS-2", "S2-I3U"],
+          "location": "Language and appearance cross app and host contracts, parágrafos e primeira linha da tabela.",
+          "expected": "Explicar concretamente o caminho de copy pelo language.t/language.plural tipado e pelos bundles nativeT no desktop; manter seleção de locale/plural e montagem gramatical fora dos callsites de feature/native, preservando texto e chaves inglesas existentes.",
+          "observed": "O corpo descreve dicionários, fallback, locale/layoutLocale, atualização de copy nativa e frases completas, mas não identifica os pontos tipados de chamada nem explicita as proibições de branches por locale e concatenação de fragmentos nos callsites. S10 oferece parte da regra no companion, mas o percurso até nativeT não está sintetizado no corpo.",
+          "consequence": "A seção não entrega integralmente a orientação contratual solicitada pelo caso direto de i18n; o leitor precisa reconstruir a fronteira de implementação entre app e main.",
+          "required_fix": "Acrescentar uma explicação curta nessa seção: app usa language.t e language.plural; main consome bundles tipados via nativeT; complexidade de locale/plural/fallback/interpolação pertence à camada compartilhada, sem branches ou fragmentos gramaticais em features/native; inglês e chaves existentes são preservados. Vincular à autoridade já disponível em S10 e ao predecessor desktop aceito. Não exige testes, runtime ou novo mecanismo."
+        }
+      ],
+      "reason": "Os demais fluxos de TUI, identidade, recursos e geração são úteis e sustentados. O bloqueio é a transferência incompleta da fronteira de i18n exigida no caso direto.",
+      "direct_use_readiness": {
+        "case": "S2-I3U",
+        "decision": "FIX-FIRST",
+        "location": "Language and appearance cross app and host contracts; DESIGN-L3-J2-F1.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": {
+        "decision": "PASS",
+        "reason": "Os três L2 contribuem fatos reais, inclusive admissão/browser, sanitização e copy do host. Os peers L3 permanecem navegação.",
+        "location": "Synthesis-to-predecessor map; Exact dependency rationale."
+      },
+      "optional_suggestions": []
+    }
+  ],
+  "grouped_criteria": [
+    {
+      "ids": ["GO-A1", "GO-A3", "AC-01: conteúdo", "CC-3", "CC-7", "QS-2"],
+      "decisions": {
+        "desktop-web": "PASS",
+        "app-session": "PASS",
+        "design-tui": "FIX-FIRST"
+      },
+      "locations": "Seções e casos diretos indicados por artefato.",
+      "reason": "As relações são utilizáveis; a exceção obrigatória é DESIGN-L3-J2-F1."
+    },
+    {
+      "ids": ["GO-A2", "GO-A4", "GO-A5", "GO-A6", "GO-A7", "AC-04: conteúdo", "CC-1", "CC-2: conteúdo", "QS-3", "QS-6"],
+      "decision": "PASS",
+      "locations": "Orientações, mapas de evidência e dependências dos três pacotes.",
+      "reason": "Construção cumulativa sobre versões aceitas, fontes atribuídas, cobertura herdada e ausência de infraestrutura especulativa. Não certifica execução ou economia global."
+    },
+    {
+      "ids": ["GO-I1", "GO-I2", "GO-I7", "GO-I8", "QS-1", "QS-4", "QS-5"],
+      "decision": "PASS",
+      "locations": "Identidades, testemunhos e limites finais dos três artefatos.",
+      "reason": "Preserva linhagem, conflitos, incertezas e diferença entre instrução, inferência e observação. Não há garantia de cluster, exactly-once, segurança ou acessibilidade universal."
+    },
+    {
+      "ids": ["GO-I3: vínculos declarados", "GO-I4: dependências", "GO-I5: impacto declarado", "AC-05: dependências", "AC-06: impacto declarado", "CC-4: impacto declarado"],
+      "decision": "PASS",
+      "locations": "Exact dependency rationale e tabelas de impacto/verificação.",
+      "reason": "Uso factual e build edges correspondem; navegação não justifica reconstrução. Leituras atuais, reutilização e atualização operacional continuam sem prova."
+    }
+  ],
+  "unaccepted_gates": {
+    "decision": "HOLD",
+    "items": [
+      "Camada L3 completa e início de L4, devido ao finding obrigatório aberto",
+      "Consumidores reais e limites de leitura",
+      "Vinculação/publicação, cache, atualização, recuperação e controles de mutação em execução",
+      "GO-I6 e demais garantias de orçamento/economia global",
+      "Runtime, testes, CI e aceitação global"
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "files": [
+    {
+      "path": "report.md",
+      "byte_length": 9799,
+      "sha256": "6cca3eaa95292356be18b9ecc852489b1b7c9287544771c3a65967c88b94afb4"
+    },
+    {
+      "path": "receipt.json",
+      "byte_length": 4743,
+      "sha256": "8f898f05f82a6c421b10f647d56d1c90835f74dcb0a8bc4bd27b2eb8d1f8bdba"
+    },
+    {
+      "path": "commands.md",
+      "byte_length": 2457,
+      "sha256": "1da08852059558c9d3b3be19f587a8050ebf88fe3dcd54431063266da8fc12e6"
+    },
+    {
+      "path": "request.md",
+      "byte_length": 3427,
+      "sha256": "34964866fe4c475ca82401c221e729015e40131a889f75665e6f4abfd9799b23"
+    },
+    {
+      "path": "response.md",
+      "byte_length": 2325,
+      "sha256": "3d5653be786ecc6da99bd3872cb2368e4464823d5dae5c897c047a2d75073593"
+    },
+    {
+      "path": "source-materialization.json",
+      "byte_length": 372431,
+      "sha256": "93b23a71c4896142e757b33a709bc91442a33111e0a0b7c59925e3f3e6ac8d4c"
+    },
+    {
+      "path": "runtime-materialization.json",
+      "byte_length": 188462,
+      "sha256": "9ba791b332abab7bba4b6949aedce9363a13dbb87ab3a4aa58ad485b695bea60"
+    },
+    {
+      "path": "dependency-materialization.json",
+      "byte_length": 1598078,
+      "sha256": "973e1414bdc71833420da907e15c1183bc0d452de70f8f7044b7f850cfc29e20"
+    },
+    {
+      "path": "tree-linkage-verification.json",
+      "byte_length": 8203,
+      "sha256": "f3992b052f29008017f752b3ed52b6471bf3cc5e58275b96bca509ed9a5e84ac"
+    },
+    {
+      "path": "package-structure-audit.json",
+      "byte_length": 2734,
+      "sha256": "eed4a04a139d34f829efad84467a161f817ce4ec4ec63382dd7d10f1d72c545c"
+    },
+    {
+      "path": "inspection/native-package-original.json",
+      "byte_length": 228059,
+      "sha256": "d0bf942164e6b69c3cd89e9d4a0808a5f4ddcbb450d6c40045b2d0952c9aa0cd"
+    },
+    {
+      "path": "inspection/native-package-current.json",
+      "byte_length": 228283,
+      "sha256": "9dacfc3c7837655b1de7b16adf953465c481e207ddc8df8afda74baea342f8ff"
+    }
+  ],
+  "source_git_probe": {
+    "argv": [
+      "git",
+      "-C",
+      "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+      "rev-parse",
+      "--show-toplevel"
+    ],
+    "exit_code": 128,
+    "stdout": "",
+    "stderr": "fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\n"
+  }
+}

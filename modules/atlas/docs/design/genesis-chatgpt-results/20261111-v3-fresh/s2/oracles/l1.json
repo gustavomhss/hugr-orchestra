@@ -1,0 +1,69 @@
+{
+  "schema": "genesis-s2-oracle/v1",
+  "stage": "L1",
+  "frozen_before_dispatch": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "cases": [
+    {
+      "id": "L1-COVERAGE",
+      "expected": {
+        "entries": 4506,
+        "paths_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+        "tree_records_sha256": "cb4f96b19e248e923485db63de87e56b45523428e1cb891a8746ec8189dffd88",
+        "group_counts": {
+          "desktop-web": 532,
+          "app-session": 1887,
+          "design-tui": 2087
+        }
+      },
+      "critical_errors": [
+        "dropped or duplicate paths",
+        "claiming tree enumeration as complete source reading",
+        "assuming all assets generated without provenance"
+      ]
+    },
+    {
+      "id": "L1-AUTHORITY",
+      "expected": "Root AGENTS, baseline implementation and current local instructions are distinct from historical intent and tests. Existing docs are attributed, not automatically current. Build dependency and navigation are separate.",
+      "critical_errors": [
+        "invented execution or pass",
+        "unsupported feature rationale",
+        "unread source claimed as inspected"
+      ]
+    },
+    {
+      "id": "L1-DESKTOP",
+      "expected": "owned-serve.ts READY_TIMEOUT=120000 ms, Promise.race polls /api/health against child exit and cap; start cwd userData/global according to index and maintenance skill. Renderer window.api via preload; IPC main; native i18n uses typed nativeT. Dependent facts must cite code separately from docs.",
+      "evidence": [
+        "apps/desktop/src/main/owned-serve.ts",
+        "apps/desktop/src/main/index.ts",
+        "apps/desktop/AGENTS.md"
+      ]
+    },
+    {
+      "id": "L1-UI",
+      "expected": "app-shell prioritizes stability/simplicity/performance, session/timeline edits require benchmark; UI English keys/source remain stable; localization complexity behind typed API, raw generated client files never hand edited; runtime dependencies do not import Core/Server into Client.",
+      "evidence": [
+        "packages/app-shell/AGENTS.md",
+        "packages/session-ui/AGENTS.md",
+        "packages/ui/AGENTS.md",
+        "AGENTS.md"
+      ]
+    },
+    {
+      "id": "L1-SCOPE",
+      "expected": "TUI, desktop, web, Storybook, app-shell, session-ui, UI, assets/themes/i18n/schema/docs all accounted by meaningful families. Binary/font/sound/icon/fixture files may use family-level evidence; source/maintenance mechanisms need concrete captured witnesses.",
+      "critical_errors": [
+        "unexplained catchall as semantic completion",
+        "outside-scope guarantee of backend recovery or consensus"
+      ]
+    }
+  ],
+  "allowed_unknowns": [
+    "individual binary pixel semantics",
+    "unexecuted tests explicitly labeled",
+    "historical cost/tokens",
+    "unverified UI behavior identified as gap rather than claimed"
+  ],
+  "acceptance": "Both independent judges cover all criteria and bodies. Critical missing required knowledge blocks acceptance."
+}

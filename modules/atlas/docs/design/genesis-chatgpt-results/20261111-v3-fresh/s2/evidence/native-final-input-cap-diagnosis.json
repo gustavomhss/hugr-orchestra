@@ -1,0 +1,89 @@
+{
+  "schema": "genesis-s2-final-input-cap-diagnosis/v1",
+  "recorded_at": "2026-11-11T20:50:34.060311+00:00",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "actual_prepare_receipt": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+    "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410"
+  },
+  "actual_error": "{\"kind\":\"error\",\"error\":\"native-input-unavailable: file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json\"}\n",
+  "exit_code": 1,
+  "known_oversized_inputs": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json",
+      "sha256": "3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6",
+      "byte_length": 369462,
+      "origin": "deliverable/inputs/app-session-tree.json",
+      "roles": [
+        "runtime-input",
+        "transitive-payload-reference",
+        "transitive-input_file"
+      ],
+      "git_blob_sha": null
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/design-tui-tree.json",
+      "sha256": "371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9",
+      "byte_length": 390775,
+      "origin": "deliverable/inputs/design-tui-tree.json",
+      "roles": [
+        "runtime-input",
+        "transitive-payload-reference",
+        "transitive-input_file"
+      ],
+      "git_blob_sha": null
+    },
+    {
+      "path": "schema/tui.json",
+      "sha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+      "byte_length": 1131057,
+      "origin": "producers/design-tui/sources/schema/tui.json",
+      "roles": [
+        "runtime-source",
+        "runtime-input",
+        "transitive-source-reference",
+        "source-capture-alias"
+      ],
+      "git_blob_sha": "9250e2ec0c6e433ade0d5a172e8156087022f217"
+    }
+  ],
+  "source_excerpts": {
+    "observer": {
+      "path": "runtime-work/runtime-code/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "lines": [
+        162,
+        182
+      ],
+      "excerpt": "        const file = fstatSync(fd)\n        if (!file.isFile()) return { kind: \"unavailable\" }\n        const chunks: Buffer[] = []\n        let total = 0\n        const probe = Buffer.alloc(8192)\n        for (;;) {\n          const n = readSync(fd, probe, 0, probe.length, null)\n          if (n === 0) break\n          chunks.push(Buffer.from(probe.subarray(0, n)))\n          total += n\n          if (total > 256000) return { kind: \"unavailable\" }\n        }\n        bytes = Buffer.concat(chunks, total)\n      } finally { closeSync(fd) }\n    }\n  } catch { return { kind: \"unavailable\" } }\n  let after: ReturnType<typeof lstatSync>\n  try { after = lstatSync(requested) } catch { return { kind: \"unavailable\" } }\n  if (after.ino !== before.ino || after.size !== before.size) return { kind: \"unavailable\" }\n  if (bytes.length > 256000) return { kind: \"unavailable\" }\n  return { kind: \"present\", version: String(id({ kind: \"ownership-source\", version: 1, bytes: Array.from(bytes) })) }\n",
+      "excerpt_sha256": "507e3b587683b6c918a97251ffe4045819fa22c3a7b59765a1ce357b282b795c"
+    },
+    "adapter": {
+      "path": "runtime-work/runtime-code/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "lines": [
+        53,
+        70
+      ],
+      "excerpt": "  for (const source of pack.artifacts) {\n    for (const reference of [source.recipe_ref, source.producer_request_ref, source.producer_response_ref, ...source.semantic_review_refs, ...source.runtime_receipt_refs]) preserve(reference)\n    for (const reference of source.source_refs) {\n      expectFile(reference.path, reference.sha256)\n      const bytes = readNativeFile(root, reference.path, 256000)\n      if (nativeSha256(bytes) !== reference.sha256 || nativeBlobSha(bytes) !== reference.git_blob_sha)\n        throw new Error(`native-source-drift: ${reference.path}`)\n    }\n    // Protocol/contract evidence is also a live input. The transport JSON is immutable evidence,\n    // not a whole-scope dependency that would invalidate unrelated artifacts whenever a WP is added.\n    const inputKeys = [...new Set([...source.input_keys, `file:${nativeReferencePath(pack.protocol_ref)}`])]\n    const inputs = inputKeys.map((key) => {\n      const observed = observeOwnershipInput(root, key)\n      if (observed.kind !== \"present\") throw new Error(`native-input-${observed.kind}: ${key}`)\n      const bytes = key.startsWith(\"file:\") ? readNativeFile(root, key.slice(5), 256000) : undefined\n      if (bytes !== undefined && expectedFiles.has(key.slice(5)) && nativeSha256(bytes) !== expectedFiles.get(key.slice(5)))\n        throw new Error(`native-source-drift: ${key}`)\n      if (bytes !== undefined && observed.version !== String(id({ kind: \"ownership-source\", version: 1, bytes: Array.from(bytes) })))\n",
+      "excerpt_sha256": "40724d5785d84cc93f7b7c6b3508c06260d44bc32a61896764062b9dad245074"
+    },
+    "io": {
+      "path": "runtime-work/runtime-code/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "lines": [
+        7,
+        31
+      ],
+      "excerpt": "import { nativePath } from \"./genesis-native-format.js\"\n\nexport const nativeIoUrl = import.meta.url\n\nexport const nativeMaxBytes = 8 * 1024 * 1024\nexport const nativeSha256 = (bytes: Uint8Array) => createHash(\"sha256\").update(bytes).digest(\"hex\")\nexport const nativeBlobSha = (bytes: Uint8Array) => createHash(\"sha1\").update(`blob ${bytes.length}\\0`).update(bytes).digest(\"hex\")\n\nexport function nativeRoot(path: string): string {\n  const root = resolve(path)\n  const stat = lstatSync(root)\n  if (!stat.isDirectory() || stat.isSymbolicLink() || realpathSync(root) !== root) throw new Error(`native-root-path: ${path}`)\n  return root\n}\n\n/** Descriptor-bound, bounded reads; reject symlinks in every path component before and after reading. */\nexport function readNativeFile(root: string, relative: string, maximum = nativeMaxBytes): Uint8Array {\n  nativePath(relative)\n  const parts = relative.split(\"/\")\n  const observed = parts.map((_, index) => {\n    const path = resolve(root, ...parts.slice(0, index + 1))\n    const stat = lstatSync(path)\n    if (stat.isSymbolicLink() || (index < parts.length - 1 ? !stat.isDirectory() : !stat.isFile())) throw new Error(`native-file-kind: ${relative}`)\n    return { path, stat }\n  })\n",
+      "excerpt_sha256": "ef06589f3568e2e79e5c8e4612cb7a2eb9df9e2a5518b3ef089b2fb51bbf34b6"
+    }
+  },
+  "inference": "The first failing declared input exists with verified complete bytes and is369462bytes; the pinned observer returns unavailable once reading exceeds256000bytes. This explains the observed first failure. The other two oversize files are static remaining incompatibilities, not separately executed failures.",
+  "limits": [
+    "The general native document reader allows8MiB; the live input and direct source paths separately cap256000bytes.",
+    "No new runtime candidate, binding, publish, readers, consumers or update is established.",
+    "S2 did not alter shared S4 source or limits, omit mandatory inputs, reclassify unavailable as absent, truncate files or retry native prepare."
+  ]
+}

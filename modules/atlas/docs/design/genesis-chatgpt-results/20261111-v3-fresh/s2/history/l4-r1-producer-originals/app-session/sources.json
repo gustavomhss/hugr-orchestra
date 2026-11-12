@@ -1,0 +1,168 @@
+{
+  "unit": "s2.l4.app-session",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "capture_index": {
+    "path": "producers/app-session/sources.json",
+    "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+  },
+  "scope": "Only directly used captured instructions and declared package-script fields are listed. Complete captured bytes were hashed for identity. Accepted predecessor bodies carry other facts through explicit build edges; no raw peer source or new remote capture was fetched.",
+  "sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "local_capture_file": "producers/app-session/sources/AGENTS.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-05.json",
+      "used_for": "Current codegen/dependency, repo-only docs/skills, remote-test cadence, PTY, guard, runtime and process-local continuation instructions.",
+      "used_line_ranges": [
+        [
+          1,
+          2
+        ],
+        [
+          146,
+          166
+        ],
+        [
+          175,
+          216
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "local_capture_file": "producers/app-session/sources/packages/app-shell/AGENTS.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-01.json",
+      "used_for": "Stability/simplicity/performance priority, production benchmark requirement, no-restart rule and exact localization guidance.",
+      "used_line_ranges": [
+        [
+          1,
+          8
+        ],
+        [
+          21,
+          34
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/session-ui/AGENTS.md",
+      "git_blob_sha": "678ae1bf90d8466fc47859eb01678d9e31586133",
+      "sha256": "60bfa8f3ae4ad8e65a15247074ae0c105712b352990dac4b1f9463c1de4a58e7",
+      "byte_length": 1404,
+      "local_capture_file": "producers/app-session/sources/packages/session-ui/AGENTS.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-01.json",
+      "used_for": "Shared session-UI visible-copy localization and preservation of English source text/keys.",
+      "used_line_ranges": [
+        [
+          1,
+          7
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/AGENTS.md",
+      "git_blob_sha": "88ff8b244e3fca3c8b23950514b7eff3cf37e85b",
+      "sha256": "ca79ab26b6eb07d1ed35a76851852d69475ec554dad7624714d3e47c15dce057",
+      "byte_length": 5640,
+      "local_capture_file": "producers/app-session/sources/packages/schema/AGENTS.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-05.json",
+      "used_for": "Browser-safe serializable contract ownership, legacy ID compatibility/migration decision and focused contract regression requirements.",
+      "used_line_ranges": [
+        [
+          3,
+          9
+        ],
+        [
+          71,
+          83
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/e2e/AGENTS.md",
+      "git_blob_sha": "2e24eecc8ccea104922263bf6c7ccc8e93da24ec",
+      "sha256": "87f2775fafa79874744ead17751b8df5c6b74b38ea66e70e02beeeeba1a121f9",
+      "byte_length": 2379,
+      "local_capture_file": "producers/app-session/sources/packages/app-shell/e2e/AGENTS.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-05.json",
+      "used_for": "Required official-guide reading before E2E work, observable-state/identity assertions, no timing sleeps or retried state-changing actions, and manual-suite discovery limits.",
+      "used_line_ranges": [
+        [
+          1,
+          22
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/e2e/performance/AGENTS.md",
+      "git_blob_sha": "e69c91a98fc168717cfc5663f0dfdf5a01723153",
+      "sha256": "f3139eb2927c5b6758955772ea1dd42ba9d5403b785f6e09b2c5cc858e73e0f1",
+      "byte_length": 813,
+      "local_capture_file": "producers/app-session/sources/packages/app-shell/e2e/performance/AGENTS.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-05.json",
+      "used_for": "Serial production benchmarking, raw diagnostics, scenario/metric completion and no machine-dependent thresholds.",
+      "used_line_ranges": [
+        [
+          1,
+          13
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/agent-screen-maintenance/SKILL.md",
+      "git_blob_sha": "a24017fc867e367890e4212b28dcc5bb443abced",
+      "sha256": "0363fb0ac52524525a3fccf3a5e5ba15d94174f245f3fd48c21adfe8712487ed",
+      "byte_length": 3287,
+      "local_capture_file": "producers/app-session/sources/.orchestra/skills/agent-screen-maintenance/SKILL.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-04.json",
+      "used_for": "Agent-screen guide/endpoint ownership, stable IDs, secret-free presentation, localization, deferred Atlas reads and codegen obligation.",
+      "used_line_ranges": [
+        [
+          8,
+          41
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/package.json",
+      "git_blob_sha": "eb09ebc7c07ed519482aeafdd5e592bf8223a269",
+      "sha256": "26b413c9fb46bf04bbeeb6d7a62ef77372c7acff2fec5cfb9ed8ad7cb8863352",
+      "byte_length": 4144,
+      "local_capture_file": "producers/app-session/sources/packages/app-shell/package.json",
+      "original_connector_response_file": "producers/app-session/captures/batch-01.json",
+      "used_for": "Declared app typecheck and manual benchmark scripts; no script execution.",
+      "used_json_fields": [
+        "name",
+        "scripts.typecheck",
+        "scripts.test:bench"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/session-ui/package.json",
+      "git_blob_sha": "8ee2e7941a4ee1e053f97267ac1bf4db3fbfab83",
+      "sha256": "42b168226b976a8de78f1e02d8051328f66d377b9c64b249241c8435ad63b5ba",
+      "byte_length": 3661,
+      "local_capture_file": "producers/app-session/sources/packages/session-ui/package.json",
+      "original_connector_response_file": "producers/app-session/captures/batch-01.json",
+      "used_for": "Declared session-UI typecheck script; no script execution.",
+      "used_json_fields": [
+        "name",
+        "scripts.typecheck"
+      ]
+    }
+  ]
+}

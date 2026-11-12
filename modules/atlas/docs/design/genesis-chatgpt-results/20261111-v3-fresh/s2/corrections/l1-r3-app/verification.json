@@ -1,0 +1,94 @@
+{
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "revision": "l1-r3-app",
+  "status": "producer correction ready; semantic judgment pending",
+  "semantic_verdict": null,
+  "source_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "canonical_r2_body": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/l1.md",
+    "bytes": 40081,
+    "sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc"
+  },
+  "revised_body": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r3-app/l1.md",
+    "bytes": 42047,
+    "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+  },
+  "change_operations": 4,
+  "inserted_normative_paragraphs": 3,
+  "corrected_existing_paragraphs": 1,
+  "all_other_original_paragraphs_preserved_exactly": true,
+  "reversing_four_changes_reproduces_original_bytes": true,
+  "equal_remainder_byte_segments": 5,
+  "equal_remainder_verified_bytes": 39896,
+  "skills_section_byte_identical": true,
+  "inherited_cited_paths_removed": [],
+  "canonical_files_preserved": 12,
+  "other_unit_body_hashes": {
+    "design-tui": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+    "desktop-web": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+  },
+  "normative_capture_count": 3,
+  "normative_capture_bytes": 22413,
+  "new_unique_source_captures": 0,
+  "source_hash_and_response_roundtrip_verified": true,
+  "exact_normative_excerpts": 3,
+  "existing_E15_binding_verified": true,
+  "new_assigned_paths": 0,
+  "depth_changes": 0,
+  "app_session_population": 1887,
+  "app_session_unique_sources": 255,
+  "app_session_depth": {
+    "inspected": 234,
+    "family_supported": 1623,
+    "metadata_only": 30
+  },
+  "all_units_population": 4506,
+  "all_units_unique_paths": 4506,
+  "all_units_path_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+  "sections": [
+    {
+      "heading": "Scope, identity and depth",
+      "bytes": 2541
+    },
+    {
+      "heading": "Authority, composition and identity",
+      "bytes": 4683
+    },
+    {
+      "heading": "Transport, stream health and canonical recovery",
+      "bytes": 4029
+    },
+    {
+      "heading": "Prompt admission and draft ownership",
+      "bytes": 4394
+    },
+    {
+      "heading": "Requests, terminals and auxiliary lifetimes",
+      "bytes": 3851
+    },
+    {
+      "heading": "Rendering, evidence and reusable utility contracts",
+      "bytes": 5180
+    },
+    {
+      "heading": "Navigation, settings and feature-family disposition",
+      "bytes": 6083
+    },
+    {
+      "heading": "Skills catalog, editing and ownership",
+      "bytes": 5976
+    },
+    {
+      "heading": "Assets, localization and verification evidence",
+      "bytes": 5263
+    }
+  ],
+  "product_tests": 0,
+  "benchmarks": 0,
+  "generation_runs": 0,
+  "product_edits": 0,
+  "remote_writes": 0,
+  "oracles_or_judge_packets_accessed": false,
+  "later_layers": "L2-L4 remain blocked pending complete L1 judgment"
+}

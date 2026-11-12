@@ -1,0 +1,78 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "status": "COMPLETE",
+    "parts_present": ["design-tui r2 1/2", "design-tui r2 2/2"],
+    "evidence_present": [
+      "Complete corrected body",
+      "Exact bounded insertion and its location",
+      "App-shell S10 instruction excerpt",
+      "Complete desktop S23 instruction excerpt, including its continuation in part 2",
+      "Complete current dependency rationale and predecessor bindings",
+      "Previously supplied complete r1 evidence retained as the unchanged foundation"
+    ],
+    "missing_content": [],
+    "identity_limit": "Hashes, byte lengths and mechanical reconciliation are external receipts. I did not compute hashes or attest to host serialized-message bytes."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l3.design-tui",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "body_byte_length": 15780,
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "resolved_findings": [
+        {
+          "id": "J1-L3-DT-01",
+          "disposition": "RESOLVED",
+          "location": "Language and appearance cross app and host contracts — inserted Instruction paragraph immediately before the handoff table",
+          "reason": "The body now explains the required copy path directly: app callsites use language.t for ordinary copy and language.plural for counts; native main-process callsites consume shared typed translation bundles through nativeT. It assigns locale selection, plural resolution, fallback and interpolation to shared language/UI modules. It explicitly prohibits locale branches, plural-category selection and grammatical fragment concatenation in feature/native callsites, preserves existing English keys and text, and directs richer grammar into the shared bundle/API. The known startup-copy discrepancy remains visible.",
+          "support": [
+            "S10 — packages/app-shell/AGENTS.md:23–28",
+            "S23 — apps/desktop/AGENTS.md:5–9",
+            "Accepted s2.l2.desktop-web decisive evidence E10 — Native copy instruction"
+          ]
+        }
+      ],
+      "reserved_case": {
+        "id": "S2-I3U",
+        "content_readiness": "PASS",
+        "location": "Language and appearance cross app and host contracts",
+        "reason": "The target flow now contains the typed app/native API path, ownership of localization machinery, prohibited callsite behavior and English-source preservation needed to answer the reserved question without supplying missing contract details from outside the body.",
+        "actual_consumer": "NOT_RUN",
+        "budget_status": "No index/read execution or consumer-budget compliance is certified."
+      },
+      "regression_assessment": {
+        "verdict": "NO_NEW_MANDATORY_ISSUE",
+        "reason": "The insertion is explicitly attributed instruction and does not claim universal implementation compliance. It preserves the surrounding separation of content locale, layout direction, terminal language, native copy, theme validation and visual verification. It introduces no runtime, accessibility, translation-completeness or backend-recovery guarantee."
+      },
+      "dependency_assessment": {
+        "verdict": "PASS",
+        "reason": "The three accepted L2 factual dependencies and two navigation-only L3 destinations remain unchanged. The added pinned desktop AGENTS record and public E10 corroboration support the newly explicit instruction within the existing desktop-copy dependency. No pending peer L3 body becomes evidence, and no new ordering or source-binding mismatch is apparent."
+      },
+      "required_l3_content_scope_resolved": true
+    }
+  ],
+  "criteria_dispositions": [
+    {
+      "criteria": ["GO-A1", "GO-A2", "GO-A3", "CC-2", "CC-3", "QS-2"],
+      "disposition": "PASS_CONTENT",
+      "reason": "The previously missing ownership and maintenance explanation is now directly usable in its stable flow section."
+    },
+    {
+      "criteria": ["GO-A4", "GO-A5", "AC-05", "AC-06", "CC-1", "CC-4", "CC-7"],
+      "disposition": "PRIOR_CONTENT_AND_DEPENDENCY_DISPOSITIONS_RETAINED",
+      "reason": "Accepted predecessor identities, semantic build edges and navigation distinctions remain explicit. Executed reuse, invalidation and update propagation remain outside this review."
+    },
+    {
+      "criteria": ["GO-A6", "GO-A7", "GO-I1..8", "AC-01", "AC-04", "QS-1", "QS-3", "QS-4", "QS-5", "QS-6"],
+      "disposition": "APPLICABLE_PRIOR_DISPOSITIONS_RETAINED",
+      "reason": "The correction is bounded and source-supported. Observations, attributed instructions, interpretations and unknowns remain distinguishable; unchanged coverage and unexecuted verification limits are not upgraded."
+    }
+  ],
+  "optional_suggestions": [],
+  "unchanged_peer_decisions": "The original desktop-web and app-session L3 PASS decisions remain preserved; no new peer review is issued.",
+  "acceptance_limit": "This is semantic content PASS for the corrected design-tui L3 artifact. The principal records whole-L3 acceptance after both independent corrected-artifact decisions. It does not accept L4, actual consumers, runtime, binding/publication, executed update/reuse/recovery, CI, economics or global gates."
+}

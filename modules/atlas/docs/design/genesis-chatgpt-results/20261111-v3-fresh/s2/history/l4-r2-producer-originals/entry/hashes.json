@@ -1,0 +1,50 @@
+{
+  "schema": "genesis-producer-output-hashes/v1",
+  "artifact": "s2.l4.entry",
+  "revision": 2,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "Local documentation output identities; no semantic or runtime attestation.",
+  "files": [
+    {
+      "file": "body.md",
+      "byte_length": 5849,
+      "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1"
+    },
+    {
+      "file": "sources.json",
+      "byte_length": 1290,
+      "sha256": "443b8e94919fb4bcbdef2380d1414f8c3e3d964961b3eda3933e76b9c301f41d"
+    },
+    {
+      "file": "dependencies.json",
+      "byte_length": 8418,
+      "sha256": "f87550c141a6592d1cbdafbb63c9c06e963bcd1fd5e8f198081911177911c425"
+    },
+    {
+      "file": "decisive-evidence.md",
+      "byte_length": 12805,
+      "sha256": "40b990eefa4e9630be200bd1f2907871d78f95175949025fd09330584a66e35e"
+    },
+    {
+      "file": "response.md",
+      "byte_length": 4673,
+      "sha256": "a6bdb557360ba300cdcb1a09eaba1159f3c674caabd6bf84319dedfd4516f702"
+    },
+    {
+      "file": "body.diff",
+      "byte_length": 1811,
+      "sha256": "e1d924481eab0d78599570d1a8ea7c171a3dd51bce2270636f5c262b5256cfd6"
+    },
+    {
+      "file": "delta.md",
+      "byte_length": 5152,
+      "sha256": "d49527f10e07503cfe2f5e4925bd6cae86839243f87001f05fea595ea7600744"
+    },
+    {
+      "file": "author-checks.json",
+      "byte_length": 5973,
+      "sha256": "6f44dc7d44a20fa2d05550d7a705e5e8c60dae9a02b709a23c870fa5453cb13b"
+    }
+  ],
+  "self_excluded": true
+}

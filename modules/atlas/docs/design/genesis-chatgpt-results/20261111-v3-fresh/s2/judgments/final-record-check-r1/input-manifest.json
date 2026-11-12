@@ -1,0 +1,65 @@
+{
+  "schema": "genesis-s2-final-record-review-input/v1",
+  "recorded_at": "2026-11-11T21:35:59.584938+00:00",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "prior_packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "records": [
+    {
+      "path": "work.md",
+      "byte_length": 25446,
+      "sha256": "335b5277098c14ffacd0456a9926dbeb512f0682d43e5641fc1b4cb1fda7be2e"
+    },
+    {
+      "path": "handoff.json",
+      "byte_length": 18854,
+      "sha256": "17a6f55d2c4712879a7ea5a9242e1422a962f7ff35f7fb1b4a68747e66712d5f"
+    },
+    {
+      "path": "execution-ledger.jsonl",
+      "byte_length": 47300,
+      "sha256": "c38acd169bc550babc87211c278f29f2370222f6b2fcae4449a4d80515e10578"
+    },
+    {
+      "path": "evidence/final-criterion-matrix.json",
+      "byte_length": 108664,
+      "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20"
+    },
+    {
+      "path": "evidence/final-local-gates.json",
+      "byte_length": 6902,
+      "sha256": "fb2aad45351f3c03c59bb69458560d79aab07b56dff78a16e2006d7dae6a3f88"
+    },
+    {
+      "path": "evidence/final-record-consolidation.json",
+      "byte_length": 1585,
+      "sha256": "7c4a4cbc4e0dd591788e37ad76f852e9c9a336e2321c0d9ba10275aba5f0ce3a"
+    }
+  ],
+  "disclosure_inventory": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/disclosure-inventory-reviewed.json",
+    "byte_length": 209036,
+    "sha256": "327c1f57e66606672a7790a1cc13c97cd47eb79e7b3c50e9ed4d5c380fda650e"
+  },
+  "current_accounting_scope": {
+    "ledger_rows": 89,
+    "indexed_judge_send_calls": 126,
+    "closure_activations": 2,
+    "actual_closure_response_documents": 2,
+    "semantic_response_documents": 18,
+    "post_snapshot_gets": 7,
+    "named_recent_gets": 16,
+    "current_support_activations": 2,
+    "principal_support_coordination_calls": 1,
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN",
+    "historical": "GLOBAL_UNRECONCILED"
+  },
+  "preserved_reference_correction": {
+    "path": "evidence/final-record-reference-correction.json",
+    "byte_length": 882,
+    "sha256": "fb055e2504292de3477b7c03de3699c1d3d01ca86d36c7dc7820695d78ce01cc"
+  },
+  "limitations": "Hashes externally computed. No new semantic/runtime/consumer/CI/publication PASS. This record review and final export have not run when this input is frozen."
+}

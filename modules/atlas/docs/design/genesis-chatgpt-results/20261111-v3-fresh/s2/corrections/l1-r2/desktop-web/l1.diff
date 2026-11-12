@@ -1,0 +1,11 @@
+--- original/desktop-web/l1.md
++++ correction/desktop-web/l1.md
+@@ -12,7 +12,7 @@
+ 
+ ## 1. Startup, readiness and shutdown
+ 
+-The desktop is an Electron host around the shared application. Main chooses application state, migration and logging, creates windows, registers integrations and starts the backend service. Its normal branch resolves a bundled CLI and launch environment together, then calls `startOwnedServe` with a cwd under desktop user data. The returned URL and Basic credentials are published through `serverReady` **after** `owned.health.wait` succeeds. Failure flows through `forwardInitializationFailure`; this ordering is stronger evidence than the renderer comment claiming credentials are available before health. (`M/index.ts:320–338,431–475`; `R/index.tsx:367–388`.)
++The desktop is an Electron host around the shared application. Main chooses application state, migration and logging, creates windows, registers integrations and starts the backend service. Its normal branch creates `join(app.getPath("userData"), "global")` recursively and passes that exact directory as `cwd` to `startOwnedServe`, after resolving the bundled CLI and launch environment together. The maintenance skill separately prescribes `userData/global` and warns against home or another large folder; its reported startup cost is historical, not a measurement from this work. The returned URL and Basic credentials are published through `serverReady` **after** `owned.health.wait` succeeds. Failure flows through `forwardInitializationFailure`; this ordering is stronger evidence than the renderer comment claiming credentials are available before health. (`M/index.ts:320–338,431–475`; `.orchestra/skills/desktop-startup-maintenance/SKILL.md:18–21`; `R/index.tsx:367–388`.)
+ 
+ `startOwnedServe` reserves a loopback port and random password, spawns `serve --hostname … --port …`, redacts the password from output, and retains the last 15 output lines for startup errors. Readiness races authenticated `/api/health`, the first child's exit and a 120-second ceiling. Its local health predicate accepts an HTTP success response; it is not the stricter WSL response/body and wrong-password check described later. `sidecarMode` selects shared mode only for the exact string `shared`. (`M/owned-serve.ts:15–68,94–102,130–141`; `M/owned-serve.test.ts:4–12`.)
+ 

@@ -1,0 +1,34 @@
+{
+  "schema": "genesis-s2-bounded-staging-diagnostic/v1",
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-c",
+    "import faulthandler,runpy,sys; faulthandler.dump_traceback_later(5,repeat=True); sys.path.insert(0,'assembly-tools'); sys.argv=['assembly-tools/stage_final_native.py','--inspect-current','--runtime-release','deliverable/evidence/s4-post-l3-recheck/runtime-release.json','--report-dir','runtime-work/staging-diagnostic-support/inspection-report']; runpy.run_path('assembly-tools/stage_final_native.py',run_name='__main__')"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2",
+  "started_at": "2026-11-11T20:18:45.051119+00:00",
+  "ended_at": "2026-11-11T20:19:03.055170+00:00",
+  "duration_seconds": 18.004060248000314,
+  "timeout_seconds": 18,
+  "timed_out": true,
+  "exit_code": -15,
+  "command_scope": "inspect-current only; report destination confined to diagnostic support",
+  "stdout": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/staging-diagnostic-support/diagnostic.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "byte_length": 0
+  },
+  "stderr": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/staging-diagnostic-support/diagnostic.stderr",
+    "sha256": "a6e697ae304ea59b4b7faca0bb25db641211d8a78c691c404a2cb61bab620839",
+    "byte_length": 3030
+  },
+  "utility": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/assembly-tools/stage_final_native.py",
+    "sha256": "f10ecbc59faea42d65f0b096aa67fb7fd93ba352bc54bdfc9c64575139fc8bbf",
+    "byte_length": 30555
+  },
+  "actual_prepare_executed": false,
+  "apply_requested": false,
+  "cas_exists_after": false
+}

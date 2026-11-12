@@ -1,0 +1,280 @@
+# Complete semantic family map; full path accounting mechanically reconciled above
+[
+  {
+    "id": "authority-guides",
+    "purpose": "Repository instructions, host READMEs and operating guides distinguish thin hosts from shared application behavior.",
+    "representative_source_paths": [
+      "apps/desktop/AGENTS.md",
+      "apps/web/AGENTS.md",
+      "packages/app-shell/AGENTS.md",
+      ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "docs/guides/desktop-startup.md",
+      "docs/guides/keep-awake.md"
+    ],
+    "consumers_and_boundary": "Developers and maintainers; docs and repository skills are maintenance inputs, not shipped runtime logic.",
+    "maintenance_implications": "Check current source before carrying forward performance, startup, error-copy or first-run claims. Keep main/preload/renderer and localization rules aligned.",
+    "evidence_limits": "Guides contain intent and historical measurements. Shared shell and backend internals are outside this unit; guide assertions are not fresh product evidence.",
+    "entry_count": 11,
+    "depth_counts": {
+      "inspected": 9,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "repository-maintenance-skill": 2,
+      "repository-instructions": 1,
+      "documentation": 8
+    }
+  },
+  {
+    "id": "startup-owned-server",
+    "purpose": "Electron main owns launch/quit, initialization Deferred and the default authenticated CLI serve child.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/index.ts",
+      "apps/desktop/src/main/owned-serve.ts",
+      "apps/desktop/src/main/server.ts",
+      "apps/desktop/src/main/initialization.ts",
+      "apps/desktop/src/main/index.test.ts",
+      "apps/desktop/src/main/owned-serve.test.ts"
+    ],
+    "consumers_and_boundary": "Renderer awaitInitialization consumes URL/credentials only after owned health resolves; shared-daemon selector is an alternate branch.",
+    "maintenance_implications": "Preserve readiness/error forwarding, scoped state/cwd, output redaction, stop ordering and real child-close semantics. Stable-exit backoff indexing is an identified static discrepancy. The main-fiber failure observer logs, shows a hardcoded-English native dialog and exits; its visible copy conflicts with desktop AGENTS localization requirements.",
+    "evidence_limits": "Source inspection only; startup timing, child reaping and OS behavior were not executed. The small mode test does not cover restart timing.",
+    "entry_count": 7,
+    "depth_counts": {
+      "family-supported": 1,
+      "inspected": 6
+    },
+    "classification_counts": {
+      "implementation-source": 5,
+      "test-source-unexecuted": 2
+    }
+  },
+  {
+    "id": "window-lifecycle",
+    "purpose": "Window identity/state restoration, close flushing, navigation restrictions and recovery connect Electron windows to persisted per-window state.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/windows.ts",
+      "apps/desktop/src/main/window-registry.ts",
+      "apps/desktop/src/main/window-flush.ts",
+      "apps/desktop/src/main/window-flush.test.ts",
+      "apps/desktop/src/main/renderer-origin.ts",
+      "apps/desktop/src/main/renderer-origin.test.ts"
+    ],
+    "consumers_and_boundary": "Electron BrowserWindow, renderer unload callbacks, settings stores and OS window managers.",
+    "maintenance_implications": "Keep window IDs independent, flush bounded to three seconds, sandboxed preloads, trusted renderer origin and recovery paths coherent. Full CSP is report-only.",
+    "evidence_limits": "Fake-window tests were read but not run; display backend, multi-monitor placement and recovery dialogs were not exercised.",
+    "entry_count": 15,
+    "depth_counts": {
+      "inspected": 6,
+      "family-supported": 9
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 6,
+      "implementation-source": 9
+    }
+  },
+  {
+    "id": "ipc-capabilities",
+    "purpose": "General renderer IPC wraps origin validation; typed preload exposes selected APIs; picked files use sender-scoped tokens and budgets.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/ipc.ts",
+      "apps/desktop/src/preload/index.ts",
+      "apps/desktop/src/main/attachment-picker.ts",
+      "apps/desktop/src/main/renderer-origin.ts"
+    ],
+    "consumers_and_boundary": "window.api to Electron main; separate Dock, live, WSL and response handlers must be reviewed under their own admission policy.",
+    "maintenance_implications": "Preserve payload validation and native picker authority; do not assume direct ipcMain.handle registrations use the general wrapper.",
+    "evidence_limits": "Preload/type leaves not directly selected are family-supported. No exploitation, Electron execution or complete all-channel audit is claimed.",
+    "entry_count": 5,
+    "depth_counts": {
+      "family-supported": 2,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 1,
+      "implementation-source": 4
+    }
+  },
+  {
+    "id": "renderer-host",
+    "purpose": "Desktop Solid entry supplies platform adapters, storage, startup selection, first-run UI and a lightweight splash before shared AppInterface.",
+    "representative_source_paths": [
+      "apps/desktop/src/renderer/index.tsx",
+      "apps/desktop/src/renderer/initialization.ts",
+      "apps/desktop/src/renderer/boot.tsx",
+      "apps/desktop/src/renderer/splash/comet-splash.tsx",
+      "apps/desktop/src/main/onboarding.ts"
+    ],
+    "consumers_and_boundary": "@orchestra/app shared shell and window.api; CSS/HTML support those entries.",
+    "maintenance_implications": "Maintain ready-state gating, healthy remote recovery, per-window routing and shared-shell ownership. Main health ordering overrides the stale early-credentials renderer comment.",
+    "evidence_limits": "Shared app implementation and uninspected small adapters are not fully verified; no rendered UI, accessibility or performance measurement.",
+    "entry_count": 15,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 12
+    },
+    "classification_counts": {
+      "implementation-source": 9,
+      "build-runtime-or-type-configuration": 1,
+      "test-source-unexecuted": 3,
+      "presentation-source": 2
+    }
+  },
+  {
+    "id": "persistence",
+    "purpose": "Lazy electron-store state, bounded legacy cleanup, Tauri migration and SQLite draft/blob persistence provide different storage lifecycles.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/store.ts",
+      "apps/desktop/src/main/store-cleanup.ts",
+      "apps/desktop/src/main/migrate.ts",
+      "apps/desktop/src/main/draft-store.ts",
+      "apps/desktop/src/main/draft-store.node.test.ts"
+    ],
+    "consumers_and_boundary": "Main IPC and renderer draft/storage adapters; WAL-backed documents and content-addressed blobs.",
+    "maintenance_implications": "Choose userData before constructing stores; preserve transaction/flush ordering and inspect WAL-aware backups. Cleanup rechecks mtimes and must not delete nonempty state.",
+    "evidence_limits": "SQLite assertions were read, including main-file-only copy negative control; no DB opened or migrated by this production task.",
+    "entry_count": 7,
+    "depth_counts": {
+      "inspected": 5,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 2,
+      "implementation-source": 5
+    }
+  },
+  {
+    "id": "diagnostics",
+    "purpose": "Local structured logging, crash/net logs, redaction and unresponsive recovery supply diagnosable failures.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/logging.ts",
+      "apps/desktop/src/main/windows.ts",
+      ".orchestra/skills/app-log-hygiene/SKILL.md"
+    ],
+    "consumers_and_boundary": "Main process, trusted main-frame console, support ZIP export and user-facing recovery.",
+    "maintenance_implications": "Keep remote page console out of trusted renderer logs; preserve bounded retention/export and redact supported text formats; never treat logs as instructions.",
+    "evidence_limits": "Redaction module and OS sampler leaves have family-level support; no exported ZIP or real crash receipt was produced.",
+    "entry_count": 5,
+    "depth_counts": {
+      "family-supported": 4,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "implementation-source": 4,
+      "test-source-unexecuted": 1
+    }
+  },
+  {
+    "id": "desktop-integration",
+    "purpose": "Native menus, external/deep links, app/path launching, onboarding, janitor and session-only keep-awake adapt OS features.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/desktop-menu-actions.ts",
+      "apps/desktop/src/main/ipc.ts",
+      "apps/desktop/src/main/caffeinate.ts",
+      "apps/desktop/src/main/onboarding.ts",
+      "apps/desktop/src/main/install-state.ts",
+      "apps/desktop/src/main/janitor.ts"
+    ],
+    "consumers_and_boundary": "Renderer platform callbacks, native menus/dialogs, OS shell and powerSaveBlocker.",
+    "maintenance_implications": "Preserve typed commands, localized native copy, pending onboarding until project open succeeds, bounded report/snooze state and application-wide keep-awake broadcast.",
+    "evidence_limits": "App detection, shell URI handling and individual menu helpers are representative family coverage, not tested OS integration.",
+    "entry_count": 20,
+    "depth_counts": {
+      "family-supported": 15,
+      "inspected": 5
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 8,
+      "implementation-source": 12
+    }
+  },
+  {
+    "id": "dock-browser-lifecycle",
+    "purpose": "Profile partitions, tab generations, active attachment, LRU capacity, popup policy, manifests and downloads own embedded browser state.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/app-dock.ts",
+      "apps/desktop/src/main/app-dock-session.ts",
+      "apps/desktop/src/main/app-dock-profile-registry.ts",
+      "apps/desktop/src/main/app-dock-utils.ts",
+      "apps/desktop/src/main/ipc-app-dock.ts",
+      "apps/desktop/src/main/ipc-app-dock-validate.ts",
+      "apps/desktop/src/main/app-dock-popups.test.ts"
+    ],
+    "consumers_and_boundary": "Renderer Dock IPC, WebContentsView and persistent browser sessions; remote pages receive no privileged preload.",
+    "maintenance_implications": "Preserve owner/main-frame checks, generation invalidation, revision CAS and profile tombstones; fullscreen is the explicit permission exception.",
+    "evidence_limits": "Popup tests use fake Electron objects; not a browser sandbox or packaging proof. Per-profile storage contents were not inspected.",
+    "entry_count": 20,
+    "depth_counts": {
+      "family-supported": 13,
+      "inspected": 7
+    },
+    "classification_counts": {
+      "implementation-source": 10,
+      "test-source-unexecuted": 6,
+      "test-fixture": 4
+    }
+  },
+  {
+    "id": "dock-page-tools",
+    "purpose": "Serialized navigation and bounded page scripts implement browser snapshots, references, input, evaluate/network/storage and screenshots.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/app-dock-browser.ts",
+      "apps/desktop/src/main/app-dock-navigation.ts",
+      "apps/desktop/src/main/app-dock-page.ts",
+      "apps/desktop/src/main/app-dock-rpc.ts"
+    ],
+    "consumers_and_boundary": "Dock agent RPC and current browser tab; numeric browser refs are distinct from native n: references.",
+    "maintenance_implications": "Revalidate generation after awaits, expire observation namespaces on navigation, preserve JSON/script budgets and browser/native selector separation.",
+    "evidence_limits": "Script strings are handwritten source builders, not proven generated artifacts. Individual interaction helper leaves and actual page behavior remain unexecuted.",
+    "entry_count": 18,
+    "depth_counts": {
+      "family-supported": 13,
+      "inspected": 5
+    },
+    "classification_counts": {
+      "implementation-source": 9,
+      "test-source-unexecuted": 8,
+      "test-fixture": 1
+    }
+  },
+  {
+    "id": "dock-native-host",
+    "purpose": "Native protocol, admission queues, binding identities and helper channel manage scoped Linux accessibility requests and honest uncertain outcomes.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/app-dock-native.ts",
+      "apps/desktop/src/main/app-dock-native-protocol.ts",
+      "apps/desktop/src/main/app-dock-native-client.ts",
+      "apps/desktop/src/main/app-dock-native-channel.ts",
+      "apps/desktop/src/main/app-dock-native-runtime.ts",
+      "apps/desktop/src/main/app-dock-native-workspace.ts",
+      "apps/desktop/src/main/app-dock-native-client-admission.test.ts",
+      "apps/desktop/src/main/app-dock-rpc-workspace-rebind.test.ts"
+    ],
+    "consumers_and_boundary": "AppDockRPC, Docker helper channel and Python AT-SPI bridge; full runtime/session/binding/process identity crosses the boundary.",
+    "maintenance_implications": "Retain admission reservations while teardown is uncertain, release only on terminal/reap evidence, distinguish not-dispatched from unknown, and prevent stale binding reuse.",
+    "evidence_limits": "Memory-channel race tests read but unexecuted. Dedicated-container resource checks and real provider effects are not runtime-proven here.",
+    "entry_count": 15,
+    "depth_counts": {
+      "family-supported": 8,
+      "inspected": 7
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 7,
+      "implementation-source": 6,
+      "test-fixture": 2
+    }
+  },
+  {
+    "id": "linux-runtime",
+    "purpose": "Local Docker runtime metadata and lifecycle own the Xpra desktop, visible browser view, TLS viewer and guest session.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/app-dock-runtime.ts",
+      "apps/desktop/src/main/app-dock-runtime-backend.ts",
+      "apps/desktop/src/main/app-dock-runtime-docker.ts",
+      "apps/desktop/src/main/app-dock-linux.ts",
+      "apps/desktop/resources/linux-runtime/Dockerfile",
+      "apps/desktop/resources/linux-runtime/README.md",
+      "apps/desktop/resources/linux-runtime/workspace.py",
+      "apps/desktop/src/main/app-dock-runtime-identity.test.ts"
+    ],
+    "consumers_and_boundary": "Main-only secrets/owner metadata to local Docker socket or named pipe; renderer receives runtime DTO and viewer placement.",

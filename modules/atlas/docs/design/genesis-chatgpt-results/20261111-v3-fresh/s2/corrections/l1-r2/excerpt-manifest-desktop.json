@@ -1,0 +1,98 @@
+[
+  {
+    "id": "desktop-readiness-cap",
+    "path": "apps/desktop/src/main/owned-serve.ts",
+    "start_line": 15,
+    "end_line": 25,
+    "excerpt_bytes": 755,
+    "excerpt_sha256": "7ccdb76a13a5dfe8de8139b9c3810f09e7d845595cfc40ca04d19c1a10599c83"
+  },
+  {
+    "id": "desktop-readiness-race",
+    "path": "apps/desktop/src/main/owned-serve.ts",
+    "start_line": 94,
+    "end_line": 102,
+    "excerpt_bytes": 623,
+    "excerpt_sha256": "2070c59bd64180584513d9392660e0c2c8d3db49700a9c06288c7652d31c12b8"
+  },
+  {
+    "id": "desktop-readiness-race",
+    "path": "apps/desktop/src/main/owned-serve.ts",
+    "start_line": 130,
+    "end_line": 141,
+    "excerpt_bytes": 437,
+    "excerpt_sha256": "3e903a9a42aa0271038138d5fa41244c8fdbcf509bd2c086d02d0a11a23cd570"
+  },
+  {
+    "id": "desktop-cwd-and-readiness-publication",
+    "path": "apps/desktop/src/main/index.ts",
+    "start_line": 431,
+    "end_line": 466,
+    "excerpt_bytes": 1662,
+    "excerpt_sha256": "ea8b431f701941fbbda2ca5f2ba835064e962e007989405fa2b9b2e3b601748e"
+  },
+  {
+    "id": "desktop-cwd-and-readiness-publication",
+    "path": "apps/desktop/src/main/index.ts",
+    "start_line": 467,
+    "end_line": 475,
+    "excerpt_bytes": 710,
+    "excerpt_sha256": "70a3a6b30914ede8a6e852175e64d50936cdb63b6f2c5f5526dc9ccbe8c516bf"
+  },
+  {
+    "id": "desktop-cwd-maintenance",
+    "path": ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+    "start_line": 18,
+    "end_line": 21,
+    "excerpt_bytes": 964,
+    "excerpt_sha256": "214a8a56c696a8c4fc690ccb4ce636db9f0d6a38d43f3f24cff0be3ec79459e1"
+  },
+  {
+    "id": "desktop-native-typed-bridge",
+    "path": "apps/desktop/src/main/native-translations.ts",
+    "start_line": 1,
+    "end_line": 24,
+    "excerpt_bytes": 693,
+    "excerpt_sha256": "146cceedea77950c17dbfc32f1d618e954c7a33b5901a7fa8b5218dae0902a7b"
+  },
+  {
+    "id": "desktop-preload-named-api",
+    "path": "apps/desktop/src/preload/index.ts",
+    "start_line": 1,
+    "end_line": 4,
+    "excerpt_bytes": 251,
+    "excerpt_sha256": "ca63bbb75afc0b229ef4ed1b45ea844013f015a75155f57b64df2511d5422a97"
+  },
+  {
+    "id": "desktop-preload-named-api",
+    "path": "apps/desktop/src/preload/index.ts",
+    "start_line": 24,
+    "end_line": 48,
+    "excerpt_bytes": 1950,
+    "excerpt_sha256": "9723ceeecc58d06170e2cbc727dd0e86c74cb5b8bfe0c05dd3f08129f79e49e4"
+  },
+  {
+    "id": "desktop-preload-named-api",
+    "path": "apps/desktop/src/preload/index.ts",
+    "start_line": 64,
+    "end_line": 66,
+    "excerpt_bytes": 185,
+    "excerpt_sha256": "8349484b1dc82dd0df2053f971f3fd43feec2c756cd5c36de7ee214913087ed5"
+  },
+  {
+    "id": "desktop-preload-named-api",
+    "path": "apps/desktop/src/preload/index.ts",
+    "start_line": 159,
+    "end_line": 164,
+    "excerpt_bytes": 463,
+    "excerpt_sha256": "f2cfc1f3af78a3913d8908602bd80118fcd800097c8e85acea65f74e98b5377c"
+  },
+  {
+    "id": "desktop-preload-named-api",
+    "path": "apps/desktop/src/preload/index.ts",
+    "start_line": 243,
+    "end_line": 254,
+    "excerpt_bytes": 802,
+    "excerpt_sha256": "26359fd8d57592ccb0f6e112ae48225265e9e934a917a27012565c467f3bec59"
+  }
+]

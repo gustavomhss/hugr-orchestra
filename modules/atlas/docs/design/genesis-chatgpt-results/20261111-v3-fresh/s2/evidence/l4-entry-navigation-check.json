@@ -1,0 +1,126 @@
+{
+  "schema": "genesis-s2-entry-navigation-mechanical/v1",
+  "recorded_at": "2026-11-11T20:21:56.073297+00:00",
+  "entry_body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+  "destinations": [
+    {
+      "key": "s2.l1.desktop-web",
+      "heading_targets": [
+        "1. Startup, readiness and shutdown"
+      ],
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "body_byte_length": 29075,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l1.app-session",
+      "heading_targets": [
+        "Prompt admission and draft ownership"
+      ],
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "body_byte_length": 42047,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "heading_targets": [
+        "V2 session action boundary"
+      ],
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "body_byte_length": 36964,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "heading_targets": [
+        "Startup publishes readiness before the renderer proceeds"
+      ],
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "body_byte_length": 18440,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "heading_targets": [
+        "Durable admission, optimistic state and draft storage"
+      ],
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "body_byte_length": 24434,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "heading_targets": [
+        "V2 actions and prompt admission"
+      ],
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "body_byte_length": 21535,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "heading_targets": [
+        "Cross renderer, preload and main with a scoped capability"
+      ],
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "body_byte_length": 14715,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l3.app-session",
+      "heading_targets": [
+        "Submit once, then hand the draft to its session"
+      ],
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "body_byte_length": 14334,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "heading_targets": [
+        "Generated products reach consumers through distinct maintenance paths"
+      ],
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "body_byte_length": 15780,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "heading_targets": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+      "body_byte_length": 11183,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l4.app-session",
+      "heading_targets": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+      "body_byte_length": 11220,
+      "exact_heading_matches": true
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "heading_targets": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+      "body_byte_length": 11783,
+      "exact_heading_matches": true
+    }
+  ],
+  "all_declared_destinations_have_exact_current_headings": true,
+  "proposed_roots": {
+    "entry": "s2.l4.entry"
+  },
+  "scope": "Mechanical key/heading/body identity only; L4 semantic decisions remain pending; no Atlas index/read or consumer proof."
+}

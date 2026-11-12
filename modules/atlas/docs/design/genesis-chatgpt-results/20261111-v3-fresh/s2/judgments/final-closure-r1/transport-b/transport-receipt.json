@@ -1,0 +1,136 @@
+{
+  "schema": "genesis-s2-final-closure-transport/v1",
+  "actor": "/root/s2_native_prepare_capture",
+  "recorded_at": "2026-11-11T21:10:06.931603+00:00",
+  "recorded_time_basis": "Receipt creation after all four actual sends; per-send native timestamps were not exposed.",
+  "assigned_parts": [
+    3,
+    4
+  ],
+  "packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "packet_manifest": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-packet-01/packet-manifest.json",
+    "byte_length": 20404,
+    "sha256": "7611d9155e16b7608126e589ade3c5230b5ecdba47c95084ee856045871c802f"
+  },
+  "actual_send_calls": 4,
+  "local_logical_message_bytes_per_judge": 52000,
+  "local_logical_message_bytes_all_calls": 104000,
+  "calls": [
+    {
+      "call_number": 1,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j1",
+      "part_number": 3,
+      "part_count": 6,
+      "message_byte_length": 26000,
+      "local_message_sha256": "b06146b616e1e8ec58e167556bf9918faf443a1bb608cc622a493406f9d37a01",
+      "arguments": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-01-arguments.json",
+        "byte_length": 27910,
+        "sha256": "636169446047484dd6c69cb5571970878113ef303895a7fdd27af08b9b5fe53a"
+      },
+      "actual_returned_content": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-01-returned-content.txt",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "actual_return_kind": "NORMAL_EMPTY_RESULT",
+      "reported_error": false,
+      "context_truncation_notice": false,
+      "automatic_retry": false,
+      "recipient_response_inspected": false,
+      "host_serialized_bytes_attested": false
+    },
+    {
+      "call_number": 2,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j2",
+      "part_number": 3,
+      "part_count": 6,
+      "message_byte_length": 26000,
+      "local_message_sha256": "b06146b616e1e8ec58e167556bf9918faf443a1bb608cc622a493406f9d37a01",
+      "arguments": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-02-arguments.json",
+        "byte_length": 27910,
+        "sha256": "087c2953866504a8b9ff61f16f6fc8dd99311af4efd1a3b22b95bb0e3384099b"
+      },
+      "actual_returned_content": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-02-returned-content.txt",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "actual_return_kind": "NORMAL_EMPTY_RESULT",
+      "reported_error": false,
+      "context_truncation_notice": false,
+      "automatic_retry": false,
+      "recipient_response_inspected": false,
+      "host_serialized_bytes_attested": false
+    },
+    {
+      "call_number": 3,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j1",
+      "part_number": 4,
+      "part_count": 6,
+      "message_byte_length": 26000,
+      "local_message_sha256": "f542755da654473d627446af9e35043980e2fe904f9295fc7c5aa0f61d1cf796",
+      "arguments": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-03-arguments.json",
+        "byte_length": 27872,
+        "sha256": "aca15e529a849e77b5663574caef476f78f7541ee1936591e1fbe7f3d7efe7f9"
+      },
+      "actual_returned_content": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-03-returned-content.txt",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "actual_return_kind": "NORMAL_EMPTY_RESULT",
+      "reported_error": false,
+      "context_truncation_notice": false,
+      "automatic_retry": false,
+      "recipient_response_inspected": false,
+      "host_serialized_bytes_attested": false
+    },
+    {
+      "call_number": 4,
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_resume_j2",
+      "part_number": 4,
+      "part_count": 6,
+      "message_byte_length": 26000,
+      "local_message_sha256": "f542755da654473d627446af9e35043980e2fe904f9295fc7c5aa0f61d1cf796",
+      "arguments": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-04-arguments.json",
+        "byte_length": 27872,
+        "sha256": "a6c08dba89be4843f8e922be6a205679a7c3a279f9f350fa01d03ea11fbe6685"
+      },
+      "actual_returned_content": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-transport-b/call-04-returned-content.txt",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "actual_return_kind": "NORMAL_EMPTY_RESULT",
+      "reported_error": false,
+      "context_truncation_notice": false,
+      "automatic_retry": false,
+      "recipient_response_inspected": false,
+      "host_serialized_bytes_attested": false
+    }
+  ],
+  "known_invalidations": [],
+  "replacement_calls": [],
+  "uncertain_result_calls": [],
+  "seal_sent": false,
+  "judges_activated": false,
+  "judge_replies_or_status_read": false,
+  "root_only_templates_read": false,
+  "other_packet_parts_read": false,
+  "source_parts_unchanged_verified": true,
+  "argument_record_basis": "Local records of the visible target/message values supplied in the four native calls, materialized from the immutable literal source files. Native calls are in the conversation; these JSON serializations are not host exports.",
+  "limits": [
+    "No recipient-side byte hash or host-internal serialized-message attestation was exposed.",
+    "Empty normal tool results do not independently establish recipient reading or semantic acceptance.",
+    "Segment boundaries were retained exactly, including mid-string endings without a final newline."
+  ]
+}

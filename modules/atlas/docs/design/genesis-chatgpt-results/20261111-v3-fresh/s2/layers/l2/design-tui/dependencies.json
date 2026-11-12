@@ -1,0 +1,42 @@
+{
+  "artifact_key": "s2.l2.design-tui",
+  "build": [
+    "s2.l1.design-tui"
+  ],
+  "navigation": [
+    "s2.l2.app-session",
+    "s2.l2.desktop-web"
+  ],
+  "rationale": {
+    "s2.l1.design-tui": "Accepted source-backed behavioral contracts, 67-family scope and exact limitations are the sole factual predecessor foundation. This L2 adds local explanation and labelled maintenance implications; the direct CLI/protocol boundary captures remain part of the design/TUI evidence lineage.",
+    "s2.l2.app-session": "Consultation destination for application/session composition, durable execution, requests and shared rendering beyond this terminal adapter/UI-library boundary. No pending L2 body was read or used as evidence.",
+    "s2.l2.desktop-web": "Consultation destination for desktop/web startup, trust, packaging and native host behavior beyond the library/native-terminal source contracts. No pending L2 body was read or used as evidence."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l1.design-tui",
+      "path": "layers/l1/design-tui/l1.md",
+      "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "byte_length": 36964
+    }
+  ],
+  "consumed_supporting_records": [
+    {
+      "path": "producers/design-tui/coverage.json",
+      "sha256": "d7048239a9907676dee0ee6819ade51a3b06152f9e366c308a2efe7aaea63744",
+      "role": "Predecessor family accounting; the acceptance manifest directly binds the L1 body, not a separate ledger digest."
+    },
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea",
+      "role": "Exact capture provenance for directly used source files."
+    }
+  ],
+  "cross_unit_factual_boundary": "No accepted L1 body of another unit was consumed. CLI adapters and protocol declarations are directly pinned boundary captures listed in sources.json, rather than an inferred dependency on a navigation destination."
+}

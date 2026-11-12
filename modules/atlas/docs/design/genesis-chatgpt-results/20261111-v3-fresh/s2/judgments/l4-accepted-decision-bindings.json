@@ -1,0 +1,99 @@
+{
+  "schema": "genesis-s2-independent-decision-bindings/v1",
+  "layer": 4,
+  "scope": "Semantic artifact decisions only; all actual original responses remain referenced and unchanged.",
+  "reviews": [
+    {
+      "judge": "/root/s2_resume_j1",
+      "artifacts": [
+        {
+          "key": "s2.l4.desktop-web",
+          "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r1/j1.json",
+          "response_sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "key": "s2.l4.app-session",
+          "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r1/j1.json",
+          "response_sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "key": "s2.l4.design-tui",
+          "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r1/j1.json",
+          "response_sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "key": "s2.l4.entry",
+          "body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r2/j1.json",
+          "response_sha256": "81e9685a5fdd63170aa8a5dfafe40bdfe9d8ad2ef36e2580b06ce68f45f7d817"
+        }
+      ]
+    },
+    {
+      "judge": "/root/s2_resume_j2",
+      "artifacts": [
+        {
+          "key": "s2.l4.desktop-web",
+          "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r1/j2.json",
+          "response_sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        },
+        {
+          "key": "s2.l4.app-session",
+          "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r1/j2.json",
+          "response_sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        },
+        {
+          "key": "s2.l4.design-tui",
+          "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r1/j2.json",
+          "response_sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        },
+        {
+          "key": "s2.l4.entry",
+          "body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l4-r2/j2.json",
+          "response_sha256": "5fb4008812cbe7e5f384aaed31ad4fb8bbbd99b738754b2759c9cd2f7e5cdf7d"
+        }
+      ]
+    }
+  ],
+  "unselected_historical_entries": [
+    {
+      "response_path": "judgments/l4-r1/j1.json",
+      "response_sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458",
+      "key": "s2.l4.entry",
+      "body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+      "verdict": "FIX-FIRST",
+      "reason": "Explicit per-artifact selection; original entry remains preserved and is not accepted by this record."
+    },
+    {
+      "response_path": "judgments/l4-r1/j2.json",
+      "response_sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299",
+      "key": "s2.l4.entry",
+      "body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+      "verdict": "FIX-FIRST",
+      "reason": "Explicit per-artifact selection; original entry remains preserved and is not accepted by this record."
+    }
+  ]
+}

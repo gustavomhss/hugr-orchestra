@@ -1,0 +1,317 @@
+| Integrations / Context savings (Lean) | Integrations uses idempotency and keeps secrets outside presentation state. Lean orders accepted snapshots and reconciles writes with GET while preserving write errors. |
+| Board / Guardrails | Board evidence supports issue grouping/ordering and derived presentation, not its mutation lifecycle. Guardrails keeps missing-base, error, no-rules, blocked, warning and clean distinct; reachability is unresolved beyond non-registration. |
+| Schedule / RAG Studio | Schedule polls recorded runs and migrates device tasks with stable IDs, preserving calendar/DST/lateness distinctions. RAG admits/parses sources, binds questions to revisions and invokes scoped maintenance passes; Core scheduling and retrieval quality are gaps. |
+| MCP / plugins | MCP keeps per-name pending/error state and cancellable authentication waits. Plugins serialize the latest desired behavior and distinguish saved from supported/applied status; builtin behaviors begin disabled. |
+| Workspace / environment | Workspace names differ from project sandboxes. Environment parsing preserves BOM/comments/opaque syntax; copying, server writes and legacy execution are not established end to end. |
+
+These are observed controller boundaries and explicit limits, not a claim that all associated screens or mutation branches were read. [s2.l1.app-session §Navigation, settings and feature-family disposition]
+
+## Skills catalog, content and editing ownership
+
+Skills illustrates why catalog validity, visibility and write eligibility need separate decisions. `readSkills` accepts the complete list response's `.data` array, including empty, requiring string `name`, `location` and `content`; `description`, `mtime` and `internal` are optional and nullable with their declared string/number/boolean types. A malformed entry fails the entire load. The decoder provides no nonempty, uniqueness or path-safety refinement. Visibility removes `internal === true` and descendants under any supplied `/SKILL.md` folder, including internal-parent folders; it does not delete entries. Search covers name/description/location, and sorting orders project/global/builtin then name. [s2.l1.app-session §Skills catalog, editing and ownership]
+
+Ownership follows location, not name. Literal `/builtin/` is builtin; normalized paths under the current directory are project, and the remainder global. Within a project, `.orchestra/skills/own/` is governed before other checks; lowercase `.md` under `.orchestra/skills/`, `.orchestra/skill/`, `.claude/skills/` or `.agents/skills/` is editable, otherwise fixed. **Gap:** these lexical rules establish neither symlink/dot-segment safety nor server filesystem enforcement. [s2.l1.app-session §Skills catalog, editing and ownership]
+
+The server-scope/directory warm cache paints promptly while refreshing. Only a successfully decoded/filtered/sorted list updates it. Statuses 404/405/501 become unavailable; malformed or other failures become error, distinct from empty, with Retry. Read cancellation and disposal suppress late results. Add sends name/description/content; edit additionally maps location to path and forwards optional mtime. The dialog permits editing only for add or `edit` access, prevents duplicate busy submissions, and applies disposal checks. Save/remove close only the originating dialog and reload; a saved-but-unlisted location remains visible as a notice. Write calls lack the page abort signal: suppressing late UI updates does not cancel an already sent write. [s2.l1.app-session §Skills catalog, editing and ownership]
+
+The pinned `/api/skill` GET/PUT/DELETE declarations and handler confirm service delegation and conflict/error mapping. The API description reserves new files for project `.orchestra/skills` and calls global/builtin/Atlas-governed files read-only; this is attributed contract intent, not an inspected filesystem implementation. **Maintenance inference:** change decoder, editor payload and API together while preserving mtime/path ownership and unknown write outcomes. [s2.l1.app-session §Skills catalog, editing and ownership]
+
+## Host capabilities and auxiliary lifetimes
+
+App Dock's renderer-wide controller scopes profiles by server/directory, rejects stale generations/attachments and serializes revisioned manifest writes with bounded conflict reload. It restores eligible HTTPS tabs while excluding the separate Linux tab. Live uses optional desktop readiness, per-start consent and permission/run callbacks; WSL queries only with its bridge and unsubscribes on cleanup. Native titlebar measurement coalesces frames and clears invalid/fullscreen/disconnected state; the host owns zoom conversion. None establishes native browser/Linux/WSL/audio execution. [s2.l1.app-session §Requests, terminals and auxiliary lifetimes]
+
+Janitor bounds report fields, drops scanner/ok findings, filters source and checks notification ownership. Pocket reuse/create/adoption uses generation, server scope and directory, with explicit retry after failure. Diagnostics are development-gated, expose optional renderer measurements and reset native focus overrides on cleanup. **Maintenance inference:** optional host contracts require capability and lifetime checks; scanner behavior and diagnostic accuracy remain separate questions. Host implementation details are a navigation topic for `s2.l2.desktop-web`, not a build dependency of this explanation. [s2.l1.app-session §Requests, terminals and auxiliary lifetimes]
+
+## Visual resources and prescribed maintenance
+
+Palette generation has an inspected input/generator/consumer chain and seven outputs; Vite embeds first-paint/preload code and runtime rejects late loads. This does not make all authored layout/component styles generated. Language merges app/UI/domain dictionaries, caches locales, sets document language/direction and updates native copy. **Instruction:** app-shell/session-ui require i18n for visible copy and byte-preservation of existing English text during migration; dictionaries are not evidence of complete translation or accessibility. [s2.l1.app-session §Assets, localization and verification evidence; §Authority, composition and identity]
+
+Avatars use a glob-backed library with seat portraits excluded from selection and SVG-rejecting, 192-square WebP uploads. The captured seat sample is 256×256 despite generic 128-pixel maintenance guidance. Wallpaper catalogs pair full/thumb assets; approval notes cover specific logos/mountain art, not universal provenance. Zen has its own upstream/MPL-2.0 notice. Preserve those distinctions and authored/generated boundaries; broad asset ownership, visual quality and locale accuracy are unverified. [s2.l1.app-session §Assets, localization and verification evidence]
+
+**Instruction:** app-shell prioritizes stability, simplicity, then performance and requires a production benchmark baseline before session/timeline code changes with comparison afterward. Root AGENTS requires Client regeneration after public Protocol or Server HttpApi changes, forbids hand edits to both generated trees, and keeps Client runtime dependencies on Schema/Protocol rather than Core/Server. The UI's explicit browserSafe Core-helper exception is separate, despite broader app README prose. Schema guidance keeps browser-safe serializable contracts in Schema and runtime behavior with its owning domain. [s2.l1.app-session §Authority, composition and identity; §Transport, stream health and canonical recovery; `packages/schema/AGENTS.md:1–12`]
+
+Maintainer skills and user guides prescribe ownership/workflows; root instructions keep maintenance skills repository-only. The captured Agents/avatars skills reinforce stable seat IDs, localization and coordinated contract changes. HuGR Composer guidance describes an external backend-seat MCP dependency, unrelated to the prompt composer; its installation/dependency statements were not independently verified. **Historical intent:** eight migration/reactive proposals concern earlier bases/paths and cannot establish current completion. [s2.l1.app-session §Authority, composition and identity; `AGENTS.md` §What Ships and What Stays in the Repo; `.orchestra/skills/agent-screen-maintenance/SKILL.md`; `.orchestra/skills/agent-avatars-maintenance/SKILL.md`; `.orchestra/skills/hugr-composer-maintenance/SKILL.md`]
+
+## Verification limits and ownership use
+
+The accepted tests describe expected admission, A→B→A ownership, credential replacement, request/terminal/Dock and worker behavior. Browser harnesses, mocked SSE/server infrastructure, Playwright regressions, stories and parser fixtures have distinct evidence roles. Normal Playwright excludes performance; the benchmark guidance treats metrics as serial diagnostics without machine-dependent acceptance budgets or compositor-frame claims. Exclusion does not waive the mandatory before/after condition for session/timeline changes. No product test, benchmark, typecheck, build, restart, generation or CI was executed for this L2. [s2.l1.app-session §Assets, localization and verification evidence]
+
+For ownership use, start at the section matching the failed boundary: composition for stale targets, admission for retry/handoff, transport for liveness/recovery, requests for permission identity, rendering for projected evidence, or the feature/skills section for scoped mutations. This is a maintenance inference from the observed separation of responsibilities. Keep the 30 metadata-only leaves and family-supported branches at their stated depth. Native/scanner behavior, backend filesystem enforcement, provider outcomes, Board mutations, exhaustive rendering and per-asset/per-locale provenance remain open. Shared browser design/TUI details are a navigation topic for `s2.l2.design-tui`; no pending L2 body supplies evidence here. [s2.l1.app-session §Scope, identity and depth; §Assets, localization and verification evidence]
+END EXACT BODY s2.l2.app-session
+
+## Exact decisive evidence and predecessor mapping
+# Decisive evidence — s2.l2.app-session
+
+## Bound inputs and claim status
+
+All source excerpts below are exact UTF-8 spans from captured commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`. `sources.json` binds each directly used file to its actual Git blob SHA and SHA256. The sole factual build predecessor is accepted `s2.l1.app-session`, body SHA256 `67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e`, under manifest `accepted/l1.json` SHA256 `8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8`.
+
+L2 contributes an explanation of ownership and maintenance consequences. Most facts are inherited from the nine accepted L1 sections. N1–N4 identify the few details newly made explicit here and give bounded primary support. C1–C7 corroborate inherited claims. Maintenance inferences are recommendations derived from the named mechanisms, not invented feature intent. No product code, tests, benchmarks, native operations, provider calls or filesystem skill writes were executed.
+
+## Synthesis and bounded primary support
+
+### N1 — Newly explicit static observation: optimistic cleanup is separate from durable admission outcome
+
+L2 section: **Durable admission, optimistic state and draft storage**. Accepted support: `s2.l1.app-session` §Prompt admission and draft ownership.
+
+The new detail is the visible removeOptimisticMessage/restoreInput/settleEmptySession(true) failure sequence. Session/request retention, policy checks and draft handoff are inherited from accepted L1. The inference is that local visual cleanup cannot settle an ambiguous server outcome; no universal rollback guarantee is claimed.
+
+`packages/app-shell/src/components/prompt-input/submit.ts:442–466` · file SHA256 `9fc3fde5e453fe6e36b92909488249be788189d640c132d83c9c7a5407b42c80` · excerpt SHA256 `18b26d32fa21394a757a866191975d4e5212b03107343e2960b5e7b65c8554b9`
+
+```text
+    const messageID = Identifier.ascending("message")
+    const removeOptimisticMessage = () => {
+      if (ownsSource()) syncState.session.optimistic.remove({ directory: sessionDirectory, sessionID: session.id,
+        messageID: isNewSession ? admission.request?.id ?? messageID : messageID })
+    }
+    admission.cleanup = trackPendingPrompt(directorySDK.scope, session.id, {
+      abort: controller,
+      cleanup: () => { removeOptimisticMessage(); restoreInput() },
+      draft: isNewSession ? {
+        key: rulesKey, target, scope: directorySDK.scope, directory: projectDirectory,
+        sessionID: session.id, api, serverState,
+      } : undefined,
+    })
+    // A first send that fails leaves the Session this draft created behind, empty, in the sidebar. The draft itself
+    // (text, context, subagent models, worktree) stays as it was for the next try.
+    // Once the prompt was dispatched, the Session is kept and labelled: the server may have admitted it before the
+    // failure (an admitted input is not a message until it is promoted), so the retry must reuse this Session and
+    // message ID. Only a send that never left (its policy write failed) deletes a Session the server confirms empty.
+    const settleEmptySession = async (dispatched: boolean) => {
+      const created = admission.session
+      if (!isNewSession || !created || admission.request?.admitted) return
+      const empty = await sessionHasNoMessages(server, created.id, sessionDirectory).catch(() => undefined)
+      if (empty === false) return
+      const removed = !dispatched && empty === true &&
+        (await api.remove({ sessionID: created.id, directory: sessionDirectory }).then(() => true, () => false))
+```
+
+`packages/app-shell/src/components/prompt-input/submit.ts:660–672` · file SHA256 `9fc3fde5e453fe6e36b92909488249be788189d640c132d83c9c7a5407b42c80` · excerpt SHA256 `b5bb3a0da0690c92b3898c93aa344b3b11081ad2e7c4020f0bfe8f67e02454de`
+
+```text
+      .catch(async (err) => {
+        if (controller.signal.aborted) return false
+        if (ownsSource() && (isCommand || sessionDirectory === projectDirectory) && !queued) {
+          syncState.set("session_status", session.id, { type: "idle" })
+        }
+        if (ownsSource()) showToast({
+          title: language.t(isCommand ? "prompt.toast.commandSendFailed.title" : "prompt.toast.promptSendFailed.title"),
+          description: isCommand && !hookRefusal(err) ? formatServerError(err, language.t, language.t("common.requestFailed")) : errorMessage(err),
+        })
+        removeOptimisticMessage()
+        restoreInput()
+        await settleEmptySession(true)
+        return false
+```
+
+### N2 — Newly explicit instruction: Schema contract ownership
+
+L2 section: **Visual resources and prescribed maintenance**. Accepted support: `s2.l1.app-session` §Authority, composition and identity.
+
+This is an instruction from captured package authority, not a claim that an architectural checker ran or that every module complies.
+
+`packages/schema/AGENTS.md:1–10` · file SHA256 `ca79ab26b6eb07d1ed35a76851852d69475ec554dad7624714d3e47c15dce057` · excerpt SHA256 `8e813ab66a0b53d8451e4750095982833e27fb016bbbb101b68f3a0d2ce85858`
+
+```text
+# Schema Package Guide
+
+`@orchestra/schema` owns browser-safe wire and storage contracts shared by protocol, server, core, and generated SDKs. Keep runtime behavior, service layers, side effects, and host-local implementation details in the domain package that owns them.
+
+## Package Boundary
+
+- Preserve the dependency direction: `@orchestra/schema <- @orchestra/protocol <- @orchestra/server`.
+- Schema values should be serializable contract definitions, not service implementations or runtime registries.
+- A domain may keep a minimal public wire contract here when SDK generation needs it, but do not move the broader runtime model into Schema just because an event is public. `plugin.added` is the current example: Schema may own the minimum browser-safe event payload, while plugin runtime behavior stays outside Schema.
+- The root barrel exports canonical current domain contracts. Specialized event modules, manifests, and infrastructure modules use direct entrypoints instead of becoming first-class root exports.
+```
+
+### N3 — Newly explicit instruction: repository maintenance material and runtime skills have different destinations
+
+L2 section: **Visual resources and prescribed maintenance**. Accepted support: `s2.l1.app-session` §Authority, composition and identity.
+
+The repository-only classification is attributed to root AGENTS. The accepted L1 supports the existence and intended use of the five maintainer/onboarding skills and six guides; their installation statements remain unverified.
+
+`AGENTS.md:146–154` · file SHA256 `07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f` · excerpt SHA256 `8fa4debd4f7a4a28198b8620029467c1cd1f107c3645ff0157969b637a752721`
+
+```text
+## What Ships and What Stays in the Repo
+
+The release carries only what someone who installs and uses Orchestra needs. Material for people who change the code stays in the repository.
+
+- Ships: compiled code, including seat prompts (`modules/maestro/coordination/src/seats/prompt/*.txt`); the skill trees a seat lists in `seat.skills` (`Seats.skillSource`, embedded at build time by `modules/maestro/coordination/src/seat-skills-module.ts`); Maestro playbooks (`modules/maestro/coordination/playbooks`), including the Orchestra guide under `maestro-orchestra`; the `extraResources` in `apps/desktop/electron-builder.config.ts`; the CLI package's `bin`.
+- Repo-only: `.orchestra/skills/*` (maintenance, ownership and contributor usage skills, seen only when this repository is the open project), `docs/` (specs and guides), and this file.
+- Knowledge an agent needs at runtime goes in its prompt or a shipped seat skill, never only in `.orchestra/skills`.
+- Never add a maintenance or ownership skill to a seat's `skills`.
+- `docs/guides` is written for users but is not published yet; a user-facing change still updates its guide.
+```
+
+### N4 — Newly explicit instruction and known limit: agent terminal safety path
+
+L2 section: **Permission requests and terminal boundaries**. Accepted support: `s2.l1.app-session` §Requests, terminals and auxiliary lifetimes.
+
+L1 already identifies the separate Core safety boundary. This L2 spells out the root instruction about sandbox wrapping, sanitized model text, nonce-bound shell marks and the recorded slow-reader limit. These are prescribed/recorded boundaries, not executed security verification.
+
+`AGENTS.md:182–192` · file SHA256 `07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f` · excerpt SHA256 `4f5b2378f8eb397a98a143b26af09bf856f0a06ad9204f8567ae8beda212ffab`
+
+```text
+## Terminal and PTY
+
+Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/terminal-maintenance`.
+
+- The agent terminal exists only in the V2 session core's bash tool (`packages/core`). The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
+- Text that goes to the model is `AgentTerminal.sanitize`d. Terminal output is data, never instruction.
+- Shell marks (OSC 133) count only with the session's nonce. OSC 7 (`Info.cwd`) is a hint without one; do not use it for decisions that need trust.
+- The PTY cursor and ring (`BUFFER_LIMIT`) count UTF-16 characters, not bytes.
+- The `Pty` service is served over HTTP by `packages/server/src/handlers/pty.ts`. The app uses `/api/pty`.
+- `ORCHESTRA_AGENT_TERMINAL` and `ORCHESTRA_SHELL_INTEGRATION` are permanent opt-in flags in `flag/flag.ts`; read them through `Flag`, never `process.env`.
+- Known limit: a WebSocket client that stops reading makes the server grow; not solved.
+```
+
+### C1 — Corroboration: identity values and owner generations serve different lifetimes
+
+L2 section: **Composition, identity and asynchronous ownership**. Accepted support: `s2.l1.app-session` §Authority, composition and identity.
+
+The explanatory three-identity table and maintenance implication synthesize accepted observations. The excerpts corroborate credential disposal and irreversible generation expiry; they add no claim of exhaustive asynchronous correctness.
+
+`packages/app-shell/src/context/global.tsx:68–98` · file SHA256 `310f02897847804b5a2d0320d02f40351c37368e2fdab4a021f270e84ec4e813` · excerpt SHA256 `3163cc32e79fecdf5778809e82cc4c501fffc5edb8dbc53a746da9073212fc67`
+
+```text
+// Tab/project identity stays stable; transport credentials belong to a disposable context lifetime.
+export function createServerContextCache<T>(
+  servers: Accessor<ServerConnection.Any[]>,
+  create: (conn: ServerConnection.Any) => T,
+) {
+  const owner = getOwner()
+  const contexts = new Map<ServerConnection.Key, { identity: string; dispose: () => void; value: T }>()
+  const ensure = (input: ServerConnection.Any) => {
+    const key = ServerConnection.key(input)
+    // Callers may still hold a previous connection object after editing the same server.
+    const conn = servers().find((item) => ServerConnection.key(item) === key) ?? input
+    const identity = JSON.stringify([
+      conn.type,
+      conn.http.url,
+      conn.http.username,
+      conn.http.password,
+      conn.type === "http" && conn.authToken,
+    ])
+    const existing = contexts.get(key)
+    if (existing?.identity === identity) return existing.value
+    existing?.dispose()
+    const root = createRoot(
+      (dispose) => ({
+        identity,
+        dispose,
+        value: create({ ...conn, http: { ...conn.http } }),
+      }),
+      owner,
+    )
+    contexts.set(key, root)
+    return root.value
+```
+
+`packages/app-shell/src/pages/session/session-ownership.ts:3–33` · file SHA256 `36dbb4e8d45c32243d957b299de5de279d6dcf24f5a594447b827f4dba47f482` · excerpt SHA256 `cd00e143087a08dbad7f6d8fd4b515d903df2bfc6346eaa5056efadf4bbe4af4`
+
+```text
+export function createSessionOwnership(sessionKey: () => string) {
+  let current = sessionKey()
+  let generation = 0
+  const transition = () => {
+    const next = sessionKey()
+    if (next === current) return
+    current = next
+    generation++
+  }
+  createComputed(transition)
+  onCleanup(() => generation++)
+
+  return {
+    key: () => {
+      transition()
+      return `${generation}:${current}`
+    },
+    capture() {
+      transition()
+      const captured = generation
+      return {
+        key: `${captured}:${current}`,
+        current: () => {
+          transition()
+          return generation === captured
+        },
+        run<T>(action: () => T) {
+          transition()
+          if (generation !== captured) return
+          return action()
+        },
+```
+
+### C2 — Corroboration: exact retry does not equal projection equivalence
+
+L2 section: **Durable admission, optimistic state and draft storage**. Accepted support: `s2.l1.app-session` §Prompt admission and draft ownership.
+
+The comparison distinction is already explicit in accepted L1. Prompt context is not added to the retry identity by this explanation.
+
+`packages/core/src/session/input.ts:291–316` · file SHA256 `c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc` · excerpt SHA256 `249f596d94c394e09943e64fa36f16eb158e0f3ae47d32e60bcf24064acef803`
+
+```text
+export const equivalent = (
+  input: Admitted,
+  expected: {
+    readonly sessionID: SessionSchema.ID
+    readonly prompt: Prompt
+    readonly delivery: Delivery
+  },
+) => input.delivery === expected.delivery && matchesPrompt(input, expected)
+
+const matchesPrompt = (input: Admitted, expected: { readonly sessionID: SessionSchema.ID; readonly prompt: Prompt }) =>
+  input.sessionID === expected.sessionID &&
+  JSON.stringify(encodePrompt(input.prompt)) === JSON.stringify(encodePrompt(expected.prompt))
+
+const matchesProjection = (
+  input: Admitted,
+  expected: {
+    readonly sessionID: SessionSchema.ID
+    readonly prompt: Prompt
+    readonly promptContext?: PromptContext.Info
+    readonly delivery: Delivery
+    readonly timeCreated: DateTime.Utc
+  },
+) =>
+  equivalent(input, expected) &&
+  JSON.stringify(input.promptContext) === JSON.stringify(expected.promptContext) &&
+  DateTime.toEpochMillis(input.timeCreated) === DateTime.toEpochMillis(expected.timeCreated)
+```
+
+### C3 — Corroboration: bounded live SSE does not supply durable replay
+
+L2 section: **Transport, liveness and canonical recovery**. Accepted support: `s2.l1.app-session` §Transport, stream health and canonical recovery.
+
+The reconnect-and-reconcile interpretation follows the no-ID frame and bounded listener/heartbeat observations already accepted. It makes no losslessness or real overload result claim.
+
+`packages/server/src/handlers/event.ts:13–20` · file SHA256 `ca51a6d6bd47e97cda8d43b629e4a590cbe21e1a263b6146d3609d30bceae427` · excerpt SHA256 `ba1e8e697e68001d7b71935a3d00f2b534b89e7a74bc22ecc12c6e722c7f99d6`
+
+```text
+export const eventFrames = (encode: (data: unknown) => string = encodeEvent) => {
+  const frames = new WeakMap<object, string>()
+  return (data: object): Sse.Event => {
+    const cached = frames.get(data)
+    const json = cached ?? encode(data)
+    if (cached === undefined) frames.set(data, json)
+    return { _tag: "Event", event: "message", id: undefined, data: json }
+  }
+```
+
+`packages/server/src/handlers/event.ts:25–43` · file SHA256 `ca51a6d6bd47e97cda8d43b629e4a590cbe21e1a263b6146d3609d30bceae427` · excerpt SHA256 `23ea3e429cfddf1be5e7971055f0ee1a69c44adf2bdce194d88ca2bfaa660ff1`
+
+```text
+// enough to ride out such a stall; an event is a few hundred bytes, so a full queue is still small.
+export const subscriberCapacity = 4096
+
+export const eventStream = (events: EventV2.Interface, frame = eventFrames()) => {
+  const connected = {
+    id: EventV2.ID.create(),
+    type: "server.connected",
+    data: {},
+  }
+  const output = Stream.unwrap(
+    Effect.gen(function* () {

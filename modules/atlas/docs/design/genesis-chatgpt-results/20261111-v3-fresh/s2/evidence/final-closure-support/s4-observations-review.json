@@ -1,0 +1,215 @@
+{
+  "schema": "genesis-s2-bounded-s4-review-observations/v1",
+  "scope": "Selected actual scoped observations. Full original support record and all 26 underlying source identities remain preserved. No S2 acceptance is transferred.",
+  "full_source_record": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/s4-observations-full.json",
+    "sha256": "762b336455e5faf8a3e9383f376143cc5b1d00b9a200d0d3b8ed191c5347c87b"
+  },
+  "identities": {
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "initial_release_commit": "f3c1f6a83bb0b81fd2ab394ab9f21b19e8685604",
+    "latest_readback_recorded_at": "2026-11-11T20:40:51.993744+00:00",
+    "latest_s4_branch_head": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+    "release_repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "release_sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+    "release_git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "release_byte_length": 28282,
+    "release_bytes_unchanged": true,
+    "native_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "common_controls_candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "s2_branch_head_as_read": "ac972ff8dc1126b02f8a16f3942a142e417039ed",
+    "source_ids": [
+      "support_receipt",
+      "file_verification",
+      "final_remote_readback",
+      "release_bytes"
+    ],
+    "scope_limit": "Different discovery commits preserve the same release bytes; branch discovery is not S2 payload publication or acceptance."
+  },
+  "ci_runs": [
+    {
+      "run_id": 43065851373,
+      "run_attempt": 1,
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "head_sha": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "head_branch": "genesis-fresh-s4",
+      "status": "completed",
+      "conclusion": "failure",
+      "workflow_path": ".github/workflows/atlas-pilot.yml",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43065851373",
+      "scope": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding.",
+      "limit": "Historical aggregate FAILURE at e3a remains. It is neither the newer 7102 result nor S2 final-payload CI."
+    },
+    {
+      "run_id": 43077975153,
+      "run_attempt": 1,
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "head_sha": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "head_branch": "genesis-fresh-s4",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_path": ".github/workflows/atlas-pilot.yml",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43077975153",
+      "scope": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding.",
+      "limit": "Aggregate SUCCESS belongs to 7102. It does not rerun e3a or prove S2 full13 binding, consumers, maintenance execution or final-payload CI.",
+      "job_id": 130722742703,
+      "test_counts": {
+        "numTotalTests": 220,
+        "numPassedTests": 220,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      },
+      "test_files_passed": 23,
+      "mutation_probe_count": 22,
+      "successful_gate_steps": [
+        {
+          "number": 5,
+          "name": "Typecheck Atlas",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Grouped ownership and existing door regressions",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Probe the new guards against named failing controls",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Generate Atlas boundary from the checked sources",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Check repository guards on the candidate",
+          "conclusion": "success"
+        }
+      ],
+      "guards": {
+        "exit_code": 0,
+        "rule_count": 78,
+        "changed_paths": 869,
+        "gate": 0,
+        "warn": 2,
+        "errors": 0,
+        "warnings": [
+          "S4 producers/l1b/artifacts.json large-file",
+          "S4 producers/l1b/coverage.json large-file"
+        ]
+      },
+      "ci_receipt_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "ci_receipt_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+      "job_log_sha256": "492cf4b15ae4e14bd54e92da6601e78dcbf8e7c00c5720656c3bcb0d76f67a26"
+    }
+  ],
+  "implementation_comparison": {
+    "base": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "head": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "files_in_comparison": 161,
+    "docs_evidence_changes": 154,
+    "other_files": "One workflow, three generated JS bundles, two adapter sources, one added recovery test.",
+    "base_materialized_files_reverified": 406,
+    "not_listed_as_changed_in_fixed_compare": 404,
+    "listed_changed_materialized_count": 2,
+    "changed_source_identities": [
+      {
+        "repository_path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+        "base_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "base_sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+        "base_git_blob_sha": "5d8ebda609634ec02c4cdaff09499d1d615e2ec9",
+        "controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+        "controls_sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+        "controls_git_blob_sha": "64d29d3e67dea3bb826be5960a5b9bbf6719edc0",
+        "source_id": "controls_binding"
+      },
+      {
+        "repository_path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "base_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "base_sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+        "base_git_blob_sha": "9920e6b26bc68c392386b13146e352753c08aef1",
+        "controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+        "controls_sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+        "controls_git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+        "source_id": "controls_format"
+      }
+    ],
+    "static_assessment_as_recorded": "The only checked-source changes are three return expressions in binding/format. nativeRecord returns the original object; the returned value is identical. This is a static equivalence inference, not a new test of e3a. Raw source bytes and recorded implementation identity differ.",
+    "generated_artifacts_as_recorded": "Three committed JS bundles differ; surface includes regenerated strict membership observation. Do not call entire generated runtime byte-identical. The S2 native CLI imports adapter source; no changed bundles were installed.",
+    "candidate_identity_effect_as_recorded": "format and binding are in prepared.candidate.implementation; adopting changed bytes requires a new candidate and independent exact bindings.",
+    "common_control_reuse_limit_as_recorded": "Runtime behavioral evidence may be cited for verified unchanged source paths and stated assumptions; exact run/aggregate PASS remains 7102-specific.",
+    "scope_limit": "406 measures base-copy integrity; 404 were not listed changed in the fixed comparison. Two source files have different bytes at 7102. The support report attributes static equivalence to three return expressions; no new execution of e3a or identical whole distribution is inferred."
+  },
+  "generated_parity": {
+    "ci_artifact": {
+      "id": 13883635728,
+      "size_in_bytes": 431413,
+      "digest": "sha256:cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd",
+      "receipt_digest_matches": true,
+      "workflow_run_head_matches": true,
+      "archive_downloaded": false
+    },
+    "declared_file_count": 18,
+    "all_match_as_claimed_by_pinned_receipt": true,
+    "directly_verified_changed_file_count": 3,
+    "other_archive_entries_not_downloaded_or_recomputed": 15,
+    "artifact_zip_downloaded": false,
+    "scope_limit": "Three changed committed files were checked by the support audit and rehashed here. Full eighteen-file archive parity remains the pinned receipt claim; the other fifteen archive bytes were not independently downloaded or recomputed here."
+  },
+  "distinct_limits": {
+    "source_reference_and_live_file_observer_bytes": 256000,
+    "native_document_default_bytes": 8388608,
+    "native_document_default_label": "8 MiB",
+    "oversized_source_inputs_as_recorded": [
+      {
+        "path_as_recorded": "schema/tui.json",
+        "byte_length": 1131057,
+        "applicable_cap": 256000
+      },
+      {
+        "path_as_recorded": "payload/inputs/app-session-tree.json",
+        "byte_length": 369462,
+        "applicable_cap": 256000
+      },
+      {
+        "path_as_recorded": "payload/inputs/design-tui-tree.json",
+        "byte_length": 390775,
+        "applicable_cap": 256000
+      }
+    ],
+    "distinction": "The native document reader defaults to nativeMaxBytes for package and preserved-reference reads. Native source_refs and live file input reads explicitly pass 256000; observeOwnershipInput also returns unavailable above 256000. The 8 MiB default does not increase the source/observer cap.",
+    "scope_limit": "Static source/release observation only; the separate principal one-shot preparation outcome is not read or inferred here."
+  },
+  "shared_controls": {
+    "recovery_controls_as_reported": {
+      "NR1-01_02_03": "Durable resume, drift/HOLD, rollback and migration controls use synthetic fixtures and an exception seam; not arbitrary power-loss proof.",
+      "NR1-04": "Reported corrected control measures mainStarted/mainFinished around the principal read and requires intersection with activation. One Worker/one writer at the identified run; not universal concurrency."
+    },
+    "sample": {
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "operation_evidence_commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "operations": [
+        "publish exit0, emitted=true, shape/truth/authz/ratify gates true",
+        "index exit0, metadata without body",
+        "read exit0, ready, historical=false"
+      ],
+      "artifact_count": 1,
+      "read_body_byte_length": 17959,
+      "read_body_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+      "limit": "One real S4 artifact executed by its principal; not an independent consumer or the S2 full13 package."
+    },
+    "no_transfer_to_s2": [
+      "S4 scope, policy, ratifier, candidate, contracts and results do not authorize S2 publication.",
+      "Common control outcomes do not supply S2 runtime-import bindings, fourteen local consumer cases, S2-U1 actual update/rebuild/reuse or final-payload gates.",
+      "Adopting changed implementation bytes requires a new exact candidate and matching independent bindings."
+    ]
+  },
+  "limits": [
+    "Static code anchors, precise candidate source identities, generated byte hashes, full original runtime receipts and connector envelopes are preserved in the full source record and its 26 bound references.",
+    "No raw peer opinions or reserved consumer answers are supplied.",
+    "The S2 actual native preparation is a separate receipt; the earlier support audit did not execute it."
+  ]
+}

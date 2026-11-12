@@ -1,0 +1,31 @@
+{
+  "unit": "s2.l4.entry",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "capture_index": {
+    "path": "producers/app-session/sources.json",
+    "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+  },
+  "scope": "Only directly used captured instructions and declared package-script fields are listed. Complete captured bytes were hashed for identity. Accepted predecessor bodies carry other facts through explicit build edges; no raw peer source or new remote capture was fetched.",
+  "sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "local_capture_file": "producers/app-session/sources/AGENTS.md",
+      "original_connector_response_file": "producers/app-session/captures/batch-05.json",
+      "used_for": "Directly attributed repository-only knowledge, remote-test, restart/typecheck and process-local continuation instructions for entry boundaries.",
+      "used_line_ranges": [
+        [
+          146,
+          166
+        ],
+        [
+          199,
+          216
+        ]
+      ]
+    }
+  ]
+}

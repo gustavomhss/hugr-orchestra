@@ -1,0 +1,76 @@
+{
+  "unit": "s2.l4.design-tui",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "build": [
+    "s2.l3.design-tui",
+    "s2.l3.app-session",
+    "s2.l3.desktop-web"
+  ],
+  "navigation": [
+    "s2.l4.app-session",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "rationale": {
+    "build": {
+      "s2.l3.design-tui": {
+        "path": "deliverable/layers/l3/design-tui/body.md",
+        "sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+        "sections": [
+          "Orientation and accepted ownership",
+          "Terminal input becomes admission through ordered, separate operations",
+          "Ambiguous sends, live projection and request decisions keep different identities",
+          "Rendered state follows caller and resource lifetimes",
+          "Language and appearance cross app and host contracts",
+          "Generated products reach consumers through distinct maintenance paths",
+          "Change impact and verification ownership"
+        ],
+        "reason": "Primary factual maintenance basis: TUI submission/admission ordering and limits, local persistence/projection, UI/dialog/worker ownership, corrected typed app/native copy contract, RTL/theme distinctions, generated ownership, test-scope and inherited coverage gaps. The accepted corrected r2 body is used unchanged.",
+        "byte_length": 15780
+      },
+      "s2.l3.app-session": {
+        "path": "deliverable/layers/l3/app-session/body.md",
+        "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+        "sections": [
+          "Submit once, then hand the draft to its session",
+          "Render and localize under caller-owned lifetimes",
+          "Recover the projection without inventing execution recovery"
+        ],
+        "reason": "Actual cross-unit facts used for maintenance: acknowledged policy/owner gate, retained dispatch identity and later-draft handoff, scoped deletion/ambiguous failure, consumer rendering and sanitization ownership, and canonical recovery without provider/clustered recovery guarantees.",
+        "byte_length": 14334
+      },
+      "s2.l3.desktop-web": {
+        "path": "deliverable/layers/l3/desktop-web/body.md",
+        "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+        "sections": [
+          "Carry changes through shared UI and distribution",
+          "Launch, choose a server and identify the health decision",
+          "Cross renderer, preload and main with a scoped capability"
+        ],
+        "reason": "Actual cross-unit facts used for diagnosis and change impact: named host health predicates and stable-exit discrepancy, channel-specific preload/main admission and Live/WSL wrapper difference, plus the separation between presentation generation/build declarations and packaged host evidence.",
+        "byte_length": 14715
+      }
+    },
+    "navigation": {
+      "s2.l4.app-session": "Optional sibling maintenance guidance for app submission, scope, request and recovery owners; not read or used as factual evidence.",
+      "s2.l4.desktop-web": "Optional sibling maintenance guidance for host startup, trust, platform and packaging owners; not read or used as factual evidence.",
+      "s2.l4.entry": "Optional common entry navigation using the public L4 heading contract; no same-layer body was consumed."
+    }
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    }
+  ],
+  "manifest_path_base": "deliverable/",
+  "lineage_note": "All three dispatched manifests were read and hash-verified. L1/L2 are consumed lineage pins; the three accepted L3 bodies actually read and used are the direct factual build inputs. No direct lower-layer body or same-layer artifact is an additional factual dependency."
+}

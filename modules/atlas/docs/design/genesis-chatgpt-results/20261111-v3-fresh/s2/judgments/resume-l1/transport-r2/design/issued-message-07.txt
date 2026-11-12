@@ -1,0 +1,744 @@
+TRANSPORT ONLY: unit=design-tui r2 section=03-evidence part=2/4; manifest-order=7/14.
+BEGIN EXACT FILE BODY design-tui-03-evidence-02.txt
+      set(() => next)
+    }, ms)
+  }
+  onCleanup(() => {
+    if (timer) clearTimeout(timer)
+  })
+  return [get, debounced]
+}
+```
+
+## E13. Demo request identity and local interception
+
+Demo IDs are intercepted before permission replies can reach the V2 server; synthetic UI results are not tool results.
+
+**Source:** `packages/tui/src/context/demo.ts:49–54` · blob `6f0adbdeb640a83004a8bfeeed978856a363d074`
+
+```typescript
+/** Ids of everything the demo makes up start with this, so a reply to one is answered locally. */
+export const PREFIX = "demo_"
+
+export function isDemoRequest(id: string) {
+  return id.startsWith(PREFIX)
+}
+```
+
+**Source:** `packages/tui/src/context/sdk.tsx:130–145` · blob `b595aa115e6902542a41bee79be7fc26ca434ded`
+
+```typescript
+    // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
+    const answerLocally = (type: string, data: Record<string, unknown>) =>
+      emitter.emit("event", {
+        directory: props.directory ?? "",
+        payload: { id: `demo_evt_${type}`, type, data },
+      } as GlobalEvent)
+    const api = {
+      ...v2,
+      permissions: {
+        ...v2.permissions,
+        reply: (input: Parameters<typeof v2.permissions.reply>[0], options?: Parameters<typeof v2.permissions.reply>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(
+                answerLocally("permission.v2.replied", { sessionID: input.sessionID, requestID: input.requestID, reply: input.reply }),
+              )
+            : v2.permissions.reply(input, options),
+```
+
+**Source:** `packages/tui/src/context/demo.ts:224–233` · blob `6f0adbdeb640a83004a8bfeeed978856a363d074`
+
+```typescript
+export function settle(
+  requestID: string,
+  outcome: { readonly type: "completed"; readonly answers?: readonly (readonly string[])[] } | { readonly type: "error"; readonly error: string },
+  now = Date.now(),
+): { messageID: string; tool: SessionMessageAssistantTool } | undefined {
+  const entry = waiting.get(requestID)
+  if (!entry) return undefined
+  waiting.delete(requestID)
+  const input = entry.tool.state.status === "pending" ? {} : entry.tool.state.input
+  const time = { ...entry.tool.time, completed: now }
+```
+
+## E14. Replay projection is mini-specific
+
+The helper itself has no CLI-argument validation; ordinary sessions retain their input message array.
+
+**Source:** `packages/tui/src/context/replay.ts:1–12` · blob `572923473d3af34f4c8e2d1f2fda2a8e08c77bd7`
+
+```typescript
+/**
+ * The messages a mini-mode session shows: `--no-replay` hides what existed when the screen opened, and
+ * `--replay-limit N` keeps the newest N of what is left. Outside mini mode every message shows.
+ */
+export function replayWindow<T extends { readonly time: { readonly created: number } }>(
+  messages: readonly T[],
+  options: { readonly mini?: boolean; readonly replay?: boolean; readonly limit?: number; readonly openedAt: number },
+) {
+  if (!options.mini) return messages
+  const fresh = options.replay === false ? messages.filter((message) => message.time.created >= options.openedAt) : messages
+  return options.limit === undefined ? fresh : fresh.slice(-options.limit)
+}
+```
+
+## E15. Thinking preference migrates stored values
+
+The default is hide, with legacy boolean migration; this is disclosure state.
+
+**Source:** `packages/tui/src/context/thinking.ts:29–36` · blob `bb1c2a6929f92b936fbc70c7cb52966d02e87f94`
+
+```typescript
+export function useThinkingMode() {
+  const kv = useKV()
+  // Capture pre-state before `kv.signal` seeds a default, so we can detect
+  // first-time users with a legacy `thinking_visibility` boolean and migrate.
+  // The KVProvider only renders children once kv.ready, so reads here are safe.
+  const hadStored = kv.get("thinking_mode") !== undefined
+  const legacy = kv.get("thinking_visibility")
+  const [stored, setStored] = kv.signal<ThinkingMode>("thinking_mode", "hide")
+```
+
+**Source:** `packages/tui/src/context/thinking.ts:48–61` · blob `bb1c2a6929f92b936fbc70c7cb52966d02e87f94`
+
+```typescript
+  // Preserve previous experience for users who had explicitly toggled the
+  // legacy `thinking_visibility` boolean. First-time users (no legacy key)
+  // get the new "hide" default (collapsed thinking).
+  if (!hadStored) {
+    if (legacy === true) set("show")
+    else if (legacy === false) set("hide")
+  }
+
+  if ((stored() as string) === "minimal") set("hide")
+
+  const mode = createMemo<ThinkingMode>(() => {
+    const value = stored()
+    return isThinkingMode(value) ? value : "hide"
+  })
+```
+
+## E16. Parser source mixes pinned and moving external references
+
+This is declared configuration, not proof that external grammar/query bytes were downloaded or compatible.
+
+**Source:** `packages/tui/src/parsers-config.ts:1–19` · blob `8a5a71fb85391476943224d0b94b1ee257d18481`
+
+```typescript
+export default {
+  // NOTE: FOR markdown, javascript and typescript, we use the opentui built-in parsers
+  // Warn: when taking queries from the nvim-treesitter repo, make sure to include the query dependencies as well
+  //       marked with for example `; inherits: ecma` at the top of the file. Just put the dependencies before the actual query.
+  //       ALSO: Some queries use breaking changes in the nvim-treesitter repo, that are not compatible with the (web-)tree-sitter parser.
+  parsers: [
+    {
+      filetype: "python",
+      wasm: "https://github.com/tree-sitter/tree-sitter-python/releases/download/v0.23.6/tree-sitter-python.wasm",
+      queries: {
+        highlights: [
+          // NOTE: This nvim-treesitter query is currently broken, because the parser is not compatible with the query apparently.
+          //       it is using "except" nodes that the parser is complaining about, but it has been in the query for 3+ years.
+          //       Unclear.
+          // "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/refs/heads/master/queries/python/highlights.scm",
+          "https://github.com/tree-sitter/tree-sitter-python/raw/refs/heads/master/queries/highlights.scm",
+        ],
+        locals: [
+          "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/refs/heads/master/queries/python/locals.scm",
+```
+
+**Source:** `packages/tui/src/routes/session/index.tsx:69–69` · blob `a61f7477250895d31dea4f50e806dadfa45afcd9`
+
+```typescript
+addDefaultParsers(parsers.parsers)
+```
+
+## E17. UI provider keeps layout locale separate
+
+The fallback and provider wiring do not certify translation completeness.
+
+**Source:** `packages/ui/src/context/i18n.tsx:52–68` · blob `757083f8f7842815c6e835d722a9f8887a9088bc`
+
+```typescript
+const fallback: UiI18n = {
+  locale: () => "en",
+  t: (key, params) => {
+    const value = source[key] ?? String(key)
+    return resolveTemplate(value, params)
+  },
+  plural: (key, count, params) =>
+    fallback.t(pluralKey(key, pluralCategory(fallback.locale(), count)), { ...params, count }),
+}
+
+const Context = createContext<UiI18n>(fallback)
+
+function UiI18nProvider(props: ParentProps<{ value: UiI18n }>) {
+  return (
+    <I18nProvider locale={(props.value.layoutLocale ?? props.value.locale)()}>
+      <Context.Provider value={props.value}>{props.children}</Context.Provider>
+    </I18nProvider>
+```
+
+## E18. Field synchronizes control accessibility attributes
+
+This is a concrete source mechanism; no screen-reader test ran.
+
+**Source:** `packages/ui/src/v2/components/field-v2.tsx:81–109` · blob `45b5a70b2efb0ae179d41b70e1dd39f4b0ba53cb`
+
+```typescript
+  const syncControlA11y = () => {
+    const root = rootRef
+    if (!root) return
+
+    const control = root.querySelector(CONTROL_SELECTOR) as HTMLInputElement | HTMLTextAreaElement | null
+    if (!control) return
+
+    const shell = control.closest(
+      "[data-component='text-input-v2'], [data-component='textarea-v2'], [data-component='inline-input-v2']",
+    ) as HTMLElement | null
+
+    control.id = controlId
+    control.setAttribute("aria-labelledby", labelId)
+
+    const describedBy = ctx.getDescribedBy()
+    if (describedBy) {
+      control.setAttribute("aria-describedby", describedBy)
+    } else {
+      control.removeAttribute("aria-describedby")
+    }
+
+    if (ctx.invalid()) {
+      control.setAttribute("aria-invalid", "true")
+      shell?.setAttribute("data-invalid", "")
+    } else {
+      control.removeAttribute("aria-invalid")
+      shell?.removeAttribute("data-invalid")
+    }
+  }
+```
+
+## E19. Segmented-control arrows use DOM-order increments
+
+The shown key handler has no direction lookup, leaving RTL behavioral verification open.
+
+**Source:** `packages/ui/src/v2/components/segmented-control-v2.tsx:158–169` · blob `006b28394f3e611c52746ddf26e88b7a8288a1d5`
+
+```typescript
+  const onKeyDown: JSX.EventHandlerUnion<HTMLButtonElement, KeyboardEvent> = (e) => {
+    invokeButtonHandler(local.onKeyDown, e)
+    if (e.defaultPrevented || disabled()) return
+    const t = e.currentTarget
+
+    if (e.key === "ArrowRight") {
+      e.preventDefault()
+      ctx.focusNext(t, 1)
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault()
+      ctx.focusNext(t, -1)
+    }
+```
+
+## E20. Context readiness and worker ownership
+
+Readiness gates consumers. Pools are injected and selected, with no creation or disposal in this wrapper.
+
+**Source:** `packages/ui/src/context/helper.tsx:20–35` · blob `172fed460ec63fc373e616fcbef40d8cb21be5ee`
+
+```typescript
+      // Access init.ready inside the memo to make it reactive for getter properties
+      const isReady = createMemo(() => {
+        // @ts-expect-error
+        const ready = init.ready as Accessor<boolean> | boolean | undefined
+        return ready === undefined || (typeof ready === "function" ? ready() : ready)
+      })
+      return (
+        <Show when={isReady()}>
+          <ctx.Provider value={init}>{props.children}</ctx.Provider>
+        </Show>
+      )
+    },
+    use() {
+      const value = useContext(ctx)
+      if (!value) throw new Error(`${input.name} context must be used within a context provider`)
+      return value
+```
+
+**Source:** `packages/ui/src/context/worker-pool.tsx:9–20` · blob `5f788f7866abfd25e701e37ea377d416f87a4e4f`
+
+```typescript
+const ctx = createSimpleContext<WorkerPools, { pools: WorkerPools }>({
+  name: "WorkerPool",
+  init: (props) => props.pools,
+})
+
+export const WorkerPoolProvider = ctx.provider
+
+export function useWorkerPool(diffStyle: "unified" | "split" | undefined) {
+  const pools = ctx.use()
+  if (diffStyle === "split") return pools.split
+  return pools.unified
+}
+```
+
+## E21. Theme formats have different contracts
+
+Terminal defs/theme and desktop light/dark variants must not be treated as one schema.
+
+**Source:** `packages/tui/src/theme/index.ts:120–128` · blob `bcdeff3a46e498bf1aadbcac39d6c149030657fb`
+
+```typescript
+export type ThemeJson = {
+  $schema?: string
+  defs?: Record<string, HexColor | RefName>
+  theme: Omit<Record<ThemeColor, ColorValue>, "selectedListItemText" | "backgroundMenu"> & {
+    selectedListItemText?: ColorValue
+    backgroundMenu?: ColorValue
+    thinkingOpacity?: number
+  }
+}
+```
+
+**Source:** `packages/ui/src/theme/types.ts:35–49` · blob `2284659b48426bc293c744916583260d3c4aa3f5`
+
+```typescript
+type ThemeVariantBase = {
+  overrides?: Record<string, ColorValue>
+  v2Overrides?: Record<string, V2ColorValue>
+}
+
+export type ThemeVariant =
+  | ({ seeds: ThemeSeedColors; palette?: never } & ThemeVariantBase)
+  | ({ palette: ThemePaletteColors; seeds?: never } & ThemeVariantBase)
+
+export interface DesktopTheme {
+  $schema?: string
+  name: string
+  id: string
+  light: ThemeVariant
+  dark: ThemeVariant
+```
+
+## E22. Actual schema generator and mirror source
+
+These are the precise owners of the assigned editor schemas. Python additionally verified exact desktop-schema copy equality; no generator ran.
+
+**Source:** `apps/cli/script/schema-files.ts:68–80` · blob `b965bf921f0a75ab6abfd2149e1d24b50f86f83b`
+
+```typescript
+export const configSchemaFile = path.resolve(import.meta.dir, "../../../schema/config.json")
+export const tuiSchemaFile = path.resolve(import.meta.dir, "../../../schema/tui.json")
+export const themeSchemaFile = path.resolve(import.meta.dir, "../../../schema/theme.json")
+export const themeSchemaSource = path.resolve(import.meta.dir, "../../../packages/ui/src/theme/desktop-theme.schema.json")
+
+export const configSchemaText = () => JSON.stringify(generateEffect(Config.Info), null, 2)
+export const tuiSchemaText = () => JSON.stringify(generateEffect(TuiConfig.Info), null, 2)
+
+// schema/ is what editors fetch through the $schema URLs; the theme schema is hand-written in packages/ui and mirrored verbatim.
+if (import.meta.main) {
+  await Bun.write(configSchemaFile, configSchemaText())
+  await Bun.write(tuiSchemaFile, tuiSchemaText())
+  await Bun.write(themeSchemaFile, Bun.file(themeSchemaSource))
+```
+
+## E23. Verified file and provider sprite generation
+
+The config declares these two outputs. It does not declare an app-icons producer.
+
+**Source:** `packages/ui/vite.config.ts:10–24` · blob `b89c666ae19be83a567d525687404fb6bc137857`
+
+```typescript
+    iconsSpritesheet([
+      {
+        withTypes: true,
+        inputDir: "src/assets/icons/file-types",
+        outputDir: "src/components/file-icons",
+        formatter: "prettier",
+      },
+      {
+        withTypes: true,
+        inputDir: "src/assets/icons/provider",
+        outputDir: "src/components/provider-icons",
+        formatter: "prettier",
+        iconNameTransformer: (iconName) => iconName,
+      },
+    ]),
+```
+
+**Source:** `packages/ui/vite.config.ts:47–58` · blob `b89c666ae19be83a567d525687404fb6bc137857`
+
+```typescript
+async function fetchProviderIcons() {
+  const url = process.env.ORCHESTRA_MODELS_URL || "https://models.dev"
+  const providers = await fetch(`${url}/api.json`)
+    .then((res) => res.json())
+    .then((json) => Object.keys(json))
+  await Promise.all(
+    providers.map((provider) =>
+      fetch(`${url}/logos/${provider}.svg`)
+        .then((res) => res.text())
+        .then((svg) => fs.writeFileSync(`./src/assets/icons/provider/${provider}.svg`, svg)),
+    ),
+  )
+```
+
+## E24. Bundled fonts do not establish loading
+
+The exported Font component is empty. Actual font loading requires a consumer boundary.
+
+**Source:** `packages/ui/src/components/font.tsx:1–1` · blob `f89dfafe1db32114fde53f9581a7c46992512092`
+
+```typescript
+export const Font = () => null
+```
+
+## E25. Storybook accessibility remains a todo
+
+A configured workbench is not a test pass.
+
+
+END EXACT FILE BODY design-tui-03-evidence-02.txt
+TRANSPORT ONLY: unit=design-tui r2 section=03-evidence part=3/4; manifest-order=8/14.
+BEGIN EXACT FILE BODY design-tui-03-evidence-03.txt
+**Source:** `apps/storybook/.storybook/preview.tsx:98–110` · blob `a6052bf222a2146b2aca63109d3583f1cef399fd`
+
+```typescript
+  parameters: {
+    actions: {
+      argTypesRegex: "^on.*",
+    },
+    controls: {
+      matchers: {
+        color: /(background|color)$/i,
+        date: /Date$/i,
+      },
+    },
+    a11y: {
+      test: "todo",
+    },
+```
+
+## E26. Workbench CSS editing writes source
+
+The development middleware is capable of source mutation; no middleware request was made.
+
+**Source:** `apps/storybook/.storybook/playground-css-plugin.ts:113–124` · blob `cc73ecf667fd444d0d1ddde9ba30f9487906bead`
+
+```typescript
+              continue
+            }
+
+            try {
+              const content = fs.readFileSync(abs, "utf-8")
+              const applied = applyEdits(content, edits)
+              results.push(...applied.results)
+
+              if (applied.results.some((r) => r.ok)) {
+                fs.writeFileSync(abs, applied.content, "utf-8")
+              }
+            } catch (err) {
+```
+
+## E27. Historical verification is explicitly limited
+
+This past receipt is not a current product test result.
+
+**Source:** `docs/specs/frontend-recovery-receipt.json:66–71` · blob `ab453aa29c818d7c84e0d9e50502c519d7429c6c`
+
+```json
+  "explicitLimits": [
+    "CI was not run or published in this task.",
+    "No live model turns using owner credentials were performed.",
+    "Packaged desktop behavior on Windows/Linux and real screen-reader coverage remain unverified.",
+    "Core V2 model policy and Task enforcement are implemented. CCSDK execution requires its host consumer of the same guard; native Task explicitly rejects unsupported CC targets.",
+    "Older V2 servers lacking the new endpoints receive explanatory unsupported states; current V2 supports model policy, archive, archived listing and restore."
+```
+
+## E28. README render relationship is explicit
+
+Only assigned output basenames matching HTML inputs are mapped to this loop; binary equivalence is unverified.
+
+**Source:** `docs/images/readme/src/render.sh:1–19` · blob `2e3769d9b7c6577c7252d85bce9110ab0c3c92e8`
+
+```bash
+#!/bin/sh
+# Renders each diagram in src/ to ../<name>-dark.png and ../<name>-light.png at 2x with headless Chrome,
+# sized to the canvas, then quantizes the PNG to keep the README light.
+# Usage: sh docs/images/readme/src/render.sh [name...]
+set -e
+dir=$(cd "$(dirname "$0")" && pwd)
+chrome="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
+names=${*:-$(cd "$dir" && ls *.html | sed 's/\.html$//')}
+for name in $names; do
+  height=$("$chrome" --headless=new --disable-gpu --window-size=1200,900 --virtual-time-budget=3000 \
+    --dump-dom "file://$dir/$name.html" 2>/dev/null | sed -n 's:.*<title>\([0-9]*\)</title>.*:\1:p' | head -1)
+  for theme in dark light; do
+    out="$dir/../$name-$theme.png"
+    "$chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=2 \
+      --window-size=1200,"${height:-900}" --virtual-time-budget=3000 \
+      --screenshot="$out" "file://$dir/$name.html#$theme" >/dev/null 2>&1
+    python3 -c "import sys; from PIL import Image; Image.open(sys.argv[1]).convert('RGB').quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(sys.argv[1], optimize=True)" "$out"
+  done
+done
+```
+
+## Evidence integrity and unresolved transport boundary
+
+The initial `fetch_file` response for `schema/tui.json` supplied an empty body. A second read using the assigned exact blob SHA recovered 1,131,057 bytes and passed Git blob SHA verification. Both original responses remain in the capture record. The controller-reported 256,000-byte observer limit is an import/runtime constraint; the semantic source is available here.
+
+This document contains 28 critical-claim groups, 40 bounded source slices and 535 quoted source lines. No historical PASS label has been promoted to a result of this task.
+
+
+# Resumed correction evidence
+
+## tui-adapter
+
+Complete adapter contract and mapping; no execution, transaction, fallback or retry proof.
+
+Source: `packages/tui/src/context/session-actions.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `255420d1e93ce0fca21b941c673abdede087e91e`; SHA-256 `e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd`.
+
+Exact lines 4–92:
+
+```ts
+type Client = ReturnType<typeof Orchestra.make>
+type Model = { providerID: string; modelID: string; variant?: string }
+
+// The V2 server serves these session actions under `/api/session/:id/*`. The legacy `/session/:id/*`
+// routes (abort, shell, command, summarize, revert, unrevert) are not served by it.
+export function createSessionActions(client: Client) {
+  async function select(input: { sessionID: string; agent: string; model: Model }) {
+    await client.sessions.switchAgent({ sessionID: input.sessionID, agent: input.agent })
+    await client.sessions.switchModel({
+      sessionID: input.sessionID,
+      model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.model.variant },
+    })
+  }
+
+  return {
+    // Without a directory the V2 server places the Session in its own working directory.
+    create: (input: { agent: string; model: Model; directory?: string; workspaceID?: string }) =>
+      client.sessions.create({
+        agent: input.agent,
+        model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.model.variant },
+        location: input.directory ? { directory: input.directory, workspaceID: input.workspaceID } : undefined,
+      }),
+    // The earlier runtime sent the agent and model with every prompt; V2 prompts run on the Session's selection, so select first.
+    // Editor context was a hidden synthetic part in the earlier runtime; V2 admits it as a synthetic input that does not wake the
+    // Session, so the prompt that follows carries it into the same turn.
+    async prompt(input: {
+      sessionID: string
+      text: string
+      context?: string
+      agent: string
+      model: Model
+      files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
+      agents: ReadonlyArray<Pick<TuiPromptAgentPart, "name" | "source">>
+    }) {
+      await select(input)
+      if (input.context)
+        await client.sessions.synthetic({ sessionID: input.sessionID, text: input.context, resume: false })
+      return client.sessions.prompt({
+        sessionID: input.sessionID,
+        prompt: {
+          text: input.text,
+          files: input.files.map(toFile),
+          agents: input.agents.map((agent) => ({
+            name: agent.name,
+            source: agent.source
+              ? { start: agent.source.start, end: agent.source.end, text: agent.source.value }
+              : undefined,
+          })),
+        },
+      })
+    },
+    interrupt: (sessionID: string) => client.sessions.interrupt({ sessionID }),
+    // V2 compaction uses the Session's own model, so no model is passed.
+    compact: (sessionID: string) => client.sessions.compact({ sessionID }),
+    // V2 shell records the command and its output for the next turn; it takes no agent or model.
+    shell: (input: { sessionID: string; command: string }) => client.sessions.shell(input),
+    reply: (input: { sessionID: string; requestID: string; reply: "once" | "always" | "reject" }) =>
+      client.permissions.reply(input),
+    revert: (input: { sessionID: string; messageID: string }) => client.sessions.stage({ ...input, files: true }),
+    unrevert: (sessionID: string) => client.sessions.clear({ sessionID }),
+    // V2 commands run on the Session's selected agent and model, so select them first.
+    async command(input: {
+      sessionID: string
+      command: string
+      arguments: string
+      agent: string
+      model: Model
+      files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
+    }) {
+      await select(input)
+      return client.sessions.command({
+        sessionID: input.sessionID,
+        command: input.command,
+        arguments: input.arguments,
+        files: input.files.map(toFile),
+      })
+    },
+  }
+}
+
+function toFile(file: Pick<TuiPromptFilePart, "url" | "filename" | "source">) {
+  return {
+    uri: file.url,
+    name: file.filename,
+    source: file.source?.text
+      ? { start: file.source.text.start, end: file.source.text.end, text: file.source.text.value }
+      : undefined,
+  }
+}
+```
+
+## tui-session-protocol-create-select-admit
+
+Exact create, selection, prompt, command and compact route contracts with declared semantics.
+
+Source: `packages/protocol/src/groups/session.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `5830f50001c8dc01227a920f04276054c0e29570`; SHA-256 `2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f`.
+
+Exact lines 157–165:
+
+```ts
+      HttpApiEndpoint.post("session.create", "/api/session", {
+        payload: Schema.Struct({
+          id: Session.ID.pipe(Schema.optional),
+          agent: Agent.ID.pipe(Schema.optional),
+          model: Model.Ref.pipe(Schema.optional),
+          location: Location.Ref.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: Session.Info }),
+        error: SessionNotFoundError,
+```
+
+Exact lines 301–394:
+
+```ts
+      HttpApiEndpoint.post("session.switchAgent", "/api/session/:sessionID/agent", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ agent: Agent.ID }),
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.switchAgent",
+            summary: "Switch session agent",
+            description: "Switch the agent used by subsequent provider turns.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.switchModel", "/api/session/:sessionID/model", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ model: Model.Ref }),
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.switchModel",
+            summary: "Switch session model",
+            description: "Switch the model used by subsequent provider turns.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.prompt", "/api/session/:sessionID/prompt", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({
+          id: SessionMessage.ID.pipe(Schema.optional),
+          prompt: PromptInput.Prompt,
+          delivery: SessionInput.Delivery.pipe(Schema.optional),
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: SessionInput.Admitted }),
+        error: [ConflictError, SessionNotFoundError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.prompt",
+            summary: "Send message",
+            description: "Durably admit one session input and schedule agent-loop execution unless resume is false.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.command", "/api/session/:sessionID/command", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({
+          id: SessionMessage.ID.pipe(Schema.optional),
+          command: Schema.String,
+          arguments: Schema.String.pipe(Schema.optional),
+          files: PromptInput.Prompt.fields.files,
+          agents: PromptInput.Prompt.fields.agents,
+          delivery: SessionInput.Delivery.pipe(Schema.optional),
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: SessionInput.Admitted }),
+        error: [ConflictError, SessionNotFoundError, InvalidRequestError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.command",
+            summary: "Run command",
+            description:
+              "Render a configured command or an MCP prompt (`server:prompt`) with its arguments and admit the result as one session input.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.compact", "/api/session/:sessionID/compact", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: Schema.Struct({ compacted: Schema.Boolean }) }).annotate({
+          identifier: "SessionCompactResult",
+        }),
+        error: [SessionNotFoundError, ConflictError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.compact",
+            summary: "Compact session",
+            description:
+              "Summarize the conversation now into a compaction checkpoint. `compacted` is false when there was nothing to summarize. A running Session is refused as busy.",
+          }),
+        ),
+```
+
+## tui-session-protocol-other-actions
+
+Exact shell/synthetic/stage/clear/commit/interrupt declarations; adapter exposes no commit action.
+
+Source: `packages/protocol/src/groups/session.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `5830f50001c8dc01227a920f04276054c0e29570`; SHA-256 `2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f`.
+
+Exact lines 431–443:
+
+```ts
+      HttpApiEndpoint.post("session.shell", "/api/session/:sessionID/shell", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ id: Schema.String.pipe(Schema.optional), command: Schema.NonEmptyString }),
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, ConflictError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.shell",
+            summary: "Run shell command",
+            description:
+              "Run a shell command in the Session's location and record it with its output for the next turn. No turn starts.",
+```
+
+Exact lines 464–479:
+
+```ts
+      HttpApiEndpoint.post("session.synthetic", "/api/session/:sessionID/synthetic", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({
+          id: SessionMessage.ID.pipe(Schema.optional),
+          text: Schema.String,
+
+END EXACT FILE BODY design-tui-03-evidence-03.txt

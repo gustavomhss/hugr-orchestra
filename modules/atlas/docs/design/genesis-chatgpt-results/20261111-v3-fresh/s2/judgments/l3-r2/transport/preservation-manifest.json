@@ -1,0 +1,105 @@
+{
+  "schema": "genesis-s2-actual-revision-transport-preservation/v1",
+  "artifact": "s2.l3.design-tui",
+  "revision": 2,
+  "actual_native_send_calls": 4,
+  "logical_part_bytes_per_judge": 31156,
+  "judges": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "all_saved_envelopes_include_complete_exact_parts": true,
+  "host_serialized_message_bytes": "NOT_EXPOSED",
+  "files": [
+    {
+      "path": "manifest.json",
+      "bytes": 948,
+      "sha256": "22581bde83683feca745a70d5d38655af1583d040b67bb7620409b7a68fb7695"
+    },
+    {
+      "path": "part-01.txt",
+      "bytes": 25988,
+      "sha256": "f46c90b3ed316fb4f039d6c84bc754ea566ebfabef55a7efc292c334fe447b49"
+    },
+    {
+      "path": "part-02.txt",
+      "bytes": 5168,
+      "sha256": "b8c0f25f60d8cc9e6e0629971d432f17188609c5bb58d3d60f3cbb33ecf2d5f0"
+    },
+    {
+      "path": "transport/call-01-envelope.json",
+      "bytes": 26564,
+      "sha256": "c1867f4dcf1c3f8e53ee6bdfd58cd6b163eab6875552984b3c84e9994bae0410"
+    },
+    {
+      "path": "transport/call-01-receipt.json",
+      "bytes": 552,
+      "sha256": "1d2f33aff329db05fa595b057f2b26794b69d0c3ef478491040a81c9dbb586e1"
+    },
+    {
+      "path": "transport/call-02-envelope.json",
+      "bytes": 26564,
+      "sha256": "73b8583d3bee131e2ee0844b6266fd7a5187babb289bf195e2358c80c323c254"
+    },
+    {
+      "path": "transport/call-02-receipt.json",
+      "bytes": 552,
+      "sha256": "c7078c8b9020531c110f917435c4c6490d2cf5765ed959207384fdc6ba94801c"
+    },
+    {
+      "path": "transport/call-03-envelope.json",
+      "bytes": 5580,
+      "sha256": "2c5ac273b54ddec2334a69c35d37ead0d9816f3b991d083648d82521e4391bd6"
+    },
+    {
+      "path": "transport/call-03-receipt.json",
+      "bytes": 552,
+      "sha256": "5064f32f10d2dea5c4cb47d62173e79f8126896937c3252a4a83c8a68ac55523"
+    },
+    {
+      "path": "transport/call-04-envelope.json",
+      "bytes": 5580,
+      "sha256": "96829fed2c711277abbccf8066e27c119570579b54dc0eb1320a03400599d952"
+    },
+    {
+      "path": "transport/call-04-receipt.json",
+      "bytes": 552,
+      "sha256": "e301c67ee88bf6364cb285404508054aa48db71f7c132be8a76266dfc262eb35"
+    },
+    {
+      "path": "transport/calls.json",
+      "bytes": 3040,
+      "sha256": "806b83a97e5dbeb5d0d64ccb929c3dd08aefa0a2ac2d6314478ce943ed7039c7"
+    },
+    {
+      "path": "transport/hashes.sha256",
+      "bytes": 1175,
+      "sha256": "dc89e4719962cd1c4b8dab0505d33d912c0dca37df39407cf7785e790a2e6af7"
+    },
+    {
+      "path": "transport/manifest.json",
+      "bytes": 948,
+      "sha256": "22581bde83683feca745a70d5d38655af1583d040b67bb7620409b7a68fb7695"
+    },
+    {
+      "path": "transport/outcomes.md",
+      "bytes": 1975,
+      "sha256": "3de411e588d609f82ac272de7f5787950dd5af937a441b0552ec795fccbff273"
+    },
+    {
+      "path": "transport/part-01.txt",
+      "bytes": 25988,
+      "sha256": "f46c90b3ed316fb4f039d6c84bc754ea566ebfabef55a7efc292c334fe447b49"
+    },
+    {
+      "path": "transport/part-02.txt",
+      "bytes": 5168,
+      "sha256": "b8c0f25f60d8cc9e6e0629971d432f17188609c5bb58d3d60f3cbb33ecf2d5f0"
+    },
+    {
+      "path": "transport/verification.json",
+      "bytes": 1047,
+      "sha256": "7f4dcf97aa2b38ad3003aa920d2fe5e9f9eb46d38b12966d87e6f2bd1ee2b1f8"
+    }
+  ]
+}

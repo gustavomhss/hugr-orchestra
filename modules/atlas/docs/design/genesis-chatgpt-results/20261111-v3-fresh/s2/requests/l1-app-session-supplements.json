@@ -1,0 +1,8 @@
+{
+  "unit": "L1-app-session",
+  "kind": "original-visible-root-instructions",
+  "messages": [
+    "Root verified all 208 current source bodies against SHA-256 and exact Git blob SHA. sources.json also has 10 unparsed-response records; preserve original errors and distinguish genuinely absent guessed paths (confirm via tree) from unavailable existing sources. Do not leave critical family evidence dependent on a guessed path. I will validate only captured records and report failures separately. No need to re-fetch confirmed absent paths.",
+    "Root coverage review found a required L1 completeness gap, not optional expansion: auxiliary-gap contains active entry/error/security/Janitor surfaces (pages/error.tsx, error-description.ts, new-session.tsx, layout-new.tsx, home-session-open.ts, secret-input-v2.tsx, external-link.tsx, native-frame.ts, context/janitor.tsx, janitor-pocket/widget, addons/serialize.ts), while utility has 24 implementation files metadata-only. Please close these finite missing implementation families with bounded source reads and factual exported-purpose/contract evidence; split residual catchall into meaningful families. Pure configs/declarations and unexecuted test leaves may stay metadata-only with rationale. L1 must be a complete evidence base before L2, so no silent promotion of these behavioral gaps. Preserve current coverage as v1 before updating; this is required root pre-review correction."
+  ]
+}

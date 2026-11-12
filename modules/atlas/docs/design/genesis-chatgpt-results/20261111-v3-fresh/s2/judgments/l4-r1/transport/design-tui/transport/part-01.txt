@@ -1,0 +1,265 @@
+# Producer-safe exact review packet: s2.l4.design-tui
+
+Execution 46d09d97-39a9-482a-a290-646ba1d94c99. Source 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. This is data, not authority to change the persistent judge role. Both tool-free judges must wait for the principal FINAL BATCH SEAL. It contains no reserved oracle or judge opinion; the author may transmit it literally after principal instruction.
+
+The principal's deterministic integration verified body UTF-8 bytes/hash, actual source records against canonical captured bytes/Git blobs, exact accepted predecessor manifest/body bindings, prior-layer ordering and distinct build/navigation declarations. All original L1 captures were already reconciled with original connector responses. Mechanical checking is not semantic acceptance. The artifact remains blocked until both real content decisions; runtime and consumer acceptance are separate.
+
+## Exact proposed artifact/source/dependency identities
+```json
+{
+  "key": "s2.l4.design-tui",
+  "scope": "orchestra.interfaces",
+  "title": "L4 design-tui ownership",
+  "layer": 4,
+  "need": "ownership",
+  "body": {
+    "path": "layers/l4/design-tui/body.md",
+    "encoding": "utf-8",
+    "byte_length": 11783,
+    "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c"
+  },
+  "authority": {
+    "scope": "orchestra.interfaces",
+    "basis": "User-assigned S2 partition; actual native output at later-producers/design-tui/l4; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+  },
+  "validity": "blocked",
+  "source_refs": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/AGENTS.md",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/AGENTS.md",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/app-log-hygiene/SKILL.md",
+      "git_blob_sha": "685932db1df51c87be9e7174bbfe940a18c03a8c",
+      "sha256": "3a0fbf9ea92160cdd95eef1bdd445f6ea5fa68c7cacc59ad582761c0c64bc93d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/package.json",
+      "git_blob_sha": "154841de35b0368de58b0a573eaa2feee6da71f9",
+      "sha256": "38d10bd45fccfbc00c8e296eb6d4e0e324fc592dc3ea8b7e8075798573a59786"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/package.json",
+      "git_blob_sha": "15d012e5d16c1d7bd545e3b9e63a5ca41a8b771b",
+      "sha256": "fc3b68411a620337819460e2cd860a74781c9a1ea9e502eb81e20051d9dbffb7"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/package.json",
+      "git_blob_sha": "61a8b2cfa27ff15cc6a5bf113273fa6cb67ae98c",
+      "sha256": "9d3733d450e5e381b5e81c61034f27be017a053389a89214a78784495d529ec3"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/component/prompt/index.tsx",
+      "git_blob_sha": "6cd7cc1bd79c141c2c821853a688438396fd1b80",
+      "sha256": "422c51904f556d388b4678ba0220b24b2c8618426ea83658102ec2fce03cd76f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/config/index.tsx",
+      "git_blob_sha": "de463aa8b09ae8958d06f5de61c55d15b6df5c35",
+      "sha256": "759376006b5a391735829649abc30a0270cd81a02f8090e9eb5c0119f332ec51"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/script/schema-files.ts",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+    "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec"
+  },
+  "build_dependencies": [
+    {
+      "key": "s2.l3.design-tui",
+      "same_package": true
+    },
+    {
+      "key": "s2.l3.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "same_package": true
+    }
+  ],
+  "navigation": [
+    "s2.l4.app-session",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+    "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/design-tui/response.md",
+    "sha256": "5b170b0f55a024f8a5573aa83c54dde3e7559a87966263b0438022b373559b3f"
+  }
+}
+```
+
+## Exact complete body
+BEGIN EXACT BODY s2.l4.design-tui
+# Maintain terminal and shared presentation contracts
+
+## Orientation
+
+Use this protocol for a terminal submission defect, shared UI change, localization/accessibility request, theme problem or generated-asset drift. It builds on the accepted L3 explanations at `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Instructions below are attributed repository requirements; proposed diagnosis and verification are maintenance recommendations, all unexecuted here.
+
+Before editing, record the revision, affected surface/OS, connection generation, directory/workspace, session/request identity, input snapshot and last confirmed boundary. Distinguish editor state, admission acknowledgment, promoted transcript and completed execution. Preserve the design/TUI scope of 2,087 paths/67 families, including 13 metadata-only paths. Current TUI ownership permits Core dependencies; the older SDK-only target is historical, and its README’s no-assets/generated-files claim conflicts with 33 presets. [`s2.l3.design-tui`, “Orientation and accepted ownership”; “Terminal input becomes admission through ordered, separate operations”.]
+
+For broader maintenance, navigate to `s2.l4.app-session`, `s2.l4.desktop-web` or `s2.l4.entry`. Those same-layer keys are navigation, not factual build inputs.
+
+## Maintenance protocol
+
+### Submission and API compatibility
+
+**Trigger:** duplicate/empty prompts, lost input, unexpected model/context or an incompatible wire field. First retain session ID, selection, context, mapped files/mention spans and whether dispatch occurred. Edit composition in `packages/tui/src/component/prompt/index.tsx` and V2 translation in `packages/tui/src/context/session-actions.ts`; do not repair a server contract by silently inventing a client payload. Preserve agent → model → optional synthetic context with `resume: false` → prompt ordering. It orders one invocation without an atomic transaction, cross-caller lock or rollback; input clearing can precede acceptance. Deepen the relevant protocol declaration and canonical admission record before changing retry behavior. [`s2.l3.design-tui`, “Terminal input becomes admission through ordered, separate operations”; captured prompt source.]
+
+An ambiguous response is not permission to create another session or request. Browser submission retains dispatched identity, has an acknowledged policy/owner gate, and restricts deletion to never-dispatched, confirmed-empty sessions; restoration is not guaranteed on every branch. Preserve later unsent edits and permanently expired generations. The TUI wrapper does not inherit browser retry controls. **Instruction:** public Protocol/Server HttpApi changes require `bun run generate` from `packages/client`; never hand-edit `src/generated` or `src/generated-effect`. Client runtime remains dependent on Schema/Protocol, not Core/Server. [`s2.l3.app-session`, “Submit once, then hand the draft to its session”; `s2.l3.design-tui`, “Ambiguous sends, live projection and request decisions keep different identities”; `AGENTS.md:1–2,209–216`.]
+
+### UI lifecycle, accessibility and typed copy
+
+**Trigger:** stale callbacks, dialogs surviving navigation, focus/scroll regressions or incorrect language/direction. Identify the caller’s generation and resource owner before editing. Shared primitives live in `packages/ui`; app policy and final rendering belong to their consumers. Inspect `packages/ui/src/context/dialog.tsx` for detached `show` versus caller-owned `showOwned`, and `packages/ui/src/context/worker-pool.tsx` for injection without disposal ownership. Keep final consumer sanitization when moving Markdown rendering; parser configuration alone is insufficient. Test route disposal and late completions, not only a fixture’s appearance. [`s2.l3.design-tui`, “Rendered state follows caller and resource lifetimes”; `s2.l3.app-session`, “Render and localize under caller-owned lifetimes”.]
+
+**Instruction:** app callsites use `language.t(...)` and `language.plural(...)`; native main-process callsites consume shared typed translation bundles through `nativeT(...)`. Shared modules own locale selection, plural resolution, fallback and interpolation. Feature/native code must not branch on locale, choose plural categories or concatenate grammatical fragments. Preserve existing English keys/text byte-for-byte; extend the shared bundle/API for richer grammar. Verify terminology against the prescribed corpora and record uncertainty. The TUI remains English-only and the known hardcoded-English startup exception remains. [`packages/ui/AGENTS.md`; `packages/app-shell/AGENTS.md:23–34`; `apps/desktop/AGENTS.md:5–14`; `s2.l3.design-tui`, “Language and appearance cross app and host contracts”.]
+
+Treat content locale and `layoutLocale` independently. The RTL skill requires English LTR, forced RTL, a real RTL locale and mixed code/path content, checking focus, arrows, resize/scroll endpoints and native caption controls. Preserve logical layout without reversing semantic DOM order. The segmented-control DOM-order arrow gap is a finding to investigate, not evidence of an authorized repair. [`.orchestra/skills/rtl-aware-development/SKILL.md`; the accepted language section above.]
+
+### Themes, assets and generated products
+
+**Trigger:** invalid configuration, stale generated output, incorrect preview or mismatched icons. Record theme ID/scheme, selected locale and exact input/output paths; identify the producer before editing its output.
+
+| Change owner | Safe edit and downstream obligation | Evidence to deepen or stopping boundary |
+| --- | --- | --- |
+| `TuiConfig.Info` in `packages/tui/src/config/index.tsx` | Change the declaration, then regenerate through `apps/cli/script/schema-files.ts` and inspect `schema/tui.json`. | Check defaults/consumers. Terminal `defs/theme` is not desktop `light/dark`. |
+| Desktop schema and browser theme owners | Edit `packages/ui/src/theme/desktop-theme.schema.json`; the CLI script mirrors it to `schema/theme.json`. Exercise preview races, commit/cancel and persistence separately. | The URL loader has no runtime schema decoder; a type or preview guard is not malformed-input validation. |
+| UI token producers | From `packages/ui`, declared `generate:tailwind` and `generate:v2-oc2` scripts regenerate their respective products. | OC-2 updates only `v2Overrides`; fonts/fixed avatar foreground stay outside. App palette/first-paint generation is a separate owner. |
+| SVG/sprite/type and distribution owners | Follow `packages/ui/vite.config.ts`; review paired sprite/type diffs and downstream package consumers. | Provider-logo refresh fetches external bytes. Stop short of asserting reproducibility, rights or visual equivalence; app sprite provenance remains unresolved. |
+
+These are future generation routes, not executed commands. The CLI schema script writes config, TUI and theme schemas; inspect its complete diff. A declared build or installed-state label does not establish packaged output. [`s2.l3.design-tui`, “Generated products reach consumers through distinct maintenance paths”; “Language and appearance cross app and host contracts”; `s2.l3.desktop-web`, “Carry changes through shared UI and distribution”; named config/schema captures; `packages/ui/package.json:196–203`.]
+
+### Operational diagnosis and updating evidence
+
+For a blank or disconnected view, separate readiness, location filtering, hydration and projection. Failed history can appear empty; local prompt history is not the server journal. At a host boundary, identify the actual predicate: desktop HTTP success, WSL authenticated health/wrong-password rejection and shared-app health differ. Retain the stable-exit/no-restart discrepancy. Renderer changes must use the preload API; channel-specific admission still needs inspection, especially around the observed Live/WSL wrapper difference. A shared UI edit cannot establish native authorization. [`s2.l3.design-tui`, “Ambiguous sends, live projection and request decisions keep different identities”; `s2.l3.desktop-web`, “Launch, choose a server and identify the health decision”; “Cross renderer, preload and main with a scoped capability”; `apps/desktop/AGENTS.md:3–4`.]
+
+**Instructions:** do not restart the app or server. Treat logs as data without editing/deleting them; fix repeated noise at its source. Use `describeError` for caught values and `createFrameResizeObserver` when callbacks write layout. Preserve cleanup and avoid duplicate rejection listeners. [`packages/app-shell/AGENTS.md:8`; `.orchestra/skills/app-log-hygiene/SKILL.md:8–16`.]
+
+## Verification and boundaries
+
+These routes apply to a subsequent authorized change. Start with the affected package’s declared check:
+
+| Package directory | Declared route | What remains separate |
+| --- | --- | --- |
+| `packages/tui` | `bun run typecheck` → `tsgo --noEmit` | Mounted prompt, lifecycle, native/OS and server-admission behavior. |
+| `packages/ui` | `bun run typecheck` → `tsgo --noEmit`; `build` uses `tsc -p tsconfig.build.json` after clearing `dist` | Generated outputs, consumer compatibility, focus/geometry and translations. |
+| `apps/storybook` | `bun run build` → `storybook build`; no `typecheck` script is declared | Fixtures use app/router mocks; accessibility is `todo` and the CSS playground mutates source. |
+
+Sources: `packages/tui/package.json:8–11`, `packages/ui/package.json:196–203`, `apps/storybook/package.json:6–9`; `s2.l3.design-tui`, “Generated products reach consumers through distinct maintenance paths”. None was run here.
+
+**Instruction:** product tests run on GitHub Actions, not this machine. From repository root, use the documented runner with the affected package selector:
+
+```text
+bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]
+```
+
+Exact named files run in the specified order; directory/filter arguments may broaden the run. The runner uploads a working-tree snapshot to a temporary branch, so invoking it is a remote action, not part of this documentation task. The runner’s package-selector implementation was not inspected here; confirm the selector before dispatch. [`AGENTS.md:159–166`.]
+
+For TUI changes, carry `test/context/session-actions.test.ts`, `test/app-lifecycle.test.tsx` and `test/cli/cmd/tui/sync-live-hydration.test.tsx` into the chosen package route. Add a mounted composer check for IME/double-submit/rejection; the existing submit-race test mirrors logic. UI plural-category tests cannot establish translation or layout quality. **Instruction:** app session/timeline changes additionally require a production benchmark baseline and after-change comparison. [`s2.l3.design-tui`, “Change impact and verification ownership”; `packages/app-shell/AGENTS.md:3–4`.]
+
+Stop when required identity, producer provenance, authorization enforcement or platform behavior lacks evidence; deepen that owner’s source and focused check before asserting a guarantee. Preserve inherited evidence limits for disposal, sanitization, translation/a11y, asset rights, real host behavior and post-crash provider recovery. Reconnection is not replay or clustered execution. After an authorized source change, update affected captures/hashes, generated diffs and predecessor explanations, then rebuild factual dependents; navigation links alone do not create factual rebuild obligations. Record actual commands/results and remaining gaps. This unit ran no product test, typecheck, generation, benchmark, application, remote CI or provider operation. [`s2.l3.app-session`, “Recover the projection without inventing execution recovery”; `s2.l3.design-tui`, “Change impact and verification ownership”; maintenance recommendation.]
+END EXACT BODY s2.l4.design-tui
+
+## Exact decisive evidence and predecessor mapping
+# Decisive evidence for s2.l4.design-tui
+
+## Scope and claim classes
+
+This operational guidance uses accepted L3 explanations at source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`, including the accepted corrected design/TUI r2 body. The protocol pin remains `ee2521a5b966bd505cc95bd1c733e09e12f33531`. It does not add a source domain, revise product behavior or claim an executed check. Repository and captured-skill directives are attributed instructions; their prose is not evidence that every callsite complies. Diagnosis, stopping/deepening and factual-dependent rebuild guidance are maintenance recommendations drawn from the accepted boundaries.
+
+Newly explicit primary facts concern the exact TUI/UI typecheck scripts, the UI build and generator aliases, the absence of a declared Storybook typecheck script, the precise TuiConfig.Info/composer edit owners and the CLI generator’s three schema writes. Current root/package test/localization/benchmark instructions and the log/RTL skills were read directly. These facts and attributed policies are supported by bounded exact excerpts below. No CI runner implementation, helper runtime, corpus website or platform environment was newly inspected.
+
+## Exact accepted inputs
+
+| Factual build artifact | Accepted body SHA256 | Bytes |
+| --- | --- | --- |
+| `s2.l3.design-tui` — `deliverable/layers/l3/design-tui/body.md` | `cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730` | 15780 |
+| `s2.l3.app-session` — `deliverable/layers/l3/app-session/body.md` | `7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7` | 14334 |
+| `s2.l3.desktop-web` — `deliverable/layers/l3/desktop-web/body.md` | `fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e` | 14715 |
+
+Consumed manifests, relative to `deliverable/`:
+
+- `accepted/l1.json` — SHA256 `8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8`.
+- `accepted/l2.json` — SHA256 `27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c`.
+- `accepted/l3.json` — SHA256 `dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b`.
+
+The three manifests were read as allowed metadata and hash-verified. No review-response reference was followed. L1/L2 are lineage pins; the three accepted L3 bodies actually consumed are the direct build dependencies. The three L4 keys in navigation were neither read nor used as factual evidence.
+
+## Maintenance synthesis mapped to accepted sections
+
+| L4 material | Accepted predecessor sections | Direct support and inference boundary |
+| --- | --- | --- |
+| Orientation and initial identity capture | `s2.l3.design-tui` §Orientation and accepted ownership; §Terminal input becomes admission through ordered, separate operations. | Retains 2,087 paths/67 families/13 metadata-only limits, historical SDK-only versus current Core-permitting ownership, and README/preset discrepancy. Recording the relevant identities before editing is a maintenance recommendation, not a new persistence mechanism. |
+| Submission and API compatibility | `s2.l3.design-tui` §Terminal input becomes admission through ordered, separate operations; §Ambiguous sends, live projection and request decisions keep different identities. `s2.l3.app-session` §Submit once, then hand the draft to its session. | S10 identifies the actual composer entry/dispatch location. S01 attributes regeneration and runtime dependency instructions. Browser identity/policy/restoration constraints stay scoped; no blind TUI stable-ID retry or all-failure restoration is inferred. |
+| UI lifecycle, accessibility and typed copy | `s2.l3.design-tui` §Rendered state follows caller and resource lifetimes; §Language and appearance cross app and host contracts. `s2.l3.app-session` §Render and localize under caller-owned lifetimes. | S02–S05 supply instructions for keys/copy, typed app/native APIs, shared grammar/locale ownership and behavioral RTL checks. The corrected L3 contract and known startup exception are retained. Direction, cleanup, labels and sanitizer placement do not become runtime/a11y proof. |
+| Themes, assets and generated products | `s2.l3.design-tui` §Generated products reach consumers through distinct maintenance paths; §Language and appearance cross app and host contracts. `s2.l3.desktop-web` §Carry changes through shared UI and distribution. | S11–S12 pin TuiConfig.Info, generator import and all three schema outputs; S08 gives exact token-generator aliases and build declaration. Named producers do not establish all generated provenance, external logo reproducibility, rights or installed output. |
+| Operational diagnosis | `s2.l3.design-tui` §Ambiguous sends, live projection and request decisions keep different identities. `s2.l3.desktop-web` §Launch, choose a server and identify the health decision; §Cross renderer, preload and main with a scoped capability. | S03 forbids restart; S04 attributes preload/main registration instructions; S06 attributes log/observer/error-handling policy. Health predicates, stable-exit discrepancy and channel-specific admission remain actual accepted boundaries, not proof of an exploit or host recovery. |
+| Verification and update/stop consequences | `s2.l3.design-tui` §Change impact and verification ownership; §Generated products reach consumers through distinct maintenance paths. `s2.l3.app-session` §Recover the projection without inventing execution recovery. | S01 gives the exact CI template and named-file behavior; S03 gives benchmark instructions; S07–S09 give package script declarations. Existing tests remain source routes, not results. Package-selector implementation remains uninspected; dependent-evidence rebuild guidance is a maintenance recommendation. |
+
+## Exact primary excerpts
+
+`sources.json` SHA256 `16582ee7bae87983ed0fc3fca82fa7f2d6c1f773191c37b70ff0667810f98c2c` binds the following 12 actually used captures to commit, repository path, Git blob SHA, SHA256, byte length, local capture/original response path and actual inspection ranges. Whole-capture hashing is not whole-file behavioral inspection. Source snippets are exact text from the stated captured line ranges.
+
+### S01 — `AGENTS.md`
+
+Attributed public API/client-generation and runtime-dependency directions, exact CI-only product-test route and admission/execution/recovery limits.
+
+Exact capture lines 1–2:
+
+```markdown
+- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
+- Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.
+```
+
+Exact capture lines 159–166:
+
+```markdown
+- Test actual implementation, do not duplicate logic into tests
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
+  - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
+  - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
+  - A run takes a few minutes: give the shell call a long timeout or run it in the background.
+  - A Python package (a `requirements-dev.txt` and no `package.json`) runs pytest instead. In a package with both, such as `modules/relay`, naming only `.py` files runs pytest, for example `bun run test:ci relay tests/test_authoring.py`, and anything else runs `bun test`; `-t` becomes pytest's `-k`.

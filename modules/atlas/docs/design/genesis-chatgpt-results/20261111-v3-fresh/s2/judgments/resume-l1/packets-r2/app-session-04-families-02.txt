@@ -1,0 +1,270 @@
+    "maintenance_implications": "Keep request/session/location identity, pending-state checks, failure retry and always-scope eligibility.",
+    "limits": "Backend authorization enforcement and all keyboard/accessibility flows are not established by these UI reads.",
+    "path_count": 10,
+    "classification_counts": {
+      "test-unexecuted": 2,
+      "implementation": 7,
+      "test-support-or-story": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 7,
+      "family-supported": 3
+    },
+    "representative_tests_read": [
+      "packages/app-shell/src/context/permission-auto-respond.test.ts"
+    ],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "session-route",
+    "title": "Session route ownership and layout lifetime",
+    "representative_source_paths": [
+      "packages/app-shell/src/pages/session.tsx",
+      "packages/app-shell/src/pages/session/session-lineage.ts",
+      "packages/app-shell/src/pages/session/session-ownership.ts",
+      "packages/app-shell/src/context/layout.tsx"
+    ],
+    "source_implications": "Session resolution derives directory from lineage; workspace providers stay mounted within a server/directory. Session owner captures permanently expire when identity departs.",
+    "consumer_implications": "Timeline, composer, files and side panels share workspace lifetimes while targeting a session identity.",
+    "maintenance_implications": "Use generation rather than value equality alone for async commits; keep error boundaries tied to target identity.",
+    "limits": "The large session page was inspected at owner/composition seams, not line-by-line across all layout affordances.",
+    "path_count": 34,
+    "classification_counts": {
+      "implementation": 24,
+      "test-unexecuted": 10
+    },
+    "evidence_depth_counts": {
+      "family-supported": 31,
+      "inspected": 3
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "timeline",
+    "title": "App transcript projection, rows and navigation",
+    "representative_source_paths": [
+      "packages/app-shell/src/pages/session/timeline/rows.ts",
+      "packages/app-shell/src/pages/session.tsx",
+      "packages/app-shell/src/context/server-session-v2-reducer.ts",
+      "packages/app-shell/src/utils/session-export.ts"
+    ],
+    "source_implications": "Rows group user turns and assistant parts, preserve assistant content order, and distinguish retry, thinking, error and diff-summary rows. Export fetches log pages in ascending order and adapts canonical parts to the CLI-shaped export contract.",
+    "consumer_implications": "App projection adapts native session log to session-ui rendering contracts.",
+    "maintenance_implications": "Synthetic IDs are not a semantic content order; preserve turn parent joins and loaded-page boundaries.",
+    "limits": "Scroll anchoring, virtualization geometry and every projection variant were not individually inspected or benchmarked.",
+    "path_count": 47,
+    "classification_counts": {
+      "implementation": 31,
+      "test-unexecuted": 16
+    },
+    "evidence_depth_counts": {
+      "family-supported": 44,
+      "inspected": 2,
+      "metadata-only": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "files",
+    "title": "Files, review and comment integration",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/file.tsx",
+      "packages/app-shell/src/context/comments.tsx",
+      "packages/session-ui/src/components/file.tsx",
+      "packages/session-ui/src/pierre/file-runtime.ts",
+      "packages/session-ui/src/components/session-review.tsx",
+      "packages/app-shell/src/constants/file-picker.ts"
+    ],
+    "source_implications": "FileProvider uses server/directory-scoped SDK and file-tree/content/view caches; comments retain selected-line state. Session-ui wraps Pierre viewers. File-picker filters derive deduplicated extensions from accepted MIME/type declarations; picker hints are not server validation.",
+    "consumer_implications": "Review and file browser panels consume these contracts and route context into prompts.",
+    "maintenance_implications": "Maintain lifetime cleanup, scoped file identity and stable comment collections; native shadow-view readiness has its own token guard.",
+    "limits": "Full tree, media, selection and diff interaction implementations are only family-supported.",
+    "path_count": 39,
+    "classification_counts": {
+      "implementation": 27,
+      "test-unexecuted": 12
+    },
+    "evidence_depth_counts": {
+      "family-supported": 36,
+      "inspected": 3
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "terminal",
+    "title": "Workspace terminals and PTY transport",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/terminal.tsx",
+      "packages/app-shell/src/components/terminal.tsx",
+      "packages/app-shell/src/utils/pty-ticket.ts",
+      "packages/app-shell/src/utils/terminal-websocket-url.ts",
+      "packages/app-shell/src/context/terminal.test.ts",
+      "packages/app-shell/src/addons/serialize.ts"
+    ],
+    "source_implications": "Terminal tabs are per server/workspace; connection tokens precede websocket attach and cursor tracks JavaScript string length. Exited agent terminals remain visible. The Ghostty serialize addon requires activation, can emit terminal state or active-buffer plain text, and optionally excludes alternate buffer/modes.",
+    "consumer_implications": "PTY HTTP/server boundary and host terminal widget provide output and resize; pipeline runner uses the same ticket helpers.",
+    "maintenance_implications": "Preserve UTF-16 cursor semantics and reconnect/gone distinctions; agent PTY authorization is a separate Core concern.",
+    "limits": "No PTY process, websocket or slow-reader experiment was run. Mid-file cell/style conversion is not exhaustively reviewed; the xterm.js port header is provenance intent, not verified equivalence.",
+    "path_count": 16,
+    "classification_counts": {
+      "test-unexecuted": 5,
+      "implementation": 11
+    },
+    "evidence_depth_counts": {
+      "metadata-only": 1,
+      "inspected": 6,
+      "family-supported": 9
+    },
+    "representative_tests_read": [
+      "packages/app-shell/src/context/terminal.test.ts"
+    ],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "dock",
+    "title": "App Dock browser and Linux host integration",
+    "representative_source_paths": [
+      "packages/app-shell/src/pages/session/apps-panel-controller.ts",
+      "packages/app-shell/src/pages/session/apps-panel.tsx",
+      "packages/app-shell/src/app-dock-linux.ts",
+      "packages/app-shell/src/pages/session/apps-panel-controller.test.ts"
+    ],
+    "source_implications": "Controller is renderer-wide, scopes native profiles by server/directory and rejects stale tab generations/host attachments. Manifest updates use revisions.",
+    "consumer_implications": "Panel uses injected native App Dock API; Linux tab is a distinct host bridge and excluded from browser restore lists.",
+    "maintenance_implications": "Persist only eligible HTTPS tabs, serialize manifest writes and preserve detach ownership across remounts.",
+    "limits": "Native browser/LXC/Electron behavior and all overlay/resizer races were not executed.",
+    "path_count": 13,
+    "classification_counts": {
+      "test-unexecuted": 4,
+      "implementation": 9
+    },
+    "evidence_depth_counts": {
+      "inspected": 3,
+      "family-supported": 10
+    },
+    "representative_tests_read": [
+      "packages/app-shell/src/pages/session/apps-panel-controller.test.ts"
+    ],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "home",
+    "title": "Home, project selection and server navigation",
+    "representative_source_paths": [
+      "packages/app-shell/src/pages/home.tsx",
+      "packages/app-shell/src/pages/home/home-projects-controller.tsx",
+      "packages/app-shell/src/orchestra/chapters/home-start.tsx",
+      "packages/app-shell/src/orchestra/chapters/kpis-home.tsx",
+      "packages/app-shell/src/orchestra/chapters/kpis-data.ts",
+      "packages/app-shell/src/orchestra/claude-mode-entry.ts",
+      "packages/app-shell/src/pages/home-session-open.ts"
+    ],
+    "source_implications": "Home selects server/project and opens drafts/sessions; folder start awaits trust approval. KPI parsing checks server-provided numeric shapes before display.",
+    "consumer_implications": "Home is a navigation/dashboard surface; account/engine entry can return to a task after provider setup.",
+    "maintenance_implications": "Retain server target during project selection; distinguish missing numeric facts from zero and partial server data.",
+    "limits": "Detailed KPI arithmetic, all Home controller branches and real provider account flows are not exhaustively traced.",
+    "path_count": 39,
+    "classification_counts": {
+      "implementation": 33,
+      "test-unexecuted": 6
+    },
+    "evidence_depth_counts": {
+      "family-supported": 30,
+      "inspected": 8,
+      "metadata-only": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "commands",
+    "title": "Commands, shortcut catalog and shell navigation",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/command.tsx",
+      "packages/app-shell/src/orchestra/chapters/shortcuts-model.ts",
+      "packages/app-shell/src/orchestra/shell/navigation-commands.tsx",
+      "packages/app-shell/src/desktop-menu.ts"
+    ],
+    "source_implications": "CommandProvider combines keyed registrations, persisted catalog and settings overrides; shortcut model detects collisions and rejects text-editing keys.",
+    "consumer_implications": "Shell lifetime commands and native menu command IDs target current route/server; settings can list inactive catalog entries.",
+    "maintenance_implications": "Dispose registrations on owner cleanup; editable targets, open dialogs and suspended keybinds constrain dispatch.",
+    "limits": "No native-menu or keyboard interaction was run; every individual command is not reviewed.",
+    "path_count": 15,
+    "classification_counts": {
+      "implementation": 11,
+      "test-unexecuted": 4
+    },
+    "evidence_depth_counts": {
+      "family-supported": 12,
+      "inspected": 3
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "settings",
+    "title": "Settings, model catalogs and provider selection",
+    "representative_source_paths": [
+      "packages/app-shell/src/context/settings.tsx",
+      "packages/app-shell/src/context/models.tsx",
+      "packages/app-shell/src/context/local.tsx",
+      "packages/app-shell/src/hooks/model-execution.ts",
+      "packages/app-shell/src/orchestra/chapters/settings.tsx",
+      "packages/app-shell/src/orchestra/chapters/providers.tsx",
+      "packages/app-shell/src/components/settings-v2/general-controllers.ts",
+      "packages/app-shell/src/components/settings-v2/view/trust-section.tsx"
+    ],
+    "source_implications": "Window-wide model preferences coexist with scoped catalogs and session model selection. Settings separate project-required sections from global sections; trust is server owned.",
+    "consumer_implications": "Composer/model dialogs and chapter screens consume provider availability; host-only models require matching execution engine.",
+    "maintenance_implications": "Do not infer API connectivity from a host-only model; preserve optimistic shell setting rollback and readiness.",
+    "limits": "Provider OAuth/credential storage, server-side trust effects and all model policy controls remain outside exhaustive review.",
+    "path_count": 66,
+    "classification_counts": {
+      "test-support-or-story": 2,
+      "implementation": 49,
+      "test-unexecuted": 15
+    },
+    "evidence_depth_counts": {
+      "family-supported": 56,
+      "inspected": 10
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "agents",
+    "title": "Agent screens, identity and avatars",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/chapters/agents.tsx",
+      "packages/app-shell/src/orchestra/chapters/agents-roster.ts",
+      "packages/app-shell/src/orchestra/avatars.ts",
+      ".orchestra/skills/agent-screen-maintenance/SKILL.md"
+    ],
+    "source_implications": "Roster/detail source uses stable agent IDs, hides hidden agents and limits direct chat to maestro; Atlas counts are deferred.",
+    "consumer_implications": "Cards, prompt mentions and settings consume identity and avatars; editing is described by maintenance/user docs.",
+    "maintenance_implications": "Never use display names as persistent IDs; separate current controller facts from promised guide tabs.",
+    "limits": "Agent-file save/toolkit/skill-tree details are only family-supported; full native registry is outside this unit.",
+    "path_count": 7,
+    "classification_counts": {
+      "implementation": 6,
+      "test-unexecuted": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 3,
+      "family-supported": 4
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "actions",
+    "title": "Actions chapter and native command receipts",
+    "representative_source_paths": [
+      "packages/app-shell/src/orchestra/actions/api.ts",
+      "packages/app-shell/src/orchestra/actions/commands.ts",
+      "packages/app-shell/src/orchestra/actions/request-policy.ts"
+    ],
+    "source_implications": "Actions transport decodes schema responses and pins host/location. Requests are blocked for stale binding, unsupported state or unknown command outcome.",

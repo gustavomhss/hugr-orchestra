@@ -1,0 +1,350 @@
+// The catalog reply is untrusted: a malformed one fails the load, which the page shows as its error with Retry.
+export function readSkills(value: unknown): readonly SkillEntry[] {
+  return Option.getOrThrowWith(decodeSkills(value), () => new Error("Skills response is malformed"))
+}
+```
+
+## skills-visibility
+
+Internal/tree-node visibility and construction of the prefix set before filtering.
+
+Source: `packages/app-shell/src/orchestra/chapters/skills-data.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `81fe5f7a2a5c6bc45d59ae9e88b42d1b36f76037`; SHA-256 `0001420dcb688c672b55f1070284df5b5086be8d1655df75f7a25585981f4931`.
+
+Exact lines 30–49:
+
+```ts
+/** Skills for agent use only declare `internal: true` in their frontmatter; the server reports it and the catalog does not list them. */
+export function isInternalSkill(skill: Pick<SkillEntry, "internal">) {
+  return skill.internal === true
+}
+
+/**
+ * The skills the catalog lists: neither internal nor a skill tree node. A node is a `SKILL.md` inside the folder of
+ * another listed `SKILL.md`; it loads only through its parent's index, the same rule as the server's `SkillV2.nested`.
+ */
+export function listedSkills(skills: readonly SkillEntry[]) {
+  const folders = skills
+    .map((skill) => slash(skill.location))
+    .filter((location) => location.endsWith("/SKILL.md"))
+    .map((location) => location.slice(0, -"SKILL.md".length))
+  return skills.filter((skill) => {
+    if (isInternalSkill(skill)) return false
+    const location = slash(skill.location)
+    return !folders.some((folder) => location !== `${folder}SKILL.md` && location.startsWith(folder))
+  })
+}
+```
+
+## skills-access
+
+Source/access classes, allowed roots, governed priority, lexical normalization, search/order and error-message extraction.
+
+Source: `packages/app-shell/src/orchestra/chapters/skills-data.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `81fe5f7a2a5c6bc45d59ae9e88b42d1b36f76037`; SHA-256 `0001420dcb688c672b55f1070284df5b5086be8d1655df75f7a25585981f4931`.
+
+Exact lines 51–99:
+
+```ts
+export type SkillSource = "project" | "global" | "builtin"
+/** Mirrors the server's write rule: only the project's own skill folders change, never Atlas-governed skills. */
+export type SkillAccess = "edit" | "builtin" | "global" | "governed" | "fixed"
+
+const PROJECT_ROOTS = [".orchestra/skills/", ".orchestra/skill/", ".claude/skills/", ".agents/skills/"]
+const GOVERNED_ROOT = ".orchestra/skills/own/"
+
+const SOURCE_ORDER: SkillSource[] = ["project", "global", "builtin"]
+
+export function filterSkills(skills: SkillEntry[], query: string) {
+  const search = query.trim().toLowerCase()
+  return skills.filter((skill) =>
+    [skill.name, skill.description ?? "", skill.location].some((value) => value.toLowerCase().includes(search)),
+  )
+}
+
+// A server's built-in skills live under the virtual absolute path /builtin/.
+// Orchestra's own server ships none (playbooks are files), but other servers may.
+export function skillSource(location: string, directory: string): SkillSource {
+  if (location.startsWith("/builtin/")) return "builtin"
+  return slash(location).startsWith(root(directory)) ? "project" : "global"
+}
+
+export function skillAccess(location: string, directory: string): SkillAccess {
+  const source = skillSource(location, directory)
+  if (source !== "project") return source
+  const relative = slash(location).slice(root(directory).length)
+  if (relative.startsWith(GOVERNED_ROOT)) return "governed"
+  if (!relative.endsWith(".md") || !PROJECT_ROOTS.some((item) => relative.startsWith(item))) return "fixed"
+  return "edit"
+}
+
+/** Project skills first, then the user's global skills, then built-ins; names break ties. */
+export function sortSkills(skills: readonly SkillEntry[], directory: string) {
+  return skills.toSorted(
+    (a, b) =>
+      SOURCE_ORDER.indexOf(skillSource(a.location, directory)) -
+        SOURCE_ORDER.indexOf(skillSource(b.location, directory)) || a.name.localeCompare(b.name),
+  )
+}
+
+/** Reads the message from a `{ message }` error body. */
+export function skillErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object") return
+  if ("message" in error && typeof error.message === "string") return error.message
+}
+
+const slash = (value: string) => value.replaceAll("\\", "/")
+const root = (directory: string) => slash(directory).replace(/\/*$/, "/")
+```
+
+## skills-page-identity
+
+Server/directory cache identity, same-dialog close guard, decode pipeline and unavailable/error distinction.
+
+Source: `packages/app-shell/src/orchestra/chapters/skills.tsx`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `896a17a54e8782536917564083031da05af9023d`; SHA-256 `7e60597bb282ef3fdd525224acfff4efd94c07cfc2a3069c403b4b39b1b0cd31`.
+
+Exact lines 29–55:
+
+```ts
+const warm = createWarm<SkillEntry[]>(8)
+
+export default function Skills(props: ChapterPageProps) {
+  const language = useLanguage()
+  const global = useGlobal()
+  const sdk = useSDK()
+  const serverSDK = useServerSDK()
+  const abort = new AbortController()
+  const warmKey = `${serverSDK().scope}\0${pathKey(props.directory)}`
+  // The last list paints at once; the page still asks the server for a fresh one.
+  const warmed = warm.read(warmKey)
+  const [state, setState] = createStore({
+    status: (warmed ? "ready" : "loading") as "loading" | "ready" | "error" | "unavailable",
+    cause: undefined as unknown,
+    skills: warmed ?? ([] as SkillEntry[]),
+    query: "",
+    // A saved file the server has not listed yet (its configuration predates the skill folder).
+    pending: undefined as string | undefined,
+  })
+  // A signal, not a store field: setting a store path to an object merges into the previous object, so the keyed
+  // dialog would not remount and the previous dialog's pending close event would clear the next one.
+  const [dialog, setDialog] = createSignal<SkillDialogState>()
+  const close = (current: SkillDialogState) => {
+    if (dialog() === current) setDialog(undefined)
+  }
+  const unlisted = createMemo(() =>
+    state.pending && !state.skills.some((skill) => skill.location === state.pending) ? state.pending : undefined,
+```
+
+Exact lines 69–97:
+
+```ts
+  const message = createMemo(() => {
+    if (state.status === "loading") return language.t("orchestra.skills.loading")
+    if (state.status === "error") return withServerReason(language.t("orchestra.skills.error"), state.cause)
+    if (state.status === "unavailable") return language.t("orchestra.skills.unavailable")
+    if (!state.skills.length) return language.t("orchestra.skills.empty")
+    if (!filtered().length) return language.t("orchestra.skills.noMatches")
+  })
+
+  async function load() {
+    const entries = await serverSDK().ready.then(async () => {
+      if (abort.signal.aborted) return []
+      return (
+        await serverSDK().currentApi.skill.list({ location: { directory: props.directory } }, { signal: abort.signal })
+      ).data
+    })
+    if (abort.signal.aborted) return
+    const skills = sortSkills(listedSkills(readSkills(entries)), props.directory)
+    warm.write(warmKey, skills)
+    setState({ skills, status: "ready" })
+  }
+
+  function refresh(quiet = false) {
+    if (!quiet) setState("status", "loading")
+    void load().catch((error: unknown) => {
+      if (abort.signal.aborted) return
+      const cause = error instanceof Error ? error.cause : undefined
+      const status = cause && typeof cause === "object" && "status" in cause ? cause.status : undefined
+      setState({ status: status === 404 || status === 405 || status === 501 ? "unavailable" : "error", cause: error })
+    })
+```
+
+## skills-page-writes
+
+Save/remove payload boundary, pending path, failure display, cleanup, retry and access handoff.
+
+Source: `packages/app-shell/src/orchestra/chapters/skills.tsx`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `896a17a54e8782536917564083031da05af9023d`; SHA-256 `7e60597bb282ef3fdd525224acfff4efd94c07cfc2a3069c403b4b39b1b0cd31`.
+
+Exact lines 100–137:
+
+```ts
+  async function save(current: SkillDialogState, input: SkillSaveInput) {
+    const result = await sdk()
+      .orchestra.skills.save({ location: { directory: props.directory }, ...input })
+      .then(
+        (saved) => ({ saved, error: undefined }),
+        (error: unknown) => ({ saved: undefined, error }),
+      )
+    if (!result.saved) return writeFailure(result.error)
+    if (abort.signal.aborted) return
+    close(current)
+    setState("pending", result.saved.data.location)
+    await load().catch(() => refresh())
+  }
+
+  async function remove(current: SkillDialogState, skill: SkillEntry) {
+    const error = await sdk()
+      .orchestra.skills.remove({ location: { directory: props.directory }, path: skill.location })
+      .then(
+        () => undefined,
+        (error: unknown) => ({ error }),
+      )
+    if (error) return writeFailure(error.error)
+    if (abort.signal.aborted) return
+    close(current)
+    setState("pending", undefined)
+    await load().catch(() => refresh())
+  }
+
+  // An undeclared answer throws a ClientError with its status and no message worth showing.
+  function writeFailure(error: unknown) {
+    const status = errorStatus(error)
+    if (status === 404 || status === 405 || status === 501) return language.t("orchestra.skills.writeUnavailable")
+    return (error instanceof ClientError ? undefined : skillErrorMessage(error)) ?? language.t("orchestra.skills.writeFailed")
+  }
+
+
+  onMount(() => refresh(warmed !== undefined))
+  onCleanup(() => abort.abort())
+```
+
+Exact lines 175–187:
+
+```ts
+      <Show when={state.status === "error" || state.status === "unavailable"}>
+        <button type="button" class="mx-btn orchestra-skills-retry" onClick={() => refresh()}>
+          {language.t("orchestra.skills.retry")}
+        </button>
+      </Show>
+      <Show when={state.status === "ready" && filtered().length}>
+        <ul class="mx-grid orchestra-skills-grid" aria-label={language.t("orchestra.skills.catalog")}>
+          <For each={filtered()}>
+            {(skill) => {
+              const source = () => skillSource(skill.location, props.directory)
+              const access = () => skillAccess(skill.location, props.directory)
+              return (
+                <li class="mx-card skills-card" data-skill-location={skill.location}>
+```
+
+Exact lines 208–210:
+
+```ts
+                      onClick={() => setDialog({ type: "edit", skill, access: access() })}
+                    >
+                      {language.t(access() === "edit" ? "orchestra.skills.read" : "orchestra.skills.readOnly")}
+```
+
+Exact lines 219–238:
+
+```ts
+      <Show when={unlisted()}>
+        {(location) => (
+          <p class="mx-note orchestra-skills-notice">
+            {language.t("orchestra.skills.notListed", { location: location() })}{" "}
+            <button type="button" class="mx-link" onClick={() => refresh()}>
+              {language.t("orchestra.skills.reload")}
+            </button>
+          </p>
+        )}
+      </Show>
+      <Show when={dialog()} keyed>
+        {(current) => (
+          <SkillDialog
+            state={current}
+            onClose={() => close(current)}
+            onSave={(input) => save(current, input)}
+            onRemove={(skill) => remove(current, skill)}
+            onAskRemove={(skill) => {
+              if (dialog() === current) setDialog({ type: "remove", skill })
+            }}
+```
+
+## skills-dialog
+
+Client write shape, path/mtime identity, busy/lifetime handling and editable/removal affordances.
+
+Source: `packages/app-shell/src/orchestra/chapters/skills-dialog.tsx`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `498439a6b815a1b51dfe756dc891fb450bae2e09`; SHA-256 `4d765b72649145007edfaeed34a5a397b311c6518b75ca5fc25defd31a77251a`.
+
+Exact lines 5–26:
+
+```ts
+export type SkillDialogState =
+  | { type: "add" }
+  | { type: "edit"; skill: SkillEntry; access: SkillAccess }
+  | { type: "remove"; skill: SkillEntry }
+
+export type SkillSaveInput = { name: string; description: string; content: string; path?: string; mtime?: number }
+
+// Mock `modal()`: one native modal dialog whose content is replaced per step. Each action resolves to
+// an error message, or undefined once the page has applied it and closed the dialog.
+export function SkillDialog(props: {
+  state: SkillDialogState
+  onClose: () => void
+  onSave: (input: SkillSaveInput) => Promise<string | undefined>
+  onRemove: (skill: SkillEntry) => Promise<string | undefined>
+  onAskRemove: (skill: SkillEntry) => void
+}) {
+  const language = useLanguage()
+  const [error, setError] = createSignal<string>()
+  const [busy, setBusy] = createSignal(false)
+  const lifetime = { disposed: false }
+  const skill = props.state.type === "add" ? undefined : props.state.skill
+  const editable = props.state.type === "add" || (props.state.type === "edit" && props.state.access === "edit")
+```
+
+Exact lines 34–57:
+
+```ts
+  async function run(action: () => Promise<string | undefined>) {
+    if (busy()) return
+    setBusy(true)
+    setError(undefined)
+    const failure = await action().catch(() => language.t("orchestra.skills.writeFailed"))
+    if (lifetime.disposed) return
+    setBusy(false)
+    setError(failure)
+  }
+
+  function submit(event: SubmitEvent & { currentTarget: HTMLFormElement }) {
+    event.preventDefault()
+    const state = props.state
+    if (state.type === "remove") return void run(() => props.onRemove(state.skill))
+    const data = new FormData(event.currentTarget)
+    void run(() =>
+      props.onSave({
+        name: String(data.get("name") ?? ""),
+        description: String(data.get("description") ?? ""),
+        content: String(data.get("instructions") ?? ""),
+        path: skill?.location,
+        mtime: skill?.mtime ?? undefined,
+      }),
+    )
+```
+
+Exact lines 134–175:
+
+```ts
+            <label class="mx-field">
+              <span>{language.t("orchestra.skills.dialog.name")}</span>
+              <input name="name" type="text" value={skill?.name ?? ""} required readOnly={!editable || busy()} />
+            </label>
+            <label class="mx-field">
+              <span>{language.t("orchestra.skills.dialog.description")}</span>
+              <input
+                name="description"
+                type="text"
+                value={skill?.description ?? ""}
+                required
+                readOnly={!editable || busy()}
+              />
+            </label>
+            <label class="mx-field">
+              <span>{language.t("orchestra.skills.content")}</span>

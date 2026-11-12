@@ -1,0 +1,54 @@
+{
+  "schema": "genesis-l1-mechanical-verification/v1",
+  "unit": "desktop-web",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "Artifact accounting, UTF-8/source hashes, original connector body equivalence and citation/excerpt consistency only. This is not product testing or semantic acceptance.",
+  "exact_population_entries": 532,
+  "family_count": 30,
+  "depth_counts": {
+    "inspected": 146,
+    "metadata-only": 5,
+    "family-supported": 381
+  },
+  "verified_source_capture_count": 193,
+  "verified_source_bytes": 1657730,
+  "read_source_count": 148,
+  "captured_not_directly_inspected_count": 45,
+  "l1_word_count": 3277,
+  "l1_source_citation_count": 135,
+  "decisive_evidence_sections": 25,
+  "decisive_source_clips": 32,
+  "decisive_source_lines": 457,
+  "artifact_hashes": {
+    "l1.md": {
+      "byte_length": 28755,
+      "sha256": "f680f5e2900f4e5039e0d9be32b4756db66de7d776d59ee0232c26555fd362f9"
+    },
+    "coverage.json": {
+      "byte_length": 496639,
+      "sha256": "4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9"
+    },
+    "sources.json": {
+      "byte_length": 143730,
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+    },
+    "decisive-evidence.md": {
+      "byte_length": 37930,
+      "sha256": "800ab91421d2f46571dd9114c84475d411ae2e3a07a18564a1da346e2045572d"
+    },
+    "response.md": {
+      "byte_length": 2968,
+      "sha256": "f6afea44b6ec11d78170ccbab8e553aca67d6f4462a15ad20b48c8662d54b686"
+    }
+  },
+  "mechanical_consistency": "verified",
+  "product_tests_run": false,
+  "product_runtime_or_build_run": false,
+  "remote_mutation": false,
+  "remaining_limits": [
+    "Representative family coverage is not individual-file behavioral review.",
+    "OS/provider/native integration behavior was not executed.",
+    "Unsuccessful extra pt.ts lookup is outside the assigned population and retained as a capture error."
+  ]
+}

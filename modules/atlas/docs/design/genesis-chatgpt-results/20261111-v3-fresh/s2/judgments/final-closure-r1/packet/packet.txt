@@ -1,0 +1,2831 @@
+
+===== 00 PACKET SCOPE AND IDENTITIES =====
+content_bytes=1413; content_sha256=5e3dcd9d53923bdb6a6e9fe0b2187b1be6e1a0e246c2a149b9a6e707faa50dc9
+----- EXACT SECTION CONTENT -----
+{
+  "purpose": "Independent same-pair final closure assessment; no result is predetermined.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "final_render": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-render-02/final-obligations.json",
+    "byte_length": 2227586,
+    "sha256": "43b0f8e749711917cbb57a22aba84c479e1fbea0e1b9dcfbfa6ea5abc622641b"
+  },
+  "complete_work": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-render-02/work.md",
+    "byte_length": 27792,
+    "sha256": "19843333b96ba17a6fddedd756a1e840df09adeeefde0895b5430d2eb8b7cc44"
+  },
+  "renderer": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/render_final_work.py",
+    "byte_length": 46710,
+    "sha256": "63d2f8a28747a562e9d78cefd5b21ce93321ffb221bbae778db2bc3c0853d30f"
+  },
+  "exclusions": [
+    "Peer raw review opinions",
+    "Criterion-specific peer opinion records",
+    "Reserved consumer questions and answer keys"
+  ],
+  "limits": [
+    "Draft HOLD labels are not requested judge answers.",
+    "Artifact PASS metadata does not establish operational acceptance.",
+    "Predicted affected sets are not execution receipts.",
+    "No original decision is modified or replaced; no handoff is created."
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 01 COMPLETE FINAL-RENDER WORK.MD — DRAFT, NOT A VERDICT =====
+content_bytes=27792; content_sha256=19843333b96ba17a6fddedd756a1e840df09adeeefde0895b5430d2eb8b7cc44
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-render-02/work.md; source_sha256=19843333b96ba17a6fddedd756a1e840df09adeeefde0895b5430d2eb8b7cc44
+----- EXACT SECTION CONTENT -----
+# Genesis S2 — final work DRAFT
+
+**DRAFT_FOR_FINAL_SAME_PAIR_ASSESSMENT.** Thirteen exact artifacts have recorded semantic PASS from both persistent judges. This renderer does not infer whole-criterion, runtime, consumer, CI, publication or delivery acceptance.
+
+Execution `46d09d97-39a9-482a-a290-646ba1d94c99`; baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocol `ee2521a5b966bd505cc95bd1c733e09e12f33531`. Snapshot 2026-11-11T21:01:38.810556+00:00 to 2026-11-11T21:01:39.810170+00:00.
+
+## Source, coverage and preservation
+
+Native package: [native-package.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/native-package.json) (SHA-256 `9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b`). Recorded package state: `SEMANTIC_ACCEPTED_RUNTIME_PENDING`.
+
+Coverage: 4,506 paths, 156 families; depths {"inspected": 565, "metadata-only": 48, "family-supported": 3893}. Frozen path SHA-256 `8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582`. Evidence: [l1-principal-verification.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/l1-principal-verification.json) (SHA-256 `c66487e308988efb8706c22ad761d39b42fbb470064273d81676d94e594a3385`).
+
+The final preservation receipt verifies all 1,231 initial snapshot files, including the explicitly preserved initial version of the late app transport receipt. Late transport information creates no old judge acceptance. This renderer checks the receipt and linked archive/override hashes; it does not repeat the original full semantic audit. [original-preservation-final.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/original-preservation-final.json) (SHA-256 `a1405ade3d5c3c30daf6fb75c4e66bb245446ff6e07e6922a67473b54e0bf577`)
+
+## Recorded semantic acceptances
+
+| Artifact | Exact body SHA-256 | Decisions |
+| --- | --- | --- |
+| s2.l1.desktop-web | `757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/desktop-design-r2-j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/desktop-design-r2-j2.md` |
+| s2.l1.app-session | `67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/app-session-r3-j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/app-session-r3-j2.json` |
+| s2.l1.design-tui | `fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/desktop-design-r2-j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/desktop-design-r2-j2.md` |
+| s2.l2.desktop-web | `03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l2-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l2-r1/j2.json` |
+| s2.l2.app-session | `302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l2-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l2-r1/j2.json` |
+| s2.l2.design-tui | `21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l2-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l2-r1/j2.json` |
+| s2.l3.desktop-web | `fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l3-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l3-r1/j2.json` |
+| s2.l3.app-session | `7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l3-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l3-r1/j2.json` |
+| s2.l3.design-tui | `cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l3-r2/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l3-r2/j2.json` |
+| s2.l4.desktop-web | `108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r1/j2.json` |
+| s2.l4.app-session | `ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r1/j2.json` |
+| s2.l4.design-tui | `95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r1/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r1/j2.json` |
+| s2.l4.entry | `e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1` | /root/s2_resume_j1 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r2/j1.json`; /root/s2_resume_j2 PASS: `/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/l4-r2/j2.json` |
+
+All accepted bodies remain exact. Optional review suggestions are preserved in the JSON and do not reopen acceptance; the optional L2 desktop heading wording remains unchanged.
+
+## Actual operation and readback observations
+
+### Runtime operation
+
+[prepare-execution-receipt.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json) (SHA-256 `234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410`)
+
+| Observed field | Recorded value |
+| --- | --- |
+| `schema` | "genesis-s2-native-prepare-execution/v1" |
+| `operation` | "prepare" |
+| `state` | "PREPARE_FAILED" |
+| `recorded_at` | "2026-11-11T20:48:52.214348+00:00" |
+| `started_at` | "2026-11-11T20:48:51.158507+00:00" |
+| `ended_at` | "2026-11-11T20:48:52.041873+00:00" |
+| `native_package_sha256` | "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b" |
+| `candidate_revision` | "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1" |
+| `source_revision` | "1cde2ff7a71bcf7aecb5d030917b577165135d38" |
+| `protocol_revision` | "ee2521a5b966bd505cc95bd1c733e09e12f33531" |
+| `argv[0]` | "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun" |
+| `argv[1]` | "scripts/genesis-native.ts" |
+| `argv[2]` | "prepare" |
+| `argv[3]` | "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root" |
+| `argv[4]` | "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json" |
+| `argv[5]` | "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json" |
+| `cwd` | "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas" |
+| `prepare_executed` | true |
+| `exit_code` | 1 |
+| `cas_created` | true |
+| `candidate_id` | null |
+| `publish_executed` | false |
+| `git_checkout` | false |
+| `observed_head` | null |
+| `membership_observation_ready` | false |
+
+### Final read-only remote discovery
+
+[readback-receipt.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-remote-recheck-01/readback-receipt.json) (SHA-256 `845546f3fdd629863a1209375d2888a7af15d69b75bb62e2754d0c0c3dcf86aa`)
+
+| Observed field | Recorded value |
+| --- | --- |
+| `schema` | "genesis-s2-final-remote-readback/v1" |
+| `recorded_at` | "2026-11-11T20:40:51.993744+00:00" |
+| `operation` | "read-only GitHub connector GETs" |
+| `own_branch_head` | "ac972ff8dc1126b02f8a16f3942a142e417039ed" |
+| `s4_discovery.commit` | "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c" |
+| `s4_discovery.path` | "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json" |
+| `s4_discovery.sha256` | "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016" |
+| `s4_discovery.release_id` | "20261111-v3-fresh-s4-r3" |
+| `s4_discovery.candidate_revision` | "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1" |
+| `evidence.s4-branch-connector.json.path` | "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s4-branch-connector.json" |
+| `evidence.s4-branch-connector.json.sha256` | "c33297ce38b7966b848bd98d43a3d988292f6f9b37bf3a503c7ec2a778358b82" |
+| `evidence.s4-branch-ref.json.path` | "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s4-branch-ref.json" |
+| `evidence.s4-branch-ref.json.sha256` | "f34d502872287cb57b7102bb4ba3e95f6e0cf7e10a631f39ad64dcb02925bf17" |
+
+### Current supplied CI readbacks
+
+[run-43065851373.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/ci-final-readbacks/run-43065851373.json) (SHA-256 `5029a9fc18c68b9866ab1d6cd151a3331b19e2d946fca3a17244b43a6b6e76b5`)
+
+| Observed field | Recorded value |
+| --- | --- |
+| `schema` | "genesis-s2-sibling-ci-actual-readback/v1" |
+| `run_id` | 43065851373 |
+| `run_attempt` | 1 |
+| `candidate_revision` | "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1" |
+| `head_sha` | "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1" |
+| `status` | "completed" |
+| `conclusion` | "failure" |
+| `scope` | "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding." |
+
+[run-43077975153.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/ci-final-readbacks/run-43077975153.json) (SHA-256 `afaa2065e99703a0d55e62919042eb68bdd27d6de0bcbd56422afedfce5c2e22`)
+
+| Observed field | Recorded value |
+| --- | --- |
+| `schema` | "genesis-s2-sibling-ci-actual-readback/v1" |
+| `run_id` | 43077975153 |
+| `run_attempt` | 1 |
+| `candidate_revision` | "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553" |
+| `head_sha` | "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553" |
+| `status` | "completed" |
+| `conclusion` | "success" |
+| `scope` | "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding." |
+
+Runtime content acceptance, prepare, binding, governed publication, index/read, consumers and controls remain separate. A zero exit or successful CI step proves only its recorded operation/scope. Old release limits are historical; current claims use the explicitly supplied final receipts.
+
+## Open local gates and exact next actions
+
+| Gate | Draft state | Remaining evidence / unblock action |
+| --- | --- | --- |
+| G-LAYERS | PASS_RECORDED_CONTENT_ONLY | All 13 exact artifacts have recorded two-judge semantic PASS; retain accepted bytes and review scope. |
+| G-RUNTIME | FAIL | Use the actual operation result and current S4 discovery; if blocked, obtain a compatible pinned implementation, preserve full inputs and rerun only through an authorized isolated operation. Do not assume historical r1 limitations remain current. |
+| G-BINDING | HOLD | Provide two actual binding decisions for the exact prepared candidate/contract/results/inputs plus authorized isolated governed publication receipts; content PASS does not supply binding authority. |
+| G-CONSUMERS | NOT_RUN | Complete all 14 real Atlas-only traces and independent evaluations under the frozen limits; missing readers/cases remain S2 obligations. |
+| G-UPDATE | NOT_RUN | Validate the expected final-graph closure and execute S2-U1 restoration/reuse; bind compatible controls for additions/removals, intent/recipe changes, missing edge/input rejection, authority/validity/gaps propagation, receipt-only refresh and unchanged-result stopping. |
+| G-RECOVERY | HOLD | Bind exact compatible common coherence/recovery/rollback/migration controls and S2 local-use proof: complete current manifest or HOLD, durable resume, stale-current refusal, compatible rollback, labelled history and independent valid scope. |
+| G-CI | HOLD | Reconcile provided actual CI conclusions and exact candidate/workflow scope. Supply missing S2 final-payload remote gates, generation/typecheck/guards evidence; shared passing steps never override a failed overall run. ROOT owns union epic/branch-protection integration. |
+| G-PROVENANCE | HOLD | Finish final ledger/outcome and source/recipe/review/receipt reconciliation; retain original 1231-file preservation proof and late-receipt distinction. Obtain final same-pair closure assessment; do not infer hidden usage or old approval. |
+| G-PUBLICATION | HOLD | Determine current authorization/publication state from real later receipts while preserving both historical public-write refusals. If still blocked, finish independent work and present concrete public-disclosure scope for authorization or an authorized safer destination. No retry/bypass. After authorization: fresh HEAD, payload P, separate handoff H, expected-sha lease/force:false, and exact readback. |
+| G-CLOSURE | HOLD | The principal must obtain the final same-pair closure assessment against this exact evidence bundle; this renderer does not issue criterion verdicts or seal a handoff. |
+
+## Frozen consumers and local update
+
+All consumers require real Atlas index/read, exact artifact versions, fresh observed context and no source/answer-key access. Routine limits: 2 index calls, 2 reads, 16,000 body bytes. Deep limits: 6 index calls, 5 reads, 64,000 body bytes. A missing trace is NOT_RUN; a supplied trace remains HOLD for independent evaluation/closure. No reserved question or answer is reproduced.
+
+| Case | Target / kind | Depth | State | Actual trace references |
+| --- | --- | --- | --- | --- |
+| S2-C1 | permitted-change | deep | NOT_RUN | None supplied |
+| S2-C2 | contract-violation | deep | NOT_RUN | None supplied |
+| S2-C3 | cross-component-impact | deep | NOT_RUN | None supplied |
+| S2-C4 | operational-failure | deep | NOT_RUN | None supplied |
+| S2-C5 | out-of-scope | routine | NOT_RUN | None supplied |
+| S2-I1D | s2.l1.desktop-web | routine | NOT_RUN | None supplied |
+| S2-I1A | s2.l1.app-session | routine | NOT_RUN | None supplied |
+| S2-I1U | s2.l1.design-tui | routine | NOT_RUN | None supplied |
+| S2-I2D | s2.l2.desktop-web | routine | NOT_RUN | None supplied |
+| S2-I2A | s2.l2.app-session | routine | NOT_RUN | None supplied |
+| S2-I2U | s2.l2.design-tui | routine | NOT_RUN | None supplied |
+| S2-I3D | s2.l3.desktop-web | routine | NOT_RUN | None supplied |
+| S2-I3A | s2.l3.app-session | deep | NOT_RUN | None supplied |
+| S2-I3U | s2.l3.design-tui | routine | NOT_RUN | None supplied |
+
+S2-U1 state: **NOT_RUN**. Changed input: `file:apps/desktop/src/main/owned-serve.ts`.
+
+Mechanical expected build closure from the final graph: `s2.l1.desktop-web`, `s2.l2.desktop-web`, `s2.l3.app-session`, `s2.l3.design-tui`, `s2.l3.desktop-web`, `s2.l4.app-session`, `s2.l4.design-tui`, `s2.l4.desktop-web`, `s2.l4.entry`.
+
+Independent-by-build-graph set: `s2.l1.app-session`, `s2.l1.design-tui`, `s2.l2.app-session`, `s2.l2.design-tui`. Navigation edges do not propagate rebuild. Observed set comparison: `NOT_RUN`. This prediction requires independent expected-set validation and is not execution/rebuild proof.
+
+## Fifty-ID local/global disposition matrix
+
+Each exact normative source line is preserved in final-obligations.json. Every row retains ROOT as exclusively global complement owner. Local obligations cannot be moved to ROOT because proof or a tool is missing. All row states remain HOLD for final same-pair closure assessment; the thirteen artifact PASS decisions and any criterion-specific scopes actually stated in those decisions are linked separately. No N/A or new semantic verdict is synthesized.
+
+| ID (source line) | Local state | Local obligation | Open local evidence gates | ROOT global complement |
+| --- | --- | --- | --- | --- |
+| GO-A1 (52) | HOLD | Transfer useful ownership across the full S2 population. | G-CONSUMERS, G-CLOSURE | Judge transferable ownership across the five-domain union. |
+| GO-A2 (53) | HOLD | Persist cumulative, directly useful L1-L4 intermediates. | G-CONSUMERS, G-CLOSURE | Reconcile cumulative cross-domain usefulness. |
+| GO-A3 (54) | HOLD | Provide operational skill/entry and bounded real index/read navigation. | G-CONSUMERS, G-CLOSURE | Validate the integrated entry and union navigation. |
+| GO-A4 (55) | HOLD | Bind S2 build dependencies and maintenance semantics. | G-UPDATE, G-CLOSURE | Prove propagation and reuse across domains. |
+| GO-A5 (56) | HOLD | Keep source, authority, validity, Git and local gates distinct. | G-RUNTIME, G-BINDING, G-CI, G-PUBLICATION, G-CLOSURE | Integrate source/knowledge consistency and governed landing. |
+| GO-A6 (57) | HOLD | Use deterministic provenance checks, bounded native tasks and retained completions. | G-PROVENANCE, G-CLOSURE | Reconcile aggregate/historical economics and shared limits. |
+| GO-A7 (58) | HOLD | Use existing Atlas types/doors and only necessary adaptation. | G-RUNTIME, G-BINDING, G-CONSUMERS, G-CLOSURE | Review minimal shared mechanisms and union integration. |
+| GO-I1 (120) | HOLD | Preserve original responses, retries, source identities and correction lineage. | G-PROVENANCE, G-PUBLICATION, G-CLOSURE | Reconcile protected historical campaign objects. |
+| GO-I2 (121) | HOLD | Retain labels for observation, intent, interpretation and gaps. | G-CONSUMERS, G-CLOSURE | Resolve cross-domain conflicts without certainty inflation. |
+| GO-I3 (122) | HOLD | Bind exact current versions to a valid accepted local manifest. | G-BINDING, G-CONSUMERS, G-RECOVERY, G-CLOSURE | Prove union manifest coherence and current-source validity. |
+| GO-I4 (123) | HOLD | Reuse unchanged valid work; distinguish build and navigation edges. | G-UPDATE, G-CLOSURE | Prove independent cross-domain preservation and shared cache semantics. |
+| GO-I5 (124) | HOLD | Include source and relevant non-code change in S2 impact. | G-UPDATE, G-CLOSURE | Prove union impact closure and unavailable-impact HOLD. |
+| GO-I6 (125) | HOLD | Account for every visible production/review/correction/consumer request. | G-PROVENANCE, G-CLOSURE | Reconcile global reservations, historical limits and adapter guarantee. |
+| GO-I7 (126) | HOLD | Retain governed doors, source-as-data and domain/generated boundaries. | G-BINDING, G-RECOVERY, G-CLOSURE | Validate union governance, project boundaries and preservation. |
+| GO-I8 (127) | HOLD | Keep mechanical coverage, semantic acceptance, runtime and completion distinct. | G-CONSUMERS, G-PROVENANCE, G-CLOSURE | Independently decide union semantic and global completion states. |
+| AC-01 (138) | HOLD | Account for 4506 paths/156 families and all 13 required keys. | G-CLOSURE | Review coverage union and cross-domain flow sufficiency. |
+| AC-02 (139) | HOLD | Run five frozen ownership cases with independent Atlas-only consumers. | G-CONSUMERS, G-CLOSURE | Run ownership cases for integrated cross-domain use. |
+| AC-03 (140) | HOLD | Run nine direct-use cases plus bounded ownership navigation. | G-CONSUMERS, G-CLOSURE | Validate integrated progressive use and union navigation. |
+| AC-04 (141) | HOLD | Preserve real native construction and prove exact import/source authority handling. | G-RUNTIME, G-BINDING, G-CLOSURE | Check five-package compatibility and union authority controls. |
+| AC-05 (142) | HOLD | Prove reuse, independent identity preservation and result/receipt semantics. | G-UPDATE, G-CLOSURE | Prove cross-domain independence and propagation stopping. |
+| AC-06 (143) | HOLD | Prove expected affected set and actual knowledge restoration. | G-UPDATE, G-CLOSURE | Prove cross-domain impacted closure and rebuilt union. |
+| AC-07 (144) | HOLD | Prove coherent local accepted reads or HOLD during recovery. | G-BINDING, G-RECOVERY, G-CLOSURE | Prove union concurrency, failure recovery and independent scopes. |
+| AC-08 (145) | HOLD | Report all new observable usage and true native-route limits. | G-PROVENANCE, G-CLOSURE | Reconcile common adapter guarantee, aggregate envelope and history. |
+| AC-09 (146) | HOLD | Verify S2 component gates and actual invalid-state reader controls. | G-CI, G-BINDING, G-RECOVERY, G-CLOSURE | Run integrated gates; report actual branch protection and scope isolation. |
+| AC-10 (147) | HOLD | Preserve S2 protected objects and generated boundaries; stage without authority. | G-PROVENANCE, G-RECOVERY, G-PUBLICATION, G-CLOSURE | Reconcile full historical preservation, migration and activation. |
+| CC-1 (159) | HOLD | Maintain frozen scope, source, gaps and finite 13-key inventory. | G-PROVENANCE, G-CLOSURE | Freeze/reconcile union inventory and missing knowledge. |
+| CC-2 (160) | HOLD | Make every required local level persistent and directly reachable. | G-CONSUMERS, G-CLOSURE | Confirm cumulative union reachability. |
+| CC-3 (161) | HOLD | Support purpose, contracts, behavior, decisions, impact and maintenance. | G-CONSUMERS, G-CLOSURE | Judge cross-domain ownership sufficiency. |
+| CC-4 (162) | HOLD | Demonstrate local initial build through incremental maintenance. | G-RUNTIME, G-UPDATE, G-CLOSURE | Prove end-to-end union maintenance. |
+| CC-5 (163) | HOLD | Use coherent publication, reader verification and compatible recovery. | G-BINDING, G-RECOVERY, G-CLOSURE | Prove union recovery, concurrent readers and independent scopes. |
+| CC-6 (164) | HOLD | Reconcile observed local economics to the actual route guarantee. | G-PROVENANCE, G-CLOSURE | Reconcile adapter guarantees and aggregated/historical obligations. |
+| CC-7 (165) | HOLD | Dispose of local compatibility, generated surfaces and maintenance guidance. | G-RUNTIME, G-PROVENANCE, G-CLOSURE | Resolve union compatibility, old-campaign obligations and expansion limits. |
+| SC-1 (169) | HOLD | Pass all frozen local ownership cases without source discovery. | G-CONSUMERS, G-CLOSURE | Pass integrated ownership cases. |
+| SC-2 (170) | HOLD | Meet frozen routine/deep read limits with real readers. | G-CONSUMERS, G-CLOSURE | Meet union progressive-use limits. |
+| SC-3 (171) | HOLD | Preserve independent work and expected update closure. | G-UPDATE, G-CLOSURE | Verify cross-domain incrementality and no unnecessary interpretation. |
+| SC-4 (172) | HOLD | Report construction, review, update and read usage separately. | G-PROVENANCE, G-CLOSURE | Reconcile total envelope and historical/comparable measurements. |
+| SC-5 (173) | HOLD | Demonstrate coherent local reads and refusal of invalid states. | G-BINDING, G-RECOVERY, G-CI, G-CLOSURE | Prove integrated consistency and invalid-state refusal. |
+| QS-1 (180) | HOLD | Preserve fidelity, disagreement and exact epistemic labels. | G-CLOSURE | Review union fidelity and unresolved conflicts. |
+| QS-2 (181) | HOLD | Provide concise actionable guides and useful bounded index entries. | G-CONSUMERS, G-CLOSURE | Review integrated operating guidance and navigation utility. |
+| QS-3 (182) | HOLD | Use only justified existing-Atlas mechanisms. | G-RUNTIME, G-CLOSURE | Review shared mechanism necessity and avoid redundant infrastructure. |
+| QS-4 (183) | HOLD | Retain repository boundaries, generated discipline and safe persistence. | G-BINDING, G-CI, G-CLOSURE | Review integrated engineering/governance controls. |
+| QS-5 (184) | HOLD | Use fixed independent semantic bar and actual controls with bounded proof. | G-CONSUMERS, G-UPDATE, G-CI, G-CLOSURE | Review union evidence and anti-vacuity coverage. |
+| QS-6 (185) | HOLD | Reuse preserved context/completions and record bounded work honestly. | G-PROVENANCE, G-CLOSURE | Reconcile campaign economics and reusable completions. |
+| DOD-1 (223) | HOLD | Link every local CC/SC disposition to actual evidence and decisions. | G-CONSUMERS, G-UPDATE, G-RECOVERY, G-PROVENANCE, G-CLOSURE | Resolve union CC/SC and named global acceptance. |
+| DOD-2 (224) | HOLD | Review applicable invariants/QS and demonstrate rejecting controls. | G-UPDATE, G-CI, G-CLOSURE | Review global invariants/QS and integrated rejecting controls. |
+| DOD-3 (225) | HOLD | Verify accepted local consumption and end-to-end maintenance/publication use. | G-CONSUMERS, G-UPDATE, G-RECOVERY, G-CLOSURE | Verify integrated end-to-end union path. |
+| DOD-4 (226) | HOLD | Reconcile actual local scoped gates without promoting unrun gates. | G-CI, G-CLOSURE | Run final integrated epic and report enforcement separately. |
+| DOD-5 (227) | HOLD | Reconcile all authorized new visible usage and unresolved requests. | G-PROVENANCE, G-CLOSURE | Reconcile historical aggregate/envelope with no resets. |
+| DOD-6 (228) | HOLD | Deliver accurate guides, local compatibility/preservation and complete independent review. | G-PROVENANCE, G-PUBLICATION, G-CLOSURE | Resolve historical migration/rollback and governed landing review. |
+| DOD-7 (229) | HOLD | Report honest local completion and governed sealed transport. | G-PROVENANCE, G-PUBLICATION, G-CLOSURE | Record owner acceptance, governed integration, landing and production activation as distinct states. |
+
+## Usage, publication and handoff
+
+Ledger: [ledger-at-final-closure-review.jsonl](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/history/ledger-at-final-closure-review.jsonl) (SHA-256 `45a3d4abb9ba101af7e739ff17071b9b176f16c4704b958c5506474c32c22450`); 79 visible events. Native tokens, billing and physical provider attempts remain **UNKNOWN**. Historical usage remains **GLOBAL_UNRECONCILED**, owner ROOT. Event counts do not establish currency limits, provider attempts or current liveness.
+
+Both original automatic approval review refusals remain preserved:
+
+- [archive-publication-rejection.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/archive-publication-rejection.json) (SHA-256 `e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709`)
+- [remote-publication-rejection.json](sandbox:/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/remote-publication-rejection.json) (SHA-256 `a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21`)
+
+The refusals concern internal evidence/execution records proposed for public/external GitHub disclosure. Their history remains even if a later explicitly authorized route succeeds. A read-only branch/S4 discovery receipt does not lift the refusal or prove publication. If unresolved, finish independent work, present the concrete payload/disclosure scope for authorization or establish an authorized safer destination, then follow payload P → separate seal H → leased update → exact readback. No bypass or silent retry.
+
+Handoff state: `PLANNED_ABSENT`. This renderer never writes or seals deliverable/handoff.json, never overwrites deliverable/work.md, and does not assign an artifact revision or claim delivery complete.
+
+Owner acceptance, union integration, landing, production activation, integrated final epic and historical aggregate reconciliation belong to ROOT. The S2 principal must first reconcile its local evidence and obtain the final same-pair closure assessment. The complete input snapshot, receipt hashes, original decision scopes, optional suggestions and exact normative lines are in final-obligations.json.
+
+----- END SECTION CONTENT -----
+
+===== 02 ALL FIFTY EXACT NORMATIVE LINES AND LOCAL OBLIGATIONS =====
+content_bytes=25430; content_sha256=a89ebab7bf4b20bd0638a91f18e7b146271198a88fb5c6956f3f63dbb48a0ab3
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md; source_sha256=6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697
+----- EXACT SECTION CONTENT -----
+### GO-A1 — normative source line 52
+Normative line (verbatim):
+| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |
+Local obligation (verbatim from final-render draft):
+Transfer useful ownership across the full S2 population.
+Exclusively global complement owner: ROOT
+Judge transferable ownership across the five-domain union.
+
+### GO-A2 — normative source line 53
+Normative line (verbatim):
+| GO-A2 | Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch. |
+Local obligation (verbatim from final-render draft):
+Persist cumulative, directly useful L1-L4 intermediates.
+Exclusively global complement owner: ROOT
+Reconcile cumulative cross-domain usefulness.
+
+### GO-A3 — normative source line 54
+Normative line (verbatim):
+| GO-A3 | Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories. |
+Local obligation (verbatim from final-render draft):
+Provide operational skill/entry and bounded real index/read navigation.
+Exclusively global complement owner: ROOT
+Validate the integrated entry and union navigation.
+
+### GO-A4 — normative source line 55
+Normative line (verbatim):
+| GO-A4 | Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics. |
+Local obligation (verbatim from final-render draft):
+Bind S2 build dependencies and maintenance semantics.
+Exclusively global complement owner: ROOT
+Prove propagation and reuse across domains.
+
+### GO-A5 — normative source line 56
+Normative line (verbatim):
+| GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |
+Local obligation (verbatim from final-render draft):
+Keep source, authority, validity, Git and local gates distinct.
+Exclusively global complement owner: ROOT
+Integrate source/knowledge consistency and governed landing.
+
+### GO-A6 — normative source line 57
+Normative line (verbatim):
+| GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |
+Local obligation (verbatim from final-render draft):
+Use deterministic provenance checks, bounded native tasks and retained completions.
+Exclusively global complement owner: ROOT
+Reconcile aggregate/historical economics and shared limits.
+
+### GO-A7 — normative source line 58
+Normative line (verbatim):
+| GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |
+Local obligation (verbatim from final-render draft):
+Use existing Atlas types/doors and only necessary adaptation.
+Exclusively global complement owner: ROOT
+Review minimal shared mechanisms and union integration.
+
+### GO-I1 — normative source line 120
+Normative line (verbatim):
+| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |
+Local obligation (verbatim from final-render draft):
+Preserve original responses, retries, source identities and correction lineage.
+Exclusively global complement owner: ROOT
+Reconcile protected historical campaign objects.
+
+### GO-I2 — normative source line 121
+Normative line (verbatim):
+| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |
+Local obligation (verbatim from final-render draft):
+Retain labels for observation, intent, interpretation and gaps.
+Exclusively global complement owner: ROOT
+Resolve cross-domain conflicts without certainty inflation.
+
+### GO-I3 — normative source line 122
+Normative line (verbatim):
+| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |
+Local obligation (verbatim from final-render draft):
+Bind exact current versions to a valid accepted local manifest.
+Exclusively global complement owner: ROOT
+Prove union manifest coherence and current-source validity.
+
+### GO-I4 — normative source line 123
+Normative line (verbatim):
+| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |
+Local obligation (verbatim from final-render draft):
+Reuse unchanged valid work; distinguish build and navigation edges.
+Exclusively global complement owner: ROOT
+Prove independent cross-domain preservation and shared cache semantics.
+
+### GO-I5 — normative source line 124
+Normative line (verbatim):
+| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |
+Local obligation (verbatim from final-render draft):
+Include source and relevant non-code change in S2 impact.
+Exclusively global complement owner: ROOT
+Prove union impact closure and unavailable-impact HOLD.
+
+### GO-I6 — normative source line 125
+Normative line (verbatim):
+| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |
+Local obligation (verbatim from final-render draft):
+Account for every visible production/review/correction/consumer request.
+Exclusively global complement owner: ROOT
+Reconcile global reservations, historical limits and adapter guarantee.
+
+### GO-I7 — normative source line 126
+Normative line (verbatim):
+| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |
+Local obligation (verbatim from final-render draft):
+Retain governed doors, source-as-data and domain/generated boundaries.
+Exclusively global complement owner: ROOT
+Validate union governance, project boundaries and preservation.
+
+### GO-I8 — normative source line 127
+Normative line (verbatim):
+| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |
+Local obligation (verbatim from final-render draft):
+Keep mechanical coverage, semantic acceptance, runtime and completion distinct.
+Exclusively global complement owner: ROOT
+Independently decide union semantic and global completion states.
+
+### AC-01 — normative source line 138
+Normative line (verbatim):
+| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |
+Local obligation (verbatim from final-render draft):
+Account for 4506 paths/156 families and all 13 required keys.
+Exclusively global complement owner: ROOT
+Review coverage union and cross-domain flow sufficiency.
+
+### AC-02 — normative source line 139
+Normative line (verbatim):
+| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |
+Local obligation (verbatim from final-render draft):
+Run five frozen ownership cases with independent Atlas-only consumers.
+Exclusively global complement owner: ROOT
+Run ownership cases for integrated cross-domain use.
+
+### AC-03 — normative source line 140
+Normative line (verbatim):
+| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |
+Local obligation (verbatim from final-render draft):
+Run nine direct-use cases plus bounded ownership navigation.
+Exclusively global complement owner: ROOT
+Validate integrated progressive use and union navigation.
+
+### AC-04 — normative source line 141
+Normative line (verbatim):
+| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |
+Local obligation (verbatim from final-render draft):
+Preserve real native construction and prove exact import/source authority handling.
+Exclusively global complement owner: ROOT
+Check five-package compatibility and union authority controls.
+
+### AC-05 — normative source line 142
+Normative line (verbatim):
+| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |
+Local obligation (verbatim from final-render draft):
+Prove reuse, independent identity preservation and result/receipt semantics.
+Exclusively global complement owner: ROOT
+Prove cross-domain independence and propagation stopping.
+
+### AC-06 — normative source line 143
+Normative line (verbatim):
+| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |
+Local obligation (verbatim from final-render draft):
+Prove expected affected set and actual knowledge restoration.
+Exclusively global complement owner: ROOT
+Prove cross-domain impacted closure and rebuilt union.
+
+### AC-07 — normative source line 144
+Normative line (verbatim):
+| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |
+Local obligation (verbatim from final-render draft):
+Prove coherent local accepted reads or HOLD during recovery.
+Exclusively global complement owner: ROOT
+Prove union concurrency, failure recovery and independent scopes.
+
+### AC-08 — normative source line 145
+Normative line (verbatim):
+| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |
+Local obligation (verbatim from final-render draft):
+Report all new observable usage and true native-route limits.
+Exclusively global complement owner: ROOT
+Reconcile common adapter guarantee, aggregate envelope and history.
+
+### AC-09 — normative source line 146
+Normative line (verbatim):
+| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |
+Local obligation (verbatim from final-render draft):
+Verify S2 component gates and actual invalid-state reader controls.
+Exclusively global complement owner: ROOT
+Run integrated gates; report actual branch protection and scope isolation.
+
+### AC-10 — normative source line 147
+Normative line (verbatim):
+| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |
+Local obligation (verbatim from final-render draft):
+Preserve S2 protected objects and generated boundaries; stage without authority.
+Exclusively global complement owner: ROOT
+Reconcile full historical preservation, migration and activation.
+
+### CC-1 — normative source line 159
+Normative line (verbatim):
+| CC-1 | Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen. | AC-01, AC-04 |
+Local obligation (verbatim from final-render draft):
+Maintain frozen scope, source, gaps and finite 13-key inventory.
+Exclusively global complement owner: ROOT
+Freeze/reconcile union inventory and missing knowledge.
+
+### CC-2 — normative source line 160
+Normative line (verbatim):
+| CC-2 | The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path. | AC-03, AC-04 |
+Local obligation (verbatim from final-render draft):
+Make every required local level persistent and directly reachable.
+Exclusively global complement owner: ROOT
+Confirm cumulative union reachability.
+
+### CC-3 — normative source line 161
+Normative line (verbatim):
+| CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |
+Local obligation (verbatim from final-render draft):
+Support purpose, contracts, behavior, decisions, impact and maintenance.
+Exclusively global complement owner: ROOT
+Judge cross-domain ownership sufficiency.
+
+### CC-4 — normative source line 162
+Normative line (verbatim):
+| CC-4 | Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end. | AC-05, AC-06 |
+Local obligation (verbatim from final-render draft):
+Demonstrate local initial build through incremental maintenance.
+Exclusively global complement owner: ROOT
+Prove end-to-end union maintenance.
+
+### CC-5 — normative source line 163
+Normative line (verbatim):
+| CC-5 | Coherent publication, reader verification, failure recovery and rollback work without weakening governance. | AC-07, AC-09, AC-10 |
+Local obligation (verbatim from final-render draft):
+Use coherent publication, reader verification and compatible recovery.
+Exclusively global complement owner: ROOT
+Prove union recovery, concurrent readers and independent scopes.
+
+### CC-6 — normative source line 164
+Normative line (verbatim):
+| CC-6 | Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles. | AC-08 |
+Local obligation (verbatim from final-render draft):
+Reconcile observed local economics to the actual route guarantee.
+Exclusively global complement owner: ROOT
+Reconcile adapter guarantees and aggregated/historical obligations.
+
+### CC-7 — normative source line 165
+Normative line (verbatim):
+| CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |
+Local obligation (verbatim from final-render draft):
+Dispose of local compatibility, generated surfaces and maintenance guidance.
+Exclusively global complement owner: ROOT
+Resolve union compatibility, old-campaign obligations and expansion limits.
+
+### SC-1 — normative source line 169
+Normative line (verbatim):
+- **SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.
+Local obligation (verbatim from final-render draft):
+Pass all frozen local ownership cases without source discovery.
+Exclusively global complement owner: ROOT
+Pass integrated ownership cases.
+
+### SC-2 — normative source line 170
+Normative line (verbatim):
+- **SC-2 — progressive use:** AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.
+Local obligation (verbatim from final-render draft):
+Meet frozen routine/deep read limits with real readers.
+Exclusively global complement owner: ROOT
+Meet union progressive-use limits.
+
+### SC-3 — normative source line 171
+Normative line (verbatim):
+- **SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.
+Local obligation (verbatim from final-render draft):
+Preserve independent work and expected update closure.
+Exclusively global complement owner: ROOT
+Verify cross-domain incrementality and no unnecessary interpretation.
+
+### SC-4 — normative source line 172
+Normative line (verbatim):
+- **SC-4 — economics:** separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.
+Local obligation (verbatim from final-render draft):
+Report construction, review, update and read usage separately.
+Exclusively global complement owner: ROOT
+Reconcile total envelope and historical/comparable measurements.
+
+### SC-5 — normative source line 173
+Normative line (verbatim):
+- **SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.
+Local obligation (verbatim from final-render draft):
+Demonstrate coherent local reads and refusal of invalid states.
+Exclusively global complement owner: ROOT
+Prove integrated consistency and invalid-state refusal.
+
+### QS-1 — normative source line 180
+Normative line (verbatim):
+- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.
+Local obligation (verbatim from final-render draft):
+Preserve fidelity, disagreement and exact epistemic labels.
+Exclusively global complement owner: ROOT
+Review union fidelity and unresolved conflicts.
+
+### QS-2 — normative source line 181
+Normative line (verbatim):
+- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.
+Local obligation (verbatim from final-render draft):
+Provide concise actionable guides and useful bounded index entries.
+Exclusively global complement owner: ROOT
+Review integrated operating guidance and navigation utility.
+
+### QS-3 — normative source line 182
+Normative line (verbatim):
+- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.
+Local obligation (verbatim from final-render draft):
+Use only justified existing-Atlas mechanisms.
+Exclusively global complement owner: ROOT
+Review shared mechanism necessity and avoid redundant infrastructure.
+
+### QS-4 — normative source line 183
+Normative line (verbatim):
+- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.
+Local obligation (verbatim from final-render draft):
+Retain repository boundaries, generated discipline and safe persistence.
+Exclusively global complement owner: ROOT
+Review integrated engineering/governance controls.
+
+### QS-5 — normative source line 184
+Normative line (verbatim):
+- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.
+Local obligation (verbatim from final-render draft):
+Use fixed independent semantic bar and actual controls with bounded proof.
+Exclusively global complement owner: ROOT
+Review union evidence and anti-vacuity coverage.
+
+### QS-6 — normative source line 185
+Normative line (verbatim):
+- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.
+Local obligation (verbatim from final-render draft):
+Reuse preserved context/completions and record bounded work honestly.
+Exclusively global complement owner: ROOT
+Reconcile campaign economics and reusable completions.
+
+### DOD-1 — normative source line 223
+Normative line (verbatim):
+- **DOD-1:** CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.
+Local obligation (verbatim from final-render draft):
+Link every local CC/SC disposition to actual evidence and decisions.
+Exclusively global complement owner: ROOT
+Resolve union CC/SC and named global acceptance.
+
+### DOD-2 — normative source line 224
+Normative line (verbatim):
+- **DOD-2:** all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.
+Local obligation (verbatim from final-render draft):
+Review applicable invariants/QS and demonstrate rejecting controls.
+Exclusively global complement owner: ROOT
+Review global invariants/QS and integrated rejecting controls.
+
+### DOD-3 — normative source line 225
+Normative line (verbatim):
+- **DOD-3:** real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.
+Local obligation (verbatim from final-render draft):
+Verify accepted local consumption and end-to-end maintenance/publication use.
+Exclusively global complement owner: ROOT
+Verify integrated end-to-end union path.
+
+### DOD-4 — normative source line 226
+Normative line (verbatim):
+- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.
+Local obligation (verbatim from final-render draft):
+Reconcile actual local scoped gates without promoting unrun gates.
+Exclusively global complement owner: ROOT
+Run final integrated epic and report enforcement separately.
+
+### DOD-5 — normative source line 227
+Normative line (verbatim):
+- **DOD-5:** real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.
+Local obligation (verbatim from final-render draft):
+Reconcile all authorized new visible usage and unresolved requests.
+Exclusively global complement owner: ROOT
+Reconcile historical aggregate/envelope with no resets.
+
+### DOD-6 — normative source line 228
+Normative line (verbatim):
+- **DOD-6:** docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.
+Local obligation (verbatim from final-render draft):
+Deliver accurate guides, local compatibility/preservation and complete independent review.
+Exclusively global complement owner: ROOT
+Resolve historical migration/rollback and governed landing review.
+
+### DOD-7 — normative source line 229
+Normative line (verbatim):
+- **DOD-7:** owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.
+Local obligation (verbatim from final-render draft):
+Report honest local completion and governed sealed transport.
+Exclusively global complement owner: ROOT
+Record owner acceptance, governed integration, landing and production activation as distinct states.
+
+----- END SECTION CONTENT -----
+
+===== 03 THIRTEEN BODY IDENTITIES AND FOUR ACCEPTED MANIFEST PINS — PUBLIC METADATA ONLY =====
+content_bytes=12172; content_sha256=1c4a37c1d150c8753b6752ca064e0d796236c38c5ca5a339ac7306676dc8e2e0
+----- EXACT SECTION CONTENT -----
+{
+  "artifacts": [
+    {
+      "key": "s2.l1.desktop-web",
+      "layer": 1,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/l1.md",
+        "byte_length": 29075,
+        "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+        "byte_length": 2963,
+        "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.app-session",
+      "layer": 1,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/l1.md",
+        "byte_length": 42047,
+        "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+        "byte_length": 2963,
+        "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "layer": 1,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/l1.md",
+        "byte_length": 36964,
+        "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+        "byte_length": 2963,
+        "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "layer": 2,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/desktop-web/body.md",
+        "byte_length": 18440,
+        "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+        "byte_length": 2847,
+        "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.app-session",
+      "layer": 2,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/app-session/body.md",
+        "byte_length": 24434,
+        "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+        "byte_length": 2847,
+        "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "layer": 2,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l2/design-tui/body.md",
+        "byte_length": 21535,
+        "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+        "byte_length": 2847,
+        "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "layer": 3,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/desktop-web/body.md",
+        "byte_length": 14715,
+        "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+        "byte_length": 2847,
+        "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.app-session",
+      "layer": 3,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/app-session/body.md",
+        "byte_length": 14334,
+        "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+        "byte_length": 2847,
+        "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "layer": 3,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l3/design-tui/body.md",
+        "byte_length": 15780,
+        "sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+        "byte_length": 2847,
+        "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/desktop-web/body.md",
+        "byte_length": 11183,
+        "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.app-session",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/app-session/body.md",
+        "byte_length": 11220,
+        "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/design-tui/body.md",
+        "byte_length": 11783,
+        "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.entry",
+      "layer": 4,
+      "body": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l4/entry/body.md",
+        "byte_length": 5849,
+        "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1"
+      },
+      "accepted_manifest": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+        "byte_length": 3558,
+        "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+      },
+      "semantic_acceptance_metadata": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "scope": "SEMANTIC_ARTIFACT_ONLY"
+        }
+      ]
+    }
+  ],
+  "accepted_manifests": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l1.json",
+      "byte_length": 2963,
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l2.json",
+      "byte_length": 2847,
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l3.json",
+      "byte_length": 2847,
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/accepted/l4.json",
+      "byte_length": 3558,
+      "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+    }
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 04 ACTUAL NATIVE OPERATION RECEIPT — SCOPE IS THE RECORDED OPERATION ONLY =====
+content_bytes=4187; content_sha256=234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json; source_sha256=234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-native-prepare-execution/v1",
+  "operation": "prepare",
+  "state": "PREPARE_FAILED",
+  "recorded_at": "2026-11-11T20:48:52.214348+00:00",
+  "started_at": "2026-11-11T20:48:51.158507+00:00",
+  "ended_at": "2026-11-11T20:48:52.041873+00:00",
+  "duration_seconds": 0.8833769949997077,
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "argv": [
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+  "prepare_executed": true,
+  "exit_code": 1,
+  "launch_error": null,
+  "attempt": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare-attempt.json",
+    "sha256": "e6fac91c9594451daff1f91203a661f02c87fafe72a891b28f0b6f02eea4f8ce",
+    "byte_length": 1227
+  },
+  "preflight": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/preflight.json",
+    "sha256": "ff088c74ff156b579434a176af272a79cebeecda9700027eda5f661c0b885d2b",
+    "byte_length": 4588
+  },
+  "stdout": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "byte_length": 0
+  },
+  "stderr": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stderr",
+    "sha256": "43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079",
+    "byte_length": 158
+  },
+  "cas_before": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/cas-before.json",
+    "sha256": "595613c86288edb30a8c9b055da1c3e94fc1adb9b635239d12caa364922e1c92",
+    "byte_length": 155
+  },
+  "cas_after": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/cas-after.json",
+    "sha256": "efd444011f22bddbfb9bb4783add68dc503a3d7fddb00ab8ad06c2cb04e63dc8",
+    "byte_length": 4403
+  },
+  "cas_created": true,
+  "partial_cas_preserved": true,
+  "cas_file_count_after": 13,
+  "post_operation_integrity": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/post-operation-integrity.json",
+    "sha256": "e30d69982afe6707f57e8126277bccc043e1cc796eef73c146e28a859e062d53",
+    "byte_length": 93
+  },
+  "output": null,
+  "parsed_output_error": null,
+  "candidate_id": null,
+  "candidate_id_basis": null,
+  "binding_id": null,
+  "publish_executed": false,
+  "tests_executed": false,
+  "runtime_acceptance": "UNACCEPTED",
+  "git_checkout": false,
+  "observed_head": null,
+  "membership_observation_ready": false,
+  "automatic_retries": 0,
+  "cas_deleted": false,
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN",
+  "limits": [
+    "Prepare is not binding, publication, consumer acceptance, CI or a product test.",
+    "CAS inventory records exact observed bytes, including partial state; no cleanup occurs.",
+    "An interrupted wrapper may leave marker/logs without a final receipt; inspect and preserve, never rerun automatically."
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 05 EXACT ACTUAL RUNTIME STDOUT =====
+content_bytes=0; content_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stdout; source_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+----- EXACT SECTION CONTENT -----
+
+----- END SECTION CONTENT -----
+
+===== 06 EXACT ACTUAL RUNTIME STDERR =====
+content_bytes=158; content_sha256=43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepare.stderr; source_sha256=43d7269576a3cd51d7c9852ebdeda55e1878c3643f5e0354431b68f49f00c079
+----- EXACT SECTION CONTENT -----
+{"kind":"error","error":"native-input-unavailable: file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json"}
+
+----- END SECTION CONTENT -----
+
+===== 07 ACTUAL READBACK AND CI OBSERVATIONS AT SUPPLIED PINS =====
+content_bytes=10043; content_sha256=296702e17d439df422fd46fd11a2d6b6ae79fff7eec10efed5bcd7098a9812ed
+----- EXACT SECTION CONTENT -----
+{
+  "runtime_observed_fields": [
+    {
+      "field": "schema",
+      "value": "genesis-s2-native-prepare-execution/v1"
+    },
+    {
+      "field": "operation",
+      "value": "prepare"
+    },
+    {
+      "field": "state",
+      "value": "PREPARE_FAILED"
+    },
+    {
+      "field": "recorded_at",
+      "value": "2026-11-11T20:48:52.214348+00:00"
+    },
+    {
+      "field": "started_at",
+      "value": "2026-11-11T20:48:51.158507+00:00"
+    },
+    {
+      "field": "ended_at",
+      "value": "2026-11-11T20:48:52.041873+00:00"
+    },
+    {
+      "field": "native_package_sha256",
+      "value": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+    },
+    {
+      "field": "candidate_revision",
+      "value": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+    },
+    {
+      "field": "source_revision",
+      "value": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "field": "protocol_revision",
+      "value": "ee2521a5b966bd505cc95bd1c733e09e12f33531"
+    },
+    {
+      "field": "argv[0]",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun"
+    },
+    {
+      "field": "argv[1]",
+      "value": "scripts/genesis-native.ts"
+    },
+    {
+      "field": "argv[2]",
+      "value": "prepare"
+    },
+    {
+      "field": "argv[3]",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root"
+    },
+    {
+      "field": "argv[4]",
+      "value": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json"
+    },
+    {
+      "field": "argv[5]",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json"
+    },
+    {
+      "field": "cwd",
+      "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas"
+    },
+    {
+      "field": "prepare_executed",
+      "value": true
+    },
+    {
+      "field": "exit_code",
+      "value": 1
+    },
+    {
+      "field": "cas_created",
+      "value": true
+    },
+    {
+      "field": "candidate_id",
+      "value": null
+    },
+    {
+      "field": "publish_executed",
+      "value": false
+    },
+    {
+      "field": "git_checkout",
+      "value": false
+    },
+    {
+      "field": "observed_head",
+      "value": null
+    },
+    {
+      "field": "membership_observation_ready",
+      "value": false
+    }
+  ],
+  "runtime_scope": "Only observed receipt fields are quoted. A successful prepare exit/output does not establish binding, governed publication, readers, consumers, update/recovery or CI acceptance.",
+  "final_remote_readback": {
+    "receipt": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-remote-recheck-01/readback-receipt.json",
+      "byte_length": 3635,
+      "sha256": "845546f3fdd629863a1209375d2888a7af15d69b75bb62e2754d0c0c3dcf86aa"
+    },
+    "observed_fields": [
+      {
+        "field": "schema",
+        "value": "genesis-s2-final-remote-readback/v1"
+      },
+      {
+        "field": "recorded_at",
+        "value": "2026-11-11T20:40:51.993744+00:00"
+      },
+      {
+        "field": "operation",
+        "value": "read-only GitHub connector GETs"
+      },
+      {
+        "field": "own_branch_head",
+        "value": "ac972ff8dc1126b02f8a16f3942a142e417039ed"
+      },
+      {
+        "field": "s4_discovery.commit",
+        "value": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c"
+      },
+      {
+        "field": "s4_discovery.path",
+        "value": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json"
+      },
+      {
+        "field": "s4_discovery.sha256",
+        "value": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016"
+      },
+      {
+        "field": "s4_discovery.release_id",
+        "value": "20261111-v3-fresh-s4-r3"
+      },
+      {
+        "field": "s4_discovery.candidate_revision",
+        "value": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+      },
+      {
+        "field": "evidence.s4-branch-connector.json.path",
+        "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s4-branch-connector.json"
+      },
+      {
+        "field": "evidence.s4-branch-connector.json.sha256",
+        "value": "c33297ce38b7966b848bd98d43a3d988292f6f9b37bf3a503c7ec2a778358b82"
+      },
+      {
+        "field": "evidence.s4-branch-ref.json.path",
+        "value": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s4-branch-ref.json"
+      },
+      {
+        "field": "evidence.s4-branch-ref.json.sha256",
+        "value": "f34d502872287cb57b7102bb4ba3e95f6e0cf7e10a631f39ad64dcb02925bf17"
+      }
+    ],
+    "verified_reference_files": [
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+        "verification": "EXTERNAL_IMMUTABLE_REFERENCE_ONLY_NOT_REREAD"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/runtime-release-connector.json",
+        "byte_length": 30352,
+        "sha256": "ebf8cba884c8311e3ddf05e323b417377ecff4fcbe7bd75828af7ae89bbaf6eb"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/runtime-release.json",
+        "byte_length": 28282,
+        "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s2-branch-connector.json",
+        "byte_length": 1502,
+        "sha256": "d13202ebceacf99529aaccc7055479da46b4bf49e9c71ff9d11c45123e1e69b5"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s2-branch-ref.json",
+        "byte_length": 390,
+        "sha256": "b8f2411229176c156e3538e7ff827ae3fff30e515acdffc56595384eb8961b3e"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s4-branch-connector.json",
+        "byte_length": 1502,
+        "sha256": "c33297ce38b7966b848bd98d43a3d988292f6f9b37bf3a503c7ec2a778358b82"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-remote-recheck-01/s4-branch-ref.json",
+        "byte_length": 390,
+        "sha256": "f34d502872287cb57b7102bb4ba3e95f6e0cf7e10a631f39ad64dcb02925bf17"
+      }
+    ],
+    "own_branch_heads_as_recorded": [
+      "ac972ff8dc1126b02f8a16f3942a142e417039ed"
+    ],
+    "s4_discovery_commits_as_recorded": [
+      "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c"
+    ],
+    "interpretation": "Read-only branch/release discovery is not payload publication, sealing, binding or activation."
+  },
+  "ci_readbacks": [
+    {
+      "receipt": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/ci-final-readbacks/run-43065851373.json",
+        "byte_length": 976,
+        "sha256": "5029a9fc18c68b9866ab1d6cd151a3331b19e2d946fca3a17244b43a6b6e76b5"
+      },
+      "observed_fields": [
+        {
+          "field": "schema",
+          "value": "genesis-s2-sibling-ci-actual-readback/v1"
+        },
+        {
+          "field": "run_id",
+          "value": 43065851373
+        },
+        {
+          "field": "run_attempt",
+          "value": 1
+        },
+        {
+          "field": "candidate_revision",
+          "value": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+        },
+        {
+          "field": "head_sha",
+          "value": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+        },
+        {
+          "field": "status",
+          "value": "completed"
+        },
+        {
+          "field": "conclusion",
+          "value": "failure"
+        },
+        {
+          "field": "scope",
+          "value": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding."
+        }
+      ],
+      "verified_reference_files": [
+        {
+          "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/ci-final-readbacks/run-43065851373-connector.json",
+          "byte_length": 27857,
+          "sha256": "89bc579ada65513dd1900dda7bca2d4cb078bd6ae0c164256afb07ba80bd4562"
+        }
+      ]
+    },
+    {
+      "receipt": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/ci-final-readbacks/run-43077975153.json",
+        "byte_length": 1043,
+        "sha256": "afaa2065e99703a0d55e62919042eb68bdd27d6de0bcbd56422afedfce5c2e22"
+      },
+      "observed_fields": [
+        {
+          "field": "schema",
+          "value": "genesis-s2-sibling-ci-actual-readback/v1"
+        },
+        {
+          "field": "run_id",
+          "value": 43077975153
+        },
+        {
+          "field": "run_attempt",
+          "value": 1
+        },
+        {
+          "field": "candidate_revision",
+          "value": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+        },
+        {
+          "field": "head_sha",
+          "value": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+        },
+        {
+          "field": "status",
+          "value": "completed"
+        },
+        {
+          "field": "conclusion",
+          "value": "success"
+        },
+        {
+          "field": "scope",
+          "value": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding."
+        }
+      ],
+      "verified_reference_files": [
+        {
+          "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/ci-final-readbacks/run-43077975153-connector.json",
+          "byte_length": 27833,
+          "sha256": "a7a48b5857383f97b5ba8abbd7b8db8be355a0224732552f42a06865d5958069"
+        }
+      ]
+    }
+  ],
+  "note": "These are supplied operational observations at their cited pins, not semantic opinions or a blanket S4 verdict."
+}
+
+----- END SECTION CONTENT -----
+
+===== 08.01 BOUNDED SUPPLIED S4 CI/COMPATIBILITY OBSERVATIONS =====
+content_bytes=11549; content_sha256=cfbd2c7e890c04142c482f300346c3f6e8b82f0902fc682938a2a9204ed73da4
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/s4-observations-review.json; source_sha256=cfbd2c7e890c04142c482f300346c3f6e8b82f0902fc682938a2a9204ed73da4
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-bounded-s4-review-observations/v1",
+  "scope": "Selected actual scoped observations. Full original support record and all 26 underlying source identities remain preserved. No S2 acceptance is transferred.",
+  "full_source_record": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/s4-observations-full.json",
+    "sha256": "762b336455e5faf8a3e9383f376143cc5b1d00b9a200d0d3b8ed191c5347c87b"
+  },
+  "identities": {
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "initial_release_commit": "f3c1f6a83bb0b81fd2ab394ab9f21b19e8685604",
+    "latest_readback_recorded_at": "2026-11-11T20:40:51.993744+00:00",
+    "latest_s4_branch_head": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+    "release_repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "release_sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+    "release_git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "release_byte_length": 28282,
+    "release_bytes_unchanged": true,
+    "native_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "common_controls_candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "s2_branch_head_as_read": "ac972ff8dc1126b02f8a16f3942a142e417039ed",
+    "source_ids": [
+      "support_receipt",
+      "file_verification",
+      "final_remote_readback",
+      "release_bytes"
+    ],
+    "scope_limit": "Different discovery commits preserve the same release bytes; branch discovery is not S2 payload publication or acceptance."
+  },
+  "ci_runs": [
+    {
+      "run_id": 43065851373,
+      "run_attempt": 1,
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "head_sha": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "head_branch": "genesis-fresh-s4",
+      "status": "completed",
+      "conclusion": "failure",
+      "workflow_path": ".github/workflows/atlas-pilot.yml",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43065851373",
+      "scope": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding.",
+      "limit": "Historical aggregate FAILURE at e3a remains. It is neither the newer 7102 result nor S2 final-payload CI."
+    },
+    {
+      "run_id": 43077975153,
+      "run_attempt": 1,
+      "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "head_sha": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "head_branch": "genesis-fresh-s4",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_path": ".github/workflows/atlas-pilot.yml",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43077975153",
+      "scope": "Actual S4 branch workflow run at the exact candidate; not S2 final-payload CI or an S2 runtime binding.",
+      "limit": "Aggregate SUCCESS belongs to 7102. It does not rerun e3a or prove S2 full13 binding, consumers, maintenance execution or final-payload CI.",
+      "job_id": 130722742703,
+      "test_counts": {
+        "numTotalTests": 220,
+        "numPassedTests": 220,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      },
+      "test_files_passed": 23,
+      "mutation_probe_count": 22,
+      "successful_gate_steps": [
+        {
+          "number": 5,
+          "name": "Typecheck Atlas",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Grouped ownership and existing door regressions",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Probe the new guards against named failing controls",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Generate Atlas boundary from the checked sources",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Check repository guards on the candidate",
+          "conclusion": "success"
+        }
+      ],
+      "guards": {
+        "exit_code": 0,
+        "rule_count": 78,
+        "changed_paths": 869,
+        "gate": 0,
+        "warn": 2,
+        "errors": 0,
+        "warnings": [
+          "S4 producers/l1b/artifacts.json large-file",
+          "S4 producers/l1b/coverage.json large-file"
+        ]
+      },
+      "ci_receipt_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "ci_receipt_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+      "job_log_sha256": "492cf4b15ae4e14bd54e92da6601e78dcbf8e7c00c5720656c3bcb0d76f67a26"
+    }
+  ],
+  "implementation_comparison": {
+    "base": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "head": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "files_in_comparison": 161,
+    "docs_evidence_changes": 154,
+    "other_files": "One workflow, three generated JS bundles, two adapter sources, one added recovery test.",
+    "base_materialized_files_reverified": 406,
+    "not_listed_as_changed_in_fixed_compare": 404,
+    "listed_changed_materialized_count": 2,
+    "changed_source_identities": [
+      {
+        "repository_path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+        "base_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "base_sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+        "base_git_blob_sha": "5d8ebda609634ec02c4cdaff09499d1d615e2ec9",
+        "controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+        "controls_sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+        "controls_git_blob_sha": "64d29d3e67dea3bb826be5960a5b9bbf6719edc0",
+        "source_id": "controls_binding"
+      },
+      {
+        "repository_path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "base_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "base_sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+        "base_git_blob_sha": "9920e6b26bc68c392386b13146e352753c08aef1",
+        "controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+        "controls_sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+        "controls_git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+        "source_id": "controls_format"
+      }
+    ],
+    "static_assessment_as_recorded": "The only checked-source changes are three return expressions in binding/format. nativeRecord returns the original object; the returned value is identical. This is a static equivalence inference, not a new test of e3a. Raw source bytes and recorded implementation identity differ.",
+    "generated_artifacts_as_recorded": "Three committed JS bundles differ; surface includes regenerated strict membership observation. Do not call entire generated runtime byte-identical. The S2 native CLI imports adapter source; no changed bundles were installed.",
+    "candidate_identity_effect_as_recorded": "format and binding are in prepared.candidate.implementation; adopting changed bytes requires a new candidate and independent exact bindings.",
+    "common_control_reuse_limit_as_recorded": "Runtime behavioral evidence may be cited for verified unchanged source paths and stated assumptions; exact run/aggregate PASS remains 7102-specific.",
+    "scope_limit": "406 measures base-copy integrity; 404 were not listed changed in the fixed comparison. Two source files have different bytes at 7102. The support report attributes static equivalence to three return expressions; no new execution of e3a or identical whole distribution is inferred."
+  },
+  "generated_parity": {
+    "ci_artifact": {
+      "id": 13883635728,
+      "size_in_bytes": 431413,
+      "digest": "sha256:cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd",
+      "receipt_digest_matches": true,
+      "workflow_run_head_matches": true,
+      "archive_downloaded": false
+    },
+    "declared_file_count": 18,
+    "all_match_as_claimed_by_pinned_receipt": true,
+    "directly_verified_changed_file_count": 3,
+    "other_archive_entries_not_downloaded_or_recomputed": 15,
+    "artifact_zip_downloaded": false,
+    "scope_limit": "Three changed committed files were checked by the support audit and rehashed here. Full eighteen-file archive parity remains the pinned receipt claim; the other fifteen archive bytes were not independently downloaded or recomputed here."
+  },
+  "distinct_limits": {
+    "source_reference_and_live_file_observer_bytes": 256000,
+    "native_document_default_bytes": 8388608,
+    "native_document_default_label": "8 MiB",
+    "oversized_source_inputs_as_recorded": [
+      {
+        "path_as_recorded": "schema/tui.json",
+        "byte_length": 1131057,
+        "applicable_cap": 256000
+      },
+      {
+        "path_as_recorded": "payload/inputs/app-session-tree.json",
+        "byte_length": 369462,
+        "applicable_cap": 256000
+      },
+      {
+        "path_as_recorded": "payload/inputs/design-tui-tree.json",
+        "byte_length": 390775,
+        "applicable_cap": 256000
+      }
+    ],
+    "distinction": "The native document reader defaults to nativeMaxBytes for package and preserved-reference reads. Native source_refs and live file input reads explicitly pass 256000; observeOwnershipInput also returns unavailable above 256000. The 8 MiB default does not increase the source/observer cap.",
+    "scope_limit": "Static source/release observation only; the separate principal one-shot preparation outcome is not read or inferred here."
+  },
+  "shared_controls": {
+    "recovery_controls_as_reported": {
+      "NR1-01_02_03": "Durable resume, drift/HOLD, rollback and migration controls use synthetic fixtures and an exception seam; not arbitrary power-loss proof.",
+      "NR1-04": "Reported corrected control measures mainStarted/mainFinished around the principal read and requires intersection with activation. One Worker/one writer at the identified run; not universal concurrency."
+    },
+    "sample": {
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "operation_evidence_commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "operations": [
+        "publish exit0, emitted=true, shape/truth/authz/ratify gates true",
+        "index exit0, metadata without body",
+        "read exit0, ready, historical=false"
+      ],
+      "artifact_count": 1,
+      "read_body_byte_length": 17959,
+      "read_body_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+      "limit": "One real S4 artifact executed by its principal; not an independent consumer or the S2 full13 package."
+    },
+    "no_transfer_to_s2": [
+      "S4 scope, policy, ratifier, candidate, contracts and results do not authorize S2 publication.",
+      "Common control outcomes do not supply S2 runtime-import bindings, fourteen local consumer cases, S2-U1 actual update/rebuild/reuse or final-payload gates.",
+      "Adopting changed implementation bytes requires a new exact candidate and matching independent bindings."
+    ]
+  },
+  "limits": [
+    "Static code anchors, precise candidate source identities, generated byte hashes, full original runtime receipts and connector envelopes are preserved in the full source record and its 26 bound references.",
+    "No raw peer opinions or reserved consumer answers are supplied.",
+    "The S2 actual native preparation is a separate receipt; the earlier support audit did not execute it."
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 08B.01 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS =====
+content_bytes=11533; content_sha256=6a00443c0c02156edefc184eacec575e00192ad2900f32343971d9dd95773c78
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/observable-usage-review.json; source_sha256=6a00443c0c02156edefc184eacec575e00192ad2900f32343971d9dd95773c78
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-observable-usage-index/v1",
+  "recorded_at": "2026-11-11T20:58:37.634530+00:00",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "scope": "Bounded local reconciliation of explicitly indexed preserved receipts; not exhaustive conversation/tool/provider accounting",
+  "provider_telemetry": {
+    "physical_provider_attempts": "UNKNOWN",
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "cached_tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "global_history": "GLOBAL_UNRECONCILED",
+    "owner": "ROOT"
+  },
+  "consumers_and_update": {
+    "consumer_state": "NOT_RUN",
+    "planned_consumer_cases": 14,
+    "update_state": "NOT_RUN",
+    "planned_update_case": "S2-U1",
+    "scope": "Explicit own-S2 execution state in ledger row75, consistent with failed native prepare and absent candidate/binding. No consumer/update execution total is inferred from other-session evidence."
+  },
+  "publication_attempts": {
+    "recorded_automatic_approval_rejections": 2,
+    "ledger_rows": [
+      19,
+      26
+    ],
+    "result": "No remote tree write from these rejected requests",
+    "prior_claim_commit_is_history": true,
+    "global_remote_mutation_total": null
+  },
+  "forbidden_inferences": [
+    "No filesystem-copy count is treated as another call.",
+    "No late archival observation is treated as a new send.",
+    "No token/billing/provider-attempt estimate is synthesized.",
+    "No semantic PASS is promoted to runtime, consumer, CI or global acceptance.",
+    "No raw judge reasoning or reserved consumer expected answers appear in this index."
+  ],
+  "full_index": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/observable-usage-01/observable-usage-index.json",
+    "sha256": "8aacf330f988818aed40b5dc253d70c7fb1d514d92b9882b17930690f5135b45",
+    "byte_length": 47594
+  },
+  "construction": {
+    "saved_artifact_request_documents": 13,
+    "ledger_recorded_initial_author_activations": 12,
+    "activation_ledger_rows": [
+      3,
+      4,
+      5,
+      42,
+      47,
+      50,
+      62
+    ],
+    "failed_initial_author_activation_calls": [
+      {
+        "ledger_row": 48,
+        "target": "/root/s2_author_design",
+        "result": "thread-capacity rejection; no production presumed"
+      }
+    ],
+    "limits": "L4 app and entry were one author activation with two artifact requests. Supplement text count is not a native call count. Support/coordination followups are not exhaustively indexed.",
+    "saved_supplemental_texts": 8,
+    "supplement_native_call_count": "UNKNOWN"
+  },
+  "corrections": {
+    "saved_logical_correction_batches": 4,
+    "corrected_artifact_revisions": 6,
+    "exact_native_activation_total": null,
+    "limit": "Four ledger-backed correction batches; additional followup/scope-addition messages inside a batch are not promoted to unobserved exact call totals.",
+    "batch_ids": [
+      "l1-r2",
+      "l1-app-r3",
+      "l3-design-r2",
+      "l4-entry-r2"
+    ]
+  },
+  "literal_review_transport": {
+    "resumed_logical_send_message_calls": 113,
+    "payload_dispositions": {
+      "INVALIDATED": 5,
+      "FULL_REPLACEMENT": 5,
+      "ORIGINAL_NO_KNOWN_INVALIDATION": 103
+    },
+    "uncertain_context_truncated_result_flags": 3,
+    "uncertainty_is_overlapping_not_extra_calls": true,
+    "definition": "Original/no-known-invalidation describes the payload history, not guaranteed delivery. An empty return without reported error is not a received-byte attestation.",
+    "deduplication": "One canonical preserved receipt per group, selected by exact path and SHA256; copies in producer/staging/history locations are not extra calls. Distinct per-group ordinals, including same-payload replacements, remain distinct actual logical calls.",
+    "canonical_groups": [
+      {
+        "id": "resume-l1-desktop-r1",
+        "logical_calls": 13,
+        "invalidated_calls": 1,
+        "full_replacements": 1,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "resume-l1-app-desktop-r2",
+        "logical_calls": 22,
+        "invalidated_calls": 2,
+        "full_replacements": 2,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "resume-l1-design-r2",
+        "logical_calls": 20,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "resume-l1-app-r3",
+        "logical_calls": 2,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l2-desktop-r1",
+        "logical_calls": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l2-app-r1",
+        "logical_calls": 6,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l2-design-r1",
+        "logical_calls": 7,
+        "invalidated_calls": 1,
+        "full_replacements": 1,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-desktop-r1",
+        "logical_calls": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-app-r1",
+        "logical_calls": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-design-r1",
+        "logical_calls": 6,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-design-r2",
+        "logical_calls": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-desktop-r1",
+        "logical_calls": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "l4-app-r1",
+        "logical_calls": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-design-r1",
+        "logical_calls": 6,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-entry-r1",
+        "logical_calls": 5,
+        "invalidated_calls": 1,
+        "full_replacements": 1,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "l4-entry-r2",
+        "logical_calls": 2,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      }
+    ]
+  },
+  "judges": {
+    "actual_semantic_response_documents": 18,
+    "artifact_verdict_entries_including_superseded_revisions": 34,
+    "verdict_counts_including_history": {
+      "PASS": 26,
+      "FIX-FIRST": 8
+    },
+    "current_accepted_artifacts": 13,
+    "current_accepted_pass_bindings": 26,
+    "explicit_saved_activation_request_or_dispatch_calls": 12,
+    "additional_ledger_only_review_activations": [
+      {
+        "ledger_row": 23,
+        "target": "/root/s2_resume_j1",
+        "batch": "desktop L1r1"
+      },
+      {
+        "ledger_row": 34,
+        "target": "/root/s2_resume_j1",
+        "batch": "desktop/design L1r2"
+      }
+    ],
+    "exact_total_review_activation_calls": null,
+    "one_failed_activation": {
+      "ledger_row": 22,
+      "target": "/root/s2_resume_j1",
+      "result": "thread-capacity rejection; later dispatched once"
+    },
+    "judge_context_initializations_separate_from_reviews": {
+      "original_ready_records": [
+        12,
+        13
+      ],
+      "resumed_ready_dispatch_records": [
+        15,
+        16
+      ],
+      "old_handles_not_found_record": 14
+    },
+    "limits": "Response documents are real preserved results, not inferred executions. Initial L1 J2 desktop, J2 desktop/design and both app-r3 review activations lack standalone dispatched-call receipts in this bounded index; their actual response documents remain present. Closure review is outside this preclosure snapshot."
+  },
+  "native_prepare": {
+    "logical_cli_invocations": 1,
+    "receipt": {
+      "path": "deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+      "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410",
+      "byte_length": 4187
+    },
+    "state": "PREPARE_FAILED",
+    "exit_code": 1,
+    "started_at": "2026-11-11T20:48:51.158507+00:00",
+    "ended_at": "2026-11-11T20:48:52.041873+00:00",
+    "automatic_retries": 0,
+    "candidate_id": null,
+    "binding_id": null,
+    "partial_cas_preserved": true,
+    "scope": "Own S2 final package only; prior setup/typecheck and other-session sample operations are not additional S2 prepare calls"
+  },
+  "readbacks": {
+    "captured_returns_in_these_four_batches": 9,
+    "additional_capture_catalog_file": "additional-connector-capture-index.json",
+    "additional_distinct_envelope_hashes": 42,
+    "total_remote_read_calls": null,
+    "new_ci_runs_from_readbacks": false,
+    "limits": "The four named batches are9 captured logical GET results, not a global read total. The additional catalog is non-additive: matching hashes collapse preserved copies, but separate repeated GETs can produce identical bytes. Initial source captures, all historical reads and every root/support tool call are not fully reconciled here.",
+    "named_batches": [
+      {
+        "batch": "s4-r3-discovery",
+        "observed_connector_returns": 2
+      },
+      {
+        "batch": "s4-post-l3",
+        "observed_connector_returns": 2
+      },
+      {
+        "batch": "ci-final-two-runs",
+        "observed_connector_returns": 2
+      },
+      {
+        "batch": "final-s4-s2",
+        "observed_connector_returns": 3
+      }
+    ]
+  },
+  "historical_original_session": {
+    "reported_producer_relay_calls": 68,
+    "included_in_resumed113": false,
+    "global_history_state": "GLOBAL_UNRECONCILED",
+    "owner": "ROOT",
+    "limit": "These68 historical producer-relay calls are retained evidence, not newly issued calls and not the full original-session or campaign total."
+  },
+  "local_gap_disposition": [
+    {
+      "gap": "Missing separate ledger events for the already recorded L4 entry-r2 sends and activations",
+      "state": "RESOLVED_BY_APPENDING_EXISTING_RECEIPT_REFERENCES",
+      "new_calls": 0
+    },
+    {
+      "gap": "Some original L1 activation request/result envelopes missing from bounded index",
+      "state": "UNKNOWN_NOT_FABRICATED",
+      "observation": "Root searched current preserved judgment/correction seal, dispatch, activation and request paths plus ledger; no additional standalone original activation envelope was found. Actual original semantic response files remain preserved.",
+      "effect": "Do not infer an exact activation total or unobserved spend."
+    },
+    {
+      "gap": "Global/support/source-retrieval call totals beyond indexed receipts",
+      "state": "OUTSIDE_CAPTURED_TOTAL_UNKNOWN",
+      "effect": "Index does not claim exhaustive native/provider accounting; historical ROOT reconciliation remains open."
+    }
+  ],
+  "snapshot_note": "The source index captures the prior76-row ledger, whose exact immutable copy is preserved. The principal appended3 accounting events with no new transport/review calls before freezing the next closure ledger."
+}
+
+----- END SECTION CONTENT -----
+
+===== 08B.02 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS =====
+content_bytes=3230; content_sha256=33087116edd0024e4bc0c4f646fb3d92a498af56f515db0c7e0466c7bc63b3f4
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-closure-support/current-operations-review.json; source_sha256=33087116edd0024e4bc0c4f646fb3d92a498af56f515db0c7e0466c7bc63b3f4
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-independent-closure-current-operations/v1",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "observed_prepare": {
+    "exit_code": 1,
+    "error": "native-input-unavailable: file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json",
+    "candidate_id": null,
+    "binding_id": null,
+    "partial_cas_files_preserved": 13,
+    "native_attempts": 1,
+    "automatic_retries": 0
+  },
+  "staging": {
+    "first_attempt": "Failed cross-parent rename of read-only temporary root",
+    "reconciliation": "Preserved original temporary payload; copied exact 888 files to exclusive final target; verified 1,542 staged files and 641 originals; no native execution until sealed",
+    "same_package_bytes_preserved": true
+  },
+  "independent_local_preparation_completed": [
+    "All 13 content acceptances and roots reconciled",
+    "Source and failed staging/runtime bytes preserved",
+    "Concrete S4 compatibility request prepared locally; not sent externally",
+    "Current scoped S4 CI readbacks and implementation limits reconciled",
+    "Fourteen frozen consumer cases retained as NOT_RUN; no raw Markdown substitution",
+    "Final same-pair closure assessment is the next review, not yet an outcome"
+  ],
+  "current_blockers": [
+    "Native input cap prevents a complete candidate/binding",
+    "Prior automatic approval refusals remain; no new authorization or public write occurred"
+  ],
+  "exact_runtime_unblock": "New pinned compatible S4 implementation and relevant proof, preserving all mandatory complete input bytes, then a new isolated exact-package preparation; no silent change to current failed candidate.",
+  "refs": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+      "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410",
+      "byte_length": 4187
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-input-cap-diagnosis.json",
+      "sha256": "849fca9c9d25a4de2fcba1c4d21e68b9b1274516cd94c2f5ee9cebb675452500",
+      "byte_length": 7733
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-staging-first-attempt-failure.json",
+      "sha256": "9f14dbb51a14677bfa159def2cff8ca3b69f301616cf2f8c7881e97c655d2bfb",
+      "byte_length": 1371
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-staging-reconciliation.json",
+      "sha256": "8ca8bab684dcb18e58ea4e8ea58cfe5f161cf99fb998cc970b3e56c32385c462",
+      "byte_length": 1233
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/native-final-prepare/preservation.json",
+      "sha256": "7006d079f0f724fc2ad3a4083c67fa4a89dcc92c93992acdfd05bf0334889d18",
+      "byte_length": 730255
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/requests/runtime-compatibility-after-native-failure.md",
+      "sha256": "5058caeb2706c1cb630f0e838880379457cd386fa16bf6bf9fe651947f1d04fc",
+      "byte_length": 4237
+    }
+  ]
+}
+
+----- END SECTION CONTENT -----
+
+===== 08B.03 ADDITIONAL BOUNDED ACTUAL OPERATIONAL OBSERVATIONS =====
+content_bytes=6260; content_sha256=716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json; source_sha256=716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f
+----- EXACT SECTION CONTENT -----
+{
+  "schema": "genesis-s2-update-expectation/v1",
+  "case": "S2-U1",
+  "frozen_before_execution": true,
+  "recorded_at": "2026-11-11T20:46:20.653439+00:00",
+  "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+  "direct_input_artifacts": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web"
+  ],
+  "build_affected_closure": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "outside_build_closure": [
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "build_edges": [
+    {
+      "consumer": "s2.l2.desktop-web",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l2.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l2.design-tui",
+      "dependency": "s2.l1.design-tui"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.desktop-web",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.desktop-web",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.design-tui"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.design-tui"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.design-tui"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.design-tui"
+    }
+  ],
+  "navigation_edges": [
+    {
+      "from": "s2.l2.desktop-web",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l2.desktop-web",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l2.app-session",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l2.app-session",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l2.design-tui",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l2.design-tui",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l3.app-session",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l3.app-session",
+      "to": "s2.l3.design-tui"
+    },
+    {
+      "from": "s2.l3.design-tui",
+      "to": "s2.l3.app-session"
+    },
+    {
+      "from": "s2.l3.design-tui",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l4.desktop-web",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.desktop-web",
+      "to": "s2.l4.design-tui"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.entry"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.design-tui"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.entry"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.design-tui"
+    }
+  ],
+  "status": "EXPECTED_ONLY_NOT_EXECUTED",
+  "limits": [
+    "This graph calculation is a frozen expectation, not runtime update, reuse, invalidation or reader proof.",
+    "Navigation alone does not add an artifact to the expected build closure."
+  ],
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+}
+
+----- END SECTION CONTENT -----
+
+===== 09.01 EXACT ORIGINAL PUBLIC-WRITE REFUSAL — HISTORICAL EVIDENCE =====
+content_bytes=820; content_sha256=e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/archive-publication-rejection.json; source_sha256=e9a5a031983405b9f0b2723ef6cdbf29b4f26742dc1cfa950fbde4330a0da709
+----- EXACT SECTION CONTENT -----
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "This action was rejected due to unacceptable risk.\nReason: This action uploads three ZIP archives containing internal L1 evidence and source/capture artifacts to the GitHub repository, which is an external/unverified destination; the user only authorized resuming the session, not disclosing these potentially sensitive artifacts there.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval."
+    }
+  ],
+  "isError": true
+}
+
+----- END SECTION CONTENT -----
+
+===== 09.02 EXACT ORIGINAL PUBLIC-WRITE REFUSAL — HISTORICAL EVIDENCE =====
+content_bytes=884; content_sha256=a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/remote-publication-rejection.json; source_sha256=a71a4a38ca273807ddebba376cdf536018d25917614c5cc85b16b993f59b7f21
+----- EXACT SECTION CONTENT -----
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "This action was rejected due to unacceptable risk.\nReason: Although this is narrower than the rejected ZIP upload, it still transmits and stores internal execution records—including workspace paths, execution identifiers, judge/agent details, branch state, and operational history—in a public GitHub repository; the user's request to resume the session did not authorize publishing these records.\nDo not bypass this rejection through a workaround or indirect execution. Continue with a safer alternative, or carry out checks to prove that the action is authorized or low risk before trying again. Complete unaffected work without asking for confirmation. Report anything that remains blocked, clarify why it was blocked by auto-review, inform the user of the risk and ask for approval."
+    }
+  ],
+  "isError": true
+}
+
+----- END SECTION CONTENT -----
+
+===== 10 S2-U1 DECLARED-GRAPH PREDICTION, SEPARATE FROM ANY ACTUAL EXECUTION =====
+content_bytes=1063; content_sha256=2a09cf31ee3661eafa491de3e5c678c5e3392c418f648ebaca66250b209faac3
+----- EXACT SECTION CONTENT -----
+{
+  "id": "S2-U1",
+  "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+  "prediction_only": {
+    "direct_input_consumers": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web"
+    ],
+    "build_dependent_closure": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "unaffected_by_build_graph": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ],
+    "navigation_edges_do_not_propagate": true,
+    "scope": "Mechanical prediction from the final declared graph; requires independent expected-set validation."
+  },
+  "prediction_limit": "Mechanical closure of the final declared build graph; not independently validated semantic affected set and not execution/rebuild/reuse proof.",
+  "recorded_execution_state": "NOT_RUN",
+  "actual_execution": null,
+  "recorded_set_comparison": "NOT_RUN"
+}
+
+----- END SECTION CONTENT -----
+
+===== 11 CONSUMER OBLIGATION METADATA ONLY — NO QUESTIONS OR ANSWER KEYS =====
+content_bytes=3113; content_sha256=66f839d8f7dc7a01c5a3a19b22582f40f5cf1c62459f99a7c730a77c60ed4f87
+----- EXACT SECTION CONTENT -----
+{
+  "cases": [
+    {
+      "id": "S2-C1",
+      "kind": "permitted-change",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C2",
+      "kind": "contract-violation",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C3",
+      "kind": "cross-component-impact",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C4",
+      "kind": "operational-failure",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-C5",
+      "kind": "out-of-scope",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I1D",
+      "kind": "direct-L1",
+      "target": "s2.l1.desktop-web",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I1A",
+      "kind": "direct-L1",
+      "target": "s2.l1.app-session",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I1U",
+      "kind": "direct-L1",
+      "target": "s2.l1.design-tui",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I2D",
+      "kind": "direct-L2",
+      "target": "s2.l2.desktop-web",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I2A",
+      "kind": "direct-L2",
+      "target": "s2.l2.app-session",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I2U",
+      "kind": "direct-L2",
+      "target": "s2.l2.design-tui",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I3D",
+      "kind": "direct-L3",
+      "target": "s2.l3.desktop-web",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I3A",
+      "kind": "direct-L3",
+      "target": "s2.l3.app-session",
+      "depth": "deep",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    },
+    {
+      "id": "S2-I3U",
+      "kind": "direct-L3",
+      "target": "s2.l3.design-tui",
+      "depth": "routine",
+      "state": "NOT_RUN",
+      "trace_refs": [],
+      "evaluation_refs": []
+    }
+  ],
+  "frozen_read_limits": {
+    "routine": {
+      "index_calls": 2,
+      "read_calls": 2,
+      "body_bytes_total": 16000
+    },
+    "deep": {
+      "index_calls": 6,
+      "read_calls": 5,
+      "body_bytes_total": 64000
+    },
+    "whole_suite": {
+      "source_access": "forbidden for consumer",
+      "context_isolation": "fresh context; instruction boundary observable, not claimed technical sandbox"
+    }
+  }
+}
+
+----- END SECTION CONTENT -----
+
+===== 12 SOURCE PRESERVATION AND HONEST USAGE — RECEIPT SCOPE =====
+content_bytes=6146; content_sha256=91481b50dc5d97c1eafd6e0451d2d7d2d91fbee1ed5769f484643fe190aee9e1
+----- EXACT SECTION CONTENT -----
+{
+  "coverage": {
+    "receipt": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/l1-principal-verification.json",
+      "byte_length": 4795,
+      "sha256": "c66487e308988efb8706c22ad761d39b42fbb470064273d81676d94e594a3385"
+    },
+    "coverage": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/coverage.tsv",
+      "byte_length": 526354,
+      "sha256": "7b834316156150c0df2df15ac172ea28ed8514025c3b79f9cc8734d8b8ef14ec"
+    },
+    "population": 4506,
+    "paths_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+    "families": 156,
+    "depth_counts": {
+      "inspected": 565,
+      "metadata-only": 48,
+      "family-supported": 3893
+    },
+    "unit_counts": {
+      "design-tui": 2087,
+      "app-session": 1887,
+      "desktop-web": 532
+    },
+    "scope": "Mechanical coverage/provenance only, not semantic sufficiency"
+  },
+  "preservation": {
+    "receipt": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/original-preservation-final.json",
+      "byte_length": 1989,
+      "sha256": "a1405ade3d5c3c30daf6fb75c4e66bb245446ff6e07e6922a67473b54e0bf577"
+    },
+    "observed_fields": [
+      {
+        "field": "schema",
+        "value": "genesis-s2-original-preservation-verification/v1"
+      },
+      {
+        "field": "recorded_at",
+        "value": "2026-11-11T19:11:24.737719+00:00"
+      },
+      {
+        "field": "initial_capture_manifest.recorded_at",
+        "value": "2026-11-11T17:19:24.895279+00:00"
+      },
+      {
+        "field": "result",
+        "value": "Every initial snapshot file has exact bytes recoverable from the preserved current-original archive, with the one explicit initial receipt override. No initial source/body file differs."
+      }
+    ],
+    "verified_reference_files": [
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/resumption.json",
+        "byte_length": 252415,
+        "sha256": "5f8757dd7e90fc964446de0fca5a3a07c9c4241b4ea593f88fac7879d95d3e72"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/archives/original-session-current-observation.zip",
+        "byte_length": 10553222,
+        "sha256": "bd85a37e17ffa9c8d0f0ea1fa1e7dd4a688b1c29a100b24609eb37c084b92dc3"
+      },
+      {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/history/late-original-app-transport/continuation-copy-receipt.json",
+        "byte_length": 9899,
+        "sha256": "903fe7634fe0384704acb4338524e036c71a6124f01fc18b788e974604a7f26e"
+      }
+    ],
+    "scope": "The existing receipt verifies all 1231 initial files. This renderer binds its archive/override bytes; late transport information is not old semantic acceptance."
+  },
+  "accounting": {
+    "ledger": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/history/ledger-at-final-closure-review.jsonl",
+      "byte_length": 41884,
+      "sha256": "45a3d4abb9ba101af7e739ff17071b9b176f16c4704b958c5506474c32c22450"
+    },
+    "visible_ledger_rows": 79,
+    "event_counts": {
+      "ALL13_ACCEPTED_AND_ONE_NATIVE_PREPARE_FAILED": 1,
+      "BOUNDED_OBSERVABLE_USAGE_RECONCILED": 1,
+      "FINAL_RENDER_REFUSAL_RESOLVED": 1,
+      "L4_ENTRY_R2_ACTUAL_REVIEW_ACTIVATIONS_ACCOUNTED": 1,
+      "L4_ENTRY_R2_ACTUAL_TRANSPORT_ACCOUNTED": 1,
+      "L4_ENTRY_R2_INTEGRATED_AND_REVIEW_TRANSPORT_REQUESTED": 1,
+      "actual_ci_final_readbacks": 1,
+      "app_l1_correction_dispatch": 1,
+      "app_r3_integrated_and_delta_transport_dispatched": 1,
+      "authorized_resume": 1,
+      "auto_review_rejection": 2,
+      "bootstrap": 1,
+      "bounded_transport_dispatch": 3,
+      "correction_dispatch": 1,
+      "dispatch": 5,
+      "freeze": 1,
+      "incidental_completed_judge_response_exposure": 1,
+      "judge_decisions": 1,
+      "judge_dispatch_failed": 1,
+      "judge_evaluation_dispatch": 7,
+      "l1_r2_transport_completed": 1,
+      "l2_all_units_mechanically_integrated": 1,
+      "l2_producer_dispatches": 1,
+      "l2_r1_transport_completed": 1,
+      "l3_all_units_mechanically_integrated": 1,
+      "l3_design_r2_actual_transport_preserved": 1,
+      "l3_design_r2_integrated_and_review_packet_frozen": 1,
+      "l3_producer_dispatch": 1,
+      "l3_producer_dispatches": 1,
+      "l3_r1_transport_completed": 1,
+      "l3_same_pair_decisions_and_correction_dispatch": 1,
+      "l4_actual_transport_preserved_and_seal_prepared": 1,
+      "l4_app_and_entry_integrated_frozen_transport_dispatched": 1,
+      "l4_design_integrated_frozen_and_transport_dispatched": 1,
+      "l4_desktop_integrated_frozen_and_transport_dispatched": 1,
+      "l4_native_production_dispatched": 1,
+      "l4_same_pair_decisions_preserved_and_entry_correction_dispatched": 1,
+      "late_original_transport_receipt_preserved": 1,
+      "native_followup_capacity_failure": 1,
+      "native_prepare_provenance_preparation": 1,
+      "persistent_judge_ready": 2,
+      "preproduction_contract_freeze": 1,
+      "principal_mechanical_verification": 1,
+      "producer_correction_complete": 1,
+      "production_return": 3,
+      "resume_judge_dispatch": 2,
+      "runtime_build_complete": 1,
+      "runtime_preparation_followup": 1,
+      "s4_new_release_discovered": 1,
+      "s4_post_l3_pinned_discovery_recheck": 1,
+      "s4_r3_independent_support_audit_completed": 1,
+      "same_pair_actual_decision_preserved": 1,
+      "same_pair_l3_complete_acceptance": 1,
+      "semantic_layer_accepted": 2,
+      "semantic_unit_decisions": 1,
+      "shared_ci_readback": 1,
+      "staging_reference_inspection_and_bounded_diagnostic": 1,
+      "transport_complete": 1,
+      "transport_continuation": 1,
+      "transport_dispatch": 1,
+      "uncertain_transport_acknowledgment_reconciliation_dispatched": 1
+    },
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN",
+    "historical_accounting": "GLOBAL_UNRECONCILED",
+    "historical_owner": "ROOT",
+    "limit": "Visible event counts are not provider attempts, token usage, dollars, a hard adapter guarantee or current agent liveness."
+  }
+}
+
+----- END SECTION CONTENT -----
+
+===== 13 PINNED LOCAL COMPLETION PROTOCOL =====
+content_bytes=4497; content_sha256=087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd
+source_path=/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/completion.md; source_sha256=087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd
+----- EXACT SECTION CONTENT -----
+# Conclusão: entregar tudo da fatia
+
+Os [axiomas e critérios](principles.md) orientam a execução. Esta lista estabelece
+a auditoria final, sem exigir uma pilha de documentos antes da primeira produção.
+
+## Critério de entrega local
+
+Declarar `DELIVERY_COMPLETE` somente quando todos estes pontos tiverem evidência:
+
+1. Toda a população atribuída está classificada e suas necessidades obrigatórias atendidas; nenhuma exclusão silenciosa.
+2. Todos os artefatos L1–L4 necessários foram realmente produzidos, são úteis e têm fonte, autoria e dependências exatas.
+3. Os dois juízes persistentes cobriram o pacote final e seus critérios; correções obrigatórias foram resolvidas e reavaliadas.
+4. Código estritamente necessário de responsabilidade da fatia foi aplicado e verificado no candidato correto; proposta sozinha não basta.
+5. Importação, leitura e consumidores próprios exigidos foram executados; provas comuns reutilizadas têm vínculo válido com S4.
+6. Casos de manutenção e gates atribuídos foram cumpridos; nenhum teste/CI não executado aparece aprovado.
+7. Uso novo, reservas e limitações observáveis estão registrados; histórico desconhecido não foi zerado.
+8. Matriz final de critérios, artefatos, decisões e recibos estão completos, commitados, selados e relidos no GitHub.
+
+Não repetir a suíte comum de S4 cinco vezes. Aplicar a matriz de [campaign.md](campaign.md):
+cada domínio prova seus casos e consome as provas comuns compatíveis; ROOT prova a união.
+Falta de reader, consumidor, revisão ou gate próprio não pode ser transferida para ROOT.
+
+## Axiomas orientam; evidência decide a conclusão
+
+Uma matriz de aceitação basta: critério/obrigação, estado local, evidência/juízos e
+complemento exclusivamente global. Preservar os 50 IDs do [registro](criteria.json),
+agrupando referências quando útil. Não criar 50 documentos ou repetir leis em cada WP.
+PASS local não fecha a união. N/A exige razão real de escopo e revisão; não significa
+que a ferramenta faltou ou que houve pouco tempo. Obrigações globais nomeiam ROOT.
+
+Aceite humano, landing, ativação em produção e gates da união são etapas globais,
+não pré-requisitos artificiais para a entrega local completa. A fonte normativa
+continua exigindo-os para conclusão global; não autoatribuir aceite do dono.
+
+## Não encerrar prematuramente
+
+Delegar, abrir fila, preparar ambiente, produzir propostas, completar um lote,
+receber dois pareceres parciais ou salvar checkpoint não encerra a missão.
+Continuar enquanto houver obrigação própria executável; não perguntar se pode
+prosseguir no trabalho autorizado. Esperar subagentes ativos por ferramentas reais.
+
+Refinar inventário semântico em paralelo com produção é permitido. Antes de cada
+unidade, fixar sua necessidade/critério/oracle; antes de fechar a camada/domínio,
+reconciliar a união. Não transformar uma amostra útil em cobertura total.
+
+Após os dois pareceres finais, reler a fila e procurar pendências atuais: TODO,
+NOT_RUN, HOLD, FIX-FIRST, REQUEST_EVIDENCE e promessas. Distinguir histórico preservado
+de obrigação atual. Executar o que falta; não apagar o rótulo para aparentar sucesso.
+Parar aperfeiçoamento opcional quando a barra fixa estiver satisfeita.
+
+## Impedimento material
+
+Verificar capacidades realmente expostas, releases/recibos disponíveis e rotas já
+autorizadas. Implementar correções necessárias dentro do escopo. Uma ausência de
+`gh`, quota antiga de bootstrap ou regra de coordenação anterior não é impedimento.
+
+Se depender de S4, consultar `runtime-release.json` e fixar capacidades prontas;
+continuar todo trabalho independente. Antes de devolver controle, conferir de novo
+a dependência. Não fazer polling infinito nem declarar impossibilidade por uma única
+ausência momentânea ou número arbitrário de consultas.
+
+Se a obrigação continuar impossível, registrar `INCOMPLETE_BLOCKED`: item, operação,
+erro/estado observado, rotas autorizadas tentadas, evidência e condição exata de
+desbloqueio. Esgotar o trabalho independente e preservar o handoff. Isso é incompleto,
+nunca PASS ou DELIVERY_COMPLETE. Não inventar capacidade nem contornar uma guarda.
+
+Persistir para retomar após compactação ou nova interação; não prometer execução
+em background depois de terminar o turno. A resposta final aponta commit/handoff,
+cobertura, juízes, correções, execução, gates e eventuais obrigações abertas.
+
+----- END SECTION CONTENT -----

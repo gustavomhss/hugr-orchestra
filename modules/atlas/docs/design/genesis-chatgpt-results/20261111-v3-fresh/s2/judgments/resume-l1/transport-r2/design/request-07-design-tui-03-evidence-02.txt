@@ -1,0 +1,398 @@
+TRANSPORT ONLY: unit=design-tui r2 section=03-evidence part=2/4; manifest-order=7/14.
+BEGIN EXACT FILE BODY design-tui-03-evidence-02.txt
+      set(() => next)
+    }, ms)
+  }
+  onCleanup(() => {
+    if (timer) clearTimeout(timer)
+  })
+  return [get, debounced]
+}
+```
+
+## E13. Demo request identity and local interception
+
+Demo IDs are intercepted before permission replies can reach the V2 server; synthetic UI results are not tool results.
+
+**Source:** `packages/tui/src/context/demo.ts:49–54` · blob `6f0adbdeb640a83004a8bfeeed978856a363d074`
+
+```typescript
+/** Ids of everything the demo makes up start with this, so a reply to one is answered locally. */
+export const PREFIX = "demo_"
+
+export function isDemoRequest(id: string) {
+  return id.startsWith(PREFIX)
+}
+```
+
+**Source:** `packages/tui/src/context/sdk.tsx:130–145` · blob `b595aa115e6902542a41bee79be7fc26ca434ded`
+
+```typescript
+    // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
+    const answerLocally = (type: string, data: Record<string, unknown>) =>
+      emitter.emit("event", {
+        directory: props.directory ?? "",
+        payload: { id: `demo_evt_${type}`, type, data },
+      } as GlobalEvent)
+    const api = {
+      ...v2,
+      permissions: {
+        ...v2.permissions,
+        reply: (input: Parameters<typeof v2.permissions.reply>[0], options?: Parameters<typeof v2.permissions.reply>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(
+                answerLocally("permission.v2.replied", { sessionID: input.sessionID, requestID: input.requestID, reply: input.reply }),
+              )
+            : v2.permissions.reply(input, options),
+```
+
+**Source:** `packages/tui/src/context/demo.ts:224–233` · blob `6f0adbdeb640a83004a8bfeeed978856a363d074`
+
+```typescript
+export function settle(
+  requestID: string,
+  outcome: { readonly type: "completed"; readonly answers?: readonly (readonly string[])[] } | { readonly type: "error"; readonly error: string },
+  now = Date.now(),
+): { messageID: string; tool: SessionMessageAssistantTool } | undefined {
+  const entry = waiting.get(requestID)
+  if (!entry) return undefined
+  waiting.delete(requestID)
+  const input = entry.tool.state.status === "pending" ? {} : entry.tool.state.input
+  const time = { ...entry.tool.time, completed: now }
+```
+
+## E14. Replay projection is mini-specific
+
+The helper itself has no CLI-argument validation; ordinary sessions retain their input message array.
+
+**Source:** `packages/tui/src/context/replay.ts:1–12` · blob `572923473d3af34f4c8e2d1f2fda2a8e08c77bd7`
+
+```typescript
+/**
+ * The messages a mini-mode session shows: `--no-replay` hides what existed when the screen opened, and
+ * `--replay-limit N` keeps the newest N of what is left. Outside mini mode every message shows.
+ */
+export function replayWindow<T extends { readonly time: { readonly created: number } }>(
+  messages: readonly T[],
+  options: { readonly mini?: boolean; readonly replay?: boolean; readonly limit?: number; readonly openedAt: number },
+) {
+  if (!options.mini) return messages
+  const fresh = options.replay === false ? messages.filter((message) => message.time.created >= options.openedAt) : messages
+  return options.limit === undefined ? fresh : fresh.slice(-options.limit)
+}
+```
+
+## E15. Thinking preference migrates stored values
+
+The default is hide, with legacy boolean migration; this is disclosure state.
+
+**Source:** `packages/tui/src/context/thinking.ts:29–36` · blob `bb1c2a6929f92b936fbc70c7cb52966d02e87f94`
+
+```typescript
+export function useThinkingMode() {
+  const kv = useKV()
+  // Capture pre-state before `kv.signal` seeds a default, so we can detect
+  // first-time users with a legacy `thinking_visibility` boolean and migrate.
+  // The KVProvider only renders children once kv.ready, so reads here are safe.
+  const hadStored = kv.get("thinking_mode") !== undefined
+  const legacy = kv.get("thinking_visibility")
+  const [stored, setStored] = kv.signal<ThinkingMode>("thinking_mode", "hide")
+```
+
+**Source:** `packages/tui/src/context/thinking.ts:48–61` · blob `bb1c2a6929f92b936fbc70c7cb52966d02e87f94`
+
+```typescript
+  // Preserve previous experience for users who had explicitly toggled the
+  // legacy `thinking_visibility` boolean. First-time users (no legacy key)
+  // get the new "hide" default (collapsed thinking).
+  if (!hadStored) {
+    if (legacy === true) set("show")
+    else if (legacy === false) set("hide")
+  }
+
+  if ((stored() as string) === "minimal") set("hide")
+
+  const mode = createMemo<ThinkingMode>(() => {
+    const value = stored()
+    return isThinkingMode(value) ? value : "hide"
+  })
+```
+
+## E16. Parser source mixes pinned and moving external references
+
+This is declared configuration, not proof that external grammar/query bytes were downloaded or compatible.
+
+**Source:** `packages/tui/src/parsers-config.ts:1–19` · blob `8a5a71fb85391476943224d0b94b1ee257d18481`
+
+```typescript
+export default {
+  // NOTE: FOR markdown, javascript and typescript, we use the opentui built-in parsers
+  // Warn: when taking queries from the nvim-treesitter repo, make sure to include the query dependencies as well
+  //       marked with for example `; inherits: ecma` at the top of the file. Just put the dependencies before the actual query.
+  //       ALSO: Some queries use breaking changes in the nvim-treesitter repo, that are not compatible with the (web-)tree-sitter parser.
+  parsers: [
+    {
+      filetype: "python",
+      wasm: "https://github.com/tree-sitter/tree-sitter-python/releases/download/v0.23.6/tree-sitter-python.wasm",
+      queries: {
+        highlights: [
+          // NOTE: This nvim-treesitter query is currently broken, because the parser is not compatible with the query apparently.
+          //       it is using "except" nodes that the parser is complaining about, but it has been in the query for 3+ years.
+          //       Unclear.
+          // "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/refs/heads/master/queries/python/highlights.scm",
+          "https://github.com/tree-sitter/tree-sitter-python/raw/refs/heads/master/queries/highlights.scm",
+        ],
+        locals: [
+          "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/refs/heads/master/queries/python/locals.scm",
+```
+
+**Source:** `packages/tui/src/routes/session/index.tsx:69–69` · blob `a61f7477250895d31dea4f50e806dadfa45afcd9`
+
+```typescript
+addDefaultParsers(parsers.parsers)
+```
+
+## E17. UI provider keeps layout locale separate
+
+The fallback and provider wiring do not certify translation completeness.
+
+**Source:** `packages/ui/src/context/i18n.tsx:52–68` · blob `757083f8f7842815c6e835d722a9f8887a9088bc`
+
+```typescript
+const fallback: UiI18n = {
+  locale: () => "en",
+  t: (key, params) => {
+    const value = source[key] ?? String(key)
+    return resolveTemplate(value, params)
+  },
+  plural: (key, count, params) =>
+    fallback.t(pluralKey(key, pluralCategory(fallback.locale(), count)), { ...params, count }),
+}
+
+const Context = createContext<UiI18n>(fallback)
+
+function UiI18nProvider(props: ParentProps<{ value: UiI18n }>) {
+  return (
+    <I18nProvider locale={(props.value.layoutLocale ?? props.value.locale)()}>
+      <Context.Provider value={props.value}>{props.children}</Context.Provider>
+    </I18nProvider>
+```
+
+## E18. Field synchronizes control accessibility attributes
+
+This is a concrete source mechanism; no screen-reader test ran.
+
+**Source:** `packages/ui/src/v2/components/field-v2.tsx:81–109` · blob `45b5a70b2efb0ae179d41b70e1dd39f4b0ba53cb`
+
+```typescript
+  const syncControlA11y = () => {
+    const root = rootRef
+    if (!root) return
+
+    const control = root.querySelector(CONTROL_SELECTOR) as HTMLInputElement | HTMLTextAreaElement | null
+    if (!control) return
+
+    const shell = control.closest(
+      "[data-component='text-input-v2'], [data-component='textarea-v2'], [data-component='inline-input-v2']",
+    ) as HTMLElement | null
+
+    control.id = controlId
+    control.setAttribute("aria-labelledby", labelId)
+
+    const describedBy = ctx.getDescribedBy()
+    if (describedBy) {
+      control.setAttribute("aria-describedby", describedBy)
+    } else {
+      control.removeAttribute("aria-describedby")
+    }
+
+    if (ctx.invalid()) {
+      control.setAttribute("aria-invalid", "true")
+      shell?.setAttribute("data-invalid", "")
+    } else {
+      control.removeAttribute("aria-invalid")
+      shell?.removeAttribute("data-invalid")
+    }
+  }
+```
+
+## E19. Segmented-control arrows use DOM-order increments
+
+The shown key handler has no direction lookup, leaving RTL behavioral verification open.
+
+**Source:** `packages/ui/src/v2/components/segmented-control-v2.tsx:158–169` · blob `006b28394f3e611c52746ddf26e88b7a8288a1d5`
+
+```typescript
+  const onKeyDown: JSX.EventHandlerUnion<HTMLButtonElement, KeyboardEvent> = (e) => {
+    invokeButtonHandler(local.onKeyDown, e)
+    if (e.defaultPrevented || disabled()) return
+    const t = e.currentTarget
+
+    if (e.key === "ArrowRight") {
+      e.preventDefault()
+      ctx.focusNext(t, 1)
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault()
+      ctx.focusNext(t, -1)
+    }
+```
+
+## E20. Context readiness and worker ownership
+
+Readiness gates consumers. Pools are injected and selected, with no creation or disposal in this wrapper.
+
+**Source:** `packages/ui/src/context/helper.tsx:20–35` · blob `172fed460ec63fc373e616fcbef40d8cb21be5ee`
+
+```typescript
+      // Access init.ready inside the memo to make it reactive for getter properties
+      const isReady = createMemo(() => {
+        // @ts-expect-error
+        const ready = init.ready as Accessor<boolean> | boolean | undefined
+        return ready === undefined || (typeof ready === "function" ? ready() : ready)
+      })
+      return (
+        <Show when={isReady()}>
+          <ctx.Provider value={init}>{props.children}</ctx.Provider>
+        </Show>
+      )
+    },
+    use() {
+      const value = useContext(ctx)
+      if (!value) throw new Error(`${input.name} context must be used within a context provider`)
+      return value
+```
+
+**Source:** `packages/ui/src/context/worker-pool.tsx:9–20` · blob `5f788f7866abfd25e701e37ea377d416f87a4e4f`
+
+```typescript
+const ctx = createSimpleContext<WorkerPools, { pools: WorkerPools }>({
+  name: "WorkerPool",
+  init: (props) => props.pools,
+})
+
+export const WorkerPoolProvider = ctx.provider
+
+export function useWorkerPool(diffStyle: "unified" | "split" | undefined) {
+  const pools = ctx.use()
+  if (diffStyle === "split") return pools.split
+  return pools.unified
+}
+```
+
+## E21. Theme formats have different contracts
+
+Terminal defs/theme and desktop light/dark variants must not be treated as one schema.
+
+**Source:** `packages/tui/src/theme/index.ts:120–128` · blob `bcdeff3a46e498bf1aadbcac39d6c149030657fb`
+
+```typescript
+export type ThemeJson = {
+  $schema?: string
+  defs?: Record<string, HexColor | RefName>
+  theme: Omit<Record<ThemeColor, ColorValue>, "selectedListItemText" | "backgroundMenu"> & {
+    selectedListItemText?: ColorValue
+    backgroundMenu?: ColorValue
+    thinkingOpacity?: number
+  }
+}
+```
+
+**Source:** `packages/ui/src/theme/types.ts:35–49` · blob `2284659b48426bc293c744916583260d3c4aa3f5`
+
+```typescript
+type ThemeVariantBase = {
+  overrides?: Record<string, ColorValue>
+  v2Overrides?: Record<string, V2ColorValue>
+}
+
+export type ThemeVariant =
+  | ({ seeds: ThemeSeedColors; palette?: never } & ThemeVariantBase)
+  | ({ palette: ThemePaletteColors; seeds?: never } & ThemeVariantBase)
+
+export interface DesktopTheme {
+  $schema?: string
+  name: string
+  id: string
+  light: ThemeVariant
+  dark: ThemeVariant
+```
+
+## E22. Actual schema generator and mirror source
+
+These are the precise owners of the assigned editor schemas. Python additionally verified exact desktop-schema copy equality; no generator ran.
+
+**Source:** `apps/cli/script/schema-files.ts:68–80` · blob `b965bf921f0a75ab6abfd2149e1d24b50f86f83b`
+
+```typescript
+export const configSchemaFile = path.resolve(import.meta.dir, "../../../schema/config.json")
+export const tuiSchemaFile = path.resolve(import.meta.dir, "../../../schema/tui.json")
+export const themeSchemaFile = path.resolve(import.meta.dir, "../../../schema/theme.json")
+export const themeSchemaSource = path.resolve(import.meta.dir, "../../../packages/ui/src/theme/desktop-theme.schema.json")
+
+export const configSchemaText = () => JSON.stringify(generateEffect(Config.Info), null, 2)
+export const tuiSchemaText = () => JSON.stringify(generateEffect(TuiConfig.Info), null, 2)
+
+// schema/ is what editors fetch through the $schema URLs; the theme schema is hand-written in packages/ui and mirrored verbatim.
+if (import.meta.main) {
+  await Bun.write(configSchemaFile, configSchemaText())
+  await Bun.write(tuiSchemaFile, tuiSchemaText())
+  await Bun.write(themeSchemaFile, Bun.file(themeSchemaSource))
+```
+
+## E23. Verified file and provider sprite generation
+
+The config declares these two outputs. It does not declare an app-icons producer.
+
+**Source:** `packages/ui/vite.config.ts:10–24` · blob `b89c666ae19be83a567d525687404fb6bc137857`
+
+```typescript
+    iconsSpritesheet([
+      {
+        withTypes: true,
+        inputDir: "src/assets/icons/file-types",
+        outputDir: "src/components/file-icons",
+        formatter: "prettier",
+      },
+      {
+        withTypes: true,
+        inputDir: "src/assets/icons/provider",
+        outputDir: "src/components/provider-icons",
+        formatter: "prettier",
+        iconNameTransformer: (iconName) => iconName,
+      },
+    ]),
+```
+
+**Source:** `packages/ui/vite.config.ts:47–58` · blob `b89c666ae19be83a567d525687404fb6bc137857`
+
+```typescript
+async function fetchProviderIcons() {
+  const url = process.env.ORCHESTRA_MODELS_URL || "https://models.dev"
+  const providers = await fetch(`${url}/api.json`)
+    .then((res) => res.json())
+    .then((json) => Object.keys(json))
+  await Promise.all(
+    providers.map((provider) =>
+      fetch(`${url}/logos/${provider}.svg`)
+        .then((res) => res.text())
+        .then((svg) => fs.writeFileSync(`./src/assets/icons/provider/${provider}.svg`, svg)),
+    ),
+  )
+```
+
+## E24. Bundled fonts do not establish loading
+
+The exported Font component is empty. Actual font loading requires a consumer boundary.
+
+**Source:** `packages/ui/src/components/font.tsx:1–1` · blob `f89dfafe1db32114fde53f9581a7c46992512092`
+
+```typescript
+export const Font = () => null
+```
+
+## E25. Storybook accessibility remains a todo
+
+A configured workbench is not a test pass.
+
+
+END EXACT FILE BODY design-tui-03-evidence-02.txt

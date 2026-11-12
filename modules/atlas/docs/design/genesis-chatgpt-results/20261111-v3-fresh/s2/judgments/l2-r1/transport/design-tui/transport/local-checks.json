@@ -1,0 +1,36 @@
+{
+  "artifact": "s2.l2.design-tui",
+  "revision": 1,
+  "frozen_manifest_sha256": "0d8b1cab18d0859f94991da76a6020b660eddb5613e3b91737d6ed3f051a3282",
+  "parts": [
+    {
+      "file": "part-01.txt",
+      "number": 1,
+      "byte_length": 25831,
+      "sha256": "98ccc17f4b409a45d126ffc5bdffa481c4b567292f8dc3cffc9e53a3dd1d289b",
+      "matches_frozen_manifest": true,
+      "copied_bytes_equal_frozen": true,
+      "ends_with_newline": true
+    },
+    {
+      "file": "part-02.txt",
+      "number": 2,
+      "byte_length": 25908,
+      "sha256": "86f180ae87e78084aae5829792539b75f64b86c8d4871eed76c62c9d1c6bb426",
+      "matches_frozen_manifest": true,
+      "copied_bytes_equal_frozen": true,
+      "ends_with_newline": true
+    },
+    {
+      "file": "part-03.txt",
+      "number": 3,
+      "byte_length": 23935,
+      "sha256": "c1bceab498ae7f3acf6f1da4901325b0cb2cab5187c0559a78c6f9e5a1886741",
+      "matches_frozen_manifest": true,
+      "copied_bytes_equal_frozen": true,
+      "ends_with_newline": true
+    }
+  ],
+  "scope": "Local exact-file identity only; no host serialization or receiver-byte identity is asserted.",
+  "native_calls_recorded_separately": true
+}

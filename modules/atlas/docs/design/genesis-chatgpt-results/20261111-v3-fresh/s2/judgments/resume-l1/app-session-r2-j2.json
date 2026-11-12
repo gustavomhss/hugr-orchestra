@@ -1,0 +1,114 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "complete": true,
+    "received": "18/18 partes: header2/body3/evidence7/families6.",
+    "corrections": "Utilizada a retransmissão integral corrigida de body-3/3; a tentativa explicitamente invalidada foi desconsiderada.",
+    "missing_parts": [],
+    "integrity_limit": "Hashes e reconciliação são recibos externos. Não recomputei hashes nem certifiquei a serialização interna das mensagens."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l1.app-session",
+      "revision": 2,
+      "body_sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc",
+      "body_bytes": 40081,
+      "verdict": "FIX-FIRST",
+      "resolves_required_l1_scope": false,
+      "summary": "A base apresenta mecanismos e limites úteis, especialmente identidade, admissão, recuperação e catálogo de skills. Entretanto, não transfere explicitamente obrigações de manutenção exigidas pelo oráculo L1-UI. Os dois findings abaixo são documentais; não exigem execução de testes ou alteração do produto.",
+      "mandatory_findings": [
+        {
+          "id": "APP-J2-F1",
+          "decision": "FIX-FIRST",
+          "criteria": ["GO-A1", "AC-01: parcela L1", "CC-7", "QS-2", "L1-UI"],
+          "location": "l1.md: Authority, composition and identity; Assets, localization and verification evidence, parágrafo de benchmarks; famílias authority, timeline e benchmarks; E38.",
+          "expected": "Registrar a prioridade de estabilidade, simplicidade e desempenho de app-shell e a obrigação de benchmark para alterações de sessão/timeline, atribuídas às instruções locais pertinentes.",
+          "observed": "A família authority diz genericamente que AGENTS estabelece regras. O corpo e E38 explicam exclusão da descoberta normal, execução explícita e limites dos diagnósticos, mas não informam a condição que torna o benchmark obrigatório nem a prioridade de manutenção congelada.",
+          "consequence": "Um consumidor recebe informações sobre o harness sem receber a regra necessária para decidir sua aplicação numa mudança permitida.",
+          "required_fix": "Adicionar uma orientação curta e explícita de manutenção e transportar os trechos pertinentes de packages/app-shell/AGENTS.md e packages/session-ui/AGENTS.md. Preservar a distinção entre obrigação prescrita e benchmark efetivamente executado."
+        },
+        {
+          "id": "APP-J2-F2",
+          "decision": "FIX-FIRST",
+          "criteria": ["GO-A1", "AC-01: parcela L1", "CC-7", "QS-2", "L1-UI"],
+          "location": "l1.md: Authority, composition and identity, primeiro parágrafo; Transport, stream health and canonical recovery, primeiro parágrafo; E01; família transport.",
+          "expected": "Transferir explicitamente a disciplina de nunca editar manualmente arquivos brutos gerados do Client e a fronteira que impede dependências de runtime de Core/Server dentro de Client.",
+          "observed": "O corpo identifica o cliente gerado e explica corretamente a exceção browserSafe da camada UI. Não declara as duas regras específicas de Client. A permissão de seis helpers para UI não esclarece, por si, a fronteira distinta de Client.",
+          "consequence": "A base deixa incompleta a orientação para corrigir um contrato compartilhado sem alterar a superfície gerada ou atravessar a camada errada.",
+          "required_fix": "Acrescentar as duas regras, distinguindo Client da exceção browserSafe de UI, e fornecer os trechos correspondentes do AGENTS raiz. Não reinterpretar documentação histórica como autoridade nem modificar código gerado."
+        }
+      ],
+      "criteria": [
+        {
+          "ids": ["GO-A1", "AC-01: parcela semântica L1", "CC-7", "QS-2"],
+          "decision": "FIX-FIRST",
+          "location": "APP-J2-F1 e APP-J2-F2.",
+          "reason": "A transferência de manutenção segura ainda omite obrigações expressamente congeladas."
+        },
+        {
+          "ids": ["GO-A2", "GO-A6", "QS-3", "QS-6"],
+          "decision": "PASS",
+          "location": "Scope, identity and depth; recibo externo; mapa das 59 famílias.",
+          "reason": "Artefato intermediário útil, profundidades delimitadas, capturas e tentativas preservadas; separa derivação mecânica de interpretação sem criar mecanismos ou economias fictícias."
+        },
+        {
+          "ids": ["GO-I1"],
+          "decision": "PASS",
+          "location": "coverage-v1, capture-attempts, sources-delta e identidades apresentadas.",
+          "reason": "Preservação e atribuição locais estão explícitas. Não certifica imutabilidade de todos os objetos da campanha."
+        },
+        {
+          "ids": ["GO-I2", "GO-I7", "GO-I8", "QS-1", "QS-4"],
+          "decision": "PASS",
+          "location": "E02–E19,E24–E30,E36–E39; Skills catalog, editing and ownership e seus testemunhos.",
+          "reason": "Distingue identidade de credenciais, admissão de execução, recibo local de revisão durável, UI lexical de autoridade de filesystem e testes lidos de resultados executados."
+        },
+        {
+          "ids": ["AC-04: parcela documental L1", "QS-5"],
+          "decision": "REQUEST_EVIDENCE",
+          "location": "Trechos normativos especificados em APP-J2-F1/F2.",
+          "reason": "Os mecanismos centrais têm testemunhos concretos; faltam os testemunhos das obrigações normativas omitidas para concluir este recorte."
+        },
+        {
+          "ids": ["CC-1"],
+          "decision": "PASS",
+          "location": "Scope, identity and depth; reconciliação e mapa completo.",
+          "reason": "Inventário local, fontes, profundidades e lacunas estão delimitados. Isso não supre as omissões semânticas."
+        }
+      ],
+      "oracle": [
+        {
+          "case": "L1-COVERAGE",
+          "decision": "PASS",
+          "location": "Recibo: 1887 caminhos, 59 famílias, 234 inspected, 1623 family-supported e 30 metadata-only.",
+          "reason": "Cobertura local reconciliada e profundidade honesta; não há inferência de geração por formato."
+        },
+        {
+          "case": "L1-AUTHORITY",
+          "decision": "REQUEST_EVIDENCE",
+          "location": "Authority, composition and identity; E01; APP-J2-F1/F2.",
+          "reason": "Histórico, implementação e testes estão bem separados; a autoridade local relevante precisa ser completada pelos trechos pedidos."
+        },
+        {
+          "case": "L1-UI",
+          "decision": "FIX-FIRST",
+          "location": "APP-J2-F1/F2; Assets, localization and verification evidence.",
+          "reason": "Preservação do inglês e API compartilhada de localização estão descritas. Permanecem as omissões de manutenção, benchmark e disciplina de Client."
+        },
+        {
+          "case": "L1-SCOPE",
+          "decision": "PASS",
+          "location": "Mapa das 59 famílias; limites finais; fronteiras de Skills e admissão.",
+          "reason": "Famílias significativas e gaps delimitados, sem garantia indevida de recuperação ou backend. Nenhum outro gap obrigatório foi identificado nesta revisão."
+        }
+      ],
+      "optional_suggestions": []
+    }
+  ],
+  "global_status": {
+    "decision": "HOLD",
+    "reason": "Este artefato ainda não resolve seu escopo L1 obrigatório. Desktop/design não foram reavaliados. Não há aceitação de runtime, consumidores, CI, L2–L4 ou obrigações globais."
+  }
+}

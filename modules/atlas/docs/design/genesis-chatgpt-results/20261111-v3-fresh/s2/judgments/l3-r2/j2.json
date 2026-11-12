@@ -1,0 +1,64 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport_completeness": {
+    "status": "COMPLETE",
+    "parts_received": ["L3 design-tui r2 part 1/2", "L3 design-tui r2 part 2/2"],
+    "observed_content": "Both labeled parts are present. Together they contain the complete corrected body, bounded insertion delta, complete S10 and S23 supporting excerpts, updated source metadata and complete dependency rationale. The S23 excerpt continues coherently across the part boundary. These supplement the retained complete r1 dossier.",
+    "identity_limit": "Byte lengths and hashes are external mechanical receipts. I did not recompute them or attest to internal serialized message bytes."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l3.design-tui",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "body_bytes_external_receipt": 15780,
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "resolved_findings": [
+        {
+          "id": "DESIGN-L3-J2-F1",
+          "disposition": "RESOLVED",
+          "location": "Body §Language and appearance cross app and host contracts, inserted Instruction paragraph immediately before the handoff table.",
+          "observed": "The body now explicitly directs ordinary app copy through language.t(...), count-sensitive copy through language.plural(...), and native main-process copy through shared typed bundles consumed by nativeT(...). It assigns locale selection, plural resolution, fallback and interpolation to shared language/UI modules; prohibits locale branches, plural-category selection and grammatical-fragment concatenation in feature/native callsites; preserves existing English keys and text; and directs richer grammar into the shared API.",
+          "evidence": "S10: packages/app-shell/AGENTS.md:23–28. S23: apps/desktop/AGENTS.md:5–9. Existing desktop L2 build dependency and its public E10 corroboration remain explicitly declared.",
+          "reason": "The previously missing maintenance path is now directly usable from the artifact body. It is labeled Instruction, and the preceding hardcoded-English startup discrepancy remains visible. No further correction is required for this finding."
+        }
+      ],
+      "criteria_dispositions": [
+        {
+          "criteria": ["GO-A1", "GO-A3", "AC-01 content", "CC-3", "CC-7", "QS-2", "S2-I3U content readiness"],
+          "verdict": "PASS",
+          "location": "Body §Language and appearance cross app and host contracts.",
+          "reason": "The corrected section supplies the complete required app-to-native copy contract without requiring the reader to reconstruct it from source excerpts. The externally reported complete body remains below the frozen 16000-byte routine body allowance; actual reader calls and consumption remain unexecuted."
+        },
+        {
+          "criteria": ["GO-I1", "GO-I2", "GO-I7", "GO-I8", "QS-1", "QS-4", "QS-5"],
+          "verdict": "PASS",
+          "location": "Inserted Instruction paragraph; delta §Bounded primary support; S10/S23; current source metadata.",
+          "reason": "The addition has precise pinned support and preserves the distinction between maintenance policy and observed implementation compliance. It introduces no runtime, universal localization, security or accessibility guarantee."
+        },
+        {
+          "criteria": ["GO-I3 declared bindings", "GO-I4 dependency semantics", "GO-I5 declared impact", "AC-04 content", "AC-05 dependency content", "AC-06 impact content", "CC-4 declared impact"],
+          "verdict": "PASS",
+          "location": "Current dependency rationale, desktop-web build entry and additional_public_evidence; bounded body delta.",
+          "reason": "Native copy remains an actual factual use of the existing desktop predecessor. The three build keys and two navigation keys retain their roles. The added captured guidance supports the narrow correction without introducing a pending-peer factual dependency."
+        },
+        {
+          "criteria": ["GO-A2", "GO-A4", "GO-A5", "GO-A6", "GO-A7", "CC-1", "CC-2 content", "QS-3", "QS-6 content"],
+          "verdict": "PASS",
+          "location": "Unchanged r1 sections, retained evidence and current dependency rationale.",
+          "reason": "Prior applicable content dispositions are retained. The bounded insertion preserves the integrated flows, ownership, failure boundaries, maintenance routes, coverage limits and discrepancies. No new mandatory regression was identified."
+        }
+      ],
+      "required_local_scope_resolved": true,
+      "acceptance_scope": "Semantic L3 content only. The original r1 decision remains preserved; this PASS binds the corrected r2 body."
+    }
+  ],
+  "unchanged_peer_decisions": "Previously issued desktop-web and app-session L3 PASS decisions remain unchanged; neither peer artifact was re-reviewed.",
+  "unaccepted_gates": {
+    "status": "HOLD / NOT_RUN",
+    "scope": "GO-I6 operational budget enforcement; actual consumers and measured read budgets; runtime binding and publication; update, reuse and recovery execution; CI, economics and global controls. Whole-layer acceptance remains the principal's responsibility after both independent corrected-unit decisions. This verdict does not accept L4."
+  },
+  "optional_suggestions": []
+}

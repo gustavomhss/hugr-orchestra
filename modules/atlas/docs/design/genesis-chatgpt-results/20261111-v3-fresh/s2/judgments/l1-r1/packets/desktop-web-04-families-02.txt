@@ -1,0 +1,283 @@
+    "maintenance_implications": "Pin immutable container ID and local endpoint, reverify ownership before actions, keep ordinary workspace readiness separate from native readiness, preserve session file permissions and process birth identity.",
+    "evidence_limits": "No Docker daemon, image build, Xpra/TLS display or integration test ran. Seccomp provenance is documented; its bytes, signing key and apt package closure were not independently authenticated.",
+    "entry_count": 28,
+    "depth_counts": {
+      "inspected": 10,
+      "family-supported": 18
+    },
+    "classification_counts": {
+      "build-runtime-or-type-configuration": 4,
+      "documentation": 1,
+      "implementation-source": 9,
+      "public-key-resource": 1,
+      "test-source-unexecuted": 11,
+      "test-fixture": 2
+    }
+  },
+  {
+    "id": "linux-access",
+    "purpose": "Separate linux.rpc transport provides guest exec, bounded file operations and session-owned terminals with explicit cancellation.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/linux-workspace-rpc.ts",
+      "apps/desktop/src/main/linux-workspace-access.ts",
+      "apps/desktop/src/main/linux-workspace-files.ts",
+      "apps/desktop/src/main/linux-workspace-omni.ts",
+      "apps/desktop/resources/linux-runtime/workspace-access.py"
+    ],
+    "consumers_and_boundary": "Agent channel to verified workspace container; terminal owner/session and runtime start identity fence operations.",
+    "maintenance_implications": "Keep cancel/reap and session-close ownership, output/input limits and transport termination distinct. Absolute guest paths are not a host filesystem sandbox.",
+    "evidence_limits": "Guest process, file and PTY behavior not executed; source only establishes checks and intended authority.",
+    "entry_count": 5,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 1
+    },
+    "classification_counts": {
+      "implementation-source": 4,
+      "test-source-unexecuted": 1
+    }
+  },
+  {
+    "id": "native-accessibility-helper",
+    "purpose": "Python AT-SPI helper discovers host-confirmed windows, fences process/ancestry identities, observes bounded trees and admits guarded actions.",
+    "representative_source_paths": [
+      "apps/desktop/resources/linux/app-dock-accessibility/main.py",
+      "apps/desktop/resources/linux/app-dock-accessibility/bindings.py",
+      "apps/desktop/resources/linux/app-dock-accessibility/context.py",
+      "apps/desktop/resources/linux/app-dock-accessibility/refs.py",
+      "apps/desktop/resources/linux/app-dock-accessibility/snapshot.py",
+      "apps/desktop/resources/linux/app-dock-accessibility/actions.py"
+    ],
+    "consumers_and_boundary": "Host native client over framed JSON; D-Bus/AT-SPI providers, X11 focus/pointer and keyboard helpers.",
+    "maintenance_implications": "Preserve explicit host confirmation, protected-field suppression, finite budgets, non-atomic observations and unverified logical identity/postconditions.",
+    "evidence_limits": "Keyboard and bus leaves are family-supported by callers; no GTK/Qt/Electron UI, focus, mutation effect or timing claim was re-proved.",
+    "entry_count": 8,
+    "depth_counts": {
+      "inspected": 6,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "implementation-source": 8
+    }
+  },
+  {
+    "id": "wsl",
+    "purpose": "Windows distro manager verifies Linux CLI artifacts, starts authenticated per-distro sidecars and publishes typed runtime state.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/wsl/servers.ts",
+      "apps/desktop/src/main/wsl/runtime.ts",
+      "apps/desktop/src/main/wsl/artifact.ts",
+      "apps/desktop/src/main/wsl/sidecar.ts",
+      "apps/desktop/src/main/wsl/startup.ts",
+      "apps/desktop/src/main/wsl/policy.ts",
+      "apps/desktop/src/main/wsl/ipc.ts",
+      "apps/desktop/src/renderer/wsl/connections.ts"
+    ],
+    "consumers_and_boundary": "WSL IPC/preload to wsl.exe/guest binaries and renderer server selection.",
+    "maintenance_implications": "Keep generation fences, regular-file/hash/version checks, sanitized guest env and authenticated positive plus wrong-password health checks. Direct WSL registrations are separate from the general IPC origin wrapper.",
+    "evidence_limits": "No Windows, WSL install, distro command or guest binary ran; shell quoting and every artifact replacement branch lack execution evidence.",
+    "entry_count": 12,
+    "depth_counts": {
+      "family-supported": 4,
+      "inspected": 8
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 4,
+      "implementation-source": 8
+    }
+  },
+  {
+    "id": "live-senses",
+    "purpose": "Live orchestration owns capture, readiness, settings/key, audio conditioning, transcription and durable meeting/session delivery.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/live-loop.ts",
+      "apps/desktop/src/main/live-senses.ts",
+      "apps/desktop/src/main/live-capture.ts",
+      "apps/desktop/src/main/live-readiness.ts",
+      "apps/desktop/src/main/live-audio.ts",
+      "apps/desktop/src/main/live-settings.ts",
+      "apps/desktop/src/main/live-settings.test.ts",
+      "apps/desktop/src/main/live-key.ts",
+      "apps/desktop/src/main/live-transcriber.ts",
+      "apps/desktop/src/main/live-meeting-client.ts",
+      "apps/desktop/src/main/live-session-client.ts",
+      "apps/desktop/src/main/live-ipc.ts",
+      "apps/desktop/src/preload/live-capture.ts"
+    ],
+    "consumers_and_boundary": "Hidden isolated capture renderer, OS media permissions, Deepgram WebSocket, authenticated backend meeting/session endpoints and main overlay state.",
+    "maintenance_implications": "Preserve source eligibility, one answer at a time, bounded audio replay, stable segment IDs and stop/flush ordering; direct live IPC needs its own admission review.",
+    "evidence_limits": "No microphone, screen, provider, WebSocket or paid model call; backend endpoint semantics and consent handling were not independently audited.",
+    "entry_count": 32,
+    "depth_counts": {
+      "family-supported": 19,
+      "inspected": 13
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 13,
+      "implementation-source": 19
+    }
+  },
+  {
+    "id": "live-overlay",
+    "purpose": "Main-owned live overlay state, narrow preload and Solid view support answers, captions, navigation and protected always-on-top display.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/live-overlay.ts",
+      "apps/desktop/src/main/live-overlay-state.ts",
+      "apps/desktop/src/preload/live.ts",
+      "apps/desktop/src/renderer/live/index.tsx"
+    ],
+    "consumers_and_boundary": "Main live loop to overlay window; actions are filtered by overlay sender/main frame.",
+    "maintenance_implications": "Keep overlay positioning/hotkey registration and source/answer state coherent; content protection requires platform verification. Overlay copy is separate English/Brazilian Portuguese, not the locale dictionary mechanism.",
+    "evidence_limits": "Only representative renderer spans selected; full visual layout, all action transitions and actual screen-sharing protection are unverified.",
+    "entry_count": 7,
+    "depth_counts": {
+      "family-supported": 3,
+      "inspected": 4
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 1,
+      "implementation-source": 4,
+      "presentation-source": 2
+    }
+  },
+  {
+    "id": "response-transfer",
+    "purpose": "Native save capability and renderer stream adapter transfer raw bytes with bounded in-flight writes and atomic final rename.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/response-download.ts",
+      "apps/desktop/src/renderer/response-download.ts",
+      "apps/desktop/src/preload/index.ts",
+      "apps/desktop/src/main/response-download.test.ts"
+    ],
+    "consumers_and_boundary": "Renderer response body to native dialog, opaque handle, temporary file and user-selected destination.",
+    "maintenance_implications": "Bind capability to originating main frame, maintain sequence/backpressure and distinguish cancellation before rename from final committed result.",
+    "evidence_limits": "Tests read include foreign sender, malformed sequence and unowned temp collision; none executed. Platform native save dialogs remain unverified.",
+    "entry_count": 9,
+    "depth_counts": {
+      "family-supported": 6,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "test-fixture": 3,
+      "test-source-unexecuted": 3,
+      "implementation-source": 3
+    }
+  },
+  {
+    "id": "cli-process",
+    "purpose": "Manifest-bound CLI installation, shared daemon discovery, shell environment and optional Omni adapters provide executable/process boundaries.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/cli-artifacts.ts",
+      "apps/desktop/src/main/cli-install.ts",
+      "apps/desktop/src/main/background-cli.ts",
+      "apps/desktop/src/main/shell-env.ts",
+      "apps/desktop/src/main/omni-process.ts",
+      "apps/desktop/src/main/omni-host.ts",
+      "apps/desktop/src/main/omni-boot.ts",
+      "apps/desktop/src/main/server.ts"
+    ],
+    "consumers_and_boundary": "Main owned/shared server, WSL and Linux access launch sites; core Omni/ripgrep/tree-sitter loaders are external boundaries.",
+    "maintenance_implications": "Preserve digest-target cache checks, companion resources, version equality, environment stripping and child exit-versus-close/backpressure semantics.",
+    "evidence_limits": "Signature, version and process checks are source behavior only. Core native addon internals and all small environment fixtures are not fully inspected.",
+    "entry_count": 19,
+    "depth_counts": {
+      "inspected": 7,
+      "family-supported": 12
+    },
+    "classification_counts": {
+      "implementation-source": 11,
+      "test-source-unexecuted": 6,
+      "test-fixture": 2
+    }
+  },
+  {
+    "id": "packaging",
+    "purpose": "Electron build configuration and staging scripts lay out signed executable resources, platform installers and update metadata.",
+    "representative_source_paths": [
+      "apps/desktop/electron-builder.config.ts",
+      "apps/desktop/electron.vite.config.ts",
+      "apps/desktop/scripts/cli-staging.ts",
+      "apps/desktop/scripts/prebuild.ts",
+      "apps/desktop/scripts/predev.ts",
+      "apps/desktop/scripts/copy-icons.ts"
+    ],
+    "consumers_and_boundary": "electron-vite, electron-builder and release pipeline; packaged runtime resolves extraResources outside app.asar.",
+    "maintenance_implications": "Keep exact manifests/signature checks before and after packing, avoid post-hash executable rewriting, stage required notices and independent main/preload/renderer entries.",
+    "evidence_limits": "No install/build/sign/notarization/update feed ran. Claude/Omni and metadata helper leaves are family-supported, not full script audits.",
+    "entry_count": 25,
+    "depth_counts": {
+      "family-supported": 20,
+      "inspected": 5
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 7,
+      "build-runtime-or-type-configuration": 5,
+      "build-script-source": 13
+    }
+  },
+  {
+    "id": "updater",
+    "purpose": "Main updater controller checks/downloads/persists ready state and stops resources before explicit installation.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/updater.ts",
+      "apps/desktop/src/main/updater-controller.ts",
+      "apps/desktop/src/main/updater-controller.test.ts",
+      "apps/desktop/src/preload/index.ts"
+    ],
+    "consumers_and_boundary": "electron-updater to subscribed renderer; unsupported self-update builds announce a release URL.",
+    "maintenance_implications": "Maintain single-flight checks and authoritative ready state; persisted version alone is not acceptance of cached bytes.",
+    "evidence_limits": "Mock backend assertions read; no network update, cache, installer or restart execution.",
+    "entry_count": 5,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "test-source-unexecuted": 2,
+      "implementation-source": 3
+    }
+  },
+  {
+    "id": "localization",
+    "purpose": "Desktop locale dictionaries and typed native message bridge provide host copy with English fallback.",
+    "representative_source_paths": [
+      "apps/desktop/src/renderer/i18n/index.ts",
+      "apps/desktop/src/renderer/i18n/en.ts",
+      "apps/desktop/src/renderer/i18n/ar.ts",
+      "apps/desktop/src/main/native-translations.ts"
+    ],
+    "consumers_and_boundary": "Desktop renderer translator and shared desktop-native language contract; native messages reach menus/dialogs through main.",
+    "maintenance_implications": "Update English contract and shared key validation first; locale dictionaries merge onto English. Keep live overlay separate copy visible as an exception.",
+    "evidence_limits": "Representative dictionaries only; no translation-quality, key-parity or all-locale rendering audit. No generator is inferred for locale files.",
+    "entry_count": 64,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 60
+    },
+    "classification_counts": {
+      "implementation-source": 2,
+      "localization-dictionary": 62
+    }
+  },
+  {
+    "id": "assets-icons-splash",
+    "purpose": "Channel icon assets and pre-rendered splash media are consumed by platform packaging and renderer splash.",
+    "representative_source_paths": [
+      "apps/desktop/icons/README.md",
+      "apps/desktop/scripts/mac-icons.py",
+      "apps/desktop/scripts/copy-icons.ts",
+      "apps/desktop/electron-builder.config.ts",
+      "apps/desktop/src/renderer/splash/comet-splash.tsx"
+    ],
+    "consumers_and_boundary": "Native window/Dock/tray/installers and splash video/reduced-motion still.",
+    "maintenance_implications": "mac-icons.py explicitly generates only macOS icon.icns/dock.png from a pinned official SVG/toolchain; other renditions follow their documented kit and copy path.",
+    "evidence_limits": "No binary pixels, video, signature or original source kit authenticated. Tray/splash authorship is not established; do not describe every binary as generated.",
+    "entry_count": 40,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 36
+    },
+    "classification_counts": {
+      "documentation": 1,
+      "binary-asset": 35,
+      "build-script-source": 2,

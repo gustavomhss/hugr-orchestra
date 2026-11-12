@@ -1,0 +1,300 @@
+{
+  "schema": "genesis-s2-native-layer-mechanical/v1",
+  "artifact_key": "s2.l4.desktop-web",
+  "layer": 4,
+  "producer_root": "later-producers/desktop-web/l4",
+  "destination": "layers/l4/desktop-web",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "package_before_sha256": "09b4e797da2f518905bb9b6f096157a5b37422fcd80311e34306dede3320a6ca",
+  "utility_sha256": "664bbd0c1be81d9ec8606eb6a8f8909cb8434c1e17be3114c3ad1165750ff918",
+  "body": {
+    "method": "ATX headings outside fenced blocks; each slice ends at the next heading; no semantic completeness assertion",
+    "byte_length": 11183,
+    "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+    "line_count": 48,
+    "sections": [
+      {
+        "level": 1,
+        "heading": "Genesis S2 — desktop/web maintenance runbook",
+        "line": 1,
+        "byte_start": 0,
+        "byte_end_exclusive": 50,
+        "sha256": "8d4eb7483331ac15294f7a3f192dc1da7d339e8f2b37c76d0e44bb33c18c874f"
+      },
+      {
+        "level": 2,
+        "heading": "Orientation",
+        "line": 3,
+        "byte_start": 50,
+        "byte_end_exclusive": 1274,
+        "sha256": "dd60d8a290f5c557f120fc3a31dbf142a0913f374e5585dae117ead8ead4d52b"
+      },
+      {
+        "level": 2,
+        "heading": "Maintenance protocol",
+        "line": 9,
+        "byte_start": 1274,
+        "byte_end_exclusive": 8121,
+        "sha256": "b5500144b95da259d7f9a1bf1dea1a9a6eba598398ce27e29b99dbd40d1c9b7c"
+      },
+      {
+        "level": 2,
+        "heading": "Verification and boundaries",
+        "line": 32,
+        "byte_start": 8121,
+        "byte_end_exclusive": 11183,
+        "sha256": "5c59c3c863bee5939bc24937df27780faa8fc81c96f8ac0a71e085d87c2d09a6"
+      }
+    ]
+  },
+  "source_checks": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "canonical_capture": "producers/desktop-web/sources/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/AGENTS.md",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "byte_length": 2801,
+      "canonical_capture": "producers/desktop-web/sources/apps/desktop/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/AGENTS.md",
+      "git_blob_sha": "e8a89cb6ab3c95bf256e2226b9e8466f8d934220",
+      "sha256": "9c9edc98255ee4c4a9c96a742df1330eafb7ffc8f9f10bca640f5c6c7abfeaad",
+      "byte_length": 301,
+      "canonical_capture": "producers/desktop-web/sources/apps/web/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "canonical_capture": "producers/desktop-web/sources/packages/app-shell/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/src/main/README.md",
+      "git_blob_sha": "c8bec1560f6a6b3ea35ce85beadbcdad101ebffa",
+      "sha256": "f8f294268cc8a0ca93c6c38eb902dd244e425e4bf2dfb222536fadeaddce2b24",
+      "byte_length": 1784,
+      "canonical_capture": "producers/desktop-web/sources/apps/desktop/src/main/README.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/README.md",
+      "git_blob_sha": "5e685ac4857d022624d22f8c8741f6219490cac7",
+      "sha256": "8eec3b56309076dc5208ea7fe04277703efa524d61378dfb5235540186d3c2f9",
+      "byte_length": 2633,
+      "canonical_capture": "producers/desktop-web/sources/apps/web/README.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/package.json",
+      "git_blob_sha": "a7dd0b12de0f8c3855c7f5b2f069416ef711f577",
+      "sha256": "cb11bc929a46b3bbeb1e5ed323f3fa06aa612bfa3f9743489f14f0de3e821d9f",
+      "byte_length": 3472,
+      "canonical_capture": "producers/desktop-web/sources/apps/desktop/package.json",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/package.json",
+      "git_blob_sha": "e63f6bb31e454f1cae299f551eea1335b89e7592",
+      "sha256": "9600ebcb94c013599fd8264e213dc53c05bb08bdef1c0d1dee275abcefdfcc38",
+      "byte_length": 575,
+      "canonical_capture": "producers/desktop-web/sources/apps/web/package.json",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "git_blob_sha": "ba3d5859d9109e104687f628bc3e96ad5e616d07",
+      "sha256": "6434f6ed07efb0c67275e3d1c30270c2a012aa77b46071239080ae8475dd42a9",
+      "byte_length": 6256,
+      "canonical_capture": "producers/desktop-web/sources/.orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/app-log-hygiene/SKILL.md",
+      "git_blob_sha": "685932db1df51c87be9e7174bbfe940a18c03a8c",
+      "sha256": "3a0fbf9ea92160cdd95eef1bdd445f6ea5fa68c7cacc59ad582761c0c64bc93d",
+      "byte_length": 3153,
+      "canonical_capture": "producers/desktop-web/sources/.orchestra/skills/app-log-hygiene/SKILL.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    }
+  ],
+  "canonical_source_manifests": [
+    {
+      "path": "producers/desktop-web/sources.json",
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+    },
+    {
+      "path": "producers/app-session/sources.json",
+      "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+    },
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea"
+    }
+  ],
+  "build_dependencies": [
+    {
+      "key": "s2.l1.desktop-web",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "accepted_manifests": [
+        "accepted/l1.json"
+      ],
+      "supported": true
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "accepted_manifests": [
+        "accepted/l3.json"
+      ],
+      "supported": true
+    }
+  ],
+  "navigation": [
+    "s2.l4.app-session",
+    "s2.l4.design-tui"
+  ],
+  "navigation_targets_pending": [
+    "s2.l4.app-session",
+    "s2.l4.design-tui"
+  ],
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "layer": 1,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    },
+    {
+      "path": "accepted/l2.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c",
+      "layer": 2,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    },
+    {
+      "path": "accepted/l3.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b",
+      "layer": 3,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    }
+  ],
+  "recipe": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-desktop-web-dispatch.md",
+    "sha256": "2dd13862d3ede895dabea2269bc8d4ec3254e05350042a2ba52c535feb4a3c38"
+  },
+  "producer_files": [
+    {
+      "name": "body.md",
+      "byte_length": 11183,
+      "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa"
+    },
+    {
+      "name": "sources.json",
+      "byte_length": 11260,
+      "sha256": "2e9c3927b535238d2f57771944c9a05c3b1b567975f45301476bffb2e0715722"
+    },
+    {
+      "name": "dependencies.json",
+      "byte_length": 3770,
+      "sha256": "d137fed6ca83c2c4db77718eaf90f3aa27d7e852cfcae95001bb7e099612f574"
+    },
+    {
+      "name": "decisive-evidence.md",
+      "byte_length": 25754,
+      "sha256": "12d553a1969a35b2780334cd390b7bc3a12e2238ec3d2f84f0235d0db5d576b8"
+    },
+    {
+      "name": "response.md",
+      "byte_length": 5238,
+      "sha256": "159b3e6ef857280dec41309d958455c190f3c2e03f55b8a218adfa957263aef2"
+    }
+  ],
+  "earlier_artifacts_unchanged": [
+    {
+      "key": "s2.l1.desktop-web",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "artifact_metadata_sha256": "537063a45589e162d694019d0e6a01a0ca893d3522af9f9210faa68651f39abf"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "artifact_metadata_sha256": "9738fecf0c280a7e0455839bc86be22fefc7a82c5cdcd017ab874579d1779f9a"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "artifact_metadata_sha256": "229652ae8a60e6eafc70bd4d75d82e811e49a305ac4d0efcdfa8b0037b2304b0"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "artifact_metadata_sha256": "c516a8627655539840a7a6c060926c2b33d2c311e894af7238b966789dd5e09c"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "artifact_metadata_sha256": "0acf73c277cc9a429c1ded3ba45009f5c875c6f0764fbd302678d2929c7a7ad4"
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "artifact_metadata_sha256": "24af4cc5eb9b8a33f37a350a9750d4903c445b76b52678d81ce96bde3a131db4"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "artifact_metadata_sha256": "ffb7f2f848b2a5558844aa0896d8b5f00cfba9d5e79f7d3c9beb85016eafe6de"
+    },
+    {
+      "key": "s2.l3.app-session",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "artifact_metadata_sha256": "3fb38cd924e249952deeeb9e9311533133e8d940be9924db973549a08b760564"
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "artifact_metadata_sha256": "f3e7bbac2193d2f4a8f58d12b280807429aeb950844318d72e99bcbb851a6ccf"
+    }
+  ],
+  "semantic_status": "PENDING_ACTUAL_JUDGMENTS",
+  "runtime_status": "NOT_RUN",
+  "limits": [
+    "Mechanical identity and dependency bookkeeping only; no semantic judgment or new acceptance gate.",
+    "Manifest consumption is explicitly declared, not inferred or authenticated by this utility.",
+    "Declared build dependency completeness and navigation usefulness remain for the actual judgments."
+  ]
+}

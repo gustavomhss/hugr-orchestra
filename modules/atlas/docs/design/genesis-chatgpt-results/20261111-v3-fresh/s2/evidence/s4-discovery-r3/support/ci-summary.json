@@ -1,0 +1,153 @@
+{
+  "schema": "genesis-s2-s4-r3-ci-audit/v1",
+  "audited_at": "2026-11-11T19:37:06.322245+00:00",
+  "run_id": 43077975153,
+  "job_id": 130722742703,
+  "head_sha": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "run_attempt": 1,
+  "conclusion": "success",
+  "run_started_at": "2026-11-11T18:27:38Z",
+  "run_updated_at": "2026-11-11T18:29:21Z",
+  "tests": {
+    "numTotalTests": 220,
+    "numPassedTests": 220,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "test_files_passed": 23,
+  "mutation_probe_count": 22,
+  "mutation_probe_names": [
+    "update-affected-order",
+    "update-input",
+    "update-dependency",
+    "update-frontier",
+    "update-unavailable",
+    "need-root",
+    "current-input",
+    "composed-ratify",
+    "worker-ast",
+    "observer-error-as-absent",
+    "observer-members-index-only",
+    "observer-accept-partial-git",
+    "rebuild-every-affected",
+    "rebuild-return-old-result",
+    "rebuild-body-only-stop",
+    "rebuild-ignore-direct-child-change",
+    "rebuild-omit-input",
+    "rebuild-omit-required-edge",
+    "rebuild-accept-stale-review",
+    "rebuild-skip-preflight",
+    "rebuild-skip-final-sweep",
+    "rebuild-read-live-path"
+  ],
+  "job_steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Run ./.github/actions/setup-bun",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Install Atlas dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Typecheck Atlas",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Grouped ownership and existing door regressions",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Probe the new guards against named failing controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Generate Atlas boundary from the checked sources",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Check repository guards on the candidate",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Preserve exact gate and generated-boundary evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10
+    },
+    {
+      "name": "Post Run ./.github/actions/setup-bun",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 19
+    },
+    {
+      "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 20
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21
+    }
+  ],
+  "guards": {
+    "exit_code": 0,
+    "rule_count": 78,
+    "changed_paths": 869,
+    "gate": 0,
+    "warn": 2,
+    "errors": 0,
+    "warnings": [
+      "S4 producers/l1b/artifacts.json large-file",
+      "S4 producers/l1b/coverage.json large-file"
+    ]
+  },
+  "artifact": {
+    "id": 13883635728,
+    "size_in_bytes": 431413,
+    "digest": "sha256:cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd",
+    "receipt_digest_matches": true,
+    "workflow_run_head_matches": true,
+    "archive_downloaded": false
+  },
+  "generated_parity": {
+    "receipt_claimed_files": 18,
+    "receipt_all_match": true,
+    "three_changed_generated_file_hashes_independently_checked": true,
+    "remaining15_archive_bytes_not_downloaded": true
+  },
+  "receipt_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+  "logs_sha256": "492cf4b15ae4e14bd54e92da6601e78dcbf8e7c00c5720656c3bcb0d76f67a26",
+  "native_s2_test_or_execution": false
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "genesis-s2-transport-compatibility/v1",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "old_package_sha256": "d0bf942164e6b69c3cd89e9d4a0808a5f4ddcbb450d6c40045b2d0952c9aa0cd",
+  "new_package_sha256": "9dacfc3c7837655b1de7b16adf953465c481e207ddc8df8afda74baea342f8ff",
+  "changes": [
+    {
+      "key": "s2.l1.desktop-web",
+      "change": "Evidence reference objects preserved losslessly as canonical JSON strings required by pinned S4 r1 evidence:string[]. No source/bodies/reviews changed."
+    },
+    {
+      "key": "s2.l1.desktop-web",
+      "change": "Declare actual recipe file as observed input; payload reference remains exact."
+    },
+    {
+      "key": "s2.l1.app-session",
+      "change": "Evidence reference objects preserved losslessly as canonical JSON strings required by pinned S4 r1 evidence:string[]. No source/bodies/reviews changed."
+    },
+    {
+      "key": "s2.l1.app-session",
+      "change": "Declare actual recipe file as observed input; payload reference remains exact."
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "change": "Evidence reference objects preserved losslessly as canonical JSON strings required by pinned S4 r1 evidence:string[]. No source/bodies/reviews changed."
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "change": "Declare actual recipe file as observed input; payload reference remains exact."
+    }
+  ],
+  "not_runtime_evidence": true,
+  "semantic_review_state": "pending",
+  "full_validator_or_prepare_run": false
+}

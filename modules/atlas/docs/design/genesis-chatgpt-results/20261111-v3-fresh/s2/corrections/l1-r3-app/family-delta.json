@@ -1,0 +1,72 @@
+{
+  "schema": "genesis-s2-l1-family-delta/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "revision": "l1-r3-app",
+  "unit": "app-session",
+  "updates": [
+    {
+      "family_id": "authority",
+      "updates": {
+        "representative_source_paths": [
+          "packages/app-shell/AGENTS.md",
+          "packages/app-shell/README.md",
+          "packages/app-shell/package.json",
+          "packages/session-ui/README.md",
+          "packages/session-ui/package.json",
+          "packages/session-ui/AGENTS.md",
+          "AGENTS.md"
+        ],
+        "source_implications": "Package manifests declare exported entrypoints and tasks; AGENTS establishes local maintenance rules. README module-contract blocks have a verified generator. App-shell AGENTS explicitly prioritizes stability, simplicity and performance in that order, and requires a production benchmark baseline before changing session/timeline code plus comparison after the change. Session UI AGENTS separately supplies its localization obligations.",
+        "consumer_implications": "Desktop/web import app-shell; app-shell and Storybook use session-ui. Module architecture permits explicit browserSafe Core helpers. That UI browserSafe exception is distinct from root AGENTS' prohibition on Client runtime dependencies on Core or Server; Client may depend on Schema and Protocol.",
+        "maintenance_implications": "Reconcile manifest and executable boundary policy before treating prose as import prohibition. Tests are CI-only in this run. Public Protocol or Server HttpApi changes require bun run generate from packages/client; raw Client src/generated and src/generated-effect files must not be hand-edited. These rules and the conditional benchmark obligation are prescribed authority, not executions performed by this L1 correction."
+      }
+    },
+    {
+      "family_id": "transport",
+      "updates": {
+        "representative_source_paths": [
+          "packages/app-shell/src/context/server.tsx",
+          "packages/app-shell/src/context/global.tsx",
+          "packages/app-shell/src/context/server-sdk.tsx",
+          "packages/app-shell/src/utils/server.ts",
+          "packages/app-shell/src/utils/server-health.ts",
+          "packages/app-shell/src/utils/server-ready.ts",
+          "packages/app-shell/src/utils/server-stream-liveness.ts",
+          "packages/app-shell/src/utils/scoped-fetch.ts",
+          "AGENTS.md"
+        ],
+        "maintenance_implications": "Preserve credential replacement disposal, retryable readiness and cancellation composition. Heartbeat bytes matter even without decoded events. Keep the generated Client's runtime dependencies on Schema/Protocol and never Core/Server, independently of the UI browserSafe-helper allowance. After a public Protocol or Server HttpApi change, run generation from packages/client and never hand-edit src/generated or src/generated-effect. This correction records that requirement and does not run generation.",
+        "limits": "Network scenarios and retained-stream behavior are source-level observations; not observed live. The Client dependency/generation rules are prescribed maintenance constraints; no generator, dependency checker or product code ran here."
+      }
+    },
+    {
+      "family_id": "timeline",
+      "updates": {
+        "representative_source_paths": [
+          "packages/app-shell/src/pages/session/timeline/rows.ts",
+          "packages/app-shell/src/pages/session.tsx",
+          "packages/app-shell/src/context/server-session-v2-reducer.ts",
+          "packages/app-shell/src/utils/session-export.ts",
+          "packages/app-shell/AGENTS.md"
+        ],
+        "maintenance_implications": "Synthetic IDs are not a semantic content order; preserve turn parent joins and loaded-page boundaries. App-shell AGENTS requires a production benchmark baseline before changing session or timeline code and comparison after the change, with stability, simplicity and performance prioritized in that order. This documentation correction changes no product code and performs no benchmark."
+      }
+    },
+    {
+      "family_id": "benchmarks",
+      "updates": {
+        "representative_source_paths": [
+          "packages/app-shell/e2e/performance/AGENTS.md",
+          "packages/app-shell/e2e/performance/README.md",
+          "packages/app-shell/playwright.config.ts",
+          "packages/app-shell/AGENTS.md"
+        ],
+        "source_implications": "Normal Playwright ignores performance directory; README calls metrics diagnostics without machine-dependent budgets or compositor-frame claims. App-shell AGENTS nevertheless prescribes recording a production benchmark baseline before changing session or timeline code and comparing it after the change.",
+        "consumer_implications": "Maintainers invoke the benchmark production-build harness explicitly to satisfy the before/after condition for app-shell session or timeline changes; normal Playwright exclusion does not remove that requirement. The obligation is recorded, not executed, in this L1 correction.",
+        "maintenance_implications": "Preserve raw diagnostics, serial execution and distinction between scenario completion and performance acceptance. Preserve the mandatory before/after benchmark condition for session/timeline code changes and the app-shell priority order stability, simplicity, performance.",
+        "limits": "Implementation internals and collected results are metadata/family supported only; no benchmark ran. The prescribed benchmark condition is not evidence of collected measurements or performance acceptance."
+      }
+    }
+  ],
+  "scope_note": "Only semantic fields of the four existing families are updated; IDs, assigned entries, counts, classifications and evidence depths remain unchanged. No other unit is changed."
+}

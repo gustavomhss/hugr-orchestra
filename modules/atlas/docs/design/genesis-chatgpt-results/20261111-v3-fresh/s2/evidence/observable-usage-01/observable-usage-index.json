@@ -1,0 +1,1251 @@
+{
+  "schema": "genesis-s2-observable-usage-index/v1",
+  "recorded_at": "2026-11-11T20:58:37.634530+00:00",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "scope": "Bounded local reconciliation of explicitly indexed preserved receipts; not exhaustive conversation/tool/provider accounting",
+  "snapshot": {
+    "execution_ledger": {
+      "path": "deliverable/execution-ledger.jsonl",
+      "sha256": "0b084e444a2c3bed76e71ecd59abfa7fec9eb3a045731f5cbaf7e6ab0270b134",
+      "byte_length": 39584
+    },
+    "ledger_rows": 76,
+    "immutable_local_copy": {
+      "path": "closure-work/observable-usage-01/execution-ledger-snapshot.jsonl",
+      "sha256": "0b084e444a2c3bed76e71ecd59abfa7fec9eb3a045731f5cbaf7e6ab0270b134",
+      "byte_length": 39584
+    }
+  },
+  "construction": {
+    "saved_artifact_request_documents": 13,
+    "ledger_recorded_initial_author_activations": 12,
+    "activation_ledger_rows": [
+      3,
+      4,
+      5,
+      42,
+      47,
+      50,
+      62
+    ],
+    "failed_initial_author_activation_calls": [
+      {
+        "ledger_row": 48,
+        "target": "/root/s2_author_design",
+        "result": "thread-capacity rejection; no production presumed"
+      }
+    ],
+    "unit_and_entry_requests": [
+      {
+        "artifact": "s2.l1.desktop-web",
+        "request": {
+          "path": "deliverable/requests/l1-desktop-web.md",
+          "sha256": "f7115bf61eeb22895b57f0813fd1855b979bd4c8c7106a3f03745ee449563f5d",
+          "byte_length": 4289
+        }
+      },
+      {
+        "artifact": "s2.l1.app-session",
+        "request": {
+          "path": "deliverable/requests/l1-app-session.md",
+          "sha256": "e0f3417d5b226c60a1f2ac9d5f439ac5e2469b23ff1f13e167e643bd6ea8fd75",
+          "byte_length": 4330
+        }
+      },
+      {
+        "artifact": "s2.l1.design-tui",
+        "request": {
+          "path": "deliverable/requests/l1-design-tui.md",
+          "sha256": "19bcbd487c1b21b53c81cdd180dc051d428a10bc0acbefeef2fb45ffc9306d00",
+          "byte_length": 4303
+        }
+      },
+      {
+        "artifact": "s2.l2.desktop-web",
+        "request": {
+          "path": "deliverable/requests/l2-desktop-web-dispatch.md",
+          "sha256": "35ac19160905bd95fddede62be0e9e1d569e20425eb8e15493421ed7a53c8f5c",
+          "byte_length": 8543
+        }
+      },
+      {
+        "artifact": "s2.l2.app-session",
+        "request": {
+          "path": "deliverable/requests/l2-app-session-dispatch.md",
+          "sha256": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60",
+          "byte_length": 8543
+        }
+      },
+      {
+        "artifact": "s2.l2.design-tui",
+        "request": {
+          "path": "deliverable/requests/l2-design-tui-dispatch.md",
+          "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40",
+          "byte_length": 8541
+        }
+      },
+      {
+        "artifact": "s2.l3.desktop-web",
+        "request": {
+          "path": "deliverable/requests/l3-desktop-web-dispatch.md",
+          "sha256": "ff214eb6c55241300affe3932ca99403ad9913302804bffc04c64f367e7a1f7e",
+          "byte_length": 8597
+        }
+      },
+      {
+        "artifact": "s2.l3.app-session",
+        "request": {
+          "path": "deliverable/requests/l3-app-session-dispatch.md",
+          "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20",
+          "byte_length": 8597
+        }
+      },
+      {
+        "artifact": "s2.l3.design-tui",
+        "request": {
+          "path": "deliverable/requests/l3-design-tui-dispatch.md",
+          "sha256": "325383a663ac0c275419653f7b12c5836ed3c47efb8f066408bc25898b524949",
+          "byte_length": 8595
+        }
+      },
+      {
+        "artifact": "s2.l4.desktop-web",
+        "request": {
+          "path": "deliverable/requests/l4-desktop-web-dispatch.md",
+          "sha256": "2dd13862d3ede895dabea2269bc8d4ec3254e05350042a2ba52c535feb4a3c38",
+          "byte_length": 9363
+        }
+      },
+      {
+        "artifact": "s2.l4.app-session",
+        "request": {
+          "path": "deliverable/requests/l4-app-session-dispatch.md",
+          "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f",
+          "byte_length": 9363
+        }
+      },
+      {
+        "artifact": "s2.l4.design-tui",
+        "request": {
+          "path": "deliverable/requests/l4-design-tui-dispatch.md",
+          "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec",
+          "byte_length": 9361
+        }
+      },
+      {
+        "artifact": "s2.l4.entry",
+        "request": {
+          "path": "deliverable/requests/l4-entry-dispatch.md",
+          "sha256": "77249172b64d05aad8b344bce1d6dbadca80901b01579c67ed0137623d836b68",
+          "byte_length": 9490
+        }
+      }
+    ],
+    "supplemental_saved_texts": [
+      {
+        "unit": "desktop-web",
+        "saved_message_texts": 2,
+        "request": {
+          "path": "deliverable/requests/l1-desktop-web-supplements.json",
+          "sha256": "300e137349396cabf3078e252345570ed979e7af1d029ecb77d4606beb7f0500",
+          "byte_length": 1051
+        },
+        "native_call_count": null
+      },
+      {
+        "unit": "app-session",
+        "saved_message_texts": 2,
+        "request": {
+          "path": "deliverable/requests/l1-app-session-supplements.json",
+          "sha256": "477f778589bae0d401b01e8d6e445a7cbc85e3e4e731c943de28fecb96d9bc60",
+          "byte_length": 1446
+        },
+        "native_call_count": null
+      },
+      {
+        "unit": "design-tui",
+        "saved_message_texts": 4,
+        "request": {
+          "path": "deliverable/requests/l1-design-tui-supplements.json",
+          "sha256": "fc59509cb5267bbe371055f1463dc1262cc19f3f1b5ac349e7b6300ba5b94389",
+          "byte_length": 1933
+        },
+        "native_call_count": null
+      }
+    ],
+    "limits": "L4 app and entry were one author activation with two artifact requests. Supplement text count is not a native call count. Support/coordination followups are not exhaustively indexed."
+  },
+  "corrections": {
+    "saved_logical_correction_batches": 4,
+    "corrected_artifact_revisions": 6,
+    "batches": [
+      {
+        "id": "l1-r2",
+        "request": {
+          "path": "deliverable/corrections/l1-r2/producer-request.md",
+          "sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36",
+          "byte_length": 6670
+        },
+        "affected_artifacts": [
+          "s2.l1.desktop-web",
+          "s2.l1.app-session",
+          "s2.l1.design-tui"
+        ],
+        "dispatch_ledger_row": 24
+      },
+      {
+        "id": "l1-app-r3",
+        "request": {
+          "path": "deliverable/corrections/l1-r3-app/producer-request.md",
+          "sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd",
+          "byte_length": 3110
+        },
+        "affected_artifacts": [
+          "s2.l1.app-session"
+        ],
+        "dispatch_ledger_row": 38
+      },
+      {
+        "id": "l3-design-r2",
+        "request": {
+          "path": "deliverable/requests/l3-design-tui-r2-correction.md",
+          "sha256": "15d91eb9a18a571488e912a56970783de61eb7d28fef8fce6e138a840d299274",
+          "byte_length": 3465
+        },
+        "affected_artifacts": [
+          "s2.l3.design-tui"
+        ],
+        "dispatch_ledger_row": 56
+      },
+      {
+        "id": "l4-entry-r2",
+        "request": {
+          "path": "deliverable/requests/l4-entry-r2-correction.md",
+          "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53",
+          "byte_length": 3192
+        },
+        "affected_artifacts": [
+          "s2.l4.entry"
+        ],
+        "dispatch_ledger_row": 73
+      }
+    ],
+    "exact_native_activation_total": null,
+    "limit": "Four ledger-backed correction batches; additional followup/scope-addition messages inside a batch are not promoted to unobserved exact call totals."
+  },
+  "literal_review_transport": {
+    "resumed_logical_send_message_calls": 113,
+    "payload_dispositions": {
+      "INVALIDATED": 5,
+      "FULL_REPLACEMENT": 5,
+      "ORIGINAL_NO_KNOWN_INVALIDATION": 103
+    },
+    "uncertain_context_truncated_result_flags": 3,
+    "uncertainty_is_overlapping_not_extra_calls": true,
+    "groups": [
+      {
+        "id": "resume-l1-desktop-r1",
+        "receipt": {
+          "path": "deliverable/judgments/resume-l1/transport/desktop-web-visible-requests.json",
+          "sha256": "e33b49f36090e47d2d09ef60e937b9abd0b0e905c5a175eda6ae8977be0f4902",
+          "byte_length": 278381
+        },
+        "records_field": "calls",
+        "logical_calls": 13,
+        "original_without_known_invalidation": 11,
+        "invalidated_calls": 1,
+        "full_replacements": 1,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "resume-l1-app-desktop-r2",
+        "receipt": {
+          "path": "deliverable/judgments/resume-l1/transport-r2/app-desktop/visible-requests.json",
+          "sha256": "916ffe0cb6e211787bc60765bb060d7cfa5b23f4e703b13eba2301c50430434f",
+          "byte_length": 562845
+        },
+        "records_field": "calls",
+        "logical_calls": 22,
+        "original_without_known_invalidation": 18,
+        "invalidated_calls": 2,
+        "full_replacements": 2,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "resume-l1-design-r2",
+        "receipt": {
+          "path": "deliverable/judgments/resume-l1/transport-r2/design/native-send-observations.complete.json",
+          "sha256": "ff6e2cb4fe953109de1ed7a418363e3ef6ad9e44acb207099209d5ef1fdb7a35",
+          "byte_length": 8631
+        },
+        "records_field": "observations",
+        "logical_calls": 20,
+        "original_without_known_invalidation": 20,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "resume-l1-app-r3",
+        "receipt": {
+          "path": "deliverable/corrections/l1-r3-app/transport/transport-receipt.json",
+          "sha256": "1de30171eb866b15f3e578ba2d70de0a66519b2ca87aa10ab4f6a17d11d3d12c",
+          "byte_length": 3962
+        },
+        "records_field": "submissions",
+        "logical_calls": 2,
+        "original_without_known_invalidation": 2,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l2-desktop-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l2-r1/transport/desktop-web/transport/transport-record.json",
+          "sha256": "7be008349057452645ecd29a93a24eb39d0116d9a69d192aad499793500026db",
+          "byte_length": 5456
+        },
+        "records_field": "calls_observed",
+        "logical_calls": 4,
+        "original_without_known_invalidation": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l2-app-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l2-r1/transport/app-session/transport/receipt.json",
+          "sha256": "9dd318eb23a046165dd808fff9d44d232938cbb6eb598d8088118aca58de5f53",
+          "byte_length": 6635
+        },
+        "records_field": "calls",
+        "logical_calls": 6,
+        "original_without_known_invalidation": 6,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l2-design-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l2-r1/transport/design-tui/transport/native-call-log.json",
+          "sha256": "4785f3f3c32ad9c750762cb6f7994ae3053eb139eaee2caed77e5d6858b9c60f",
+          "byte_length": 7147
+        },
+        "records_field": "calls",
+        "logical_calls": 7,
+        "original_without_known_invalidation": 5,
+        "invalidated_calls": 1,
+        "full_replacements": 1,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-desktop-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l3-r1/transport/desktop-web/transport/transport-record.json",
+          "sha256": "910f00969bcc6e0ff81369df19d533205d5819e966678667d2d78f81976f5c9b",
+          "byte_length": 5444
+        },
+        "records_field": "actual_native_send_calls",
+        "logical_calls": 4,
+        "original_without_known_invalidation": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-app-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l3-r1/transport/app-session/transport/receipts.json",
+          "sha256": "5bc8badd29395062f7978630f4680039f8d7e21d219bf9a45541e74dbffd1496",
+          "byte_length": 5228
+        },
+        "records_field": "calls",
+        "logical_calls": 4,
+        "original_without_known_invalidation": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-design-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l3-r1/transport/design-tui/transport/calls.json",
+          "sha256": "a96013e17a4a393a3008cae969384f1b7a01c4ca1926215207c6c03b1485bb6f",
+          "byte_length": 6089
+        },
+        "records_field": "calls",
+        "logical_calls": 6,
+        "original_without_known_invalidation": 6,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l3-design-r2",
+        "receipt": {
+          "path": "deliverable/judgments/l3-r2/transport/transport/calls.json",
+          "sha256": "806b83a97e5dbeb5d0d64ccb929c3dd08aefa0a2ac2d6314478ce943ed7039c7",
+          "byte_length": 3040
+        },
+        "records_field": "calls",
+        "logical_calls": 4,
+        "original_without_known_invalidation": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-desktop-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l4-r1/transport/desktop-web/transport/transport-record.json",
+          "sha256": "bfe718d1621a883d739155eb8229be5522ceca596dbe5dba89415d13dda6b9a8",
+          "byte_length": 9342
+        },
+        "records_field": "events",
+        "logical_calls": 4,
+        "original_without_known_invalidation": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "l4-app-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l4-r1/transport/app-session/transport/receipts.json",
+          "sha256": "068092ac3ccf9c03a1e4757aa2e5738e08be68efa091cabffa9f62498225f5f8",
+          "byte_length": 7671
+        },
+        "records_field": "calls",
+        "logical_calls": 4,
+        "original_without_known_invalidation": 4,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-design-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l4-r1/transport/design-tui/transport/calls.json",
+          "sha256": "7e53e0fe1cd8ad3b3438d958906d2dbc04b44fc7b2cf623fae4490729edd2449",
+          "byte_length": 4179
+        },
+        "records_field": "records",
+        "logical_calls": 6,
+        "original_without_known_invalidation": 6,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      },
+      {
+        "id": "l4-entry-r1",
+        "receipt": {
+          "path": "deliverable/judgments/l4-r1/transport/entry/transport/receipts.json",
+          "sha256": "cfb109e2b4275c9e5bd6555a1ee68f6d657547e97d20319ce4e971409e1b728f",
+          "byte_length": 11620
+        },
+        "records_field": "calls",
+        "logical_calls": 5,
+        "original_without_known_invalidation": 3,
+        "invalidated_calls": 1,
+        "full_replacements": 1,
+        "uncertain_result_flags": 1
+      },
+      {
+        "id": "l4-entry-r2",
+        "receipt": {
+          "path": "deliverable/judgments/l4-r2/transport/transport-r2/receipts.json",
+          "sha256": "46c5ea1ae7da254231c56d5c4314a1b69038b4f971f761397a9b192fcf942792",
+          "byte_length": 3602
+        },
+        "records_field": "calls",
+        "logical_calls": 2,
+        "original_without_known_invalidation": 2,
+        "invalidated_calls": 0,
+        "full_replacements": 0,
+        "uncertain_result_flags": 0
+      }
+    ],
+    "call_index_file": "transport-call-index.json",
+    "definition": "Original/no-known-invalidation describes the payload history, not guaranteed delivery. An empty return without reported error is not a received-byte attestation.",
+    "deduplication": "One canonical preserved receipt per group, selected by exact path and SHA256; copies in producer/staging/history locations are not extra calls. Distinct per-group ordinals, including same-payload replacements, remain distinct actual logical calls."
+  },
+  "judges": {
+    "actual_semantic_response_documents": 18,
+    "artifact_verdict_entries_including_superseded_revisions": 34,
+    "verdict_counts_including_history": {
+      "PASS": 26,
+      "FIX-FIRST": 8
+    },
+    "current_accepted_artifacts": 13,
+    "current_accepted_pass_bindings": 26,
+    "explicit_saved_activation_request_or_dispatch_calls": 12,
+    "activation_batches": [
+      {
+        "batch": "l1-app-r2",
+        "request_or_dispatch_receipt": {
+          "path": "deliverable/judgments/resume-l1/app-r2-seal-requests.json",
+          "sha256": "2a916704b92c4b5afbbbb44dfc88f8d85c7ab7f1fab50b3a9efa82ddd49dac70",
+          "byte_length": 3477
+        },
+        "targets": [
+          "/root/s2_resume_j1",
+          "/root/s2_resume_j2"
+        ],
+        "recorded_logical_calls": 2
+      },
+      {
+        "batch": "l2-r1",
+        "request_or_dispatch_receipt": {
+          "path": "deliverable/judgments/l2-r1/seal-requests.json",
+          "sha256": "db1946de71a614420e2177d8d529688c424dc883c9af3e812d620f9576c9f6e2",
+          "byte_length": 10324
+        },
+        "targets": [
+          "/root/s2_resume_j1",
+          "/root/s2_resume_j2"
+        ],
+        "recorded_logical_calls": 2
+      },
+      {
+        "batch": "l3-r1",
+        "request_or_dispatch_receipt": {
+          "path": "deliverable/judgments/l3-r1/seal-dispatch-receipt.json",
+          "sha256": "0cd5801a9cf536d670fe393681c94cfa745a0fbb83cd80edc6b52002f9a6b7cb",
+          "byte_length": 988
+        },
+        "targets": [
+          "/root/s2_resume_j1",
+          "/root/s2_resume_j2"
+        ],
+        "recorded_logical_calls": 2
+      },
+      {
+        "batch": "l3-r2",
+        "request_or_dispatch_receipt": {
+          "path": "deliverable/judgments/l3-r2/seal-dispatch-receipt.json",
+          "sha256": "26496939179a90477b9fb967dfb84d9b68d79a2d06da0212de748490d529292d",
+          "byte_length": 648
+        },
+        "targets": [
+          "/root/s2_resume_j1",
+          "/root/s2_resume_j2"
+        ],
+        "recorded_logical_calls": 2
+      },
+      {
+        "batch": "l4-r1",
+        "request_or_dispatch_receipt": {
+          "path": "deliverable/judgments/l4-r1/seal-dispatch-receipt.json",
+          "sha256": "51a07201590c7e00ee7e81a04312a563ff6e304aaa8db2c4bf1e4b28dc3c09ee",
+          "byte_length": 1397
+        },
+        "targets": [
+          "/root/s2_resume_j1",
+          "/root/s2_resume_j2"
+        ],
+        "recorded_logical_calls": 2
+      },
+      {
+        "batch": "l4-r2",
+        "request_or_dispatch_receipt": {
+          "path": "deliverable/judgments/l4-r2/seal-dispatch-receipt.json",
+          "sha256": "c8e5be9750243f3cb3fc7415d54ec92d4bfb2488a21a5f4bc675c7c2e08b168b",
+          "byte_length": 754
+        },
+        "targets": [
+          "/root/s2_resume_j1",
+          "/root/s2_resume_j2"
+        ],
+        "recorded_logical_calls": 2
+      }
+    ],
+    "additional_ledger_only_review_activations": [
+      {
+        "ledger_row": 23,
+        "target": "/root/s2_resume_j1",
+        "batch": "desktop L1r1"
+      },
+      {
+        "ledger_row": 34,
+        "target": "/root/s2_resume_j1",
+        "batch": "desktop/design L1r2"
+      }
+    ],
+    "exact_total_review_activation_calls": null,
+    "one_failed_activation": {
+      "ledger_row": 22,
+      "target": "/root/s2_resume_j1",
+      "result": "thread-capacity rejection; later dispatched once"
+    },
+    "judge_context_initializations_separate_from_reviews": {
+      "original_ready_records": [
+        12,
+        13
+      ],
+      "resumed_ready_dispatch_records": [
+        15,
+        16
+      ],
+      "old_handles_not_found_record": 14
+    },
+    "responses": [
+      {
+        "response": {
+          "path": "deliverable/judgments/l2-r1/j1.json",
+          "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850",
+          "byte_length": 8629
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l2.desktop-web",
+            "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l2.app-session",
+            "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l2.design-tui",
+            "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l2-r1/j2.json",
+          "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd",
+          "byte_length": 8911
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l2.desktop-web",
+            "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l2.app-session",
+            "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l2.design-tui",
+            "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l3-r1/j1.json",
+          "sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a",
+          "byte_length": 8569
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l3.desktop-web",
+            "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l3.app-session",
+            "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l3.design-tui",
+            "body_sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l3-r1/j2.json",
+          "sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c",
+          "byte_length": 8849
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l3.desktop-web",
+            "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l3.app-session",
+            "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l3.design-tui",
+            "body_sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l3-r2/j1.json",
+          "sha256": "2a5102a2be7dc1acd065c75c75df6d558985a25ef15720221c792ec9b12f6741",
+          "byte_length": 5385
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l3.design-tui",
+            "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l3-r2/j2.json",
+          "sha256": "fc9edf21cf505d0b0e4fc535e68269e39e540ab2246d67e47bbdc376974f43e0",
+          "byte_length": 5456
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l3.design-tui",
+            "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l4-r1/j1.json",
+          "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458",
+          "byte_length": 10140
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l4.desktop-web",
+            "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l4.app-session",
+            "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l4.design-tui",
+            "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l4.entry",
+            "body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l4-r1/j2.json",
+          "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299",
+          "byte_length": 10179
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l4.desktop-web",
+            "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l4.app-session",
+            "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l4.design-tui",
+            "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l4.entry",
+            "body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l4-r2/j1.json",
+          "sha256": "81e9685a5fdd63170aa8a5dfafe40bdfe9d8ad2ef36e2580b06ce68f45f7d817",
+          "byte_length": 4720
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l4.entry",
+            "body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/l4-r2/j2.json",
+          "sha256": "5fb4008812cbe7e5f384aaed31ad4fb8bbbd99b738754b2759c9cd2f7e5cdf7d",
+          "byte_length": 4687
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l4.entry",
+            "body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/app-session-r2-j1.json",
+          "sha256": "c90085113c8cc9fe0bfb8a046af8493183763a4690b5ade7b9cfea156b0d1f0f",
+          "byte_length": 7343
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l1.app-session",
+            "body_sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/app-session-r2-j2.json",
+          "sha256": "a4c82c3e65e4f91b091334bb4775d99ec48b3ba34de536343e4501277389082d",
+          "byte_length": 7642
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l1.app-session",
+            "body_sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/app-session-r3-j1.json",
+          "sha256": "7507d5d7b5a893750f7a341e930bfae5af9be4d1d08482d8bfdf41a0f3321e2e",
+          "byte_length": 6027
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l1.app-session",
+            "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/app-session-r3-j2.json",
+          "sha256": "89e853a37f7001fd37cc612217d330db8e8a18a3497de48ccb56b2c178f3c0f4",
+          "byte_length": 6516
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l1.app-session",
+            "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/desktop-design-r2-j1.json",
+          "sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8",
+          "byte_length": 10736
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l1.desktop-web",
+            "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l1.design-tui",
+            "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/desktop-design-r2-j2.md",
+          "sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0",
+          "byte_length": 10138
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l1.desktop-web",
+            "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+            "verdict": "PASS"
+          },
+          {
+            "key": "s2.l1.design-tui",
+            "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+            "verdict": "PASS"
+          }
+        ],
+        "metadata_basis": "Exact original structured response metadata only; reasoning omitted"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/desktop-web-r1-j1.md",
+          "sha256": "bca4cdfe9ae855ecd95684cac428812fb7b31c1c46d3aea078a045e1d6109a5c",
+          "byte_length": 10927
+        },
+        "reviewer": "parallel-v3-fresh/S2/J1",
+        "artifacts": [
+          {
+            "key": "s2.l1.desktop-web",
+            "body_sha256": "f680f5e2900f4e5039e0d9be32b4756db66de7d776d59ee0232c26555fd362f9",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Original prose response retained; identity/verdict also recorded in ledger row25"
+      },
+      {
+        "response": {
+          "path": "deliverable/judgments/resume-l1/desktop-web-r1-j2.md",
+          "sha256": "b441527e6e729b1028ff587355fe3c01230b6774d33d5bf2599272aaf7e362d9",
+          "byte_length": 6641
+        },
+        "reviewer": "parallel-v3-fresh/S2/J2",
+        "artifacts": [
+          {
+            "key": "s2.l1.desktop-web",
+            "body_sha256": "f680f5e2900f4e5039e0d9be32b4756db66de7d776d59ee0232c26555fd362f9",
+            "verdict": "FIX-FIRST"
+          }
+        ],
+        "metadata_basis": "Original prose response retained; identity/verdict also recorded in ledger row25"
+      }
+    ],
+    "nonsemantic_completeness_check": {
+      "request": {
+        "path": "deliverable/judgments/l4-r1/desktop-transport-completeness-request-j1.txt",
+        "sha256": "c4f0ed73ffd81c6929dbdd40b18ce1869a8c71cd776018d0585bd297c1dee0c9",
+        "byte_length": 1175
+      },
+      "response": {
+        "path": "deliverable/judgments/l4-r1/desktop-transport-completeness-response-j1.md",
+        "sha256": "8d5ff03eb21a0120f46497d9b4feacb6e873236f75120109feb1826d0f5ac542",
+        "byte_length": 688
+      },
+      "ledger_row": 69
+    },
+    "limits": "Response documents are real preserved results, not inferred executions. Initial L1 J2 desktop, J2 desktop/design and both app-r3 review activations lack standalone dispatched-call receipts in this bounded index; their actual response documents remain present. Closure review is outside this preclosure snapshot."
+  },
+  "native_prepare": {
+    "logical_cli_invocations": 1,
+    "receipt": {
+      "path": "deliverable/evidence/native-final-prepare/prepare-execution-receipt.json",
+      "sha256": "234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410",
+      "byte_length": 4187
+    },
+    "state": "PREPARE_FAILED",
+    "exit_code": 1,
+    "started_at": "2026-11-11T20:48:51.158507+00:00",
+    "ended_at": "2026-11-11T20:48:52.041873+00:00",
+    "automatic_retries": 0,
+    "candidate_id": null,
+    "binding_id": null,
+    "partial_cas_preserved": true,
+    "scope": "Own S2 final package only; prior setup/typecheck and other-session sample operations are not additional S2 prepare calls"
+  },
+  "readbacks": {
+    "explicit_named_fresh_batches": [
+      {
+        "batch": "s4-r3-discovery",
+        "ledger_row": 54,
+        "observed_connector_returns": 2,
+        "returns": [
+          {
+            "envelope": {
+              "path": "deliverable/evidence/s4-discovery-r3/branch-ref-connector.json",
+              "sha256": "e6c6f9e5aaab11d7609e34c4a77bb8a12ecff0b173ffb5abf3a3d0af790e9f3d",
+              "byte_length": 1502
+            },
+            "endpoint": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/ref/heads/genesis-fresh-s4",
+            "is_error": false
+          },
+          {
+            "envelope": {
+              "path": "deliverable/evidence/s4-discovery-r3/release-connector.json",
+              "sha256": "3b0feb7d13f992cd312ec4360c88844b0c5f44a8ab24cca473b462f2a6c4aab1",
+              "byte_length": 30352
+            },
+            "endpoint": "https://github.com/gustavomhss/hugr-orchestra/blob/f3c1f6a83bb0b81fd2ab394ab9f21b19e8685604/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+            "is_error": false
+          }
+        ]
+      },
+      {
+        "batch": "s4-post-l3",
+        "ledger_row": 63,
+        "observed_connector_returns": 2,
+        "returns": [
+          {
+            "envelope": {
+              "path": "deliverable/evidence/s4-post-l3-recheck/branch-ref-connector.json",
+              "sha256": "56724bedbea52b557ea2350ff6d1d46848f3bab6046c3514f517a4fa429d5988",
+              "byte_length": 1502
+            },
+            "endpoint": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/ref/heads/genesis-fresh-s4",
+            "is_error": false
+          },
+          {
+            "envelope": {
+              "path": "deliverable/evidence/s4-post-l3-recheck/release-connector.json",
+              "sha256": "e0e12262bdaf3b74348b2dbc39189b22745191cfc34c676da95c21387d595f6c",
+              "byte_length": 30352
+            },
+            "endpoint": "https://github.com/gustavomhss/hugr-orchestra/blob/47eaa5322102910289cb56e2e07e9d3536ba1926/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+            "is_error": false
+          }
+        ]
+      },
+      {
+        "batch": "ci-final-two-runs",
+        "ledger_row": 65,
+        "observed_connector_returns": 2,
+        "returns": [
+          {
+            "envelope": {
+              "path": "deliverable/evidence/ci-final-readbacks/run-43065851373-connector.json",
+              "sha256": "89bc579ada65513dd1900dda7bca2d4cb078bd6ae0c164256afb07ba80bd4562",
+              "byte_length": 27857
+            },
+            "endpoint": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43065851373",
+            "is_error": false
+          },
+          {
+            "envelope": {
+              "path": "deliverable/evidence/ci-final-readbacks/run-43077975153-connector.json",
+              "sha256": "a7a48b5857383f97b5ba8abbd7b8db8be355a0224732552f42a06865d5958069",
+              "byte_length": 27833
+            },
+            "endpoint": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43077975153",
+            "is_error": false
+          }
+        ]
+      },
+      {
+        "batch": "final-s4-s2",
+        "ledger_row": 74,
+        "observed_connector_returns": 3,
+        "returns": [
+          {
+            "envelope": {
+              "path": "deliverable/evidence/final-remote-recheck-01/s4-branch-connector.json",
+              "sha256": "c33297ce38b7966b848bd98d43a3d988292f6f9b37bf3a503c7ec2a778358b82",
+              "byte_length": 1502
+            },
+            "endpoint": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/ref/heads/genesis-fresh-s4",
+            "is_error": false
+          },
+          {
+            "envelope": {
+              "path": "deliverable/evidence/final-remote-recheck-01/s2-branch-connector.json",
+              "sha256": "d13202ebceacf99529aaccc7055479da46b4bf49e9c71ff9d11c45123e1e69b5",
+              "byte_length": 1502
+            },
+            "endpoint": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/ref/heads/genesis-fresh-s2",
+            "is_error": false
+          },
+          {
+            "envelope": {
+              "path": "deliverable/evidence/final-remote-recheck-01/runtime-release-connector.json",
+              "sha256": "ebf8cba884c8311e3ddf05e323b417377ecff4fcbe7bd75828af7ae89bbaf6eb",
+              "byte_length": 30352
+            },
+            "endpoint": "https://github.com/gustavomhss/hugr-orchestra/blob/c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+            "is_error": false
+          }
+        ]
+      }
+    ],
+    "captured_returns_in_these_four_batches": 9,
+    "additional_capture_catalog_file": "additional-connector-capture-index.json",
+    "additional_distinct_envelope_hashes": 42,
+    "total_remote_read_calls": null,
+    "new_ci_runs_from_readbacks": false,
+    "limits": "The four named batches are9 captured logical GET results, not a global read total. The additional catalog is non-additive: matching hashes collapse preserved copies, but separate repeated GETs can produce identical bytes. Initial source captures, all historical reads and every root/support tool call are not fully reconciled here."
+  },
+  "consumers_and_update": {
+    "consumer_state": "NOT_RUN",
+    "planned_consumer_cases": 14,
+    "update_state": "NOT_RUN",
+    "planned_update_case": "S2-U1",
+    "scope": "Explicit own-S2 execution state in ledger row75, consistent with failed native prepare and absent candidate/binding. No consumer/update execution total is inferred from other-session evidence."
+  },
+  "publication_attempts": {
+    "recorded_automatic_approval_rejections": 2,
+    "ledger_rows": [
+      19,
+      26
+    ],
+    "result": "No remote tree write from these rejected requests",
+    "prior_claim_commit_is_history": true,
+    "global_remote_mutation_total": null
+  },
+  "historical_original_session": {
+    "reported_producer_relay_calls": 68,
+    "groups": [
+      {
+        "unit": "desktop-web",
+        "receipt": {
+          "path": "producers/desktop-web/transport-receipt.json",
+          "sha256": "617561d5c7885a69798f56af1ce41acd8f620eb5796c87cddbc569b470987b27",
+          "byte_length": 14176
+        },
+        "historical_reported_calls": 18,
+        "historical_acceptance_unconfirmed": 0,
+        "new_calls_caused_by_preservation": 0,
+        "scope": "Original-session producer relay only; not complete historical/root accounting"
+      },
+      {
+        "unit": "design-tui",
+        "receipt": {
+          "path": "producers/design-tui/transport-receipt.json",
+          "sha256": "bdfbd5effab7616f1f56e4577af96976b8ed53c4f0c381ec2c8a1641ee8ef173",
+          "byte_length": 15958
+        },
+        "historical_reported_calls": 22,
+        "historical_acceptance_unconfirmed": 0,
+        "new_calls_caused_by_preservation": 0,
+        "scope": "Original-session producer relay only; not complete historical/root accounting"
+      },
+      {
+        "unit": "app-session",
+        "receipt": {
+          "path": "deliverable/history/late-original-app-transport/later-original-receipt.json",
+          "sha256": "ba7860613532f0f5dccf854f2db24327d9e3c50b37a51780b28d747118e28724",
+          "byte_length": 11296
+        },
+        "historical_reported_calls": 28,
+        "historical_acceptance_unconfirmed": 1,
+        "new_calls_caused_by_preservation": 0,
+        "scope": "Original-session producer relay only; not complete historical/root accounting"
+      }
+    ],
+    "late_receipt_observation": {
+      "path": "deliverable/history/late-original-app-transport/observation.json",
+      "sha256": "3c57f7656815b32f623489408fbdf7ef5b8f8785077d5459226cd537366074a0",
+      "byte_length": 1539
+    },
+    "included_in_resumed113": false,
+    "global_history_state": "GLOBAL_UNRECONCILED",
+    "owner": "ROOT",
+    "limit": "These68 historical producer-relay calls are retained evidence, not newly issued calls and not the full original-session or campaign total."
+  },
+  "provider_telemetry": {
+    "physical_provider_attempts": "UNKNOWN",
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "cached_tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "global_history": "GLOBAL_UNRECONCILED",
+    "owner": "ROOT"
+  },
+  "independently_recoverable_local_gaps": [
+    {
+      "gap": "L4 entry-r2 two sends and two review activations have actual preserved receipts but no separate ledger events before row75.",
+      "resolution": "Root may append references to those existing actual receipts without new calls or reconstructing spend."
+    },
+    {
+      "gap": "Some initial L1 review activations are represented by actual response files and partial ledger entries rather than standalone exact dispatched-request/result records.",
+      "resolution": "If original visible conversation arguments/results remain accessible, preserve those exact records. Otherwise retain UNKNOWN exact activation total; do not manufacture envelopes."
+    },
+    {
+      "gap": "Support/coordination and original source-retrieval totals are not complete in this scoped index.",
+      "resolution": "Existing additional connector envelopes and retained archives can support further bounded identity indexing if a required gate demands it; do not equate capture/hash counts with physical attempts."
+    }
+  ],
+  "forbidden_inferences": [
+    "No filesystem-copy count is treated as another call.",
+    "No late archival observation is treated as a new send.",
+    "No token/billing/provider-attempt estimate is synthesized.",
+    "No semantic PASS is promoted to runtime, consumer, CI or global acceptance.",
+    "No raw judge reasoning or reserved consumer expected answers appear in this index."
+  ],
+  "support_files": [
+    {
+      "path": "closure-work/observable-usage-01/transport-call-index.json",
+      "sha256": "3527b14886dd1080f06d72eb9f7606eb1452f62d840d8a17bc9dfa61eb259246",
+      "byte_length": 40179
+    },
+    {
+      "path": "closure-work/observable-usage-01/additional-connector-capture-index.json",
+      "sha256": "cb3675e33eaa41d0cbecc124718d3cf0a62f3f01de898806b9691723401678a3",
+      "byte_length": 9126
+    },
+    {
+      "path": "closure-work/observable-usage-01/reconcile_usage.py",
+      "sha256": "f003797868ef1424c17eaffd8ebfc8afcb354c6d5068030f69097cedb9ef9783",
+      "byte_length": 20986
+    },
+    {
+      "path": "closure-work/observable-usage-01/execution-ledger-snapshot.jsonl",
+      "sha256": "0b084e444a2c3bed76e71ecd59abfa7fec9eb3a045731f5cbaf7e6ab0270b134",
+      "byte_length": 39584
+    },
+    {
+      "path": "closure-work/observable-usage-01/first-attempt-failure.json",
+      "sha256": "5e98cd9e55a07c0544e802d45e102a5361e2cf0b5de28f5b21c38daf5f52818d",
+      "byte_length": 545
+    },
+    {
+      "path": "closure-work/observable-usage-01/second-attempt-failure.json",
+      "sha256": "f6cca5178530e9675003b8fba455a6ba38c324b0b6d7fac18754a6a85b90864f",
+      "byte_length": 493
+    }
+  ],
+  "local_normalizer_execution": {
+    "successful_generation": true,
+    "prior_preserved_utility_failures": 2,
+    "scope": "Receipt-schema field mapping only; original evidence, canonical package and native runtime unchanged."
+  }
+}

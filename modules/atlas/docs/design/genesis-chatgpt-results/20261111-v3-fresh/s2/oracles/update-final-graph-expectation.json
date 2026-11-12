@@ -1,0 +1,286 @@
+{
+  "schema": "genesis-s2-update-expectation/v1",
+  "case": "S2-U1",
+  "frozen_before_execution": true,
+  "recorded_at": "2026-11-11T20:46:20.653439+00:00",
+  "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+  "direct_input_artifacts": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web"
+  ],
+  "build_affected_closure": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "outside_build_closure": [
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "build_edges": [
+    {
+      "consumer": "s2.l2.desktop-web",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l2.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l2.design-tui",
+      "dependency": "s2.l1.design-tui"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.desktop-web",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l3.design-tui",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.desktop-web",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.desktop-web",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.design-tui"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.design-tui",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l3.design-tui"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l4.app-session",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l1.design-tui"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l2.design-tui"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.desktop-web"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.app-session"
+    },
+    {
+      "consumer": "s2.l4.entry",
+      "dependency": "s2.l3.design-tui"
+    }
+  ],
+  "navigation_edges": [
+    {
+      "from": "s2.l2.desktop-web",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l2.desktop-web",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l2.app-session",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l2.app-session",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l2.design-tui",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l2.design-tui",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l3.app-session",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l3.app-session",
+      "to": "s2.l3.design-tui"
+    },
+    {
+      "from": "s2.l3.design-tui",
+      "to": "s2.l3.app-session"
+    },
+    {
+      "from": "s2.l3.design-tui",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l4.desktop-web",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.desktop-web",
+      "to": "s2.l4.design-tui"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.design-tui",
+      "to": "s2.l4.entry"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.design-tui"
+    },
+    {
+      "from": "s2.l4.app-session",
+      "to": "s2.l4.entry"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l1.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l2.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l3.design-tui"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.desktop-web"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.app-session"
+    },
+    {
+      "from": "s2.l4.entry",
+      "to": "s2.l4.design-tui"
+    }
+  ],
+  "status": "EXPECTED_ONLY_NOT_EXECUTED",
+  "limits": [
+    "This graph calculation is a frozen expectation, not runtime update, reuse, invalidation or reader proof.",
+    "Navigation alone does not add an artifact to the expected build closure."
+  ],
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+}

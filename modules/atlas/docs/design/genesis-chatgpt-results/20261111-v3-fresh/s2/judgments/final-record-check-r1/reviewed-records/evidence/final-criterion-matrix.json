@@ -1,0 +1,2427 @@
+{
+  "schema": "genesis-s2-final-criterion-matrix/v1",
+  "recorded_at": "2026-11-11T21:33:48.981909+00:00",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "reviewed_packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "normative_registry": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/criteria.json",
+    "byte_length": 4001,
+    "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116"
+  },
+  "normative_source": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+    "byte_length": 28267,
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5"
+  },
+  "preserved_reviewed_draft": {
+    "path": "judgments/final-closure-r1/reviewed-draft/final-obligations.json",
+    "byte_length": 2227586,
+    "sha256": "43b0f8e749711917cbb57a22aba84c479e1fbea0e1b9dcfbfa6ea5abc622641b"
+  },
+  "judges": {
+    "j1": {
+      "response": {
+        "path": "judgments/final-closure-r1/j1.json",
+        "byte_length": 22520,
+        "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+      },
+      "reviewer": "parallel-v3-fresh/S2/J1",
+      "transport": {
+        "status": "COMPLETE",
+        "parts_present": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "basis": "All numbered parts and sections 00–13 are visible. The split work text, normative lines, readback hash, usage record and preservation record have their continuations.",
+        "missing_parts": [],
+        "limits": "Hashes and byte lengths are externally supplied receipts. I have not recomputed them or attested to host message serialization. Public acceptance metadata is distinguished from peer reasoning, which I have not consulted."
+      },
+      "closure_assessment": {
+        "local_state": "INCOMPLETE_BLOCKED",
+        "closure_verdict": "HOLD",
+        "delivery_complete": false,
+        "evidence_sufficient_to_decide_noncompletion": true,
+        "material_blockers_confirmed": true,
+        "all_independent_local_work_exhausted": false,
+        "independent_authorized_work_remains": true,
+        "ready_to_end_local_work": false,
+        "reason": "The thirteen content acceptances remain intact, but the actual complete-package preparation failed and the required binding, readers, consumers, maintenance execution and publication evidence are absent. Current dependency observation confirms the material runtime limitation; the public-write refusals have no evidenced superseding authorization. Local receipt reconciliation, judged matrix finalization and blocked-resumption/disclosure preparation remain executable independently. After those are completed, an honest blocked return may preserve the exact unblock conditions; it must not be labelled PASS or DELIVERY_COMPLETE.",
+        "global_boundary": "Union integration, owner acceptance, final epic, landing and production activation belong to ROOT and are distinct from the unfinished local obligations. Their absence alone is not used to block local completion."
+      },
+      "criterion_groups": [
+        {
+          "ids": [
+            "GO-A2",
+            "GO-I1",
+            "GO-I2",
+            "GO-I8",
+            "AC-01",
+            "CC-1",
+            "CC-3",
+            "QS-1",
+            "QS-2"
+          ],
+          "local_status": "PASS",
+          "satisfied_local_portions": "The exact thirteen bodies retain my prior substantive content acceptances across cumulative L1–L4. They support purpose, mechanisms, contracts, impact and maintenance rather than headings alone. The frozen 4,506-path, 156-family population and named evidence depths remain explicit. The preservation receipt accounts for all 1,231 initial files, including the explicit initial-receipt override. Corrections, historical attempts and epistemic limits are retained. The closure draft correctly separates content acceptance, mechanical checks, failed preparation and unexecuted operational gates.",
+          "remaining_local_obligations": "No additional content correction is required for these exact accepted bodies. Actual indexed consumption, operational persistence, publication and complete delivery remain separate obligations in the groups below.",
+          "evidence_refs": [
+            "Sections 01 and 03: thirteen accepted body identities and four manifest pins",
+            "Section 12: coverage and original-preservation-final.json",
+            "My preserved L1–L4 original and correction decisions",
+            "Sections 04–11: explicitly bounded operational states"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Judge union coverage, cross-domain ownership, fidelity and usefulness; reconcile protected historical objects outside the local S2 preservation scope."
+          }
+        },
+        {
+          "ids": [
+            "GO-A1",
+            "GO-A3",
+            "AC-02",
+            "AC-03",
+            "CC-2",
+            "SC-1",
+            "SC-2"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "The accepted guides and entry provide useful bounded reading routes, twelve correctly mapped destinations and a declared entry root. Their content readiness was independently reviewed.",
+          "remaining_local_obligations": "S2 must execute and independently evaluate all fourteen frozen Atlas-only cases through the real index/read path. No trace is supplied. Content readiness and Markdown navigation do not establish reachable accepted knowledge, source-free consumer correctness or compliance with the frozen read bounds.",
+          "evidence_refs": [
+            "Section 11: all fourteen cases NOT_RUN with empty trace/evaluation references",
+            "Section 01: consumer limits and open G-CONSUMERS",
+            "Accepted s2.l4.entry and prior content-readiness decisions"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Validate additional integrated union navigation and cross-domain ownership cases. The fourteen missing S2 cases remain S2 obligations."
+          }
+        },
+        {
+          "ids": [
+            "GO-A4",
+            "GO-I4",
+            "GO-I5",
+            "AC-05",
+            "AC-06",
+            "CC-4",
+            "SC-3"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "Build and navigation roles are explicit. The supplied S2-U1 declared-graph closure is correct under those declarations, as assessed separately below. Accepted artifacts prescribe appropriate maintenance and generated-input ownership.",
+          "remaining_local_obligations": "Execute the local source-change/update case and compare actual invalidation, restoration and reuse with the validated expectation. Establish zero-interpretation reuse where applicable, independent identity preservation, result-based propagation stopping, receipt-only refresh and propagation of changed authority/validity/gaps. Relevant addition/removal, intent/recipe and missing-edge/input controls require compatible evidence; a graph calculation is insufficient.",
+          "evidence_refs": [
+            "Sections 08B.03 and 10: complete declared graph and prediction-only S2-U1",
+            "Section 11 and Section 08B.01: update NOT_RUN",
+            "Previously accepted dependency rationales"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Prove cross-domain affected closure and preservation across the union. Local S2 update, restoration and reuse are not transferred to ROOT."
+          }
+        },
+        {
+          "ids": [
+            "GO-A5",
+            "GO-I3",
+            "GO-I7",
+            "AC-07",
+            "AC-09",
+            "AC-10",
+            "CC-5",
+            "SC-5",
+            "QS-4"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "Source, content, candidate and CI identities are distinguished. Original and partial state is preserved. Public-write refusals were not treated as authorization. The supplied S4 records identify actual successful controls at 7102f2e3 and retain the failed aggregate run at e3a8ab8c.",
+          "remaining_local_obligations": "S2 lacks a complete prepared candidate, exact binding decisions, governed publication and current accepted-reader evidence. Coherence, stale-current refusal, compatible rollback, durable resume, independent-scope readability and migration protection require valid local-use or compatible common-control bindings. Missing S2 final-payload gates cannot be supplied by a sibling workflow. Final disclosure and Git publication remain unauthorized on the supplied evidence.",
+          "evidence_refs": [
+            "Sections 04–06: prepare failure, null candidate/binding and preserved partial CAS",
+            "Sections 07 and 08.01: candidate-specific CI and implementation differences",
+            "Section 09: both original public-write refusals",
+            "Section 13: local completion requirements"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Prove union coherence, branch-protection enforcement, integrated recovery and governed landing/activation. S2 must still establish its own binding, reads, required gates and publication evidence."
+          }
+        },
+        {
+          "ids": [
+            "GO-A7",
+            "AC-04",
+            "CC-7",
+            "QS-3"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "Real source-backed construction and the accepted documents are evidenced. The attempted integration uses the existing native Atlas prepare door. Compatibility, generated surfaces, historical material and current limits have explicit dispositions; no substitute knowledge framework is claimed.",
+          "remaining_local_obligations": "The complete S2 package has not successfully imported. A compatible pinned implementation must handle mandatory complete inputs and support the required source-authority controls. The observed unavailable-input rejection is not a complete known-good/known-bad construction test or proof of malicious/conflicting-source handling. Any required adaptation must remain minimal and independently bound.",
+          "evidence_refs": [
+            "Sections 03–06: accepted content and actual native prepare",
+            "Section 08.01: distinct input limits and common-control scope",
+            "Section 08B.02: compatibility request and staging preservation"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Review shared mechanism necessity and five-domain compatibility, including common S4 implementation changes and historical expansion obligations."
+          }
+        },
+        {
+          "ids": [
+            "GO-A6",
+            "GO-I6",
+            "AC-08",
+            "CC-6",
+            "SC-4",
+            "QS-6",
+            "DOD-5"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "The bounded index distinguishes actual logical sends, replacements, uncertainty flags, response documents and the one native invocation. It preserves useful completions and does not convert bytes or calls into tokens or money. Native telemetry remains UNKNOWN; historical accounting remains GLOBAL_UNRECONCILED.",
+          "remaining_local_obligations": "Reconcile newly observable local work after the frozen snapshot, including the supplied post-packet GETs and actual closure transport/review records. Retain missing original activation envelopes and non-exhaustive support/source-read totals as explicit limits. Establish the applicable authorized route/budget guarantee at its stated scope. Unexposed token or billing telemetry is not itself a new requirement to fabricate or reconstruct unavailable data.",
+          "evidence_refs": [
+            "Section 08B.01: bounded observable-usage index",
+            "Section 12: 79-event immutable closure snapshot and UNKNOWN fields",
+            "Principal post-packet readback at 2026-11-11T21:04:35.714496+00:00"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Reconcile the aggregate historical envelope and common adapter guarantee. Missing currently observable S2 events remain a local accounting obligation; historical unknowns must not be reset to zero."
+          }
+        },
+        {
+          "ids": [
+            "QS-5",
+            "DOD-1",
+            "DOD-2",
+            "DOD-3",
+            "DOD-4",
+            "DOD-6",
+            "DOD-7"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "The fixed-bar content review is complete for the exact thirteen artifacts. This packet preserves the criteria, original decisions, operation failure, scoped common evidence and explicit open gates. It does not manufacture closure from partial results.",
+          "remaining_local_obligations": "Record both actual final closure assessments and reconcile the fifty-ID matrix against them. Complete the remaining local consumer, update, binding/recovery and gate obligations when unblocked. Produce an accurate final incomplete-work/resumption record and reconcile authorized publication/sealing/readback. The draft work file and PLANNED_ABSENT handoff do not satisfy those requirements.",
+          "evidence_refs": [
+            "Sections 01–02: draft matrix and exact fifty normative lines",
+            "Sections 08–12: bounded controls, missing local executions and preservation",
+            "Section 13: completion protocol"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Record owner acceptance, integrated final epic, union integration, landing and production activation as distinct global states. Those global actions are not artificial prerequisites for local completion."
+          }
+        }
+      ]
+    },
+    "j2": {
+      "response": {
+        "path": "judgments/final-closure-r1/j2.json",
+        "byte_length": 19521,
+        "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+      },
+      "reviewer": "parallel-v3-fresh/S2/J2",
+      "transport": {
+        "status": "COMPLETE",
+        "parts_present": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "part_2_confirmation": "Complete part 2 is visible: it continues work.md, finishes that section and supplies the normative registry through the QS-4 continuation into part 3.",
+        "part_5_confirmation": "The separately labeled FULL REPLACEMENT part 5 is complete and used exclusively. Its section 10 direct_input_consumers array closes correctly with ]. Its preservation-section continuation joins part 6. The invalid initial part 5 is discarded.",
+        "limits": "Hashes and lengths are externally supplied receipts, not independently recomputed message-byte attestations. Public acceptance metadata was not used as the peer's reasoning.",
+        "additional_observation": "The principal's post-packet readback, receipt SHA256 6c84df86e7cd1a67426130bdeafdadeeacc07f26ea7e9b16a2faba9e95a98a8e, retains the same S4 release, candidate and observer limit."
+      },
+      "closure_assessment": {
+        "local_status": "FIX-FIRST",
+        "delivery_complete": false,
+        "material_blockers_confirmed": true,
+        "independent_authorized_local_work_remaining": true,
+        "evidence_sufficiency": "Sufficient to reject DELIVERY_COMPLETE, retain all thirteen exact content acceptances, validate the declared S2-U1 closure and identify the material runtime/publication blockers. It does not establish exhaustion of independent local work.",
+        "terminal_blocked_closure_ready": false,
+        "reason": "The completion protocol requires more than accepted prose and a failed prepare. Finish bounded independent reconciliation first. If only the documented material blockers then remain, record INCOMPLETE_BLOCKED with exact operations, errors, authority limits and unblock conditions; do not report delivery complete.",
+        "handoff_created_by_this_assessment": false
+      },
+      "criterion_groups": [
+        {
+          "ids": [
+            "GO-A2",
+            "GO-I2",
+            "GO-I8",
+            "AC-01",
+            "CC-1",
+            "CC-3",
+            "QS-1",
+            "QS-2"
+          ],
+          "local_status": "PASS",
+          "satisfied_local_portions": "My prior independent reviews support all thirteen exact current bodies as cumulative, useful, source-supported content. The frozen 4506-path, 156-family population and its 565 inspected, 3893 family-supported and 48 metadata-only dispositions remain explicit. The entry and maintenance guides explain substantive ownership and boundaries. The closure draft correctly separates those acceptances from operational completion.",
+          "remaining_local_obligations": "No mandatory content correction remains for these portions. Actual reachability and successful consumer use remain separate obligations below; this PASS does not establish them.",
+          "evidence_refs": [
+            "Sections 01, 03 and 12",
+            "Own L1–L4 decisions at the thirteen listed body hashes"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Reconcile union coverage, cumulative usefulness, cross-domain ownership, fidelity and integrated navigation."
+          }
+        },
+        {
+          "ids": [
+            "GO-I1"
+          ],
+          "local_status": "PASS",
+          "satisfied_local_portions": "The supplied preservation receipt covers all 1231 initial snapshot files, including the explicit initial late-receipt override. Current accepted bodies and correction lineage remain separately identifiable. Late transport is not promoted into old semantic approval.",
+          "remaining_local_obligations": "Preserve and append subsequent closure records without altering originals. This disposition covers the evidenced S2 protected population; it does not certify an exhaustive historical call inventory.",
+          "evidence_refs": [
+            "Section 12",
+            "original-preservation-final.json SHA256 a1405ade3d5c3c30daf6fb75c4e66bb245446ff6e07e6922a67473b54e0bf577",
+            "Prior correction packets and decisions"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Reconcile protected historical campaign objects outside this local preservation receipt."
+          }
+        },
+        {
+          "ids": [
+            "GO-A1",
+            "GO-A3",
+            "AC-02",
+            "AC-03",
+            "CC-2",
+            "SC-1",
+            "SC-2"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "Transferable-ownership content, operational guidance, exact headings and bounded-reading declarations are semantically accepted.",
+          "remaining_local_obligations": "All fourteen real Atlas-only consumers remain NOT_RUN: S2-C1–C5 and S2-I1D/I1A/I1U/I2D/I2A/I2U/I3D/I3A/I3U. Require fresh observed contexts, exact accepted versions, no source or answer-key access, actual index/read traces and independent evaluation. Routine limits remain 2 index calls, 2 reads and 16000 total body bytes; deep limits remain 6, 5 and 64000. Instructions establish an observable isolation boundary, not a technical sandbox.",
+          "evidence_refs": [
+            "Sections 01 and 11",
+            "Section 04: no candidate or binding"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Evaluate integrated union consumers and cross-domain progressive navigation; missing S2 consumers remain S2 obligations."
+          }
+        },
+        {
+          "ids": [
+            "GO-A4",
+            "GO-I4",
+            "GO-I5",
+            "AC-05",
+            "AC-06",
+            "CC-4",
+            "SC-3"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "Build/navigation roles were independently reviewed. The supplied S2-U1 declared-graph closure is correct at the scope stated in expected_set_assessment below.",
+          "remaining_local_obligations": "No actual mutation, invalidation, restoration, cache hit, independent-result preservation or proposer-call comparison is supplied. Execute S2-U1 and bind compatible common controls for additions/removals, intent/recipe changes, missing edges/inputs, authority/validity/gap changes, receipt-only refresh and unchanged-result stopping. Graph reachability alone cannot determine required interpretation calls.",
+          "evidence_refs": [
+            "Sections 08B.03 and 10",
+            "Prior accepted dependency reviews"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Prove propagation, restoration and independent reuse across the domain union."
+          }
+        },
+        {
+          "ids": [
+            "GO-A5",
+            "GO-I3",
+            "GO-I7",
+            "AC-04",
+            "AC-07",
+            "AC-09",
+            "AC-10",
+            "CC-5",
+            "CC-7",
+            "SC-5",
+            "QS-4",
+            "QS-5"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "Native content construction and source preservation are evidenced. One real prepare attempt is recorded, partial CAS is preserved, public-write refusals are retained, and the S4 CI observations distinguish exact candidates and scopes.",
+          "remaining_local_obligations": "Prepare failed before producing a candidate. Exact runtime bindings, governed publication, current/historical reader behavior, local invalid-state refusal, compatible recovery/rollback/migration and S2 final-payload gates remain unproved. Reuse common S4 evidence only through demonstrated compatibility and local binding; do not repeat unrelated common suites or transfer their outcomes automatically.",
+          "evidence_refs": [
+            "Sections 04–09.02",
+            "Section 13",
+            "Post-packet readback"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Integrate union publication, concurrency, governance, migration and branch-protection evidence. Local S2 import, binding, readers and gates are not transferred."
+          }
+        },
+        {
+          "ids": [
+            "GO-A6",
+            "GO-I6",
+            "AC-08",
+            "CC-6",
+            "SC-4",
+            "QS-6"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "The evidence distinguishes actual operations, archived copies, invalidated sends, replacements and uncertain acknowledgments. It records one S2 prepare invocation without automatic retries and preserves useful completed content. Missing tokens, billing and physical attempts are honestly UNKNOWN.",
+          "remaining_local_obligations": "Finish reconciliation of available current S2 production, review, correction, support and closure receipts by stage, including post-snapshot operations. The bounded index is expressly non-exhaustive, and no complete shared reservation/envelope or adapter-conformance guarantee is supplied. Keep unrecoverable telemetry unknown; do not manufacture totals or repeat old mining to obtain costs.",
+          "evidence_refs": [
+            "Sections 08B.01 and 12",
+            "79-row preclosure ledger snapshot",
+            "Post-packet readback"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Reconcile historical GLOBAL_UNRECONCILED usage, aggregate reservations and the campaign-wide adapter/envelope guarantee."
+          }
+        },
+        {
+          "ids": [
+            "GO-A7",
+            "QS-3"
+          ],
+          "local_status": "PASS",
+          "satisfied_local_portions": "The reviewed S2 contribution uses bounded knowledge artifacts and existing Atlas native preparation. The supplied work does not introduce a separate production knowledge store or governance framework. The compatibility problem is identified at the existing source-input boundary.",
+          "remaining_local_obligations": "Any subsequent implementation repair must remain narrowly justified and separately verified. This design disposition does not approve a future repair or establish successful runtime integration.",
+          "evidence_refs": [
+            "Accepted artifact/dependency reviews",
+            "Sections 04 and 08B.02"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Review shared runtime mechanism necessity and minimality across the integrated implementation."
+          }
+        },
+        {
+          "ids": [
+            "DOD-1",
+            "DOD-2",
+            "DOD-3",
+            "DOD-4",
+            "DOD-5",
+            "DOD-6",
+            "DOD-7"
+          ],
+          "local_status": "HOLD",
+          "satisfied_local_portions": "The fixed registry is preserved, content corrections are resolved, local/global responsibilities are distinguished, and this assessment supplies explicit dispositions without treating drafting or tests as delivery.",
+          "remaining_local_obligations": "Record both actual final closure assessments in the final matrix; finish current observable accounting and accurate blocked-work records. Required operational consumers, update/recovery controls and local gates remain open. No committed, sealed and reread final S2 handoff is evidenced. Human acceptance or union activation must not be invented or imposed as artificial substitutes for these local obligations.",
+          "evidence_refs": [
+            "Sections 01, 02 and 13",
+            "Handoff state PLANNED_ABSENT",
+            "Sections 04, 09–12"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "obligation": "Resolve union CC/SC and controls, final integrated epic, historical obligations, owner acceptance, governed integration, landing and production activation."
+          }
+        }
+      ]
+    }
+  },
+  "criteria": [
+    {
+      "id": "GO-A1",
+      "normative_line": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |",
+      "normative_source_line": 52,
+      "local_obligation": "Transfer useful ownership across the full S2 population.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Judge transferable ownership across the five-domain union."
+      }
+    },
+    {
+      "id": "GO-A2",
+      "normative_line": "| GO-A2 | Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch. |",
+      "normative_source_line": 53,
+      "local_obligation": "Persist cumulative, directly useful L1-L4 intermediates.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile cumulative cross-domain usefulness."
+      }
+    },
+    {
+      "id": "GO-A3",
+      "normative_line": "| GO-A3 | Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories. |",
+      "normative_source_line": 54,
+      "local_obligation": "Provide operational skill/entry and bounded real index/read navigation.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Validate the integrated entry and union navigation."
+      }
+    },
+    {
+      "id": "GO-A4",
+      "normative_line": "| GO-A4 | Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics. |",
+      "normative_source_line": 55,
+      "local_obligation": "Bind S2 build dependencies and maintenance semantics.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-UPDATE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove propagation and reuse across domains."
+      }
+    },
+    {
+      "id": "GO-A5",
+      "normative_line": "| GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |",
+      "normative_source_line": 56,
+      "local_obligation": "Keep source, authority, validity, Git and local gates distinct.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-RUNTIME",
+        "G-BINDING",
+        "G-CI",
+        "G-PUBLICATION",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Integrate source/knowledge consistency and governed landing."
+      }
+    },
+    {
+      "id": "GO-A6",
+      "normative_line": "| GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |",
+      "normative_source_line": 57,
+      "local_obligation": "Use deterministic provenance checks, bounded native tasks and retained completions.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile aggregate/historical economics and shared limits."
+      }
+    },
+    {
+      "id": "GO-A7",
+      "normative_line": "| GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |",
+      "normative_source_line": 58,
+      "local_obligation": "Use existing Atlas types/doors and only necessary adaptation.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": true,
+      "scope_note": "J2 accepts existing-mechanism design; J1 retains runtime-integration HOLD. Both original scopes remain; no synthetic agreement.",
+      "related_gate_refs": [
+        "G-RUNTIME",
+        "G-BINDING",
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review minimal shared mechanisms and union integration."
+      }
+    },
+    {
+      "id": "GO-I1",
+      "normative_line": "| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |",
+      "normative_source_line": 120,
+      "local_obligation": "Preserve original responses, retries, source identities and correction lineage.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-PUBLICATION",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile protected historical campaign objects."
+      }
+    },
+    {
+      "id": "GO-I2",
+      "normative_line": "| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |",
+      "normative_source_line": 121,
+      "local_obligation": "Retain labels for observation, intent, interpretation and gaps.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Resolve cross-domain conflicts without certainty inflation."
+      }
+    },
+    {
+      "id": "GO-I3",
+      "normative_line": "| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |",
+      "normative_source_line": 122,
+      "local_obligation": "Bind exact current versions to a valid accepted local manifest.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-BINDING",
+        "G-CONSUMERS",
+        "G-RECOVERY",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove union manifest coherence and current-source validity."
+      }
+    },
+    {
+      "id": "GO-I4",
+      "normative_line": "| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |",
+      "normative_source_line": 123,
+      "local_obligation": "Reuse unchanged valid work; distinguish build and navigation edges.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-UPDATE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove independent cross-domain preservation and shared cache semantics."
+      }
+    },
+    {
+      "id": "GO-I5",
+      "normative_line": "| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |",
+      "normative_source_line": 124,
+      "local_obligation": "Include source and relevant non-code change in S2 impact.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-UPDATE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove union impact closure and unavailable-impact HOLD."
+      }
+    },
+    {
+      "id": "GO-I6",
+      "normative_line": "| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |",
+      "normative_source_line": 125,
+      "local_obligation": "Account for every visible production/review/correction/consumer request.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile global reservations, historical limits and adapter guarantee."
+      }
+    },
+    {
+      "id": "GO-I7",
+      "normative_line": "| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |",
+      "normative_source_line": 126,
+      "local_obligation": "Retain governed doors, source-as-data and domain/generated boundaries.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-BINDING",
+        "G-RECOVERY",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Validate union governance, project boundaries and preservation."
+      }
+    },
+    {
+      "id": "GO-I8",
+      "normative_line": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |",
+      "normative_source_line": 127,
+      "local_obligation": "Keep mechanical coverage, semantic acceptance, runtime and completion distinct.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Independently decide union semantic and global completion states."
+      }
+    },
+    {
+      "id": "AC-01",
+      "normative_line": "| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |",
+      "normative_source_line": 138,
+      "local_obligation": "Account for 4506 paths/156 families and all 13 required keys.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review coverage union and cross-domain flow sufficiency."
+      }
+    },
+    {
+      "id": "AC-02",
+      "normative_line": "| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |",
+      "normative_source_line": 139,
+      "local_obligation": "Run five frozen ownership cases with independent Atlas-only consumers.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Run ownership cases for integrated cross-domain use."
+      }
+    },
+    {
+      "id": "AC-03",
+      "normative_line": "| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |",
+      "normative_source_line": 140,
+      "local_obligation": "Run nine direct-use cases plus bounded ownership navigation.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Validate integrated progressive use and union navigation."
+      }
+    },
+    {
+      "id": "AC-04",
+      "normative_line": "| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |",
+      "normative_source_line": 141,
+      "local_obligation": "Preserve real native construction and prove exact import/source authority handling.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-RUNTIME",
+        "G-BINDING",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Check five-package compatibility and union authority controls."
+      }
+    },
+    {
+      "id": "AC-05",
+      "normative_line": "| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |",
+      "normative_source_line": 142,
+      "local_obligation": "Prove reuse, independent identity preservation and result/receipt semantics.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-UPDATE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove cross-domain independence and propagation stopping."
+      }
+    },
+    {
+      "id": "AC-06",
+      "normative_line": "| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |",
+      "normative_source_line": 143,
+      "local_obligation": "Prove expected affected set and actual knowledge restoration.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-UPDATE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove cross-domain impacted closure and rebuilt union."
+      }
+    },
+    {
+      "id": "AC-07",
+      "normative_line": "| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |",
+      "normative_source_line": 144,
+      "local_obligation": "Prove coherent local accepted reads or HOLD during recovery.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-BINDING",
+        "G-RECOVERY",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove union concurrency, failure recovery and independent scopes."
+      }
+    },
+    {
+      "id": "AC-08",
+      "normative_line": "| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |",
+      "normative_source_line": 145,
+      "local_obligation": "Report all new observable usage and true native-route limits.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile common adapter guarantee, aggregate envelope and history."
+      }
+    },
+    {
+      "id": "AC-09",
+      "normative_line": "| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |",
+      "normative_source_line": 146,
+      "local_obligation": "Verify S2 component gates and actual invalid-state reader controls.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CI",
+        "G-BINDING",
+        "G-RECOVERY",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Run integrated gates; report actual branch protection and scope isolation."
+      }
+    },
+    {
+      "id": "AC-10",
+      "normative_line": "| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |",
+      "normative_source_line": 147,
+      "local_obligation": "Preserve S2 protected objects and generated boundaries; stage without authority.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-RECOVERY",
+        "G-PUBLICATION",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile full historical preservation, migration and activation."
+      }
+    },
+    {
+      "id": "CC-1",
+      "normative_line": "| CC-1 | Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen. | AC-01, AC-04 |",
+      "normative_source_line": 159,
+      "local_obligation": "Maintain frozen scope, source, gaps and finite 13-key inventory.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Freeze/reconcile union inventory and missing knowledge."
+      }
+    },
+    {
+      "id": "CC-2",
+      "normative_line": "| CC-2 | The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path. | AC-03, AC-04 |",
+      "normative_source_line": 160,
+      "local_obligation": "Make every required local level persistent and directly reachable.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Confirm cumulative union reachability."
+      }
+    },
+    {
+      "id": "CC-3",
+      "normative_line": "| CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |",
+      "normative_source_line": 161,
+      "local_obligation": "Support purpose, contracts, behavior, decisions, impact and maintenance.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Judge cross-domain ownership sufficiency."
+      }
+    },
+    {
+      "id": "CC-4",
+      "normative_line": "| CC-4 | Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end. | AC-05, AC-06 |",
+      "normative_source_line": 162,
+      "local_obligation": "Demonstrate local initial build through incremental maintenance.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-RUNTIME",
+        "G-UPDATE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove end-to-end union maintenance."
+      }
+    },
+    {
+      "id": "CC-5",
+      "normative_line": "| CC-5 | Coherent publication, reader verification, failure recovery and rollback work without weakening governance. | AC-07, AC-09, AC-10 |",
+      "normative_source_line": 163,
+      "local_obligation": "Use coherent publication, reader verification and compatible recovery.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-BINDING",
+        "G-RECOVERY",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove union recovery, concurrent readers and independent scopes."
+      }
+    },
+    {
+      "id": "CC-6",
+      "normative_line": "| CC-6 | Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles. | AC-08 |",
+      "normative_source_line": 164,
+      "local_obligation": "Reconcile observed local economics to the actual route guarantee.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile adapter guarantees and aggregated/historical obligations."
+      }
+    },
+    {
+      "id": "CC-7",
+      "normative_line": "| CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |",
+      "normative_source_line": 165,
+      "local_obligation": "Dispose of local compatibility, generated surfaces and maintenance guidance.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-RUNTIME",
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Resolve union compatibility, old-campaign obligations and expansion limits."
+      }
+    },
+    {
+      "id": "SC-1",
+      "normative_line": "- **SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.",
+      "normative_source_line": 169,
+      "local_obligation": "Pass all frozen local ownership cases without source discovery.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Pass integrated ownership cases."
+      }
+    },
+    {
+      "id": "SC-2",
+      "normative_line": "- **SC-2 — progressive use:** AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.",
+      "normative_source_line": 170,
+      "local_obligation": "Meet frozen routine/deep read limits with real readers.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/1",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Meet union progressive-use limits."
+      }
+    },
+    {
+      "id": "SC-3",
+      "normative_line": "- **SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
+      "normative_source_line": 171,
+      "local_obligation": "Preserve independent work and expected update closure.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/2",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-UPDATE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Verify cross-domain incrementality and no unnecessary interpretation."
+      }
+    },
+    {
+      "id": "SC-4",
+      "normative_line": "- **SC-4 — economics:** separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
+      "normative_source_line": 172,
+      "local_obligation": "Report construction, review, update and read usage separately.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile total envelope and historical/comparable measurements."
+      }
+    },
+    {
+      "id": "SC-5",
+      "normative_line": "- **SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "normative_source_line": 173,
+      "local_obligation": "Demonstrate coherent local reads and refusal of invalid states.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-BINDING",
+        "G-RECOVERY",
+        "G-CI",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Prove integrated consistency and invalid-state refusal."
+      }
+    },
+    {
+      "id": "QS-1",
+      "normative_line": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "normative_source_line": 180,
+      "local_obligation": "Preserve fidelity, disagreement and exact epistemic labels.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review union fidelity and unresolved conflicts."
+      }
+    },
+    {
+      "id": "QS-2",
+      "normative_line": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "normative_source_line": 181,
+      "local_obligation": "Provide concise actionable guides and useful bounded index entries.",
+      "local_status": "PASS",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/0",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review integrated operating guidance and navigation utility."
+      }
+    },
+    {
+      "id": "QS-3",
+      "normative_line": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "normative_source_line": 182,
+      "local_obligation": "Use only justified existing-Atlas mechanisms.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "PASS",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": true,
+      "scope_note": "J2 accepts existing-mechanism design; J1 retains runtime-integration HOLD. Both original scopes remain; no synthetic agreement.",
+      "related_gate_refs": [
+        "G-RUNTIME",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review shared mechanism necessity and avoid redundant infrastructure."
+      }
+    },
+    {
+      "id": "QS-4",
+      "normative_line": "- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "normative_source_line": 183,
+      "local_obligation": "Retain repository boundaries, generated discipline and safe persistence.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/3",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-BINDING",
+        "G-CI",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review integrated engineering/governance controls."
+      }
+    },
+    {
+      "id": "QS-5",
+      "normative_line": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "normative_source_line": 184,
+      "local_obligation": "Use fixed independent semantic bar and actual controls with bounded proof.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/4",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-UPDATE",
+        "G-CI",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review union evidence and anti-vacuity coverage."
+      }
+    },
+    {
+      "id": "QS-6",
+      "normative_line": "- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "normative_source_line": 185,
+      "local_obligation": "Reuse preserved context/completions and record bounded work honestly.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile campaign economics and reusable completions."
+      }
+    },
+    {
+      "id": "DOD-1",
+      "normative_line": "- **DOD-1:** CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.",
+      "normative_source_line": 223,
+      "local_obligation": "Link every local CC/SC disposition to actual evidence and decisions.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/7",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-UPDATE",
+        "G-RECOVERY",
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Resolve union CC/SC and named global acceptance."
+      }
+    },
+    {
+      "id": "DOD-2",
+      "normative_line": "- **DOD-2:** all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
+      "normative_source_line": 224,
+      "local_obligation": "Review applicable invariants/QS and demonstrate rejecting controls.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/7",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-UPDATE",
+        "G-CI",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Review global invariants/QS and integrated rejecting controls."
+      }
+    },
+    {
+      "id": "DOD-3",
+      "normative_line": "- **DOD-3:** real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.",
+      "normative_source_line": 225,
+      "local_obligation": "Verify accepted local consumption and end-to-end maintenance/publication use.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/7",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CONSUMERS",
+        "G-UPDATE",
+        "G-RECOVERY",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Verify integrated end-to-end union path."
+      }
+    },
+    {
+      "id": "DOD-4",
+      "normative_line": "- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
+      "normative_source_line": 226,
+      "local_obligation": "Reconcile actual local scoped gates without promoting unrun gates.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/7",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-CI",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Run final integrated epic and report enforcement separately."
+      }
+    },
+    {
+      "id": "DOD-5",
+      "normative_line": "- **DOD-5:** real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
+      "normative_source_line": 227,
+      "local_obligation": "Reconcile all authorized new visible usage and unresolved requests.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/5",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/7",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Reconcile historical aggregate/envelope with no resets."
+      }
+    },
+    {
+      "id": "DOD-6",
+      "normative_line": "- **DOD-6:** docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
+      "normative_source_line": 228,
+      "local_obligation": "Deliver accurate guides, local compatibility/preservation and complete independent review.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/7",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-PUBLICATION",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Resolve historical migration/rollback and governed landing review."
+      }
+    },
+    {
+      "id": "DOD-7",
+      "normative_line": "- **DOD-7:** owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
+      "normative_source_line": 229,
+      "local_obligation": "Report honest local completion and governed sealed transport.",
+      "local_status": "HOLD",
+      "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+      "judge_decisions": {
+        "j1": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/6",
+          "response": {
+            "path": "judgments/final-closure-r1/j1.json",
+            "byte_length": 22520,
+            "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+          }
+        },
+        "j2": {
+          "status": "HOLD",
+          "group_pointer": "/criterion_groups/7",
+          "response": {
+            "path": "judgments/final-closure-r1/j2.json",
+            "byte_length": 19521,
+            "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+          }
+        }
+      },
+      "scope_difference": false,
+      "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+      "related_gate_refs": [
+        "G-PROVENANCE",
+        "G-PUBLICATION",
+        "G-CLOSURE"
+      ],
+      "global_complement": {
+        "owner": "ROOT",
+        "status": "DEFERRED_TO_INTEGRATION",
+        "proof": "Record owner acceptance, governed integration, landing and production activation as distinct states."
+      }
+    }
+  ],
+  "criterion_counts": {
+    "HOLD": 41,
+    "PASS": 9
+  },
+  "limits": [
+    "No new criterion decision is issued by this recorder.",
+    "PASS is limited to each original reviewed local portion; it does not establish runtime, publication or whole-delivery acceptance.",
+    "The 41 HOLD records remain open despite completion of current local bookkeeping. Exact resolved bookkeeping is recorded separately; unavailable operational proof is not manufactured."
+  ]
+}

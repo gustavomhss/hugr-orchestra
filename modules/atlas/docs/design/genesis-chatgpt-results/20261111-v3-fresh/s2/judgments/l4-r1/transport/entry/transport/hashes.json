@@ -1,0 +1,39 @@
+{
+  "schema": "genesis-local-transport-hashes/v1",
+  "artifact": "s2.l4.entry",
+  "revision": 1,
+  "scope": "Local record files only; no host-internal or received-byte attestation.",
+  "files": [
+    {
+      "file": "payload-01.txt",
+      "byte_length": 26053,
+      "sha256": "bc969220abe4c2aa342ac764639e444f80f6a22c0153a4515503b532593855a3"
+    },
+    {
+      "file": "payload-02.txt",
+      "byte_length": 4396,
+      "sha256": "b8d55cf25021d4866a5fdb703c0712e21cf972054ff88dc8e5046231a99530d9"
+    },
+    {
+      "file": "receipts.json",
+      "byte_length": 11620,
+      "sha256": "cfb109e2b4275c9e5bd6555a1ee68f6d657547e97d20319ce4e971409e1b728f"
+    },
+    {
+      "file": "response.md",
+      "byte_length": 3553,
+      "sha256": "fafe2f86545743fe5eabf4d3887c5b82a36ff68d126b76b4ad27c505cc49b3a7"
+    },
+    {
+      "file": "payload-02-call08-invalid.txt",
+      "byte_length": 4401,
+      "sha256": "64f609baa3452ce4b6cc5407ae2e51339eb620ecf99214ced6245fd7e0cd3320"
+    },
+    {
+      "file": "payload-02-call09-replacement.txt",
+      "byte_length": 4642,
+      "sha256": "97e0f07e524d651f704f79142f6bca2da672c8d5b7cd168600da986e68216507"
+    }
+  ],
+  "self_excluded": true
+}

@@ -1,0 +1,332 @@
+{
+  "schema": "genesis-s2-u1-final-binding-audit/v1",
+  "case_id": "S2-U1",
+  "audit_started_at": "2026-11-11T21:31:28.995481+00:00",
+  "audit_finished_at": "2026-11-11T21:31:29.003602+00:00",
+  "role": "Bounded provenance and declared-graph audit only; no semantic authoring or judgment.",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "audit_status": "FROZEN_TARGET_AND_PREDICTION_BOUND_EXACT_MUTATION_UNSPECIFIED",
+  "inputs": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/ownership-v1.json",
+      "byte_length": 12869,
+      "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json",
+      "byte_length": 6260,
+      "sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/layers-addendum.json",
+      "byte_length": 2377,
+      "sha256": "3fe0f7a3d118fab05fba99f9348a7b434b23418cbc8a0e003ed46f80279d2a8f"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/requests/native-production-plan.json",
+      "byte_length": 1884,
+      "sha256": "c143e65c43fe9fd8816c8f4ca3f636b019e1fec0c3f02a7d5701f4b1bf082ea0"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/requests/runtime-compatibility-after-native-failure.md",
+      "byte_length": 4237,
+      "sha256": "5058caeb2706c1cb630f0e838880379457cd386fa16bf6bf9fe651947f1d04fc"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/runtime.md",
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/campaign.md",
+      "byte_length": 4842,
+      "sha256": "b3cb6324c348ca3fbe92ccf73b2a5e17d36d0822aa3cddeec84c0a9bb2a907bb"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/apps/desktop/src/main/owned-serve.ts",
+      "byte_length": 8511,
+      "sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/inputs/desktop-web-tree.json",
+      "byte_length": 96767,
+      "sha256": "ea0257a78d1940515ec5baa4632e906e5a2f3e019263c8f39c90fbf973c363f5"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/native-package.json",
+      "byte_length": 332594,
+      "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+    }
+  ],
+  "scope": {
+    "primary_roots": [
+      "deliverable/oracles",
+      "deliverable/requests",
+      "protocol"
+    ],
+    "saved_update_file": "deliverable/oracles/update-final-graph-expectation.json",
+    "absence_limit": "Absence findings concern the inspected frozen case records and relevant request/protocol references, not an unbounded repository search. No raw judge opinions were used.",
+    "final_judge_scope_as_supplied_by_root": "Declared expected graph only; actual mutation/update NOT_RUN. This audit neither reads nor independently asserts final judge verdicts."
+  },
+  "frozen_case": {
+    "source": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/ownership-v1.json",
+    "json_pointer": "/impact_case",
+    "original": {
+      "id": "S2-U1",
+      "operation": "isolated behavior edit in apps/desktop/src/main/owned-serve.ts",
+      "expected": "L1 desktop/web and its build-dependent closure require revalidation; app/session and design/TUI units that only navigate to desktop remain unchanged. Compute exact closure from final declared graph before run; stop if graph contradicts semantic dependencies.",
+      "controls": [
+        "identical inputs/recipe reuse",
+        "navigation-only link does not rebuild",
+        "missing declared input and omitted dependency reject",
+        "recipe or authority/validity/gaps change propagates even equal prose",
+        "restore exact source and rebind, no stale fallback"
+      ]
+    },
+    "exact_mutation_patch": null,
+    "mutant_sha256": null
+  },
+  "baseline_source_binding": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/apps/desktop/src/main/owned-serve.ts",
+    "repository_path": "apps/desktop/src/main/owned-serve.ts",
+    "byte_length": 8511,
+    "sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+    "git_blob_sha": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "frozen_tree_entry": [
+      {
+        "path": "apps/desktop/src/main/owned-serve.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+        "size": 8511
+      }
+    ],
+    "native_package_source_refs": [
+      {
+        "artifact_key": "s2.l1.desktop-web",
+        "source_ref": {
+          "path": "apps/desktop/src/main/owned-serve.ts",
+          "git_blob_sha": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+          "sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+        }
+      },
+      {
+        "artifact_key": "s2.l2.desktop-web",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "apps/desktop/src/main/owned-serve.ts",
+          "git_blob_sha": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+          "sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5"
+        }
+      }
+    ],
+    "meaning": "The observed baseline bytes are bindable restoration evidence; observing them now does not prove that a mutation was applied and restored."
+  },
+  "expected_graph": {
+    "source": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json",
+    "sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f",
+    "recorded_status": "EXPECTED_ONLY_NOT_EXECUTED",
+    "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+    "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+    "direct_input_artifacts": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web"
+    ],
+    "potential_build_affected_closure": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "potential_affected_artifact_count": 9,
+    "outside_build_closure": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ],
+    "declared_build_edge_count": 32,
+    "declared_navigation_edge_count": 30,
+    "mechanical_comparisons": {
+      "saved_graph_package_sha_matches_current_package": true,
+      "saved_direct_inputs_match_current_declared_inputs": true,
+      "saved_build_edges_match_current_declared_build_edges": true,
+      "saved_potential_closure_matches_current_declared_graph": true,
+      "saved_outside_closure_matches_current_declared_graph": true,
+      "baseline_git_blob_matches_frozen_tree": true,
+      "baseline_matches_current_package_source_refs": true
+    },
+    "not_a_call_count": "Nine potential affected artifacts is not nine interpretation calls. The normative plan permits deterministic discharge, zero proposer calls for unchanged valid inputs/recipe, receipt-only binding refresh, and downstream stopping only when the validated canonical consumer-visible result is unchanged; equal prose alone is insufficient. Actual interpretation/proposer counts for S2-U1 are unobserved because it was NOT_RUN.",
+    "conditional_scope": "The original promise protects units that only navigate to desktop. In the final declared graph, L3/L4 cross-unit build dependencies make app/session and design/TUI candidates; their L1/L2 units are outside this potential closure."
+  },
+  "restoration_binding": {
+    "frozen_requirement": "restore exact source and rebind, no stale fallback",
+    "state": "SEMANTICS_PRESENT_EXECUTION_NOT_RUN",
+    "exact_source_identity_ref": "baseline_source_binding",
+    "required_observable_result": "Restore the exact baseline bytes and rebind/revalidate against current source and contracts. Prior acceptance or knowledge rollback alone cannot make a stale generation current; failed rebuilds cannot serve stale fallback as current. These are existing requirements, not outcomes supplied by this receipt.",
+    "source_excerpt_refs": [
+      "deliverable/oracles/ownership-v1.json:256",
+      "protocol/references/runtime.md:114-127",
+      "corpus/modules/atlas/docs/design/genesis-ownership-plan.md:112-114",
+      "corpus/modules/atlas/docs/design/genesis-ownership-plan.md:142-144"
+    ]
+  },
+  "missing_details": [
+    {
+      "id": "U1-EXACT-EDIT",
+      "state": "ABSENT_IN_INSPECTED_FROZEN_RECORDS",
+      "detail": "The frozen impact_case identifies an isolated behavior edit and its target file only. No exact patch, changed line/selector, before/after replacement, mutated file bytes, or mutant SHA-256 is specified. The baseline READY_TIMEOUT line is source evidence, not a frozen instruction to edit that constant."
+    },
+    {
+      "id": "U1-MUTANT-RESULT-COMPARISON",
+      "state": "ABSENT_AS_CASE_SPECIFIC_VALUES",
+      "detail": "The general canonical-result comparison and reuse rules are present, but the inspected S2-U1 records do not freeze per-artifact post-mutation result identities or an exact omission/control fixture. A potential affected closure does not specify which candidates need interpretation."
+    },
+    {
+      "id": "U1-EXECUTION",
+      "state": "NOT_RUN",
+      "detail": "Actual mutation, update/revalidation/rebuild, reuse/call-count observation, source restoration, rebinding and post-restoration reader traces remain unexecuted. The graph file explicitly states EXPECTED_ONLY_NOT_EXECUTED; no execution is inferred from it or from content acceptance."
+    },
+    {
+      "id": "U1-REFERENCED-UPDATE-CONTRACT",
+      "state": "ABSENT_AT_EXPECTED_LOCAL_CORPUS_PATH",
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-update-plan-contract.md",
+      "detail": "protocol/references/campaign.md line 61 references genesis-update-plan-contract.md. This bounded audit performed no remote retrieval and does not assert that the repository lacks the document."
+    }
+  ],
+  "material_conflicts": [],
+  "original_excerpts": [
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/ownership-v1.json",
+      "start_line": 247,
+      "end_line": 258,
+      "text": "  \"impact_case\": {\n    \"id\": \"S2-U1\",\n    \"operation\": \"isolated behavior edit in apps/desktop/src/main/owned-serve.ts\",\n    \"expected\": \"L1 desktop/web and its build-dependent closure require revalidation; app/session and design/TUI units that only navigate to desktop remain unchanged. Compute exact closure from final declared graph before run; stop if graph contradicts semantic dependencies.\",\n    \"controls\": [\n      \"identical inputs/recipe reuse\",\n      \"navigation-only link does not rebuild\",\n      \"missing declared input and omitted dependency reject\",\n      \"recipe or authority/validity/gaps change propagates even equal prose\",\n      \"restore exact source and rebind, no stale fallback\"\n    ]\n  },\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json",
+      "start_line": 1,
+      "end_line": 27,
+      "text": "{\n  \"schema\": \"genesis-s2-update-expectation/v1\",\n  \"case\": \"S2-U1\",\n  \"frozen_before_execution\": true,\n  \"recorded_at\": \"2026-11-11T20:46:20.653439+00:00\",\n  \"changed_input\": \"file:apps/desktop/src/main/owned-serve.ts\",\n  \"direct_input_artifacts\": [\n    \"s2.l1.desktop-web\",\n    \"s2.l2.desktop-web\"\n  ],\n  \"build_affected_closure\": [\n    \"s2.l1.desktop-web\",\n    \"s2.l2.desktop-web\",\n    \"s2.l3.app-session\",\n    \"s2.l3.design-tui\",\n    \"s2.l3.desktop-web\",\n    \"s2.l4.app-session\",\n    \"s2.l4.design-tui\",\n    \"s2.l4.desktop-web\",\n    \"s2.l4.entry\"\n  ],\n  \"outside_build_closure\": [\n    \"s2.l1.app-session\",\n    \"s2.l1.design-tui\",\n    \"s2.l2.app-session\",\n    \"s2.l2.design-tui\"\n  ],\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/update-final-graph-expectation.json",
+      "start_line": 280,
+      "end_line": 286,
+      "text": "  \"status\": \"EXPECTED_ONLY_NOT_EXECUTED\",\n  \"limits\": [\n    \"This graph calculation is a frozen expectation, not runtime update, reuse, invalidation or reader proof.\",\n    \"Navigation alone does not add an artifact to the expected build closure.\"\n  ],\n  \"native_package_sha256\": \"9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b\"\n}\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/oracles/layers-addendum.json",
+      "start_line": 4,
+      "end_line": 8,
+      "text": "  \"relation\": \"Before any L2/L3/L4 production dispatch; preserves ownership-v1 unchanged\",\n  \"ownership_oracle\": {\n    \"path\": \"oracles/ownership-v1.json\",\n    \"sha256\": \"87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1\"\n  },\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/requests/native-production-plan.json",
+      "start_line": 20,
+      "end_line": 20,
+      "text": "  \"remaining_runtime_consumers\": \"Execute only with compatible pinned actual runtime and real publication/binding; no substitute markdown reads. Frozen cases remain reserved from producers.\",\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/requests/runtime-compatibility-after-native-failure.md",
+      "start_line": 31,
+      "end_line": 35,
+      "text": "S4 must provide a new pinned compatible implementation and release whose source/input observation and native source reads consistently admit all three legitimate complete inputs across preparation, binding, publication, current reads and updates, while retaining bounded reads, immutable content identity, race checks, unsafe-path/symlink refusal and a real distinction between absent and unavailable. A valid S4 solution may choose its bounded policy, but it cannot silently omit, truncate, reclassify or replace these S2 inputs with transport digests or synthetic observations.\n\nS2 will preserve this failed attempt and use a new isolated operation for the compatible implementation. Required local work after that dependency is available remains: complete preparation and binding, actual Atlas index/read consumers with the frozen budgets, S2-U1 update/restoration/reuse, compatible control bindings, and applicable CI. Public GitHub payload publication also has a separate unresolved automatic approval rejection; changing the runtime does not authorize disclosure.\n\nThe successful common-controls CI run at `7102f2e3a1a9a3822bcd0ae054b36ecffe9da553` does not change the native candidate retained in this release or supply a successful S2 import. Both the historical native-candidate CI failure and current scoped common-controls success remain visible in the final evidence.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/runtime.md",
+      "start_line": 112,
+      "end_line": 127,
+      "text": "## Binding, atualização e consumo\n\nO adapter calcula hashes CAS e versões de inputs reais; hashes de transporte não são\n`OwnershipInput.version`. Preservar bytes exatos. Dependência de build invalida resultados;\nlink de navegação só orienta consulta. Igualdade de prosa não iguala autoridade/validade/gaps.\nFontes indisponíveis permanecem indisponíveis; lista vazia não prova ausência de afetados. [R2, R3]\n\nJuízes de conteúdo não emitem automaticamente aprovação de binding. Quando exigida, o\nmesmo par independente recebe a transformação/candidato exatos e a evidência de execução\npara decidir essa obrigação separada. Não sintetizar votos nem atribuir IDs históricos.\n\nConsumidores independentes usam index/read reais e os limites fixados antes de avaliar.\nPreservar consultas, respostas, versões e isolamento observado; abrir um arquivo diretamente\nnão prova consumo Atlas. Política, store ou projeção ausentes são precondições explícitas.\nTestar publicação/recuperação somente em estado isolado autorizado, com geração coerente,\nHOLD, retomada durável e rollback compatível. Não ativar produção como efeito colateral.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/principles.md",
+      "start_line": 45,
+      "end_line": 46,
+      "text": "- **SC-3:** mudanças atingem o conjunto esperado, preservam independentes e não repetem interpretação sem necessidade.\n- **SC-4:** construção, avaliação, atualização e leitura têm uso separado; desconhecido não vira zero ou economia inventada.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/principles.md",
+      "start_line": 53,
+      "end_line": 55,
+      "text": "- **GO-I3:** leitura atual usa versões exatas aceitas e compatíveis; rollback não torna conhecimento stale atual.\n- **GO-I4:** input/receita inalterados e válidos reutilizam resultado; link de navegação não é dependência de build.\n- **GO-I5:** adição, remoção, código, intenção e receita entram no impacto; falha de observação não é worklist vazia.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/campaign.md",
+      "start_line": 39,
+      "end_line": 39,
+      "text": "| AC-05/06 / SC-3 | Dependências, afetados e mudança específica | Cache/rebuild e controles comuns | Propagação entre domínios |\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/campaign.md",
+      "start_line": 61,
+      "end_line": 61,
+      "text": "- `genesis-update-plan-contract.md`: identidade, dependências, afetados e rebuild.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "start_line": 96,
+      "end_line": 103,
+      "text": "Initial build and incremental update share recipes and receipts. A changed input makes dependents candidates\nfor revalidation/rebuild; deterministic checks may discharge the change without a model. Distinguish the\nconsumer-visible result (body, authority, validity, gaps and any evidence identity the consumer relies on)\nfrom execution receipts/input versions. Propagation stops only when the validated result's canonical\nidentity is unchanged; equal prose alone is insufficient. Receipt-only changes remain auditable and refresh\nversion bindings, but need not trigger downstream interpretation. Freeze this comparison contract with the\nslice examples; do not build a universal semantic-equivalence oracle. Recipe/prompt/extractor/validation-contract changes are inputs too.\nReject cycles in build dependencies; navigation may contain cycles, but a read must be bounded and avoid revisits.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "start_line": 112,
+      "end_line": 114,
+      "text": "Serve a prior generation as current ONLY while valid against current inputs and contracts. Otherwise HOLD;\nhistorical reads must be labelled. Rollback revalidates source compatibility; reverting knowledge alone cannot\nmake it current. Reuse existing commit/snapshot boundaries where sufficient; do not assume a new publication service.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "start_line": 123,
+      "end_line": 124,
+      "text": "| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |\n| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "start_line": 142,
+      "end_line": 144,
+      "text": "| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |\n| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |\n| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "start_line": 171,
+      "end_line": 171,
+      "text": "- **SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.\n"
+    },
+    {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/apps/desktop/src/main/owned-serve.ts",
+      "start_line": 18,
+      "end_line": 18,
+      "text": "const READY_TIMEOUT = 120_000\n"
+    }
+  ],
+  "input_bytes_stable_at_final_read": true,
+  "actions": {
+    "canonical_writes": 0,
+    "source_mutations": 0,
+    "package_changes": 0,
+    "runtime_execution": 0,
+    "tests": 0,
+    "remote_calls": 0,
+    "judge_calls": 0,
+    "semantic_judgments": 0
+  }
+}

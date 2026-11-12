@@ -1,0 +1,276 @@
+BEGIN DECISIVE SOURCE EVIDENCE desktop-web
+# Decisive L1 evidence — desktop-web
+
+Source pin: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Protocol pin: `ee2521a5b966bd505cc95bd1c733e09e12f33531`.
+
+These are bounded verbatim source-line excerpts. The numeric prefixes are added line labels; source text after each prefix is unchanged. Source byte hashes refer to the complete exact capture in `sources/`. Full connector responses remain in `captures/`. Implementation and test excerpts are explicitly distinguished; no product execution is represented.
+
+## E01. Owned readiness gates initialization
+
+The actual ordering awaits health before publishing credentials; renderer commentary does not override it.
+
+`apps/desktop/src/main/index.ts:467–475` · Git blob `2a00cd582c5917716fe9061a46ca614ed45d086e` · SHA-256 `79e2de4c4f9e50a9b04cf78ad09b3d03585b1e49190943e230f1d45f49b08f11`
+
+```text
+467:     // A server that never came up fails initialization, so the renderer shows why instead of a dead URL.
+468:     yield* Effect.tryPromise({
+469:       try: () => owned.health.wait,
+470:       catch: (e) => (e instanceof Error ? e : new Error(String(e))),
+471:     }).pipe(Effect.tapError((e) => Effect.sync(() => logger.error("owned serve health check failed", e.message))))
+472:     yield* Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password })
+473:     yield* Effect.promise(() => OmniBoot.report({ url: owned.url, username: owned.username, password: owned.password }, logger))
+474:     logger.log("loading task finished")
+475:   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
+```
+
+## E02. Stable-exit restart discrepancy
+
+Static inference: a stable exit sets failures=0, then indexes BACKOFF[-1], reaching the undefined branch. This was not reproduced at runtime.
+
+`apps/desktop/src/main/owned-serve.ts:76–86` · Git blob `31d70c15aafdc91ebccc1c5cd25da153cfac84ed` · SHA-256 `0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5`
+
+```text
+76:         const requested = state.stopping && !state.killed && (code === 143 || signal === "SIGTERM" || process.platform === "win32")
+77:         options.onEvent?.("utility-exit", { utilityPID: child.pid, code: requested ? 0 : code })
+78:         options.logger.log("owned serve exited", { code, signal, stopping: state.stopping })
+79:         if (state.stopping) return
+80:         state.failures = Date.now() - startedAt > STABLE_AFTER ? 0 : state.failures + 1
+81:         const wait = BACKOFF[state.failures - 1]
+82:         if (wait === undefined) return options.logger.error("owned serve crash loop; not restarting", { url })
+83:         options.logger.log("owned serve restarting", { attempt: state.failures, wait })
+84:         setTimeout(() => {
+85:           if (!state.stopping) launch()
+86:         }, wait).unref()
+```
+
+## E03. Enforced versus report-only CSP
+
+The fuller policy is declared separately from the enforced safe subset.
+
+`apps/desktop/src/main/renderer-origin.ts:25–45` · Git blob `34f5db54ee46ec5a2b7714b63d2a868fb13ca095` · SHA-256 `ddccb06fef155c7d2fa5edc2693ecc4b3da9694c911fd52c4c5ee4db6929ad0b`
+
+```text
+25: /**
+26:  * The enforced part of the policy is a subset that cannot break a page: no plugins and no <base> rewriting. The full
+27:  * policy is report-only until it has been watched against the packaged app, because the renderer reaches remote
+28:  * servers over http(s)/ws(s) at any host and uses blob workers, wasm and inline styles, none of which can be checked
+29:  * without running it.
+30:  */
+31: export const rendererCsp = "object-src 'none'; base-uri 'self'"
+32: export const rendererCspReportOnly = [
+33:   "default-src 'self'",
+34:   "script-src 'self' 'wasm-unsafe-eval'",
+35:   "style-src 'self' 'unsafe-inline'",
+36:   "img-src 'self' data: blob: http: https:",
+37:   "media-src 'self' data: blob: http: https:",
+38:   "font-src 'self' data:",
+39:   "connect-src 'self' data: blob: http: https: ws: wss:",
+40:   "worker-src 'self' blob:",
+41:   "frame-src 'self' http: https:",
+42:   "object-src 'none'",
+43:   "base-uri 'self'",
+44:   "form-action 'self'",
+45: ].join("; ")
+```
+
+## E04. General IPC origin wrapper
+
+This registration wrapper checks sender-frame origin; separate registration modules must be inspected separately.
+
+`apps/desktop/src/main/ipc.ts:69–82` · Git blob `2214930f4cc822e565599b480ad9aad8cb29f200` · SHA-256 `918fb622129d68d6654748697e68517d9ab21ef103cc08df06aaf19d1cc0c76c`
+
+```text
+69: export function registerIpcHandlers(deps: Deps) {
+70:   // Every handler here is privileged, so none runs for a frame that is not the app's own renderer: a page the window
+71:   // navigated to, or a subframe from another origin, never reaches the file system, the store or the sidecar.
+72:   const trusted = (event: IpcMainEvent | IpcMainInvokeEvent) =>
+73:     isRendererOrigin(event.senderFrame?.url, rendererDevUrl(app.isPackaged, process.env.ELECTRON_RENDERER_URL))
+74:   const handle = (channel: string, listener: Parameters<typeof ipcMain.handle>[1]) =>
+75:     ipcMain.handle(channel, (event, ...args) => {
+76:       if (!trusted(event)) throw new Error(`Untrusted IPC sender: ${channel}`)
+77:       return listener(event, ...args)
+78:     })
+79:   const on = (channel: string, listener: Parameters<typeof ipcMain.on>[1]) =>
+80:     ipcMain.on(channel, (event, ...args) => {
+81:       if (trusted(event)) listener(event, ...args)
+82:     })
+```
+
+## E05. Direct live and WSL registration
+
+These handlers register directly and validate arguments where shown; no general origin wrapper appears in these registrations. Reachability/exploitability is not established.
+
+`apps/desktop/src/main/live-ipc.ts:29–40` · Git blob `fcb3903779ee6a88a813ba6c23f21829167ecfcb` · SHA-256 `b5caff3ee7bf8ffc7663dc33db98cbe2400fc9d4af3614c7b7558eb6285db146`
+
+```text
+29:   ipcMain.handle("start-live-meeting", (_event: IpcMainInvokeEvent, title: unknown) =>
+30:     loop.start(typeof title === "string" ? title : undefined),
+31:   )
+32:   ipcMain.handle("stop-live-meeting", () => loop.stop())
+33:   ipcMain.handle("get-live-meeting-running", () => loop.running())
+34:   // The key itself never goes back to a renderer; it can only be replaced or cleared.
+35:   ipcMain.handle("has-live-transcription-key", () => hasTranscriptionKey())
+36:   ipcMain.handle("set-live-transcription-key", (_event: IpcMainInvokeEvent, key: unknown) => {
+37:     if (typeof key === "string") saveTranscriptionKey(key)
+38:   })
+39:   ipcMain.handle("get-live-readiness", () => readiness(loop.settings.get().answerModel))
+40:   ipcMain.handle("request-live-permission", (_event: IpcMainInvokeEvent, source: unknown) => {
+```
+
+`apps/desktop/src/main/wsl/ipc.ts:43–55` · Git blob `e52af811a5078399011cfbe03ccd2620be5e5846` · SHA-256 `d0a829f81da133aa865e613d94368dcd69c7fb0235e7c98fb5483a571169d4c0`
+
+```text
+43:   ipcMain.handle("wsl-servers-get-state", () => controller.getState())
+44:   ipcMain.handle("wsl-servers-probe-runtime", () => controller.probeRuntime())
+45:   ipcMain.handle("wsl-servers-refresh-distros", () => controller.refreshDistros())
+46:   ipcMain.handle("wsl-servers-install-wsl", () => controller.installWsl())
+47:   ipcMain.handle("wsl-servers-install-distro", (_event: IpcMainInvokeEvent, name: string) =>
+48:     controller.installDistro(requireWslIpcString("distro", name)),
+49:   )
+50:   ipcMain.handle("wsl-servers-probe-addable", (_event: IpcMainInvokeEvent, distros: string[]) =>
+51:     controller.probeAddable(requireWslIpcStrings("distro", distros)),
+52:   )
+53:   ipcMain.handle("wsl-servers-install-server", (_event: IpcMainInvokeEvent, name: string) =>
+54:     controller.installServer(requireWslIpcString("distro", name)),
+55:   )
+```
+
+## E06. Draft buffering and blob ownership
+
+These are implementation operations, not an executed database receipt.
+
+`apps/desktop/src/main/draft-store.ts:42–76` · Git blob `839eff26afe682f771eea9e30c55fc0af78cfc08` · SHA-256 `04d57ecb70b91c250ea1b5c7989b7ebe5b36754e4ca218cd74f745037c9c918a`
+
+```text
+42:     const writes = [...pending]
+43:     pending.clear()
+44:     db.transaction((tx) => {
+45:       writes.forEach(([key, value]) => {
+46:         if (value === null) tx.delete(documents).where(eq(documents.key, key)).run()
+47:         else
+48:           tx.insert(documents)
+49:             .values({ key, value })
+50:             .onConflictDoUpdate({ target: documents.key, set: { value } })
+51:             .run()
+52:       })
+53:     })
+54:   }
+55:   const schedule = () => {
+56:     if (!timer) timer = setTimeout(flush, 500)
+57:   }
+58:   return {
+59:     get: (key: string) =>
+60:       pending.has(key)
+61:         ? (pending.get(key) ?? null)
+62:         : (db.select({ value: documents.value }).from(documents).where(eq(documents.key, key)).get()?.value ?? null),
+63:     set(key: string, value: string | null) {
+64:       pending.set(key, value)
+65:       schedule()
+66:     },
+67:     putBlob(data: Uint8Array) {
+68:       const id = createHash("sha256").update(data).digest("hex")
+69:       db.insert(blobs)
+70:         .values({ id, data: Buffer.from(data) })
+71:         .onConflictDoNothing()
+72:         .run()
+73:       return id
+74:     },
+75:     getBlob: (id: string) => db.select({ data: blobs.data }).from(blobs).where(eq(blobs.id, id)).get()?.data ?? null,
+76:     flush,
+```
+
+## E07. WAL test negative control
+
+Read but unexecuted test: a copied main file misses newer WAL-backed data. Test code is not a passing result.
+
+`apps/desktop/src/main/draft-store.node.test.ts:25–43` · Git blob `65f61a397984fb3c5d648d708caf4adf2b57768c` · SHA-256 `589a5565f2247d42304c312962765bd83b4e817cb6f8692e2628415ba19d342a`
+
+```text
+25: test("a main-file-only WAL copy misses the committed blob while the draft is buffered", { timeout: 30_000 }, (t) => {
+26:   const fixture = createWalFixture(t)
+27:   assert.equal(fixture.writer.get("prompt"), fixture.document)
+28:   assert.equal(fixture.native.prepare("SELECT value FROM document WHERE key = ?").get("prompt"), undefined)
+29: 
+30:   const committed = fixture.native.prepare("SELECT data FROM blob WHERE id = ?").get(fixture.id)
+31:   assert.ok(committed?.data instanceof Uint8Array && committed.data.byteLength > 0)
+32:   assert.deepEqual(committed.data, fixture.bytes)
+33:   assert.equal(createHash("sha256").update(committed.data).digest("hex"), fixture.id)
+34:   assert.ok(statSync(`${fixture.filename}-wal`).size > 0)
+35: 
+36:   // Keep the writer open: copying only the checkpointed main file deliberately omits newer WAL commits.
+37:   const filename = join(fixture.directory, "main-only.sqlite")
+38:   copyFileSync(fixture.filename, filename)
+39:   const copy = new DatabaseSync(filename, { readOnly: true })
+40:   try {
+41:     // Both queries also prove that the copy contains a usable initial schema.
+42:     assert.equal(copy.prepare("SELECT data FROM blob WHERE id = ?").get(fixture.id), undefined)
+43:     assert.equal(copy.prepare("SELECT value FROM document WHERE key = ?").get("prompt"), undefined)
+```
+
+## E08. Dock view isolation and stale attachment
+
+Remote browser view options and generation-aware attachment guards constrain the visible host boundary.
+
+`apps/desktop/src/main/app-dock.ts:237–244` · Git blob `e119706137b28191c176f3d034713ddf8fdb2100` · SHA-256 `3300100db676fc68e39c24d7e96d8ed2581b7cbdeda51bf0547cf7c294caeef0`
+
+```text
+237:     const view = new WebContentsView({
+238:       webPreferences: {
+239:         contextIsolation: true,
+240:         nodeIntegration: false,
+241:         sandbox: true,
+242:         session: browserSession,
+243:         backgroundThrottling: true,
+244:       },
+```
+
+`apps/desktop/src/main/app-dock-utils.ts:35–44` · Git blob `620869f2544c2c5929a54c3f887b5b27535dcad9` · SHA-256 `59596fc88132811e15a1a48e9d828929fe36780db0711f92fd198d672f825c84`
+
+```text
+35: // Resize and Hide name the tab they were sent for. Only the tab attached to the window now, at that
+36: // generation, takes one: anything else was sent before another tab, a recovery or a new owner took
+37: // the window's place, and must not move or hide the view shown now.
+38: export function appDockAttached<T extends { generation: number }>(
+39:   tabs: ReadonlyMap<string, T> | undefined,
+40:   active: string | undefined,
+41:   tab: Readonly<{ tabID: string; generation: number }>,
+42: ) {
+43:   const record = tabs?.get(tab.tabID)
+44:   return active === tab.tabID && record?.generation === tab.generation ? record : undefined
+```
+
+## E09. Fullscreen permission exception
+
+Session policy is not accurately summarized as deny every permission.
+
+`apps/desktop/src/main/app-dock-session.ts:117–125` · Git blob `a54327e6094ba89eb1b15c9c2cd2d11dae456ec4` · SHA-256 `1811d7a8f3d741bce0286093db39f349044dd37de72cec83690dcebfb1ba147b`
+
+```text
+117:       browserSession.setPermissionRequestHandler((webContents, permission, callback) => {
+118:         if (permission === "fullscreen") return callback(true)
+119:         if (webContents) denyPermission(webContents, permission)
+120:         callback(false)
+121:       })
+122:       browserSession.setPermissionCheckHandler((webContents, permission) => {
+123:         if (permission === "fullscreen") return true
+124:         if (webContents) denyPermission(webContents, permission)
+125:         return false
+```
+
+## E10. Profile revision contract
+
+Manifest mutation uses expected revision and validates referenced active profiles.
+
+`apps/desktop/src/main/app-dock-profile-registry.ts:289–303` · Git blob `51b63ddc3a072b7734ccb281a4826dbd93237167` · SHA-256 `c44c85c4c427449913504df36c1bbc41d56346e23032d3c778dcc8c52f0a1d6b`
+
+```text
+289:   replaceManifest(expectedRevision: unknown, value: unknown): AppDockManifestUpdate {
+290:     if (typeof expectedRevision !== "number" || !Number.isSafeInteger(expectedRevision) || expectedRevision < 0)
+291:       throw manifestError()
+292:     const revision = expectedRevision
+293:     if (revision !== this.#manifest.revision) return { status: "conflict", manifest: this.manifest() }
+294:     const manifest = parseManifest(value)
+295:     if (manifest.revision !== revision) throw manifestError()
+296:     const active = Object.keys(this.#registry.profiles).filter((id) => this.#registry.profiles[id].status === "active")
+297:     if (manifest.profiles.length !== active.length || manifest.profiles.some((profile) => !active.includes(profile.id)))
+298:       throw manifestError()

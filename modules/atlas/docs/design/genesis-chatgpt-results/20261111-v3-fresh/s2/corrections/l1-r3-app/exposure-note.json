@@ -1,0 +1,194 @@
+{
+  "schema": "genesis-exposure-note/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "producer": "/root/s2_l1_corrections",
+  "revision": "l1-r3-app",
+  "source_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "operation": {
+    "tool": "collaboration.list_agents",
+    "arguments": {},
+    "requested_purpose": "Inspect activity status while waiting for the principal's review-transport notice",
+    "operation_time_utc": null,
+    "operation_time_basis": "The list_agents result did not expose an operation timestamp."
+  },
+  "recorded_at_utc": "2026-11-11 18:27:29 UTC",
+  "recorded_at_basis": "clock__curr_time; note-recording time only, not a reconstructed operation time",
+  "exposure": {
+    "kind": "Unexpected completed judge-response text included in an agent status result",
+    "completed_agent": "/root/s2_resume_j2",
+    "reviewer": "parallel-v3-fresh/S2/J2",
+    "response_subject": {
+      "artifact_key": "s2.l1.app-session",
+      "revision": 2,
+      "body_bytes": 40081,
+      "body_sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc"
+    },
+    "included_content": "The completed status contained the full serialized J2 response for app-session r2. This note identifies it without reproducing its findings, oracle mapping or criteria decisions.",
+    "file_access": "No oracle, judge-packet or judgment/decision file was opened.",
+    "timing_relation": "The app-session r3 body, evidence, families and handoff artifacts were already written and their hashes recorded in artifact-index.json before the list_agents call."
+  },
+  "frozen_artifact_verification": {
+    "frozen_index_file": "/workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r3-app/artifact-index.json",
+    "frozen_index_sha256": "855ef77897616aadbbf26c8bc0b28773fd8c8895084fce62ab9ce2eaa27e8adb",
+    "checks": [
+      {
+        "path": "l1.md",
+        "before": {
+          "bytes": 42047,
+          "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+        },
+        "after": {
+          "bytes": 42047,
+          "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+        },
+        "identical": true
+      },
+      {
+        "path": "l1.diff",
+        "before": {
+          "bytes": 11393,
+          "sha256": "cbc369c8043bd993f91d21aaaf14734bcbafde9f6257fb53721380d12c21ca84"
+        },
+        "after": {
+          "bytes": 11393,
+          "sha256": "cbc369c8043bd993f91d21aaaf14734bcbafde9f6257fb53721380d12c21ca84"
+        },
+        "identical": true
+      },
+      {
+        "path": "decisive-delta.md",
+        "before": {
+          "bytes": 4413,
+          "sha256": "f8d6b357399fc1301fd3a6b03a97c1b74364e0b7ce35d4281fa071a666d6d488"
+        },
+        "after": {
+          "bytes": 4413,
+          "sha256": "f8d6b357399fc1301fd3a6b03a97c1b74364e0b7ce35d4281fa071a666d6d488"
+        },
+        "identical": true
+      },
+      {
+        "path": "sources-delta.json",
+        "before": {
+          "bytes": 6291,
+          "sha256": "3d7d3e5053c9d607083b0cb06bc5327d65082107047357285dc7737af428f1a5"
+        },
+        "after": {
+          "bytes": 6291,
+          "sha256": "3d7d3e5053c9d607083b0cb06bc5327d65082107047357285dc7737af428f1a5"
+        },
+        "identical": true
+      },
+      {
+        "path": "family-delta.json",
+        "before": {
+          "bytes": 5816,
+          "sha256": "85cc584c7334a7435e2dd7fa55df211c194bb84194741b5a6b018274ee715c1a"
+        },
+        "after": {
+          "bytes": 5816,
+          "sha256": "85cc584c7334a7435e2dd7fa55df211c194bb84194741b5a6b018274ee715c1a"
+        },
+        "identical": true
+      },
+      {
+        "path": "changed-spans.json",
+        "before": {
+          "bytes": 8402,
+          "sha256": "f5bd38b9a02438f51408d328cafaabf291cedb8c0df263d88c749db731db7e4e"
+        },
+        "after": {
+          "bytes": 8402,
+          "sha256": "f5bd38b9a02438f51408d328cafaabf291cedb8c0df263d88c749db731db7e4e"
+        },
+        "identical": true
+      },
+      {
+        "path": "verification.json",
+        "before": {
+          "bytes": 3030,
+          "sha256": "d88a839f573e69ccde27e2f36ed1bd53cb0aa16454be46e3a3ae6e9be8a176a4"
+        },
+        "after": {
+          "bytes": 3030,
+          "sha256": "d88a839f573e69ccde27e2f36ed1bd53cb0aa16454be46e3a3ae6e9be8a176a4"
+        },
+        "identical": true
+      },
+      {
+        "path": "excerpt-manifest.json",
+        "before": {
+          "bytes": 562,
+          "sha256": "cb45158c8c4f7eb9b555e05b52c90ab336ce5f4adfd7c3dc5e01dc7228621384"
+        },
+        "after": {
+          "bytes": 562,
+          "sha256": "cb45158c8c4f7eb9b555e05b52c90ab336ce5f4adfd7c3dc5e01dc7228621384"
+        },
+        "identical": true
+      },
+      {
+        "path": "preserved-originals.json",
+        "before": {
+          "bytes": 2593,
+          "sha256": "fd495a8026f3a3908edbcab37dbdcf46b6521a252bc14fe0d6111affe6cbaedb"
+        },
+        "after": {
+          "bytes": 2593,
+          "sha256": "fd495a8026f3a3908edbcab37dbdcf46b6521a252bc14fe0d6111affe6cbaedb"
+        },
+        "identical": true
+      },
+      {
+        "path": "change-summary.md",
+        "before": {
+          "bytes": 5530,
+          "sha256": "0efa4b47b79248cb48c28882d96f6328804fd97eb4dbdd93f041952649e10045"
+        },
+        "after": {
+          "bytes": 5530,
+          "sha256": "0efa4b47b79248cb48c28882d96f6328804fd97eb4dbdd93f041952649e10045"
+        },
+        "identical": true
+      },
+      {
+        "path": "producer-request.md",
+        "before": {
+          "bytes": 3110,
+          "sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd"
+        },
+        "after": {
+          "bytes": 3110,
+          "sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd"
+        },
+        "identical": true
+      },
+      {
+        "path": "producer-response.md",
+        "before": {
+          "bytes": 1862,
+          "sha256": "4d30893548b1b9eb018dcee0e1fd408fdad5152e39eb064acf28389a97e0c2ea"
+        },
+        "after": {
+          "bytes": 1862,
+          "sha256": "4d30893548b1b9eb018dcee0e1fd408fdad5152e39eb064acf28389a97e0c2ea"
+        },
+        "identical": true
+      }
+    ],
+    "all_frozen_artifacts_unchanged": true
+  },
+  "semantic_use": "No body, evidence or family change was made after exposure; the hashes below confirm the frozen candidate and its recorded artifacts remain unchanged.",
+  "factual_notes_after_exposure": [
+    "transport-wait-note.md",
+    "exposure-note.json"
+  ],
+  "actions_taken": [
+    "Informed /root of the unexpected status payload promptly.",
+    "Recorded a factual note without copying judge findings.",
+    "Stopped agent-inventory queries and will not open judgment/oracle files.",
+    "No L2 production or semantic revision followed the exposure."
+  ],
+  "principal_disposition_received": "The principal stated that r3 remains reviewable because it was frozen before exposure, will use a fresh-context app author for L2 onward, and permits only explicit deterministic/literal transport followup after its freeze notice.",
+  "semantic_verdict": null
+}

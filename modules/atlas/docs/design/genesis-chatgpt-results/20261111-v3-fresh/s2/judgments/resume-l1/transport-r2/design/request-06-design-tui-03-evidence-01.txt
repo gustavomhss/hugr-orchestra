@@ -1,0 +1,382 @@
+TRANSPORT ONLY: unit=design-tui r2 section=03-evidence part=1/4; manifest-order=6/14.
+BEGIN EXACT FILE BODY design-tui-03-evidence-01.txt
+BEGIN DECISIVE SOURCE EVIDENCE design-tui
+# Decisive evidence — design-tui L1
+
+All source excerpts are from `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Excerpts are unchanged UTF-8 source lines; each block names its inclusive line interval and Git blob SHA. Source bytes, SHA-256 and original connector responses are retained in `sources.json` and the referenced capture files.
+
+These witnesses establish selected critical mechanisms and limitations. They are not execution evidence. All product tests, builds, typechecks, generators, terminal/browser sessions and remote mutations remain unexecuted. See `l1.md` and `coverage.json` for the full family disposition.
+
+## E01. Current boundary and language policy
+
+Current terminal ownership permits core and says V2. The language policy is English-only; the UI has its own i18n instruction.
+
+**Source:** `packages/tui/README.md:17–18` · blob `3033116c72a3a39851f35f48536b79728305596f`
+
+```text
+- Layer `terminal-ui`: may use core (it runs in the backend process), plugin, schema, ui and client.
+- The TUI speaks only V2: Sessions, messages and events come from `@orchestra/client` and the types in `packages/tui/src/types.ts`.
+```
+
+**Source:** `packages/tui/README.md:28–30` · blob `3033116c72a3a39851f35f48536b79728305596f`
+
+```text
+## Language policy
+
+The TUI is English-only for now. Strings are written in place and there is no i18n layer. Do not add ad hoc translation dictionaries; a localization layer needs its own design, as the web and desktop apps have one in `packages/app-shell`.
+```
+
+**Source:** `packages/ui/AGENTS.md:3–5` · blob `73b12de4d7cea0029707d89edff72c14575498cc`
+
+```text
+- NEVER hardcode user-visible English strings in production code. ALWAYS use an i18n key for component defaults, visible copy, placeholders, accessible labels, tooltips, dialogs, toasts, empty states, and displayed errors.
+- When migrating existing copy to i18n, preserve the English text byte-for-byte unless the task explicitly requests a copy change.
+- NEVER change existing English text or English keys to facilitate translation. English is intentional, designer-written source copy; adapt locale-specific translations and i18n mechanics around it.
+```
+
+## E02. The inspected CLI supplies an empty plugin host
+
+Feature source existence cannot establish activation by this adapter.
+
+**Source:** `apps/cli/src/tui.ts:23–40` · blob `ec99d67457f67a0a184b742dd4e61c84efaada4d`
+
+```typescript
+    }
+    directory?: string
+  } = {},
+) {
+  return Effect.promise(() => loadTuiConfig(options.directory ?? process.cwd())).pipe(
+    Effect.flatMap((config) =>
+      run({
+        ...transport,
+        args: options.args ?? {},
+        directory: options.directory,
+        config,
+        pluginHost: {
+          async start() {},
+          async dispose() {},
+        },
+      }),
+    ),
+    Effect.provide(AppNodeBuilder.build(Global.node)),
+```
+
+## E03. Renderer and injected host cleanup are scoped
+
+This source registers plugin/audio cleanup and SIGHUP shutdown; the test below uses a mocked renderer.
+
+**Source:** `packages/tui/src/app.tsx:211–230` · blob `8471637f416eece3baf17e66e8653c59676b1d8f`
+
+```typescript
+        Effect.sync(() => registerOrchestraKeymap(keymap, renderer, input.config)),
+        (unregister) => Effect.sync(unregister),
+      )
+      yield* Effect.addFinalizer(() =>
+        Effect.promise(async () => {
+          try {
+            await input.pluginHost.dispose()
+          } catch (error) {
+            console.error("Failed to dispose TUI plugins", error)
+          }
+        }),
+      )
+      yield* Effect.addFinalizer(() => Effect.sync(TuiAudio.dispose))
+      const shutdown = yield* Deferred.make<unknown>()
+      const onSighup = () => destroyRenderer(renderer)
+      yield* Effect.acquireRelease(
+        Effect.sync(() => process.on("SIGHUP", onSighup)),
+        () => Effect.sync(() => process.off("SIGHUP", onSighup)),
+      )
+      renderer.once("destroy", () => Deferred.doneUnsafe(shutdown, Effect.void))
+```
+
+**Source:** `packages/tui/test/app-lifecycle.test.tsx:50–60` · blob `7a32ed20d7c0d220070a4a93415863d375ee0b2a`
+
+```typescript
+    process.emit("SIGHUP")
+    await task
+
+    expect(setup.renderer.isDestroyed).toBe(true)
+    expect(titles.at(-1)).toBe("")
+    expect(disposes).toBe(1)
+    expect(process.listeners("SIGHUP").every((listener) => listeners.has(listener))).toBe(true)
+  } finally {
+    if (!setup.renderer.isDestroyed) setup.renderer.destroy()
+    mock.restore()
+  }
+```
+
+## E04. Injected event source and SSE have distinct ownership
+
+The selected source branch and cleanup are visible; no live transport was used.
+
+**Source:** `packages/tui/src/context/sdk.tsx:114–128` · blob `b595aa115e6902542a41bee79be7fc26ca434ded`
+
+```typescript
+    onMount(async () => {
+      if (props.events) {
+        const unsub = await props.events.subscribe(handleEvent)
+        onCleanup(unsub)
+        return
+      }
+      startSSE()
+    })
+
+    onCleanup(() => {
+      abort.abort()
+      sse?.abort()
+      if (timer) clearTimeout(timer)
+      handlers.clear()
+    })
+```
+
+## E05. History hydration retains rows changed by live events
+
+This is the production merge and lifecycle, including the history-error fallback. It is not a claim that the test executed.
+
+**Source:** `packages/tui/src/context/sync.tsx:498–537` · blob `d780ec3db53f6adbd36131e9342d5899b0b517a5`
+
+```typescript
+        async sync(sessionID: string) {
+          if (fullSyncedSessions.has(sessionID)) return
+          const syncing = syncingSessions.get(sessionID)
+          if (syncing) return syncing
+          const touched = new Set<string>()
+          hydratingSessions.set(sessionID, touched)
+          const task = (async () => {
+            const [session, messages, todo] = await Promise.all([
+              sdk.catalog.session(sessionID),
+              // The earlier runtime rendered a Session whose message route failed as empty instead of failing the sync.
+              sdk.catalog.messages(sessionID).catch(() => []),
+              sdk.catalog.todo(sessionID),
+            ])
+            const live = history.get(sessionID) ?? []
+            history.set(
+              sessionID,
+              [
+                ...messages.map(
+                  (message) => live.find((item) => item.id === message.id && touched.has(item.id)) ?? message,
+                ),
+                ...live.filter((item) => touched.has(item.id) && !messages.some((message) => message.id === item.id)),
+              ].toSorted((a, b) => b.time.created - a.time.created || b.id.localeCompare(a.id)),
+            )
+            setStore(
+              produce((draft) => {
+                const match = search(draft.session, sessionID, (s) => s.id)
+                if (match.found) draft.session[match.index] = session
+                if (!match.found) draft.session.splice(match.index, 0, session)
+                draft.todo[sessionID] = todo
+              }),
+            )
+            projectHistory(sessionID)
+            fullSyncedSessions.add(sessionID)
+            await refreshDiff(sessionID)
+          })().finally(() => {
+            syncingSessions.delete(sessionID)
+            hydratingSessions.delete(sessionID)
+          })
+          syncingSessions.set(sessionID, task)
+          return task
+```
+
+**Source:** `packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx:163–174` · blob `de09c3c7d6a229963050b82e428fee12e6c2c33e`
+
+```typescript
+          },
+        ],
+        cursor: {},
+      }),
+    )
+    await hydrate
+
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "live" })
+  } finally {
+    app.renderer.destroy()
+  }
+})
+```
+
+## E06. Prompt action order uses the V2 adapter
+
+Selection, optional synthetic editor input and prompt dispatch are ordered here.
+
+**Source:** `packages/tui/src/context/session-actions.ts:38–53` · blob `255420d1e93ce0fca21b941c673abdede087e91e`
+
+```typescript
+      await select(input)
+      if (input.context)
+        await client.sessions.synthetic({ sessionID: input.sessionID, text: input.context, resume: false })
+      return client.sessions.prompt({
+        sessionID: input.sessionID,
+        prompt: {
+          text: input.text,
+          files: input.files.map(toFile),
+          agents: input.agents.map((agent) => ({
+            name: agent.name,
+            source: agent.source
+              ? { start: agent.source.start, end: agent.source.end, text: agent.source.value }
+              : undefined,
+          })),
+        },
+      })
+```
+
+## E07. Production submission guard and mirrored test limit
+
+The guard protects admission; the regression source explicitly says its test is a mirror.
+
+**Source:** `packages/tui/src/component/prompt/index.tsx:919–934` · blob `6cd7cc1bd79c141c2c821853a688438396fd1b80`
+
+```typescript
+  let submitting = false
+  async function submit() {
+    // Prevent overlapping invocations (e.g. a double-pressed Enter, or the
+    // input's native onSubmit racing another dispatch). Without this guard,
+    // a second call slips past the empty-input check before the first call
+    // clears `store.prompt.input`, then awaits its own `session.create` and
+    // ultimately reads the now-empty store — sending a phantom empty prompt
+    // to a freshly created session.
+    if (submitting) return false
+    submitting = true
+    try {
+      return await submitInner()
+    } finally {
+      submitting = false
+    }
+  }
+```
+
+**Source:** `packages/tui/test/cli/tui/prompt-submit-race.test.ts:17–20` · blob `fb85a7f5b1288b111be7ea2679003104f3092f0d`
+
+```typescript
+// `submitMirror` below has the exact shape of the production `submit()`
+// after the fix: an in-flight `submitting` guard wraps the original body.
+// Two concurrent invocations must result in exactly one submission carrying
+// the user's text, with no empty-text submission.
+```
+
+## E08. Facade lifecycle is a placeholder
+
+The host must supply meaningful lifecycle behavior elsewhere; this facade does not implement disposal registration.
+
+**Source:** `packages/tui/src/plugin/api.ts:42–51` · blob `8591ef36024aeeda7785127710d920e9dad236c0`
+
+```typescript
+export function createTuiApi(input: Omit<TuiPluginApi, "lifecycle">): TuiPluginApi {
+  return {
+    ...input,
+    lifecycle: {
+      signal: new AbortController().signal,
+      onDispose() {
+        return () => {}
+      },
+    },
+  }
+```
+
+## E09. Terminal defaults and suspend compatibility
+
+Attention remains disabled by default; subordinate notification/sound values do not enable it.
+
+**Source:** `packages/tui/src/config/index.tsx:101–120` · blob `de463aa8b09ae8958d06f5de61c55d15b6df5c35`
+
+```typescript
+export function resolve(input: Info, options: ResolveOptions): Resolved {
+  const keybinds: TuiKeybind.KeybindOverrides = { ...input.keybinds }
+  if (!options.terminalSuspend) {
+    keybinds.terminal_suspend = "none"
+    if (keybinds.input_undo === undefined) {
+      const inputUndo = TuiKeybind.defaultValue("input_undo")
+      keybinds.input_undo = ["ctrl+z", ...(typeof inputUndo === "string" ? inputUndo.split(",") : [])]
+        .filter((value, index, values) => values.indexOf(value) === index)
+        .join(",")
+    }
+  }
+
+  return {
+    ...input,
+    attention: {
+      enabled: input.attention?.enabled ?? false,
+      notifications: input.attention?.notifications ?? true,
+      sound: input.attention?.sound ?? true,
+      volume: input.attention?.volume ?? 0.4,
+      sound_pack: input.attention?.sound_pack ?? "orchestra.default",
+```
+
+## E10. Transcript is a sorted display projection
+
+Export sorts by time and ID, and omits message kinds outside its explicit cases.
+
+**Source:** `packages/tui/src/util/transcript.ts:22–46` · blob `55e9f1e52a00fb4336753bffec52c66043db28f3`
+
+```typescript
+export function formatTranscript(session: SessionInfo, messages: SessionMessage[], options: TranscriptOptions): string {
+  const providers = Model.index(options.providers)
+  const header =
+    `# ${session.title}\n\n` +
+    `**Session ID:** ${session.id}\n` +
+    `**Created:** ${new Date(session.time.created).toLocaleString()}\n` +
+    `**Updated:** ${new Date(session.time.updated).toLocaleString()}\n\n` +
+    `---\n\n`
+  return messages
+    .toSorted((a, b) => a.time.created - b.time.created || a.id.localeCompare(b.id))
+    .map((message) => formatMessage(message, options, providers))
+    .filter((text) => text !== "")
+    .reduce((transcript, text) => transcript + text + `---\n\n`, header)
+}
+
+/** One message as Markdown. Host-injected, system and switch messages are not part of the conversation and render empty. */
+export function formatMessage(
+  message: SessionMessage,
+  options: TranscriptOptions,
+  providers?: Provider[] | ReadonlyMap<string, Provider>,
+): string {
+  if (message.type === "user") return `## User\n\n${message.text}\n\n`
+  if (message.type === "shell") return `## Shell\n\n\`\`\`\n$ ${message.command}\n${message.output}\n\`\`\`\n\n`
+  if (message.type === "compaction") return `## Compaction\n\n${message.summary}\n\n`
+  if (message.type !== "assistant") return ""
+```
+
+## E11. Selection copy is asynchronous and clears immediately
+
+This preserves the actual timing contract; no clipboard operation ran.
+
+**Source:** `packages/tui/src/util/selection.ts:26–43` · blob `d9158ba407607583bbc15e4b04ffa8550f21aded`
+
+```typescript
+export function copy(renderer: Renderer, toast: Toast, clipboard: ClipboardService): boolean {
+  const selection = renderer.getSelection()
+  if (!selection) return false
+
+  const text = selection.getSelectedText()
+  if (!text) return false
+
+  const focus = renderer.currentFocusedRenderable
+  const clipboardText =
+    focus?.getClipboardText && selection.selectedRenderables.includes(focus) ? focus.getClipboardText(text) : text
+
+  clipboard
+    ?.write?.(clipboardText)
+    .then(() => toast.show({ message: "Copied to clipboard", variant: "info" }))
+    .catch(toast.error)
+
+  renderer.clearSelection()
+  return true
+```
+
+## E12. Reactive helper cleans its timer
+
+The debounce setter replaces pending work and disposes it with its owner.
+
+**Source:** `packages/tui/src/util/signal.ts:3–17` · blob `e28c680cd4102dd6a11aec21f297c956e1c8cbdf`
+
+```typescript
+export function createDebouncedSignal<T>(value: T, ms: number): [Accessor<T>, (value: T) => void] {
+  const [get, set] = createSignal(value)
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const debounced = (next: T) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+      timer = undefined
+
+END EXACT FILE BODY design-tui-03-evidence-01.txt

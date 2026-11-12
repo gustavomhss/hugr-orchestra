@@ -1,0 +1,69 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "status": "COMPLETE",
+    "parts_present": ["L4 entry r2 1/1"],
+    "basis": "The complete corrected body, exact insertion, supporting root excerpts, accepted app L3 reference and complete dependency/navigation rationale are visible. The previously received r1 evidence supplies the unchanged foundation.",
+    "missing_content": [],
+    "identity_limit": "Byte lengths, hashes and reconciliation results are external mechanical receipts. No independent hash computation or host serialized-message-byte attestation is claimed."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l4.entry",
+      "body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+      "body_byte_length": 5849,
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "resolved_findings": [
+        {
+          "id": "J1-L4-ENTRY-01",
+          "disposition": "RESOLVED",
+          "location": "Verification and boundaries — Out-of-scope evidence route paragraph",
+          "reason": "The entry now explicitly abstains from establishing distributed or clustered Session ownership, crash continuation and exactly-once provider execution. It names the S1/backend session-execution owner and identifies the evidence to request: current coordination, continuation and provider-retry design, with supporting implementation and failure-recovery evidence. It expressly rejects S2 reconnect and admission observations as sufficient proof.",
+          "support": [
+            "Root AGENTS.md:214–216, including the existing entry E04",
+            "Accepted s2.l3.app-session — Recover the projection without inventing execution recovery",
+            "The public correction's explicit backend evidence-owner routing requirement"
+          ]
+        }
+      ],
+      "reserved_case": {
+        "id": "S2-C5",
+        "content_readiness": "PASS",
+        "location": "Verification and boundaries",
+        "reason": "A reader can now give the supported negative answer, explain the distinction between interface recovery and backend execution, retain the process-local/separate-design limitation, and identify an actionable further-evidence owner.",
+        "actual_consumer": "NOT_RUN",
+        "budget_status": "No Atlas index/read execution, source-free consumer result or measured budget compliance is asserted."
+      },
+      "regression_assessment": {
+        "disposition": "NO_NEW_MANDATORY_ISSUE",
+        "reason": "The following Instructions paragraph retains the process-local drain limitation and separate post-crash continuation design requirement. The insertion requests evidence; it does not claim an implemented recovery mechanism, passing test or available backend guarantee. It invents no artifact key and creates no factual dependency on an unconsumed S1 artifact."
+      },
+      "required_l4_entry_scope_resolved": true
+    }
+  ],
+  "roots_and_navigation": {
+    "proposed_roots": {
+      "entry": "s2.l4.entry"
+    },
+    "disposition": "PASS_CONTENT_AND_DECLARATION",
+    "reason": "The root still identifies the compact entry. All twelve destination keys and previously checked exact headings remain unchanged. Nine accepted L1–L3 bodies remain factual inputs; the three L4 unit destinations remain navigation only. Actual binding and retrieval are separate."
+  },
+  "criteria_dispositions": [
+    {
+      "criteria": ["GO-A1", "GO-A3", "CC-2", "CC-3", "QS-2"],
+      "disposition": "PASS_CONTENT",
+      "reason": "The missing out-of-scope ownership handoff is now explicit and directly usable."
+    },
+    {
+      "criteria": ["GO-A2", "GO-A4..7", "GO-I1..8", "AC-01/04/05/06", "CC-1/4/7", "QS-1/3/4/5/6"],
+      "disposition": "APPLICABLE_PRIOR_CONTENT_AND_DECLARATION_DISPOSITIONS_RETAINED",
+      "reason": "The bounded routing clarification preserves source attribution, predecessor identities, coverage limits, build/navigation distinctions, reading guidance and unexecuted-gate boundaries. Operational portions of these criteria are not certified."
+    }
+  ],
+  "optional_suggestions": [],
+  "unchanged_peer_decisions": "The original desktop-web, app-session and design-tui L4 PASS decisions remain preserved; no new peer judgment is issued.",
+  "acceptance_limit": "This closes J1's remaining L4 entry content finding. The principal records complete L4 and all-thirteen-artifact semantic acceptance only after both actual corrected-entry decisions. This PASS does not accept runtime, binding/publication, actual consumers, executed update/reuse/recovery, CI, economics or global gates."
+}

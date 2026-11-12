@@ -1,0 +1,118 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "status": "COMPLETE",
+    "parts_present": {
+      "desktop-web": ["1/2", "2/2"],
+      "app-session": ["1/2", "2/2"],
+      "design-tui": ["1/3", "2/3", "3/3"]
+    },
+    "basis": "All three complete bodies, decisive evidence and dependency rationales are present. No missing content identified. File hashes and byte lengths are external mechanical receipts; no independent hash computation or host message-byte attestation is claimed."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l3.desktop-web",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "flow_assessment": {
+        "locations": [
+          "Launch, choose a server and identify the health decision",
+          "Reconnect without transferring work to a replacement owner",
+          "Cross renderer, preload and main with a scoped capability",
+          "Move from a visible Dock to a browser, native or guest effect",
+          "Finish capture, persistence and installation at the right boundary"
+        ],
+        "reason": "The journeys connect owners, identity, failure outcomes, affected components and verification routes. Owned readiness, remote recovery, WSL authentication and shared-app health remain distinct. Capability admission, native uncertainty, WAL persistence and installation completion retain their separate boundaries."
+      },
+      "reserved_case": {
+        "id": "S2-I3D",
+        "content_readiness": "PASS",
+        "location": "Cross renderer, preload and main with a scoped capability",
+        "reason": "Explains packaged rejection of the development URL, window.api/preload handoff, general main-origin validation and specific sender/frame/token/sequence checks, including nonuniform channel registration and partial enforced CSP.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": "PASS: all three accepted L2 bodies contribute identified facts and are build dependencies; no pending peer artifact supplies evidence."
+    },
+    {
+      "key": "s2.l3.app-session",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "flow_assessment": {
+        "locations": [
+          "Enter the intended server and workspace",
+          "Submit once, then hand the draft to its session",
+          "Recover the projection without inventing execution recovery",
+          "Answer requests without transferring server authority to the UI",
+          "Change settings and Skills under the original owner",
+          "Render and localize under caller-owned lifetimes"
+        ],
+        "reason": "Explains identity transitions, policy barriers, ambiguous admission, canonical recovery and mutation ownership with practical change implications. Direct refinements are supported by E01–E02; E03 attributes process-local execution policy without claiming implemented post-crash recovery. Skills cancellation and lexical-access limits remain explicit."
+      },
+      "reserved_case": {
+        "id": "S2-I3A",
+        "content_readiness": "PASS",
+        "location": "Submit once, then hand the draft to its session",
+        "reason": "Traces captured credentials/ownership, policy acknowledgment and dispatch rechecks, retained request identity, admission distinct from transcript promotion, and handoff preserving later edits unsent while preventing another submission from the old draft.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": "PASS: three accepted L2 factual inputs and directly consumed L1 test evidence are declared build dependencies; peer L3 destinations remain navigation only."
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+      "verdict": "FIX-FIRST",
+      "mandatory_findings": [
+        {
+          "id": "J1-L3-DT-01",
+          "criterion": "S2-I3U; GO-A1/A2/A3; CC-2/3; QS-2",
+          "location": "Language and appearance cross app and host contracts",
+          "expected": "A directly usable explanation of the typed app-to-native copy path and which localization responsibilities must remain outside feature/native callsites.",
+          "observed": "The body describes keys, plural arguments, complete phrases and native-copy propagation, but does not identify language.t(...), language.plural(...), typed native-translation bundles or nativeT(...). It also does not explicitly explain that locale branches, plural-category selection and grammatical fragment assembly stay out of feature/native callsites. The required contract details therefore remain outside the target flow body.",
+          "minimal_resolution": "Add a concise, attributed paragraph tracing app copy through language.t/language.plural and native copy through shared typed bundles consumed by nativeT. State that locale selection, plural resolution, fallback and interpolation belong in shared modules; feature/native callsites must not branch on locale or concatenate grammatical fragments. Preserve existing English keys/text and the known startup-copy exception. Existing captured evidence suffices: current S10, packages/app-shell/AGENTS.md:23–28, and accepted desktop L2 decisive evidence E10, apps/desktop/AGENTS.md:5–9. No product execution or new investigation is required."
+        }
+      ],
+      "otherwise_satisfied": {
+        "locations": [
+          "Terminal input becomes admission through ordered, separate operations",
+          "Ambiguous sends, live projection and request decisions keep different identities",
+          "Rendered state follows caller and resource lifetimes",
+          "Generated products reach consumers through distinct maintenance paths",
+          "Change impact and verification ownership"
+        ],
+        "reason": "Ordering, separate context admission, absent TUI retry controls, projection limits, caller-owned resources and generated-product boundaries are meaningfully connected. S01–S22 support the refinements and distinguish real-adapter assertions, mirrored submission tests and unexecuted verification."
+      },
+      "reserved_case": {
+        "id": "S2-I3U",
+        "content_readiness": "FIX-FIRST",
+        "finding": "J1-L3-DT-01",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": "PASS: all three accepted L2 inputs have actual factual uses and build edges; peer L3 links are navigation only."
+    }
+  ],
+  "shared_criteria": [
+    {
+      "criteria": ["GO-A4", "GO-A5", "AC-05", "AC-06", "CC-1", "CC-4", "CC-7"],
+      "disposition": "Content/dependency declarations satisfied",
+      "locations": "Each packet's dependency rationale, accepted-predecessor bindings and section-to-evidence map.",
+      "reason": "Semantic cross-unit uses are declared; direct sources and inherited facts have distinct provenance. Whole-L2-before-L3 ordering is supported by the principal's receipt. Executed reuse, invalidation and update propagation remain unproven."
+    },
+    {
+      "criteria": ["GO-I1..8", "AC-01", "AC-04", "QS-1", "QS-4", "QS-5"],
+      "disposition": "Applicable content/provenance portions satisfied, subject to the design utility finding",
+      "locations": "All three orientations, decisive evidence companions and verification-limit sections.",
+      "reason": "Prior coverage depths, static conflicts, attributed policy, uncertainty and unexecuted limits are preserved. No source inspection is presented as consumer execution, provider exactly-once behavior or universal security/accessibility proof. Operational invariant controls are not certified."
+    },
+    {
+      "criteria": ["GO-A6", "GO-A7", "QS-3", "QS-6"],
+      "disposition": "Applicable content portions satisfied",
+      "reason": "The artifacts reuse accepted foundations, provide bounded sections and introduce no parallel knowledge framework or fabricated execution/economics evidence."
+    }
+  ],
+  "optional_suggestions": [],
+  "acceptance_limit": "Desktop-web and app-session receive semantic L3 content PASS. Design-tui requires the single stated correction; this review does not support whole-L3 acceptance or L4 release yet. Actual consumers and budgets, runtime, binding/publication, update/reuse/recovery execution, CI, economics and global controls remain unaccepted."
+}

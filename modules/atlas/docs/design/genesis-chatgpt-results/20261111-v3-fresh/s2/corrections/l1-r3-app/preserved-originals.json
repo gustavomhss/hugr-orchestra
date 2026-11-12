@@ -1,0 +1,62 @@
+[
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/l1.md",
+    "bytes": 40081,
+    "sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/coverage.json",
+    "bytes": 1622191,
+    "sha256": "cd690438b304f50bf7c3a820531e3a2711aa58511993979169b8ef1cd0c6c1d4"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/sources.json",
+    "bytes": 323410,
+    "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/decisive-evidence.md",
+    "bytes": 91982,
+    "sha256": "dc57d2d404e62b3fdfc5012939481f5dcc3ecc2d845dde899ce6edc69bee8e50"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/l1.md",
+    "bytes": 36964,
+    "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/coverage.json",
+    "bytes": 1836738,
+    "sha256": "d7048239a9907676dee0ee6819ade51a3b06152f9e366c308a2efe7aaea63744"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/sources.json",
+    "bytes": 156036,
+    "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/decisive-evidence.md",
+    "bytes": 53364,
+    "sha256": "0e8581ab0e610f19d500803a7a601101d2038c52916c2953252bb205afa09d92"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/l1.md",
+    "bytes": 29075,
+    "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/coverage.json",
+    "bytes": 496639,
+    "sha256": "4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/sources.json",
+    "bytes": 143730,
+    "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/decisive-evidence.md",
+    "bytes": 50617,
+    "sha256": "05f2ae3305948cbe4dbaeabb06496b70b33e07cb868417673c53be37ec1bf290"
+  }
+]

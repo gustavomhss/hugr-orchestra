@@ -1,0 +1,81 @@
+{
+  "schema": "genesis-l1-artifact-verification/v1",
+  "unit": "app-session",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "result": "PASS",
+  "scope": "Artifact and source integrity only; no product test, build, benchmark or runtime execution.",
+  "checks": [
+    {
+      "check": "exact population and original metadata",
+      "result": "PASS",
+      "detail": "1887 exact paths, each once; all frozen metadata preserved; input SHA-256 matches"
+    },
+    {
+      "check": "family semantics and depth totals",
+      "result": "PASS",
+      "detail": {
+        "families": 59,
+        "classifications": {
+          "skill": 5,
+          "historical-proposal": 8,
+          "documentation": 19,
+          "configuration-or-declaration": 13,
+          "test-unexecuted": 498,
+          "test-support": 57,
+          "test-support-or-story": 52,
+          "implementation": 745,
+          "binary-or-vector-asset": 181,
+          "maintenance-tool": 4,
+          "style": 78,
+          "localization": 183,
+          "generated": 7,
+          "fixture": 37
+        },
+        "evidence_depths": {
+          "inspected": 232,
+          "metadata-only": 30,
+          "family-supported": 1625
+        }
+      }
+    },
+    {
+      "check": "required correction",
+      "result": "PASS",
+      "detail": "v1 retained; 39 original metadata-only implementations now inspected; residual catchall families removed"
+    },
+    {
+      "check": "source hashes and original connector bytes",
+      "result": "PASS",
+      "detail": "251/251 exact bytes, SHA-256 and Git blob identities verified; every representative resolves"
+    },
+    {
+      "check": "failed attempt preservation",
+      "result": "PASS",
+      "detail": "10 exact original error responses retained; 6 absent app-shell guesses confirmed by frozen tree; 4 outside-tree lookups explicitly limited"
+    },
+    {
+      "check": "verbatim evidence",
+      "result": "PASS",
+      "detail": "39 bounded selections, 1159 source lines; source text, line numbers and excerpt hashes verified"
+    },
+    {
+      "check": "narrative source references",
+      "result": "PASS",
+      "detail": "196 exact path/range citations resolve within captured bodies; A/S expansions explicit"
+    },
+    {
+      "check": "required UTF-8 artifacts",
+      "result": "PASS",
+      "detail": "All five required files exist and decode as UTF-8"
+    }
+  ],
+  "counts": {
+    "paths": 1887,
+    "families": 59,
+    "sources": 251,
+    "failed_attempts": 10,
+    "excerpts": 39,
+    "source_lines_excerpted": 1159,
+    "l1_whitespace_words": 3360
+  }
+}

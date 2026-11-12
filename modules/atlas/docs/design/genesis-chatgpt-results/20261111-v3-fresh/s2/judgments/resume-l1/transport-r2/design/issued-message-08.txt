@@ -1,0 +1,586 @@
+TRANSPORT ONLY: unit=design-tui r2 section=03-evidence part=4/4; manifest-order=9/14.
+BEGIN EXACT FILE BODY design-tui-03-evidence-04.txt
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Struct({ id: SessionMessage.ID }) }),
+        error: [SessionNotFoundError, ConflictError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.synthetic",
+            summary: "Add synthetic context",
+            description: "Record text as synthetic context, then run a turn unless resume is false.",
+```
+
+Exact lines 550–582:
+
+```ts
+      HttpApiEndpoint.post("session.revert.stage", "/api/session/:sessionID/revert/stage", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ messageID: SessionMessage.ID, files: Schema.Boolean.pipe(Schema.optional) }),
+        success: Schema.Struct({ data: Revert.State }),
+        error: [MessageNotFoundError, SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.revert.stage",
+            summary: "Stage session revert",
+            description: "Stage or move a reversible session boundary and optionally apply its file changes.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.revert.clear", "/api/session/:sessionID/revert/clear", {
+        params: { sessionID: Session.ID },
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(OpenApi.annotations({ identifier: "v2.session.revert.clear", summary: "Clear staged revert" })),
+    )
+    .add(
+      HttpApiEndpoint.post("session.revert.commit", "/api/session/:sessionID/revert/commit", {
+        params: { sessionID: Session.ID },
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({ identifier: "v2.session.revert.commit", summary: "Commit staged revert" }),
+```
+
+Exact lines 655–665:
+
+```ts
+      HttpApiEndpoint.post("session.interrupt", "/api/session/:sessionID/interrupt", {
+        params: { sessionID: Session.ID },
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.interrupt",
+            summary: "Interrupt session execution",
+            description: "Interrupt active execution owned by this Orchestra process. Idle interruption is a no-op.",
+```
+
+## tui-permission-protocol
+
+Both IDs, reply payload, optional message and declared missing-session/request errors.
+
+Source: `packages/protocol/src/groups/permission.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `a34d8726146a5cdc1b989b583a4943290584d34b`; SHA-256 `9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab`.
+
+Exact lines 119–134:
+
+```ts
+      HttpApiEndpoint.post("session.permission.reply", "/api/session/:sessionID/permission/:requestID/reply", {
+        params: { sessionID: Session.ID, requestID: Permission.ID },
+        payload: Schema.Struct({
+          reply: Permission.Reply,
+          message: Schema.String.pipe(Schema.optional),
+        }),
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, PermissionNotFoundError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.permission.reply",
+            summary: "Reply to pending permission request",
+            description: "Respond to a pending permission request owned by a session.",
+          }),
+```
+
+## tui-request-assertions
+
+Real-client/replaced-transport assertions for paths, bodies and order; read only, never run.
+
+Source: `packages/tui/test/context/session-actions.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `9d22d47f255e6a1c73a1ce2bfe40ce87c467a27a`; SHA-256 `48423aa811be59b328fc29d306cca600f8aa9aaa91a96e1e53b832cb59e39e42`.
+
+Exact lines 5–27:
+
+```ts
+// The real client builds every request; only the transport is replaced, to record what it sends.
+function recorder() {
+  const calls: { method: string; path: string; body: unknown }[] = []
+  const fetch = Object.assign(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init)
+      calls.push({
+        method: request.method,
+        path: new URL(request.url).pathname,
+        body: request.body ? await request.json() : undefined,
+      })
+      if (request.url.endsWith("/compact")) return Response.json({ data: { compacted: true } })
+      if (request.url.endsWith("/prompt") || request.url.endsWith("/synthetic"))
+        return Response.json({ data: { id: "msg_1" } })
+      if (request.method === "POST" && request.url.endsWith("/api/session"))
+        return Response.json({ data: { id: "ses_new" } })
+      return request.url.endsWith("/revert/stage") || request.url.endsWith("/command")
+        ? Response.json({ data: {} })
+        : new Response(null, { status: 204 })
+    },
+    { preconnect: globalThis.fetch.preconnect },
+  )
+  return { calls, actions: createSessionActions(Orchestra.make({ baseUrl: "http://localhost:1", fetch })) }
+```
+
+Exact lines 30–62:
+
+```ts
+test("interrupt, compact, shell, revert and unrevert hit the V2 session routes", async () => {
+  const { calls, actions } = recorder()
+  await actions.interrupt("ses_1")
+  await actions.compact("ses_1")
+  await actions.shell({ sessionID: "ses_1", command: "ls" })
+  await actions.revert({ sessionID: "ses_1", messageID: "msg_1" })
+  await actions.unrevert("ses_1")
+  expect(calls).toEqual([
+    { method: "POST", path: "/api/session/ses_1/interrupt", body: undefined },
+    { method: "POST", path: "/api/session/ses_1/compact", body: undefined },
+    { method: "POST", path: "/api/session/ses_1/shell", body: { command: "ls" } },
+    { method: "POST", path: "/api/session/ses_1/revert/stage", body: { messageID: "msg_1", files: true } },
+    { method: "POST", path: "/api/session/ses_1/revert/clear", body: undefined },
+  ])
+})
+
+test("command selects the agent and model, then maps file parts to V2 files", async () => {
+  const { calls, actions } = recorder()
+  await actions.command({
+    sessionID: "ses_1",
+    command: "review",
+    arguments: "src",
+    agent: "build",
+    model: { providerID: "p", modelID: "m", variant: "high" },
+    files: [{ url: "file:///a.ts", filename: "a.ts", source: undefined }],
+  })
+  expect(calls.map((call) => call.path)).toEqual([
+    "/api/session/ses_1/agent",
+    "/api/session/ses_1/model",
+    "/api/session/ses_1/command",
+  ])
+  expect(calls[1].body).toEqual({ model: { providerID: "p", id: "m", variant: "high" } })
+  expect(calls[2].body).toEqual({ command: "review", arguments: "src", files: [{ uri: "file:///a.ts", name: "a.ts" }] })
+```
+
+Exact lines 65–85:
+
+```ts
+test("create places the Session in the given directory with the chosen agent and model", async () => {
+  const { calls, actions } = recorder()
+  await actions.create({
+    agent: "build",
+    model: { providerID: "p", modelID: "m" },
+    directory: "/repo/app",
+    workspaceID: "ws_1",
+  })
+  await actions.create({ agent: "build", model: { providerID: "p", modelID: "m" } })
+  expect(calls).toEqual([
+    {
+      method: "POST",
+      path: "/api/session",
+      body: {
+        agent: "build",
+        model: { providerID: "p", id: "m" },
+        location: { directory: "/repo/app", workspaceID: "ws_1" },
+      },
+    },
+    { method: "POST", path: "/api/session", body: { agent: "build", model: { providerID: "p", id: "m" } } },
+  ])
+```
+
+Exact lines 88–149:
+
+```ts
+test("prompt selects agent and model, admits editor context without waking, then sends the prompt", async () => {
+  const { calls, actions } = recorder()
+  await actions.prompt({
+    sessionID: "ses_1",
+    text: "fix @a.ts with @review",
+    context: "selection: line 3",
+    agent: "build",
+    model: { providerID: "p", modelID: "m", variant: "high" },
+    files: [
+      {
+        url: "file:///a.ts",
+        filename: "a.ts",
+        source: { type: "file", path: "a.ts", text: { start: 4, end: 9, value: "@a.ts" } },
+      },
+    ],
+    agents: [{ name: "review", source: { start: 15, end: 22, value: "@review" } }],
+  })
+  expect(calls).toEqual([
+    { method: "POST", path: "/api/session/ses_1/agent", body: { agent: "build" } },
+    {
+      method: "POST",
+      path: "/api/session/ses_1/model",
+      body: { model: { providerID: "p", id: "m", variant: "high" } },
+    },
+    { method: "POST", path: "/api/session/ses_1/synthetic", body: { text: "selection: line 3", resume: false } },
+    {
+      method: "POST",
+      path: "/api/session/ses_1/prompt",
+      body: {
+        prompt: {
+          text: "fix @a.ts with @review",
+          files: [{ uri: "file:///a.ts", name: "a.ts", source: { start: 4, end: 9, text: "@a.ts" } }],
+          agents: [{ name: "review", source: { start: 15, end: 22, text: "@review" } }],
+        },
+      },
+    },
+  ])
+})
+
+test("prompt without editor context sends no synthetic input", async () => {
+  const { calls, actions } = recorder()
+  await actions.prompt({
+    sessionID: "ses_1",
+    text: "hi",
+    agent: "build",
+    model: { providerID: "p", modelID: "m" },
+    files: [],
+    agents: [],
+  })
+  expect(calls.map((call) => call.path)).toEqual([
+    "/api/session/ses_1/agent",
+    "/api/session/ses_1/model",
+    "/api/session/ses_1/prompt",
+  ])
+})
+
+test("reply answers the permission request on the V2 route", async () => {
+  const { calls, actions } = recorder()
+  await actions.reply({ sessionID: "ses_1", requestID: "per_1", reply: "once" })
+  expect(calls).toEqual([
+    { method: "POST", path: "/api/session/ses_1/permission/per_1/reply", body: { reply: "once" } },
+  ])
+```
+
+END DECISIVE SOURCE EVIDENCE design-tui
+
+END EXACT FILE BODY design-tui-03-evidence-04.txt
+TRANSPORT ONLY: unit=design-tui r2 section=04-families part=1/5; manifest-order=10/14.
+BEGIN EXACT FILE BODY design-tui-04-families-01.txt
+# Complete semantic family map; full path accounting mechanically reconciled above
+[
+  {
+    "id": "tui-package",
+    "purpose": "Terminal package manifest, ownership and build configuration",
+    "representative_source_paths": [
+      "packages/tui/README.md",
+      "packages/tui/package.json",
+      "packages/tui/src/index.tsx"
+    ],
+    "source_implications": "Explicit run/config/runtime/context/plugin exports; current terminal-ui ownership permits core.",
+    "consumer_implications": "CLI runTui adapts transport/config/global paths into run.",
+    "maintenance_implications": "Preserve public exports; generated README module-contract block has a separate owner.",
+    "semantic_limits": "Ancillary bun/TypeScript configuration inventoried; no package command executed.",
+    "metadata_only": false,
+    "path_count": 4,
+    "byte_count": 5286,
+    "depth_counts": {
+      "inspected": 2,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "documentation": 1,
+      "configuration": 3
+    }
+  },
+  {
+    "id": "tui-lifecycle-routes",
+    "purpose": "Renderer lifetime, application provider composition and navigation",
+    "representative_source_paths": [
+      "packages/tui/src/app.tsx",
+      "packages/tui/src/context/route.tsx",
+      "packages/tui/src/context/runtime.tsx",
+      "packages/tui/src/runtime.tsx",
+      "packages/tui/src/routes/home.tsx",
+      "apps/cli/src/tui.ts",
+      "packages/tui/test/app-lifecycle.test.tsx"
+    ],
+    "source_implications": "run acquires renderer under Effect scope, wires providers and waits for shutdown; route union is home/session/plugin.",
+    "consumer_implications": "Host supplies transport and plugin lifetime; CLI host at this pin is no-op.",
+    "maintenance_implications": "Maintain cleanup ordering, route validation and continue/fork hydration ordering.",
+    "semantic_limits": "Provider wiring is inspected; not every small supporting context/component implementation is read. Mock-renderer lifecycle test is unexecuted.",
+    "metadata_only": false,
+    "path_count": 23,
+    "byte_count": 62450,
+    "depth_counts": {
+      "inspected": 6,
+      "family-supported": 17
+    },
+    "classification_counts": {
+      "implementation": 23
+    }
+  },
+  {
+    "id": "tui-v2-transport-state",
+    "purpose": "V2 event transport, catalog mapping, hydration and client actions",
+    "representative_source_paths": [
+      "packages/tui/src/context/sdk.tsx",
+      "packages/tui/src/context/event.ts",
+      "packages/tui/src/context/sync.tsx",
+      "packages/tui/src/context/session-history.ts",
+      "packages/tui/src/context/data.tsx",
+      "packages/tui/src/context/catalog.ts",
+      "packages/tui/src/context/session-actions.ts",
+      "packages/tui/src/types.ts",
+      "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "packages/tui/test/context/session-actions.test.ts"
+    ],
+    "source_implications": "Injected events or SSE feed projection; history hydration merges live-touched rows; actions call V2.",
+    "consumer_implications": "Sessions render bounded projections; separate location cache keys include directory/workspace.",
+    "maintenance_implications": "Preserve idempotent event application and hydration coalescing; verify actual transport when changing contracts.",
+    "semantic_limits": "Client/server internals outside boundary; no network, reconnection, or product tests executed.",
+    "metadata_only": false,
+    "path_count": 8,
+    "byte_count": 63695,
+    "depth_counts": {
+      "inspected": 8
+    },
+    "classification_counts": {
+      "implementation": 8
+    }
+  },
+  {
+    "id": "tui-selection-persistence",
+    "purpose": "Model/agent selection and process state persistence",
+    "representative_source_paths": [
+      "packages/tui/src/context/local.tsx",
+      "packages/tui/src/context/kv.tsx",
+      "packages/tui/src/context/project.tsx",
+      "packages/tui/src/util/agent.ts",
+      "packages/tui/src/util/persistence.ts"
+    ],
+    "source_implications": "Local selection uses stable agent keys and catalog-validated models; state files use Global paths and atomic replacement.",
+    "consumer_implications": "Prompt consumes selection; dialogs consume project and KV preferences.",
+    "maintenance_implications": "Keep stable identity distinct from display name; preserve save ordering.",
+    "semantic_limits": "Atomic replacement plus file locking does not prove cross-process merge semantics.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 23862,
+    "depth_counts": {
+      "inspected": 5
+    },
+    "classification_counts": {
+      "implementation": 5
+    }
+  },
+  {
+    "id": "tui-prompt",
+    "purpose": "Prompt admission, completion, parts and project/session movement",
+    "representative_source_paths": [
+      "packages/tui/src/component/prompt/index.tsx",
+      "packages/tui/src/component/prompt/autocomplete.tsx",
+      "packages/tui/src/component/prompt/move.tsx",
+      "packages/tui/src/context/editor.ts",
+      "packages/tui/test/cli/tui/prompt-submit-race.test.ts"
+    ],
+    "source_implications": "Submit guard spans awaited admission; input extmarks expand into typed parts; moves can create a project copy or move an existing session.",
+    "consumer_implications": "V2 actions receive selected agent/model, attachments, source spans and optional editor context.",
+    "maintenance_implications": "Retain in-flight guard and clear timing; audit actual mounted prompt when changing asynchronous dispatch.",
+    "semantic_limits": "Part/display/trait/local-attachment leaf algorithms are family-supported by prompt call sites, not separately audited. Race test mirrors implementation and is unexecuted.",
+    "metadata_only": false,
+    "path_count": 7,
+    "byte_count": 92269,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 4
+    },
+    "classification_counts": {
+      "implementation": 7
+    }
+  },
+  {
+    "id": "tui-prompt-history",
+    "purpose": "Local history, stash, frecency and compatibility exports",
+    "representative_source_paths": [
+      "packages/tui/src/prompt/history.tsx",
+      "packages/tui/src/prompt/stash.tsx",
+      "packages/tui/src/component/prompt/history.tsx",
+      "packages/tui/src/component/prompt/stash.tsx",
+      "packages/tui/src/component/prompt/frecency.tsx",
+      "packages/tui/src/component/prompt/index.tsx"
+    ],
+    "source_implications": "History/stash persist bounded JSONL records; component-level compatibility files re-export prompt modules.",
+    "consumer_implications": "Prompt restores prior input and stash entries; this is not the server conversation journal.",
+    "maintenance_implications": "Preserve tolerant parsing and bounded retention; compatibility import paths remain relevant.",
+    "semantic_limits": "Frecency ranking internals not inspected.",
+    "metadata_only": false,
+    "path_count": 6,
+    "byte_count": 9066,
+    "depth_counts": {
+      "inspected": 5,
+      "family-supported": 1
+    },
+    "classification_counts": {
+      "compatibility-export": 3,
+      "implementation": 3
+    }
+  },
+  {
+    "id": "tui-empty-placeholder",
+    "purpose": "Verified empty prompt placeholder",
+    "representative_source_paths": [
+      "packages/tui/src/component/prompt/cwd.ts"
+    ],
+    "source_implications": "Exact source bytes are empty and match the Git empty-blob SHA.",
+    "consumer_implications": "No runtime behavior can be attributed to this file.",
+    "maintenance_implications": "Do not infer a CWD implementation from its filename.",
+    "semantic_limits": "",
+    "metadata_only": false,
+    "path_count": 1,
+    "byte_count": 0,
+    "depth_counts": {
+      "inspected": 1
+    },
+    "classification_counts": {
+      "empty": 1
+    }
+  },
+  {
+    "id": "tui-session-view",
+    "purpose": "Session route, message/tool projection and supporting presentation",
+    "representative_source_paths": [
+      "packages/tui/src/routes/session/index.tsx",
+      "packages/tui/src/routes/session/message.tsx",
+      "packages/tui/src/routes/session/tool.tsx"
+    ],
+    "source_implications": "Session route synchronizes directory/workspace, editor and history; message/tool components dispatch typed views.",
+    "consumer_implications": "Root and child sessions share displayed request state; sidebar depends on terminal width and preferences.",
+    "maintenance_implications": "Retain message ordering and generic tool fallback; separate display preferences from server state.",
+    "semantic_limits": "Timeline, subagent, draft and tool-parsing helpers are covered through route imports/call sites; their complete behavior is not separately audited.",
+    "metadata_only": false,
+    "path_count": 14,
+    "byte_count": 108417,
+    "depth_counts": {
+      "family-supported": 11,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "implementation": 14
+    }
+  },
+  {
+    "id": "tui-permission-question",
+    "purpose": "Permission decisions, question tabs and automatic approval setting",
+    "representative_source_paths": [
+      "packages/tui/src/routes/session/permission.tsx",
+      "packages/tui/src/routes/session/question.tsx",
+      "packages/tui/src/context/permission.tsx",
+      "packages/tui/src/context/sync.tsx"
+    ],
+    "source_implications": "Requests are keyed by session/request; permission stages once/always/reject; question replies preserve question order.",
+    "consumer_implications": "Session route hides normal prompt during pending interaction; auto mode changes handling of asked events.",
+    "maintenance_implications": "Keep explicit request identity and rejection paths; permission wording is not a server-side policy proof.",
+    "semantic_limits": "Server authorization semantics outside this unit; no interactive terminal verification.",
+    "metadata_only": false,
+    "path_count": 3,
+    "byte_count": 42114,
+    "depth_counts": {
+      "inspected": 3
+    },
+    "classification_counts": {
+      "implementation": 3
+    }
+  },
+  {
+    "id": "tui-config-keymap",
+    "purpose": "Configuration schema, legacy key translation and mode routing",
+    "representative_source_paths": [
+      "packages/tui/src/config/index.tsx",
+      "packages/tui/src/config/keybind.ts",
+      "packages/tui/src/keymap.tsx",
+      "apps/cli/src/tui-config.ts",
+      "packages/tui/test/config.test.tsx",
+      "packages/tui/test/keymap.test.tsx"
+    ],
+    "source_implications": "Effect schema resolves defaults; CLI merges config maps; mode stack and leader routing are centralized.",
+    "consumer_implications": "Prompt/autocomplete/dialog/plugin commands compete through modes and bindings.",
+    "maintenance_implications": "Keep parse/resolve and schema generation aligned; mode disposers must tolerate out-of-order cleanup.",
+    "semantic_limits": "Core configuration file discovery is delegated outside the inspected boundary.",
+    "metadata_only": false,
+    "path_count": 3,
+    "byte_count": 38473,
+    "depth_counts": {
+      "inspected": 3
+    },
+    "classification_counts": {
+      "implementation": 3
+    }
+  },
+  {
+    "id": "tui-dialogs-widgets",
+    "purpose": "Terminal selection/dialog primitives and feature dialog call sites",
+    "representative_source_paths": [
+      "packages/tui/src/ui/dialog.tsx",
+      "packages/tui/src/ui/dialog-select.tsx",
+      "packages/tui/src/app.tsx",
+      "packages/tui/src/component/prompt/index.tsx"
+    ],
+    "source_implications": "Shared modal stack captures focus, consumes escape and restores focus; DialogSelect exposes typed filtering/options/actions.",
+    "consumer_implications": "App commands and prompt invoke feature dialogs through shared primitives.",
+    "maintenance_implications": "Preserve focus/mode stack coordination and input ownership.",
+    "semantic_limits": "Individual agent/model/provider/status/rename/export/toast widget behavior not separately inspected; grouping establishes shared integration only.",
+    "metadata_only": false,
+    "path_count": 27,
+    "byte_count": 142157,
+    "depth_counts": {
+      "family-supported": 25,
+      "inspected": 2
+    },
+    "classification_counts": {
+      "implementation": 27
+    }
+  },
+  {
+    "id": "tui-plugin-facade",
+    "purpose": "Injectable plugin host, route registry, slots and adapters",
+    "representative_source_paths": [
+      "packages/tui/src/plugin/runtime.tsx",
+      "packages/tui/src/plugin/api.ts",
+      "packages/tui/src/plugin/slots.tsx",
+      "packages/tui/src/plugin/adapters.tsx",
+      "apps/cli/src/tui.ts",
+      "packages/tui/test/plugin/runtime.test.ts"
+    ],
+    "source_implications": "Host is a start/dispose contract; route registry is last-registration-wins; slots use a separately set-up registry.",
+    "consumer_implications": "App supplies adapters and readiness; current CLI supplies empty host methods.",
+    "maintenance_implications": "Do not treat facade lifecycle placeholders as full plugin disposal; verify owning host integration.",
+    "semantic_limits": "Feature existence does not establish installation/enabling on the inspected CLI path.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 18649,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 1
+    },
+    "classification_counts": {
+      "implementation": 5
+    }
+  },
+  {
+    "id": "tui-feature-plugins",
+    "purpose": "Built-in home/sidebar/system plugin contributions",
+    "representative_source_paths": [
+      "packages/tui/src/feature-plugins/builtins.ts",
+      "packages/tui/src/feature-plugins/sidebar/context.tsx",
+      "packages/tui/src/feature-plugins/system/diff-viewer.tsx",
+      "packages/tui/src/feature-plugins/system/which-key.tsx",
+      "packages/tui/src/feature-plugins/system/plugins.tsx",
+      "packages/tui/src/feature-plugins/system/notifications.ts"
+    ],
+    "source_implications": "Builtins factory enumerates contributions; diff plugin registers a route; which-key supplies commands/slots; notifications deduplicate request events.",
+    "consumer_implications": "Plugin host, command registry, slots and KV determine availability and preferences.",
+    "maintenance_implications": "Preserve registration disposal and route parameters; feature contribution is distinct from host activation.",
+    "semantic_limits": "Small sidebar/home and diff model/tree/helper leaf semantics are family-supported, not individually inspected.",
+    "metadata_only": false,
+    "path_count": 21,
+    "byte_count": 123301,
+    "depth_counts": {
+
+END EXACT FILE BODY design-tui-04-families-01.txt

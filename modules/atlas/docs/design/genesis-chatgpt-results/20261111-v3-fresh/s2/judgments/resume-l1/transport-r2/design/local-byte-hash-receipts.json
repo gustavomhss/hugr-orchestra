@@ -1,0 +1,290 @@
+{
+  "unit": "design-tui",
+  "revision": 2,
+  "source_baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "execution": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "source_part_count": 14,
+  "source_total_bytes": 178282,
+  "receipts": [
+    {
+      "manifest_order": 1,
+      "source_file": "design-tui-01-header-01.txt",
+      "section": "01-header",
+      "part": 1,
+      "parts": 2,
+      "source_bytes": 14475,
+      "source_sha256": "77f00f78de2fecebcab258fdfc0aed24259c5a040f45bbdb79bc0e840f7615ad",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-01-design-tui-01-header-01.txt",
+      "request_local_bytes": 14658,
+      "request_local_sha256": "f94f1c918e3dc57092e4e6500053c5b3da0b8248b81afe9c1a63e67778ca2d10",
+      "body_offset": 134,
+      "body_length": 14475,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 2,
+      "source_file": "design-tui-01-header-02.txt",
+      "section": "01-header",
+      "part": 2,
+      "parts": 2,
+      "source_bytes": 2275,
+      "source_sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-02-design-tui-01-header-02.txt",
+      "request_local_bytes": 2458,
+      "request_local_sha256": "eeaae34407e29e3cf1d736bab6adc43aeffac3450046aea18e31f905b3978d8c",
+      "body_offset": 134,
+      "body_length": 2275,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 3,
+      "source_file": "design-tui-02-body-01.txt",
+      "section": "02-body",
+      "part": 1,
+      "parts": 3,
+      "source_bytes": 14141,
+      "source_sha256": "dc23fec729214f82d944a9b60f04ff00e57e80f235167c55d800d52fb6471a0f",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-03-design-tui-02-body-01.txt",
+      "request_local_bytes": 14318,
+      "request_local_sha256": "b410fb5ef8bd0d6d090e42272103370114d05e6ad2dcfed6e92fa4bc541bb486",
+      "body_offset": 130,
+      "body_length": 14141,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 4,
+      "source_file": "design-tui-02-body-02.txt",
+      "section": "02-body",
+      "part": 2,
+      "parts": 3,
+      "source_bytes": 13742,
+      "source_sha256": "fdce4d6d47fdb9bcc3c865aa4ea2fe0d8ffa88370937aa8cf014a2ed0252f008",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-04-design-tui-02-body-02.txt",
+      "request_local_bytes": 13919,
+      "request_local_sha256": "e684f6b2a681e01721fbcd57b5db46625c628bb71d9bb6cea4f8de82dc9042f7",
+      "body_offset": 130,
+      "body_length": 13742,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 5,
+      "source_file": "design-tui-02-body-03.txt",
+      "section": "02-body",
+      "part": 3,
+      "parts": 3,
+      "source_bytes": 9147,
+      "source_sha256": "bc1cff0d82af8675d3af53453119cc9ed64216ab9d715808e1a73f50ed177deb",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-05-design-tui-02-body-03.txt",
+      "request_local_bytes": 9324,
+      "request_local_sha256": "2fb6212d4164601927836bae4ef64ad2b27b27d6e3524cc57458db0a9742b772",
+      "body_offset": 130,
+      "body_length": 9147,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 6,
+      "source_file": "design-tui-03-evidence-01.txt",
+      "section": "03-evidence",
+      "part": 1,
+      "parts": 4,
+      "source_bytes": 14492,
+      "source_sha256": "17e3a669295632e5ee5caa4ff8ed4c7657e09ed396e4fde1c3cc154895a4bf8f",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-06-design-tui-03-evidence-01.txt",
+      "request_local_bytes": 14681,
+      "request_local_sha256": "f68810a96be0ac3da803a95bd0cb36090071f3f70c5a68dcd30d508316538096",
+      "body_offset": 138,
+      "body_length": 14492,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 7,
+      "source_file": "design-tui-03-evidence-02.txt",
+      "section": "03-evidence",
+      "part": 2,
+      "parts": 4,
+      "source_bytes": 14456,
+      "source_sha256": "d06d3538d8c082a5515d04c2f34329e606e588edef433e410a380c56181f4c89",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-07-design-tui-03-evidence-02.txt",
+      "request_local_bytes": 14645,
+      "request_local_sha256": "1bf392c4d07061c814faa208808b7e8a89bd774e6c8338f6bfc9cd56b5a24d29",
+      "body_offset": 138,
+      "body_length": 14456,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 8,
+      "source_file": "design-tui-03-evidence-03.txt",
+      "section": "03-evidence",
+      "part": 3,
+      "parts": 4,
+      "source_bytes": 14466,
+      "source_sha256": "a6900e2ec87f55952e99eb47d52369dd6f4907971e3202be525acc4bdbbb8d69",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-08-design-tui-03-evidence-03.txt",
+      "request_local_bytes": 14655,
+      "request_local_sha256": "780e4c9eb042eddb4768db6bc94ff7f9a4ecfdc1b3a006fa52e99a2883d1faee",
+      "body_offset": 138,
+      "body_length": 14466,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 9,
+      "source_file": "design-tui-03-evidence-04.txt",
+      "section": "03-evidence",
+      "part": 4,
+      "parts": 4,
+      "source_bytes": 10032,
+      "source_sha256": "48085e74b1f875128889836f57491d2220f28e80e6a080945883865fc455c04a",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-09-design-tui-03-evidence-04.txt",
+      "request_local_bytes": 10221,
+      "request_local_sha256": "1b337e1951c8697fa84319bafe03d8ac59ee9aba670412596314ba3e2262a720",
+      "body_offset": 138,
+      "body_length": 10032,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 10,
+      "source_file": "design-tui-04-families-01.txt",
+      "section": "04-families",
+      "part": 1,
+      "parts": 5,
+      "source_bytes": 14492,
+      "source_sha256": "a3884712271cf76214915b7209c9c4331beacd4d3d4bcd909df3488a3b69bd54",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-10-design-tui-04-families-01.txt",
+      "request_local_bytes": 14682,
+      "request_local_sha256": "e8cb6303d062b0f6a0fcbba19431c5b3f8ed741513bcc256d9ff4e982398d4f0",
+      "body_offset": 139,
+      "body_length": 14492,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 11,
+      "source_file": "design-tui-04-families-02.txt",
+      "section": "04-families",
+      "part": 2,
+      "parts": 5,
+      "source_bytes": 14497,
+      "source_sha256": "af8424dfe3a103f6b96c066b0e9e937824315f6c971fde41c76fa60620a351d8",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-11-design-tui-04-families-02.txt",
+      "request_local_bytes": 14687,
+      "request_local_sha256": "fc803f83f02bf9e390fe96ccee2e2269e197b27ec04cd40d3cb2c83dd748d65b",
+      "body_offset": 139,
+      "body_length": 14497,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 12,
+      "source_file": "design-tui-04-families-03.txt",
+      "section": "04-families",
+      "part": 3,
+      "parts": 5,
+      "source_bytes": 14395,
+      "source_sha256": "ae87b932af263d78f3752a5c918600f7b61a833084f623d4b0025a8cb8894676",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-12-design-tui-04-families-03.txt",
+      "request_local_bytes": 14585,
+      "request_local_sha256": "e432a38cdd58cfb1bd673b21a91601a99b64a93bc5d809e73846dc9cd0bc60ce",
+      "body_offset": 139,
+      "body_length": 14395,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 13,
+      "source_file": "design-tui-04-families-04.txt",
+      "section": "04-families",
+      "part": 4,
+      "parts": 5,
+      "source_bytes": 14459,
+      "source_sha256": "ad1c7ba7f3eac99beb92266b182f895640a29304086a4afceb60bf357668bf56",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-13-design-tui-04-families-04.txt",
+      "request_local_bytes": 14649,
+      "request_local_sha256": "61552c4fb759e0d2ca98b3c6b8ef17f35feaabf4f69c917d8ec8aa55f5b2bff0",
+      "body_offset": 139,
+      "body_length": 14459,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    },
+    {
+      "manifest_order": 14,
+      "source_file": "design-tui-04-families-05.txt",
+      "section": "04-families",
+      "part": 5,
+      "parts": 5,
+      "source_bytes": 13213,
+      "source_sha256": "1618415ab46a8b02055aa43a1b7586209e12e96abc6f1287594b29ed77785e74",
+      "manifest_matches": true,
+      "request_path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/request-14-design-tui-04-families-05.txt",
+      "request_local_bytes": 13403,
+      "request_local_sha256": "828b31d107000b66719e915bef2127b155de56159da2221201ab79839196e650",
+      "body_offset": 139,
+      "body_length": 13213,
+      "targets": [
+        "/root/s2_resume_j1",
+        "/root/s2_resume_j2"
+      ],
+      "request_record_classification": "Local deterministic reconstruction of visible native send_message request text. Host-internal serialized delivery bytes are not exposed."
+    }
+  ]
+}

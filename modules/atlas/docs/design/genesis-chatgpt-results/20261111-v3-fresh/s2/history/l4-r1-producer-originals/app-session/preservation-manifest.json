@@ -1,0 +1,51 @@
+{
+  "producer": "/root/s2_author_app",
+  "artifact": "s2.l4.app-session",
+  "files": [
+    {
+      "name": "author-checks.json",
+      "bytes": 1360,
+      "sha256": "7c8f7d3f86fce5a6c3260724277f30d6220c0afe7f657dd6cf6b9f5a6695b100"
+    },
+    {
+      "name": "author_artifacts.py",
+      "bytes": 32193,
+      "sha256": "002d29a4ae43552633ae3e9a688ac16373be2e014a7a6045f4ec8dfa3366f731"
+    },
+    {
+      "name": "body.md",
+      "bytes": 11220,
+      "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3"
+    },
+    {
+      "name": "decisive-evidence.md",
+      "bytes": 17020,
+      "sha256": "0d1c8100dd15c2030e26da124c8c6a7ee3b2c31a55608efffa4df50d9ea94551"
+    },
+    {
+      "name": "dependencies.json",
+      "bytes": 3270,
+      "sha256": "42810b379057a96e86a914b626bcbd6fa1288720857fc0b84b33bd0641097a74"
+    },
+    {
+      "name": "evidence-map.json",
+      "bytes": 8167,
+      "sha256": "f83a738b6a5f4b237b2db9218f4f4dac58474a309cc48b3cac42770c3f3747a9"
+    },
+    {
+      "name": "hashes.json",
+      "bytes": 1353,
+      "sha256": "df6337f6d0d1405650a8e6db4cec8e46e293aceb1b2cedeed5d2a39677fb2305"
+    },
+    {
+      "name": "response.md",
+      "bytes": 4682,
+      "sha256": "343226f46bd885afa3c0773adf679e529f6ed7107ba0fbdf851e5646b7a6d293"
+    },
+    {
+      "name": "sources.json",
+      "bytes": 7088,
+      "sha256": "decc7ca998568cf868e48d5099a19163dc8bc482d011fd7df897934619e1ead6"
+    }
+  ]
+}

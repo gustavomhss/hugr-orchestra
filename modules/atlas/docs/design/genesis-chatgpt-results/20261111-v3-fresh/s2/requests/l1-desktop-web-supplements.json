@@ -1,0 +1,8 @@
+{
+  "unit": "L1-desktop-web",
+  "kind": "original-visible-root-instructions",
+  "messages": [
+    "Root mechanical check: all 532 paths, SHAs and modes match with zero omissions/duplicates; 30 families reconcile. One required consistency fix before delivery: coverage representative_source_paths names apps/desktop/src/main/window-state.ts, but that path is absent from your sources.json captures. Capture/inspect it or remove it as a claimed evidence representative if not used. Metadata-only five paths are transparently identified.",
+    "I read l1.md in full. One final required startup-scope check before closing: include the observable pre-window main-process failure path near index.ts addObserver and compare its user-visible copy with desktop AGENTS localization requirements; current startup narrative largely stops at loadingTask/window restore. Keep observation, instruction and any conflict distinct. The static stable-child restart finding is useful as an attributed control-flow inference, not a product failure reproduced here."
+  ]
+}

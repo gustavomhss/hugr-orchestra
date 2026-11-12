@@ -1,0 +1,304 @@
+{
+  "unit": "s2.l3.design-tui",
+  "check_kind": "Mechanical author verification only; no semantic self-verdict, runtime result or review decision.",
+  "body": {
+    "sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+    "byte_length": 15143,
+    "utf8": true,
+    "ends_with_newline": true,
+    "h2_count": 7,
+    "whitespace_token_count_including_tables_and_citations": 1958,
+    "entire_body_within_routine_16000_byte_budget": true,
+    "sections": [
+      {
+        "heading": "Orientation and accepted ownership",
+        "utf8_bytes": 1196,
+        "within_routine_16000_byte_budget": true
+      },
+      {
+        "heading": "Terminal input becomes admission through ordered, separate operations",
+        "utf8_bytes": 2716,
+        "within_routine_16000_byte_budget": true
+      },
+      {
+        "heading": "Ambiguous sends, live projection and request decisions keep different identities",
+        "utf8_bytes": 2869,
+        "within_routine_16000_byte_budget": true
+      },
+      {
+        "heading": "Rendered state follows caller and resource lifetimes",
+        "utf8_bytes": 2083,
+        "within_routine_16000_byte_budget": true
+      },
+      {
+        "heading": "Language and appearance cross app and host contracts",
+        "utf8_bytes": 2706,
+        "within_routine_16000_byte_budget": true
+      },
+      {
+        "heading": "Generated products reach consumers through distinct maintenance paths",
+        "utf8_bytes": 2127,
+        "within_routine_16000_byte_budget": true
+      },
+      {
+        "heading": "Change impact and verification ownership",
+        "utf8_bytes": 1371,
+        "within_routine_16000_byte_budget": true
+      }
+    ]
+  },
+  "source_capture_verification": [
+    {
+      "id": "S01",
+      "path": "packages/tui/src/context/session-actions.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S02",
+      "path": "packages/protocol/src/groups/session.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S03",
+      "path": "packages/tui/test/context/session-actions.test.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S04",
+      "path": "packages/tui/test/app-lifecycle.test.tsx",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S05",
+      "path": "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S06",
+      "path": "packages/tui/test/cli/tui/prompt-submit-race.test.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S07",
+      "path": "AGENTS.md",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S08",
+      "path": "packages/ui/AGENTS.md",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S09",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S10",
+      "path": "packages/app-shell/AGENTS.md",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S11",
+      "path": "packages/ui/src/context/i18n.test.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S12",
+      "path": "packages/ui/src/context/dialog.tsx",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S13",
+      "path": "packages/ui/src/context/worker-pool.tsx",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S14",
+      "path": "packages/ui/src/context/i18n.tsx",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S15",
+      "path": "packages/ui/src/theme/loader.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S16",
+      "path": "packages/ui/src/theme/context.tsx",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S17",
+      "path": "apps/cli/script/schema-files.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S18",
+      "path": "packages/ui/script/tailwind.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S19",
+      "path": "packages/ui/script/build-oc2-v2-overrides.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S20",
+      "path": "packages/ui/vite.config.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S21",
+      "path": "apps/storybook/.storybook/preview.tsx",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    },
+    {
+      "id": "S22",
+      "path": "apps/storybook/.storybook/playground-css-plugin.ts",
+      "sha256_matches_capture": true,
+      "git_blob_sha_matches_capture": true,
+      "direct_path_cited_in_body": true
+    }
+  ],
+  "accepted_inputs_and_request": [
+    {
+      "path": "deliverable/requests/l3-design-tui-dispatch.md",
+      "sha256": "325383a663ac0c275419653f7b12c5836ed3c47efb8f066408bc25898b524949",
+      "byte_length": 8595
+    },
+    {
+      "path": "deliverable/accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "byte_length": 2963
+    },
+    {
+      "path": "deliverable/accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c",
+      "byte_length": 2847
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "path": "deliverable/layers/l2/design-tui/body.md",
+      "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "byte_length": 21535,
+      "cited_sections_exist": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "path": "deliverable/layers/l2/app-session/body.md",
+      "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434,
+      "cited_sections_exist": true
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "path": "deliverable/layers/l2/desktop-web/body.md",
+      "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "byte_length": 18440,
+      "cited_sections_exist": true
+    }
+  ],
+  "dependency_shape": {
+    "build_count": 3,
+    "navigation_count": 2,
+    "accepted_section_count": 18,
+    "build_navigation_disjoint": true,
+    "build_only_accepted_l2_keys": true,
+    "navigation_only_l3_keys": true
+  },
+  "artifact_structure": {
+    "required_json_parsed": [
+      "sources.json",
+      "dependencies.json"
+    ],
+    "balanced_fences": [
+      "body.md",
+      "decisive-evidence.md",
+      "response.md"
+    ],
+    "body_table_column_counts_consistent": true
+  },
+  "unexecuted": [
+    "Product tests locally",
+    "Product tests or CI remotely",
+    "Generator execution",
+    "Production benchmarks",
+    "Application/browser/terminal execution",
+    "Provider calls",
+    "Network asset refresh",
+    "Reviewer activation or message",
+    "L4 production"
+  ],
+  "required_artifacts": {
+    "body.md": {
+      "sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+      "byte_length": 15143,
+      "utf8": true
+    },
+    "sources.json": {
+      "sha256": "982dd9896c32842336fda4ff1c867993be974346d422ff4cb9cfc34931581c62",
+      "byte_length": 18108,
+      "utf8": true
+    },
+    "dependencies.json": {
+      "sha256": "bbf98807d18cd9f8bed9d32ec6a524b7650863d1a3b1cd495a9abfbc36367855",
+      "byte_length": 3917,
+      "utf8": true
+    },
+    "decisive-evidence.md": {
+      "sha256": "424ea704b58604af2404ff2bc7f53cfbea704f09e845f2b8a131907adfa7e190",
+      "byte_length": 38616,
+      "utf8": true
+    },
+    "response.md": {
+      "sha256": "7cea345333be7979393876b3a93a0568be1c7a9e165d946e64f97b3785c0a3d7",
+      "byte_length": 6869,
+      "utf8": true
+    }
+  },
+  "source_capture_count": 22,
+  "exact_evidence_excerpt_blocks": 37
+}

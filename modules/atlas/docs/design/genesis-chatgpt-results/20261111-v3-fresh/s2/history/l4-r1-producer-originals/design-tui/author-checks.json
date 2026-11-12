@@ -1,0 +1,241 @@
+{
+  "unit": "s2.l4.design-tui",
+  "kind": "Mechanical author observations; no semantic verdict, runtime claim or review decision.",
+  "body": {
+    "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+    "byte_length": 11783,
+    "utf8": true,
+    "ends_with_newline": true,
+    "h2_headings": [
+      "Orientation",
+      "Maintenance protocol",
+      "Verification and boundaries"
+    ],
+    "h2_sections": [
+      {
+        "heading": "Orientation",
+        "utf8_bytes": 1233,
+        "sha256": "c69291a8a96aab2320b006c5ab2ed31391d25aa3b0dded3d93fe1822c0ad5896"
+      },
+      {
+        "heading": "Maintenance protocol",
+        "utf8_bytes": 7348,
+        "sha256": "def7ce16c2baa08cda632fccdc3a0a933ee5bcec46c7f661ad3ca0bf405406c1"
+      },
+      {
+        "heading": "Verification and boundaries",
+        "utf8_bytes": 3147,
+        "sha256": "6bf0b7a5d3ec20bb91e2736db71e2cab13da31dd7a832949d61c2130f6390c3f"
+      }
+    ],
+    "whitespace_tokens_including_tables_and_references": 1384,
+    "entire_body_within_16000_bytes": true
+  },
+  "exact_inputs": [
+    {
+      "path": "deliverable/requests/l4-design-tui-dispatch.md",
+      "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec",
+      "byte_length": 9361
+    },
+    {
+      "path": "deliverable/accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "byte_length": 2963
+    },
+    {
+      "path": "deliverable/accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c",
+      "byte_length": 2847
+    },
+    {
+      "path": "deliverable/accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b",
+      "byte_length": 2847
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "path": "deliverable/layers/l3/design-tui/body.md",
+      "sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780,
+      "cited_sections": [
+        "Orientation and accepted ownership",
+        "Terminal input becomes admission through ordered, separate operations",
+        "Ambiguous sends, live projection and request decisions keep different identities",
+        "Rendered state follows caller and resource lifetimes",
+        "Language and appearance cross app and host contracts",
+        "Generated products reach consumers through distinct maintenance paths",
+        "Change impact and verification ownership"
+      ]
+    },
+    {
+      "key": "s2.l3.app-session",
+      "path": "deliverable/layers/l3/app-session/body.md",
+      "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334,
+      "cited_sections": [
+        "Submit once, then hand the draft to its session",
+        "Render and localize under caller-owned lifetimes",
+        "Recover the projection without inventing execution recovery"
+      ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "path": "deliverable/layers/l3/desktop-web/body.md",
+      "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715,
+      "cited_sections": [
+        "Carry changes through shared UI and distribution",
+        "Launch, choose a server and identify the health decision",
+        "Cross renderer, preload and main with a scoped capability"
+      ]
+    }
+  ],
+  "direct_source_captures": [
+    {
+      "id": "S01",
+      "path": "AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "byte_length": 16501,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S02",
+      "path": "packages/ui/AGENTS.md",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "byte_length": 2160,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S03",
+      "path": "packages/app-shell/AGENTS.md",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "byte_length": 4508,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S04",
+      "path": "apps/desktop/AGENTS.md",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "byte_length": 2801,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S05",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "byte_length": 4098,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S06",
+      "path": ".orchestra/skills/app-log-hygiene/SKILL.md",
+      "sha256": "3a0fbf9ea92160cdd95eef1bdd445f6ea5fa68c7cacc59ad582761c0c64bc93d",
+      "git_blob_sha": "685932db1df51c87be9e7174bbfe940a18c03a8c",
+      "byte_length": 3153,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S07",
+      "path": "packages/tui/package.json",
+      "sha256": "38d10bd45fccfbc00c8e296eb6d4e0e324fc592dc3ea8b7e8075798573a59786",
+      "git_blob_sha": "154841de35b0368de58b0a573eaa2feee6da71f9",
+      "byte_length": 2717,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S08",
+      "path": "packages/ui/package.json",
+      "sha256": "fc3b68411a620337819460e2cd860a74781c9a1ea9e502eb81e20051d9dbffb7",
+      "git_blob_sha": "15d012e5d16c1d7bd545e3b9e63a5ca41a8b771b",
+      "byte_length": 10222,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S09",
+      "path": "apps/storybook/package.json",
+      "sha256": "9d3733d450e5e381b5e81c61034f27be017a053389a89214a78784495d529ec3",
+      "git_blob_sha": "61a8b2cfa27ff15cc6a5bf113273fa6cb67ae98c",
+      "byte_length": 918,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S10",
+      "path": "packages/tui/src/component/prompt/index.tsx",
+      "sha256": "422c51904f556d388b4678ba0220b24b2c8618426ea83658102ec2fce03cd76f",
+      "git_blob_sha": "6cd7cc1bd79c141c2c821853a688438396fd1b80",
+      "byte_length": 56161,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S11",
+      "path": "packages/tui/src/config/index.tsx",
+      "sha256": "759376006b5a391735829649abc30a0270cd81a02f8090e9eb5c0119f332ec51",
+      "git_blob_sha": "de463aa8b09ae8958d06f5de61c55d15b6df5c35",
+      "byte_length": 6007,
+      "body_path_reference_present": true
+    },
+    {
+      "id": "S12",
+      "path": "apps/cli/script/schema-files.ts",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "byte_length": 3409,
+      "body_path_reference_present": true
+    }
+  ],
+  "counts": {
+    "source_captures": 12,
+    "source_excerpt_blocks": 20,
+    "build_dependencies": 3,
+    "navigation_keys": 3,
+    "accepted_body_sections": 13,
+    "consumed_manifest_pins": 3
+  },
+  "structure": {
+    "sources_and_dependencies_json_parsed": true,
+    "build_navigation_disjoint": true,
+    "direct_builds_only_accepted_l3": true,
+    "navigation_only_l4_keys": true,
+    "body_table_columns_consistent": true,
+    "body_and_evidence_fences_balanced": true
+  },
+  "unexecuted": [
+    "product tests",
+    "typechecks",
+    "builds",
+    "generation",
+    "benchmarks",
+    "app/browser/terminal/native operations",
+    "remote CI writes",
+    "provider calls",
+    "external asset refresh",
+    "reviewer contact"
+  ],
+  "required_artifacts": {
+    "body.md": {
+      "byte_length": 11783,
+      "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c"
+    },
+    "sources.json": {
+      "byte_length": 10536,
+      "sha256": "16582ee7bae87983ed0fc3fca82fa7f2d6c1f773191c37b70ff0667810f98c2c"
+    },
+    "dependencies.json": {
+      "byte_length": 4139,
+      "sha256": "d2bbd4bcc1ec24d483d46e3eec314e1efc5f127b347624c7a61dd4ab27406053"
+    },
+    "decisive-evidence.md": {
+      "byte_length": 30593,
+      "sha256": "ffa5cd0b4f8d028228fc5ffa5f7f3c03c24ffeb15ed7d1479d87a18c3bfcd677"
+    },
+    "response.md": {
+      "byte_length": 6321,
+      "sha256": "5b170b0f55a024f8a5573aa83c54dde3e7559a87966263b0438022b373559b3f"
+    }
+  }
+}

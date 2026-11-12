@@ -1,0 +1,206 @@
+[
+  [
+    40,
+    "2026-11-11T18:27:42.1220013Z   ssh-user: git"
+  ],
+  [
+    41,
+    "2026-11-11T18:27:42.1220264Z   persist-credentials: true"
+  ],
+  [
+    42,
+    "2026-11-11T18:27:42.1220533Z   clean: true"
+  ],
+  [
+    43,
+    "2026-11-11T18:27:42.1220783Z   sparse-checkout-cone-mode: true"
+  ],
+  [
+    48,
+    "2026-11-11T18:27:42.1222041Z   set-safe-directory: true"
+  ],
+  [
+    155,
+    "2026-11-11T18:27:57.8132450Z  * [new branch]            context-binding-tests   -> origin/context-binding-tests"
+  ],
+  [
+    169,
+    "2026-11-11T18:27:57.8140059Z  * [new branch]            context-recovery-tests  -> origin/context-recovery-tests"
+  ],
+  [
+    208,
+    "2026-11-11T18:27:57.8156362Z  * [new branch]            event-residual-tests    -> origin/event-residual-tests"
+  ],
+  [
+    209,
+    "2026-11-11T18:27:57.8156684Z  * [new branch]            exclusive-clean-tests   -> origin/exclusive-clean-tests"
+  ],
+  [
+    221,
+    "2026-11-11T18:27:57.8160415Z  * [new branch]            fabric-entry-tests      -> origin/fabric-entry-tests"
+  ],
+  [
+    241,
+    "2026-11-11T18:27:57.8240094Z  * [new branch]            generator-db-proof      -> origin/generator-db-proof"
+  ],
+  [
+    242,
+    "2026-11-11T18:27:57.8240648Z  * [new branch]            generator-db-safety     -> origin/generator-db-safety"
+  ],
+  [
+    286,
+    "2026-11-11T18:27:57.8258972Z  * [new branch]            guards-tests            -> origin/guards-tests"
+  ],
+  [
+    295,
+    "2026-11-11T18:27:57.8261842Z  * [new branch]            host-clause-tests       -> origin/host-clause-tests"
+  ],
+  [
+    297,
+    "2026-11-11T18:27:57.8262434Z  * [new branch]            host-pair-tests         -> origin/host-pair-tests"
+  ],
+  [
+    303,
+    "2026-11-11T18:27:57.8264220Z  * [new branch]            inbox-open-pull         -> origin/inbox-open-pull"
+  ],
+  [
+    322,
+    "2026-11-11T18:27:57.8270381Z  * [new branch]            lucy-client-generation  -> origin/lucy-client-generation"
+  ],
+  [
+    347,
+    "2026-11-11T18:27:57.8278133Z  * [new branch]            lucy-round-generate     -> origin/lucy-round-generate"
+  ],
+  [
+    353,
+    "2026-11-11T18:27:57.8279914Z  * [new branch]            lucy-undo-tests         -> origin/lucy-undo-tests"
+  ],
+  [
+    375,
+    "2026-11-11T18:27:57.8286549Z  * [new branch]            multifact-driver-tests  -> origin/multifact-driver-tests"
+  ],
+  [
+    428,
+    "2026-11-11T18:27:57.8303737Z  * [new branch]            reconnect-tests         -> origin/reconnect-tests"
+  ],
+  [
+    431,
+    "2026-11-11T18:27:57.8304644Z  * [new branch]            removal-wake-tests      -> origin/removal-wake-tests"
+  ],
+  [
+    432,
+    "2026-11-11T18:27:57.8304946Z  * [new branch]            replay-marker-tests     -> origin/replay-marker-tests"
+  ],
+  [
+    437,
+    "2026-11-11T18:27:57.8306885Z  * [new branch]            runner-durable-tests    -> origin/runner-durable-tests"
+  ],
+  [
+    457,
+    "2026-11-11T18:27:57.8312982Z  * [new branch]            skill-bound-tests       -> origin/skill-bound-tests"
+  ],
+  [
+    477,
+    "2026-11-11T18:27:57.8319613Z  * [new branch]            task-clause-tests       -> origin/task-clause-tests"
+  ],
+  [
+    483,
+    "2026-11-11T18:27:57.8321576Z  * [new branch]            task-worktree-tests     -> origin/task-worktree-tests"
+  ],
+  [
+    485,
+    "2026-11-11T18:27:57.8322169Z  * [new branch]            terminal-theme-tests    -> origin/terminal-theme-tests"
+  ],
+  [
+    501,
+    "2026-11-11T18:27:57.8327154Z  * [new branch]            wake-exclusive-tests    -> origin/wake-exclusive-tests"
+  ],
+  [
+    528,
+    "2026-11-11T18:27:57.8336437Z 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+  ],
+  [
+    540,
+    "2026-11-11T18:27:58.7394891Z 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+  ],
+  [
+    731,
+    "2026-11-11T18:28:34.3320220Z      \u001b[33m\u001b[2m\u2713\u001b[22m\u001b[39m NR1-04 a separate reader overlaps real sidecar activation and sees only complete accepted manifests \u001b[33m 599\u001b[2mms\u001b[22m\u001b[39m"
+  ],
+  [
+    732,
+    "2026-11-11T18:28:34.4252907Z  \u001b[32m\u2713\u001b[39m \u001b[30m\u001b[42m unit \u001b[49m\u001b[39m packages/knowledge/test/ownership-read.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 53\u001b[2mms\u001b[22m\u001b[39m"
+  ],
+  [
+    748,
+    "2026-11-11T18:28:36.9183462Z \u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m23 passed\u001b[39m\u001b[22m\u001b[90m (23)\u001b[39m"
+  ],
+  [
+    749,
+    "2026-11-11T18:28:36.9184334Z \u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m220 passed\u001b[39m\u001b[22m\u001b[90m (220)\u001b[39m"
+  ],
+  [
+    816,
+    "2026-11-11T18:28:36.9834921Z \u001b[36;1m   'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-13 rejected or unbound', False),\u001b[0m"
+  ],
+  [
+    834,
+    "2026-11-11T18:28:36.9842483Z \u001b[36;1m        raise RuntimeError(f'{name}: mutation target absent or ambiguous')\u001b[0m"
+  ],
+  [
+    846,
+    "2026-11-11T18:28:36.9846752Z \u001b[36;1m            raise RuntimeError(f'{name}: named control did not reject the mutant')\u001b[0m"
+  ],
+  [
+    852,
+    "2026-11-11T18:28:36.9848299Z \u001b[36;1mpathlib.Path('ownership-mutation-receipts.json').write_text(json.dumps(receipts, indent=2) + '\\n')\u001b[0m"
+  ],
+  [
+    886,
+    "2026-11-11T18:28:55.5877837Z ##[group]Run bun run generate"
+  ],
+  [
+    887,
+    "2026-11-11T18:28:55.5878117Z \u001b[36;1mbun run generate\u001b[0m"
+  ],
+  [
+    891,
+    "2026-11-11T18:29:14.3862209Z ##[group]Run set +e"
+  ],
+  [
+    902,
+    "2026-11-11T18:29:17.5722993Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not."
+  ],
+  [
+    903,
+    "2026-11-11T18:29:17.5724178Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not."
+  ],
+  [
+    904,
+    "2026-11-11T18:29:17.5724732Z guards: 78 rules, 869 changed paths, 0 gate and 2 warn findings, 0 errors."
+  ],
+  [
+    905,
+    "2026-11-11T18:29:17.5740949Z ##[warning]Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not."
+  ],
+  [
+    906,
+    "2026-11-11T18:29:17.5746957Z ##[warning]Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not."
+  ],
+  [
+    909,
+    "2026-11-11T18:29:17.6004073Z   name: ownership-runtime-7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+  ],
+  [
+    913,
+    "modules/atlas/boundary/src/generated"
+  ],
+  [
+    933,
+    "2026-11-11T18:29:18.8014452Z Artifact ownership-runtime-7102f2e3a1a9a3822bcd0ae054b36ecffe9da553.zip successfully finalized. Artifact ID 13883635728"
+  ],
+  [
+    934,
+    "2026-11-11T18:29:18.8015639Z Artifact ownership-runtime-7102f2e3a1a9a3822bcd0ae054b36ecffe9da553 has been successfully uploaded! Final size is 431413 bytes. Artifact ID is 13883635728"
+  ]
+]

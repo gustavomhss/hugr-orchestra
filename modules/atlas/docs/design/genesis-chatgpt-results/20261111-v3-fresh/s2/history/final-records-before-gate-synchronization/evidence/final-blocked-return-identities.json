@@ -1,0 +1,54 @@
+{
+  "schema": "genesis-s2-final-blocked-return-identities/v1",
+  "recorded_at": "2026-11-11T21:47:05.174721+00:00",
+  "work": {
+    "path": "work.md",
+    "byte_length": 28284,
+    "sha256": "bd20c7fd34637ee68accb065fe85998301ce7a4a278c7e5dc9b688623548d046"
+  },
+  "handoff": {
+    "path": "handoff.json",
+    "byte_length": 20489,
+    "sha256": "59b65e3332408d99bdcf11b38a4fc71d60f7d443e8f07ebcb68872a4347844b2"
+  },
+  "ledger": {
+    "path": "execution-ledger.jsonl",
+    "byte_length": 50192,
+    "sha256": "438957afc04d18e8a16bf8a882aff6a2f1f4a60b8d50c078fe84755415490368"
+  },
+  "ledger_rows": 94,
+  "native_package": {
+    "path": "native-package.json",
+    "byte_length": 332594,
+    "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+  },
+  "matrix": {
+    "path": "evidence/final-criterion-matrix.json",
+    "byte_length": 108664,
+    "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20"
+  },
+  "record_resolution": {
+    "path": "evidence/final-record-correction-resolution.json",
+    "byte_length": 1719,
+    "sha256": "fc3de552313eed260fd1a484b3564a56555bb7616d6fe6949beeba594704a17b"
+  },
+  "usage": {
+    "path": "evidence/final-return-observable-usage.json",
+    "byte_length": 3026,
+    "sha256": "8694d5bee0166c4f7edc7dfe564a6e32c1802ed72c3244a0fc1954bbda88195a"
+  },
+  "queue_disposition": {
+    "path": "evidence/final-current-queue-disposition.json",
+    "byte_length": 1405,
+    "sha256": "2ecc099ca3cc08ae685a2e1254596c39cd81d2f0cd17c196b6f268125b85f470"
+  },
+  "latest_dependency_readback": {
+    "path": "evidence/return-readback-02/readback-receipt.json",
+    "byte_length": 2330,
+    "sha256": "dca5b54456c0fcf690e5be740ed2bfe4002f7494fa1db2e25a5d015bf72b7c01"
+  },
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "delivery_complete": false,
+  "no_new_runtime_or_remote_write": true,
+  "archive_integrity_source": "Accompanying external export-receipt.json after actual export."
+}

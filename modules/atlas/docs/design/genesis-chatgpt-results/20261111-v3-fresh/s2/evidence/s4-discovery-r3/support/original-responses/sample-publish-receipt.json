@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "{\n  \"command\": [\n    \"/workspace/scratch/aff930d22ec7/s4/tools/node_modules/.bin/bun\",\n    \"scripts/genesis-native.ts\",\n    \"publish\",\n    \"/workspace/scratch/aff930d22ec7/s4/candidate\",\n    \"/workspace/scratch/aff930d22ec7/s4/runtime-state/l1a-prepared-v1.json\",\n    \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/binding-v1.json\"\n  ],\n  \"cwd\": \"/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas\",\n  \"environment_declarations\": {\n    \"ATLAS_ACTOR\": \"/root\",\n    \"ATLAS_RATIFY_TOKEN\": \"/root\"\n  },\n  \"start_utc\": \"2026-11-11T17:55:50.388889+00:00\",\n  \"duration_seconds\": 0.795177641999544,\n  \"exit_code\": 0,\n  \"stdout_sha256\": \"f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1\",\n  \"stderr_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n  \"candidate_revision\": \"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1\",\n  \"operation\": \"actual isolated native publication; not product test suite\"\n}\n",
+    "encoding": "utf-8",
+    "sha": "2933b47eff7d4c4927b05b7a5265dc685d7b3e5b",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/6e43247103ac36e5adb635f2fccde2e61480c56d/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+    "display_title": "sample-publish-v1.receipt.json"
+  },
+  "isError": false
+}

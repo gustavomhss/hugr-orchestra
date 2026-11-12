@@ -1,0 +1,181 @@
+{
+  "schema": "genesis-bounded-correction-checks/v1",
+  "artifact": "s2.l4.entry",
+  "revision": 2,
+  "recorded_at_utc": "2026-11-11T20:37:44.654645+00:00",
+  "scope": "Documentation-only local identity, insertion and provenance checks; no product execution or semantic verdict.",
+  "correction_request": {
+    "path": "deliverable/requests/l4-entry-r2-correction.md",
+    "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53",
+    "verified": true
+  },
+  "old_body": {
+    "path": "later-producers/app-session/l4-entry/body.md",
+    "byte_length": 5305,
+    "sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67"
+  },
+  "new_body": {
+    "path": "later-producers/app-session/l4-entry-r2/body.md",
+    "byte_length": 5849,
+    "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+    "whitespace_word_count": 735
+  },
+  "insertion": {
+    "section": "Verification and boundaries",
+    "before": "**Instructions:** root `AGENTS.md` routes tests to GitHub Actions",
+    "original_zero_based_byte_offset": 4688,
+    "byte_length": 544,
+    "sha256": "60d43bd14179f0cc48cb58c5fe045894582c99782ee4f3e8f4a2e4ca7fe851be",
+    "text_with_following_blank_line": "**Out-of-scope evidence route:** S2 cannot establish distributed or clustered Session ownership, crash continuation, or exactly-once provider execution. Direct these questions to the S1/backend session-execution owner for its current coordination, continuation and provider-retry design and supporting implementation and failure-recovery evidence. S2 reconnect and admission observations do not supply that proof. [Root `AGENTS.md:214–216`; accepted `s2.l3.app-session` § “Recover the projection without inventing execution recovery”.]\n\n",
+    "hunk_count": 1,
+    "added_lines": 2,
+    "removed_lines": 0,
+    "remove_insertion_recovers_original": true
+  },
+  "headings": [
+    "Orientation",
+    "Maintenance protocol",
+    "Verification and boundaries"
+  ],
+  "sections": [
+    {
+      "heading": "Orientation",
+      "byte_length": 951
+    },
+    {
+      "heading": "Maintenance protocol",
+      "byte_length": 3149
+    },
+    {
+      "heading": "Verification and boundaries",
+      "byte_length": 1717
+    }
+  ],
+  "navigation_table_byte_identical": true,
+  "original_instruction_paragraph_byte_identical": true,
+  "preserved_files": [
+    {
+      "file": "sources.json",
+      "byte_length": 1290,
+      "sha256": "443b8e94919fb4bcbdef2380d1414f8c3e3d964961b3eda3933e76b9c301f41d",
+      "byte_identical": true
+    },
+    {
+      "file": "dependencies.json",
+      "byte_length": 8418,
+      "sha256": "f87550c141a6592d1cbdafbb63c9c06e963bcd1fd5e8f198081911177911c425",
+      "byte_identical": true
+    },
+    {
+      "file": "decisive-evidence.md",
+      "byte_length": 12805,
+      "sha256": "40b990eefa4e9630be200bd1f2907871d78f95175949025fd09330584a66e35e",
+      "byte_identical": true
+    }
+  ],
+  "source_records": 1,
+  "accepted_build_keys": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui"
+  ],
+  "navigation_keys": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui"
+  ],
+  "accepted_manifest_checks": [
+    {
+      "path": "accepted/l1.json",
+      "byte_length": 2963,
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "matches_original_pin": true
+    },
+    {
+      "path": "accepted/l2.json",
+      "byte_length": 2847,
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c",
+      "matches_original_pin": true
+    },
+    {
+      "path": "accepted/l3.json",
+      "byte_length": 2847,
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b",
+      "matches_original_pin": true
+    }
+  ],
+  "supporting_inputs": [
+    {
+      "path": "producers/app-session/sources/AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "read_lines": [
+        209,
+        216
+      ]
+    },
+    {
+      "path": "deliverable/layers/l3/app-session/body.md",
+      "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334,
+      "read_section": "Recover the projection without inventing execution recovery"
+    },
+    {
+      "path": "deliverable/layers/l3/app-session/decisive-evidence.md",
+      "sha256": "c085725c05b12cd5933624bb424038c4c9bfc8b5a41f6e75a2662a4317529678",
+      "byte_length": 18962,
+      "read_section": "E03"
+    }
+  ],
+  "excerpt_checks": [
+    {
+      "existing_entry_evidence": "E04",
+      "source_lines": [
+        214,
+        216
+      ],
+      "byte_length": 980,
+      "sha256": "1cdc2c87f7640a31a071dc92964dab10d88dafd6a6f7244a6cc02ea39417c1e0",
+      "matches_capture_and_existing_entry": true
+    },
+    {
+      "accepted_app_l3_evidence": "E03",
+      "source_lines": [
+        209,
+        216
+      ],
+      "byte_length": 2855,
+      "sha256": "0489888da1e156063c11b4f49045fbb95bf5e4b95879a4140d45e1d4b19b9d37",
+      "matches_capture_and_accepted_evidence": true
+    }
+  ],
+  "all_original_five_files_unchanged": true,
+  "all_existing_body_bytes_preserved": true,
+  "source_record_additions": 0,
+  "build_dependency_additions": 0,
+  "navigation_dependency_additions": 0,
+  "decisive_evidence_changes": 0,
+  "peer_l4_bodies_read": false,
+  "product_tests_run": false,
+  "runtime_run": false,
+  "ci_run": false,
+  "remote_writes": false,
+  "reviewer_contact": false,
+  "semantic_verdict_issued": false,
+  "write_scope": "later-producers/app-session/l4-entry-r2"
+}

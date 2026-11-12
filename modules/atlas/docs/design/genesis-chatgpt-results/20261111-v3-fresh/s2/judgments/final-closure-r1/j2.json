@@ -1,0 +1,225 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "transport": {
+    "status": "COMPLETE",
+    "parts_present": [1, 2, 3, 4, 5, 6],
+    "part_2_confirmation": "Complete part 2 is visible: it continues work.md, finishes that section and supplies the normative registry through the QS-4 continuation into part 3.",
+    "part_5_confirmation": "The separately labeled FULL REPLACEMENT part 5 is complete and used exclusively. Its section 10 direct_input_consumers array closes correctly with ]. Its preservation-section continuation joins part 6. The invalid initial part 5 is discarded.",
+    "limits": "Hashes and lengths are externally supplied receipts, not independently recomputed message-byte attestations. Public acceptance metadata was not used as the peer's reasoning.",
+    "additional_observation": "The principal's post-packet readback, receipt SHA256 6c84df86e7cd1a67426130bdeafdadeeacc07f26ea7e9b16a2faba9e95a98a8e, retains the same S4 release, candidate and observer limit."
+  },
+  "criterion_groups": [
+    {
+      "ids": ["GO-A2", "GO-I2", "GO-I8", "AC-01", "CC-1", "CC-3", "QS-1", "QS-2"],
+      "local_status": "PASS",
+      "satisfied_local_portions": "My prior independent reviews support all thirteen exact current bodies as cumulative, useful, source-supported content. The frozen 4506-path, 156-family population and its 565 inspected, 3893 family-supported and 48 metadata-only dispositions remain explicit. The entry and maintenance guides explain substantive ownership and boundaries. The closure draft correctly separates those acceptances from operational completion.",
+      "remaining_local_obligations": "No mandatory content correction remains for these portions. Actual reachability and successful consumer use remain separate obligations below; this PASS does not establish them.",
+      "evidence_refs": ["Sections 01, 03 and 12", "Own L1–L4 decisions at the thirteen listed body hashes"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Reconcile union coverage, cumulative usefulness, cross-domain ownership, fidelity and integrated navigation."
+      }
+    },
+    {
+      "ids": ["GO-I1"],
+      "local_status": "PASS",
+      "satisfied_local_portions": "The supplied preservation receipt covers all 1231 initial snapshot files, including the explicit initial late-receipt override. Current accepted bodies and correction lineage remain separately identifiable. Late transport is not promoted into old semantic approval.",
+      "remaining_local_obligations": "Preserve and append subsequent closure records without altering originals. This disposition covers the evidenced S2 protected population; it does not certify an exhaustive historical call inventory.",
+      "evidence_refs": ["Section 12", "original-preservation-final.json SHA256 a1405ade3d5c3c30daf6fb75c4e66bb245446ff6e07e6922a67473b54e0bf577", "Prior correction packets and decisions"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Reconcile protected historical campaign objects outside this local preservation receipt."
+      }
+    },
+    {
+      "ids": ["GO-A1", "GO-A3", "AC-02", "AC-03", "CC-2", "SC-1", "SC-2"],
+      "local_status": "HOLD",
+      "satisfied_local_portions": "Transferable-ownership content, operational guidance, exact headings and bounded-reading declarations are semantically accepted.",
+      "remaining_local_obligations": "All fourteen real Atlas-only consumers remain NOT_RUN: S2-C1–C5 and S2-I1D/I1A/I1U/I2D/I2A/I2U/I3D/I3A/I3U. Require fresh observed contexts, exact accepted versions, no source or answer-key access, actual index/read traces and independent evaluation. Routine limits remain 2 index calls, 2 reads and 16000 total body bytes; deep limits remain 6, 5 and 64000. Instructions establish an observable isolation boundary, not a technical sandbox.",
+      "evidence_refs": ["Sections 01 and 11", "Section 04: no candidate or binding"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Evaluate integrated union consumers and cross-domain progressive navigation; missing S2 consumers remain S2 obligations."
+      }
+    },
+    {
+      "ids": ["GO-A4", "GO-I4", "GO-I5", "AC-05", "AC-06", "CC-4", "SC-3"],
+      "local_status": "HOLD",
+      "satisfied_local_portions": "Build/navigation roles were independently reviewed. The supplied S2-U1 declared-graph closure is correct at the scope stated in expected_set_assessment below.",
+      "remaining_local_obligations": "No actual mutation, invalidation, restoration, cache hit, independent-result preservation or proposer-call comparison is supplied. Execute S2-U1 and bind compatible common controls for additions/removals, intent/recipe changes, missing edges/inputs, authority/validity/gap changes, receipt-only refresh and unchanged-result stopping. Graph reachability alone cannot determine required interpretation calls.",
+      "evidence_refs": ["Sections 08B.03 and 10", "Prior accepted dependency reviews"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Prove propagation, restoration and independent reuse across the domain union."
+      }
+    },
+    {
+      "ids": ["GO-A5", "GO-I3", "GO-I7", "AC-04", "AC-07", "AC-09", "AC-10", "CC-5", "CC-7", "SC-5", "QS-4", "QS-5"],
+      "local_status": "HOLD",
+      "satisfied_local_portions": "Native content construction and source preservation are evidenced. One real prepare attempt is recorded, partial CAS is preserved, public-write refusals are retained, and the S4 CI observations distinguish exact candidates and scopes.",
+      "remaining_local_obligations": "Prepare failed before producing a candidate. Exact runtime bindings, governed publication, current/historical reader behavior, local invalid-state refusal, compatible recovery/rollback/migration and S2 final-payload gates remain unproved. Reuse common S4 evidence only through demonstrated compatibility and local binding; do not repeat unrelated common suites or transfer their outcomes automatically.",
+      "evidence_refs": ["Sections 04–09.02", "Section 13", "Post-packet readback"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Integrate union publication, concurrency, governance, migration and branch-protection evidence. Local S2 import, binding, readers and gates are not transferred."
+      }
+    },
+    {
+      "ids": ["GO-A6", "GO-I6", "AC-08", "CC-6", "SC-4", "QS-6"],
+      "local_status": "HOLD",
+      "satisfied_local_portions": "The evidence distinguishes actual operations, archived copies, invalidated sends, replacements and uncertain acknowledgments. It records one S2 prepare invocation without automatic retries and preserves useful completed content. Missing tokens, billing and physical attempts are honestly UNKNOWN.",
+      "remaining_local_obligations": "Finish reconciliation of available current S2 production, review, correction, support and closure receipts by stage, including post-snapshot operations. The bounded index is expressly non-exhaustive, and no complete shared reservation/envelope or adapter-conformance guarantee is supplied. Keep unrecoverable telemetry unknown; do not manufacture totals or repeat old mining to obtain costs.",
+      "evidence_refs": ["Sections 08B.01 and 12", "79-row preclosure ledger snapshot", "Post-packet readback"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Reconcile historical GLOBAL_UNRECONCILED usage, aggregate reservations and the campaign-wide adapter/envelope guarantee."
+      }
+    },
+    {
+      "ids": ["GO-A7", "QS-3"],
+      "local_status": "PASS",
+      "satisfied_local_portions": "The reviewed S2 contribution uses bounded knowledge artifacts and existing Atlas native preparation. The supplied work does not introduce a separate production knowledge store or governance framework. The compatibility problem is identified at the existing source-input boundary.",
+      "remaining_local_obligations": "Any subsequent implementation repair must remain narrowly justified and separately verified. This design disposition does not approve a future repair or establish successful runtime integration.",
+      "evidence_refs": ["Accepted artifact/dependency reviews", "Sections 04 and 08B.02"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Review shared runtime mechanism necessity and minimality across the integrated implementation."
+      }
+    },
+    {
+      "ids": ["DOD-1", "DOD-2", "DOD-3", "DOD-4", "DOD-5", "DOD-6", "DOD-7"],
+      "local_status": "HOLD",
+      "satisfied_local_portions": "The fixed registry is preserved, content corrections are resolved, local/global responsibilities are distinguished, and this assessment supplies explicit dispositions without treating drafting or tests as delivery.",
+      "remaining_local_obligations": "Record both actual final closure assessments in the final matrix; finish current observable accounting and accurate blocked-work records. Required operational consumers, update/recovery controls and local gates remain open. No committed, sealed and reread final S2 handoff is evidenced. Human acceptance or union activation must not be invented or imposed as artificial substitutes for these local obligations.",
+      "evidence_refs": ["Sections 01, 02 and 13", "Handoff state PLANNED_ABSENT", "Sections 04, 09–12"],
+      "global_complement": {
+        "owner": "ROOT",
+        "obligation": "Resolve union CC/SC and controls, final integrated epic, historical obligations, owner acceptance, governed integration, landing and production activation."
+      }
+    }
+  ],
+  "expected_set_assessment": {
+    "case": "S2-U1",
+    "status": "PASS_DECLARED_GRAPH_EXPECTATION_ONLY",
+    "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+    "direct_consumers": ["s2.l1.desktop-web", "s2.l2.desktop-web"],
+    "affected_closure": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "outside_closure": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ],
+    "reason": "Both supplied direct consumers lead through accepted build edges to all three L3 units and then all four L4 artifacts. No build path reaches the four listed independent units; navigation adds none.",
+    "limits": "This independently validates the declared potential affected closure, not an executed update or a requirement for nine new interpretation calls. Concrete mutation semantics and before/after result, authority, validity, gap and receipt observations are needed to assess restoration and propagation stopping."
+  },
+  "independently_executable_obligations": [
+    {
+      "operation": "Append actual closure transport, invalidation/replacement, activation, returned-decision and post-native GET receipts to current S2 accounting; reconcile other presently available current support receipts or retain precise unresolved gaps.",
+      "capability_and_authority": "The packet demonstrates authorized local receipt preservation and ledger appends. This requires local record work, not a compatible runtime, public write or paid model experiment.",
+      "limit": "Do not infer missing activation envelopes, hidden attempts or costs."
+    },
+    {
+      "operation": "Persist this expected-set assessment with the frozen expectation and bind the existing S2-U1 mutation specification and restoration criteria, or explicitly identify their absence.",
+      "capability_and_authority": "Local expectation/evidence files already exist and the supplied declarations permit independent graph assessment without runtime execution.",
+      "limit": "Do not rewrite the frozen case or label the update executed."
+    },
+    {
+      "operation": "After receiving both actual closure responses, render the final local criterion matrix and blocked-work report, preserving the draft and original decisions; reconcile each local gate's applicability, exact existing evidence and missing execution.",
+      "capability_and_authority": "The existing local renderer and evidence-writing workflow are demonstrated. Accurate reporting is independent of prepare success and remote publication.",
+      "limit": "No new content refinement is required. A report may record HOLD or NOT_RUN but cannot convert it into satisfaction."
+    },
+    {
+      "operation": "Prepare the concrete disclosure manifest and local blocked handoff/approval brief for the intended publication destination, including exact files, identities and internal-record scope.",
+      "capability_and_authority": "Local preparation is already evidenced and does not transmit records. Both refusals expressly permit completing unaffected work and presenting concrete scope for authorization.",
+      "limit": "Then request explicit authorization or an authorized safer destination; do not upload, indirectly transmit or retry rejected disclosure."
+    }
+  ],
+  "blocked_obligations": [
+    {
+      "id": "B-RUNTIME",
+      "observed_operation": "One native prepare at candidate e3a8ab8cf56dbff1ee91272df51ffa398d882aa1 exited 1 with native-input-unavailable for inputs/app-session-tree.json. Thirteen partial CAS files exist, but candidate_id and binding_id are null.",
+      "route_status": "The supplied source/size observations identify a 256000-byte source/live-observer cap against complete inputs of 369462, 390775 and 1131057 bytes. The later GET confirms the released candidate and cap are unchanged. The prepared compatibility request is local, not an obtained repair.",
+      "unblock": "Obtain an authorized, pinned compatible implementation and relevant proof preserving all mandatory complete inputs; perform a new isolated exact-package prepare, then obtain exact independent bindings and governed publication. Do not truncate inputs or silently substitute implementation bytes."
+    },
+    {
+      "id": "B-CONSUMPTION-MAINTENANCE",
+      "observed_operation": "All fourteen consumers and S2-U1 are explicitly NOT_RUN; no accepted S2 runtime candidate/current reader is supplied.",
+      "route_status": "S4's one-artifact publish/index/read sample and synthetic common controls do not execute these S2 obligations.",
+      "unblock": "Establish the compatible bound S2 reader path, then run and independently assess the frozen local consumers, update/restoration/reuse and applicable common-control bindings."
+    },
+    {
+      "id": "B-CI-COMPATIBILITY",
+      "observed_operation": "Run 43065851373 failed at e3a8ab8c; run 43077975153 succeeded at 7102f2e3 with its recorded 220 tests and 22 probes.",
+      "route_status": "Two checked adapter sources and three generated bundles differ. The reported static equivalence of return expressions is not an e3a rerun or whole-distribution identity. Full archive parity beyond three directly checked changed files remains a pinned receipt claim. No S2 final-payload remote gate is supplied.",
+      "unblock": "Bind applicable common evidence to the actual adopted implementation and execute or provide exact required S2 gates through authorized routes. Report overall run and candidate scope separately."
+    },
+    {
+      "id": "B-PUBLICATION",
+      "observed_operation": "Two automatic approval reviews rejected disclosure of internal archives and then narrower execution records to public/external GitHub. No supplied later authorization or successful final publication supersedes them.",
+      "route_status": "Read-only branch/release discovery does not lift either refusal. A handoff remains PLANNED_ABSENT.",
+      "unblock": "After concrete local preparation, obtain explicit disclosure authorization or an authorized safer destination. Then use fresh HEAD, payload P, separate seal H, the required expected-sha lease/force:false and exact readback. No workaround is approved."
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "CLOSURE-J2-F1",
+      "status": "HOLD",
+      "location": "Sections 04–08B.02",
+      "finding": "The complete native runtime candidate and its binding do not exist.",
+      "required_resolution": "Resolve B-RUNTIME and retain the failed attempt and partial CAS as history."
+    },
+    {
+      "id": "CLOSURE-J2-F2",
+      "status": "HOLD",
+      "location": "Sections 10–11 and local gate matrix",
+      "finding": "Consumer, update/reuse/restoration and recovery/control execution is absent.",
+      "required_resolution": "Complete the fixed local operational obligations after runtime unblocking; content readiness and graph expectation validation cannot substitute."
+    },
+    {
+      "id": "CLOSURE-J2-F3",
+      "status": "FIX-FIRST",
+      "location": "Sections 08B.01, 12–13 and post-packet addendum",
+      "finding": "Current independent local reconciliation is not yet exhausted: the accounting snapshot predates closure operations, and the final assessed matrix and concrete blocked handoff/publication scope are not recorded.",
+      "required_resolution": "Finish the independently executable local record work listed above, preserving unknown telemetry and exact decision scopes. No repeated content review is required merely for faithful recording."
+    },
+    {
+      "id": "CLOSURE-J2-F4",
+      "status": "HOLD",
+      "location": "Sections 07–09.02 and handoff state",
+      "finding": "Exact S2 gate, authorized publication and final sealed-readback evidence remain missing.",
+      "required_resolution": "Resolve B-CI-COMPATIBILITY and B-PUBLICATION without treating current S4 success or historical branch state as S2 delivery."
+    }
+  ],
+  "closure_assessment": {
+    "local_status": "FIX-FIRST",
+    "delivery_complete": false,
+    "material_blockers_confirmed": true,
+    "independent_authorized_local_work_remaining": true,
+    "evidence_sufficiency": "Sufficient to reject DELIVERY_COMPLETE, retain all thirteen exact content acceptances, validate the declared S2-U1 closure and identify the material runtime/publication blockers. It does not establish exhaustion of independent local work.",
+    "terminal_blocked_closure_ready": false,
+    "reason": "The completion protocol requires more than accepted prose and a failed prepare. Finish bounded independent reconciliation first. If only the documented material blockers then remain, record INCOMPLETE_BLOCKED with exact operations, errors, authority limits and unblock conditions; do not report delivery complete.",
+    "handoff_created_by_this_assessment": false
+  },
+  "acceptance_limits": [
+    "No artifact content PASS is withdrawn or promoted into runtime acceptance.",
+    "No S2 consumer, update, recovery, CI or publication gate is newly passed here.",
+    "Native usage remains UNKNOWN; historical aggregate usage remains GLOBAL_UNRECONCILED. These are distinct from reconcilable current local receipts.",
+    "This assessment grants no remote-write, runtime-repair, provider-call or production-activation authority.",
+    "Owner acceptance, union integration, landing and activation remain separate ROOT responsibilities."
+  ]
+}

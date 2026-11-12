@@ -1,0 +1,67 @@
+{
+  "schema": "genesis-s2-preserved-review-transport/v1",
+  "layer": 4,
+  "revision": 2,
+  "artifact": "s2.l4.entry",
+  "records": [
+    {
+      "path": "review-frozen-r2/manifest.json",
+      "byte_length": 643,
+      "sha256": "f5ec7d148d0151c6a04367fd216fb2bf6841f0305aaa0f0d46d009b88244dfd5"
+    },
+    {
+      "path": "review-frozen-r2/part-01.txt",
+      "byte_length": 23532,
+      "sha256": "c100c58bab7294a7e9b8fbd617db72ee26271ea55ddc571b52aa99f1f3407f53"
+    },
+    {
+      "path": "transport-r2/call-01-arguments.json",
+      "byte_length": 24688,
+      "sha256": "ff34e827ff62411dddb21dc59c8d1dd226233a7ae30369300fe2257e2b68e154"
+    },
+    {
+      "path": "transport-r2/call-01-result.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "transport-r2/call-02-arguments.json",
+      "byte_length": 24688,
+      "sha256": "434c3eb3812ca98cb5c1463e246c698b873055bc7f57504bcc381225b6171430"
+    },
+    {
+      "path": "transport-r2/call-02-result.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "transport-r2/hashes.json",
+      "byte_length": 1360,
+      "sha256": "4c3fac24c258fc5810d982fc17daefbae513dcc78d57b483e66cc7c7addadaaa"
+    },
+    {
+      "path": "transport-r2/payload-01.txt",
+      "byte_length": 23616,
+      "sha256": "e72b4b7cb221ef8669de57e5f452f2a8b1cf123429ac3c64480798f8ce3bd383"
+    },
+    {
+      "path": "transport-r2/receipts.json",
+      "byte_length": 3602,
+      "sha256": "46c5ea1ae7da254231c56d5c4314a1b69038b4f971f761397a9b192fcf942792"
+    },
+    {
+      "path": "transport-r2/response.md",
+      "byte_length": 2471,
+      "sha256": "c415f00c6e1d7b19cdc0cae148148a043b8fa569d49be62f30196e2b6f06060f"
+    }
+  ],
+  "actual_native_sends": 2,
+  "observed_results": [
+    "EMPTY_NORMAL",
+    "EMPTY_NORMAL"
+  ],
+  "recipient_completeness": "PENDING_ACTUAL_REVIEWS",
+  "limits": [
+    "Local preserved visible requests do not attest host-internal serialization or recipient bytes."
+  ]
+}

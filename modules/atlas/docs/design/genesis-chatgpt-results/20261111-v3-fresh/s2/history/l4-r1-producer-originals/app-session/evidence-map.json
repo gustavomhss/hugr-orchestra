@@ -1,0 +1,219 @@
+{
+  "unit": "s2.l4.app-session",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "sections": [
+    {
+      "heading": "Orientation",
+      "basis": "Accepted static scope and ownership; protocol prescriptions are maintenance inferences, not product execution.",
+      "refs": [
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Reading the handoffs"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "heading": "Orientation and evidence boundaries"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "heading": "Orientation and accepted ownership"
+        }
+      ]
+    },
+    {
+      "heading": "Maintenance protocol",
+      "basis": "Trigger/owner/stop map synthesizes accepted failure boundaries. Exact current source instructions add contract, naming, localization, codegen and documentation obligations. Rebuild/update consequences are recommendations, not claimed Atlas runtime automation.",
+      "refs": [
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Enter the intended server and workspace"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Submit once, then hand the draft to its session"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Recover the projection without inventing execution recovery"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Answer requests without transferring server authority to the UI"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Change settings and Skills under the original owner"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Render and localize under caller-owned lifetimes"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Navigation, settings and feature controllers"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Requests, terminals and auxiliary lifetimes"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Rendering, evidence and reusable utility contracts"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "heading": "Terminal input becomes admission through ordered, separate operations"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "heading": "Generated products reach consumers through distinct maintenance paths"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "heading": "Launch, choose a server and identify the health decision"
+        }
+      ]
+    },
+    {
+      "heading": "Verification and boundaries",
+      "basis": "Existing test paths/assertion scopes are accepted L1 evidence. Direct package scripts and current instructions specify future gates. Test-runner package-selector resolution and authorized benchmark execution remain unresolved; no guessed concrete invocation or performed gate is asserted.",
+      "refs": [
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Verification limits and ownership use"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Route a change through its affected contracts"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "heading": "Verification status and remaining evidence"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "heading": "Change impact and verification ownership"
+        }
+      ]
+    }
+  ],
+  "navigation_map": [],
+  "excerpts": [
+    {
+      "id": "E01",
+      "path": "AGENTS.md",
+      "start_line": 160,
+      "end_line": 166,
+      "sha256": "f73cdebf400dd09e83700a6a890e30ae7d9e609df5d2b8ee2b1e2217d325dd32",
+      "byte_length": 2187,
+      "purpose": "Attributed remote-test command and snapshot-write implications. Its owner-only local exception is not authorized in this campaign."
+    },
+    {
+      "id": "E02",
+      "path": "AGENTS.md",
+      "start_line": 175,
+      "end_line": 179,
+      "sha256": "a7559450c128d291de1974f6e21f105b39409e3c3c58f0e703b8de11d930d903",
+      "byte_length": 380,
+      "purpose": "Attributed change-scoped versus epic CI cadence and gate-reporting distinction."
+    },
+    {
+      "id": "E03",
+      "path": "AGENTS.md",
+      "start_line": 194,
+      "end_line": 205,
+      "sha256": "c297e5d83bc49bbb8b9b2ebfe0092931750c5fc716168d10f636d47e8ff2446d",
+      "byte_length": 674,
+      "purpose": "Attributed guard, restart boundary and package-local typecheck rules; none executed."
+    },
+    {
+      "id": "E04",
+      "path": "packages/app-shell/AGENTS.md",
+      "start_line": 1,
+      "end_line": 8,
+      "sha256": "2b184427fbfa30f512f1aba9c9e15be2111318a1c6c8eca2b793520188af48f7",
+      "byte_length": 272,
+      "purpose": "Attributed priorities, mandatory before/after production benchmark and strict app/server no-restart instruction."
+    },
+    {
+      "id": "E05",
+      "path": "packages/app-shell/e2e/AGENTS.md",
+      "start_line": 8,
+      "end_line": 16,
+      "sha256": "e6506595d36c4b0657470d03578abf41dbb706226594ec26f573286356b1962e",
+      "byte_length": 1200,
+      "purpose": "Attributed observable-state, exact-identity and single-mutation E2E discipline; no E2E test was authored or run."
+    },
+    {
+      "id": "E06",
+      "path": "packages/app-shell/e2e/performance/AGENTS.md",
+      "start_line": 7,
+      "end_line": 13,
+      "sha256": "0661dc69d3758c808adeeae64ecb2778d50cc9fe8b6126f3fb4c9db8de709879",
+      "byte_length": 406,
+      "purpose": "Attributed serial production diagnostics, lossless data, completion-only assertions and separate normal discovery."
+    },
+    {
+      "id": "E07",
+      "path": "packages/schema/AGENTS.md",
+      "start_line": 71,
+      "end_line": 83,
+      "sha256": "d3e76e4d2c54c7946f299c54bff9ce700406523f339504bb95ae4eb2115e66ae",
+      "byte_length": 1090,
+      "purpose": "Attributed ID-compatibility and focused contract-change obligations; no migration or contract change was implemented."
+    },
+    {
+      "id": "E08",
+      "path": "AGENTS.md",
+      "start_line": 146,
+      "end_line": 154,
+      "sha256": "8fa4debd4f7a4a28198b8620029467c1cd1f107c3645ff0157969b637a752721",
+      "byte_length": 1131,
+      "purpose": "Attributed shipped versus repository-only knowledge and user-guide update boundary."
+    },
+    {
+      "id": "E09",
+      "path": "packages/app-shell/package.json",
+      "start_line": 21,
+      "end_line": 21,
+      "sha256": "fa3986ff4e93993a5e0e06eef16fd397b6103c3bbcf6323b83bd277b131cf175",
+      "byte_length": 28,
+      "purpose": "New declared-script precision: app typecheck uses tsgo -b; not an executed result."
+    },
+    {
+      "id": "E10",
+      "path": "packages/session-ui/package.json",
+      "start_line": 44,
+      "end_line": 44,
+      "sha256": "f97ed21fa3b73e2720ba13fe9eaeaa0ab62caefe17c8c82315c60fb679bad42e",
+      "byte_length": 34,
+      "purpose": "New declared-script precision: session-UI typecheck uses tsgo --noEmit; not an executed result."
+    },
+    {
+      "id": "E11",
+      "path": "packages/app-shell/package.json",
+      "start_line": 33,
+      "end_line": 33,
+      "sha256": "9c509385d8b8f9aef2619be36d46a719a0ed5ec3b93d9582013fe20057e0c604",
+      "byte_length": 117,
+      "purpose": "New declared-script precision: the manual benchmark includes Bun test and Playwright execution, so manual classification alone does not establish permission to execute it here."
+    },
+    {
+      "id": "E12",
+      "path": ".orchestra/skills/agent-screen-maintenance/SKILL.md",
+      "start_line": 32,
+      "end_line": 41,
+      "sha256": "dcf279f4d9867db199a547e92e3740cb07e4e670457c77aee82eec02105a3d5d",
+      "byte_length": 835,
+      "purpose": "Attributed deferred Atlas loading, stable seat IDs, secret-free presentation, localization and protocol-generation obligations."
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "schema": "genesis-s2-l3-sources/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "local_capture_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/AGENTS.md",
+      "connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/AGENTS.md.json",
+      "connector_response_sha256": "ed4d75dbddfa3582d0993327f023988bad12a54a167f92ce666833208ddedf69",
+      "read_scope": "Full text read earlier in the same producer session; cited bounded lines reread for L3.",
+      "selected_line_ranges": [
+        [
+          1,
+          5
+        ],
+        [
+          146,
+          177
+        ],
+        [
+          188,
+          200
+        ]
+      ],
+      "used_for": "Attributed Client generation, product-test and CI constraints; no implementation inference from governance text."
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/desktop/AGENTS.md",
+      "git_blob_sha": "5040a3d090c75ff05ab0aab956b7efbbe0c1f6df",
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "byte_length": 2801,
+      "local_capture_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/apps/desktop/AGENTS.md",
+      "connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/apps__desktop__AGENTS.md.json",
+      "connector_response_sha256": "63b20611e4a7a615d80a5fd5fe3aa35808777d81f4aabcba8bae825402f6f875",
+      "read_scope": "Full text read earlier in the same producer session; cited bounded lines reread for L3.",
+      "selected_line_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "used_for": "Renderer/preload/main ownership and typed native-copy instructions used in trust and localization handoffs."
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/web/AGENTS.md",
+      "git_blob_sha": "e8a89cb6ab3c95bf256e2226b9e8466f8d934220",
+      "sha256": "9c9edc98255ee4c4a9c96a742df1330eafb7ffc8f9f10bca640f5c6c7abfeaad",
+      "byte_length": 301,
+      "local_capture_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/apps/web/AGENTS.md",
+      "connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/apps__web__AGENTS.md.json",
+      "connector_response_sha256": "825a0b536781dd1472d8ca33f6653c3cd54eb2b8d084ef3879cb835b332a75cc",
+      "read_scope": "Full text read earlier in the same producer session; cited bounded lines reread for L3.",
+      "selected_line_ranges": [
+        [
+          1,
+          3
+        ]
+      ],
+      "used_for": "Thin browser entry and shared-shell ownership instruction."
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "local_capture_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/packages/app-shell/AGENTS.md",
+      "connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/packages__app-shell__AGENTS.md.json",
+      "connector_response_sha256": "3b4a32d14e68e652cf40e19e181315cde8d3a2633bfffbc165f97c2ed9da6bcd",
+      "read_scope": "Full text read earlier in the same producer session; cited bounded lines reread for L3.",
+      "selected_line_ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "used_for": "Before/after session benchmark and shared localization instructions; runtime no-restart constraint."
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "git_blob_sha": "ba3d5859d9109e104687f628bc3e96ad5e616d07",
+      "sha256": "6434f6ed07efb0c67275e3d1c30270c2a012aa77b46071239080ae8475dd42a9",
+      "byte_length": 6256,
+      "local_capture_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/.orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/.orchestra__skills__desktop-startup-maintenance__SKILL.md.json",
+      "connector_response_sha256": "f94a3fa4c90407264a9dc34f1e55778040230b8aeecdf5d388dc71dda2999bf0",
+      "read_scope": "Full text read earlier in the same producer session; cited bounded lines reread for L3.",
+      "selected_line_ranges": [
+        [
+          10,
+          37
+        ]
+      ],
+      "used_for": "Attributed launch-log/warm-path guidance and injected-clock liveness verification prescription; historical timings remain historical."
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/app-log-hygiene/SKILL.md",
+      "git_blob_sha": "685932db1df51c87be9e7174bbfe940a18c03a8c",
+      "sha256": "3a0fbf9ea92160cdd95eef1bdd445f6ea5fa68c7cacc59ad582761c0c64bc93d",
+      "byte_length": 3153,
+      "local_capture_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/.orchestra/skills/app-log-hygiene/SKILL.md",
+      "connector_response_file": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/.orchestra__skills__app-log-hygiene__SKILL.md.json",
+      "connector_response_sha256": "68f14444d72c3768da7554518e036e9e1b734bdb8a3d93beab0cbb5ac998c72a",
+      "read_scope": "Full text read earlier in the same producer session; cited bounded lines reread for L3.",
+      "selected_line_ranges": [
+        [
+          8,
+          16
+        ]
+      ],
+      "used_for": "Logs-as-data and source-level noise maintenance instruction; no installed log access."
+    }
+  ],
+  "provenance_note": "Only six directly used repository guidance sources are listed. Product facts are inherited from the explicitly bound accepted L2 bodies. No new source fetch or expanded product-source audit occurred."
+}

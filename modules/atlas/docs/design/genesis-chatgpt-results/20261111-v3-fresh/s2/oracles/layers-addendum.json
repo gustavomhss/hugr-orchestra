@@ -1,0 +1,41 @@
+{
+  "schema": "genesis-s2-layers-oracle-addendum/v1",
+  "frozen_at": "2026-11-11T17:29:24.982373+00:00",
+  "relation": "Before any L2/L3/L4 production dispatch; preserves ownership-v1 unchanged",
+  "ownership_oracle": {
+    "path": "oracles/ownership-v1.json",
+    "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1"
+  },
+  "layer_checks": {
+    "L2": [
+      "All three assigned units retain full L1 family disposition; explain local purpose, contracts, actual behavior and ownership without claiming every leaf audited.",
+      "Retain implementation/policy conflicts and unexecuted runtime limits.",
+      "Any new source claim binds exact captured source; retained L1 links identify predecessor and sections."
+    ],
+    "L3": [
+      "For each of three units trace actual entry/state transitions/identity/transport/persistence/failure and the maintenance impact.",
+      "Build versus navigation reflects semantic use; no broad rebuilding inferred only from links.",
+      "No cluster/provider exactly-once claim; no generic security/a11y guarantee from source inspection."
+    ],
+    "L4": [
+      "All three guides state operational triggers, safe edit owners, evidence deeper reads, verification and abstention.",
+      "Entry key s2.l4.entry links all 12 existing required units and explicit roots/navigation; useful bounded sections, no duplicate per-file corpus.",
+      "No invented execution commands, CI pass or closed product bug; remote product tests and generation/benchmark obligations stay explicit."
+    ]
+  },
+  "critical_errors": [
+    "missing any assigned unit or mandatory family need",
+    "unknown facts promoted to guarantees",
+    "source/recipe/dependency mismatch",
+    "dependents produced before complete predecessor acceptance",
+    "raw source access passed off as Atlas consumer proof",
+    "copying semantic verdict as runtime binding verdict"
+  ],
+  "consumption_limits": "Exact ownership-v1 unchanged: routine 2 index/2 read/16000 body bytes; deep 6 index/5 read/64000; Atlas-only fresh context. Section read supported by pinned runtime is permitted.",
+  "allowed_unknowns": [
+    "unmeasured product correctness or external platform behavior explicitly labeled",
+    "provider token/cost not exposed",
+    "common controls not yet provided by pinned S4, kept open"
+  ],
+  "entry_added_before_production": true
+}

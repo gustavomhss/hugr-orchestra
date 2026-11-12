@@ -1,0 +1,223 @@
+- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
+- Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.
+- The default branch in this repo is `dev`.
+- Local `main` ref may not exist; use `dev` or `origin/dev` for diffs.
+
+## Branch Names
+
+Use a short branch name of at most three words, separated by hyphens. Do not use slashes or type prefixes such as `feat/` or `fix/`.
+
+Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
+
+## Agent Names
+
+- Maestro's name is fixed. The app and other Sessions find and address the conductor by it, so config cannot rename it.
+- Every other native seat is addressed by its stable id (for example `backend`); its display name is a user setting (`agent.<id>.name`). Code, tests, docs, commits and PR text refer to a seat by role or id, never by a default display name.
+- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`modules/maestro/coordination/src/roster.ts`). `modules/maestro/coordination/test/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
+
+## Commits and PR Titles
+
+Use conventional commit-style messages and PR titles: `type(scope): summary`.
+
+Valid types are `feat`, `fix`, `docs`, `chore`, `refactor`, and `test`. Scopes are optional; use the affected package or area when helpful, e.g. `core`, `orchestra`, `tui`, `app`, `desktop`, `sdk`, or `plugin`.
+
+Examples: `fix(tui): simplify thinking toggle styling`, `docs: update contributing guide`, `chore(sdk): regenerate types`.
+
+## Style Guide
+
+### General Principles
+
+- Keep things in one function unless composable or reusable
+- Do not extract single-use helpers preemptively. Inline the logic at the call site unless the helper is reused, hides a genuinely complex boundary, or has a clear independent name that improves the caller.
+- Avoid `try`/`catch` where possible
+- Avoid using the `any` type
+- Use Bun APIs when possible, like `Bun.file()`
+- Rely on type inference when possible; avoid explicit type annotations or interfaces unless necessary for exports or clarity
+- Prefer functional array methods (flatMap, filter, map) over for loops; use type guards on filter to maintain type inference downstream
+- In `src/config`, follow the existing self-export pattern at the top of the file (for example `export * as ConfigAgent from "./agent"`) when adding a new config module.
+- In Effect generators, bind services to named variables before calling methods. Do not use nested service yields such as `yield* (yield* Foo.Service).bar()`.
+
+Reduce total variable count by inlining when a value is only used once.
+
+```ts
+// Good
+const journal = await Bun.file(path.join(dir, "journal.json")).json()
+
+// Bad
+const journalPath = path.join(dir, "journal.json")
+const journal = await Bun.file(journalPath).json()
+```
+
+### Destructuring
+
+Avoid unnecessary destructuring. Use dot notation to preserve context.
+
+```ts
+// Good
+obj.a
+obj.b
+
+// Bad
+const { a, b } = obj
+```
+
+### Imports
+
+- Never alias imports. Do not use `import { foo as bar } from "..."` or renamed imports like `resolve as pathResolve`.
+- Never use star imports. Do not use `import * as Foo from "..."` or `import type * as Foo from "..."`.
+- If a namespace-style value is needed, import the module's own exported namespace by name, for example `import { Project } from "@orchestra/core/project"`, then reference `Project.ID`.
+- Prefer dynamic imports for heavy modules that are only needed in selected code paths, especially in startup-sensitive entrypoints. Destructure dynamic import bindings near the top of the narrowest scope that needs them so they read like normal imports. Avoid inline chains such as `await import("./module").then((mod) => mod.value())` or `(await import("./module")).value()`. Keep branch-specific imports inside the branch that needs them to preserve lazy loading.
+
+### Variables
+
+Prefer `const` over `let`. Use ternaries or early returns instead of reassignment.
+
+```ts
+// Good
+const foo = condition ? 1 : 2
+
+// Bad
+let foo
+if (condition) foo = 1
+else foo = 2
+```
+
+### Control Flow
+
+Avoid `else` statements. Prefer early returns.
+
+```ts
+// Good
+function foo() {
+  if (condition) return 1
+  return 2
+}
+
+// Bad
+function foo() {
+  if (condition) return 1
+  else return 2
+}
+```
+
+### Complex Logic
+
+When a function has several validation branches or supporting details, make the main function read as the happy path and move supporting details into small helpers below it.
+
+```ts
+// Good
+export function loadThing(input: unknown) {
+  const config = requireConfig(input)
+  const metadata = readMetadata(input)
+  return createThing({ config, metadata })
+}
+
+function requireConfig(input: unknown) {
+  ...
+}
+```
+
+- Keep helpers close to the code they support, below the main export when that improves readability.
+- Do not over-abstract simple expressions into many single-use helpers; extract only when it names a real concept like `requireConfig` or `readMetadata`.
+- Do not return `Effect` from helpers unless they actually perform effectful work. Synchronous parsing, validation, and option building should stay synchronous.
+- Prefer Effect schema helpers such as `Schema.UnknownFromJsonString` and `Schema.decodeUnknownOption` over manual `JSON.parse` wrapped in `Effect.try` when parsing untrusted JSON strings.
+- Add comments for non-obvious constraints and surprising behavior, not for obvious assignments or control flow.
+
+### Schema Definitions (Drizzle)
+
+Use snake_case for field names so column names don't need to be redefined as strings.
+
+```ts
+// Good
+const table = sqliteTable("session", {
+  id: text().primaryKey(),
+  project_id: text().notNull(),
+  created_at: integer().notNull(),
+})
+
+// Bad
+const table = sqliteTable("session", {
+  id: text("id").primaryKey(),
+  projectID: text("project_id").notNull(),
+  createdAt: integer("created_at").notNull(),
+})
+```
+
+## What Ships and What Stays in the Repo
+
+The release carries only what someone who installs and uses Orchestra needs. Material for people who change the code stays in the repository.
+
+- Ships: compiled code, including seat prompts (`modules/maestro/coordination/src/seats/prompt/*.txt`); the skill trees a seat lists in `seat.skills` (`Seats.skillSource`, embedded at build time by `modules/maestro/coordination/src/seat-skills-module.ts`); Maestro playbooks (`modules/maestro/coordination/playbooks`), including the Orchestra guide under `maestro-orchestra`; the `extraResources` in `apps/desktop/electron-builder.config.ts`; the CLI package's `bin`.
+- Repo-only: `.orchestra/skills/*` (maintenance, ownership and contributor usage skills, seen only when this repository is the open project), `docs/` (specs and guides), and this file.
+- Knowledge an agent needs at runtime goes in its prompt or a shipped seat skill, never only in `.orchestra/skills`.
+- Never add a maintenance or ownership skill to a seat's `skills`.
+- `docs/guides` is written for users but is not published yet; a user-facing change still updates its guide.
+
+## Testing
+
+- Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
+- Test actual implementation, do not duplicate logic into tests
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
+  - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
+  - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
+  - A run takes a few minutes: give the shell call a long timeout or run it in the background.
+  - A Python package (a `requirements-dev.txt` and no `package.json`) runs pytest instead. In a package with both, such as `modules/relay`, naming only `.py` files runs pytest, for example `bun run test:ci relay tests/test_authoring.py`, and anything else runs `bun test`; `-t` becomes pytest's `-k`.
+  - The omni positive control (`script/test-omni-control.ts`) prints one `omni positive control:` line per run, and `test:ci` fails a job without it or whose verdict is neither `pass` nor `not applicable`. Full lanes and whole-package `test:ci` runs expect every run to spawn through omni; a narrower `test:ci` run (`ORCHESTRA_OMNI_CONTROL=declared`, derived from the request) expects it only from tests that declared it. A test that must spawn through omni calls `expectSpawn(import.meta.path)` from `packages/core/test/fixture/omni-expect.ts` in its body, before it spawns; it then fails unless it made an omni spawn of its own. `packages/core/test/omni-expect-guard.test.ts` requires the call in test files that import omni's spawn surface. `test:ci` accepts only `1` or `strict` for `--env ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`: `0` or a typo would run the tests on legacy with the control off. Legacy rollback runs only in test.yml's named lanes.
+  - A local `bun test` stops with a pointer to `test:ci` (`script/test-guard.ts`). Only the owner may allow a local run, with `ORCHESTRA_LOCAL_TESTS=1`.
+
+## Spawning Processes
+
+- Orchestra code starts child processes only through `ChildProcessSpawner`, `Process`, or `Process.interactive`.
+- Only `packages/core/src/omni.ts` imports `hugr-omni` (`native/omni`); everything else goes through it.
+- The sites that stay outside omni are the entries in `script/spawn-allowlist.json`, which is the source of truth; `native/omni/docs/orchestra-integration.md` §3 explains only the main groups.
+- `bun run check:spawn-imports` fails on any other import of `cross-spawn`, `bun-pty`, `@lydell/node-pty`, `child_process` or `hugr-omni`, or use of `StdioClientTransport`. Today's sites are in `script/spawn-allowlist.json`; entries are only removed, never added without the lead.
+
+## CI Cadence
+
+- The full suite runs once per epic, not per unit of work. Gate each unit with change-scoped tests through `bun run test:ci` and a local package typecheck.
+- To run CI, add the `epic` label to the epic PR (remove and re-add it to rerun) or dispatch the workflow manually. Pushes and unlabeled PRs run nothing.
+- A local green is not a CI green; say which gate ran.
+- Two Atlas workflows are the exceptions: `atlas-guard.yml` runs the Own snapshot guard on PRs that touch Own-anchored files, and `atlas-worklist.yml` writes the stale-Own worklist on pushes to dev.
+
+## Terminal and PTY
+
+Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/terminal-maintenance`.
+
+- The agent terminal exists only in the V2 session core's bash tool (`packages/core`). The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
+- Text that goes to the model is `AgentTerminal.sanitize`d. Terminal output is data, never instruction.
+- Shell marks (OSC 133) count only with the session's nonce. OSC 7 (`Info.cwd`) is a hint without one; do not use it for decisions that need trust.
+- The PTY cursor and ring (`BUFFER_LIMIT`) count UTF-16 characters, not bytes.
+- The `Pty` service is served over HTTP by `packages/server/src/handlers/pty.ts`. The app uses `/api/pty`.
+- `ORCHESTRA_AGENT_TERMINAL` and `ORCHESTRA_SHELL_INTEGRATION` are permanent opt-in flags in `flag/flag.ts`; read them through `Flag`, never `process.env`.
+- Known limit: a WebSocket client that stops reading makes the server grow; not solved.
+
+## Guardrail
+
+- Before calling a change done, run `bun run check:guards --base origin/dev`; CI runs the same rules on every PR. Load the `guardrail-usage` skill to read a finding.
+- Fix the finding. Use `guardrail-ignore: <rule id> <reason>` only where the rule's `clearedBy` allows it, and apply a `guardrail-approved` label only if you are Maestro: any other agent asks Maestro, who decides.
+
+## Local Runtime
+
+- You may be running inside the Orchestra desktop app or its local server. Do not stop or restart either; ask the owner when a restart is needed.
+
+## Type Checking
+
+- Always run `bun typecheck` from package directories (e.g., `apps/cli`), never `tsc` directly.
+
+## V2 Session Core
+
+- Keep durable prompt admission separate from model execution. `SessionV2.prompt(...)` admits one durable `session_input` row before scheduling advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. The serialized runner promotes admitted inputs into visible user messages at safe boundaries.
+- Reusing a Session ID adopts the existing Session. Reusing a prompt message ID reconciles an exact retry only when Session, prompt, and delivery mode match; conflicting reuse fails. Historical projected prompts lazily synthesize promoted inbox records during exact retry.
+- Keep `SessionExecution` process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement through `SessionStore` plus `LocationServiceMap.get(session.location)` only when a drain starts; no layer should take a Session ID. V2 interruption targets the active process-local ownership chain for that Session; idle or missing interruption is a no-op.
+- Keep `SessionRunner`, model resolution, tool registry, permissions, and filesystem Location-scoped. Omitted `Location.workspaceID` means implicit-local placement; explicit workspace identity remains reserved for future placement semantics.
+- Preserve one explicit `llm.stream(request)` call per provider turn and reload projected history before durable continuation. Do not bridge through legacy `SessionPrompt.loop(...)` or delegate orchestration to an in-memory tool loop. The one exception is an agent whose `engine` names a registered `ExecutionHost` (today only `claude-code`): its single `ExecutionHost.stream(turn)` call is that provider turn, its internal tool calls persist as provider-executed events, Orchestra tools it invokes settle through the runner's `turn.execute`, and its `query()` always keeps the `claude_code` system prompt preset.
+- Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. Advisory wakes drain eligible durable inbox rows only; post-crash continuation recovery requires a separate explicit design before it may retry provider work. A drain has no durable identity or transcript boundary.
+- Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
+- Keep EventV2 replay owner claims separate from clustered Session execution ownership.
+- Keep the System Context algebra, registry, and built-ins in `packages/core/src/system-context`; keep Context Source producers with their observed domains, and keep Session History selection plus Context Epoch persistence Session-owned.
+
+## Claude Code Host
+
+- The Claude host refuses governed `maestro_*` tools until the session loads `maestro-run-governed` through `mcp__orchestra__skill`. The gate lives in `modules/engine-adapters/claude-code/src/v2/host.ts`; `maestro_arsenal_*` and `maestro_workflows` are excluded.
+- The playbook name must stay in step across `packages/core/src/agent/prompt/maestro.txt`, the gate in `host.ts`, and the playbook at `modules/maestro/coordination/playbooks/maestro-run/governed/SKILL.md`. Change all three together.
+- Maintenance details: `.orchestra/skills/claude-code-maintenance`.

@@ -1,0 +1,161 @@
+{
+  "schema": "genesis-s2-final-local-gates/v1",
+  "recorded_at": "2026-11-11T21:33:48.987115+00:00",
+  "gates": [
+    {
+      "id": "G-LAYERS",
+      "state": "PASS_CONTENT_ONLY",
+      "applicability": "All thirteen assigned artifacts.",
+      "existing_evidence": [
+        "accepted/l1.json",
+        "accepted/l2.json",
+        "accepted/l3.json",
+        "accepted/l4.json",
+        "evidence/final-semantic-reconciliation.json"
+      ],
+      "remaining": "None for exact accepted bodies. Operational obligations below remain separate.",
+      "blocked_by": []
+    },
+    {
+      "id": "G-RUNTIME",
+      "state": "FAIL",
+      "applicability": "Complete exact S2 native package and mandatory inputs.",
+      "existing_evidence": [
+        "evidence/native-final-prepare/prepare-execution-receipt.json",
+        "evidence/native-final-input-cap-diagnosis.json",
+        "evidence/final-return-remote-recheck/readback-receipt.json"
+      ],
+      "remaining": "Authorized pinned compatible S4 implementation with relevant proof; new isolated exact-package prepare. Preserve mandatory complete inputs, failed attempt and partial CAS. Establish current input/membership observation without fabricated Git HEAD.",
+      "blocked_by": [
+        "B-RUNTIME"
+      ]
+    },
+    {
+      "id": "G-BINDING",
+      "state": "NOT_RUN",
+      "applicability": "Exact native candidate, independent binding decisions and governed Atlas reader publication.",
+      "existing_evidence": [
+        "evidence/native-final-prepare/prepare-execution-receipt.json"
+      ],
+      "remaining": "Actual candidate_id/binding_id, both exact same-pair runtime binding decisions and authorized publication receipts. No candidate exists from the failed prepare.",
+      "blocked_by": [
+        "B-RUNTIME"
+      ]
+    },
+    {
+      "id": "G-CONSUMERS",
+      "state": "NOT_RUN",
+      "applicability": "All fourteen frozen S2-C and S2-I consumer cases.",
+      "existing_evidence": [
+        "requests/consumer-question-deck.json",
+        "oracles/ownership-v1.json",
+        "oracles/layers-addendum.json"
+      ],
+      "remaining": "Fresh Atlas-only contexts, actual index/read traces, exact versions, bounded reads and independent evaluation; preserve consumer isolation from source/oracles.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "G-BINDING"
+      ]
+    },
+    {
+      "id": "G-UPDATE",
+      "state": "NOT_RUN_EXPECTATION_VALIDATED_ONLY",
+      "applicability": "S2-U1 and compatible local-use maintenance controls.",
+      "existing_evidence": [
+        "oracles/update-final-graph-expectation.json",
+        "evidence/u1-final-binding/receipt.json",
+        "judgments/final-closure-r1/j1.json",
+        "judgments/final-closure-r1/j2.json"
+      ],
+      "remaining": "Actual mutation, invalidation, restoration, reuse and proposer-call comparison. Bind existing frozen intent and explicitly missing concrete mutation/observable definitions before execution. Validate expected potential closure without assuming nine interpretation calls. Bind common controls for add/remove, intent/recipe, missing input/edge, authority/validity/gap, receipt refresh and unchanged-result stopping.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "G-BINDING"
+      ]
+    },
+    {
+      "id": "G-RECOVERY",
+      "state": "HOLD",
+      "applicability": "S2 coherence, stale-current refusal, rollback, durable resume and independent valid scope.",
+      "existing_evidence": [
+        "evidence/final-closure-support/s4-observations-full.json",
+        "evidence/s4-discovery-r3/support/ci-summary.json"
+      ],
+      "remaining": "Relevant compatible common-control bindings and S2 local-use proof on an actual exact candidate. S4 sample is not S2 execution.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "G-BINDING"
+      ]
+    },
+    {
+      "id": "G-CI",
+      "state": "HOLD",
+      "applicability": "Required S2 final-payload remote gates; exact implementation compatibility.",
+      "existing_evidence": [
+        "evidence/ci-final-readbacks/run-43065851373.json",
+        "evidence/ci-final-readbacks/run-43077975153.json",
+        "evidence/guards-remote-plan.json",
+        "verification/guards.test.ts"
+      ],
+      "remaining": "Actual authorized S2 payload and applicable GitHub Actions results. S4 run43065851373 failed at e3a; run43077975153 passed at7102. Neither is S2 final-payload CI. Do not transfer the different candidate verdict.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "B-PUBLICATION"
+      ]
+    },
+    {
+      "id": "G-PROVENANCE",
+      "state": "LOCAL_RECORDS_RECONCILED_WITH_DECLARED_LIMITS",
+      "applicability": "Current observable requests/responses, transport corrections, source/body provenance and accounting.",
+      "existing_evidence": [
+        "evidence/final-usage-delta/reconciled-01/observable-usage-delta.json",
+        "evidence/final-closure-response-preservation.json",
+        "evidence/original-preservation-final.json",
+        "execution-ledger.jsonl"
+      ],
+      "remaining": "Retain missing original activation envelopes, nonexhaustive source/support/provider totals, UNKNOWN telemetry and historical GLOBAL_UNRECONCILED. Applicable shared route/reservation/adapter guarantee remains unevidenced; current scoped bookkeeping is complete through the named receipts.",
+      "blocked_by": [
+        "B-SHARED-ACCOUNTING-GUARANTEE"
+      ]
+    },
+    {
+      "id": "G-PUBLICATION",
+      "state": "BLOCKED_AUTOMATIC_APPROVAL",
+      "applicability": "Public GitHub payload P, separate handoff seal H, leased branch update and exact readback.",
+      "existing_evidence": [
+        "evidence/archive-publication-rejection.json",
+        "evidence/remote-publication-rejection.json",
+        "evidence/final-repository-metadata.json"
+      ],
+      "remaining": "Explicit informed authorization for the complete concrete public-disclosure package, or an authorized safer destination. Then fresh HEAD B, P descendant of B, H descendant of P, expected_sha=B/force:false, exact readback. No retry before authorization.",
+      "blocked_by": [
+        "B-PUBLICATION"
+      ]
+    },
+    {
+      "id": "G-CLOSURE",
+      "state": "INCOMPLETE_BLOCKED",
+      "applicability": "All eight local completion requirements in pinned completion.md.",
+      "existing_evidence": [
+        "evidence/final-criterion-matrix.json",
+        "evidence/final-closure-response-preservation.json",
+        "work.md",
+        "handoff.json",
+        "evidence/final-record-correction-resolution.json"
+      ],
+      "remaining": "Operational gates remain open. Both actual record corrections are satisfied; exact complete export is verified by the external receipt. DELIVERY_COMPLETE remains false.",
+      "blocked_by": [
+        "B-RUNTIME",
+        "B-PUBLICATION",
+        "B-SHARED-ACCOUNTING-GUARANTEE"
+      ]
+    }
+  ],
+  "limits": "No open item becomes N/A because the runtime or permission is absent.",
+  "record_correction_resolution": {
+    "path": "evidence/final-record-correction-resolution.json",
+    "byte_length": 1719,
+    "sha256": "fc3de552313eed260fd1a484b3564a56555bb7616d6fe6949beeba594704a17b"
+  },
+  "final_record_synchronized_at": "2026-11-11T21:47:44.251236+00:00"
+}

@@ -1,0 +1,273 @@
+ 514 | 
+ 515 |   /**
+ 516 |    * Activate the addon (called by Terminal.loadAddon)
+ 517 |    */
+ 518 |   public activate(terminal: ITerminalCore): void {
+ 519 |     this._terminal = terminal
+ 520 |   }
+ 521 | 
+ 522 |   /**
+ 523 |    * Dispose the addon and clean up resources
+ 524 |    */
+ 525 |   public dispose(): void {
+ 526 |     this._terminal = undefined
+ 527 |   }
+ 528 | 
+ 529 |   /**
+ 530 |    * Serializes terminal rows into a string that can be written back to the
+ 531 |    * terminal to restore the state. The cursor will also be positioned to the
+ 532 |    * correct cell.
+ 533 |    *
+ 534 |    * @param options Custom options to allow control over what gets serialized.
+ 535 |    */
+ 536 |   public serialize(options?: ISerializeOptions): string {
+ 537 |     if (!this._terminal) {
+ 538 |       throw new Error("Cannot use addon until it has been loaded")
+ 539 |     }
+ 540 | 
+ 541 |     const buffer = getTerminalBuffers(this._terminal)
+ 542 | 
+ 543 |     if (!buffer) {
+ 544 |       return ""
+ 545 |     }
+ 546 | 
+ 547 |     const normalBuffer = buffer.normal ?? buffer.active
+ 548 |     const altBuffer = buffer.alternate
+ 549 | 
+ 550 |     if (!normalBuffer) {
+ 551 |       return ""
+ 552 |     }
+ 553 | 
+ 554 |     let content = !options?.excludeModes && getTerminalMode(this._terminal, 2031) ? "\u001b[?2031h" : ""
+ 555 |     content += options?.range
+```
+
+## E35 — Palette generator entry
+
+Generator explicitly reads source inputs, rejects failed contrast checks and writes named outputs; it was not run.
+
+Source: `packages/app-shell/script/orchestra-palettes.ts`. Git blob: `5ae361b9caca40324140d3cbd402f29ddcaf9c3c`.
+
+Lines 1–27:
+
+```text
+   1 | #!/usr/bin/env bun
+   2 | // Writes Orchestra's palette stylesheets (src/orchestra/palette/generated) from its own stylesheets and the
+   3 | // palette definitions. Run from packages/app-shell after changing Orchestra's CSS colors or a palette:
+   4 | //   bun run script/orchestra-palettes.ts
+   5 | import path from "node:path"
+   6 | import { PALETTE_DEFINITIONS } from "../src/orchestra/palette/definitions"
+   7 | import { generatePalettes, PALETTE_SOURCES, parseSources } from "../src/orchestra/palette/generate"
+   8 | 
+   9 | const src = path.join(import.meta.dir, "../src")
+  10 | const texts = await Promise.all(
+  11 |   PALETTE_SOURCES.map(async (file) => [file, await Bun.file(path.join(src, file)).text()]),
+  12 | )
+  13 | const generated = generatePalettes(parseSources(Object.fromEntries(texts)), PALETTE_DEFINITIONS)
+  14 | 
+  15 | if (generated.failures.length > 0) {
+  16 |   // A palette that cannot hold AA without changing hue does not ship: remove it from the catalog and definitions.
+  17 |   console.error(
+  18 |     generated.failures
+  19 |       .map((item) => `${item.palette}: ${item.source} ${item.name} ${item.value} ${item.ratio.toFixed(2)}:1`)
+  20 |       .join("\n"),
+  21 |   )
+  22 |   process.exit(1)
+  23 | }
+  24 | 
+  25 | const out = path.join(src, "orchestra/palette/generated")
+  26 | await Promise.all(Object.entries(generated.files).map(([name, content]) => Bun.write(path.join(out, name), content)))
+  27 | console.log(`wrote ${Object.keys(generated.files).length} files to ${path.relative(process.cwd(), out)}`)
+```
+
+## E36 — Draft regression assertions
+
+These are inspected Playwright assertions using mock transport, not a test result from this work.
+
+Source: `packages/app-shell/e2e/regression/draft-admission-handoff.spec.ts`. Git blob: `352da3a7aaa2f9c456f50aca2ce75f34e914fc39`.
+
+Lines 60–102:
+
+```text
+  60 | 
+  61 | test("delayed failure keeps draft and retries same Session/message ID", async ({ page }) => {
+  62 |   const fixture = await setup(page)
+  63 |   const gate = Promise.withResolvers<void>()
+  64 |   fixture.promptGate = gate.promise
+  65 |   fixture.fail = true
+  66 |   await page.locator(editor).fill("retry retained turn")
+  67 |   const request = page.waitForRequest(isPromptRequest)
+  68 |   const response = page.waitForResponse((response) => isPromptRequest(response.request()))
+  69 |   await page.locator(submit).click()
+  70 |   const sent = await request
+  71 |   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
+  72 |   await expect(page.locator(editor)).toHaveText("retry retained turn")
+  73 |   await expect(page.locator(draftTab)).toHaveCount(1)
+  74 |   gate.resolve()
+  75 |   const failure = await response
+  76 |   expect(failure.request()).toBe(sent)
+  77 |   expect(failure.status()).toBe(500)
+  78 |   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
+  79 |   await expect(page.getByText("Failed to send prompt", { exact: true })).toBeVisible()
+  80 |   await expect(page).toHaveURL(draftURL)
+  81 |   await expect(page.locator(editor)).toHaveText("retry retained turn")
+  82 |   expect(fixture.creates).toHaveLength(1)
+  83 |   expect(fixture.messages).toHaveLength(0)
+  84 |   fixture.fail = false
+  85 |   const retried = page.waitForResponse((response) => isPromptRequest(response.request()))
+  86 |   const retryRequest = page.waitForRequest(isPromptRequest)
+  87 |   await page.locator(submit).click()
+  88 |   const retryReceipt = await retried
+  89 |   expect(retryReceipt.request()).toBe(await retryRequest)
+  90 |   expect(retryReceipt.status()).toBe(200)
+  91 |   await expect(page).toHaveURL(sessionURL)
+  92 |   await expect(page.locator(userCard)).toHaveCount(1)
+  93 |   await expect(page.locator(userText)).toHaveText("retry retained turn")
+  94 |   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
+  95 |   expect(fixture.creates).toHaveLength(1)
+  96 |   expect(fixture.prompts).toHaveLength(2)
+  97 |   expect(fixture.prompts[1]?.id).toBe(fixture.prompts[0]?.id)
+  98 |   expect(fixture.prompts[1]?.payload).toEqual(fixture.prompts[0]?.payload)
+  99 |   expect(fixture.messages).toHaveLength(1)
+ 100 |   expect(fixture.admissions).toHaveLength(2)
+ 101 | })
+ 102 | 
+```
+
+## E37 — ABA ownership assertion
+
+This browser-provider test states that returning to A does not revive the original held operation; not executed.
+
+Source: `packages/app-shell/test-browser/prompt-admission-owner.suite.ts`. Git blob: `9f72ea5888dc56cd8580bff24c1e4ff07efcd746`.
+
+Lines 341–377:
+
+```text
+ 341 | test("real PromptProvider owner ABA permanently holds old attempt until deliberate retry", async () => {
+ 342 |   const instance = mountAdmission()
+ 343 |   const key = draftSessionKey(servers.A as ServerScope, directory, route.draftId)
+ 344 |   let pending: Promise<unknown> | undefined
+ 345 |   try {
+ 346 |     await instance.prompt.ready.promise
+ 347 |     const source = instance.prompt.capture()
+ 348 |     source.set([{ type: "text", content: "held-A", start: 0, end: 6 }])
+ 349 |     selection.togglePending(key, "provider", "restricted")
+ 350 |     pending = Promise.resolve(instance.submit.handleSubmit({ preventDefault: () => undefined } as Event))
+ 351 |     await requireGate(created.promise, pending, "create")
+ 352 |     createGate.resolve()
+ 353 |     await requireGate(saved.promise, pending, "rules")
+ 354 |     batch(() => { setTabs(0, "server", servers.B as Tab["server"]); setRoute("server", "B") })
+ 355 |     const scope: PromptScope = { dir: base64Encode(directory), id: `created-A-${serial}` }
+ 356 |     const foreign = instance.prompt.capture(scope)
+ 357 |     batch(() => { setTabs(0, "server", servers.A as Tab["server"]); setRoute("server", "A") })
+ 358 |     saveGate.resolve()
+ 359 |     await pending
+ 360 |     expect(source.current()[0]).toMatchObject({ content: "held-A" })
+ 361 |     expect(promotions).toEqual([])
+ 362 |     expect(requests.filter((request) => request.operation === "prompt")).toEqual([])
+ 363 |     expect(selection.pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "restricted" }] })
+ 364 |     await instance.submit.handleSubmit({ preventDefault: () => undefined } as Event)
+ 365 |     expect(requests.filter((request) => request.operation === "create")).toHaveLength(1)
+ 366 |     expect(requests.filter((request) => request.operation === "prompt")).toEqual([
+ 367 |       { server: "A", operation: "prompt", input: expect.objectContaining({ sessionID: scope.id, text: "held-A" }) },
+ 368 |     ])
+ 369 |     expect(foreign.current()[0]).toMatchObject({ content: "" })
+ 370 |     expect(foreign.context.items()).toEqual([])
+ 371 |   } finally {
+ 372 |     createGate.resolve(); saveGate.resolve(); instance.dispose()
+ 373 |     await pending?.catch(() => undefined)
+ 374 |     selection.clearPending(key)
+ 375 |     memory.dispose()
+ 376 |   }
+ 377 | })
+```
+
+## E38 — Performance evidence limits
+
+Benchmark documentation distinguishes diagnostics from machine-budget or compositor claims.
+
+Source: `packages/app-shell/e2e/performance/README.md`. Git blob: `3dc91bf649d85e62cfde139e1b0004aa5250d3f7`.
+
+Lines 1–30:
+
+```text
+   1 | # Manual app performance suite
+   2 | 
+   3 | The app's high-volume performance diagnostics live under `packages/app-shell/e2e/performance` and are excluded from normal local and CI Playwright discovery. The benchmark config builds the web app from `apps/web` and serves the production bundle before running scenarios serially.
+   4 | 
+   5 | Run the suite explicitly from `packages/app-shell`:
+   6 | 
+   7 | ```sh
+   8 | bun run test:bench
+   9 | ```
+  10 | 
+  11 | PowerShell:
+  12 | 
+  13 | ```powershell
+  14 | $env:PLAYWRIGHT_WORKERS = "1"
+  15 | bun run test:bench
+  16 | ```
+  17 | 
+  18 | The suite contains:
+  19 | 
+  20 | - cold and hot session-tab timing
+  21 | - home-session click timing split between content and titlebar-tab paint
+  22 | - single-session tab close timing through stable home restoration
+  23 | - cached session repaint and mutation tracing
+  24 | - streaming timeline throughput, RAF-gap, long-task, geometry, and remount diagnostics
+  25 | 
+  26 | All benchmarks import the shared `benchmark` fixture. Pages created through Playwright's `page` fixture automatically capture main-frame navigation history and emit a Chrome trace when `ORCHESTRA_PERFORMANCE_TRACE_DIR` is set. Benchmarks that need isolated browser contexts use `withBenchmarkPage`, which owns the context and the same diagnostics lifecycle.
+  27 | 
+  28 | New benchmarks should look like normal Playwright tests:
+  29 | 
+  30 | ```ts
+```
+
+## E39 — Fixture provenance distinction
+
+Fixture documentation, not evidence of a current product test run.
+
+Source: `packages/app-shell/src/pages/session/orchestra-evidence-fixtures/README.md`. Git blob: `13a82b8ee438493397ff009e8d729968a03ab97b`.
+
+Lines 1–27:
+
+```text
+   1 | # Captured runner output
+   2 | 
+   3 | Bun 1.3.14, Vitest 4.1.7, Playwright 1.59.1, pytest 9.0.3, Go 1.27.1 and Cargo 1.98.0 logs were recovered from the interrupted implementation. Absolute fixture paths were replaced by `/repo`; output is test input, not proof that this application passed those suites.
+   4 | 
+   5 | The former illustrative Jest log was replaced on 2026-10-03 by actual Jest 30.2.0 output (exit 1). Reproduce from this directory:
+   6 | 
+   7 | ```sh
+   8 | bunx jest@30.2.0 --runInBand --config '{"rootDir":".","testMatch":["**/jest-fail.case.cjs","**/jest-pass.case.cjs"]}'
+   9 | ```
+  10 | 
+  11 | The `.case.cjs` inputs intentionally include a failure. Normal Bun test discovery does not select them. No Jest runtime dependency is added to the app.
+  12 | 
+  13 | ## Parser review regressions
+  14 | 
+  15 | The following additional logs are actual captures from the checked-in inputs, using Jest 30.2.0, pytest 9.0.3 and Bun 1.3.14. Reporter-only trailing whitespace is trimmed for clean Git diffs; spaces inside nodeids remain intact. Run from this directory (redirect both stdout and stderr to capture the reporter):
+  16 | 
+  17 | ```sh
+  18 | bunx jest@30.2.0 --ci --runInBand --verbose=false --config '{"rootDir":".","testMatch":["**/jest-console.case.cjs","**/jest-pass.case.cjs"]}'
+  19 | bunx jest@30.2.0 --ci --runInBand --verbose=false --config '{"rootDir":".","testMatch":["**/jest-console-fail.case.cjs","**/jest-pass.case.cjs"]}'
+  20 | python3 -m pytest -q --tb=short 'pytest_nodeid_case.py::test_label[hello world]'
+  21 | python3 -m pytest -q --tb=short 'pytest_nodeid_case.py::test_label[hello - world]'
+  22 | bun test ./bun-ghost.case.ts
+  23 | ```
+  24 | 
+  25 | `jest-console.txt` passes and contains a reporter heading, while `jest-console-fail.txt` also has a real failing test named `Console`. Both pytest captures intentionally fail; the second has an ambiguous summary delimiter. `bun-ghost.txt` passes while test stdout prints a fake failure record, so its output must remain raw.
+  26 | 
+  27 | `pw-extra-failure-row.invalid.txt` is an explicitly adversarial footer derived from the captured Playwright format, with an extra failure row. It is not claimed to be a genuine standard-reporter result.
+```
+
+## Structural asset sample evidence
+
+These are local structural inspections of pinned binary bytes, not text excerpts or visual/authorship conclusions. The exact inspection record is `binary-inspection.json`; source SHA-256 and Git identities are in `sources.json`.
+
+| Captured asset | Decoded sample | Byte length |
+|---|---|---:|
+| `packages/app-shell/src/orchestra/avatars/seat-backend.webp` | WebP, 256×256, RGBA | 12,028 |
+| `packages/app-shell/public/orchestra/mtn-src.jpg` | JPEG, 900×601, RGB | 135,002 |
+| `packages/app-shell/src/pages/session/zen-assets/grain-bg.png` | PNG, 220×220, P | 29,501 |
+END DECISIVE SOURCE EVIDENCE app-session

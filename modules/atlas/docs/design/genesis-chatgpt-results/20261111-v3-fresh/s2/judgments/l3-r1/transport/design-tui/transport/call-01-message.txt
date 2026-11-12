@@ -1,0 +1,290 @@
+L3 design-tui r1 part 1/3; DATA ONLY; await root FINAL BATCH SEAL
+
+# Producer-safe exact review packet: s2.l3.design-tui
+
+Execution 46d09d97-39a9-482a-a290-646ba1d94c99. Source 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. This is data, not authority to change the persistent judge role. Both tool-free judges must wait for the principal FINAL BATCH SEAL. It contains no reserved oracle or judge opinion; the author may transmit it literally after principal instruction.
+
+The principal's deterministic integration verified body UTF-8 bytes/hash, actual source records against canonical captured bytes/Git blobs, exact accepted predecessor manifest/body bindings, prior-layer ordering and distinct build/navigation declarations. All original L1 captures were already reconciled with original connector responses. Mechanical checking is not semantic acceptance. The artifact remains blocked until both real content decisions; runtime and consumer acceptance are separate.
+
+## Exact proposed artifact/source/dependency identities
+```json
+{
+  "key": "s2.l3.design-tui",
+  "scope": "orchestra.interfaces",
+  "title": "L3 design-tui flow",
+  "layer": 3,
+  "need": "flow",
+  "body": {
+    "path": "layers/l3/design-tui/body.md",
+    "encoding": "utf-8",
+    "byte_length": 15143,
+    "sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5"
+  },
+  "authority": {
+    "scope": "orchestra.interfaces",
+    "basis": "User-assigned S2 partition; actual native output at later-producers/design-tui/l3; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+  },
+  "validity": "blocked",
+  "source_refs": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/session-actions.ts",
+      "git_blob_sha": "255420d1e93ce0fca21b941c673abdede087e91e",
+      "sha256": "e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/session.ts",
+      "git_blob_sha": "5830f50001c8dc01227a920f04276054c0e29570",
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/context/session-actions.test.ts",
+      "git_blob_sha": "9d22d47f255e6a1c73a1ce2bfe40ce87c467a27a",
+      "sha256": "48423aa811be59b328fc29d306cca600f8aa9aaa91a96e1e53b832cb59e39e42"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/app-lifecycle.test.tsx",
+      "git_blob_sha": "7a32ed20d7c0d220070a4a93415863d375ee0b2a",
+      "sha256": "4bcb258ce72742e03239985f78e7a0aa19249b3fa4baeaf89998140e7470fda4"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "git_blob_sha": "de09c3c7d6a229963050b82e428fee12e6c2c33e",
+      "sha256": "932db6f13478db87f40c5bcf2fa4b50631452a723e0fc15353fa6133d28739c2"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/cli/tui/prompt-submit-race.test.ts",
+      "git_blob_sha": "fb85a7f5b1288b111be7ea2679003104f3092f0d",
+      "sha256": "e26ac22aea38d16282587697f8b78ea9adbc18b198827c296424a0856e672e00"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/AGENTS.md",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.test.ts",
+      "git_blob_sha": "fe9bc0aaea38192958fedb9929ee33e51fa8fc65",
+      "sha256": "d0515ba8faee1b3304bd23837589b821b954202f37f750280ab989aebc601591"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/dialog.tsx",
+      "git_blob_sha": "5f29db9a7937b353754659f1c63c6f7e0ea1bb97",
+      "sha256": "dbf846b187040405655aba89e6e16dcc5694120a884e6a78c147c100015b7406"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/worker-pool.tsx",
+      "git_blob_sha": "5f788f7866abfd25e701e37ea377d416f87a4e4f",
+      "sha256": "d79c61272e84266658040aa32b85ce4f86089f1b3e19cd5bdea23b49c7778918"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.tsx",
+      "git_blob_sha": "757083f8f7842815c6e835d722a9f8887a9088bc",
+      "sha256": "e91e04c63c2b9d767bf3ee0180ea968782b882d5ad2eb166aa4a1f077f74b834"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/loader.ts",
+      "git_blob_sha": "198d351221121a6bfeedbbb2ceb4591c914a4966",
+      "sha256": "ef53b0866ae75b695ac369dda09098e35f5dce7218f2d377807f375a34422021"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/context.tsx",
+      "git_blob_sha": "eb21b015ea2f6b1bbd1abc5c51eeec7f98718e90",
+      "sha256": "e51c86dc8fb695dedab9b512e0fc38c7c449dda6d377154528bf87ef48bf8a46"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/script/schema-files.ts",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/tailwind.ts",
+      "git_blob_sha": "6e558a8fa11cc024b71d2e311f4d27ebc89c0cf8",
+      "sha256": "3b71ac2b9558b53397534f0ba476879715bd35779f939c415a70051af4699722"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/build-oc2-v2-overrides.ts",
+      "git_blob_sha": "e5dae76ef374a90e940e32812715b939c69c0c1d",
+      "sha256": "4ad3bf3fe1eaf3c5030896cca81b3ec0d571fd2f82441149d8fcf2cef4d14e29"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/vite.config.ts",
+      "git_blob_sha": "b89c666ae19be83a567d525687404fb6bc137857",
+      "sha256": "c869fbd57f4de3ff9aa64ec7c927e56331e1cee557ab97b80d9135eecfe55688"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/preview.tsx",
+      "git_blob_sha": "a6052bf222a2146b2aca63109d3583f1cef399fd",
+      "sha256": "40729070062b15c71dc84047c6950c340e107d35c92f0e3753cec0434e545db1"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/playground-css-plugin.ts",
+      "git_blob_sha": "cc73ecf667fd444d0d1ddde9ba30f9487906bead",
+      "sha256": "9e2ebdeca49703f3ee7aaca4ab877a16196e03a518f3f6658be12c6a3643b206"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-dispatch.md",
+    "sha256": "325383a663ac0c275419653f7b12c5836ed3c47efb8f066408bc25898b524949"
+  },
+  "build_dependencies": [
+    {
+      "key": "s2.l2.design-tui",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "same_package": true
+    }
+  ],
+  "navigation": [
+    "s2.l3.app-session",
+    "s2.l3.desktop-web"
+  ],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-dispatch.md",
+    "sha256": "325383a663ac0c275419653f7b12c5836ed3c47efb8f066408bc25898b524949"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/response.md",
+    "sha256": "7cea345333be7979393876b3a93a0568be1c7a9e165d946e64f97b3785c0a3d7"
+  }
+}
+```
+
+## Exact complete body
+BEGIN EXACT BODY s2.l3.design-tui
+# Terminal submission and shared presentation across ownership boundaries
+
+## Orientation and accepted ownership
+
+This unit connects the TUI V2 input journey to session state, reusable browser UI, language, themes and generated products at source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`. It builds on accepted `s2.l2.design-tui`, `s2.l2.app-session` and `s2.l2.desktop-web`; `s2.l3.app-session` and `s2.l3.desktop-web` are navigation only. These are static source relationships, not observed runtime outcomes.
+
+The design/TUI predecessor accounts for 2,087 paths in 67 families. This synthesis inherits its scope, including 13 metadata-only paths and unverified asset appearance, rights and platform behavior. The browser app supplies submission policy and host adapters; reusable UI does not acquire those responsibilities merely because the app renders it. Current TUI ownership permits Core dependencies; the older SDK-only target is historical. Its README’s no-assets/generated-files claim conflicts with the 33 theme presets. [Accepted basis: `s2.l2.design-tui` §Orientation and §Terminal lifetime and synchronized navigation; `s2.l2.app-session` §Composition, identity and asynchronous ownership; `s2.l2.desktop-web` §Orientation and ownership.]
+
+## Terminal input becomes admission through ordered, separate operations
+
+The TUI composer resolves input modes, creates a session when required and captures prompt content before invoking its action adapter. The adapter awaits agent selection, then model selection using `providerID`, `modelID` and optional variant. Truthy context becomes a separate synthetic message with `resume: false` before the prompt is admitted. File URLs become URI fields and source spans survive the adapter. Commands share selection and file mapping but do not inherit the prompt wrapper’s context/agent-mention path. [Accepted basis: `s2.l2.design-tui` §V2 actions and prompt admission; direct source: `packages/tui/src/context/session-actions.ts`.]
+
+| Handoff and owner | Stable identity or payload | Failure observation and affected component | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Composer → TUI action adapter | Created session ID; captured text, files, mention spans and selection | History append, input clearing and navigation can occur before asynchronous acceptance; the adapter supplies no rollback. The composer must not equate clearing with delivery. | Exercise a mounted composer with delayed/rejected sends and consecutive Enter presses. |
+| Adapter → V2 selection/context/prompt endpoints | Same session ID; ordered agent/model choice; synthetic context explicitly disables resume | Operations are sequential within one invocation, without an atomic transaction or cross-caller lock. A later rejection can follow an earlier successful change; context insertion and prompt admission are separate requests. | Inject failure at each request boundary and inspect exact request order and retained state. |
+| Prompt endpoint → session runner/projection | Server admission record; optional protocol prompt ID, delivery and resume fields | `SessionInput.Admitted` confirms admission, not promotion, model completion or transcript visibility. The TUI wrapper does not expose those retry controls. | Compare admission with subsequent canonical state and execution events; preserve request identity when testing retry. |
+
+The protocol contract specifies durable admission and scheduling unless resume is false; root guidance assigns later promotion to the runner. Exact server retry reconciliation requires the same session, prompt identity, encoded prompt and delivery. Do not assume a newly constructed TUI retry meets that contract. Context surviving a later prompt failure is a consequence of the separate requests, not an observed incident. Sources: `packages/protocol/src/groups/session.ts`; `AGENTS.md`; accepted `s2.l2.app-session` §Durable admission, optimistic state and draft storage.
+
+## Ambiguous sends, live projection and request decisions keep different identities
+
+The browser app captures connection credentials, directory, draft/tab ownership and generation before submission. Its admission record survives remount; the inspected failure path can restore consumed input while retaining a dispatched session/request. A failed response may follow successful admission; restoration is not established for every failure branch. Only never-dispatched, confirmed-empty sessions qualify for deletion in that path. Later unsent edits have separate ownership. Those browser mechanisms are an actual cross-unit dependency, not guarantees supplied by the thinner TUI adapter. [Accepted basis: `s2.l2.app-session` §Composition, identity and asynchronous ownership and §Durable admission, optimistic state and draft storage.]
+
+| Handoff and owner | Identity retained | Failure observation and affected component | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Events/history → TUI synchronization | Directory/workspace scope and hydrated or hydrating session ID | Late history must preserve live-touched fields; failed history reads can collapse to an empty result. Unhydrated sessions do not acquire transcript state simply from an event. | Delay history, deliver deltas, then resolve history; include an unrelated session. |
+| Input/history → local TUI persistence | Local model IDs, history/stash entries and Global state files | The 50-entry prompt history is not the server journal; locking and atomic rename do not merge independent writers. | Check restart restoration and concurrent writers separately from server admission. |
+| Browser reconnect → canonical recovery | Connection/scope generation, active session and admission identity | Heartbeats and reconnect indicate transport liveness; canonical reads repair state. They do not establish durable event replay or clustered execution recovery. | Force disconnect and late reads; verify stale owners cannot update a replacement scope. |
+| TUI permission UI → action/API | Owning session ID, request ID and reply value | Root views can display descendant requests; replying against the visible route’s session can target the wrong owner. Rendering a decision does not prove backend authorization. | Record the request’s owning session and reply endpoint; test request removal and rejection. |
+
+Sources: accepted `s2.l2.design-tui` §Terminal lifetime and synchronized navigation, §Terminal configuration, persistence and extensions, and §Terminal display, native integrations and simulation; `s2.l2.app-session` §Transport, liveness and canonical recovery and §Permission requests and terminal boundaries. The TUI hydration test exercises live text against delayed history; it is source evidence only (`packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx`).
+
+## Rendered state follows caller and resource lifetimes
+
+Reusable browser UI receives state and callbacks; app directory/session providers own the corresponding asynchronous authority. Returning from A to B to A does not revive an expired generation. The session UI consumer sanitizes rendered Markdown, whereas the generic UI parser configuration alone supplies no final-sanitization guarantee. Moving rendering between those layers therefore changes the security work the receiving owner must supply. [Accepted basis: `s2.l2.app-session` §Composition, identity and asynchronous ownership and §Shared rendering, files and evidence interpretation; `s2.l2.design-tui` §Browser UI ownership, lifecycle and accessibility.]
+
+| Boundary | Owner/identity and affected component | Failure observation | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Caller → dialog stack | `show` uses detached dialog roots; `showOwned` binds to the caller’s reactive owner | A route disposal need not close a detached dialog; choosing the API is a lifetime decision. | Dispose the caller while each kind is open and inspect callback/closure behavior. |
+| Host → worker-pool context | Provider forwards supplied split/unified pools; the creator retains resource ownership | Injection does not create a disposer. Replacing a consumer cannot be assumed to terminate workers. | Track creator disposal and stale completions across owner changes. |
+| Host → terminal application | App run owns renderer/event subscriptions and cleanup; injected host owns its contract | A cleanup harness is not evidence for every OS/real terminal; plugin readiness can resolve through a failure path. | Use the lifecycle harness, then the affected real host environment. |
+
+Sources: `packages/ui/src/context/dialog.tsx`, `packages/ui/src/context/worker-pool.tsx`; accepted `s2.l2.design-tui` §Terminal lifetime and synchronized navigation. Accessible labels, focus, virtualization and direction also require their own behavior checks; existing components are not a general accessibility certificate.
+
+## Language and appearance cross app and host contracts
+
+Shared browser language and terminal language are separate: the captured TUI remains English-only. UI translation falls back to English and has plural logic, while layout can follow `layoutLocale` independently of content locale. The app composes UI/domain dictionaries, sets document language/direction and updates native copy. Main-process startup failures and the scoped Live overlay follow separate copy paths; the known hardcoded-English startup failure remains outside the app’s translation guarantee. [Accepted basis: `s2.l2.design-tui` §Localization, direction and two theme systems; `s2.l2.app-session` §Visual resources and prescribed maintenance; `s2.l2.desktop-web` §Host adapters own platform differences and copy and §Live separates readiness, capture and delivery.]
+
+| Handoff and owner | Stable contract | Failure observation and affected artifacts | Verification route, unexecuted |
+| --- | --- | --- | --- |
+| Dictionaries → UI/app/host | Translation keys, interpolation/plural arguments, content locale and layout locale | Missing copy falls back; module counts do not establish complete translations. Logical layout and keyboard order can disagree: the inspected segmented control uses DOM-order arrows. | English LTR, forced RTL, an RTL locale and mixed code/path text; verify focus, arrows, resizing and native copy. |
+| Terminal config → terminal theme | `defs/theme` shape and default/plugin/custom/system precedence | This is a different model from desktop `light/dark` tokens. Treating one schema as the other loses meaning. | Check override precedence and terminal reload behavior independently of browser preview. |
+| Browser selection/preview → theme styles | Desktop theme ID and scheme; current preview ownership | Provider guards suppress superseded preview application, but the separate URL loader parses JSON without runtime schema validation. Persistence and validation are different responsibilities. | Race two previews, cancel/commit, reload, and submit malformed external theme data. |
+
+Direct sources: `packages/ui/src/context/i18n.tsx`, `packages/ui/src/theme/context.tsx` and `packages/ui/src/theme/loader.ts`. The app palette has a separate generated first-paint/runtime chain; late-load guards do not make all app styling generated (accepted `s2.l2.app-session` §Visual resources and prescribed maintenance). Maintenance requires translation keys, preserved existing English copy, complete phrases and recorded uncertainty; RTL checks must include behavior, not screenshots alone (`packages/ui/AGENTS.md`; `packages/app-shell/AGENTS.md`; `.orchestra/skills/rtl-aware-development/SKILL.md`).
+
+## Generated products reach consumers through distinct maintenance paths
+
+The following directions are source ownership, not a single generator covering all presentation. Each row includes the downstream failure to check before publishing an artifact. [Accepted basis: `s2.l2.design-tui` §Generated products and asset provenance.]
+
+| Source owner → generated/derived consumer | Stable payload and failure boundary | Verification route, unexecuted |
+| --- | --- | --- |
+| TUI config schema → `schema/tui.json`; handwritten desktop schema → `schema/theme.json` | The first is generated; the second is mirrored verbatim. Editing the mirror alone drifts from its owner. | Regenerate and compare the intended schema bytes; inspect `apps/cli/script/schema-files.ts`. |
+| UI `colors.txt` → Tailwind colors CSS; V2 CSS/defaults → OC-2 theme | Token names connect CSS consumers. The OC-2 script updates only `v2Overrides`; fonts/fixed avatar foreground remain outside those overrides. | Review generated diffs and token consumers; inspect `packages/ui/script/tailwind.ts` and `packages/ui/script/build-oc2-v2-overrides.ts`. |
+| File/provider SVG inputs → sprites and types | Vite generates paired products; provider refresh fetches external logos. Generated types cannot prove visual identity, rights or reproducible remote content. | Compare paired outputs and inspect refresh provenance in `packages/ui/vite.config.ts`. |
+| Shared UI → Storybook fixtures/playground | Real UI providers coexist with mock app/router boundaries. The accessibility setting is `todo`; the CSS playground writes source files. | Inspect isolated fixture behavior and resulting CSS diff; validate app/host integration separately. |
+
+Storybook sources: `apps/storybook/.storybook/preview.tsx` and `apps/storybook/.storybook/playground-css-plugin.ts`; accepted `s2.l2.design-tui` §Storybook, design intent and verification limits. The app sprite/type provenance remains unresolved; README image basename mappings do not prove visual equivalence. These retained limits prevent generated-file labels from becoming unsupported provenance claims.
+
+## Change impact and verification ownership
+
+A public Protocol/Server HttpApi change requires client regeneration from `packages/client` and review of generated diffs; maintainers must not hand-edit generated client trees. Prompt changes affect ordering, composition and projection, so use both request-recorder and mounted integration routes. The recorder asserts the real adapter’s requests; the race test explicitly mirrors submission shape and cannot replace a mounted composer check. Lifecycle tests cover disposal signals; plural tests cover categories, not complete language or layout quality. Sources: `AGENTS.md`; `packages/tui/test/context/session-actions.test.ts`; `packages/tui/test/cli/tui/prompt-submit-race.test.ts`; `packages/tui/test/app-lifecycle.test.tsx`; `packages/ui/src/context/i18n.test.ts`.
+
+Repository guidance routes product tests through GitHub Actions, not this machine. App session/timeline changes additionally require before/after production benchmarks (`packages/app-shell/AGENTS.md`). All routes above are future verification obligations: no tests, regeneration, benchmark, browser/terminal session, CI run, provider call or remote asset refresh was executed for this synthesis. Static mechanisms and accepted semantic explanations remain distinct from runtime, accessibility, translation, asset provenance and backend recovery proof.
+END EXACT BODY s2.l3.design-tui
+
+## Exact decisive evidence and predecessor mapping
+# Decisive evidence for s2.l3.design-tui
+
+## Inputs and claim classes
+
+This record binds the L3 synthesis to accepted L2 explanations and directly inspected captures at source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`. The protocol revision named by the dispatch is `ee2521a5b966bd505cc95bd1c733e09e12f33531`. No repository retrieval, product execution or reviewer material was used during this authoring turn. Accepted manifest metadata was read; review-response references were not followed.
+
+Inherited factual statements are supported by the accepted sections below. New synthesis consists of handoff consequences and change-impact/verification routes: separate requests can leave earlier effects behind, a clearing editor is not evidence of admission, reusable UI does not inherit its caller’s ownership or sanitization, and generated/type-labelled artifacts do not prove all downstream properties. These are labelled interpretations or future routes, not reported incidents. Newly explicit source details, including the OC-2 token exclusions and the distinction between request-recorder, mirrored submission and lifecycle/plural tests, have bounded exact excerpts below. Repository/skill instructions remain attributed policy; no prescribed action was executed.
+
+| Accepted artifact | Exact captured body SHA256 | Bytes |
+| --- | --- | --- |
+| `s2.l2.design-tui` — `deliverable/layers/l2/design-tui/body.md` | `21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1` | 21535 |
+| `s2.l2.app-session` — `deliverable/layers/l2/app-session/body.md` | `302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7` | 24434 |
+| `s2.l2.desktop-web` — `deliverable/layers/l2/desktop-web/body.md` | `03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457` | 18440 |
+
+Consumed manifest pins (paths relative to `deliverable/`):
+

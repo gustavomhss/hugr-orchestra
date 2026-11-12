@@ -1,0 +1,83 @@
+{
+  "schema": "genesis-s2-independent-decision-bindings/v1",
+  "layer": 3,
+  "scope": "Semantic artifact decisions only; all actual original responses remain referenced and unchanged.",
+  "reviews": [
+    {
+      "judge": "/root/s2_resume_j1",
+      "artifacts": [
+        {
+          "key": "s2.l3.desktop-web",
+          "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l3-r1/j1.json",
+          "response_sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l3-r1/j1.json",
+          "response_sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l3-r2/j1.json",
+          "response_sha256": "2a5102a2be7dc1acd065c75c75df6d558985a25ef15720221c792ec9b12f6741"
+        }
+      ]
+    },
+    {
+      "judge": "/root/s2_resume_j2",
+      "artifacts": [
+        {
+          "key": "s2.l3.desktop-web",
+          "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l3-r1/j2.json",
+          "response_sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l3-r1/j2.json",
+          "response_sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+          "verdict": "PASS",
+          "mandatory_findings_open": 0,
+          "response_path": "judgments/l3-r2/j2.json",
+          "response_sha256": "fc9edf21cf505d0b0e4fc535e68269e39e540ab2246d67e47bbdc376974f43e0"
+        }
+      ]
+    }
+  ],
+  "unselected_historical_entries": [
+    {
+      "response_path": "judgments/l3-r1/j1.json",
+      "response_sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a",
+      "key": "s2.l3.design-tui",
+      "body_sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+      "verdict": "FIX-FIRST",
+      "reason": "Explicit per-artifact selection; original entry remains preserved and is not accepted by this record."
+    },
+    {
+      "response_path": "judgments/l3-r1/j2.json",
+      "response_sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c",
+      "key": "s2.l3.design-tui",
+      "body_sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+      "verdict": "FIX-FIRST",
+      "reason": "Explicit per-artifact selection; original entry remains preserved and is not accepted by this record."
+    }
+  ]
+}

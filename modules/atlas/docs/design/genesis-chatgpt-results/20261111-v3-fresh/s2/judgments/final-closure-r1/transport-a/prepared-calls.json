@@ -1,0 +1,47 @@
+{
+  "prepared_at": "2026-11-11T21:04:06.253369+00:00",
+  "packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "calls": [
+    {
+      "number": 1,
+      "part": 1,
+      "target": "/root/s2_resume_j1",
+      "request": "call-01.request.json",
+      "message_byte_length": 26000,
+      "message_sha256": "2dd6222f0a52433f859261033ca518bf6118c364fbb797ad901987074bdbad3f",
+      "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-packet-01/parts/part-001-of-006.txt",
+      "state": "PREPARED_NOT_YET_SENT"
+    },
+    {
+      "number": 2,
+      "part": 1,
+      "target": "/root/s2_resume_j2",
+      "request": "call-02.request.json",
+      "message_byte_length": 26000,
+      "message_sha256": "2dd6222f0a52433f859261033ca518bf6118c364fbb797ad901987074bdbad3f",
+      "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-packet-01/parts/part-001-of-006.txt",
+      "state": "PREPARED_NOT_YET_SENT"
+    },
+    {
+      "number": 3,
+      "part": 2,
+      "target": "/root/s2_resume_j1",
+      "request": "call-03.request.json",
+      "message_byte_length": 26000,
+      "message_sha256": "9187be41e480a99883dd2f8e339cb483936a1170944f2f2c1a9a1b458107ba28",
+      "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-packet-01/parts/part-002-of-006.txt",
+      "state": "PREPARED_NOT_YET_SENT"
+    },
+    {
+      "number": 4,
+      "part": 2,
+      "target": "/root/s2_resume_j2",
+      "request": "call-04.request.json",
+      "message_byte_length": 26000,
+      "message_sha256": "9187be41e480a99883dd2f8e339cb483936a1170944f2f2c1a9a1b458107ba28",
+      "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-closure-packet-01/parts/part-002-of-006.txt",
+      "state": "PREPARED_NOT_YET_SENT"
+    }
+  ],
+  "limit": "Local visible arguments only; no host serialization or delivery proof."
+}

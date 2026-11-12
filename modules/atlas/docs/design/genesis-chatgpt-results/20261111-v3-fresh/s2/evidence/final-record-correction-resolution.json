@@ -1,0 +1,42 @@
+{
+  "schema": "genesis-s2-final-record-correction-resolution/v1",
+  "recorded_at": "2026-11-11T21:47:05.171916+00:00",
+  "scope": "Actual same-pair bounded record correction only; no new artifact or operational verdict.",
+  "packet_sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae",
+  "responses": {
+    "j1": {
+      "path": "judgments/final-record-check-r1/j1.json",
+      "byte_length": 8237,
+      "sha256": "bad85ea182a716a577e899caaaf4a5e12f5d0702e383bd5a58f9d98f2f2fc02e"
+    },
+    "j2": {
+      "path": "judgments/final-record-check-r1/j2.json",
+      "byte_length": 7253,
+      "sha256": "af892679a2fbde10e3b68c543178f0f6fb01b299b4789a36c1937422f615a84e"
+    }
+  },
+  "both_ready_for_INCOMPLETE_BLOCKED_after_export": true,
+  "resolved_record_findings": [
+    "J1-CLOSURE-04",
+    "CLOSURE-J2-F3"
+  ],
+  "remaining_material_blockers": [
+    "Compatible complete-input runtime and exact bindings",
+    "Fourteen local consumers and S2-U1/recovery execution",
+    "Public disclosure authorization and exact S2 CI/publication/seal/readback",
+    "Applicable shared reservation/adapter-envelope guarantee"
+  ],
+  "retained_criteria": {
+    "PASS": 9,
+    "HOLD": 41
+  },
+  "retained_accepted_content_artifacts": 13,
+  "later_read_only_observation": {
+    "path": "evidence/return-readback-02/readback-receipt.json",
+    "byte_length": 2330,
+    "sha256": "dca5b54456c0fcf690e5be740ed2bfe4002f7494fa1db2e25a5d015bf72b7c01"
+  },
+  "remaining_mechanics": "The actual responses are preserved here. Complete archive verification is performed next and its external manifest/receipt must accompany the delivered ZIP.",
+  "delivery_complete": false,
+  "completion_state": "INCOMPLETE_BLOCKED"
+}

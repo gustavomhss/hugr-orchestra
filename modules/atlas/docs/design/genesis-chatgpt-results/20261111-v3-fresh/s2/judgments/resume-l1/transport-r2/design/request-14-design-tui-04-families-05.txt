@@ -1,0 +1,317 @@
+TRANSPORT ONLY: unit=design-tui r2 section=04-families part=5/5; manifest-order=14/14.
+BEGIN EXACT FILE BODY design-tui-04-families-05.txt
+      "apps/storybook/.storybook/main.ts"
+    ],
+    "source_implications": "Alias map replaces application/transport contexts; representative mocks return static, pending or reduced values.",
+    "consumer_implications": "Stories can render without live authenticated server services.",
+    "maintenance_implications": "Treat mocks as illustrative fixtures, not authoritative server wire contracts.",
+    "semantic_limits": "Only representative mocks inspected; OAuth/network/security behavior not validated.",
+    "metadata_only": false,
+    "path_count": 21,
+    "byte_count": 34841,
+    "depth_counts": {
+      "family-supported": 19,
+      "inspected": 2
+    },
+    "classification_counts": {
+      "fixture": 21
+    }
+  },
+  {
+    "id": "schemas",
+    "purpose": "TUI generated editor schema and desktop-theme mirrored schema",
+    "representative_source_paths": [
+      "schema/tui.json",
+      "schema/theme.json",
+      "apps/cli/script/schema-files.ts",
+      "packages/tui/src/config/index.tsx",
+      "packages/ui/src/theme/desktop-theme.schema.json"
+    ],
+    "source_implications": "schema-files.ts writes TuiConfig.Info-derived schema and copies handwritten desktop theme schema verbatim; exact theme copies match.",
+    "consumer_implications": "Editors consume $schema documents; runtime uses owning source schema/types.",
+    "maintenance_implications": "Use actual source/generator; cli script generate.ts is a model-snapshot loader, not this schema generator.",
+    "semantic_limits": "TUI schema captured exactly at 1,131,057 bytes; observer 256,000-byte cap is a runtime transport limit, not missing source. Generation not executed.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 1137099,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "mirrored-handwritten-schema": 1,
+      "generated-schema": 1
+    }
+  },
+  {
+    "id": "repo-tui-examples",
+    "purpose": "Repository-local terminal configuration and theme ignore rule",
+    "representative_source_paths": [
+      ".orchestra/tui.json",
+      ".orchestra/themes/mytheme.json",
+      "apps/cli/src/tui-config.ts",
+      "packages/tui/src/context/theme.tsx"
+    ],
+    "source_implications": "Repository config/examples are consumed through configuration/theme discovery, distinct from package defaults.",
+    "consumer_implications": "CLI loads external config using core file discovery.",
+    "maintenance_implications": "Keep examples consistent with the correct terminal schema.",
+    "semantic_limits": "Ignore rule content and full discovery implementation not inspected.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 507,
+    "depth_counts": {
+      "family-supported": 1,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "configuration": 2
+    }
+  },
+  {
+    "id": "glossary-policy",
+    "purpose": "Locale terminology guidance and template glossary files",
+    "representative_source_paths": [
+      ".orchestra/glossary/README.md",
+      ".orchestra/glossary/ar.md",
+      "packages/ui/AGENTS.md"
+    ],
+    "source_implications": "Guidance includes locale aliases and glossary maintenance; representative Arabic file lacks PR-backed entries.",
+    "consumer_implications": "Translation maintainers use this as guidance, not executable locale selection.",
+    "maintenance_implications": "Verify locale-specific entries/corpora before translation approval.",
+    "semantic_limits": "Other locale documents family-supported; no translation-quality audit.",
+    "metadata_only": false,
+    "path_count": 17,
+    "byte_count": 22401,
+    "depth_counts": {
+      "inspected": 2,
+      "family-supported": 15
+    },
+    "classification_counts": {
+      "documentation": 17
+    }
+  },
+  {
+    "id": "rtl-policy",
+    "purpose": "RTL-aware development guidance",
+    "representative_source_paths": [
+      ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "packages/ui/src/context/i18n.tsx",
+      "packages/ui/src/v2/components/segmented-control-v2.tsx"
+    ],
+    "source_implications": "Skill specifies independent layout/text direction, logical CSS and behavioral verification.",
+    "consumer_implications": "UI maintainers must compare intended RTL behavior with actual components.",
+    "maintenance_implications": "Do not substitute visual mirroring for keyboard order validation.",
+    "semantic_limits": "Guidance is intent; no RTL runtime/accessibility certification.",
+    "metadata_only": false,
+    "path_count": 1,
+    "byte_count": 4098,
+    "depth_counts": {
+      "inspected": 1
+    },
+    "classification_counts": {
+      "skill": 1
+    }
+  },
+  {
+    "id": "user-guides",
+    "purpose": "User-facing appearance and instruction/TUI setup guidance",
+    "representative_source_paths": [
+      "docs/guides/appearance.md",
+      "docs/guides/instructions-and-tui.md",
+      "apps/cli/src/tui-config.ts"
+    ],
+    "source_implications": "Documents appearance settings and config discovery/order; CLI adapter partially corroborates merge behavior.",
+    "consumer_implications": "Users configure higher-level app settings or terminal inputs.",
+    "maintenance_implications": "Validate app/core-owned behavior before asserting entire guide is current.",
+    "semantic_limits": "App settings implementation and core discovery are outside this inspected unit.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 2780,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "documentation": 2
+    }
+  },
+  {
+    "id": "historical-plans",
+    "purpose": "Architecture phase cards and old TUI extraction proposal",
+    "representative_source_paths": [
+      "docs/architecture/phase-plans/70-90-briefs/FAC-TUI.md",
+      "docs/architecture/phase-plans/70-90-briefs/RN-UI.md",
+      "docs/specs/tui-package.md",
+      "packages/tui/README.md"
+    ],
+    "source_implications": "Cards/proposal record earlier baselines/targets; old no-core target conflicts with current pinned manifest/imports.",
+    "consumer_implications": "Historical rationale only; not a current execution instruction or completed implementation proof.",
+    "maintenance_implications": "Compare dates/pins and implementation before carrying rules forward.",
+    "semantic_limits": "Unsampled cards are family-supported historical records, not semantically current authority.",
+    "metadata_only": false,
+    "path_count": 6,
+    "byte_count": 48448,
+    "depth_counts": {
+      "family-supported": 3,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "historical-proposal": 6
+    }
+  },
+  {
+    "id": "visual-recovery-history",
+    "purpose": "Visual handoff, migration, relay and historical verification records",
+    "representative_source_paths": [
+      "docs/specs/frontend-recovery-receipt.json",
+      "docs/specs/orchestra-visual/DELIVERY.md",
+      "docs/specs/orchestra-visual/MIGRATION.md",
+      "docs/specs/orchestra-visual/VERIFICATION.md"
+    ],
+    "source_implications": "Records contain prior baselines, acceptance limits and historic verification outcomes.",
+    "consumer_implications": "Maintainers may locate design decisions and known limitations.",
+    "maintenance_implications": "Do not promote old PASS/results or external asset references into current evidence.",
+    "semantic_limits": "Linked external repos/assets and all relay narratives not independently revalidated.",
+    "metadata_only": false,
+    "path_count": 10,
+    "byte_count": 245988,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 6
+    },
+    "classification_counts": {
+      "historical-record": 10
+    }
+  },
+  {
+    "id": "projects-board-design",
+    "purpose": "Projects board design contract, journeys, plan and mock catalog",
+    "representative_source_paths": [
+      "docs/specs/projects-board/README.md",
+      "docs/specs/projects-board/CONTRACT.md",
+      "docs/specs/projects-board/MOCKS.md"
+    ],
+    "source_implications": "Design contract describes writer/interaction rules and stable seat identity; catalog dates approved mock iterations.",
+    "consumer_implications": "A future/current app implementation can be assessed against these intended journeys.",
+    "maintenance_implications": "Keep design intent separate from runtime implementation and authorization.",
+    "semantic_limits": "No implementation mapping or rendered mock review; journeys/plan full contents not inspected.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 78140,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "design-contract": 5
+    }
+  },
+  {
+    "id": "projects-board-mock-assets",
+    "purpose": "Nine image mock design references",
+    "representative_source_paths": [
+      "docs/specs/projects-board/MOCKS.md",
+      "docs/specs/projects-board/README.md"
+    ],
+    "source_implications": "Catalog identifies approved design references; image bytes were not viewed.",
+    "consumer_implications": "Design-review references, not evidence of running UI.",
+    "maintenance_implications": "Preserve catalog/path mapping; generator/original artwork provenance unverified.",
+    "semantic_limits": "Family support only; no visual equivalence or accessibility conclusions.",
+    "metadata_only": false,
+    "path_count": 9,
+    "byte_count": 2943126,
+    "depth_counts": {
+      "family-supported": 9
+    },
+    "classification_counts": {
+      "binary-asset": 9
+    }
+  },
+  {
+    "id": "brand-assets",
+    "purpose": "Brand family and documented identity relocation",
+    "representative_source_paths": [
+      "assets/brand/README.md"
+    ],
+    "source_implications": "README records six PNG/SVG assets moved from packages/identity and distinguishes desktop/public logos.",
+    "consumer_implications": "Documentation/branding consumers; relocation identity not independently checked against prior commit.",
+    "maintenance_implications": "Keep canonical location distinct from app icon variants.",
+    "semantic_limits": "No binary/render/license verification; doc claim is not a cross-revision hash proof.",
+    "metadata_only": false,
+    "path_count": 7,
+    "byte_count": 2688,
+    "depth_counts": {
+      "inspected": 1,
+      "family-supported": 6
+    },
+    "classification_counts": {
+      "documentation": 1,
+      "binary-or-vector-asset": 6
+    }
+  },
+  {
+    "id": "readme-render-sources",
+    "purpose": "Documentation illustration HTML/CSS/JS and headless render script",
+    "representative_source_paths": [
+      "docs/images/readme/src/render.sh",
+      "docs/images/readme/src/architecture.html",
+      "docs/images/readme/src/wires.js"
+    ],
+    "source_implications": "Script loops HTML files, renders dark/light PNGs using Chrome at 2x and quantizes with Pillow; wires derives SVG from DOM.",
+    "consumer_implications": "README illustration assets explain intended architecture/workflow.",
+    "maintenance_implications": "Edit source then run authorized rendering; illustration is not a runtime dependency graph.",
+    "semantic_limits": "Only representative HTML/JS inspected; renderer not executed.",
+    "metadata_only": false,
+    "path_count": 12,
+    "byte_count": 44841,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 9
+    },
+    "classification_counts": {
+      "documentation-render-source": 12
+    }
+  },
+  {
+    "id": "readme-generated-images",
+    "purpose": "PNG outputs whose basenames map to inspected render loop inputs",
+    "representative_source_paths": [
+      "docs/images/readme/src/render.sh",
+      "docs/images/readme/src/architecture.html"
+    ],
+    "source_implications": "Assigned basename correspondence plus actual script establishes generation relationship for these paths.",
+    "consumer_implications": "README documentation consumes static rendered illustrations.",
+    "maintenance_implications": "Regenerate from matching HTML through the recorded script when authorized.",
+    "semantic_limits": "Current binary equivalence to script output and historical producer invocation not verified.",
+    "metadata_only": false,
+    "path_count": 18,
+    "byte_count": 4823311,
+    "depth_counts": {
+      "family-supported": 18
+    },
+    "classification_counts": {
+      "generated-asset": 18
+    }
+  },
+  {
+    "id": "readme-other-images",
+    "purpose": "Screenshot/illustration images without a demonstrated producer",
+    "representative_source_paths": [
+      "docs/images/readme/src/render.sh",
+      "docs/images/readme/src/architecture.html"
+    ],
+    "source_implications": "These paths have no matching HTML input in assigned render-source tree.",
+    "consumer_implications": "Documentation image use is apparent from assigned location; exact capture/generation provenance unverified.",
+    "maintenance_implications": "Find original source/capture workflow before replacing or calling generated.",
+    "semantic_limits": "Binary content not inspected; no visual assertions.",
+    "metadata_only": true,
+    "path_count": 10,
+    "byte_count": 5709838,
+    "depth_counts": {
+      "metadata-only": 10
+    },
+    "classification_counts": {
+      "binary-asset": 10
+    }
+  }
+]
+
+END EXACT FILE BODY design-tui-04-families-05.txt

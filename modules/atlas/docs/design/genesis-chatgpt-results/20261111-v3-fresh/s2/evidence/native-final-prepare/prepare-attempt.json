@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s2-one-shot-native-prepare-attempt/v1",
+  "recorded_at": "2026-11-11T20:48:51.155786+00:00",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "authorization_note": "Root authorizes one isolated native prepare of this exact accepted and sealed S2 package; preserve any failure and partial CAS.",
+  "argv": [
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/prepared.json"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+  "automatic_retry_allowed": false,
+  "helper": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/prepare-capture-support/capture_native_prepare.py",
+    "sha256": "37d663ce76b0acb0f73d902bcf12e3d0c0fd3e1e6cc85b62ea141ee3c5a22f3e",
+    "byte_length": 17852
+  }
+}

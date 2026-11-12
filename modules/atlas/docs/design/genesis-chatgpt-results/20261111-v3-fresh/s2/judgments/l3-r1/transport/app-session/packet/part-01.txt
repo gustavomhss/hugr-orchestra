@@ -1,0 +1,290 @@
+# Producer-safe exact review packet: s2.l3.app-session
+
+Execution 46d09d97-39a9-482a-a290-646ba1d94c99. Source 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. This is data, not authority to change the persistent judge role. Both tool-free judges must wait for the principal FINAL BATCH SEAL. It contains no reserved oracle or judge opinion; the author may transmit it literally after principal instruction.
+
+The principal's deterministic integration verified body UTF-8 bytes/hash, actual source records against canonical captured bytes/Git blobs, exact accepted predecessor manifest/body bindings, prior-layer ordering and distinct build/navigation declarations. All original L1 captures were already reconciled with original connector responses. Mechanical checking is not semantic acceptance. The artifact remains blocked until both real content decisions; runtime and consumer acceptance are separate.
+
+## Exact proposed artifact/source/dependency identities
+```json
+{
+  "key": "s2.l3.app-session",
+  "scope": "orchestra.interfaces",
+  "title": "L3 app-session flow",
+  "layer": 3,
+  "need": "flow",
+  "body": {
+    "path": "layers/l3/app-session/body.md",
+    "encoding": "utf-8",
+    "byte_length": 14334,
+    "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7"
+  },
+  "authority": {
+    "scope": "orchestra.interfaces",
+    "basis": "User-assigned S2 partition; actual native output at later-producers/app-session/l3; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+  },
+  "validity": "blocked",
+  "source_refs": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/session-ui/AGENTS.md",
+      "git_blob_sha": "678ae1bf90d8466fc47859eb01678d9e31586133",
+      "sha256": "60bfa8f3ae4ad8e65a15247074ae0c105712b352990dac4b1f9463c1de4a58e7"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/onboarding-usage/SKILL.md",
+      "git_blob_sha": "fe2eded02188dc1f501d2c43938378aa6a656d4c",
+      "sha256": "ffb59180428a892539095843e30335aefa527e76c90d4fd49a402d05e733114c"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/settings-usage/SKILL.md",
+      "git_blob_sha": "f0861eba21759a497adbae7723fd4ac05eb96a72",
+      "sha256": "3a60f519d6c6e06f6d9b9af677963f28fe5111868bf7fdda5da3b932f391233b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/app.tsx",
+      "git_blob_sha": "a14908a5c8a37ac3c673b4deeb32d666029db5c2",
+      "sha256": "161e6dd042b255da4a8dda83a76f48ce78086370ac7905accec62971b464d2be"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/context/global.tsx",
+      "git_blob_sha": "13386451ef1a4350a9dda37af92a76b93b92f54d",
+      "sha256": "310f02897847804b5a2d0320d02f40351c37368e2fdab4a021f270e84ec4e813"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/pages/session/session-ownership.ts",
+      "git_blob_sha": "831b5faaf01141dfe5184c469fe82e1f1601799f",
+      "sha256": "36dbb4e8d45c32243d957b299de5de279d6dcf24f5a594447b827f4dba47f482"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/components/prompt-input/submit.ts",
+      "git_blob_sha": "71747d3fc9f907ed5376ccee834e2f0dbec5af9a",
+      "sha256": "9fc3fde5e453fe6e36b92909488249be788189d640c132d83c9c7a5407b42c80"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/context/session-recovery.ts",
+      "git_blob_sha": "1ea5ce6efe88b2625edfd17562011c738833fe68",
+      "sha256": "5812a355724bfe9ae15a5cff5abd273b17cfb657e778c93228780b88e85eb59e"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "git_blob_sha": "81fe5f7a2a5c6bc45d59ae9e88b42d1b36f76037",
+      "sha256": "0001420dcb688c672b55f1070284df5b5086be8d1655df75f7a25585981f4931"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+      "git_blob_sha": "896a17a54e8782536917564083031da05af9023d",
+      "sha256": "7e60597bb282ef3fdd525224acfff4efd94c07cfc2a3069c403b4b39b1b0cd31"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+      "git_blob_sha": "498439a6b815a1b51dfe756dc891fb450bae2e09",
+      "sha256": "4d765b72649145007edfaeed34a5a397b311c6518b75ca5fc25defd31a77251a"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+    "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20"
+  },
+  "build_dependencies": [
+    {
+      "key": "s2.l2.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "same_package": true
+    },
+    {
+      "key": "s2.l1.app-session",
+      "same_package": true
+    }
+  ],
+  "navigation": [
+    "s2.l3.desktop-web",
+    "s2.l3.design-tui"
+  ],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+    "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/app-session/response.md",
+    "sha256": "f5826614974d14622d22bcbaac20ef27e5a47ecbe6b16492cce804626d752572"
+  }
+}
+```
+
+## Exact complete body
+BEGIN EXACT BODY s2.l3.app-session
+# App/session journeys, ownership and failure boundaries
+
+## Reading the handoffs
+
+This unit integrates source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Its factual foundations are accepted `s2.l2.app-session`, selected desktop and shared-UI sections, and `s2.l1.app-session` test evidence. It carries forward the app unit's 59-family coverage without converting family evidence into exhaustive file inspection. Dependencies and exact pins are in `dependencies.json`; direct captures are in `sources.json`.
+
+Unless marked **instruction** or **inference**, mechanisms below are static observations inherited from the cited predecessor sections. Verification routes are recommendations for a subsequent authorized change, all **unexecuted here**. An accepted description, a durable input, a visible transcript and a completed provider turn are different evidence. The following boundaries explain where those distinctions affect maintenance.
+
+## Enter the intended server and workspace
+
+| Handoff | Owner and stable identity | Failure observation and affected components |
+|---|---|---|
+| Desktop startup → shared app | Electron main starts the authenticated loopback child, waits for health, then publishes URL and credentials; preload exposes selected host operations. | Child exit, health failure or timeout blocks readiness; the renderer may choose a healthy stored remote. **Inference:** choosing it does not acquire process ownership. |
+| Route → workspace providers | App navigation uses the connection key; workspace lifetime includes server scope and directory. Transport lifetime additionally includes URL and credentials. | An unresolved target route navigates home; credential replacement disposes the old context even when the navigation key survives. Requests and streams must follow the replacement. |
+| Session → asynchronous callback | A captured session generation owns completion. | Leaving expires it permanently, including A→B→A. Old work must not update the revisited session. |
+
+Desktop health accepts HTTP success; shared-app health requires `healthy === true`. Neither proves future availability. The desktop stable-exit branch resets the failure counter before indexing `BACKOFF[-1]`, so initial readiness does not establish automatic restart. IPC checks also differ by handler; preload reachability alone establishes neither uniform authorization nor an exploit. **Instruction:** onboarding asks the user to trust the folder before adding its project; trust remains a server-owned execution capability.
+
+**Verification:** inspect desktop readiness/IPC ownership, then use the existing `packages/app-shell/test-browser/server-transport.test.ts` and `packages/app-shell/test-browser/prompt-admission-owner.suite.ts` evidence for credential replacement and generation expiry. Sources: `s2.l2.desktop-web` §§ “Startup publishes readiness before the renderer proceeds”, “Privilege is checked at each request boundary”, “Persistence and recovery have several owners”; `s2.l2.app-session` §§ “Composition, identity and asynchronous ownership”, “Navigation, settings and feature controllers”; `.orchestra/skills/onboarding-usage/SKILL.md`, `.orchestra/skills/settings-usage/SKILL.md`; `s2.l1.app-session` § “Assets, localization and verification evidence”; `packages/app-shell/src/app.tsx:99–115`.
+
+## Submit once, then hand the draft to its session
+
+The shared editor owns interaction; app submission owns session policy, attachments and admission. Follow these stages rather than treating Enter as one transaction:
+
+| Stage | Identity or state that must survive | Failure and change impact |
+|---|---|---|
+| Capture source | Credentials, server scope, directory, draft/tab, prompt snapshot and owner generation. | Navigation invalidates UI ownership; changing capture boundaries affects draft isolation and attachments. |
+| Establish session and policy | Retained session/worktree; serialized policy write plus canonical read receipt. | A failed predecessor blocks sending. Recheck ownership and policy revision after asynchronous work and at dispatch. |
+| Dispatch admission | For an unchanged action and acknowledged policy revision, retain the selected request ID. | Exact retry requires equivalent session, encoded prompt and delivery mode; conflicting reuse fails. Context reconciliation also checks projection equivalence. |
+| Hand off draft | Admission acknowledgment, destination session, current composer edits and tab identity. | Move later edits into the session unsent. Do not overwrite them with the submitted snapshot or let the old draft submit the admitted input again. |
+
+A failed/ambiguous response can remove optimistic content and restore its snapshot while retaining the dispatched session/request. Deletion is restricted to never-dispatched, server-confirmed-empty sessions. A new admission requires its durable sequence and projected record; it is separate from safe-boundary transcript promotion and execution completion. **Instruction:** `resume: false` admits without waking execution.
+
+Browser draft documents use IndexedDB with hashed blobs; native desktop drafts use SQLite/WAL and batching. Shared draft behavior is not evidence of identical crash durability. **Verification:** inspect `packages/app-shell/src/components/prompt-input/submit.ts`, and use `packages/app-shell/src/components/prompt-input/submit-admission.suite.ts` plus `packages/app-shell/e2e/regression/draft-admission-handoff.spec.ts` for policy failure, duplicate entry and delayed acknowledgment. Sources: `s2.l2.app-session` § “Durable admission, optimistic state and draft storage”; `s2.l2.desktop-web` § “Persistence and recovery have several owners”; `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+## Recover the projection without inventing execution recovery
+
+The app adapter connects generated API/event contracts to view state. Scoped fetch combines context, request and call cancellation. Readiness retains success and retries rejection; startup accepts a numeric PID or `healthy: true`, whereas ongoing app health requires the latter and uses two failed probes plus stream activity before declaring failure.
+
+SSE raw heartbeats establish liveness even without domain events. The server subscribes before its connected event, uses a bounded 4096-event queue and 15-second heartbeat; the client reconnects after 45-second silence with bounded backoff. Adjacent deltas coalesce only for matching identity/directory, preserving intervening order. There is no replay ID: a reconnected socket is not proof that every event arrived.
+
+Canonical reconciliation therefore owns recovery. Fetches preserve live-touched values, tombstones and generations; session/ancestor pins and user-turn boundaries constrain paging. Session recovery coalesces reads, rejects superseded results and repeats GET when policy changes. A local read receipt is not a backend revision; compatibility snapshots lack canonical V2 policy provenance. Rendering keeps pending admission separate from promoted transcript content; adapted part ordinals do not establish chronological order.
+
+**Instruction:** root `AGENTS.md:209–216` keeps drains process-local and requires a separate design for post-crash provider continuation. **Inference:** neither UI reconnection nor durable inbox retention authorizes provider retry or clustered execution claims. Changes affect transport, sync/recovery and timeline together. **Verification:** inspect recovery fences and existing `packages/app-shell/src/utils/server-health.test.ts`; do not interpret its assertions as a run. Source: `s2.l2.app-session` § “Transport, liveness and canonical recovery”; `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+## Answer requests without transferring server authority to the UI
+
+Permission requests retain server, session and request identity while the UI walks descendants. Auto-accept follows ancestry with cycle protection; explicit false wins fallback, and Relay-hook requests never auto-accept. Server-scoped pending deduplication prevents simultaneous responses; failure clears it for retry. Empty scope cannot support the UI's “always” action. Question state is per request; saved permissions require list/remove/refetch. These mechanisms coordinate presentation, not server authorization.
+
+Terminal access separately obtains a ticket before WebSocket connection. Server/workspace identity scopes persisted tabs, exited agent tabs remain visible, and cursor accounting uses JavaScript UTF-16 units. “Gone” differs from reconnecting. **Instruction:** agent PTYs use the sandbox-wrapped Core `AgentTerminal.run` path; root guidance records unresolved slow-reader buffer growth.
+
+Changes touch prompt gating, pending decisions, saved-permission refresh and terminal restoration. **Verification:** follow request identity through reply failure, then inspect `packages/app-shell/src/context/permission-auto-respond.test.ts` and `packages/app-shell/src/context/terminal.test.ts`; no interactive approval, terminal or load experiment occurred. Sources: `s2.l2.app-session` § “Permission requests and terminal boundaries”; `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+## Change settings and Skills under the original owner
+
+Global preferences, scoped catalogs and session choices have different scopes. Project chapters remount with server/directory ownership, though some data is server-wide. Shell settings roll back optimistic failure; plugin saved state differs from applied state. Actions pin host/location, decode responses and require receipt reconciliation after an ambiguous POST. **Instruction:** `.orchestra/skills/settings-usage/SKILL.md` treats trust as an execution capability, including inherited trust; visual toggles cannot establish filesystem authorization.
+
+Skills make the mutation boundary concrete. Catalog cache identity is server scope plus normalized directory; warm data refreshes. Decode the entire array before filtering/sorting/cache writes: one malformed row fails the load. HTTP 404/405/501 means unavailable; malformed/other failures mean error, distinct from empty/no matches. Lexical classification controls the edit UI: governed project paths take precedence; editable roots and lowercase `.md` are restrictions on affordances, not symlink-safe authorization.
+
+An edit carries location and optional `mtime`; Add has no existing path. Dialog identity, busy state and disposal prevent stale updates. Reads use cancellation; writes do not receive the page abort signal. Leaving can suppress completion UI without cancelling an issued save/remove. Success closes the originating dialog and reloads; a returned location can still be unlisted.
+
+**Inference/verification:** changes must preserve catalog decoding, mutation identity and late-completion handling together. Trace `skills-data.ts`, `skills.tsx` and `skills-dialog.tsx` under `packages/app-shell/src/orchestra/chapters/`, then check service conflict mapping before an authorized edit/delete walkthrough. Underlying `SkillV2` filesystem enforcement remains uninspected. Source: `s2.l2.app-session` §§ “Navigation, settings and feature controllers”, “Skills catalog, content and editing ownership”.
+
+## Render and localize under caller-owned lifetimes
+
+App `DataProvider` supplies ordered state, navigation and artifact callbacks; artifact operations pin session/location/revision and idempotency. Shared UI primitives provide mechanisms while callers own meaningful labels. Ordinary dialogs can outlive a caller; `showOwned` binds that lifetime. Markdown's final renderer sanitizes and fails closed; parser configuration alone is not that boundary. A latest-per-key serial worker queue governs streamed work and disposal.
+
+Browser theme loading has asynchronous preview/commit/cancel ownership; app first paint also guards late loading. Locale and layout direction are independent inputs, and segmented-control arrow handling follows DOM order rather than direction. **Instruction:** app/session copy requires localization while preserving existing English text byte-for-byte. Palette generation, UI tokens and desktop theme mirroring have separate producers; not all CSS is generated.
+
+**Verification:** inspect caller cleanup, theme race/preview state, generated-output ownership and both direction settings; use `packages/session-ui/src/components/markdown-worker-queue.test.ts` for existing disposal assertions. Visual geometry, focus behavior, contrast and language completeness remain unverified. Sources: `s2.l2.app-session` §§ “Shared rendering, files and evidence interpretation”, “Visual resources and prescribed maintenance”; `s2.l2.design-tui` §§ “Browser UI ownership, lifecycle and accessibility”, “Localization, direction and two theme systems”, “Generated products and asset provenance”; `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+## Route a change through its affected contracts
+
+**Inference:** diagnose by retained identity and authoritative owner before changing UI behavior. A stable navigation key does not preserve obsolete credentials; cancellation does not erase dispatched writes; heartbeat health does not settle admission; displayed history does not prove provider recovery.
+
+**Instructions:** public Protocol/Server `HttpApi` changes require client generation rather than hand edits to generated trees. Client runtime depends on Schema/Protocol, not Core/Server. Session/timeline production changes require before/after benchmarking under app maintenance guidance; normal Playwright excludes performance diagnostics. This documentation change executed no product checks, benchmarks, CI, provider calls or host operations. Existing tests supply proposed verification routes only.
+
+Optional navigation to `s2.l3.desktop-web` and `s2.l3.design-tui` is not evidence from those still-separately-produced units. Sources: root `AGENTS.md:1–2`, `packages/app-shell/AGENTS.md`, `packages/session-ui/AGENTS.md`; `s2.l2.app-session` §§ “Visual resources and prescribed maintenance”, “Verification limits and ownership use”; `s2.l1.app-session` § “Assets, localization and verification evidence”.
+END EXACT BODY s2.l3.app-session
+
+## Exact decisive evidence and predecessor mapping
+# Decisive evidence for s2.l3.app-session
+## Evidence status
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. This is a producer evidence record, not a semantic verdict. The L3 contribution is the relation between accepted local mechanisms: who owns each transition, which identity survives, how a failure is observed, and where a change must be checked. No runtime result, remote action or new filesystem-security proof was produced.
+Most factual statements are inherited from the exact accepted predecessor sections mapped below. Two narrow implementation refinements are supported directly: the target-server route predicate/fallback (E01) and request selection by action key plus acknowledged policy revision (E02). Root process-local/post-crash policy is reproduced as attributed instruction (E03), not promoted to a source-execution finding. E04–E09 corroborate accepted behavior or precisely attribute instructions. Other directly used captures support the bounded ownership/classification/maintenance observations listed in sources.json.
+## Accepted predecessor identities
+| Key | Exact body path, relative to deliverable | SHA256 | Bytes |
+|---|---|---|---:|
+| `s2.l2.app-session` | `layers/l2/app-session/body.md` | `302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7` | 24434 |
+| `s2.l2.desktop-web` | `layers/l2/desktop-web/body.md` | `03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457` | 18440 |
+| `s2.l2.design-tui` | `layers/l2/design-tui/body.md` | `21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1` | 21535 |
+| `s2.l1.app-session` | `layers/l1/app-session/l1.md` | `67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e` | 42047 |
+
+The two consumed accepted-layer manifest hashes are recorded exactly in dependencies.json. Review references inside those permitted manifests were not followed. No pending L3 unit supplies evidence.
+
+## Section-to-evidence map
+
+### Reading the handoffs
+
+Evidence contract and inherited scope; no new runtime or coverage finding.
+
+- `s2.l2.app-session` § “Orientation and evidence status”.
+- `s2.l2.app-session` § “Verification limits and ownership use”.
+
+### Enter the intended server and workspace
+
+Integrated handoff inference from accepted host/app observations; exact route gate is a bounded direct-source refinement. Trust workflow is attributed instruction.
+
+- `s2.l2.desktop-web` § “Orientation and ownership”.
+- `s2.l2.desktop-web` § “Startup publishes readiness before the renderer proceeds”.
+- `s2.l2.desktop-web` § “Persistence and recovery have several owners”.
+- `s2.l2.desktop-web` § “Privilege is checked at each request boundary”.
+- `s2.l2.app-session` § “Composition, identity and asynchronous ownership”.
+- `s2.l2.app-session` § “Navigation, settings and feature controllers”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `packages/app-shell/src/app.tsx`; `packages/app-shell/src/context/global.tsx`; `packages/app-shell/src/pages/session/session-ownership.ts`; `.orchestra/skills/onboarding-usage/SKILL.md`; `.orchestra/skills/settings-usage/SKILL.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Submit once, then hand the draft to its session
+
+Relates inherited admission, retry, rollback and persistence boundaries. Exact request selection by action key/receipt revision is directly corroborated and bounded; no execution observation.
+
+- `s2.l2.app-session` § “Durable admission, optimistic state and draft storage”.
+- `s2.l2.desktop-web` § “Persistence and recovery have several owners”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `packages/app-shell/src/components/prompt-input/submit.ts`; `AGENTS.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Recover the projection without inventing execution recovery
+
+Cross-stage inference distinguishes transport liveness, canonical projection and provider execution. Explicit root process-local/post-crash policy is attributed instruction, not an implementation or runtime proof.
+
+- `s2.l2.app-session` § “Transport, liveness and canonical recovery”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+Directly used captures: `packages/app-shell/src/context/session-recovery.ts`; `AGENTS.md`. Used ranges and actual byte/blob hashes are in sources.json.
+
+### Answer requests without transferring server authority to the UI
+
+Relates inherited request/terminal ownership; proposed verification is unexecuted. Slow-reader risk and server authorization limit remain.
+
+- `s2.l2.app-session` § “Permission requests and terminal boundaries”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+
+### Change settings and Skills under the original owner
+

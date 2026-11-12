@@ -1,0 +1,673 @@
+TRANSPORT ONLY: unit=design-tui r2 section=04-families part=4/5; manifest-order=13/14.
+BEGIN EXACT FILE BODY design-tui-04-families-04.txt
+    "maintenance_implications": "Preserve handwritten/generated ownership at field level; other preset provenance unverified.",
+    "semantic_limits": "Only representative preset structure inspected; no visual equivalence or regeneration run.",
+    "metadata_only": false,
+    "path_count": 37,
+    "byte_count": 93576,
+    "depth_counts": {
+      "family-supported": 36,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "theme-data": 36,
+      "partially-generated-theme-data": 1
+    }
+  },
+  {
+    "id": "ui-styles",
+    "purpose": "Shared CSS tokens, base styles, Tailwind and component CSS",
+    "representative_source_paths": [
+      "packages/ui/src/styles/index.css",
+      "packages/ui/src/styles/base.css",
+      "packages/ui/src/styles/theme.css",
+      "packages/ui/src/styles/animations.css",
+      "packages/ui/src/v2/styles/theme.css",
+      "packages/ui/src/components/button.tsx",
+      "packages/ui/src/v2/components/field-v2.tsx"
+    ],
+    "source_implications": "Stylesheets compose tokens/utilities and component data-attribute/data-slot contracts.",
+    "consumer_implications": "Both component generations and app new-layout surfaces load exported styles.",
+    "maintenance_implications": "Keep style layers and token names consistent with runtime theme resolvers.",
+    "semantic_limits": "CSS family support does not establish every selector, responsive state or contrast condition.",
+    "metadata_only": false,
+    "path_count": 82,
+    "byte_count": 319904,
+    "depth_counts": {
+      "family-supported": 77,
+      "inspected": 5
+    },
+    "classification_counts": {
+      "stylesheet": 82
+    }
+  },
+  {
+    "id": "ui-tailwind-generation",
+    "purpose": "Color source, Tailwind generator and verified generated output path",
+    "representative_source_paths": [
+      "packages/ui/script/tailwind.ts",
+      "packages/ui/README.md"
+    ],
+    "source_implications": "tailwind.ts reads script/colors.txt and writes src/styles/tailwind/colors.css.",
+    "consumer_implications": "Exported Tailwind styles consume generated utilities.",
+    "maintenance_implications": "Change generator/input and regenerate through authorized workflow; not all CSS is generated.",
+    "semantic_limits": "Generator inspected but not executed; output byte equivalence not recomputed.",
+    "metadata_only": false,
+    "path_count": 3,
+    "byte_count": 30225,
+    "depth_counts": {
+      "family-supported": 2,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "generator-input": 1,
+      "generator": 1,
+      "generated": 1
+    }
+  },
+  {
+    "id": "ui-oc2-generation",
+    "purpose": "Script that rewrites only default-theme v2Overrides",
+    "representative_source_paths": [
+      "packages/ui/script/build-oc2-v2-overrides.ts",
+      "packages/ui/src/theme/themes/oc-2.json",
+      "packages/ui/src/v2/styles/theme.css"
+    ],
+    "source_implications": "Generator derives override differences from v2 theme CSS/default primitives and preserves other JSON fields.",
+    "consumer_implications": "Theme resolver applies resulting overrides last.",
+    "maintenance_implications": "Do not treat entire preset JSON as generated.",
+    "semantic_limits": "No generator run.",
+    "metadata_only": false,
+    "path_count": 1,
+    "byte_count": 1413,
+    "depth_counts": {
+      "inspected": 1
+    },
+    "classification_counts": {
+      "generator": 1
+    }
+  },
+  {
+    "id": "ui-icon-consumers",
+    "purpose": "File/provider/app icon renderers and font placeholder",
+    "representative_source_paths": [
+      "packages/ui/src/components/file-icon.tsx",
+      "packages/ui/src/components/provider-icon.tsx",
+      "packages/ui/src/components/app-icon.tsx",
+      "packages/ui/src/components/font.tsx",
+      "packages/ui/package.json"
+    ],
+    "source_implications": "File/provider consumers reference sprites; AppIcon uses raw source assets; Font component returns null.",
+    "consumer_implications": "App consumers select named icons or import exported font bytes separately.",
+    "maintenance_implications": "Preserve names/export paths; binary font presence is not proof of runtime font loading.",
+    "semantic_limits": "No rendering or complete icon-name/path audit.",
+    "metadata_only": false,
+    "path_count": 4,
+    "byte_count": 18081,
+    "depth_counts": {
+      "inspected": 4
+    },
+    "classification_counts": {
+      "implementation": 4
+    }
+  },
+  {
+    "id": "ui-generated-icon-products",
+    "purpose": "File/provider sprite and type generation products",
+    "representative_source_paths": [
+      "packages/ui/vite.config.ts",
+      "packages/ui/src/components/file-icons/types.ts",
+      "packages/ui/src/components/provider-icons/types.ts",
+      "packages/ui/src/components/file-icon.tsx",
+      "packages/ui/src/components/provider-icon.tsx"
+    ],
+    "source_implications": "iconsSpritesheet withTypes maps file-types/provider source directories to their respective component output directories.",
+    "consumer_implications": "Renderers and exported types depend on stable names.",
+    "maintenance_implications": "Maintain generator inputs and outputs together through authorized generation.",
+    "semantic_limits": "No generator execution or all-sprite visual/byte equivalence check.",
+    "metadata_only": false,
+    "path_count": 4,
+    "byte_count": 1245154,
+    "depth_counts": {
+      "family-supported": 2,
+      "inspected": 2
+    },
+    "classification_counts": {
+      "generated": 4
+    }
+  },
+  {
+    "id": "ui-app-sprite-provenance",
+    "purpose": "App sprite/type artifacts whose producer is unverified",
+    "representative_source_paths": [
+      "packages/ui/vite.config.ts",
+      "packages/ui/src/components/app-icon.tsx",
+      "packages/ui/README.md"
+    ],
+    "source_implications": "Assigned app-icons sprite/types exist; inspected Vite config only declares file/provider generators.",
+    "consumer_implications": "AppIcon currently imports raw assets; legacy/other consumer for these products is unverified.",
+    "maintenance_implications": "Find actual producer/consumer before declaring these generated, obsolete or safe to modify.",
+    "semantic_limits": "Existence is metadata-only; no content or provenance claim.",
+    "metadata_only": true,
+    "path_count": 2,
+    "byte_count": 6014,
+    "depth_counts": {
+      "metadata-only": 2
+    },
+    "classification_counts": {
+      "asset-or-declaration-provenance-unverified": 2
+    }
+  },
+  {
+    "id": "ui-file-icon-assets",
+    "purpose": "Large file-type SVG input family",
+    "representative_source_paths": [
+      "packages/ui/src/assets/icons/file-types/abap.svg",
+      "packages/ui/vite.config.ts",
+      "packages/ui/src/components/file-icon.tsx"
+    ],
+    "source_implications": "1,089 assigned SVG inputs feed the verified spritesheet pipeline.",
+    "consumer_implications": "FileIcon consumes generated sprite names.",
+    "maintenance_implications": "Keep input names stable; upstream authorship/import tooling unverified.",
+    "semantic_limits": "Representative SVG and pipeline only; no individual render/license/provenance audit.",
+    "metadata_only": false,
+    "path_count": 1089,
+    "byte_count": 856093,
+    "depth_counts": {
+      "family-supported": 1088,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "vector-asset-source": 1089
+    }
+  },
+  {
+    "id": "ui-provider-icon-assets",
+    "purpose": "Provider SVG input family with network refresh source",
+    "representative_source_paths": [
+      "packages/ui/src/assets/icons/provider/302ai.svg",
+      "packages/ui/vite.config.ts",
+      "packages/ui/src/components/provider-icon.tsx"
+    ],
+    "source_implications": "105 assigned SVGs; providerIconsPlugin can refresh from models URL API/logo endpoints on dev/build.",
+    "consumer_implications": "Spritesheet generator and ProviderIcon consume this directory.",
+    "maintenance_implications": "Build refresh can mutate source assets and depend on remote contents; pinning freshness was not established.",
+    "semantic_limits": "Representative SVG inspected; refresh not executed; individual original provenance/appearance unverified.",
+    "metadata_only": false,
+    "path_count": 105,
+    "byte_count": 287732,
+    "depth_counts": {
+      "inspected": 1,
+      "family-supported": 104
+    },
+    "classification_counts": {
+      "vector-asset-source": 105
+    }
+  },
+  {
+    "id": "ui-app-image-assets",
+    "purpose": "Application icon, favicon and general image assets",
+    "representative_source_paths": [
+      "packages/ui/src/components/app-icon.tsx",
+      "packages/ui/package.json",
+      "packages/ui/README.md"
+    ],
+    "source_implications": "Asset families and raw imports/export boundaries are established; no generator found for these bytes.",
+    "consumer_implications": "Application identity/favicon/media consumers use bundled assets.",
+    "maintenance_implications": "Preserve paths; verify actual producers, rights and expected appearance before replacement.",
+    "semantic_limits": "No binary image viewing or all-source provenance audit.",
+    "metadata_only": false,
+    "path_count": 30,
+    "byte_count": 198855,
+    "depth_counts": {
+      "family-supported": 30
+    },
+    "classification_counts": {
+      "binary-or-vector-asset": 30
+    }
+  },
+  {
+    "id": "ui-font-assets",
+    "purpose": "Exported font binaries",
+    "representative_source_paths": [
+      "packages/ui/package.json",
+      "packages/ui/src/components/font.tsx",
+      "packages/ui/README.md"
+    ],
+    "source_implications": "Two assigned font binaries exported through fonts wildcard; Font component is null.",
+    "consumer_implications": "Actual loading must be established in a consuming app/style boundary.",
+    "maintenance_implications": "Preserve file paths and independently verify license/loading before replacing.",
+    "semantic_limits": "Binary bytes not captured; no font rendering, glyph or license audit.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 1935288,
+    "depth_counts": {
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "binary-asset": 2
+    }
+  },
+  {
+    "id": "ui-audio-assets",
+    "purpose": "Exported sound asset family",
+    "representative_source_paths": [
+      "packages/ui/package.json",
+      "packages/tui/src/attention.ts",
+      "packages/tui/src/audio.ts"
+    ],
+    "source_implications": "Ninety assigned audio files; TUI imports a concrete subset and lazy audio handles decode/cache.",
+    "consumer_implications": "Attention config chooses built-in/pack/custom paths.",
+    "maintenance_implications": "Preserve package paths and fallback behavior; provenance of each recording unverified.",
+    "semantic_limits": "No individual byte capture, audio audition or native playback.",
+    "metadata_only": false,
+    "path_count": 90,
+    "byte_count": 490170,
+    "depth_counts": {
+      "family-supported": 90
+    },
+    "classification_counts": {
+      "binary-asset": 90
+    }
+  },
+  {
+    "id": "ui-stories-fixtures",
+    "purpose": "Story examples and manufactured content fixtures",
+    "representative_source_paths": [
+      "packages/ui/src/components/button.stories.tsx",
+      "packages/ui/src/storybook/fixtures.ts",
+      "packages/ui/src/storybook/scaffold.tsx",
+      "apps/storybook/.storybook/main.ts"
+    ],
+    "source_implications": "Stories compose component variants and fixtures; some stories disable TypeScript checking.",
+    "consumer_implications": "Storybook scans both component generations and higher-level package stories.",
+    "maintenance_implications": "Maintain examples and fixtures separately from runtime/test guarantees.",
+    "semantic_limits": "Representative stories only; no full render, snapshot or interaction run.",
+    "metadata_only": false,
+    "path_count": 70,
+    "byte_count": 221210,
+    "depth_counts": {
+      "family-supported": 67,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "story": 68,
+      "fixture": 2
+    }
+  },
+  {
+    "id": "ui-tests",
+    "purpose": "UI helper/parser/i18n regression source inventory",
+    "representative_source_paths": [
+      "packages/ui/src/components/scroll-view.test.ts",
+      "packages/ui/src/context/i18n.test.ts",
+      "packages/ui/src/context/marked-parser.test.ts"
+    ],
+    "source_implications": "Read assertions cover helper semantics, plural categories and parser behavior.",
+    "consumer_implications": "Tests are a future CI verification aid, not execution evidence here.",
+    "maintenance_implications": "Preserve distinction between helper tests and full rendered accessibility/visual behavior.",
+    "semantic_limits": "marked-regression test assertions not individually read; all tests unexecuted.",
+    "metadata_only": false,
+    "path_count": 4,
+    "byte_count": 5326,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 1
+    },
+    "classification_counts": {
+      "test-unexecuted": 4
+    }
+  },
+  {
+    "id": "storybook-config-ci",
+    "purpose": "Workbench entry, providers, aliases, development CSS mutation and build workflow",
+    "representative_source_paths": [
+      "apps/storybook/README.md",
+      "apps/storybook/package.json",
+      "apps/storybook/.storybook/main.ts",
+      "apps/storybook/.storybook/preview.tsx",
+      "apps/storybook/.storybook/playground-css-plugin.ts",
+      ".github/workflows/storybook.yml"
+    ],
+    "source_implications": "Storybook composes real UI providers with mocked app boundaries, supports CSS-edit middleware and builds in label/manual workflow.",
+    "consumer_implications": "Developers inspect shared UI plus app-shell/session-ui stories.",
+    "maintenance_implications": "Maintain aliases/theme wrappers; CSS middleware writes source files and is not a read-only preview.",
+    "semantic_limits": "a11y test remains todo; no build/CI/browser/interaction verification performed.",
+    "metadata_only": false,
+    "path_count": 10,
+    "byte_count": 17886,
+    "depth_counts": {
+      "inspected": 6,
+      "family-supported": 4
+    },
+    "classification_counts": {
+      "configuration": 4,
+      "implementation": 5,
+      "documentation": 1
+    }
+  },
+  {
+    "id": "storybook-mocks",
+    "purpose": "Local mock services, contexts, router and components",
+    "representative_source_paths": [
+      "apps/storybook/.storybook/mocks/app/context/server-sdk.ts",
+      "apps/storybook/.storybook/mocks/app/context/sync.ts",
+
+END EXACT FILE BODY design-tui-04-families-04.txt
+TRANSPORT ONLY: unit=design-tui r2 section=04-families part=5/5; manifest-order=14/14.
+BEGIN EXACT FILE BODY design-tui-04-families-05.txt
+      "apps/storybook/.storybook/main.ts"
+    ],
+    "source_implications": "Alias map replaces application/transport contexts; representative mocks return static, pending or reduced values.",
+    "consumer_implications": "Stories can render without live authenticated server services.",
+    "maintenance_implications": "Treat mocks as illustrative fixtures, not authoritative server wire contracts.",
+    "semantic_limits": "Only representative mocks inspected; OAuth/network/security behavior not validated.",
+    "metadata_only": false,
+    "path_count": 21,
+    "byte_count": 34841,
+    "depth_counts": {
+      "family-supported": 19,
+      "inspected": 2
+    },
+    "classification_counts": {
+      "fixture": 21
+    }
+  },
+  {
+    "id": "schemas",
+    "purpose": "TUI generated editor schema and desktop-theme mirrored schema",
+    "representative_source_paths": [
+      "schema/tui.json",
+      "schema/theme.json",
+      "apps/cli/script/schema-files.ts",
+      "packages/tui/src/config/index.tsx",
+      "packages/ui/src/theme/desktop-theme.schema.json"
+    ],
+    "source_implications": "schema-files.ts writes TuiConfig.Info-derived schema and copies handwritten desktop theme schema verbatim; exact theme copies match.",
+    "consumer_implications": "Editors consume $schema documents; runtime uses owning source schema/types.",
+    "maintenance_implications": "Use actual source/generator; cli script generate.ts is a model-snapshot loader, not this schema generator.",
+    "semantic_limits": "TUI schema captured exactly at 1,131,057 bytes; observer 256,000-byte cap is a runtime transport limit, not missing source. Generation not executed.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 1137099,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "mirrored-handwritten-schema": 1,
+      "generated-schema": 1
+    }
+  },
+  {
+    "id": "repo-tui-examples",
+    "purpose": "Repository-local terminal configuration and theme ignore rule",
+    "representative_source_paths": [
+      ".orchestra/tui.json",
+      ".orchestra/themes/mytheme.json",
+      "apps/cli/src/tui-config.ts",
+      "packages/tui/src/context/theme.tsx"
+    ],
+    "source_implications": "Repository config/examples are consumed through configuration/theme discovery, distinct from package defaults.",
+    "consumer_implications": "CLI loads external config using core file discovery.",
+    "maintenance_implications": "Keep examples consistent with the correct terminal schema.",
+    "semantic_limits": "Ignore rule content and full discovery implementation not inspected.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 507,
+    "depth_counts": {
+      "family-supported": 1,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "configuration": 2
+    }
+  },
+  {
+    "id": "glossary-policy",
+    "purpose": "Locale terminology guidance and template glossary files",
+    "representative_source_paths": [
+      ".orchestra/glossary/README.md",
+      ".orchestra/glossary/ar.md",
+      "packages/ui/AGENTS.md"
+    ],
+    "source_implications": "Guidance includes locale aliases and glossary maintenance; representative Arabic file lacks PR-backed entries.",
+    "consumer_implications": "Translation maintainers use this as guidance, not executable locale selection.",
+    "maintenance_implications": "Verify locale-specific entries/corpora before translation approval.",
+    "semantic_limits": "Other locale documents family-supported; no translation-quality audit.",
+    "metadata_only": false,
+    "path_count": 17,
+    "byte_count": 22401,
+    "depth_counts": {
+      "inspected": 2,
+      "family-supported": 15
+    },
+    "classification_counts": {
+      "documentation": 17
+    }
+  },
+  {
+    "id": "rtl-policy",
+    "purpose": "RTL-aware development guidance",
+    "representative_source_paths": [
+      ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "packages/ui/src/context/i18n.tsx",
+      "packages/ui/src/v2/components/segmented-control-v2.tsx"
+    ],
+    "source_implications": "Skill specifies independent layout/text direction, logical CSS and behavioral verification.",
+    "consumer_implications": "UI maintainers must compare intended RTL behavior with actual components.",
+    "maintenance_implications": "Do not substitute visual mirroring for keyboard order validation.",
+    "semantic_limits": "Guidance is intent; no RTL runtime/accessibility certification.",
+    "metadata_only": false,
+    "path_count": 1,
+    "byte_count": 4098,
+    "depth_counts": {
+      "inspected": 1
+    },
+    "classification_counts": {
+      "skill": 1
+    }
+  },
+  {
+    "id": "user-guides",
+    "purpose": "User-facing appearance and instruction/TUI setup guidance",
+    "representative_source_paths": [
+      "docs/guides/appearance.md",
+      "docs/guides/instructions-and-tui.md",
+      "apps/cli/src/tui-config.ts"
+    ],
+    "source_implications": "Documents appearance settings and config discovery/order; CLI adapter partially corroborates merge behavior.",
+    "consumer_implications": "Users configure higher-level app settings or terminal inputs.",
+    "maintenance_implications": "Validate app/core-owned behavior before asserting entire guide is current.",
+    "semantic_limits": "App settings implementation and core discovery are outside this inspected unit.",
+    "metadata_only": false,
+    "path_count": 2,
+    "byte_count": 2780,
+    "depth_counts": {
+      "inspected": 2
+    },
+    "classification_counts": {
+      "documentation": 2
+    }
+  },
+  {
+    "id": "historical-plans",
+    "purpose": "Architecture phase cards and old TUI extraction proposal",
+    "representative_source_paths": [
+      "docs/architecture/phase-plans/70-90-briefs/FAC-TUI.md",
+      "docs/architecture/phase-plans/70-90-briefs/RN-UI.md",
+      "docs/specs/tui-package.md",
+      "packages/tui/README.md"
+    ],
+    "source_implications": "Cards/proposal record earlier baselines/targets; old no-core target conflicts with current pinned manifest/imports.",
+    "consumer_implications": "Historical rationale only; not a current execution instruction or completed implementation proof.",
+    "maintenance_implications": "Compare dates/pins and implementation before carrying rules forward.",
+    "semantic_limits": "Unsampled cards are family-supported historical records, not semantically current authority.",
+    "metadata_only": false,
+    "path_count": 6,
+    "byte_count": 48448,
+    "depth_counts": {
+      "family-supported": 3,
+      "inspected": 3
+    },
+    "classification_counts": {
+      "historical-proposal": 6
+    }
+  },
+  {
+    "id": "visual-recovery-history",
+    "purpose": "Visual handoff, migration, relay and historical verification records",
+    "representative_source_paths": [
+      "docs/specs/frontend-recovery-receipt.json",
+      "docs/specs/orchestra-visual/DELIVERY.md",
+      "docs/specs/orchestra-visual/MIGRATION.md",
+      "docs/specs/orchestra-visual/VERIFICATION.md"
+    ],
+    "source_implications": "Records contain prior baselines, acceptance limits and historic verification outcomes.",
+    "consumer_implications": "Maintainers may locate design decisions and known limitations.",
+    "maintenance_implications": "Do not promote old PASS/results or external asset references into current evidence.",
+    "semantic_limits": "Linked external repos/assets and all relay narratives not independently revalidated.",
+    "metadata_only": false,
+    "path_count": 10,
+    "byte_count": 245988,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 6
+    },
+    "classification_counts": {
+      "historical-record": 10
+    }
+  },
+  {
+    "id": "projects-board-design",
+    "purpose": "Projects board design contract, journeys, plan and mock catalog",
+    "representative_source_paths": [
+      "docs/specs/projects-board/README.md",
+      "docs/specs/projects-board/CONTRACT.md",
+      "docs/specs/projects-board/MOCKS.md"
+    ],
+    "source_implications": "Design contract describes writer/interaction rules and stable seat identity; catalog dates approved mock iterations.",
+    "consumer_implications": "A future/current app implementation can be assessed against these intended journeys.",
+    "maintenance_implications": "Keep design intent separate from runtime implementation and authorization.",
+    "semantic_limits": "No implementation mapping or rendered mock review; journeys/plan full contents not inspected.",
+    "metadata_only": false,
+    "path_count": 5,
+    "byte_count": 78140,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "design-contract": 5
+    }
+  },
+  {
+    "id": "projects-board-mock-assets",
+    "purpose": "Nine image mock design references",
+    "representative_source_paths": [
+      "docs/specs/projects-board/MOCKS.md",
+      "docs/specs/projects-board/README.md"
+    ],
+    "source_implications": "Catalog identifies approved design references; image bytes were not viewed.",
+    "consumer_implications": "Design-review references, not evidence of running UI.",
+    "maintenance_implications": "Preserve catalog/path mapping; generator/original artwork provenance unverified.",
+    "semantic_limits": "Family support only; no visual equivalence or accessibility conclusions.",
+    "metadata_only": false,
+    "path_count": 9,
+    "byte_count": 2943126,
+    "depth_counts": {
+      "family-supported": 9
+    },
+    "classification_counts": {
+      "binary-asset": 9
+    }
+  },
+  {
+    "id": "brand-assets",
+    "purpose": "Brand family and documented identity relocation",
+    "representative_source_paths": [
+      "assets/brand/README.md"
+    ],
+    "source_implications": "README records six PNG/SVG assets moved from packages/identity and distinguishes desktop/public logos.",
+    "consumer_implications": "Documentation/branding consumers; relocation identity not independently checked against prior commit.",
+    "maintenance_implications": "Keep canonical location distinct from app icon variants.",
+    "semantic_limits": "No binary/render/license verification; doc claim is not a cross-revision hash proof.",
+    "metadata_only": false,
+    "path_count": 7,
+    "byte_count": 2688,
+    "depth_counts": {
+      "inspected": 1,
+      "family-supported": 6
+    },
+    "classification_counts": {
+      "documentation": 1,
+      "binary-or-vector-asset": 6
+    }
+  },
+  {
+    "id": "readme-render-sources",
+    "purpose": "Documentation illustration HTML/CSS/JS and headless render script",
+    "representative_source_paths": [
+      "docs/images/readme/src/render.sh",
+      "docs/images/readme/src/architecture.html",
+      "docs/images/readme/src/wires.js"
+    ],
+    "source_implications": "Script loops HTML files, renders dark/light PNGs using Chrome at 2x and quantizes with Pillow; wires derives SVG from DOM.",
+    "consumer_implications": "README illustration assets explain intended architecture/workflow.",
+    "maintenance_implications": "Edit source then run authorized rendering; illustration is not a runtime dependency graph.",
+    "semantic_limits": "Only representative HTML/JS inspected; renderer not executed.",
+    "metadata_only": false,
+    "path_count": 12,
+    "byte_count": 44841,
+    "depth_counts": {
+      "inspected": 3,
+      "family-supported": 9
+    },
+    "classification_counts": {
+      "documentation-render-source": 12
+    }
+  },
+  {
+    "id": "readme-generated-images",
+    "purpose": "PNG outputs whose basenames map to inspected render loop inputs",
+    "representative_source_paths": [
+      "docs/images/readme/src/render.sh",
+      "docs/images/readme/src/architecture.html"
+    ],
+    "source_implications": "Assigned basename correspondence plus actual script establishes generation relationship for these paths.",
+    "consumer_implications": "README documentation consumes static rendered illustrations.",
+    "maintenance_implications": "Regenerate from matching HTML through the recorded script when authorized.",
+    "semantic_limits": "Current binary equivalence to script output and historical producer invocation not verified.",
+    "metadata_only": false,
+    "path_count": 18,
+    "byte_count": 4823311,
+    "depth_counts": {
+      "family-supported": 18
+    },
+    "classification_counts": {
+      "generated-asset": 18
+    }
+  },
+  {
+    "id": "readme-other-images",
+    "purpose": "Screenshot/illustration images without a demonstrated producer",
+    "representative_source_paths": [
+      "docs/images/readme/src/render.sh",
+      "docs/images/readme/src/architecture.html"
+    ],
+    "source_implications": "These paths have no matching HTML input in assigned render-source tree.",
+    "consumer_implications": "Documentation image use is apparent from assigned location; exact capture/generation provenance unverified.",
+    "maintenance_implications": "Find original source/capture workflow before replacing or calling generated.",
+    "semantic_limits": "Binary content not inspected; no visual assertions.",
+    "metadata_only": true,
+    "path_count": 10,
+    "byte_count": 5709838,
+    "depth_counts": {
+      "metadata-only": 10
+    },
+    "classification_counts": {
+      "binary-asset": 10
+    }
+  }
+]
+
+END EXACT FILE BODY design-tui-04-families-05.txt

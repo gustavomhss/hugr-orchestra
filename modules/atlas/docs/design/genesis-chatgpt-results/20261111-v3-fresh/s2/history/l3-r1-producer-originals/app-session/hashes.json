@@ -1,0 +1,47 @@
+{
+  "unit": "s2.l3.app-session",
+  "algorithm": "SHA256",
+  "excludes_self": true,
+  "files": [
+    {
+      "path": "body.md",
+      "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334
+    },
+    {
+      "path": "sources.json",
+      "sha256": "2cf73d730ff5103c68bcc58f4bd1f573f6f3dcae7c614c3b578069e73343c930",
+      "byte_length": 10166
+    },
+    {
+      "path": "dependencies.json",
+      "sha256": "04a27fdd24bd3806abc83332e39bc8e84ca6d0567b969c100e7b4f7fdb7116ea",
+      "byte_length": 2995
+    },
+    {
+      "path": "decisive-evidence.md",
+      "sha256": "c085725c05b12cd5933624bb424038c4c9bfc8b5a41f6e75a2662a4317529678",
+      "byte_length": 18962
+    },
+    {
+      "path": "response.md",
+      "sha256": "f5826614974d14622d22bcbaac20ef27e5a47ecbe6b16492cce804626d752572",
+      "byte_length": 5018
+    },
+    {
+      "path": "evidence-map.json",
+      "sha256": "0124f425a56c649ed67feae338a9edba58f74678d8bb5d787199e7cf75d14631",
+      "byte_length": 10745
+    },
+    {
+      "path": "author-checks.json",
+      "sha256": "9a4cb18df0627427997bfe27ee00fd3f996a096123337cf2f593407c07066441",
+      "byte_length": 2307
+    },
+    {
+      "path": "author_artifacts.py",
+      "sha256": "4a8eb15af43fccf367d812b9fc12b214aaa4178c3fc99d3dc25d38f9d39e6f2e",
+      "byte_length": 26470
+    }
+  ]
+}

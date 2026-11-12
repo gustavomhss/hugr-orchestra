@@ -1,0 +1,411 @@
+{
+  "schema": "genesis-s2-usage-delta-source-manifest/v1",
+  "files": [
+    {
+      "path": "deliverable/evidence/final-repository-metadata-connector.json",
+      "sha256": "b6f4c56c83a3e30b89db082e4c95f74a6ac4b4f9a3f9be56362799d4cfe928df",
+      "byte_length": 13331
+    },
+    {
+      "path": "deliverable/evidence/final-repository-metadata.json",
+      "sha256": "bf7aa21e43cfd287a19b374e22629be5abefccad3e98a76cfe8347b3d4da8583",
+      "byte_length": 741
+    },
+    {
+      "path": "deliverable/evidence/final-return-remote-recheck/readback-receipt.json",
+      "sha256": "abf61a120a4c99e39b0ef429c4623bf5a231602789f916b4d1bb2706529b47dc",
+      "byte_length": 2837
+    },
+    {
+      "path": "deliverable/evidence/final-return-remote-recheck/runtime-release-connector.json",
+      "sha256": "600a657e99a7a5a388096e3e6dfb036f99e22bf6821c9efd582347d90ff534c9",
+      "byte_length": 30352
+    },
+    {
+      "path": "deliverable/evidence/final-return-remote-recheck/runtime-release.json",
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+      "byte_length": 28282
+    },
+    {
+      "path": "deliverable/evidence/final-return-remote-recheck/s2-branch-connector.json",
+      "sha256": "d13202ebceacf99529aaccc7055479da46b4bf49e9c71ff9d11c45123e1e69b5",
+      "byte_length": 1502
+    },
+    {
+      "path": "deliverable/evidence/final-return-remote-recheck/s2-branch-ref.json",
+      "sha256": "b8f2411229176c156e3538e7ff827ae3fff30e515acdffc56595384eb8961b3e",
+      "byte_length": 390
+    },
+    {
+      "path": "deliverable/evidence/final-return-remote-recheck/s4-branch-connector.json",
+      "sha256": "db8b4a8544b782a89270a7d2d3f0e22c669113cf8a41a66ef200d0d38339b50b",
+      "byte_length": 1502
+    },
+    {
+      "path": "deliverable/evidence/final-return-remote-recheck/s4-branch-ref.json",
+      "sha256": "529ba6b6f3eb644176a71d28625b3f5b118be80b879870f52a599f9221ff5aaf",
+      "byte_length": 390
+    },
+    {
+      "path": "deliverable/evidence/observable-usage-01/observable-usage-index.json",
+      "sha256": "8aacf330f988818aed40b5dc253d70c7fb1d514d92b9882b17930690f5135b45",
+      "byte_length": 47594
+    },
+    {
+      "path": "deliverable/evidence/post-native-remote-recheck/readback-receipt.json",
+      "sha256": "6c84df86e7cd1a67426130bdeafdadeeacc07f26ea7e9b16a2faba9e95a98a8e",
+      "byte_length": 2784
+    },
+    {
+      "path": "deliverable/evidence/post-native-remote-recheck/runtime-release-connector.json",
+      "sha256": "ebf8cba884c8311e3ddf05e323b417377ecff4fcbe7bd75828af7ae89bbaf6eb",
+      "byte_length": 30352
+    },
+    {
+      "path": "deliverable/evidence/post-native-remote-recheck/runtime-release.json",
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+      "byte_length": 28282
+    },
+    {
+      "path": "deliverable/evidence/post-native-remote-recheck/s2-branch-connector.json",
+      "sha256": "d13202ebceacf99529aaccc7055479da46b4bf49e9c71ff9d11c45123e1e69b5",
+      "byte_length": 1502
+    },
+    {
+      "path": "deliverable/evidence/post-native-remote-recheck/s2-branch-ref.json",
+      "sha256": "b8f2411229176c156e3538e7ff827ae3fff30e515acdffc56595384eb8961b3e",
+      "byte_length": 390
+    },
+    {
+      "path": "deliverable/evidence/post-native-remote-recheck/s4-branch-connector.json",
+      "sha256": "c33297ce38b7966b848bd98d43a3d988292f6f9b37bf3a503c7ec2a778358b82",
+      "byte_length": 1502
+    },
+    {
+      "path": "deliverable/evidence/post-native-remote-recheck/s4-branch-ref.json",
+      "sha256": "f34d502872287cb57b7102bb4ba3e95f6e0cf7e10a631f39ad64dcb02925bf17",
+      "byte_length": 390
+    },
+    {
+      "path": "deliverable/history/ledger-at-final-closure-review.jsonl",
+      "sha256": "45a3d4abb9ba101af7e739ff17071b9b176f16c4704b958c5506474c32c22450",
+      "byte_length": 41884
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/j1.json",
+      "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339",
+      "byte_length": 22520
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/j2.json",
+      "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27",
+      "byte_length": 19521
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/packet/packet-manifest.json",
+      "sha256": "7611d9155e16b7608126e589ade3c5230b5ecdba47c95084ee856045871c802f",
+      "byte_length": 20404
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j1-dispatch-receipt.json",
+      "sha256": "0f183ee5735975562802fecb403fb7a5a54eb77ab03cf6f5cfcb23b4e270f007",
+      "byte_length": 883
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j1-dispatched.txt",
+      "sha256": "8d156380c24f92ea3d71ba5e7e2cab5959f5c1b2c592e27075d824ada1eb2e8f",
+      "byte_length": 6351
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j1-returned-content.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j1-visible-arguments.json",
+      "sha256": "897494345d5293239c447b22272acde8018791dfbb9830a509f7aa875965c2d3",
+      "byte_length": 6439
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j2-dispatch-receipt.json",
+      "sha256": "6464aecc4261f1791e78cdcb1aa8b2564ebd7c883a3db98339972b2b2a0d95c3",
+      "byte_length": 726
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j2-dispatched.txt",
+      "sha256": "614511056abb72cd58d02f49f76a64eef9538049e080493e6318b5ba78ad6f59",
+      "byte_length": 6998
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j2-returned-content.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/seal-j2-visible-arguments.json",
+      "sha256": "d9a4b75bd57e32b19005625438c39fd5b2443f198989957adc9d375693fbf1a6",
+      "byte_length": 7090
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-01.observation.json",
+      "sha256": "d183c730922b0d2918ca21b9906cf552ddeee344e3caacd44314b7e8db4b7652",
+      "byte_length": 314
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-01.request.json",
+      "sha256": "904f2d0df2c4e994936089f0a057b47e1c8662f03b2b3fdbd4c89ad0dc035239",
+      "byte_length": 26467
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-01.result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-02.observation.json",
+      "sha256": "906a990e6f2b9494804abb5de154d0fdcf50f8b78d54a6e22fc2d2f82002bc6a",
+      "byte_length": 314
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-02.request.json",
+      "sha256": "4fa21e61c879fdedd2a23ee6a22569c3cc282ddfc27b5de2b97642f3c0f600d9",
+      "byte_length": 26467
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-02.result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-03.observation.json",
+      "sha256": "d35f80422236056e3a9387eacaed4cab4c06eedaa89b5efb4474514eb75c4f87",
+      "byte_length": 368
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-03.request.json",
+      "sha256": "c95cca8bfb4ce5b8002844467b8b24900f1a5a2b4d5c909573c234d25d2ad359",
+      "byte_length": 26417
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-03.result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-04.observation.json",
+      "sha256": "4cd82a8ecaf01beb4e08c859a451108bd429d94f4dee6d97c0519a5a8a1e634c",
+      "byte_length": 419
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-04.request.json",
+      "sha256": "bc736d8b4a8d04b0fbbd18fa1067ab2541cdd490fb4420134606ed4dee6e75f5",
+      "byte_length": 26417
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/call-04.result.txt",
+      "sha256": "26ef151cf51d8e6b5814b5ff730675b71124ca176cd7441a00c7abeb74f851e2",
+      "byte_length": 61
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/completion.json",
+      "sha256": "1a9d1eb9056f37203105423c3acc68811fafeb861ba0f3a58162af7eab9ea52d",
+      "byte_length": 5124
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-a/prepared-calls.json",
+      "sha256": "2190bdfd11ff02cd32dfa72e328e75f2b9a4f59068c5d9d2d202b4c2d8d8b5e5",
+      "byte_length": 1945
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-01-arguments.json",
+      "sha256": "636169446047484dd6c69cb5571970878113ef303895a7fdd27af08b9b5fe53a",
+      "byte_length": 27910
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-01-returned-content.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-02-arguments.json",
+      "sha256": "087c2953866504a8b9ff61f16f6fc8dd99311af4efd1a3b22b95bb0e3384099b",
+      "byte_length": 27910
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-02-returned-content.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-03-arguments.json",
+      "sha256": "aca15e529a849e77b5663574caef476f78f7541ee1936591e1fbe7f3d7efe7f9",
+      "byte_length": 27872
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-03-returned-content.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-04-arguments.json",
+      "sha256": "a6c08dba89be4843f8e922be6a205679a7c3a279f9f350fa01d03ea11fbe6685",
+      "byte_length": 27872
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/call-04-returned-content.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/lookup-error.json",
+      "sha256": "d28310cfa8c834c9ad501551ed5e8ca63a4eb59dfc0e51ad13340e47bc37881e",
+      "byte_length": 343
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/part-003-of-006.txt",
+      "sha256": "b06146b616e1e8ec58e167556bf9918faf443a1bb608cc622a493406f9d37a01",
+      "byte_length": 26000
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/part-004-of-006.txt",
+      "sha256": "f542755da654473d627446af9e35043980e2fe904f9295fc7c5aa0f61d1cf796",
+      "byte_length": 26000
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-b/transport-receipt.json",
+      "sha256": "1dae983c6e5706352ea06aa5c72bbd43bc3506212532cc7441ad4404d18c294b",
+      "byte_length": 6075
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-1-arguments.json",
+      "sha256": "2b7ae58257df2281875eb674215677968c754251555001ce71cbe37df283eafe",
+      "byte_length": 28372
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-1-result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-2-arguments.json",
+      "sha256": "624755236c27db1e0d948a1f2f14ea90ff3fce2ba7680cc76bd5bb8e699fc1c9",
+      "byte_length": 28372
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-2-exact-byte-diff.json",
+      "sha256": "70cc1665025ea92102721e54effd12d13615b4978baf5ca8ef63ae21d9a809c8",
+      "byte_length": 1345
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-2-exact.diff",
+      "sha256": "a4a4d474f714f53158750e5a590b45452b49158af7770099ab47ec7c8bccdfab",
+      "byte_length": 274
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-2-mismatch.json",
+      "sha256": "71c28b14a7c3bf201d3fae9e12b5cc0d101c1a25718d3cba140727047baf7003",
+      "byte_length": 432
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-2-result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-of-006.txt",
+      "sha256": "bfe7efb7bfb52570c39aa1f3ebc8ac3f56d21952b5e704a53f69a47a9335ecf5",
+      "byte_length": 26000
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-006-judge-1-arguments.json",
+      "sha256": "f07c4454e6ee46a7b88ac67c22f69bec993a55c0f22b8e8d7e1687418d4cdc46",
+      "byte_length": 9579
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-006-judge-1-result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-006-judge-2-arguments.json",
+      "sha256": "d74c18b45ee0eddd671bb3f88f57f1f7a5fcf450d0605c6c81e62eabda075a9a",
+      "byte_length": 9579
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-006-judge-2-result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/part-006-of-006.txt",
+      "sha256": "f37ef2e42f31c408cd93a8e468ea0963e6b35f54788aea23104db097f0466ab4",
+      "byte_length": 9174
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/receipt.json",
+      "sha256": "95d7e1d95b38752078266684971b7e47f6f2269ac1e8a42c518ab6e6f9485c81",
+      "byte_length": 4372
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/report.md",
+      "sha256": "8348b0b06dd8d7fcd29fb8965f8111bc450703c5f59f77b8665cf639f0fdcaac",
+      "byte_length": 1362
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/request.md",
+      "sha256": "e243b0d14999ce4fb9f0e1817ee522c47c3dc49d7370c71aa40769b09862c89c",
+      "byte_length": 1153
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/response.md",
+      "sha256": "8348b0b06dd8d7fcd29fb8965f8111bc450703c5f59f77b8665cf639f0fdcaac",
+      "byte_length": 1362
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c/steering.md",
+      "sha256": "3a5111c883017fa7300d819e577e93bbc0a3e9f33974d3e5386cc7f28e51a033",
+      "byte_length": 770
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/arguments.json",
+      "sha256": "628fbc3730e9c4d266275e8a5b06607861c452758217fc8746a9832ee941f152",
+      "byte_length": 28536
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/part-005-of-006.txt",
+      "sha256": "bfe7efb7bfb52570c39aa1f3ebc8ac3f56d21952b5e704a53f69a47a9335ecf5",
+      "byte_length": 26000
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/prefix.txt",
+      "sha256": "2041e8b862ad5316174e5f2dd67365722977be51f3b0060e581044a9d020a756",
+      "byte_length": 161
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/receipt.json",
+      "sha256": "588f9f2e48b9484df0b5fefe4dc564d846540bab359c1e2641da68bfca0e037c",
+      "byte_length": 1275
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/request.md",
+      "sha256": "15c633013878881a4c195b325fe575cb37d8e49acfa7d90d38121c297432a7ac",
+      "byte_length": 755
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/response.md",
+      "sha256": "2af3dfa1b12650255b82d498f932b7c8ab3196eab426889bd9b30b181d6a436a",
+      "byte_length": 1055
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/result.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "deliverable/judgments/final-closure-r1/transport-preservation.json",
+      "sha256": "1c65d428b058f166b9e2acf25f6ba3d7b057b96cf2ceda21a55afe13a819cb8f",
+      "byte_length": 11425
+    }
+  ],
+  "scope": "Exact preserved record identities; hashes do not count operations or attest host serialization."
+}

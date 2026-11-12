@@ -1,0 +1,226 @@
+{
+  "artifact": "s2.l4.entry",
+  "revision": 1,
+  "manifest_sha256": "606b33da8b2a65731506cc859d7745f341f8011ac8424a24d00859cd2fe3c4bd",
+  "body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+  "total_local_part_bytes": 30321,
+  "parts": [
+    {
+      "file": "part-01.txt",
+      "number": 1,
+      "total": 2,
+      "byte_length": 25989,
+      "sha256": "a2e9853fdc176e9439612f461d23215be99100232844996852c8ac7c51bbe71f",
+      "prefix": "L4 entry r1 part 1/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "prepared_payload_byte_length": 26053,
+      "prepared_payload_sha256": "bc969220abe4c2aa342ac764639e444f80f6a22c0153a4515503b532593855a3",
+      "ends_with_newline": true
+    },
+    {
+      "file": "part-02.txt",
+      "number": 2,
+      "total": 2,
+      "byte_length": 4332,
+      "sha256": "b49e3d3fe165ba7094d163b22113212507e16d9caa8bee60bc6522fc52dbee22",
+      "prefix": "L4 entry r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "prepared_payload_byte_length": 4396,
+      "prepared_payload_sha256": "b8d55cf25021d4866a5fdb703c0712e21cf972054ff88dc8e5046231a99530d9",
+      "ends_with_newline": true
+    }
+  ],
+  "destinations": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "expected_native_calls": 4,
+  "calls": [
+    {
+      "global_call_ordinal": 5,
+      "artifact_call_ordinal": 1,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j1",
+      "part_number": 1,
+      "local_part_sha256": "a2e9853fdc176e9439612f461d23215be99100232844996852c8ac7c51bbe71f",
+      "prepared_envelope_file": "payload-01.txt",
+      "local_prepared_envelope_sha256": "bc969220abe4c2aa342ac764639e444f80f6a22c0153a4515503b532593855a3",
+      "prefix": "L4 entry r1 part 1/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": null
+    },
+    {
+      "global_call_ordinal": 6,
+      "artifact_call_ordinal": 2,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j2",
+      "part_number": 1,
+      "local_part_sha256": "a2e9853fdc176e9439612f461d23215be99100232844996852c8ac7c51bbe71f",
+      "prepared_envelope_file": "payload-01.txt",
+      "local_prepared_envelope_sha256": "bc969220abe4c2aa342ac764639e444f80f6a22c0153a4515503b532593855a3",
+      "prefix": "L4 entry r1 part 1/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": null
+    },
+    {
+      "global_call_ordinal": 7,
+      "artifact_call_ordinal": 3,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j1",
+      "part_number": 2,
+      "local_part_sha256": "b49e3d3fe165ba7094d163b22113212507e16d9caa8bee60bc6522fc52dbee22",
+      "prepared_envelope_file": "payload-02.txt",
+      "local_prepared_envelope_sha256": "b8d55cf25021d4866a5fdb703c0712e21cf972054ff88dc8e5046231a99530d9",
+      "local_prepared_envelope_byte_length": 4396,
+      "prefix": "L4 entry r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": null,
+      "recorded_at_utc": "2026-11-11T20:25:50.340279+00:00",
+      "time_note": "Record persistence time; exact native call timestamp unavailable.",
+      "input_record_scope": "Locally preserved call text; not a host serialization or received-byte attestation.",
+      "receipt_persistence": "First write attempt failed before process creation because exec-server transport disconnected; record persisted after transport recovery."
+    },
+    {
+      "global_call_ordinal": 8,
+      "artifact_call_ordinal": 4,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j2",
+      "part_number": 2,
+      "local_part_sha256": "b49e3d3fe165ba7094d163b22113212507e16d9caa8bee60bc6522fc52dbee22",
+      "prepared_envelope_file": "payload-02-call08-invalid.txt",
+      "local_prepared_envelope_sha256": "64f609baa3452ce4b6cc5407ae2e51339eb620ecf99214ced6245fd7e0cd3320",
+      "local_prepared_envelope_byte_length": 4401,
+      "prefix": "L4 entry r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": {
+        "status": "invalidated",
+        "reason": "Known literal transcription error at navigation_heading_contract.s2.l1.design-tui.",
+        "expected_text": "V2 session action boundary",
+        "actual_call_text": "V2 actions and prompt admission",
+        "full_replacement_call_ordinal": 9
+      },
+      "replacement_for": null,
+      "recorded_at_utc": "2026-11-11T20:25:50.340279+00:00",
+      "time_note": "Record persistence time; exact native call timestamp unavailable.",
+      "input_record_scope": "Reconstructed locally from the observed call text and its known single transcription substitution; not a host serialization or received-byte attestation.",
+      "initial_prepared_envelope_file": "payload-02.txt",
+      "local_data_sha256": "809e595b39f8239fdcaf7419795b584a48ffa4907094acaaf36bf56a1b7ab6b8",
+      "local_data_byte_length": 4337,
+      "local_data_matches_frozen_part": false
+    },
+    {
+      "global_call_ordinal": 9,
+      "artifact_call_ordinal": 5,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j2",
+      "part_number": 2,
+      "local_part_sha256": "b49e3d3fe165ba7094d163b22113212507e16d9caa8bee60bc6522fc52dbee22",
+      "prepared_envelope_file": "payload-02-call09-replacement.txt",
+      "local_prepared_envelope_sha256": "97e0f07e524d651f704f79142f6bca2da672c8d5b7cd168600da986e68216507",
+      "local_prepared_envelope_byte_length": 4642,
+      "prefix": "L4 entry r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Output exceeded the available model context and was truncated",
+      "acknowledgment_status": "truncated/uncertain; no explicit delivery acknowledgment available",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": 8,
+      "recorded_at_utc": "2026-11-11T20:25:50.340279+00:00",
+      "time_note": "Record persistence time; exact native call timestamp unavailable.",
+      "input_record_scope": "Reconstructed local input record from the explicit replacement notice and exact frozen part; not a host serialization or received-byte attestation.",
+      "replacement_notice": "FULL REPLACEMENT: supersedes my preceding L4 entry r1 part 2/2 to this recipient, which had a known transcription error in the s2.l1.design-tui navigation heading. Discard that earlier part and use this complete literal replacement for assembly.",
+      "replacement_reason": "Known input transcription error in call 8; this was not a retry triggered by missing or uncertain acknowledgment.",
+      "local_data_sha256": "b49e3d3fe165ba7094d163b22113212507e16d9caa8bee60bc6522fc52dbee22",
+      "local_data_byte_length": 4332,
+      "local_data_matches_frozen_part": true
+    }
+  ],
+  "attestation_limit": "Hashes identify local part/prepared-envelope bytes only, not host-internal serialization or received bytes. Tool returns and explicit acknowledgments are recorded independently; no automatic retries.",
+  "post_send_local_verification": {
+    "recorded_at_utc": "2026-11-11T20:25:50.340279+00:00",
+    "scope": "Local frozen manifest, part files, authored body hash, and prepared envelope bytes only; no product execution.",
+    "manifest_sha256": "606b33da8b2a65731506cc859d7745f341f8011ac8424a24d00859cd2fe3c4bd",
+    "manifest_byte_length": 872,
+    "body_sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+    "body_byte_length": 5305,
+    "total_local_part_bytes": 30321,
+    "parts": [
+      {
+        "part_file": "part-01.txt",
+        "byte_length": 25989,
+        "sha256": "a2e9853fdc176e9439612f461d23215be99100232844996852c8ac7c51bbe71f",
+        "prepared_envelope_file": "payload-01.txt",
+        "prepared_envelope_byte_length": 26053,
+        "prepared_envelope_sha256": "bc969220abe4c2aa342ac764639e444f80f6a22c0153a4515503b532593855a3",
+        "verified": true
+      },
+      {
+        "part_file": "part-02.txt",
+        "byte_length": 4332,
+        "sha256": "b49e3d3fe165ba7094d163b22113212507e16d9caa8bee60bc6522fc52dbee22",
+        "prepared_envelope_file": "payload-02.txt",
+        "prepared_envelope_byte_length": 4396,
+        "prepared_envelope_sha256": "b8d55cf25021d4866a5fdb703c0712e21cf972054ff88dc8e5046231a99530d9",
+        "verified": true
+      }
+    ],
+    "matches_expected_pins": true
+  },
+  "actual_native_call_count": 5,
+  "known_invalidations": [
+    8
+  ],
+  "literal_replacement_calls": [
+    9
+  ],
+  "automatic_retry_count": 0,
+  "empty_tool_result_count": 4,
+  "truncated_tool_result_count": 1,
+  "status": "Five native judge calls issued: four original calls plus one full replacement for a known input transcription error. Original call 8 is invalidated; replacement call 9 returned a truncated tool result. Delivery remains unconfirmed; no acknowledgment-based retry.",
+  "receipt_storage_incident": {
+    "operation": "Persist receipt for global call 7",
+    "actual_error": "exec_command failed: CreateProcess { message: \"Rejected(\\\"Failed to create unified exec process: exec-server transport disconnected\\\")\" }",
+    "effect": "The first receipt write failed before process creation; calls 7, 8 and 9 were not then on disk.",
+    "recovery": "A later exec_command read succeeded; all remaining records and local input reconstructions were persisted in this completion operation."
+  },
+  "completion": {
+    "recorded_at_utc": "2026-11-11T20:25:50.340279+00:00",
+    "state": "Native send attempts and local recordkeeping complete; delivery acknowledgment unavailable.",
+    "combined_expected_original_judge_calls": 8,
+    "combined_actual_judge_calls": 9,
+    "combined_known_invalidations": [
+      8
+    ],
+    "combined_literal_replacement_calls": [
+      9
+    ],
+    "all_native_calls_recorded_locally": true,
+    "delivery_confirmed": false,
+    "host_serialized_bytes_verified": false,
+    "received_bytes_verified": false,
+    "author_files_edited_during_transport": false,
+    "review_seal_sent": false,
+    "judges_activated": false,
+    "judge_responses_inspected": false,
+    "automatic_acknowledgment_retry_count": 0,
+    "next_action": "Report actual outcomes to root and remain idle."
+  }
+}

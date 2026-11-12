@@ -1,0 +1,277 @@
+{
+  "unit": "s2.l3.app-session",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "sections": [
+    {
+      "heading": "Reading the handoffs",
+      "predecessors": [
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Orientation and evidence status"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Verification limits and ownership use"
+        }
+      ],
+      "classification": "Evidence contract and inherited scope; no new runtime or coverage finding.",
+      "direct_sources": []
+    },
+    {
+      "heading": "Enter the intended server and workspace",
+      "predecessors": [
+        {
+          "key": "s2.l2.desktop-web",
+          "heading": "Orientation and ownership"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "heading": "Startup publishes readiness before the renderer proceeds"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "heading": "Persistence and recovery have several owners"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "heading": "Privilege is checked at each request boundary"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Composition, identity and asynchronous ownership"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Navigation, settings and feature controllers"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        }
+      ],
+      "classification": "Integrated handoff inference from accepted host/app observations; exact route gate is a bounded direct-source refinement. Trust workflow is attributed instruction.",
+      "direct_sources": [
+        "packages/app-shell/src/app.tsx",
+        "packages/app-shell/src/context/global.tsx",
+        "packages/app-shell/src/pages/session/session-ownership.ts",
+        ".orchestra/skills/onboarding-usage/SKILL.md",
+        ".orchestra/skills/settings-usage/SKILL.md"
+      ]
+    },
+    {
+      "heading": "Submit once, then hand the draft to its session",
+      "predecessors": [
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Durable admission, optimistic state and draft storage"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "heading": "Persistence and recovery have several owners"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        }
+      ],
+      "classification": "Relates inherited admission, retry, rollback and persistence boundaries. Exact request selection by action key/receipt revision is directly corroborated and bounded; no execution observation.",
+      "direct_sources": [
+        "packages/app-shell/src/components/prompt-input/submit.ts",
+        "AGENTS.md"
+      ]
+    },
+    {
+      "heading": "Recover the projection without inventing execution recovery",
+      "predecessors": [
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Transport, liveness and canonical recovery"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        }
+      ],
+      "classification": "Cross-stage inference distinguishes transport liveness, canonical projection and provider execution. Explicit root process-local/post-crash policy is attributed instruction, not an implementation or runtime proof.",
+      "direct_sources": [
+        "packages/app-shell/src/context/session-recovery.ts",
+        "AGENTS.md"
+      ]
+    },
+    {
+      "heading": "Answer requests without transferring server authority to the UI",
+      "predecessors": [
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Permission requests and terminal boundaries"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        }
+      ],
+      "classification": "Relates inherited request/terminal ownership; proposed verification is unexecuted. Slow-reader risk and server authorization limit remain.",
+      "direct_sources": []
+    },
+    {
+      "heading": "Change settings and Skills under the original owner",
+      "predecessors": [
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Navigation, settings and feature controllers"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Skills catalog, content and editing ownership"
+        }
+      ],
+      "classification": "Integrates inherited controller/mutation boundaries with direct corroboration. Trust is attributed guidance; lexical classification is not filesystem authorization; SkillV2 enforcement remains uninspected.",
+      "direct_sources": [
+        ".orchestra/skills/settings-usage/SKILL.md",
+        "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+        "packages/app-shell/src/orchestra/chapters/skills.tsx",
+        "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx"
+      ]
+    },
+    {
+      "heading": "Render and localize under caller-owned lifetimes",
+      "predecessors": [
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Shared rendering, files and evidence interpretation"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Visual resources and prescribed maintenance"
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "heading": "Browser UI ownership, lifecycle and accessibility"
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "heading": "Localization, direction and two theme systems"
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "heading": "Generated products and asset provenance"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        }
+      ],
+      "classification": "Actual shared-UI/theme cross-unit build dependency. Localization requirements are instructions; rendering, direction and generated-output facts remain static observations with visual/accessibility limits.",
+      "direct_sources": [
+        "packages/app-shell/AGENTS.md",
+        "packages/session-ui/AGENTS.md"
+      ]
+    },
+    {
+      "heading": "Route a change through its affected contracts",
+      "predecessors": [
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Visual resources and prescribed maintenance"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Verification limits and ownership use"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Assets, localization and verification evidence"
+        }
+      ],
+      "classification": "Maintenance inference and attributed dependency/codegen/benchmark instructions. Optional L3 destinations supply no factual evidence.",
+      "direct_sources": [
+        "AGENTS.md",
+        "packages/app-shell/AGENTS.md",
+        "packages/session-ui/AGENTS.md"
+      ]
+    }
+  ],
+  "excerpts": [
+    {
+      "id": "E01",
+      "path": "packages/app-shell/src/app.tsx",
+      "start_line": 105,
+      "end_line": 115,
+      "sha256": "f4bdabcf56e84997c675eb78f5809de4f7a59593d570b5c88760fac2a2699215",
+      "byte_length": 642,
+      "purpose": "Direct refinement: the target route requires resolved server identity and otherwise navigates home. The conditional, not the comment alone, bounds the statement."
+    },
+    {
+      "id": "E02",
+      "path": "packages/app-shell/src/components/prompt-input/submit.ts",
+      "start_line": 513,
+      "end_line": 523,
+      "sha256": "9b38c75016cd355c37a042ee4dc0539effdc10217237930dbf468816b5861f07",
+      "byte_length": 512,
+      "purpose": "Direct precision: request identity is replaced when the action key or policy receipt revision changes; L3 only describes retention for an unchanged pair."
+    },
+    {
+      "id": "E03",
+      "path": "AGENTS.md",
+      "start_line": 209,
+      "end_line": 216,
+      "sha256": "0489888da1e156063c11b4f49045fbb95bf5e4b95879a4140d45e1d4b19b9d37",
+      "byte_length": 2855,
+      "purpose": "Attributed instruction: admission/execution separation, process-local drains and the explicit need for a separate post-crash provider-continuation design. This is not a demonstration of implemented crash recovery."
+    },
+    {
+      "id": "E04",
+      "path": "packages/app-shell/src/context/session-recovery.ts",
+      "start_line": 45,
+      "end_line": 60,
+      "sha256": "97c860d23fa61dc20e3dfaa67e93f1023f9746271b4fab741adba01ecb972907",
+      "byte_length": 1131,
+      "purpose": "Corroboration of accepted recovery: superseded owner and policy-generation checks, compatibility snapshot limit and local receipt."
+    },
+    {
+      "id": "E05",
+      "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+      "start_line": 100,
+      "end_line": 125,
+      "sha256": "c86663f9835c1576d1eb02c7a99af006b356b2d988388a075f0a0546de4fff72",
+      "byte_length": 997,
+      "purpose": "Corroboration of accepted mutation boundary: no page abort signal is passed to save/remove; disposal is checked after completion and suppresses UI work."
+    },
+    {
+      "id": "E06",
+      "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+      "start_line": 44,
+      "end_line": 56,
+      "sha256": "b4e0319af9fb9781fa14d0fd50b99ae4e56f99ee7aa2182cb41bfa85f78eb8d1",
+      "byte_length": 555,
+      "purpose": "Corroboration of accepted edit payload identity: path and optional mtime accompany the editor fields."
+    },
+    {
+      "id": "E07",
+      "path": ".orchestra/skills/onboarding-usage/SKILL.md",
+      "start_line": 35,
+      "end_line": 40,
+      "sha256": "5fea6a4dfc5f1e2be52d59c815f2b9fa660d73c46ed0f4a09093c1c109a36159",
+      "byte_length": 511,
+      "purpose": "Attributed proposed manual checks for folder trust and provider setup, not a performed walkthrough."
+    },
+    {
+      "id": "E08",
+      "path": ".orchestra/skills/settings-usage/SKILL.md",
+      "start_line": 23,
+      "end_line": 31,
+      "sha256": "2bc4a3694eec72bd9f87122d2821197a048d9ffa8bdcde831455ef2b7f72b545",
+      "byte_length": 573,
+      "purpose": "Attributed trust capability and inherited-parent revocation guidance, not verified filesystem behavior."
+    },
+    {
+      "id": "E09",
+      "path": "AGENTS.md",
+      "start_line": 1,
+      "end_line": 2,
+      "sha256": "d106c475e9cb2805443695dc5d251d955b070bbdc991d59c29477328a71d5fc2",
+      "byte_length": 405,
+      "purpose": "Attributed client-generation and runtime dependency rules; no generator or product check was executed."
+    }
+  ]
+}

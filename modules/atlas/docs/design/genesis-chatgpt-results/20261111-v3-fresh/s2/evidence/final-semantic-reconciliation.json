@@ -1,0 +1,516 @@
+{
+  "schema": "genesis-s2-final-semantic-reconciliation/v1",
+  "recorded_at": "2026-11-11T20:46:20.662331+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "native_package_before_sha256": "44bbc6ade787a2506765fa08448b37c9870ab2036e1fdd5ac13eab9125d30876",
+  "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "accepted_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    },
+    {
+      "path": "accepted/l4.json",
+      "sha256": "b5eff95b98e8ae1e3aa39e1f14173bf285887114c17939ec91fcf9d4db3d2be0"
+    }
+  ],
+  "artifact_count": 13,
+  "roots": {
+    "entry": "s2.l4.entry"
+  },
+  "reachable_artifacts": [
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l1.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "bodies": [
+    {
+      "key": "s2.l1.desktop-web",
+      "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "byte_length": 29075,
+      "sections": [
+        {
+          "heading": "Scope and evidentiary status",
+          "byte_length": 2060
+        },
+        {
+          "heading": "1. Startup, readiness and shutdown",
+          "byte_length": 4227
+        },
+        {
+          "heading": "2. Windows, persistence and IPC authority",
+          "byte_length": 3309
+        },
+        {
+          "heading": "3. Host adapters, recovery and native integration",
+          "byte_length": 2040
+        },
+        {
+          "heading": "4. Dock browser ownership and page tools",
+          "byte_length": 2142
+        },
+        {
+          "heading": "5. Native Dock identity and uncertain outcomes",
+          "byte_length": 2949
+        },
+        {
+          "heading": "6. Linux runtime, access RPC and WSL",
+          "byte_length": 3053
+        },
+        {
+          "heading": "7. Live capture and overlay",
+          "byte_length": 2203
+        },
+        {
+          "heading": "8. Response files, executable resources and updates",
+          "byte_length": 2728
+        },
+        {
+          "heading": "9. Web, languages, media and historical evidence",
+          "byte_length": 3420
+        },
+        {
+          "heading": "Open evidence and maintenance consequences",
+          "byte_length": 897
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.app-session",
+      "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047,
+      "sections": [
+        {
+          "heading": "Scope, identity and depth",
+          "byte_length": 2541
+        },
+        {
+          "heading": "Authority, composition and identity",
+          "byte_length": 4683
+        },
+        {
+          "heading": "Transport, stream health and canonical recovery",
+          "byte_length": 4029
+        },
+        {
+          "heading": "Prompt admission and draft ownership",
+          "byte_length": 4394
+        },
+        {
+          "heading": "Requests, terminals and auxiliary lifetimes",
+          "byte_length": 3851
+        },
+        {
+          "heading": "Rendering, evidence and reusable utility contracts",
+          "byte_length": 5180
+        },
+        {
+          "heading": "Navigation, settings and feature-family disposition",
+          "byte_length": 6083
+        },
+        {
+          "heading": "Skills catalog, editing and ownership",
+          "byte_length": 5976
+        },
+        {
+          "heading": "Assets, localization and verification evidence",
+          "byte_length": 5263
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "byte_length": 36964,
+      "sections": [
+        {
+          "heading": "Scope and evidence strength",
+          "byte_length": 1871
+        },
+        {
+          "heading": "Terminal application",
+          "byte_length": 5143
+        },
+        {
+          "heading": "V2 session action boundary",
+          "byte_length": 5817
+        },
+        {
+          "heading": "Terminal interaction and supporting contracts",
+          "byte_length": 11795
+        },
+        {
+          "heading": "Browser UI library",
+          "byte_length": 5374
+        },
+        {
+          "heading": "Generation, assets and source ownership",
+          "byte_length": 3101
+        },
+        {
+          "heading": "Storybook, fixtures and design records",
+          "byte_length": 2330
+        },
+        {
+          "heading": "Remaining gaps and safe use of this evidence",
+          "byte_length": 1255
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "byte_length": 18440,
+      "sections": [
+        {
+          "heading": "Orientation and ownership",
+          "byte_length": 1281
+        },
+        {
+          "heading": "Startup publishes readiness before the renderer proceeds",
+          "byte_length": 2067
+        },
+        {
+          "heading": "Persistence and recovery have several owners",
+          "byte_length": 1916
+        },
+        {
+          "heading": "Privilege is checked at each request boundary",
+          "byte_length": 1901
+        },
+        {
+          "heading": "Browser Dock operates on current tab observations",
+          "byte_length": 1344
+        },
+        {
+          "heading": "Native Dock preserves identity and uncertain outcomes",
+          "byte_length": 1474
+        },
+        {
+          "heading": "Linux workspaces and WSL have different lifetimes",
+          "byte_length": 1881
+        },
+        {
+          "heading": "Live separates readiness, capture and delivery",
+          "byte_length": 1678
+        },
+        {
+          "heading": "Executable staging and update state are separate evidence",
+          "byte_length": 1510
+        },
+        {
+          "heading": "Host adapters own platform differences and copy",
+          "byte_length": 1879
+        },
+        {
+          "heading": "Maintenance evidence retains its original limits",
+          "byte_length": 1454
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.app-session",
+      "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434,
+      "sections": [
+        {
+          "heading": "Orientation and evidence status",
+          "byte_length": 1331
+        },
+        {
+          "heading": "Composition, identity and asynchronous ownership",
+          "byte_length": 1936
+        },
+        {
+          "heading": "Durable admission, optimistic state and draft storage",
+          "byte_length": 2705
+        },
+        {
+          "heading": "Transport, liveness and canonical recovery",
+          "byte_length": 2109
+        },
+        {
+          "heading": "Permission requests and terminal boundaries",
+          "byte_length": 1528
+        },
+        {
+          "heading": "Shared rendering, files and evidence interpretation",
+          "byte_length": 2597
+        },
+        {
+          "heading": "Navigation, settings and feature controllers",
+          "byte_length": 3639
+        },
+        {
+          "heading": "Skills catalog, content and editing ownership",
+          "byte_length": 2700
+        },
+        {
+          "heading": "Host capabilities and auxiliary lifetimes",
+          "byte_length": 1381
+        },
+        {
+          "heading": "Visual resources and prescribed maintenance",
+          "byte_length": 2857
+        },
+        {
+          "heading": "Verification limits and ownership use",
+          "byte_length": 1582
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "byte_length": 21535,
+      "sections": [
+        {
+          "heading": "Orientation",
+          "byte_length": 1376
+        },
+        {
+          "heading": "Terminal lifetime and synchronized navigation",
+          "byte_length": 2260
+        },
+        {
+          "heading": "V2 actions and prompt admission",
+          "byte_length": 3319
+        },
+        {
+          "heading": "Terminal configuration, persistence and extensions",
+          "byte_length": 2353
+        },
+        {
+          "heading": "Terminal display, native integrations and simulation",
+          "byte_length": 2510
+        },
+        {
+          "heading": "Browser UI ownership, lifecycle and accessibility",
+          "byte_length": 2738
+        },
+        {
+          "heading": "Localization, direction and two theme systems",
+          "byte_length": 2248
+        },
+        {
+          "heading": "Generated products and asset provenance",
+          "byte_length": 2338
+        },
+        {
+          "heading": "Storybook, design intent and verification limits",
+          "byte_length": 2324
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715,
+      "sections": [
+        {
+          "heading": "Orientation and evidence boundaries",
+          "byte_length": 1270
+        },
+        {
+          "heading": "Launch, choose a server and identify the health decision",
+          "byte_length": 2644
+        },
+        {
+          "heading": "Reconnect without transferring work to a replacement owner",
+          "byte_length": 1950
+        },
+        {
+          "heading": "Cross renderer, preload and main with a scoped capability",
+          "byte_length": 1904
+        },
+        {
+          "heading": "Move from a visible Dock to a browser, native or guest effect",
+          "byte_length": 2073
+        },
+        {
+          "heading": "Finish capture, persistence and installation at the right boundary",
+          "byte_length": 1832
+        },
+        {
+          "heading": "Carry changes through shared UI and distribution",
+          "byte_length": 2090
+        },
+        {
+          "heading": "Verification status and remaining evidence",
+          "byte_length": 895
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.app-session",
+      "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334,
+      "sections": [
+        {
+          "heading": "Reading the handoffs",
+          "byte_length": 894
+        },
+        {
+          "heading": "Enter the intended server and workspace",
+          "byte_length": 2416
+        },
+        {
+          "heading": "Submit once, then hand the draft to its session",
+          "byte_length": 2445
+        },
+        {
+          "heading": "Recover the projection without inventing execution recovery",
+          "byte_length": 1998
+        },
+        {
+          "heading": "Answer requests without transferring server authority to the UI",
+          "byte_length": 1502
+        },
+        {
+          "heading": "Change settings and Skills under the original owner",
+          "byte_length": 2031
+        },
+        {
+          "heading": "Render and localize under caller-owned lifetimes",
+          "byte_length": 1707
+        },
+        {
+          "heading": "Route a change through its affected contracts",
+          "byte_length": 1283
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780,
+      "sections": [
+        {
+          "heading": "Orientation and accepted ownership",
+          "byte_length": 1196
+        },
+        {
+          "heading": "Terminal input becomes admission through ordered, separate operations",
+          "byte_length": 2716
+        },
+        {
+          "heading": "Ambiguous sends, live projection and request decisions keep different identities",
+          "byte_length": 2869
+        },
+        {
+          "heading": "Rendered state follows caller and resource lifetimes",
+          "byte_length": 2083
+        },
+        {
+          "heading": "Language and appearance cross app and host contracts",
+          "byte_length": 3343
+        },
+        {
+          "heading": "Generated products reach consumers through distinct maintenance paths",
+          "byte_length": 2127
+        },
+        {
+          "heading": "Change impact and verification ownership",
+          "byte_length": 1371
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+      "byte_length": 11183,
+      "sections": [
+        {
+          "heading": "Orientation",
+          "byte_length": 1224
+        },
+        {
+          "heading": "Maintenance protocol",
+          "byte_length": 6847
+        },
+        {
+          "heading": "Verification and boundaries",
+          "byte_length": 3062
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+      "byte_length": 11783,
+      "sections": [
+        {
+          "heading": "Orientation",
+          "byte_length": 1233
+        },
+        {
+          "heading": "Maintenance protocol",
+          "byte_length": 7348
+        },
+        {
+          "heading": "Verification and boundaries",
+          "byte_length": 3147
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.app-session",
+      "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+      "byte_length": 11220,
+      "sections": [
+        {
+          "heading": "Orientation",
+          "byte_length": 951
+        },
+        {
+          "heading": "Maintenance protocol",
+          "byte_length": 6636
+        },
+        {
+          "heading": "Verification and boundaries",
+          "byte_length": 3594
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.entry",
+      "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+      "byte_length": 5849,
+      "sections": [
+        {
+          "heading": "Orientation",
+          "byte_length": 951
+        },
+        {
+          "heading": "Maintenance protocol",
+          "byte_length": 3149
+        },
+        {
+          "heading": "Verification and boundaries",
+          "byte_length": 1717
+        }
+      ]
+    }
+  ],
+  "update_expectation_sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f",
+  "scope": "Mechanical reconciliation of actual semantic decisions, exact bytes, references and graph only; no runtime, consumer, CI or publication PASS."
+}

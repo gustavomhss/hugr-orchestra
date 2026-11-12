@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-s2-staging-failure/v1",
+  "recorded_at": "2026-11-11T20:47:39.422109+00:00",
+  "actual_command": "python assembly-tools/stage_final_native.py --runtime-release deliverable/evidence/final-remote-recheck-01/runtime-release.json --apply",
+  "actual_exec_session_id": 5337,
+  "actual_final_chunk_id": "4320eb",
+  "actual_exit_code": 2,
+  "returned_combined_output": "{\"status\": \"ERROR\", \"code\": \"INVALID_OR_MISSING_INPUT\", \"message\": \"[Errno 13] Permission denied: '/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/payload-kml4b26g' -> '/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/source-root/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2'\"}\n",
+  "start_time": "NOT_SEPARATELY_CAPTURED",
+  "runtime_executed": false,
+  "cas_exists": false,
+  "temporary_payload_preserved": "runtime-work/final-staging/9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b/payload-kml4b26g",
+  "observed_temporary_root_mode": "0555",
+  "observed_target_parent_mode": "0755",
+  "next_action": "Reconcile all retained prepared files against the immutable stage plan, retain the failed temporary directory, and copy identical bytes into the exclusive final destination before sealing. No source truncation or native retry."
+}

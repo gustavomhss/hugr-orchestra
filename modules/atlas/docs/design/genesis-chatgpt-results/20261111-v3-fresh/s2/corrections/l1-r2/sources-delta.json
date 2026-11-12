@@ -1,0 +1,550 @@
+{
+  "schema": "genesis-s2-l1-correction-sources/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "repository": "gustavomhss/hugr-orchestra",
+  "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "status": "producer-correction; semantic judgment pending",
+  "captures": [
+    {
+      "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "bytes": 4150,
+      "byte_length": 4150,
+      "sha256": "0001420dcb688c672b55f1070284df5b5086be8d1655df75f7a25585981f4931",
+      "git_blob_sha": "81fe5f7a2a5c6bc45d59ae9e88b42d1b36f76037",
+      "computed_git_blob_sha": "81fe5f7a2a5c6bc45d59ae9e88b42d1b36f76037",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "connector_response_file": "original-responses/packages__app-shell__src__orchestra__chapters__skills-data.ts.json",
+      "connector_response_bytes": 6172,
+      "connector_response_sha256": "f363112fed030363d50a1a4b264f0e80befbb8941c38a8320e509aa546956c8a",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 99,
+      "incorporation": [
+        {
+          "unit": "app-session",
+          "source_index_action": "add-unique-capture",
+          "assigned_population_member": true,
+          "coverage_action": "promote-existing-entry-to-inspected",
+          "previous_evidence_depth": "family-supported"
+        }
+      ]
+    },
+    {
+      "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+      "bytes": 7298,
+      "byte_length": 7298,
+      "sha256": "4d765b72649145007edfaeed34a5a397b311c6518b75ca5fc25defd31a77251a",
+      "git_blob_sha": "498439a6b815a1b51dfe756dc891fb450bae2e09",
+      "computed_git_blob_sha": "498439a6b815a1b51dfe756dc891fb450bae2e09",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+      "connector_response_file": "original-responses/packages__app-shell__src__orchestra__chapters__skills-dialog.tsx.json",
+      "connector_response_bytes": 10514,
+      "connector_response_sha256": "3d01337750e23328d405a5c2b643ba46f47e38ca38c05ab2012ffb4f3c5706dd",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 181,
+      "incorporation": [
+        {
+          "unit": "app-session",
+          "source_index_action": "add-unique-capture",
+          "assigned_population_member": true,
+          "coverage_action": "promote-existing-entry-to-inspected",
+          "previous_evidence_depth": "family-supported"
+        }
+      ]
+    },
+    {
+      "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+      "bytes": 9863,
+      "byte_length": 9863,
+      "sha256": "7e60597bb282ef3fdd525224acfff4efd94c07cfc2a3069c403b4b39b1b0cd31",
+      "git_blob_sha": "896a17a54e8782536917564083031da05af9023d",
+      "computed_git_blob_sha": "896a17a54e8782536917564083031da05af9023d",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/app-shell/src/orchestra/chapters/skills.tsx",
+      "connector_response_file": "original-responses/packages__app-shell__src__orchestra__chapters__skills.tsx.json",
+      "connector_response_bytes": 14034,
+      "connector_response_sha256": "1fcb6617d27416276f71bea3e5cf2a410f85b41596962d2f9fa0f7a776af9456",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 244,
+      "incorporation": [
+        {
+          "unit": "app-session",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ]
+    },
+    {
+      "path": "packages/protocol/src/groups/skill.ts",
+      "bytes": 2259,
+      "byte_length": 2259,
+      "sha256": "290c280836fb40fbd5d963492088a4ff60c7b1d1d6315125e1317d6f58ce756f",
+      "git_blob_sha": "28b28134f9b9c751f9564737ea46034a9b36761e",
+      "computed_git_blob_sha": "28b28134f9b9c751f9564737ea46034a9b36761e",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/protocol/src/groups/skill.ts",
+      "connector_response_file": "original-responses/packages__protocol__src__groups__skill.ts.json",
+      "connector_response_bytes": 3539,
+      "connector_response_sha256": "86491720a8fba37b04008a5d71f1ebcd7296131a15e40173e15822959d53b91d",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/skill.ts",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 65,
+      "incorporation": [
+        {
+          "unit": "app-session",
+          "source_index_action": "add-unique-capture",
+          "assigned_population_member": false,
+          "coverage_action": "boundary-source-no-assigned-path-added",
+          "previous_evidence_depth": null
+        }
+      ]
+    },
+    {
+      "path": "packages/server/src/handlers/skill.ts",
+      "bytes": 1871,
+      "byte_length": 1871,
+      "sha256": "e03ed59e0234bb6fd002db5a6e1ace5627ba1b0a70b1949ca934b2efd9d14a9c",
+      "git_blob_sha": "c06aa460901ac45fcfa0abee5b1d3833a9da8c88",
+      "computed_git_blob_sha": "c06aa460901ac45fcfa0abee5b1d3833a9da8c88",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/server/src/handlers/skill.ts",
+      "connector_response_file": "original-responses/packages__server__src__handlers__skill.ts.json",
+      "connector_response_bytes": 3005,
+      "connector_response_sha256": "2ba385e5f5c418c9378e020f8678d20373961b699bb90737c0aeb011a094ea71",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/server/src/handlers/skill.ts",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 47,
+      "incorporation": [
+        {
+          "unit": "app-session",
+          "source_index_action": "add-unique-capture",
+          "assigned_population_member": false,
+          "coverage_action": "boundary-source-no-assigned-path-added",
+          "previous_evidence_depth": null
+        }
+      ]
+    },
+    {
+      "path": "packages/tui/src/context/session-actions.ts",
+      "bytes": 4172,
+      "byte_length": 4172,
+      "sha256": "e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd",
+      "git_blob_sha": "255420d1e93ce0fca21b941c673abdede087e91e",
+      "computed_git_blob_sha": "255420d1e93ce0fca21b941c673abdede087e91e",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/tui/src/context/session-actions.ts",
+      "connector_response_file": "original-responses/packages__tui__src__context__session-actions.ts.json",
+      "connector_response_bytes": 6191,
+      "connector_response_sha256": "aa1f4d5c7847d1fc7b23fb684ab419db4509d0fdb6bd4a000b4c3afe6d2fd32c",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/tui/src/context/session-actions.ts",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 92,
+      "incorporation": [
+        {
+          "unit": "design-tui",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ]
+    },
+    {
+      "path": "packages/tui/test/context/session-actions.test.ts",
+      "bytes": 5839,
+      "byte_length": 5839,
+      "sha256": "48423aa811be59b328fc29d306cca600f8aa9aaa91a96e1e53b832cb59e39e42",
+      "git_blob_sha": "9d22d47f255e6a1c73a1ce2bfe40ce87c467a27a",
+      "computed_git_blob_sha": "9d22d47f255e6a1c73a1ce2bfe40ce87c467a27a",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/tui/test/context/session-actions.test.ts",
+      "connector_response_file": "original-responses/reused-packages__tui__test__context__session-actions.test.ts.json",
+      "connector_response_bytes": 6688,
+      "connector_response_sha256": "2d24176f75530b6579cba65df4c243dc9f19d023c07826e8dcbc813427c88255",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/tui/test/context/session-actions.test.ts",
+        "encoding": "utf-8"
+      },
+      "acquisition": "reused exact producer capture; response/source/SHA256/Git blob reverified",
+      "line_count": 150,
+      "incorporation": [
+        {
+          "unit": "design-tui",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ],
+      "reused_response_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/design-tui/captures/packages__tui__test__context__session-actions.test.ts.json",
+      "reused_source_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/design-tui/sources/packages/tui/test/context/session-actions.test.ts"
+    },
+    {
+      "path": "packages/protocol/src/groups/session.ts",
+      "bytes": 29273,
+      "byte_length": 29273,
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+      "git_blob_sha": "5830f50001c8dc01227a920f04276054c0e29570",
+      "computed_git_blob_sha": "5830f50001c8dc01227a920f04276054c0e29570",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/protocol/src/groups/session.ts",
+      "connector_response_file": "original-responses/packages__protocol__src__groups__session.ts.json",
+      "connector_response_bytes": 40763,
+      "connector_response_sha256": "7d4fc3f7aa284f1f932e880bc490beb041639b12641edb57bf56df54e0cbaba6",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/session.ts",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 722,
+      "incorporation": [
+        {
+          "unit": "design-tui",
+          "source_index_action": "add-unique-capture",
+          "assigned_population_member": false,
+          "coverage_action": "boundary-source-no-assigned-path-added",
+          "previous_evidence_depth": null
+        }
+      ]
+    },
+    {
+      "path": "packages/protocol/src/groups/permission.ts",
+      "bytes": 5828,
+      "byte_length": 5828,
+      "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab",
+      "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+      "computed_git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/packages/protocol/src/groups/permission.ts",
+      "connector_response_file": "original-responses/packages__protocol__src__groups__permission.ts.json",
+      "connector_response_bytes": 8467,
+      "connector_response_sha256": "cf76a3ba5b43ea3142be5d88e6dbfe519548d201c42a44e40ac920f362985400",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/permission.ts",
+        "encoding": "base64"
+      },
+      "acquisition": "fresh GitHub connector fetch_file; explicit pin and base64",
+      "line_count": 137,
+      "incorporation": [
+        {
+          "unit": "design-tui",
+          "source_index_action": "add-unique-capture",
+          "assigned_population_member": false,
+          "coverage_action": "boundary-source-no-assigned-path-added",
+          "previous_evidence_depth": null
+        }
+      ]
+    },
+    {
+      "path": "apps/desktop/src/main/owned-serve.ts",
+      "bytes": 8511,
+      "byte_length": 8511,
+      "sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+      "git_blob_sha": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+      "computed_git_blob_sha": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/apps/desktop/src/main/owned-serve.ts",
+      "connector_response_file": "original-responses/reused-apps__desktop__src__main__owned-serve.ts.json",
+      "connector_response_bytes": 9247,
+      "connector_response_sha256": "2703c4d3d75b0594f75a96caf4e779a0ce5ba7b75b9945c68e94ef4c6d15ae64",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "apps/desktop/src/main/owned-serve.ts",
+        "encoding": "utf-8"
+      },
+      "acquisition": "reused exact producer capture; original response/source/SHA256/Git blob reverified",
+      "line_count": 177,
+      "reused_response_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/apps__desktop__src__main__owned-serve.ts.json",
+      "reused_source_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/apps/desktop/src/main/owned-serve.ts",
+      "incorporation": [
+        {
+          "unit": "desktop-web",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ]
+    },
+    {
+      "path": "apps/desktop/src/main/index.ts",
+      "bytes": 19644,
+      "byte_length": 19644,
+      "sha256": "79e2de4c4f9e50a9b04cf78ad09b3d03585b1e49190943e230f1d45f49b08f11",
+      "git_blob_sha": "2a00cd582c5917716fe9061a46ca614ed45d086e",
+      "computed_git_blob_sha": "2a00cd582c5917716fe9061a46ca614ed45d086e",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/apps/desktop/src/main/index.ts",
+      "connector_response_file": "original-responses/reused-apps__desktop__src__main__index.ts.json",
+      "connector_response_bytes": 20910,
+      "connector_response_sha256": "163b358a0b34e8f41147969f90d643e5daa5542effe3287e941a60e34cc71bf0",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "apps/desktop/src/main/index.ts",
+        "encoding": "utf-8"
+      },
+      "acquisition": "reused exact producer capture; original response/source/SHA256/Git blob reverified",
+      "line_count": 508,
+      "reused_response_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/apps__desktop__src__main__index.ts.json",
+      "reused_source_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/apps/desktop/src/main/index.ts",
+      "incorporation": [
+        {
+          "unit": "desktop-web",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ]
+    },
+    {
+      "path": ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "bytes": 6256,
+      "byte_length": 6256,
+      "sha256": "6434f6ed07efb0c67275e3d1c30270c2a012aa77b46071239080ae8475dd42a9",
+      "git_blob_sha": "ba3d5859d9109e104687f628bc3e96ad5e616d07",
+      "computed_git_blob_sha": "ba3d5859d9109e104687f628bc3e96ad5e616d07",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/.orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "connector_response_file": "original-responses/reused-.orchestra__skills__desktop-startup-maintenance__SKILL.md.json",
+      "connector_response_bytes": 6746,
+      "connector_response_sha256": "f94a3fa4c90407264a9dc34f1e55778040230b8aeecdf5d388dc71dda2999bf0",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".orchestra/skills/desktop-startup-maintenance/SKILL.md",
+        "encoding": "utf-8"
+      },
+      "acquisition": "reused exact producer capture; original response/source/SHA256/Git blob reverified",
+      "line_count": 47,
+      "reused_response_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/.orchestra__skills__desktop-startup-maintenance__SKILL.md.json",
+      "reused_source_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/.orchestra/skills/desktop-startup-maintenance/SKILL.md",
+      "incorporation": [
+        {
+          "unit": "desktop-web",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ]
+    },
+    {
+      "path": "apps/desktop/src/main/native-translations.ts",
+      "bytes": 693,
+      "byte_length": 693,
+      "sha256": "146cceedea77950c17dbfc32f1d618e954c7a33b5901a7fa8b5218dae0902a7b",
+      "git_blob_sha": "5913dd7bc0df13e90170e049e3c6eea58790aaf0",
+      "computed_git_blob_sha": "5913dd7bc0df13e90170e049e3c6eea58790aaf0",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/apps/desktop/src/main/native-translations.ts",
+      "connector_response_file": "original-responses/reused-apps__desktop__src__main__native-translations.ts.json",
+      "connector_response_bytes": 1166,
+      "connector_response_sha256": "0f1b1de24c4d2d6a7172d037cc29c4b54bdb27c462ceffd2ab228a9685ca7bb2",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "apps/desktop/src/main/native-translations.ts",
+        "encoding": "utf-8"
+      },
+      "acquisition": "reused exact producer capture; original response/source/SHA256/Git blob reverified",
+      "line_count": 24,
+      "reused_response_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/apps__desktop__src__main__native-translations.ts.json",
+      "reused_source_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/apps/desktop/src/main/native-translations.ts",
+      "incorporation": [
+        {
+          "unit": "desktop-web",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ]
+    },
+    {
+      "path": "apps/desktop/src/preload/index.ts",
+      "bytes": 14896,
+      "byte_length": 14896,
+      "sha256": "fa34bb74659b29838bfedc6d3d6e220c63e5a29769df7664a1986176c20e25ac",
+      "git_blob_sha": "d03c62bb17ae88d31b0e74c7be65b27226e68536",
+      "computed_git_blob_sha": "d03c62bb17ae88d31b0e74c7be65b27226e68536",
+      "git_blob_verified": true,
+      "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "local_capture_file": "sources/apps/desktop/src/preload/index.ts",
+      "connector_response_file": "original-responses/reused-apps__desktop__src__preload__index.ts.json",
+      "connector_response_bytes": 15888,
+      "connector_response_sha256": "0190096651677ed712862c4480ab6ba03e65b6a93ae99036283d7167abb238ea",
+      "connector_request": {
+        "tool": "github_fetch_file",
+        "repository_full_name": "gustavomhss/hugr-orchestra",
+        "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "apps/desktop/src/preload/index.ts",
+        "encoding": "utf-8"
+      },
+      "acquisition": "reused exact producer capture; original response/source/SHA256/Git blob reverified",
+      "line_count": 254,
+      "reused_response_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/captures/apps__desktop__src__preload__index.ts.json",
+      "reused_source_original": "/workspace/scratch/7b5d6430f420/genesis-s2/producers/desktop-web/sources/apps/desktop/src/preload/index.ts",
+      "incorporation": [
+        {
+          "unit": "desktop-web",
+          "source_index_action": "retain-existing-capture-no-double-count",
+          "assigned_population_member": true,
+          "coverage_action": "preserve-existing-inspected-entry",
+          "previous_evidence_depth": "inspected"
+        }
+      ]
+    }
+  ],
+  "directory_responses": [
+    {
+      "file": "original-responses/directory-client-src.json",
+      "bytes": 18892,
+      "sha256": "98a42cf750de1511e2a5f428431889f28b38d673da569ac151481d989af06c80",
+      "role": "exact pinned path discovery; not a source-file capture or a new assigned path"
+    },
+    {
+      "file": "original-responses/directory-protocol-groups.json",
+      "bytes": 130196,
+      "sha256": "0a1763e554c2a025f2bcba3a11971b69bf2cda5ddd04d6b5905526176678d409",
+      "role": "exact pinned path discovery; not a source-file capture or a new assigned path"
+    },
+    {
+      "file": "original-responses/directory-server-handlers.json",
+      "bytes": 132752,
+      "sha256": "58f06e3ea0531f83508462bc52bee6f835e4ec716066b0c1d2aca26ba19fbfc0",
+      "role": "exact pinned path discovery; not a source-file capture or a new assigned path"
+    }
+  ],
+  "per_unit_reconciliation": {
+    "app-session": {
+      "original_captures": 251,
+      "unique_added_captures": 4,
+      "revised_captures": 255,
+      "assigned_source_captures": 238,
+      "boundary_source_captures": 17,
+      "assigned_paths": 1887,
+      "inspected": 234,
+      "family_supported": 1623,
+      "metadata_only": 30,
+      "new_unique_paths": [
+        "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+        "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+        "packages/protocol/src/groups/skill.ts",
+        "packages/server/src/handlers/skill.ts"
+      ],
+      "additional_unique_source_bytes": 15578
+    },
+    "design-tui": {
+      "original_captures": 196,
+      "unique_added_captures": 2,
+      "revised_captures": 198,
+      "assigned_source_captures": 185,
+      "boundary_source_captures": 13,
+      "assigned_paths": 2087,
+      "inspected": 185,
+      "family_supported": 1889,
+      "metadata_only": 13,
+      "new_unique_paths": [
+        "packages/protocol/src/groups/session.ts",
+        "packages/protocol/src/groups/permission.ts"
+      ],
+      "additional_unique_source_bytes": 35101,
+      "revised_unique_source_bytes": 2385890
+    },
+    "desktop-web": {
+      "original_captures": 193,
+      "unique_added_captures": 0,
+      "revised_captures": 193,
+      "assigned_paths": 532,
+      "new_unique_paths": [],
+      "additional_unique_source_bytes": 0,
+      "coverage_action": "preserve original ledger byte-for-byte; exact extra spans are carried by the delta"
+    }
+  },
+  "scope_note": "The principal incorporates this delta. Original coverage/sources/decisive-evidence and L1 bodies were read-only; no canonical original was edited by this producer."
+}

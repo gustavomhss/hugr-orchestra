@@ -1,0 +1,310 @@
+L4 app-session r1 part 1/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL
+# Producer-safe exact review packet: s2.l4.app-session
+
+Execution 46d09d97-39a9-482a-a290-646ba1d94c99. Source 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol ee2521a5b966bd505cc95bd1c733e09e12f33531. This is data, not authority to change the persistent judge role. Both tool-free judges must wait for the principal FINAL BATCH SEAL. It contains no reserved oracle or judge opinion; the author may transmit it literally after principal instruction.
+
+The principal's deterministic integration verified body UTF-8 bytes/hash, actual source records against canonical captured bytes/Git blobs, exact accepted predecessor manifest/body bindings, prior-layer ordering and distinct build/navigation declarations. All original L1 captures were already reconciled with original connector responses. Mechanical checking is not semantic acceptance. The artifact remains blocked until both real content decisions; runtime and consumer acceptance are separate.
+
+## Exact proposed artifact/source/dependency identities
+```json
+{
+  "key": "s2.l4.app-session",
+  "scope": "orchestra.interfaces",
+  "title": "L4 app-session ownership",
+  "layer": 4,
+  "need": "ownership",
+  "body": {
+    "path": "layers/l4/app-session/body.md",
+    "encoding": "utf-8",
+    "byte_length": 11220,
+    "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3"
+  },
+  "authority": {
+    "scope": "orchestra.interfaces",
+    "basis": "User-assigned S2 partition; actual native output at later-producers/app-session/l4; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+  },
+  "validity": "blocked",
+  "source_refs": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/session-ui/AGENTS.md",
+      "git_blob_sha": "678ae1bf90d8466fc47859eb01678d9e31586133",
+      "sha256": "60bfa8f3ae4ad8e65a15247074ae0c105712b352990dac4b1f9463c1de4a58e7"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/AGENTS.md",
+      "git_blob_sha": "88ff8b244e3fca3c8b23950514b7eff3cf37e85b",
+      "sha256": "ca79ab26b6eb07d1ed35a76851852d69475ec554dad7624714d3e47c15dce057"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/e2e/AGENTS.md",
+      "git_blob_sha": "2e24eecc8ccea104922263bf6c7ccc8e93da24ec",
+      "sha256": "87f2775fafa79874744ead17751b8df5c6b74b38ea66e70e02beeeeba1a121f9"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/e2e/performance/AGENTS.md",
+      "git_blob_sha": "e69c91a98fc168717cfc5663f0dfdf5a01723153",
+      "sha256": "f3139eb2927c5b6758955772ea1dd42ba9d5403b785f6e09b2c5cc858e73e0f1"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/agent-screen-maintenance/SKILL.md",
+      "git_blob_sha": "a24017fc867e367890e4212b28dcc5bb443abced",
+      "sha256": "0363fb0ac52524525a3fccf3a5e5ba15d94174f245f3fd48c21adfe8712487ed"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/package.json",
+      "git_blob_sha": "eb09ebc7c07ed519482aeafdd5e592bf8223a269",
+      "sha256": "26b413c9fb46bf04bbeeb6d7a62ef77372c7acff2fec5cfb9ed8ad7cb8863352"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/session-ui/package.json",
+      "git_blob_sha": "8ee2e7941a4ee1e053f97267ac1bf4db3fbfab83",
+      "sha256": "42b168226b976a8de78f1e02d8051328f66d377b9c64b249241c8435ad63b5ba"
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+    "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f"
+  },
+  "build_dependencies": [
+    {
+      "key": "s2.l3.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "same_package": true
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "same_package": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "same_package": true
+    },
+    {
+      "key": "s2.l1.app-session",
+      "same_package": true
+    }
+  ],
+  "navigation": [
+    "s2.l4.desktop-web",
+    "s2.l4.design-tui",
+    "s2.l4.entry"
+  ],
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+    "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/app-session/response.md",
+    "sha256": "343226f46bd885afa3c0773adf679e529f6ed7107ba0fbdf851e5646b7a6d293"
+  }
+}
+```
+
+## Exact complete body
+BEGIN EXACT BODY s2.l4.app-session
+# App/session operational maintenance
+
+## Orientation
+
+Use this protocol for changes or failures in the shared app/session surface at source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`. It builds on accepted L1–L3, preserving the app unit's 59-family scope and representative depth. Desktop main/preload, TUI actions and reusable UI retain their own owners; rendering them in the app does not transfer their authority. [Accepted basis: `s2.l3.app-session` § “Reading the handoffs”; `s2.l3.desktop-web` § “Orientation and evidence boundaries”; `s2.l3.design-tui` § “Orientation and accepted ownership”.]
+
+The protocol is **maintenance guidance inferred from static evidence**. Explicit **instructions** below come from captured repository guidance. Existing assertions are verification candidates, not passing results. This campaign performs documentation work only. The source, dependency and evidence files bind every route to accepted bodies or pinned captures.
+
+## Maintenance protocol
+
+Start with the trigger and retain its identities: source revision, host/platform, connection key, transport-credential generation without disclosing secrets, server/directory scope, session or draft/tab, request ID, policy revision and callback generation. Distinguish a never-dispatched action, an ambiguous response, admitted input, visible user turn and completed provider work. For an exact retry, keep session, encoded prompt and delivery equivalent; preserve the separate context-projection comparison. A returned route value cannot revive an expired A→B→A callback. [Basis: `s2.l3.app-session` §§ “Enter the intended server and workspace”, “Submit once, then hand the draft to its session”.]
+
+Use this ownership map before editing. Paths beginning `A/` expand to `packages/app-shell/`; `S/` expands to `packages/session-ui/` at the pinned revision.
+
+| Trigger | Precise edit owner and preserved boundary | Evidence to deepen and stopping condition |
+|---|---|---|
+| Duplicate first send, lost edits, policy failure | `A/src/components/prompt-input/submit.ts` and `A/src/pages/session/session-ownership.ts`: preserve captured owner, serialized policy acknowledgment, action/revision request identity and unsent-edit handoff. | Compare dispatch/receipt and canonical admission before retry. Delete only never-dispatched, server-confirmed-empty sessions. An ambiguous response cannot justify a fresh request or deletion. |
+| Reconnect, stale transcript, credential change | `A/src/context/global.tsx`, `A/src/context/session-recovery.ts`, `A/src/utils/server-health.ts`: separate navigation key, disposable transport and recovery generation. | Identify the failing health predicate, heartbeat activity, canonical reread and policy fence. SSE lacks replay IDs; reconnect is not provider continuation. |
+| Settings rollback or malformed Skills data | `A/src/components/settings-v2/general-controllers.ts`; `A/src/orchestra/chapters/skills-data.ts`, `skills.tsx`, `skills-dialog.tsx`: retain scope, whole-array decode, path/mtime and originating-dialog ownership. | Preserve unavailable/error/empty distinctions. Leaving suppresses UI completion without cancelling issued writes. Lexical editability cannot establish filesystem authorization; deepen the service before claiming it. |
+| Permission/question or terminal mismatch | `A/src/context/permission.tsx`, `permission-auto-respond.ts`, `terminal.tsx`; `A/src/pages/session/composer/session-request-tree.ts`, `session-question-dock.tsx`: preserve owning server/session/request and workspace terminal identity. | Check ancestry, explicit denial, pending-response failure and connection ticket/cursor. UI replies do not prove authorization. Agent PTY changes belong to the prescribed sandbox-wrapped Core `AgentTerminal.run` path. |
+| Rendering, copy or palette regression | `S/src/components/markdown.tsx`, `markdown-worker-queue.ts`; app language/palette owners and `A/script/orchestra-palettes.ts`. | Preserve final sanitization, worker/caller disposal, ordered view state and generated-input ownership. Parser configuration, a screenshot or a generated header cannot establish safety, accessibility or provenance. |
+
+The table's observations come from `s2.l3.app-session` §§ “Submit once, then hand the draft to its session”, “Recover the projection without inventing execution recovery”, “Answer requests without transferring server authority to the UI”, “Change settings and Skills under the original owner”, “Render and localize under caller-owned lifetimes”; settings ownership is in `s2.l2.app-session` § “Navigation, settings and feature controllers”. Leaf ownership and palette/test routes are in `s2.l1.app-session` §§ “Requests, terminals and auxiliary lifetimes”, “Rendering, evidence and reusable utility contracts”, “Assets, localization and verification evidence”. The PTY requirement is **instruction**, `AGENTS.md:182–192`.
+
+For a contract change, trace Schema → Protocol/Server → generated Client → app adapter → session/UI consumers. **Instructions:** keep browser-safe serializable contracts in Schema and runtime services with their domain; do not tighten legacy ID validators without a compatibility/migration decision. Public Protocol or Server `HttpApi` changes require `bun run generate` from `packages/client`, with review of generated diffs instead of hand-editing either generated tree. Client runtime may depend on Schema/Protocol, never Core/Server. [Sources: `packages/schema/AGENTS.md:3–9,71–83`; `AGENTS.md:1–2`.]
+
+Include the TUI consumer when changing shared prompt contracts: its agent/model/synthetic/prompt operations are ordered but non-atomic, and its wrapper does not expose the protocol retry controls. Include the desktop owner when failure concerns startup, preload capability or native persistence: local HTTP-success readiness differs from WSL's authenticated health checks; a healthy remote fallback is not local-child recovery. Do not hide the recorded stable-exit restart discrepancy in a shared-app workaround. [Basis: `s2.l3.design-tui` § “Terminal input becomes admission through ordered, separate operations”; `s2.l3.desktop-web` § “Launch, choose a server and identify the health decision”.]
+
+**Instructions for presentation changes:** use `language.t`/`language.plural`, keep existing English text and keys byte-for-byte, and keep plural/fallback logic in shared language APIs. Verify terminology with the prescribed external corpora when translating. Agent-screen work also preserves stable seat IDs, excludes secrets, defers large Atlas reads beyond roster paint and updates `docs/guides/agent-screen.md`. [Sources: `packages/app-shell/AGENTS.md:23–34`; `packages/session-ui/AGENTS.md:3–7`; `.orchestra/skills/agent-screen-maintenance/SKILL.md:8–41`.]
+
+Update the real generator input and affected outputs together: app palette, UI tokens/sprites and desktop/TUI schemas have different producers. Preserve authored CSS and asset provenance limits. A user-facing change still updates its guide; maintenance skills/docs remain repository-only and must not become shipped seat skills. When a factual contract changes, refresh affected source pins, explanations and downstream build dependencies; navigation alone is not factual evidence. [Basis: `s2.l1.app-session` § “Assets, localization and verification evidence”; `s2.l3.design-tui` § “Generated products reach consumers through distinct maintenance paths”; **instruction:** `AGENTS.md:146–154`; dependency-refresh recommendation is an inference.]
+
+## Verification and boundaries
+
+For a future authorized code change, select focused regression evidence by failure boundary. Admission/policy uses `packages/app-shell/src/components/prompt-input/submit-admission.suite.ts`; owner/credential changes use `packages/app-shell/test-browser/prompt-admission-owner.suite.ts` and `server-transport.test.ts`. Health, permission ancestry and terminal scope have the corresponding `src/utils/server-health.test.ts`, `src/context/permission-auto-respond.test.ts` and `src/context/terminal.test.ts` under app-shell. Worker disposal uses `packages/session-ui/src/components/markdown-worker-queue.test.ts`. Delayed admission/handoff has `packages/app-shell/e2e/regression/draft-admission-handoff.spec.ts`. These are accepted assertion scopes, not complete integration or runtime evidence. [Basis: `s2.l1.app-session` § “Assets, localization and verification evidence”.]
+
+**Prescribed gates, not executed here:**
+
+- From the repository root, `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`. Confirm the runner's package selector rather than guessing it from a display name. Exact files run in given order; directory arguments are substring filters. The runner uploads a working-tree snapshot to a temporary branch, so this no-remote-write campaign cannot invoke it. Tests belong on GitHub Actions; root reserves any local-test exception to the owner, and this campaign has none. Full-suite cadence is per epic, with change-scoped tests per unit. [`AGENTS.md:156–179`.]
+- Run `bun typecheck` from affected package directories, specifically `packages/app-shell` and/or `packages/session-ui`; their captured scripts invoke `tsgo -b` and `tsgo --noEmit`. Do not substitute direct `tsc`. Run `bun run check:guards --base origin/dev` before declaring an authorized product change complete. [`AGENTS.md:194–205`; `packages/app-shell/package.json`; `packages/session-ui/package.json`.]
+- Before session/timeline edits, record a production benchmark baseline; compare afterward. Benchmark serially, retain raw diagnostics and assert scenario/metric completion without machine-dependent thresholds. `test:bench` includes Bun tests and Playwright; its manual status does not waive the root test policy. Resolve an authorized execution route before claiming this obligation satisfied. [`packages/app-shell/AGENTS.md:1–4`; `packages/app-shell/e2e/performance/AGENTS.md`; `packages/app-shell/package.json`.]
+- Before editing/reviewing E2E tests, read the package's required official Playwright guides. Assert required UI state and exact identities; register waits before triggers, avoid timing sleeps and never retry state-changing actions. Manual benchmarks stay outside normal discovery. [`packages/app-shell/e2e/AGENTS.md:1–22`.]
+
+Stop before restarting the app/server, blindly reissuing an uncertain mutation, claiming post-crash provider continuation, or expanding a presentation check into an OS/security/accessibility verdict. App guidance forbids agent restarts; root guidance requires separate continuation design. Keep browser/native draft durability, IPC coverage, terminal buffering, SkillV2 enforcement, focus/RTL/translation and asset gaps explicit. Report which authorized gate actually ran and its evidence; none ran here. Navigate to `s2.l4.desktop-web`, `s2.l4.design-tui` or `s2.l4.entry` for their declared common headings. [Sources: `packages/app-shell/AGENTS.md:6–8`; root `AGENTS.md:199–216`; `s2.l2.app-session` § “Verification limits and ownership use”; accepted L3 boundary sections above.]
+END EXACT BODY s2.l4.app-session
+
+## Exact decisive evidence and predecessor mapping
+# Decisive evidence for s2.l4.app-session
+
+## Evidence status
+
+Source revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`. The L4 contribution is operational prescription derived from accepted L1–L3: trigger, identity checks, edit owner, deepening evidence, stop boundary and update consequences. New direct precision consists of attributed current maintenance instructions and declared package typecheck/benchmark scripts, not new implementation behavior or runtime findings. This producer record gives no semantic verdict. All source instructions and declared scripts remain unexecuted.
+
+## Accepted predecessor identities
+
+| Key | Body path relative to deliverable | SHA256 | Bytes |
+|---|---|---|---:|
+| `s2.l3.app-session` | `layers/l3/app-session/body.md` | `7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7` | 14334 |
+| `s2.l3.desktop-web` | `layers/l3/desktop-web/body.md` | `fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e` | 14715 |
+| `s2.l3.design-tui` | `layers/l3/design-tui/body.md` | `cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730` | 15780 |
+| `s2.l2.app-session` | `layers/l2/app-session/body.md` | `302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7` | 24434 |
+| `s2.l1.app-session` | `layers/l1/app-session/l1.md` | `67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e` | 42047 |
+
+All three accepted-layer manifests were read and byte-verified; dependencies.json records their exact dispatched hashes. Permitted manifest review metadata was not followed. No L4 body is a factual predecessor.
+
+## Section-to-evidence map
+
+### Orientation
+
+Accepted static scope and ownership; protocol prescriptions are maintenance inferences, not product execution.
+
+- `s2.l3.app-session` § “Reading the handoffs”.
+- `s2.l3.desktop-web` § “Orientation and evidence boundaries”.
+- `s2.l3.design-tui` § “Orientation and accepted ownership”.
+
+### Maintenance protocol
+
+Trigger/owner/stop map synthesizes accepted failure boundaries. Exact current source instructions add contract, naming, localization, codegen and documentation obligations. Rebuild/update consequences are recommendations, not claimed Atlas runtime automation.
+
+- `s2.l3.app-session` § “Enter the intended server and workspace”.
+- `s2.l3.app-session` § “Submit once, then hand the draft to its session”.
+- `s2.l3.app-session` § “Recover the projection without inventing execution recovery”.
+- `s2.l3.app-session` § “Answer requests without transferring server authority to the UI”.
+- `s2.l3.app-session` § “Change settings and Skills under the original owner”.
+- `s2.l3.app-session` § “Render and localize under caller-owned lifetimes”.
+- `s2.l2.app-session` § “Navigation, settings and feature controllers”.
+- `s2.l1.app-session` § “Requests, terminals and auxiliary lifetimes”.
+- `s2.l1.app-session` § “Rendering, evidence and reusable utility contracts”.
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+- `s2.l3.design-tui` § “Terminal input becomes admission through ordered, separate operations”.
+- `s2.l3.design-tui` § “Generated products reach consumers through distinct maintenance paths”.
+- `s2.l3.desktop-web` § “Launch, choose a server and identify the health decision”.
+
+### Verification and boundaries
+
+Existing test paths/assertion scopes are accepted L1 evidence. Direct package scripts and current instructions specify future gates. Test-runner package-selector resolution and authorized benchmark execution remain unresolved; no guessed concrete invocation or performed gate is asserted.
+
+- `s2.l1.app-session` § “Assets, localization and verification evidence”.
+- `s2.l2.app-session` § “Verification limits and ownership use”.
+- `s2.l3.app-session` § “Route a change through its affected contracts”.
+- `s2.l3.desktop-web` § “Verification status and remaining evidence”.
+- `s2.l3.design-tui` § “Change impact and verification ownership”.
+
+## Bounded exact source excerpts
+
+Each block preserves complete UTF-8 excerpt bytes including its final newline. Hashes below identify excerpts; sources.json identifies full captures.
+
+### E01: AGENTS.md:160–166
+
+Attributed remote-test command and snapshot-write implications. Its owner-only local exception is not authorized in this campaign.
+
+Excerpt SHA256 `f73cdebf400dd09e83700a6a890e30ae7d9e609df5d2b8ee2b1e2217d325dd32`; 2187 bytes.
+
+```text
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
+  - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
+  - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
+  - A run takes a few minutes: give the shell call a long timeout or run it in the background.
+  - A Python package (a `requirements-dev.txt` and no `package.json`) runs pytest instead. In a package with both, such as `modules/relay`, naming only `.py` files runs pytest, for example `bun run test:ci relay tests/test_authoring.py`, and anything else runs `bun test`; `-t` becomes pytest's `-k`.
+  - The omni positive control (`script/test-omni-control.ts`) prints one `omni positive control:` line per run, and `test:ci` fails a job without it or whose verdict is neither `pass` nor `not applicable`. Full lanes and whole-package `test:ci` runs expect every run to spawn through omni; a narrower `test:ci` run (`ORCHESTRA_OMNI_CONTROL=declared`, derived from the request) expects it only from tests that declared it. A test that must spawn through omni calls `expectSpawn(import.meta.path)` from `packages/core/test/fixture/omni-expect.ts` in its body, before it spawns; it then fails unless it made an omni spawn of its own. `packages/core/test/omni-expect-guard.test.ts` requires the call in test files that import omni's spawn surface. `test:ci` accepts only `1` or `strict` for `--env ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`: `0` or a typo would run the tests on legacy with the control off. Legacy rollback runs only in test.yml's named lanes.
+  - A local `bun test` stops with a pointer to `test:ci` (`script/test-guard.ts`). Only the owner may allow a local run, with `ORCHESTRA_LOCAL_TESTS=1`.
+```
+
+### E02: AGENTS.md:175–179
+
+Attributed change-scoped versus epic CI cadence and gate-reporting distinction.
+
+Excerpt SHA256 `a7559450c128d291de1974f6e21f105b39409e3c3c58f0e703b8de11d930d903`; 380 bytes.
+
+```text
+## CI Cadence
+
+- The full suite runs once per epic, not per unit of work. Gate each unit with change-scoped tests through `bun run test:ci` and a local package typecheck.
+- To run CI, add the `epic` label to the epic PR (remove and re-add it to rerun) or dispatch the workflow manually. Pushes and unlabeled PRs run nothing.
+- A local green is not a CI green; say which gate ran.
+```
+
+### E03: AGENTS.md:194–205
+
+Attributed guard, restart boundary and package-local typecheck rules; none executed.
+
+Excerpt SHA256 `c297e5d83bc49bbb8b9b2ebfe0092931750c5fc716168d10f636d47e8ff2446d`; 674 bytes.
+
+```text
+## Guardrail
+
+- Before calling a change done, run `bun run check:guards --base origin/dev`; CI runs the same rules on every PR. Load the `guardrail-usage` skill to read a finding.
+- Fix the finding. Use `guardrail-ignore: <rule id> <reason>` only where the rule's `clearedBy` allows it, and apply a `guardrail-approved` label only if you are Maestro: any other agent asks Maestro, who decides.
+
+## Local Runtime
+
+- You may be running inside the Orchestra desktop app or its local server. Do not stop or restart either; ask the owner when a restart is needed.
+
+## Type Checking
+
+- Always run `bun typecheck` from package directories (e.g., `apps/cli`), never `tsc` directly.
+```
+
+### E04: packages/app-shell/AGENTS.md:1–8
+
+Attributed priorities, mandatory before/after production benchmark and strict app/server no-restart instruction.
+
+Excerpt SHA256 `2b184427fbfa30f512f1aba9c9e15be2111318a1c6c8eca2b793520188af48f7`; 272 bytes.
+
+```text
+## Priorities
+
+- Prioritise, in this order: stability, simplicity, performance.
+- Before changing session or timeline code, record a production benchmark baseline and compare it after the change.
+
+## Debugging
+
+- NEVER try to restart the app, or the server process, EVER.
+```
+
+### E05: packages/app-shell/e2e/AGENTS.md:8–16
+
+Attributed observable-state, exact-identity and single-mutation E2E discipline; no E2E test was authored or run.
+
+Excerpt SHA256 `e6506595d36c4b0657470d03578abf41dbb706226594ec26f573286356b1962e`; 1200 bytes.
+
+```text
+- Test user-visible behavior with isolated, deterministic data and scoped, unique locators.
+- Prefer role, label, text, and explicit test-contract locators. Do not use `.first()` or `.last()` merely to silence strictness errors.

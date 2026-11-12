@@ -1,0 +1,72 @@
+{
+  "kind": "documentation-artifact mechanical checks only; no semantic verdict or product test",
+  "unit": "s2.l3.app-session",
+  "dispatch": {
+    "path": "deliverable/requests/l3-app-session-dispatch.md",
+    "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20",
+    "exact_bytes_verified": true
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    }
+  ],
+  "accepted_body_count": 4,
+  "accepted_body_hashes_and_lengths_verified": true,
+  "source_capture_count": 13,
+  "source_sha256_and_git_blob_identities_verified": true,
+  "dependency_partition_and_predecessor_headings_checked": true,
+  "body": {
+    "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+    "byte_length": 14334,
+    "whitespace_word_count": 1702,
+    "level_two_section_count": 8,
+    "sections": [
+      {
+        "heading": "Reading the handoffs",
+        "byte_length": 894
+      },
+      {
+        "heading": "Enter the intended server and workspace",
+        "byte_length": 2416
+      },
+      {
+        "heading": "Submit once, then hand the draft to its session",
+        "byte_length": 2445
+      },
+      {
+        "heading": "Recover the projection without inventing execution recovery",
+        "byte_length": 1998
+      },
+      {
+        "heading": "Answer requests without transferring server authority to the UI",
+        "byte_length": 1502
+      },
+      {
+        "heading": "Change settings and Skills under the original owner",
+        "byte_length": 2031
+      },
+      {
+        "heading": "Render and localize under caller-owned lifetimes",
+        "byte_length": 1707
+      },
+      {
+        "heading": "Route a change through its affected contracts",
+        "byte_length": 1283
+      }
+    ],
+    "all_sections_under_16000_bytes": true,
+    "whole_body_under_64000_bytes": true
+  },
+  "literal_excerpt_count": 9,
+  "literal_excerpt_readback_hashes_verified": true,
+  "json_outputs_parse_checked": true,
+  "product_tests_executed": false,
+  "remote_writes_executed": false,
+  "pending_l3_peer_bodies_used": false
+}

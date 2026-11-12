@@ -1,0 +1,220 @@
+{
+  "schema": "genesis-s2-operator-tools-preservation/v1",
+  "recorded_at": "2026-11-11T20:58:43.475732+00:00",
+  "archive_path": "archives/continuation-operator-tools.zip",
+  "sha256": "25d1b604977002d2f90aca75d4fe4113feb7edbb7de6740ef8a370e3d5b908ee",
+  "byte_length": 871294,
+  "files": [
+    {
+      "path": "accept_layer.py",
+      "sha256": "9dac8e7def1d633798f6f235819d85c6fdc7c00786b9bc4556c5fafd993030bc",
+      "byte_length": 4254
+    },
+    {
+      "path": "assembly-tools/README.md",
+      "sha256": "8f312eeaf03e8b00ddd778e808c6a5d1827ec502417f122836f914c122d26030",
+      "byte_length": 7299
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-01/command.json",
+      "sha256": "26502041fb421ca575934c291af0f04c00aed660624b6fbd7916da8e7ada9853",
+      "byte_length": 672
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-01/inventory/prepare-request.json",
+      "sha256": "82fd464904a5bd3a4ac62444c556d4f341328206663d8e5b133aa5cf8fd7bfe1",
+      "byte_length": 1597
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-01/inventory/staging-plan.json",
+      "sha256": "b74a8793360ac0d9d5bbef6906fdaf9b842891c4d8aa43cda04f9664bdf4164d",
+      "byte_length": 2277031
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/audited-native-package.json",
+      "sha256": "32b6cba13b3f4c5c6bb3e068ddda2c2aa41fcacab7883da51ee6255f07ce0270",
+      "byte_length": 275069
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/audited-stage_final_native.py",
+      "sha256": "7444339116752f208b0043c99e0b6ee52d3a13bf90ccc6887bc993c3dc46d2d8",
+      "byte_length": 30238
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/command.json",
+      "sha256": "0f2e68a15eb6f30b6c881742d74f7b8a636f91b78f75bc018612539e9f96f689",
+      "byte_length": 815
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/inventory/prepare-request.json",
+      "sha256": "ebc6522f03eb0a5484d2a1e87c52af13182354507ad323863adaedbd8487b221",
+      "byte_length": 1597
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/inventory/staging-plan.json",
+      "sha256": "79d93df51807e8268d7133bffb27d2aaea4a5f6c15aaf276f3df7028a134d36a",
+      "byte_length": 2690668
+    },
+    {
+      "path": "assembly-tools/final-staging-inspection-02/prepare-execution-receipt-template.json",
+      "sha256": "23b02928a10beb09c7173531313fd9ce0afcb2ea21675f1708c4df65d061c909",
+      "byte_length": 1143
+    },
+    {
+      "path": "assembly-tools/final-staging-receipt.json",
+      "sha256": "717a29e8c503f389527db45eca697556ed59ae6e3bc426bea09bbafb46267610",
+      "byte_length": 2488
+    },
+    {
+      "path": "assembly-tools/final-staging-report.md",
+      "sha256": "39e91c612a2d65eb19df52207e31c0694bf2908a6a13b07106904e11b4485001",
+      "byte_length": 2692
+    },
+    {
+      "path": "assembly-tools/final-staging-request.md",
+      "sha256": "dec183c5b552c8c8400246de02979ff9c54390202e619d65e0a1606d1b83f5e5",
+      "byte_length": 2254
+    },
+    {
+      "path": "assembly-tools/final-staging-response.md",
+      "sha256": "c813553b57cbd36c8555f5c3584d4e35ac3559669ff609d1e60bb80b2d06ec22",
+      "byte_length": 1890
+    },
+    {
+      "path": "assembly-tools/final_staging.md",
+      "sha256": "1aa3c25adba557b55b1fce3b3d196d4d2c0480381ae61dcc89cce5d250e197c4",
+      "byte_length": 7570
+    },
+    {
+      "path": "assembly-tools/integrate_native_layer.py",
+      "sha256": "664bbd0c1be81d9ec8606eb6a8f8909cb8434c1e17be3114c3ad1165750ff918",
+      "byte_length": 24994
+    },
+    {
+      "path": "assembly-tools/prepare_l3_design_delta_review.py",
+      "sha256": "6ad213082f46bfe68a844472ea705a682338f7a54b132bd259536620ad3ab431",
+      "byte_length": 5257
+    },
+    {
+      "path": "assembly-tools/reconcile_final_staging.py",
+      "sha256": "0a9a585b7e2c84dda609761b7172f8d5f560570eb2eb35d9a8124cbd0be0a59f",
+      "byte_length": 5706
+    },
+    {
+      "path": "assembly-tools/request.md",
+      "sha256": "36f082e32041d43ed9d87000b384ad6b7fbeab173051adce4b874be1bed0c668",
+      "byte_length": 2519
+    },
+    {
+      "path": "assembly-tools/response.md",
+      "sha256": "a42aee19506785fbb17b81a26b94bcf21a1585fe7f3232b080115237ac4123b7",
+      "byte_length": 1525
+    },
+    {
+      "path": "assembly-tools/stage_final_native.py",
+      "sha256": "7d8170d2eefc4ff3c78769e22cb504ecf0235d29ec51900ec4a06ba459701dff",
+      "byte_length": 30663
+    },
+    {
+      "path": "assembly-tools/verification.json",
+      "sha256": "3622797b4270db84be6dae68e54e7693751e1215ee584629ef91f9c1a64cbc0d",
+      "byte_length": 683
+    },
+    {
+      "path": "closure-work/closure-review-tools/build_closure_review_packet.py",
+      "sha256": "77ab29f2a047b1e1cd025bcd84d52c94308440bcdd5a56387cd3df971aa51644",
+      "byte_length": 22054
+    },
+    {
+      "path": "closure-work/closure-review-tools/root-seal-request.template.md",
+      "sha256": "1c5536f66fc60521f8b9a47e9154ba0ed7aae5475f960d70302da5eafb53df99",
+      "byte_length": 5371
+    },
+    {
+      "path": "closure-work/closure-review-tools/usage.md",
+      "sha256": "ab04461fd90fcc5e001863b190b3422313f93e903f24b36d443388654de80768",
+      "byte_length": 6355
+    },
+    {
+      "path": "closure-work/render_final_work.py",
+      "sha256": "63d2f8a28747a562e9d78cefd5b21ce93321ffb221bbae778db2bc3c0853d30f",
+      "byte_length": 46710
+    },
+    {
+      "path": "closure-work/renderer-usage.md",
+      "sha256": "726c88e81529c9b9fd24b0eb0653e69b2387d3cfef00ace331e731d8f26c6d13",
+      "byte_length": 5785
+    },
+    {
+      "path": "collect_layer_decisions.py",
+      "sha256": "a902eeb46e41cdfe9a635361b6779849ba5bca82c5a22b2d6d69d3901cdc91ef",
+      "byte_length": 3365
+    },
+    {
+      "path": "finalize_semantic_package.py",
+      "sha256": "bc435a2a204fca87b269af80f6d6ccd723fb29ac2d63e141007921ee1347aaf8",
+      "byte_length": 6768
+    },
+    {
+      "path": "integrate_l3_design_r2.py",
+      "sha256": "7e737a73675ce0c5267e1bfbcf7323dc307d6f98988ea8927e717e2d09a0aa6b",
+      "byte_length": 8077
+    },
+    {
+      "path": "integrate_l4_entry_r2.py",
+      "sha256": "1d3b1764f649d8d11d27b749acb1bf37a6207b2788289ef466af9f6a84127be3",
+      "byte_length": 8515
+    },
+    {
+      "path": "make_layer_dispatches.py",
+      "sha256": "d8c99eab645e073cce4702f008425802b9b47b28ceee90ee145e135c7eb8850a",
+      "byte_length": 6788
+    },
+    {
+      "path": "merge_l1_correction.py",
+      "sha256": "ee4423c7f8a083b79edc8297157ce87134e4fb6e62f4b302174646874cc5141c",
+      "byte_length": 6457
+    },
+    {
+      "path": "prepare_l1_review.py",
+      "sha256": "b0e08241410d228f828c5a662906c101579ccdce868243683d7f2495e40767e7",
+      "byte_length": 4777
+    },
+    {
+      "path": "prepare_l1_review_r2.py",
+      "sha256": "4a427ab4a289bd8b9be7a396695d2d228cac75ee7653b896b4cf267856e287ff",
+      "byte_length": 4784
+    },
+    {
+      "path": "prepare_later_review.py",
+      "sha256": "7488a0a1be825921aebc03ba3eed5adb1529c525d5e496e873d729df028c7651",
+      "byte_length": 3781
+    },
+    {
+      "path": "preserve_later_transport.py",
+      "sha256": "3750ef952142c7394d9221fae8dd3dadb13ecc0999a7056b062e935e519d015b",
+      "byte_length": 2759
+    },
+    {
+      "path": "runtime-work/prepare-capture-support/capture_native_prepare.py",
+      "sha256": "37d663ce76b0acb0f73d902bcf12e3d0c0fd3e1e6cc85b62ea141ee3c5a22f3e",
+      "byte_length": 17852
+    },
+    {
+      "path": "runtime-work/prepare-capture-support/preparation-receipt.json",
+      "sha256": "4bf36705514b6a843a891ae823b069e469610c31270155c05cda8cf712990b60",
+      "byte_length": 824
+    },
+    {
+      "path": "runtime-work/prepare-capture-support/usage.md",
+      "sha256": "88888b87b999a95a0ca9417c70124a458185b0474fa0ce0571f403f543851d64",
+      "byte_length": 4186
+    },
+    {
+      "path": "verify_package.py",
+      "sha256": "8c1ab3107a518876ecaf1180c928fa3f982fe1dedff9200a34160631e02022bd",
+      "byte_length": 4650
+    }
+  ],
+  "scope": "Exact current operator/assembly/closure/capture code and usage documents; no claim that an uninvoked helper ran."
+}

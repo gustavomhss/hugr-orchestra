@@ -1,0 +1,164 @@
+    "consumer_implications": "Widget resolves the current route/tab target and composes existing server, prompt, file and transcript providers for the pocket.",
+    "maintenance_implications": "Keep late native notifications tied to the current report, explicit retry state and server/directory session-storage keys; dismiss/snooze invoke optional native bridge.",
+    "limits": "Native scanning implementation and complete widget markup were not inspected. No Janitor report or session was generated.",
+    "path_count": 6,
+    "classification_counts": {
+      "implementation": 4,
+      "test-support-or-story": 1,
+      "test-unexecuted": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 4,
+      "metadata-only": 2
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "controls",
+    "title": "Confirmation, secret and external-link controls",
+    "representative_source_paths": [
+      "packages/app-shell/src/components/secret-input-v2.tsx",
+      "packages/app-shell/src/components/external-link.tsx",
+      "packages/app-shell/src/components/dialog-confirm-choice.tsx",
+      "packages/app-shell/src/components/ui/drawer.tsx"
+    ],
+    "source_implications": "SecretInput defaults to password masking with an explicit reveal control; ExternalLink defaults to blank target and noopener/noreferrer, while props permit overrides. Confirmation and drawer wrappers expose caller-controlled actions and composition.",
+    "consumer_implications": "App pages consume reusable presentation/interaction contracts; these controls do not own credentials, navigation authorization or server validation.",
+    "maintenance_implications": "Preserve accessible reveal labels and action ordering. Drawer source identifies adaptation from solid-ui without establishing upstream revision or all provenance.",
+    "limits": "No credential-storage guarantee, URL sanitizer, focus/accessibility proof or browser interaction result is inferred.",
+    "path_count": 4,
+    "classification_counts": {
+      "implementation": 4
+    },
+    "evidence_depth_counts": {
+      "inspected": 4
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "diagnostics",
+    "title": "Renderer performance and focus diagnostics",
+    "representative_source_paths": [
+      "packages/app-shell/src/components/debug-bar.tsx",
+      "packages/app-shell/src/pages/layout-new.tsx"
+    ],
+    "source_implications": "Debug bar tracks optional renderer metrics and records route timing after two animation frames; native focus override is explicitly reset on cleanup.",
+    "consumer_implications": "Shell exposes the diagnostic surface through its debug-bar state; unknown metrics remain unavailable.",
+    "maintenance_implications": "Treat these instrumented values as renderer diagnostics, not compositor-frame or production benchmark acceptance.",
+    "limits": "Performance observer implementation and metric accuracy were not fully audited; no measurements were collected.",
+    "path_count": 1,
+    "classification_counts": {
+      "implementation": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "identity-utils",
+    "title": "Path, display and local identifier helpers",
+    "representative_source_paths": [
+      "packages/app-shell/src/utils/base64.ts",
+      "packages/app-shell/src/utils/path-key.ts",
+      "packages/app-shell/src/utils/id.ts",
+      "packages/app-shell/src/utils/uuid.ts",
+      "packages/app-shell/src/utils/same.ts",
+      "packages/app-shell/src/utils/wildcard.ts",
+      "packages/app-shell/src/utils/session-title.ts"
+    ],
+    "source_implications": "Helpers normalize drive/UNC path separators and trailing slash, safely decode base64, compare arrays, match whole-string wildcards, format default session titles and create prefixed IDs/UUIDs.",
+    "consumer_implications": "Route/cache/model consumers use these exported pure contracts; path normalization is not filesystem canonicalization.",
+    "maintenance_implications": "Identifier accepts supplied IDs by prefix only; random fallbacks use Math.random, so these helpers must not be described as authentication-token guarantees.",
+    "limits": "All listed helper bodies were read; platform filesystem equality and caller correctness are not proven.",
+    "path_count": 9,
+    "classification_counts": {
+      "implementation": 7,
+      "test-unexecuted": 2
+    },
+    "evidence_depth_counts": {
+      "inspected": 7,
+      "metadata-only": 2
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "dom-input",
+    "title": "DOM scheduling, menu dismissal and input adapters",
+    "representative_source_paths": [
+      "packages/app-shell/src/utils/frame-resize-observer.ts",
+      "packages/app-shell/src/utils/menu-dismiss-controller.ts",
+      "packages/app-shell/src/utils/modal-active.ts",
+      "packages/app-shell/src/utils/runtime-adapters.ts",
+      "packages/app-shell/src/utils/search-keydown.ts"
+    ],
+    "source_implications": "Resize observer delivery is coalesced to a cancellable animation frame. Menu dismissal waits for disconnected content and two frames. Search forwarding guards composition/editable targets; adapters test runtime shapes.",
+    "consumer_implications": "File/layout/input consumers call these exported scheduling and capability helpers; modal detection participates in command guarding.",
+    "maintenance_implications": "Keep owner cleanup and event preconditions distinct; structural adapter checks establish supported shape, not native implementation correctness.",
+    "limits": "Search selection helper tail and all caller interactions were not individually read or executed.",
+    "path_count": 7,
+    "classification_counts": {
+      "test-unexecuted": 2,
+      "implementation": 5
+    },
+    "evidence_depth_counts": {
+      "metadata-only": 2,
+      "inspected": 5
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "feedback",
+    "title": "Downloads, sounds, labels, toasts and rejection handling",
+    "representative_source_paths": [
+      "packages/app-shell/src/utils/download.ts",
+      "packages/app-shell/src/utils/file-manager.ts",
+      "packages/app-shell/src/utils/sound.ts",
+      "packages/app-shell/src/utils/time.ts",
+      "packages/app-shell/src/utils/toast.tsx",
+      "packages/app-shell/src/utils/unhandled-rejection.ts"
+    ],
+    "source_implications": "Helpers create/revoke download object URLs, select OS file-manager labels, lazy-load cached sound assets, format elapsed time, adapt toast regions and log non-abort unhandled rejections.",
+    "consumer_implications": "App UI callers supply bytes, sound ID, translated copy or error; these are feedback mechanisms rather than durable stores.",
+    "maintenance_implications": "Sound play failures are caught; stopping pauses/resets playback. Download anchor cleanup and abort-error suppression are explicit.",
+    "limits": "No file save, audio playback, toast interaction or real error-reporting transport was exercised.",
+    "path_count": 7,
+    "classification_counts": {
+      "implementation": 6,
+      "test-unexecuted": 1
+    },
+    "evidence_depth_counts": {
+      "inspected": 6,
+      "metadata-only": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  },
+  {
+    "id": "pull-request",
+    "title": "Server pull-request payload adapter",
+    "representative_source_paths": [
+      "packages/app-shell/src/utils/pull-request.ts"
+    ],
+    "source_implications": "Decoder recognizes typed CLI failure kinds, unsupported HTTP statuses and validated created/open pull-request payload shapes; created URLs must be HTTPS and numbers safe integers.",
+    "consumer_implications": "Commented contract places CLI work at server /api/pull-request routes; this app helper adapts responses and CLI labels.",
+    "maintenance_implications": "Preserve unavailable/malformed/declared-failure distinctions and host/count validation.",
+    "limits": "Server CLI execution and every caller were not inspected. No pull request, CLI or remote mutation was invoked.",
+    "path_count": 2,
+    "classification_counts": {
+      "test-unexecuted": 1,
+      "implementation": 1
+    },
+    "evidence_depth_counts": {
+      "metadata-only": 1,
+      "inspected": 1
+    },
+    "representative_tests_read": [],
+    "test_status": "unexecuted; family-specific test paths remain individually classified in entries"
+  }
+]

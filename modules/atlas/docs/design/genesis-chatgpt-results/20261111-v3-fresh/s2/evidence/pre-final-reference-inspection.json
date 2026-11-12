@@ -1,0 +1,68 @@
+{
+  "schema": "genesis-s2-pre-final-reference-inspection/v1",
+  "recorded_at": "2026-11-11T20:20:16.759217+00:00",
+  "argv": [
+    "python",
+    "assembly-tools/stage_final_native.py",
+    "--inspect-current",
+    "--runtime-release",
+    "deliverable/evidence/s4-post-l3-recheck/runtime-release.json",
+    "--report-dir",
+    "runtime-work/pre-final-reference-check"
+  ],
+  "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2",
+  "exit_code": 0,
+  "package_sha256": "d16156085a3b764b4b88e864d0f760416575b9dee44297d4164accb22a078aba",
+  "files": 1440,
+  "reference_errors": [],
+  "additional_capture_requests": [],
+  "final_conditions": [
+    "Principal must finalize exactly roots={\"entry\":\"s2.l4.entry\"}; this utility never edits roots.",
+    "s2.l4.desktop-web is not supported with at least two actual semantic decision references.",
+    "s2.l4.design-tui is not supported with at least two actual semantic decision references.",
+    "s2.l4.app-session is not supported with at least two actual semantic decision references.",
+    "s2.l4.entry is not supported with at least two actual semantic decision references.",
+    "Required keys not reachable through actual navigation/build links: s2.l1.app-session, s2.l1.design-tui, s2.l1.desktop-web, s2.l2.app-session, s2.l2.design-tui, s2.l2.desktop-web, s2.l3.app-session, s2.l3.design-tui, s2.l3.desktop-web, s2.l4.app-session, s2.l4.design-tui, s2.l4.desktop-web, s2.l4.entry"
+  ],
+  "runtime_compatibility": "HOLD_KNOWN_INPUT_LIMIT",
+  "oversized_input_files": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json",
+      "byte_length": 369462,
+      "sha256": "3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6",
+      "roles": [
+        "runtime-input",
+        "transitive-payload-reference",
+        "transitive-input_file"
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/design-tui-tree.json",
+      "byte_length": 390775,
+      "sha256": "371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9",
+      "roles": [
+        "runtime-input",
+        "transitive-payload-reference",
+        "transitive-input_file"
+      ]
+    },
+    {
+      "path": "schema/tui.json",
+      "byte_length": 1131057,
+      "sha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+      "roles": [
+        "runtime-source",
+        "runtime-input",
+        "transitive-source-reference",
+        "source-capture-alias"
+      ]
+    }
+  ],
+  "plan": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/pre-final-reference-check/staging-plan.json",
+    "sha256": "e125b504adb61c5f48d7510b5b311780eda83a1515cfd6306e4b7c09f87f537d"
+  },
+  "staged": false,
+  "native_prepare_executed": false,
+  "scope": "Actual read-only reference/identity inspection; L4 semantic reviews and final roots remain pending. The separate timed diagnostic is not this successful inspection."
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "s2-r2-visible-coordination-record/v1",
+  "actor": "/root/s2_transport",
+  "scope": "Visible outgoing root coordination since the most recent context resumption; not a full host transcript.",
+  "calls": [
+    {
+      "tool": "collaboration.send_message",
+      "request": {
+        "target": "/root",
+        "message": "Retomada do transporte r2: delta desktop foi enviado integralmente aos dois; app-session está em 8/18 partes submetidas a ambos. Houve dois erros literais detectados nas tentativas: um ponto extra em body-3/3 para J2 e duplicação de Context em evidence-2/7 para J1; ambas as tentativas foram explicitamente invalidadas e as partes inteiras retransmitidas. A resposta visível da última chamada (evidence-2/7 +3/7 para J2) foi truncada por limite de contexto; o pedido integral foi emitido, sem prova de bytes internos do host. Estou seguindo com as dez partes restantes e consolidando esses limites nos recibos."
+      },
+      "visible_tool_response": ""
+    },
+    {
+      "tool": "collaboration.send_message",
+      "request": {
+        "target": "/root",
+        "message": "App-session r2: 14/18 partes já submetidas integralmente a ambos os juízes; evidências 1–7 completas e famílias 1–2 encaminhadas. Restam famílias 3–6. As chamadas mais recentes retornaram vazias, sem erro visível. Recibos estão sendo consolidados em transport-r2/app-desktop; nenhuma selagem ou ativação por este helper."
+      },
+      "visible_tool_response": ""
+    },
+    {
+      "tool": "collaboration.send_message",
+      "request": {
+        "target": "/root",
+        "message": "Transporte r2 deste helper concluído: desktop-web delta 1/1 e app-session 18/18 partes submetidos integralmente a AMBOS /root/s2_resume_j1 e /root/s2_resume_j2. Foram 22 chamadas send_message (11 por juiz, incluindo uma retransmissão corretiva por destinatário). 19 arquivos locais, 248456 bytes lógicos por destinatário; app=230189, delta=18267. Todos os hashes/tamanhos locais conferem com o manifesto congelado c3e213b9013d1dfdcf88024e48775c509589a038438c7d49dfbb76a2fd42a754. Recibos em /workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/app-desktop/: completion.json SHA256 353f0fc86ee993ea4adf8b0d0d4255a71310059127dec25da9d538c1d9948338; visible-requests.json SHA256 916ffe0cb6e211787bc60765bb060d7cfa5b23f4e703b13eba2301c50430434f; recibos por juiz e receipt-hashes.json presentes. Limites explícitos: registro reconstruído das chamadas visíveis/arquivos congelados, sem exportação de bytes internos do host ou confirmação de leitura. A resposta da chamada 12 (J2 evidence2+3) foi truncada pelo contexto; pedido integral emitido, sem evidência de truncamento do corpo entregue. Os dois erros literais conhecidos foram invalidados e retransmitidos integralmente. Nenhuma parte pendente deste escopo; não selei, ativei ou julguei."
+      },
+      "visible_tool_response": ""
+    }
+  ]
+}

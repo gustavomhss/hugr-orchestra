@@ -1,0 +1,226 @@
+{
+  "unit": "s2.l4.entry",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "sections": [
+    {
+      "heading": "Orientation",
+      "basis": "Population and evidence-depth distinctions come from accepted L1 scopes; layer-role selection and pending-L4 status are construction/navigation explanations from the public dispatch.",
+      "refs": [
+        {
+          "key": "s2.l1.desktop-web",
+          "heading": "Scope and evidentiary status"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Scope, identity and depth"
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "heading": "Scope and evidence strength"
+        }
+      ]
+    },
+    {
+      "heading": "Maintenance protocol",
+      "basis": "The nine accepted bodies support exact heading/need mapping. Three L4 targets use only the public common-heading declaration. Shallow/deep reading limits are from the exact public dispatch; recommended traversal is an inference, not a measured Atlas request.",
+      "refs": [
+        {
+          "key": "s2.l1.desktop-web",
+          "heading": "1. Startup, readiness and shutdown"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "heading": "Prompt admission and draft ownership"
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "heading": "V2 session action boundary"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "heading": "Startup publishes readiness before the renderer proceeds"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "heading": "Durable admission, optimistic state and draft storage"
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "heading": "V2 actions and prompt admission"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "heading": "Cross renderer, preload and main with a scoped capability"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Submit once, then hand the draft to its session"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "heading": "Generated products reach consumers through distinct maintenance paths"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Recover the projection without inventing execution recovery"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "heading": "Finish capture, persistence and installation at the right boundary"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "heading": "Terminal input becomes admission through ordered, separate operations"
+        }
+      ]
+    },
+    {
+      "heading": "Verification and boundaries",
+      "basis": "Accepted L3 limits and attributed root instructions constrain conclusions. Refreshing pins/dependents and repairing navigation is recommended maintenance, not automatic rebuild behavior.",
+      "refs": [
+        {
+          "key": "s2.l3.desktop-web",
+          "heading": "Verification status and remaining evidence"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "heading": "Change impact and verification ownership"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "heading": "Route a change through its affected contracts"
+        }
+      ]
+    }
+  ],
+  "navigation_map": [
+    {
+      "key": "s2.l1.desktop-web",
+      "headings": [
+        "1. Startup, readiness and shutdown"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "headings": [
+        "Prompt admission and draft ownership"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "headings": [
+        "V2 session action boundary"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "headings": [
+        "Startup publishes readiness before the renderer proceeds"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "headings": [
+        "Durable admission, optimistic state and draft storage"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "headings": [
+        "V2 actions and prompt admission"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "headings": [
+        "Cross renderer, preload and main with a scoped capability"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.app-session",
+      "headings": [
+        "Submit once, then hand the draft to its session"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "headings": [
+        "Generated products reach consumers through distinct maintenance paths"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    },
+    {
+      "key": "s2.l4.app-session",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    }
+  ],
+  "excerpts": [
+    {
+      "id": "E01",
+      "path": "AGENTS.md",
+      "start_line": 151,
+      "end_line": 154,
+      "sha256": "42ae14823104caf44029da4ade03f425b527736a2d0f1893d7e28612ded2d35d",
+      "byte_length": 478,
+      "purpose": "Attributed maintenance skills/docs and runtime-knowledge boundary."
+    },
+    {
+      "id": "E02",
+      "path": "AGENTS.md",
+      "start_line": 160,
+      "end_line": 166,
+      "sha256": "f73cdebf400dd09e83700a6a890e30ae7d9e609df5d2b8ee2b1e2217d325dd32",
+      "byte_length": 2187,
+      "purpose": "Attributed remote-test route and snapshot side effect; no command execution or local exception authorization."
+    },
+    {
+      "id": "E03",
+      "path": "AGENTS.md",
+      "start_line": 199,
+      "end_line": 205,
+      "sha256": "64246f05fed82fa7ca61135c4363caab590af66e13d91d81884afc6791da0e24",
+      "byte_length": 279,
+      "purpose": "Attributed restart and package typecheck boundaries; a navigation guide grants no runtime permission."
+    },
+    {
+      "id": "E04",
+      "path": "AGENTS.md",
+      "start_line": 214,
+      "end_line": 216,
+      "sha256": "1cdc2c87f7640a31a071dc92964dab10d88dafd6a6f7244a6cc02ea39417c1e0",
+      "byte_length": 980,
+      "purpose": "Attributed process-local and post-crash continuation limit; not an implemented recovery claim."
+    }
+  ]
+}

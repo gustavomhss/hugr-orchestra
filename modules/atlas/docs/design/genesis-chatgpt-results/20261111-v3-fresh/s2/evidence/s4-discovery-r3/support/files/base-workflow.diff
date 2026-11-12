@@ -1,0 +1,43 @@
+--- base-workflow
++++ candidate-workflow.txt
+@@ -8,6 +8,7 @@
+     paths:
+       - ".github/workflows/atlas-pilot.yml"
+       - "modules/atlas/**"
++      - "!modules/atlas/docs/design/genesis-chatgpt-results/**"
+ 
+ permissions:
+   contents: read
+@@ -36,6 +37,7 @@
+             packages/knowledge/test/fastpath-promotion-origin.test.ts \
+             packages/adapter-io/test/ownership-publication.test.ts \
+             packages/adapter-io/test/genesis-native.test.ts \
++            packages/adapter-io/test/genesis-native-recovery.test.ts \
+             packages/adapter-io/test/g3-recovery.test.ts \
+             packages/adapter-io/test/sidecar.test.ts \
+             packages/adapter-io/test/identity-schema.test.ts \
+@@ -159,13 +161,14 @@
+       - name: Generate Atlas boundary from the checked sources
+         working-directory: modules/atlas/boundary
+         run: bun run generate
++      # Raw logs remain in the Actions archive; durable repository receipts record structured verdicts.
+       - name: Check repository guards on the candidate
+         run: |
+           set +e
+-          bun run check:guards --base origin/dev > modules/atlas/ownership-guards.log 2>&1
++          bun run check:guards --base origin/dev > "$RUNNER_TEMP/ownership-guards.log" 2>&1
+           code=$?
+           set -e
+-          cat modules/atlas/ownership-guards.log
++          cat "$RUNNER_TEMP/ownership-guards.log"
+           GUARD_EXIT="$code" node --input-type=module -e 'import { writeFileSync } from "node:fs"; writeFileSync("modules/atlas/ownership-guards.json", JSON.stringify({ command: "bun run check:guards --base origin/dev", exitCode: Number(process.env.GUARD_EXIT), candidate: process.env.GITHUB_SHA }) + "\n")'
+           exit "$code"
+       - name: Preserve exact gate and generated-boundary evidence
+@@ -176,6 +179,6 @@
+           if-no-files-found: error
+           path: |
+             modules/atlas/ownership-*.json
+-            modules/atlas/ownership-guards.log
++            ${{ runner.temp }}/ownership-guards.log
+             modules/atlas/boundary/src/generated
+           retention-days: 7

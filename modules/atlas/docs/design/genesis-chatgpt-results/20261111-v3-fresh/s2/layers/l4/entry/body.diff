@@ -1,0 +1,9 @@
+--- later-producers/app-session/l4-entry/body.md
++++ later-producers/app-session/l4-entry-r2/body.md
+@@ -35,4 +35,6 @@
+ 
+ Semantic acceptance and local hashes do not establish CI, runtime trust, provider completion, clustered recovery, accessibility, translation completeness, OS effects or asset rights. Preserve discrepancies and depth limits; deepen through the named owner when evidence is insufficient. [Accepted basis: `s2.l3.desktop-web` § “Verification status and remaining evidence”; `s2.l3.design-tui` § “Change impact and verification ownership”; `s2.l3.app-session` § “Route a change through its affected contracts”.]
+ 
++**Out-of-scope evidence route:** S2 cannot establish distributed or clustered Session ownership, crash continuation, or exactly-once provider execution. Direct these questions to the S1/backend session-execution owner for its current coordination, continuation and provider-retry design and supporting implementation and failure-recovery evidence. S2 reconnect and admission observations do not supply that proof. [Root `AGENTS.md:214–216`; accepted `s2.l3.app-session` § “Recover the projection without inventing execution recovery”.]
++
+ **Instructions:** root `AGENTS.md` routes tests to GitHub Actions, typechecks to package directories, and separates process-local drains from any post-crash continuation design. It forbids treating maintenance skills as shipped runtime knowledge. This guide executes no gate and grants no remote-write or restart authorization. When a source/contract changes, revalidate affected factual dependents and refresh their pins; when a heading/key changes, repair this navigation map. That update recommendation does not claim automatic rebuilding. [Root `AGENTS.md:146–166,199–216`; dispatch maintenance requirement.]

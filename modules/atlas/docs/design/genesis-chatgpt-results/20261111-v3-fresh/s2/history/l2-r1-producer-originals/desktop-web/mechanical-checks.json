@@ -1,0 +1,82 @@
+{
+  "schema": "genesis-s2-author-byte-checks/v1",
+  "key": "s2.l2.desktop-web",
+  "scope": "Mechanical author checks only; not semantic review and not product/runtime/CI testing.",
+  "body": {
+    "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+    "byte_length": 18440,
+    "utf8_decode": true,
+    "whitespace_word_count": 2184,
+    "level_two_sections": [
+      {
+        "heading": "Orientation and ownership",
+        "byte_length": 1281
+      },
+      {
+        "heading": "Startup publishes readiness before the renderer proceeds",
+        "byte_length": 2067
+      },
+      {
+        "heading": "Persistence and recovery have several owners",
+        "byte_length": 1916
+      },
+      {
+        "heading": "Privilege is checked at each request boundary",
+        "byte_length": 1901
+      },
+      {
+        "heading": "Browser Dock operates on current tab observations",
+        "byte_length": 1344
+      },
+      {
+        "heading": "Native Dock preserves identity and uncertain outcomes",
+        "byte_length": 1474
+      },
+      {
+        "heading": "Linux workspaces and WSL have different lifetimes",
+        "byte_length": 1881
+      },
+      {
+        "heading": "Live separates readiness, capture and delivery",
+        "byte_length": 1678
+      },
+      {
+        "heading": "Executable staging and update state are separate evidence",
+        "byte_length": 1510
+      },
+      {
+        "heading": "Host adapters own platform differences and copy",
+        "byte_length": 1879
+      },
+      {
+        "heading": "Maintenance evidence retains its original limits",
+        "byte_length": 1454
+      }
+    ]
+  },
+  "source_checks": {
+    "record_count": 14,
+    "source_bytes": 92725,
+    "sha256_matches": true,
+    "git_blob_sha1_matches": true,
+    "original_connector_contents_match": true,
+    "original_connector_blob_sha_matches": true,
+    "original_connector_response_hashes_match": true
+  },
+  "input_checks": {
+    "actual_request_hash_matches": true,
+    "accepted_manifest_hash_matches": true,
+    "accepted_predecessor_body_hash_matches": true,
+    "family_accounting_matches_delivered_copy": true
+  },
+  "dependency_counts": {
+    "build": 1,
+    "navigation": 2,
+    "consumed_layer_manifests": 1
+  },
+  "limits": [
+    "No semantic verdict is issued by this author.",
+    "No product or runtime test and no CI ran.",
+    "Existing source bytes and predecessor files were not modified."
+  ]
+}

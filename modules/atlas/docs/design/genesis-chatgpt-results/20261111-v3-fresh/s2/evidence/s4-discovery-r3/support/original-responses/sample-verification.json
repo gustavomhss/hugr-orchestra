@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "{\n  \"schema\": \"s4-native-path-verification/v1\",\n  \"candidate_revision\": \"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1\",\n  \"candidate_id\": \"e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284\",\n  \"manifest\": \"4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02\",\n  \"result\": \"8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f\",\n  \"receipt\": \"e58b1c0529ce4f0e885c04e632ae2662febd9a3415b0c072485bbeb827bf72c9\",\n  \"body_byte_length\": 17959,\n  \"body_sha256\": \"242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c\",\n  \"body_equals_original_native_production\": true,\n  \"read_historical\": false,\n  \"index_returns_body\": false,\n  \"gates\": [\n    {\n      \"gate\": \"shape\",\n      \"pass\": true\n    },\n    {\n      \"gate\": \"truth\",\n      \"pass\": true\n    },\n    {\n      \"gate\": \"authz\",\n      \"pass\": true\n    },\n    {\n      \"gate\": \"ratify\",\n      \"pass\": true\n    }\n  ],\n  \"actual_operator\": \"/root\",\n  \"actual_reviewers\": [\n    \"/root/judge_j1\",\n    \"/root/judge_j2\"\n  ],\n  \"source_copy_observed_head\": null,\n  \"limits\": [\n    \"One artifact; full S4 L1-L4 still incomplete.\",\n    \"Principal performed these operations; independent Atlas-only consumer remains a later obligation.\",\n    \"Local policy is authorized isolated responsibility; no production activation or cryptographic identity authentication.\",\n    \"Prior CI for this V1 remains overall failed; later corrected implementation/control candidate has separately recorded successful CI.\"\n  ]\n}\n",
+    "encoding": "utf-8",
+    "sha": "8b0bba9ad9bee4634ae57341bd45a098a61b0172",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/6e43247103ac36e5adb635f2fccde2e61480c56d/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+    "display_title": "verification.json"
+  },
+  "isError": false
+}

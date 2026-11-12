@@ -1,0 +1,56 @@
+{
+  "schema": "genesis-s2-final-return-remote-readback/v1",
+  "recorded_at": "2026-11-11T21:29:36.932868+00:00",
+  "actual_read_only_github_calls": 3,
+  "own_branch_head": "ac972ff8dc1126b02f8a16f3942a142e417039ed",
+  "s4_discovery": {
+    "commit": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+    "git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "byte_length": 28282,
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+  },
+  "s4_branch_advanced_since_post_native_check": true,
+  "same_release_bytes_as_attempted_implementation_discovery": true,
+  "cap_declared_unchanged": 256000,
+  "remote_writes": 0,
+  "native_retry": false,
+  "evidence": {
+    "runtime-release-connector.json": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-return-remote-recheck/runtime-release-connector.json",
+      "byte_length": 30352,
+      "sha256": "600a657e99a7a5a388096e3e6dfb036f99e22bf6821c9efd582347d90ff534c9"
+    },
+    "runtime-release.json": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-return-remote-recheck/runtime-release.json",
+      "byte_length": 28282,
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016"
+    },
+    "s2-branch-connector.json": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-return-remote-recheck/s2-branch-connector.json",
+      "byte_length": 1502,
+      "sha256": "d13202ebceacf99529aaccc7055479da46b4bf49e9c71ff9d11c45123e1e69b5"
+    },
+    "s2-branch-ref.json": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-return-remote-recheck/s2-branch-ref.json",
+      "byte_length": 390,
+      "sha256": "b8f2411229176c156e3538e7ff827ae3fff30e515acdffc56595384eb8961b3e"
+    },
+    "s4-branch-connector.json": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-return-remote-recheck/s4-branch-connector.json",
+      "byte_length": 1502,
+      "sha256": "db8b4a8544b782a89270a7d2d3f0e22c669113cf8a41a66ef200d0d38339b50b"
+    },
+    "s4-branch-ref.json": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/evidence/final-return-remote-recheck/s4-branch-ref.json",
+      "byte_length": 390,
+      "sha256": "529ba6b6f3eb644176a71d28625b3f5b118be80b879870f52a599f9221ff5aaf"
+    }
+  },
+  "limits": [
+    "Read-only observation; new S4 branch HEAD does not imply a changed declared runtime release.",
+    "Exact structured UTF-8 content and original connector envelopes retained; host wire bytes not attested."
+  ]
+}

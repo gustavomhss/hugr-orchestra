@@ -1,0 +1,22 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "{\"ref\":\"refs/heads/genesis-fresh-s4\",\"node_id\":\"REF_kwDOU78kOrtyZWZzL2hlYWRzL2dlbmVzaXMtZnJlc2gtczQ\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/refs/heads/genesis-fresh-s4\",\"object\":{\"sha\":\"47eaa5322102910289cb56e2e07e9d3536ba1926\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/47eaa5322102910289cb56e2e07e9d3536ba1926\"}}",
+    "title": "genesis-fresh-s4",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/ref/heads/genesis-fresh-s4",
+    "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/ref/heads/genesis-fresh-s4",
+    "display_title": "genesis-fresh-s4",
+    "structuredContent": {
+      "title": "genesis-fresh-s4",
+      "content": "{\"ref\":\"refs/heads/genesis-fresh-s4\",\"node_id\":\"REF_kwDOU78kOrtyZWZzL2hlYWRzL2dlbmVzaXMtZnJlc2gtczQ\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/refs/heads/genesis-fresh-s4\",\"object\":{\"sha\":\"47eaa5322102910289cb56e2e07e9d3536ba1926\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/47eaa5322102910289cb56e2e07e9d3536ba1926\"}}",
+      "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/ref/heads/genesis-fresh-s4"
+    }
+  },
+  "isError": false
+}

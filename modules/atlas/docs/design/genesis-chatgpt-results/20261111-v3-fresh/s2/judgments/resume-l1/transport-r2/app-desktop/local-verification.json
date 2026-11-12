@@ -1,0 +1,162 @@
+{
+  "schema": "s2-r2-local-transport-verification/v1",
+  "actor": "/root/s2_transport",
+  "parts": [
+    {
+      "file": "desktop-web-r2-delta.txt",
+      "manifest_sha256": "9431999b33481a9bc731d30b848fa4be0be2929fcd1dcac2b57e0e76e6a06786",
+      "computed_sha256": "9431999b33481a9bc731d30b848fa4be0be2929fcd1dcac2b57e0e76e6a06786",
+      "manifest_byte_length": 18267,
+      "computed_byte_length": 18267,
+      "matches": true
+    },
+    {
+      "file": "app-session-01-header-01.txt",
+      "manifest_sha256": "9bf43353e5d4a654d7ffc69826570b66465c5775fd2a2f49d8b7090a8f3d7515",
+      "computed_sha256": "9bf43353e5d4a654d7ffc69826570b66465c5775fd2a2f49d8b7090a8f3d7515",
+      "manifest_byte_length": 14478,
+      "computed_byte_length": 14478,
+      "matches": true
+    },
+    {
+      "file": "app-session-01-header-02.txt",
+      "manifest_sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33",
+      "computed_sha256": "ab6507ff6d54532ad982cac73a71c9d318d7aa697146468617a98d16b1210e33",
+      "manifest_byte_length": 2275,
+      "computed_byte_length": 2275,
+      "matches": true
+    },
+    {
+      "file": "app-session-02-body-01.txt",
+      "manifest_sha256": "67f90bdb8914710771604a60e71969c88f1cf5a8872a61ff5cd2348da02f106c",
+      "computed_sha256": "67f90bdb8914710771604a60e71969c88f1cf5a8872a61ff5cd2348da02f106c",
+      "manifest_byte_length": 14281,
+      "computed_byte_length": 14281,
+      "matches": true
+    },
+    {
+      "file": "app-session-02-body-02.txt",
+      "manifest_sha256": "f8ab38814fdb9c067e416101b887c8a125c6ca340fe0c294314a0a09a5989c9b",
+      "computed_sha256": "f8ab38814fdb9c067e416101b887c8a125c6ca340fe0c294314a0a09a5989c9b",
+      "manifest_byte_length": 14129,
+      "computed_byte_length": 14129,
+      "matches": true
+    },
+    {
+      "file": "app-session-02-body-03.txt",
+      "manifest_sha256": "9f11263a4e7dac6ca3ef1c26d6abd506555859009c4314bd218d23a59f860f54",
+      "computed_sha256": "9f11263a4e7dac6ca3ef1c26d6abd506555859009c4314bd218d23a59f860f54",
+      "manifest_byte_length": 11739,
+      "computed_byte_length": 11739,
+      "matches": true
+    },
+    {
+      "file": "app-session-03-evidence-01.txt",
+      "manifest_sha256": "333caafbe619d2270d41f724a1463eefb31162df28a6e96d1450070124f0b027",
+      "computed_sha256": "333caafbe619d2270d41f724a1463eefb31162df28a6e96d1450070124f0b027",
+      "manifest_byte_length": 14494,
+      "computed_byte_length": 14494,
+      "matches": true
+    },
+    {
+      "file": "app-session-03-evidence-02.txt",
+      "manifest_sha256": "163b1a935cf6b6832b47d03afc82472133cd7f66521c9fb2e1a807a7f4841a3f",
+      "computed_sha256": "163b1a935cf6b6832b47d03afc82472133cd7f66521c9fb2e1a807a7f4841a3f",
+      "manifest_byte_length": 14456,
+      "computed_byte_length": 14456,
+      "matches": true
+    },
+    {
+      "file": "app-session-03-evidence-03.txt",
+      "manifest_sha256": "6d71b6db387cd9b9f4abdbc246e9692cea85d65fbe4e3993ed5d068912d72006",
+      "computed_sha256": "6d71b6db387cd9b9f4abdbc246e9692cea85d65fbe4e3993ed5d068912d72006",
+      "manifest_byte_length": 14483,
+      "computed_byte_length": 14483,
+      "matches": true
+    },
+    {
+      "file": "app-session-03-evidence-04.txt",
+      "manifest_sha256": "f723bb1c5da6f7d50da97ea1b5e5947e86aa3b54476912a37419e2a3c0cb868f",
+      "computed_sha256": "f723bb1c5da6f7d50da97ea1b5e5947e86aa3b54476912a37419e2a3c0cb868f",
+      "manifest_byte_length": 14496,
+      "computed_byte_length": 14496,
+      "matches": true
+    },
+    {
+      "file": "app-session-03-evidence-05.txt",
+      "manifest_sha256": "af7bfe5f0909992b9b1f073bf5e5f5eece78f234e8b9d81c6221a12dac4de3e4",
+      "computed_sha256": "af7bfe5f0909992b9b1f073bf5e5f5eece78f234e8b9d81c6221a12dac4de3e4",
+      "manifest_byte_length": 14460,
+      "computed_byte_length": 14460,
+      "matches": true
+    },
+    {
+      "file": "app-session-03-evidence-06.txt",
+      "manifest_sha256": "8283f8a84f20567a2c502cb7a0d8e0350ee1976544d21c4aac060c942473ea2d",
+      "computed_sha256": "8283f8a84f20567a2c502cb7a0d8e0350ee1976544d21c4aac060c942473ea2d",
+      "manifest_byte_length": 14484,
+      "computed_byte_length": 14484,
+      "matches": true
+    },
+    {
+      "file": "app-session-03-evidence-07.txt",
+      "manifest_sha256": "317b8bba291710b195fa741c949b6ef8ac555040e3c085f76ed941a9b7b735e5",
+      "computed_sha256": "317b8bba291710b195fa741c949b6ef8ac555040e3c085f76ed941a9b7b735e5",
+      "manifest_byte_length": 5193,
+      "computed_byte_length": 5193,
+      "matches": true
+    },
+    {
+      "file": "app-session-04-families-01.txt",
+      "manifest_sha256": "00d476ccd7df9a21547996659d027001bd1625a437427101bb04eade0def3758",
+      "computed_sha256": "00d476ccd7df9a21547996659d027001bd1625a437427101bb04eade0def3758",
+      "manifest_byte_length": 14499,
+      "computed_byte_length": 14499,
+      "matches": true
+    },
+    {
+      "file": "app-session-04-families-02.txt",
+      "manifest_sha256": "531e2316d7ee6d815cab7150271883410fd8f76813e93b72a43146e7301f7f65",
+      "computed_sha256": "531e2316d7ee6d815cab7150271883410fd8f76813e93b72a43146e7301f7f65",
+      "manifest_byte_length": 14422,
+      "computed_byte_length": 14422,
+      "matches": true
+    },
+    {
+      "file": "app-session-04-families-03.txt",
+      "manifest_sha256": "dc8c480dfaaea0faea79a00bfab65b5bc8a689ece9de4c8c28e2595559723fb8",
+      "computed_sha256": "dc8c480dfaaea0faea79a00bfab65b5bc8a689ece9de4c8c28e2595559723fb8",
+      "manifest_byte_length": 14459,
+      "computed_byte_length": 14459,
+      "matches": true
+    },
+    {
+      "file": "app-session-04-families-04.txt",
+      "manifest_sha256": "f59025a6f237f04d0a32d51d69652629d402e3f4186fa5e577211b4700f2406c",
+      "computed_sha256": "f59025a6f237f04d0a32d51d69652629d402e3f4186fa5e577211b4700f2406c",
+      "manifest_byte_length": 14464,
+      "computed_byte_length": 14464,
+      "matches": true
+    },
+    {
+      "file": "app-session-04-families-05.txt",
+      "manifest_sha256": "e57dab724217222ab5336c82104b4995770dcd7475fc4c777a941449aa65508a",
+      "computed_sha256": "e57dab724217222ab5336c82104b4995770dcd7475fc4c777a941449aa65508a",
+      "manifest_byte_length": 14352,
+      "computed_byte_length": 14352,
+      "matches": true
+    },
+    {
+      "file": "app-session-04-families-06.txt",
+      "manifest_sha256": "5f86d835a576c4348d6ca9ad197a57a2a2b22a5f7ead87267dd597a5a13fab0a",
+      "computed_sha256": "5f86d835a576c4348d6ca9ad197a57a2a2b22a5f7ead87267dd597a5a13fab0a",
+      "manifest_byte_length": 9025,
+      "computed_byte_length": 9025,
+      "matches": true
+    }
+  ],
+  "limitations": [
+    "Local packet bytes only; collaboration host internal delivered bytes are not exposed."
+  ],
+  "manifest_sha256": "c3e213b9013d1dfdcf88024e48775c509589a038438c7d49dfbb76a2fd42a754"
+}

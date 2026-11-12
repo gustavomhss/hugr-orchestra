@@ -1,0 +1,271 @@
+299:     this.writeManifest({ ...manifest, revision: this.#manifest.revision + 1 })
+300:     return { status: "updated", manifest: this.manifest() }
+301:   }
+302: 
+303:   private write(profiles: Registry["profiles"]) {
+```
+
+## E11. Host confirmation of workspace roots
+
+Fresh runtime and process census precede confirmation of helper-proposed roots.
+
+`apps/desktop/src/main/app-dock-native-workspace.ts:27–37` · Git blob `b9178746ec036369a9ecfd9db3a425637ebdba4a` · SHA-256 `cbd459ec825dd6749ac39bb48b274b6fe54f2b44d150560de1f050ee3f484e2c`
+
+```text
+27:       confirm: async (proposal) => {
+28:         if (signal.aborted) throw new NativeDockProtocol.NativeError("cancelled", "Native workspace confirmation cancelled")
+29:         if (JSON.stringify(resource.runtime) !== JSON.stringify(scope.runtime))
+30:           throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace session changed during preparation")
+31:         const fresh = await runtime.workspaceScope()
+32:         if (signal.aborted) throw new NativeDockProtocol.NativeError("cancelled", "Native workspace confirmation cancelled")
+33:         if (JSON.stringify(fresh) !== expected)
+34:           throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace membership changed before confirmation")
+35:         // Authorization is the whole verified workspace realm. These are actual
+36:         // helper-proposed AT-SPI roots, not inferred X11/title/window pairings.
+37:         return proposal.roots.map((root) => ({ owner: root.owner, path: root.path }))
+```
+
+## E12. Native cancellation test boundary
+
+Unexecuted memory-channel test retains a slot until the original terminal, even after cancel acknowledgment.
+
+`apps/desktop/src/main/app-dock-native-client-admission.test.ts:35–58` · Git blob `56f1d112e0856e56543e67ac96bb69ee880ea614` · SHA-256 `753a2a8380faa9cf8343fd33df0c1722d7a01d1da533449140a89883a9e24e2a`
+
+```text
+35:   test("retains slot after abort and control ACK until original late terminal", async () => {
+36:     const { channel, client } = await memory({ cancelGraceMs: 500 })
+37:     await bind(client, channel)
+38:     const abort = new AbortController()
+39:     const sent = failure(client.request(read(), abort.signal))
+40:     expect(getEventListeners(abort.signal, "abort").length).toBe(1)
+41:     const original = channel.last
+42:     const queued = client.request(read())
+43:     queued.catch(() => {})
+44:     abort.abort()
+45:     expect(await sent).toMatchObject({ code: "cancelled", outcome: "unknown" })
+46:     expect(getEventListeners(abort.signal, "abort").length).toBe(0)
+47:     await until(() => channel.last.op === "cancel")
+48:     const cancel = channel.last
+49:     expect(cancel.args.requestID).toBe(original.id)
+50:     channel.ack(cancel)
+51:     await Bun.sleep(0)
+52:     expect(channel.writes.filter((request) => request.op === "read").length).toBe(1)
+53:     channel.ack(original, "late result")
+54:     await until(() => channel.last.op === "read" && channel.last.id !== original.id)
+55:     channel.ack(channel.last, "next result")
+56:     expect(await queued).toBe("next result")
+57:     expect(channel.writes.map((request) => request.sequence)).toEqual([1, 2, 3, 4])
+58:     expect(channel.writes.map((request) => request.id)).toEqual(["golden:1", "golden:2", "golden:3", "golden:4"])
+```
+
+## E13. Native observations and actions are non-atomic
+
+Snapshot and action response bodies explicitly avoid asserting logical identity or a verified effect.
+
+`apps/desktop/resources/linux/app-dock-accessibility/snapshot.py:62–66` · Git blob `6f72716d93988bf57fb2e807bfcb50bd234bbfc4` · SHA-256 `d97b0c8e3376da153a6c80991f232c40d4997d011644a8f45ef703ca2045bb26`
+
+```text
+62:     result = {"backend": "linux-atspi", "scopeKind": scope_kind(binding), "observation": observation, "title": "", "items": [], "text": "",
+63:               "truncated": False, "windows": [], "coverage": {"scope": "owned-controls-excluding-hidden-menu-subtrees", "complete": False,
+64:               "visited": 0, "calls": 0, "omittedHiddenMenus": 0, "omittedForeignChildren": 0, "reasons": list(state["partial"])}, "consistency": "non-atomic", "capabilities": {
+65:               "read": {"supported": True, "reason": "bounded-live-traversal"},
+66:               "mutation": {"supported": False, "reason": "per-item-capabilities; no-logical-dataset-identity"}}}
+```
+
+`apps/desktop/resources/linux/app-dock-accessibility/actions.py:35–53` · Git blob `0735c627b1596299d6b3b837b03149ab1d938a10` · SHA-256 `aa64e55b4cf18858e4b8a2ee29cdce11e728710313ff1652085d50debbb1b214`
+
+```text
+35:     evidence, live = _target(context, record, observed=mode == "observed")
+36:     if _action_names(context, record) != names:
+37:         raise BusError("action-drift", "Provider actions changed during admission")
+38:     result = {"method": "action", "action": action["name"], "via": "action",
+39:               "dispatch": "unknown", "postcondition": "unverified", "consistency": "non-atomic",
+40:               "identity": "observed-control" if mode == "observed" else "snapshot-bound-control",
+41:               "logicalIdentity": "unverified"}
+42:     clicked = _click(context, record, action, evidence, live, result)
+43:     if clicked:
+44:         return clicked
+45:     try:
+46:         accepted = context.call(record["owner"], record["path"], A + "Action", "DoAction",
+47:                                 "(i)", (action["index"],), "(b)")[0]
+48:         if not accepted:
+49:             result["dispatch"] = "rejected"
+50:             raise BusError("provider-rejected", "Provider rejected DoAction")
+51:         result["dispatch"] = "acknowledged"
+52:         _responding(context, record["owner"])
+53:         return result
+```
+
+## E14. Local runtime locator and current session
+
+Source checks local endpoint shape and current session file/process identity; no Docker or guest command ran.
+
+`apps/desktop/src/main/app-dock-runtime-backend.ts:97–102` · Git blob `b4f0ba59436bb9e2969735f83f350b6f7530c36c` · SHA-256 `a05f5f8fede08ce113c633632b68f4cb363b23432f3d0643158a7d92dd459973`
+
+```text
+97: export function localEndpoint(endpoint: string) {
+98:   if (process.platform === "win32" && /^npipe:\/\/\/\/\.\/pipe\/[\w.-]+$/.test(endpoint)) return true
+99:   if (!endpoint.startsWith("unix:///")) return false
+100:   const url = new URL(endpoint)
+101:   return !url.hostname && !url.search && !url.hash && !url.username && !url.password
+102: }
+```
+
+`apps/desktop/resources/linux-runtime/workspace.py:319–333` · Git blob `994ed493ffa0a76c7e2f4e6f32fda3f1bfc157d0` · SHA-256 `42a173e891059dc9fe9ac881a6b1ef66b6606fef4c7d7b5fe158e2ceba5cc9eb`
+
+```text
+319: def current_session(*, _runtime=RUNTIME):
+320:     runtime_directories(_runtime=_runtime)
+321:     try:
+322:         with os.fdopen(os.open(_runtime / "session.json", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK), "rb") as stream:
+323:             info = os.fstat(stream.fileno())
+324:             if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600:
+325:                 raise SessionError("native-session-record-invalid")
+326:             session = parse_session(stream.read(SESSION_BYTES + 1), _runtime=_runtime)
+327:     except FileNotFoundError as error:
+328:         raise SessionError("native-session-record-missing") from error
+329:     except OSError as error:
+330:         raise SessionError("native-session-record-invalid") from error
+331:     if process_identity(session["processIdentity"]["pid"]) != session["processIdentity"]:
+332:         raise SessionError("native-session-stale")
+333:     return session
+```
+
+## E15. WSL authenticated health
+
+Positive authenticated body and rejected wrong password are both required.
+
+`apps/desktop/src/main/wsl/startup.ts:7–17` · Git blob `f4556cb47b38cf37c3b98a6c4003842a83c46e49` · SHA-256 `16ee0730c7b9eaa644e5b678ee58afdaa3b490b7343be57ec8429c339ee1c3d7`
+
+```text
+7: export async function checkWslAuthentication(url: string, password: string, signal?: AbortSignal) {
+8:   const request = (value: string) =>
+9:     fetch(new URL("/api/health", url), {
+10:       headers: { authorization: `Basic ${Buffer.from(`orchestra:${value}`).toString("base64")}` },
+11:       signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(3000)]) : AbortSignal.timeout(3000),
+12:     })
+13:   const allowed = await request(password)
+14:   const denied = await request(`${password}-invalid`)
+15:   const healthy: unknown = allowed.ok ? await allowed.json() : null
+16:   return !!healthy && typeof healthy === "object" && "healthy" in healthy && healthy.healthy === true && denied.status === 401
+17: }
+```
+
+## E16. Live transcription key storage
+
+The key is read through safeStorage/environment fallback and stored only when encryption is available.
+
+`apps/desktop/src/main/live-key.ts:1–27` · Git blob `b1a22d61949a3eb39d14d4e0ab2490683bfdda6a` · SHA-256 `07a9161d80bcff408020f3eeca457dac37c3f9575e0039b8b279a60d0416ab29`
+
+```text
+1: import { safeStorage } from "electron"
+2: 
+3: import { getStore } from "./store"
+4: 
+5: // The live seat's speech-to-text key. It is stored encrypted with the OS keychain (safeStorage) in the desktop
+6: // settings store and never leaves main: no IPC returns it. DEEPGRAM_API_KEY in the environment is the fallback for
+7: // development. The server has no route that hands out provider keys, so the desktop keeps its own.
+8: 
+9: const KEY = "liveDeepgramKey"
+10: 
+11: export function readTranscriptionKey() {
+12:   const stored = getStore().get(KEY)
+13:   if (typeof stored === "string" && stored && safeStorage.isEncryptionAvailable())
+14:     return safeStorage.decryptString(Buffer.from(stored, "base64"))
+15:   return process.env.DEEPGRAM_API_KEY?.trim() || undefined
+16: }
+17: 
+18: export function saveTranscriptionKey(key: string) {
+19:   const value = key.trim()
+20:   if (!value) return getStore().delete(KEY)
+21:   if (!safeStorage.isEncryptionAvailable()) throw new Error("The system keychain is not available to store the key.")
+22:   getStore().set(KEY, safeStorage.encryptString(value).toString("base64"))
+23: }
+24: 
+25: export function hasTranscriptionKey() {
+26:   return readTranscriptionKey() !== undefined
+27: }
+```
+
+## E17. Response capability and irreversible commit
+
+Owner checks tie the capability to the originating frame; rename submission and unowned temporary-file cleanup have distinct handling.
+
+`apps/desktop/src/main/response-download.ts:89–101` · Git blob `cd869d37c96453d7692c83be51386bd559314449` · SHA-256 `f6f8c2b73328cd76cc804f03b3ae2e164d926d8c599cf7612525351ace26d5af`
+
+```text
+89:   const owner = (event: IpcMainInvokeEvent) => {
+90:     const win = deps.BrowserWindow.fromWebContents(event.sender)
+91:     if (
+92:       !win || win.isDestroyed() || event.sender.isDestroyed() || win.webContents !== event.sender
+93:       || !event.senderFrame || event.senderFrame !== event.sender.mainFrame
+94:     ) return
+95:     return { win, frame: event.senderFrame }
+96:   }
+97:   const selection = (event: IpcMainInvokeEvent, handle: unknown) => {
+98:     if (typeof handle !== "string" || handle.length > 64) return
+99:     const save = saves.get(handle)
+100:     if (!save || !owner(event) || save.sender !== event.sender || save.frame !== event.senderFrame) return
+101:     return save
+```
+
+`apps/desktop/src/main/response-download.ts:56–71` · Git blob `cd869d37c96453d7692c83be51386bd559314449` · SHA-256 `f6f8c2b73328cd76cc804f03b3ae2e164d926d8c599cf7612525351ace26d5af`
+
+```text
+56:         // A chooser can stay open after cancellation. Only an already-started open/write is awaited.
+57:         await save.opening?.catch(() => undefined)
+58:         await save.writing?.catch(() => undefined)
+59:         await save.file?.close()
+60:         if (save.commit && save.temporary && save.path) {
+61:           // Submission is irreversible: cancellation now observes this rename's actual result.
+62:           save.committing = true
+63:           await (deps.rename ?? rename)(save.temporary, save.path)
+64:           save.temporary = undefined
+65:           return { status: "ok" }
+66:         }
+67:         return { status: "cancelled" }
+68:       } finally {
+69:         try {
+70:           // Exclusive open can collide: never unlink a path unless this save acquired its handle.
+71:           if (save.file && save.temporary) await rm(save.temporary, { force: true })
+```
+
+## E18. CLI cached artifact revalidation
+
+A manifest/hash-named installation is not reused without companion and artifact checks.
+
+`apps/desktop/src/main/cli-install.ts:34–55` · Git blob `8633f0cba5aa23011dc11f3d616eb4dd28dcfe90` · SHA-256 `4279b2f1eb7495be45092ea2be5c57c17d736de7fe967314576c2af72827dd60`
+
+```text
+34:   const directory = join(cache, `${manifest.version.replace(/[^a-zA-Z0-9._-]/g, "-")}-${target}-${artifact.sha256}`)
+35:   const existing = await readCliManifest(directory)
+36:     .then(async (installed) => {
+37:       if (
+38:         installed.version !== manifest.version ||
+39:         installed.artifacts.length !== 1 ||
+40:         installed.artifacts[0]?.sha256 !== artifact.sha256 ||
+41:         installed.artifacts[0]?.file !== artifact.file
+42:       )
+43:         return
+44:       requireTreeSitterBundle(join(directory, "tree-sitter"), cliTreeSitterTarget(target))
+45:       if (ripgrep !== undefined)
+46:         await RipgrepBundle.verify(join(directory, "ripgrep"), cliRipgrepKey(target)!, { signature: options.signature })
+47:       // A cache without the pair (an install from before the pair shipped) is rebuilt, not returned.
+48:       await requireOmniPair(directory, target)
+49:       return verifyCliArtifact(directory, target)
+50:     })
+51:     .catch(() => undefined)
+52:   // A valid installed copy is checked against the digest its directory is named for, so the bundle's own copy is hashed
+53:   // only when it is installed: hashing both on every launch cost about a second.
+54:   if (existing) return existing
+55:   const bundled = await verifyCliArtifact(source, target)
+```
+
+## E19. Shipped runtime resource boundary
+
+Native icons, Python helper and Linux runtime are copied as extraResources outside the application archive.
+
+`apps/desktop/electron-builder.config.ts:175–191` · Git blob `89eb781c8878687670d0e83afdc9df8e98c49734` · SHA-256 `91b330f08e0a933193ffbd8bd1d229de9a4fccb9df22a90910959d0ee87e4757`
+
+```text
+175:   afterPack: verifyPackagedResources,

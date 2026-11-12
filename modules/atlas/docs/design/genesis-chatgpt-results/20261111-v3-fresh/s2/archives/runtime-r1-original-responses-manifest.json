@@ -1,0 +1,213 @@
+{
+  "archive": "archives/runtime-r1-original-responses.zip",
+  "sha256": "f245ee13929e57abeca9a2db9589fa563015dc7ce48a910ec389f1a230bd15ed",
+  "bytes": 400675,
+  "files": [
+    {
+      "path": "github/baseline-app-shell.body.json",
+      "bytes": 460894,
+      "sha256": "731ab7f78c59a7e8155d0d88a9980f65b09979372b3383efba7c1fd4a4636fa8"
+    },
+    {
+      "path": "github/baseline-apps.json",
+      "bytes": 3063,
+      "sha256": "430d8ee9cf31f6b47bb2cf6a7eb276de6ff7cd98a8f4545d6ea84fb9eb5bc301"
+    },
+    {
+      "path": "github/baseline-commit.json",
+      "bytes": 3513,
+      "sha256": "192dbdd33c98a51bc83d2485e08cb3d54787030263e756ac938d4c82c0c7f53e"
+    },
+    {
+      "path": "github/baseline-desktop.body.json",
+      "bytes": 135641,
+      "sha256": "6de474b10d78d8f2cf675d64425193991a0ff77f92dda76c51d79afd315df5cf"
+    },
+    {
+      "path": "github/baseline-docs.body.json",
+      "bytes": 1475,
+      "sha256": "a2dd9bc9b1ca20f271ac5f655fee8582583abc2829e6a04ef77f7f555e83d929"
+    },
+    {
+      "path": "github/baseline-orchestra.body.json",
+      "bytes": 25668,
+      "sha256": "1abe1026171bf8752865b10aeb7a884d94f5195307faa05e7c9df20a829d5b95"
+    },
+    {
+      "path": "github/baseline-packages.json",
+      "bytes": 9175,
+      "sha256": "b29424f5168cca6e2dbe2d4f2c3faa2a7d73a1032ec10c3f74c3aec52f164509"
+    },
+    {
+      "path": "github/baseline-root-tree.json",
+      "bytes": 22077,
+      "sha256": "7ccd706073d83d91573799a24aad386bbf042d084729e4e155d4078127e4c58d"
+    },
+    {
+      "path": "github/baseline-schema.json",
+      "bytes": 2753,
+      "sha256": "9492675be22f96b4a2fbc90f92c20b45e751456750c45a9c39f0df01539f00a9"
+    },
+    {
+      "path": "github/baseline-tui.body.json",
+      "bytes": 71133,
+      "sha256": "aa47066047ee69a71af5cfd5c69b1af9ca2e6e51a3760c6038614c936513d191"
+    },
+    {
+      "path": "github/baseline-ui.body.json",
+      "bytes": 440061,
+      "sha256": "a909ead59112d354d668f4cfb540de023dc454147b28570bb2bcb388409e1937"
+    },
+    {
+      "path": "github/candidate-atlas-packages.body.json",
+      "bytes": 274560,
+      "sha256": "7c48b2b2e799cb109ef1c2f4bd20c31a73cbc85080e6532a22fa4bf47b1ce250"
+    },
+    {
+      "path": "github/candidate-atlas-scripts.body.json",
+      "bytes": 2839,
+      "sha256": "22601757dfcfff1bb6517f2cf0e250af99368638124e7cacdf163f5742758a6f"
+    },
+    {
+      "path": "github/candidate-atlas.body.json",
+      "bytes": 5138,
+      "sha256": "02d21174d33de1825f79aa77b8bc75fd17d88698794310d3524e6f880471a721"
+    },
+    {
+      "path": "github/candidate-commit.json",
+      "bytes": 3345,
+      "sha256": "11c77937f11f8fc6785348101d14d4cb58853d550800d53fb8a4386504f2b2a5"
+    },
+    {
+      "path": "github/candidate-genesis-native-connector.json",
+      "bytes": 3560,
+      "sha256": "da40c6032fb451f58e08655dbf89f150ebb1bdafc9017385c89394de7d43dc65"
+    },
+    {
+      "path": "github/candidate-modules.json",
+      "bytes": 5921,
+      "sha256": "ef9be76d2d4e88d5e994123c3eecf4eb748a80f10fce62e8557a40e30527d8eb"
+    },
+    {
+      "path": "github/candidate-root-tree.json",
+      "bytes": 22077,
+      "sha256": "97cf8176cddfe4942df36b68bf1faa8cddff2e9e282bfda18b88e0f8786a82eb"
+    },
+    {
+      "path": "github/failed-candidate-recursive-tree.json",
+      "bytes": 193,
+      "sha256": "4ca085054ca3b19ece56aa50f8d65468dc7d462ce14463aca6b546d502e0cd63"
+    },
+    {
+      "path": "github/runtime-release-connector.json",
+      "bytes": 7969,
+      "sha256": "33b44fa9208f62e43a290f4353b85f70e5c557a980ea718c06bb0fa3428cc9ca"
+    },
+    {
+      "path": "github/runtime-release.json",
+      "bytes": 6989,
+      "sha256": "47deabb52ee93e18de06c68c1c27a0ff810a4e779a5087581080e87d6756979f"
+    },
+    {
+      "path": "github/runtime-release.json.initial-extra-newline",
+      "bytes": 6990,
+      "sha256": "5f7e697b81469dd16fad173f648dc20c71c7a15ef9a0c844663ee272c95c8445"
+    },
+    {
+      "path": "github/s4-latest-release-recheck.json",
+      "bytes": 7945,
+      "sha256": "fe9d841977a89fdb579b86081ae8b4ed8fe3989934aa8058c090873dbf637bc6"
+    },
+    {
+      "path": "github/s4-prepare-receipt-connector.json",
+      "bytes": 3609,
+      "sha256": "f6ccfa3c82eba707bbddb6b3db98712f16afb2829971f7dde48dbe4029ef9d7e"
+    },
+    {
+      "path": "github/source-baseline-apps-cli.body.json",
+      "bytes": 45099,
+      "sha256": "2b0dfec77151fe33f028d6a9af1ff3a23edf68e84ca9dd6c1328d2fbaabf24f6"
+    },
+    {
+      "path": "github/source-baseline-apps-storybook.body.json",
+      "bytes": 9088,
+      "sha256": "096754cb048ba1320e95bb2123cf4430d3a7fcddd0520bdfaf3111a78af31421"
+    },
+    {
+      "path": "github/source-baseline-apps-web.body.json",
+      "bytes": 2005,
+      "sha256": "5a7f1653617b5baaddf953edafde30d8d8160d6ddb4019428f504655173eb596"
+    },
+    {
+      "path": "github/source-baseline-docs-architecture.body.json",
+      "bytes": 13740,
+      "sha256": "a7234fc28df2bab9dd61e76abad527bee35e76a256ac161dee5d6705df1ea354"
+    },
+    {
+      "path": "github/source-baseline-docs-guides.body.json",
+      "bytes": 11317,
+      "sha256": "cf6a94ff993326e4932143d2b11c29702d25e69c032a3dc39e0fd7b04579f83b"
+    },
+    {
+      "path": "github/source-baseline-docs-images.body.json",
+      "bytes": 10393,
+      "sha256": "3fd8cd6181a82efa4bd5876b92c6b5d4b10dd941db02cc4e10a75d7012554bdc"
+    },
+    {
+      "path": "github/source-baseline-docs-specs.body.json",
+      "bytes": 91453,
+      "sha256": "628775cf2a6f30fb1b141ebf032ee0b6cdb9c7e7fb414e35641b39400262c4a4"
+    },
+    {
+      "path": "github/source-baseline-packages-client.body.json",
+      "bytes": 20269,
+      "sha256": "c77476684f0903dc131d3843caa200f88dcd8725a4cf6f57c15e80c78c600094"
+    },
+    {
+      "path": "github/source-baseline-packages-core.body.json",
+      "bytes": 379771,
+      "sha256": "2046fa44a0818c17e17143c1655ea30efa43c9e3e011dcc569af595be5d1999b"
+    },
+    {
+      "path": "github/source-baseline-packages-protocol.body.json",
+      "bytes": 16737,
+      "sha256": "93c496ea01249823432753a27ac08320583c8a142de8b078a4afd2bfa84cc461"
+    },
+    {
+      "path": "github/source-baseline-packages-schema.body.json",
+      "bytes": 30143,
+      "sha256": "3c2117b62604d870f3bfaa65674063086b578182a0c8b4106017615367dd9c03"
+    },
+    {
+      "path": "github/source-baseline-packages-server.body.json",
+      "bytes": 40669,
+      "sha256": "e877205542d7ef77e1a90326b8bdc8a975a15a61b1a220ab18448e4e34fb3252"
+    },
+    {
+      "path": "github/source-baseline-packages-session-ui.body.json",
+      "bytes": 35898,
+      "sha256": "7c85f2ebdbbcfcfa456e55c14252e679356694a2b761cb7eaab7412c5c3c2c9e"
+    },
+    {
+      "path": "github/source-root-assets.body.json",
+      "bytes": 2064,
+      "sha256": "077606acecaf0bccdab4f233e0cd53fb3143a5e85ad5be74590e8ca3b256cb1d"
+    },
+    {
+      "path": "github/source-root-github.body.json",
+      "bytes": 10776,
+      "sha256": "f670f4fa73a0598f68ee40a1f28bc2eb19a9a0e189242b32b831d9a6a75970c0"
+    },
+    {
+      "path": "github/source-root-script.body.json",
+      "bytes": 55513,
+      "sha256": "b9fe0f187ca5bb4aaa63fbd45aae3768ed3b5b8f0a35aa5c79b248f590bd2a74"
+    },
+    {
+      "path": "github/transport-contract-connector.json",
+      "bytes": 9250,
+      "sha256": "5e696ba1c0bc7c2893bcd8d5ceecf163fcaccbf55d159a8eacd8e95d93fc4849"
+    }
+  ],
+  "remote_publication": "NOT_ATTEMPTED; explicit approval pending after actual automatic rejection"
+}

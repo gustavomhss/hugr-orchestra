@@ -1,0 +1,117 @@
+{
+  "schema": "genesis-s2-build-supplement/v1",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source_files_verified_before_and_after": 406,
+  "source_bytes_changed": false,
+  "versions": [
+    {
+      "argv": [
+        "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+      "started_at": "2026-11-11T17:50:50.092453+00:00",
+      "ended_at": "2026-11-11T17:50:50.139771+00:00",
+      "duration_seconds": 0.047316958000010345,
+      "exit_code": 0,
+      "resolved_executable": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+      "stdout": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/bun-version.stdout",
+        "sha256": "56b0485099b6c5427d3b68c042fd05b632d5e52e924c5064473389812227164c",
+        "byte_length": 7
+      },
+      "stderr": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/bun-version.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "byte_length": 0
+      }
+    },
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+      "started_at": "2026-11-11T17:50:50.140052+00:00",
+      "ended_at": "2026-11-11T17:50:50.145847+00:00",
+      "duration_seconds": 0.005796056000690442,
+      "exit_code": 0,
+      "resolved_executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "stdout": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/node-version.stdout",
+        "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81",
+        "byte_length": 9
+      },
+      "stderr": {
+        "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/node-version.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "byte_length": 0
+      }
+    }
+  ],
+  "typescript_manifest": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas/node_modules/typescript/package.json",
+    "sha256": "822ef7ca6452205657b6288b066481ecf508bfbf43455d715cf7d3ec457561e6",
+    "byte_length": 3620
+  },
+  "typescript_version": "5.9.3",
+  "postinstall": {
+    "argv": [
+      "node",
+      "scripts/fix-scip-types.mjs"
+    ],
+    "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas",
+    "started_at": "2026-11-11T17:50:50.146734+00:00",
+    "ended_at": "2026-11-11T17:50:50.239049+00:00",
+    "duration_seconds": 0.09232591999898432,
+    "exit_code": 0,
+    "resolved_executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "stdout": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/fix-scip-types.stdout",
+      "sha256": "9ce7ef0c8339d106f3259c824a6e88c0bb408b11e790b226a18b79bb888eb3a5",
+      "byte_length": 78
+    },
+    "stderr": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/fix-scip-types.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    }
+  },
+  "scip_package_before": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas/node_modules/@c4312/scip/package.json",
+    "sha256": "e072e9fa577ce697fc2367deb1cd0ca89e29588f2867d3413d714db691536ca4",
+    "byte_length": 801
+  },
+  "scip_package_after": {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas/node_modules/@c4312/scip/package.json",
+    "sha256": "a1ac7269fbef6b5a38f3b1a17308f5492b1d4fd6daf397a96ecd1793f3252d18",
+    "byte_length": 926
+  },
+  "typecheck": {
+    "argv": [
+      "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+      "run",
+      "typecheck"
+    ],
+    "cwd": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/runtime-code/modules/atlas/packages/adapter-io",
+    "started_at": "2026-11-11T17:50:50.239435+00:00",
+    "ended_at": "2026-11-11T17:50:54.705536+00:00",
+    "duration_seconds": 4.466113295999094,
+    "exit_code": 0,
+    "resolved_executable": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/tools/bun-package/bin/bun",
+    "stdout": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/typecheck-adapter-io.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    "stderr": {
+      "path": "/workspace/scratch/7b5d6430f420/genesis-s2/runtime-work/supplement-r2/commands/typecheck-adapter-io.stderr",
+      "sha256": "faeaa94bcf7012d86f91ca647580449f56a263fb7eaf572c54789764f60a9b8f",
+      "byte_length": 9
+    }
+  },
+  "product_tests_executed": false,
+  "prepare_executed": false,
+  "cas_created": false,
+  "product_typecheck_state": "PASS"
+}

@@ -1,0 +1,251 @@
+{
+  "artifact_key": "s2.l2.app-session",
+  "check_kind": "artifact-only mechanical author checks; no semantic verdict",
+  "dispatch_sha256_verified": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60",
+  "accepted_manifest_sha256_verified": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+  "accepted_predecessor_sha256_verified": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+  "body": {
+    "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+    "bytes": 24434,
+    "whitespace_words": 2950,
+    "h2_count": 11,
+    "h2_sections": [
+      {
+        "heading": "Orientation and evidence status",
+        "bytes": 1331,
+        "whitespace_words": 155
+      },
+      {
+        "heading": "Composition, identity and asynchronous ownership",
+        "bytes": 1936,
+        "whitespace_words": 230
+      },
+      {
+        "heading": "Durable admission, optimistic state and draft storage",
+        "bytes": 2705,
+        "whitespace_words": 339
+      },
+      {
+        "heading": "Transport, liveness and canonical recovery",
+        "bytes": 2109,
+        "whitespace_words": 266
+      },
+      {
+        "heading": "Permission requests and terminal boundaries",
+        "bytes": 1528,
+        "whitespace_words": 190
+      },
+      {
+        "heading": "Shared rendering, files and evidence interpretation",
+        "bytes": 2597,
+        "whitespace_words": 312
+      },
+      {
+        "heading": "Navigation, settings and feature controllers",
+        "bytes": 3639,
+        "whitespace_words": 455
+      },
+      {
+        "heading": "Skills catalog, content and editing ownership",
+        "bytes": 2700,
+        "whitespace_words": 327
+      },
+      {
+        "heading": "Host capabilities and auxiliary lifetimes",
+        "bytes": 1381,
+        "whitespace_words": 162
+      },
+      {
+        "heading": "Visual resources and prescribed maintenance",
+        "bytes": 2857,
+        "whitespace_words": 316
+      },
+      {
+        "heading": "Verification limits and ownership use",
+        "bytes": 1582,
+        "whitespace_words": 188
+      }
+    ],
+    "below_deep_query_64000_bytes": true,
+    "every_h2_below_routine_query_16000_bytes": true
+  },
+  "direct_source_count": 31,
+  "source_sha256_matches": 31,
+  "source_git_blob_sha_matches": 31,
+  "source_duplicate_paths": 0,
+  "build_dependency_count": 1,
+  "navigation_dependency_count": 2,
+  "accepted_predecessor_section_count": 9,
+  "accepted_predecessor_sections": [
+    "Assets, localization and verification evidence",
+    "Authority, composition and identity",
+    "Navigation, settings and feature-family disposition",
+    "Prompt admission and draft ownership",
+    "Rendering, evidence and reusable utility contracts",
+    "Requests, terminals and auxiliary lifetimes",
+    "Scope, identity and depth",
+    "Skills catalog, editing and ownership",
+    "Transport, stream health and canonical recovery"
+  ],
+  "mapped_family_count": 59,
+  "mapped_family_path_count": 1887,
+  "unmapped_family_ids": [],
+  "evidence_group_count": 11,
+  "newly_explicit_evidence_groups": 4,
+  "corroboration_groups": 7,
+  "exact_excerpt_count": 20,
+  "exact_excerpts": [
+    {
+      "id": "N1",
+      "path": "packages/app-shell/src/components/prompt-input/submit.ts",
+      "start_line": 442,
+      "end_line": 466,
+      "sha256": "18b26d32fa21394a757a866191975d4e5212b03107343e2960b5e7b65c8554b9"
+    },
+    {
+      "id": "N1",
+      "path": "packages/app-shell/src/components/prompt-input/submit.ts",
+      "start_line": 660,
+      "end_line": 672,
+      "sha256": "b5bb3a0da0690c92b3898c93aa344b3b11081ad2e7c4020f0bfe8f67e02454de"
+    },
+    {
+      "id": "N2",
+      "path": "packages/schema/AGENTS.md",
+      "start_line": 1,
+      "end_line": 10,
+      "sha256": "8e813ab66a0b53d8451e4750095982833e27fb016bbbb101b68f3a0d2ce85858"
+    },
+    {
+      "id": "N3",
+      "path": "AGENTS.md",
+      "start_line": 146,
+      "end_line": 154,
+      "sha256": "8fa4debd4f7a4a28198b8620029467c1cd1f107c3645ff0157969b637a752721"
+    },
+    {
+      "id": "N4",
+      "path": "AGENTS.md",
+      "start_line": 182,
+      "end_line": 192,
+      "sha256": "4f5b2378f8eb397a98a143b26af09bf856f0a06ad9204f8567ae8beda212ffab"
+    },
+    {
+      "id": "C1",
+      "path": "packages/app-shell/src/context/global.tsx",
+      "start_line": 68,
+      "end_line": 98,
+      "sha256": "3163cc32e79fecdf5778809e82cc4c501fffc5edb8dbc53a746da9073212fc67"
+    },
+    {
+      "id": "C1",
+      "path": "packages/app-shell/src/pages/session/session-ownership.ts",
+      "start_line": 3,
+      "end_line": 33,
+      "sha256": "cd00e143087a08dbad7f6d8fd4b515d903df2bfc6346eaa5056efadf4bbe4af4"
+    },
+    {
+      "id": "C2",
+      "path": "packages/core/src/session/input.ts",
+      "start_line": 291,
+      "end_line": 316,
+      "sha256": "249f596d94c394e09943e64fa36f16eb158e0f3ae47d32e60bcf24064acef803"
+    },
+    {
+      "id": "C3",
+      "path": "packages/server/src/handlers/event.ts",
+      "start_line": 13,
+      "end_line": 20,
+      "sha256": "ba1e8e697e68001d7b71935a3d00f2b534b89e7a74bc22ecc12c6e722c7f99d6"
+    },
+    {
+      "id": "C3",
+      "path": "packages/server/src/handlers/event.ts",
+      "start_line": 25,
+      "end_line": 43,
+      "sha256": "23ea3e429cfddf1be5e7971055f0ee1a69c44adf2bdce194d88ca2bfaa660ff1"
+    },
+    {
+      "id": "C4",
+      "path": "packages/app-shell/src/context/session-recovery.ts",
+      "start_line": 45,
+      "end_line": 64,
+      "sha256": "8a39dbd07bb88c2c0614516cca942b870abefc4651c45e6f0538221fdcfa7b20"
+    },
+    {
+      "id": "C5",
+      "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "start_line": 11,
+      "end_line": 28,
+      "sha256": "fab2c3bceb35ea5912556b9d16716f54baeb2f0c1995a10205d8c0a75f93b76a"
+    },
+    {
+      "id": "C5",
+      "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "start_line": 54,
+      "end_line": 56,
+      "sha256": "5e7ce3ec9c0e0620f8c32ba3882ca5612a6ff138ce9b66f3a5687359df328e04"
+    },
+    {
+      "id": "C5",
+      "path": "packages/app-shell/src/orchestra/chapters/skills-data.ts",
+      "start_line": 69,
+      "end_line": 81,
+      "sha256": "d9e4bd803855c9bce06e4a4f420738335e84e5b5d935fd435cf07dbd2ce557dd"
+    },
+    {
+      "id": "C5",
+      "path": "packages/app-shell/src/orchestra/chapters/skills-dialog.tsx",
+      "start_line": 43,
+      "end_line": 57,
+      "sha256": "0d2345674e0ec5f15617e613404844d09dab0fa2e13d03f2edd49318cb025d30"
+    },
+    {
+      "id": "C5",
+      "path": "packages/app-shell/src/orchestra/chapters/skills.tsx",
+      "start_line": 100,
+      "end_line": 125,
+      "sha256": "c86663f9835c1576d1eb02c7a99af006b356b2d988388a075f0a0546de4fff72"
+    },
+    {
+      "id": "C6",
+      "path": "packages/session-ui/src/transcript-model.ts",
+      "start_line": 1,
+      "end_line": 6,
+      "sha256": "ed4ec071a320647016f068ec5eade0122a25b27979d3dc511a9fa051462090d3"
+    },
+    {
+      "id": "C6",
+      "path": "packages/session-ui/src/components/markdown-cache.tsx",
+      "start_line": 35,
+      "end_line": 38,
+      "sha256": "6abacc1c914a3e9c25bd998eeddfe27499b4a6ff02029086a79bda98efdb07e5"
+    },
+    {
+      "id": "C6",
+      "path": "packages/app-shell/src/context/permission-auto-respond.ts",
+      "start_line": 59,
+      "end_line": 69,
+      "sha256": "6156bdbc8d4a8769e5694496097f3dabd4228a4c68b1a107557d7e64cc934444"
+    },
+    {
+      "id": "C7",
+      "path": "packages/app-shell/src/components/settings-v2/general-controllers.ts",
+      "start_line": 75,
+      "end_line": 88,
+      "sha256": "e380c4dcfc67f694b66c756da255b4f907e75a9e48f6f11a4424e3ca3511f140"
+    }
+  ],
+  "unexecuted": [
+    "product tests",
+    "benchmarks",
+    "typechecks",
+    "builds",
+    "Client/palette generation",
+    "browser/native interactions",
+    "provider/model calls",
+    "remote writes",
+    "CI"
+  ],
+  "errors": []
+}

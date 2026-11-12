@@ -1,0 +1,48 @@
+{
+  "schema": "genesis-s2-principal-current-support-observation/v1",
+  "recorded_at": "2026-11-11T21:33:48.899127+00:00",
+  "operations": [
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_closure_audit",
+      "count": 1,
+      "purpose": "S2-U1 existing frozen specification binding",
+      "actual_work_returned": true
+    },
+    {
+      "tool": "collaboration.spawn_agent",
+      "target": "/root/s2_final_usage_delta",
+      "count": 1,
+      "purpose": "Post-79-row observable usage reconciliation",
+      "actual_visible_tool_result": {
+        "task_name": "/root/s2_final_usage_delta"
+      },
+      "actual_work_returned": true
+    },
+    {
+      "tool": "collaboration.send_message",
+      "target": "/root/s2_final_usage_delta",
+      "count": 1,
+      "purpose": "Inform actual final-return 3GET receipts"
+    }
+  ],
+  "support_result_files": [
+    {
+      "path": "evidence/u1-final-binding/receipt.json",
+      "sha256": "52d68d6aa2eb4b7bcfcf55f860e73de4d85a72271e502a97f5ce5d415b94a8fb"
+    },
+    {
+      "path": "evidence/final-usage-delta/reconciled-01/observable-usage-delta.json",
+      "sha256": "60ef81988c96b2f07c4acc4ffd96c82b823d6b256f5d31e6eba2267d78641feb"
+    }
+  ],
+  "observation_discrepancy": {
+    "worker_report": "Worker inherited context reported the spawn return as aborted. The original worker report is preserved unchanged.",
+    "principal_visible_result": "The root-visible actual spawn result is {\"task_name\":\"/root/s2_final_usage_delta\"}; task delivery and returned work independently establish activation. No failed activation is inferred from the worker inherited-view discrepancy.",
+    "host_internal_status": "UNKNOWN"
+  },
+  "scope": "Bounded current support operations only; not complete campaign support accounting or hidden provider attempts.",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN"
+}

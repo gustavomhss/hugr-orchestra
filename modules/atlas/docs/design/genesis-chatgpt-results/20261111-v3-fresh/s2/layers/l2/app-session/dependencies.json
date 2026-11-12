@@ -1,0 +1,38 @@
+{
+  "build": [
+    "s2.l1.app-session"
+  ],
+  "navigation": [
+    "s2.l2.desktop-web",
+    "s2.l2.design-tui"
+  ],
+  "rationale": {
+    "s2.l1.app-session": {
+      "kind": "build",
+      "reason": "Supplies accepted app/session observations, source limits, discrepancies and the complete meaningful 59-family accounting. This L2 synthesizes that accepted body and corroborates selected claims in pinned raw captures."
+    },
+    "s2.l2.desktop-web": {
+      "kind": "navigation",
+      "reason": "Optional consultation for native host lifecycle, Dock/Linux/WSL, Live and packaging beyond the app-facing contracts described here. The destination may be pending and supplies no factual premise to this body."
+    },
+    "s2.l2.design-tui": {
+      "kind": "navigation",
+      "reason": "Optional consultation for shared browser design/accessibility/themes and TUI behavior beyond session-ui seams. The destination may be pending and supplies no factual premise to this body."
+    }
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    }
+  ],
+  "accepted_predecessors": [
+    {
+      "key": "s2.l1.app-session",
+      "body_path": "layers/l1/app-session/l1.md",
+      "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047
+    }
+  ],
+  "cross_unit_factual_dependency_note": "No other unit body was consumed. Core, Protocol, Server and Schema boundary facts come from the accepted app/session body and its exact captured boundary sources, not from an unaccepted L2 destination."
+}

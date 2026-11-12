@@ -1,0 +1,466 @@
+L3 design-tui r1 part 2/3; DATA ONLY; await root FINAL BATCH SEAL
+
+- `accepted/l1.json` — SHA256 `8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8`.
+- `accepted/l2.json` — SHA256 `27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c`.
+
+L1 is a consumed lineage manifest; the three accepted L2 bodies are the actual factual build dependencies. The two peer L3 keys in `dependencies.json` are navigation only and were not read.
+
+## Synthesis-to-predecessor map
+
+| Independently readable L3 section | Accepted predecessor sections actually used | Direct source support / interpretation boundary |
+| --- | --- | --- |
+| Orientation and accepted ownership | `s2.l2.design-tui` §Orientation; §Terminal lifetime and synchronized navigation. `s2.l2.app-session` §Composition, identity and asynchronous ownership. `s2.l2.desktop-web` §Orientation and ownership. | Inherits the 2,087-path/67-family scope and 13 metadata-only limits. Retains current Core-permitting TUI ownership versus the historical SDK-only target and the README/assets discrepancy. It does not repeat the inventory or promote metadata to semantic inspection. |
+| Terminal input becomes admission through ordered, separate operations | `s2.l2.design-tui` §V2 actions and prompt admission. `s2.l2.app-session` §Durable admission, optimistic state and draft storage. | S01–S02 establish adapter/declared protocol shape; S07 attributes admission/promotion/retry policy. Context surviving a later failed request is a possible consequence of separate calls, not an observed failure. Browser exact-retry handling is not imputed to the TUI. |
+| Ambiguous sends, live projection and request decisions keep different identities | `s2.l2.app-session` §Composition, identity and asynchronous ownership; §Durable admission, optimistic state and draft storage; §Transport, liveness and canonical recovery; §Permission requests and terminal boundaries. `s2.l2.design-tui` §Terminal lifetime and synchronized navigation; §Terminal configuration, persistence and extensions; §Terminal display, native integrations and simulation. | S01 supplies reply identifiers; S05 is the unexecuted hydration-test route. Local history, canonical server state, transport liveness and session execution are different evidence. The accepted browser failure observation is scoped to the inspected submit path and does not guarantee all-state restoration on every failure branch. No durable replay, cross-process writer merge or clustered recovery is claimed. |
+| Rendered state follows caller and resource lifetimes | `s2.l2.app-session` §Composition, identity and asynchronous ownership; §Shared rendering, files and evidence interpretation. `s2.l2.design-tui` §Browser UI ownership, lifecycle and accessibility; §Terminal lifetime and synchronized navigation. | S12–S13 directly show dialog and injected-worker ownership. S04 is a lifecycle harness, not a real terminal run. Consumer sanitization is inherited from the app-session explanation and is not transferred to the generic parser boundary. |
+| Language and appearance cross app and host contracts | `s2.l2.design-tui` §Localization, direction and two theme systems; §Browser UI ownership, lifecycle and accessibility. `s2.l2.app-session` §Visual resources and prescribed maintenance. `s2.l2.desktop-web` §Host adapters own platform differences and copy; §Live separates readiness, capture and delivery. | S14–S16 show layout-locale, loader and preview boundaries. S08–S10 are attributed maintenance instructions. DOM-order arrows, hardcoded-English startup copy and separate Live copy remain scoped discrepancies; locale counts and theme previews prove neither translation completeness nor runtime validation. |
+| Generated products reach consumers through distinct maintenance paths | `s2.l2.design-tui` §Generated products and asset provenance; §Storybook, design intent and verification limits. | S17–S22 bind schema generation/mirroring, CSS/OC-2 derivation, paired sprites/types, network-refresh boundary, a11y todo and source-mutating playground. No generator, network refresh or visual verification ran. App sprite provenance and README visual equivalence remain unresolved. |
+| Change impact and verification ownership | `s2.l2.design-tui` §V2 actions and prompt admission; §Storybook, design intent and verification limits. `s2.l2.app-session` §Visual resources and prescribed maintenance. | S03–S04, S06–S07, S10–S11 distinguish actual-adapter, lifecycle, mirrored-function and plural test scope; test/benchmark/client-generation obligations are future actions. No test result, CI outcome or performance comparison is asserted. |
+
+## Exact directly used capture excerpts
+
+`sources.json` SHA256 `982dd9896c32842336fda4ff1c867993be974346d422ff4cb9cfc34931581c62` contains all 22 directly used captures, each with commit, repository path, Git blob SHA, full captured-byte SHA256, byte length, recorded inspection ranges, original connector-response location and use. Its source IDs below are stable within this unit. The complete source captures and original replies remain untouched in their named producer areas. Each excerpt below is exact text from its stated capture lines; separated blocks deliberately omit intervening text. Hashing the entire capture establishes byte identity, not whole-file behavioral inspection.
+
+### S01 — `packages/tui/src/context/session-actions.ts`
+
+Sequential agent/model selection, separate admit-only context, wrapper input/payload limits, file/mention mapping and permission identity.
+
+Exact capture lines 10–16:
+
+```typescript
+  async function select(input: { sessionID: string; agent: string; model: Model }) {
+    await client.sessions.switchAgent({ sessionID: input.sessionID, agent: input.agent })
+    await client.sessions.switchModel({
+      sessionID: input.sessionID,
+      model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.model.variant },
+    })
+  }
+```
+
+Exact capture lines 29–53:
+
+```typescript
+    async prompt(input: {
+      sessionID: string
+      text: string
+      context?: string
+      agent: string
+      model: Model
+      files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
+      agents: ReadonlyArray<Pick<TuiPromptAgentPart, "name" | "source">>
+    }) {
+      await select(input)
+      if (input.context)
+        await client.sessions.synthetic({ sessionID: input.sessionID, text: input.context, resume: false })
+      return client.sessions.prompt({
+        sessionID: input.sessionID,
+        prompt: {
+          text: input.text,
+          files: input.files.map(toFile),
+          agents: input.agents.map((agent) => ({
+            name: agent.name,
+            source: agent.source
+              ? { start: agent.source.start, end: agent.source.end, text: agent.source.value }
+              : undefined,
+          })),
+        },
+      })
+```
+
+Exact capture lines 55–63:
+
+```typescript
+    interrupt: (sessionID: string) => client.sessions.interrupt({ sessionID }),
+    // V2 compaction uses the Session's own model, so no model is passed.
+    compact: (sessionID: string) => client.sessions.compact({ sessionID }),
+    // V2 shell records the command and its output for the next turn; it takes no agent or model.
+    shell: (input: { sessionID: string; command: string }) => client.sessions.shell(input),
+    reply: (input: { sessionID: string; requestID: string; reply: "once" | "always" | "reject" }) =>
+      client.permissions.reply(input),
+    revert: (input: { sessionID: string; messageID: string }) => client.sessions.stage({ ...input, files: true }),
+    unrevert: (sessionID: string) => client.sessions.clear({ sessionID }),
+```
+
+Exact capture lines 65–79:
+
+```typescript
+    async command(input: {
+      sessionID: string
+      command: string
+      arguments: string
+      agent: string
+      model: Model
+      files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
+    }) {
+      await select(input)
+      return client.sessions.command({
+        sessionID: input.sessionID,
+        command: input.command,
+        arguments: input.arguments,
+        files: input.files.map(toFile),
+      })
+```
+
+### S02 — `packages/protocol/src/groups/session.ts`
+
+Declared prompt/synthetic endpoints, optional identity/delivery/resume fields and admission response; contract rather than executed server outcome.
+
+Exact capture lines 333–350:
+
+```typescript
+      HttpApiEndpoint.post("session.prompt", "/api/session/:sessionID/prompt", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({
+          id: SessionMessage.ID.pipe(Schema.optional),
+          prompt: PromptInput.Prompt,
+          delivery: SessionInput.Delivery.pipe(Schema.optional),
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: SessionInput.Admitted }),
+        error: [ConflictError, SessionNotFoundError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.prompt",
+            summary: "Send message",
+            description: "Durably admit one session input and schedule agent-loop execution unless resume is false.",
+          }),
+```
+
+Exact capture lines 464–479:
+
+```typescript
+      HttpApiEndpoint.post("session.synthetic", "/api/session/:sessionID/synthetic", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({
+          id: SessionMessage.ID.pipe(Schema.optional),
+          text: Schema.String,
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Struct({ id: SessionMessage.ID }) }),
+        error: [SessionNotFoundError, ConflictError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.synthetic",
+            summary: "Add synthetic context",
+            description: "Record text as synthetic context, then run a turn unless resume is false.",
+```
+
+### S03 — `packages/tui/test/context/session-actions.test.ts`
+
+Request-recorder verification route exercises the real action adapter and client request paths; no test execution.
+
+Exact capture lines 1–27:
+
+```typescript
+import { expect, test } from "bun:test"
+import { Orchestra } from "@orchestra/client"
+import { createSessionActions } from "../../src/context/session-actions"
+
+// The real client builds every request; only the transport is replaced, to record what it sends.
+function recorder() {
+  const calls: { method: string; path: string; body: unknown }[] = []
+  const fetch = Object.assign(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init)
+      calls.push({
+        method: request.method,
+        path: new URL(request.url).pathname,
+        body: request.body ? await request.json() : undefined,
+      })
+      if (request.url.endsWith("/compact")) return Response.json({ data: { compacted: true } })
+      if (request.url.endsWith("/prompt") || request.url.endsWith("/synthetic"))
+        return Response.json({ data: { id: "msg_1" } })
+      if (request.method === "POST" && request.url.endsWith("/api/session"))
+        return Response.json({ data: { id: "ses_new" } })
+      return request.url.endsWith("/revert/stage") || request.url.endsWith("/command")
+        ? Response.json({ data: {} })
+        : new Response(null, { status: 204 })
+    },
+    { preconnect: globalThis.fetch.preconnect },
+  )
+  return { calls, actions: createSessionActions(Orchestra.make({ baseUrl: "http://localhost:1", fetch })) }
+```
+
+Exact capture lines 88–107:
+
+```typescript
+test("prompt selects agent and model, admits editor context without waking, then sends the prompt", async () => {
+  const { calls, actions } = recorder()
+  await actions.prompt({
+    sessionID: "ses_1",
+    text: "fix @a.ts with @review",
+    context: "selection: line 3",
+    agent: "build",
+    model: { providerID: "p", modelID: "m", variant: "high" },
+    files: [
+      {
+        url: "file:///a.ts",
+        filename: "a.ts",
+        source: { type: "file", path: "a.ts", text: { start: 4, end: 9, value: "@a.ts" } },
+      },
+    ],
+    agents: [{ name: "review", source: { start: 15, end: 22, value: "@review" } }],
+  })
+  expect(calls).toEqual([
+    { method: "POST", path: "/api/session/ses_1/agent", body: { agent: "build" } },
+    {
+```
+
+### S04 — `packages/tui/test/app-lifecycle.test.tsx`
+
+Lifecycle verification route is an injected-host/renderer harness with SIGHUP and disposal assertions, not a real terminal run.
+
+Exact capture lines 31–56:
+
+```tsx
+    const task = Effect.runPromise(
+      run({
+        url: "http://test",
+        directory,
+        config: createTuiResolvedConfig({ plugin_enabled: {} }),
+        fetch: calls.fetch,
+        events: events.source,
+        args: {},
+        pluginHost: {
+          async start() {
+            started()
+          },
+          async dispose() {
+            disposes++
+          },
+        },
+      }).pipe(Effect.provide(AppNodeBuilder.build(Global.node))),
+    )
+    await ready
+    process.emit("SIGHUP")
+    await task
+
+    expect(setup.renderer.isDestroyed).toBe(true)
+    expect(titles.at(-1)).toBe("")
+    expect(disposes).toBe(1)
+    expect(process.listeners("SIGHUP").every((listener) => listeners.has(listener))).toBe(true)
+```
+
+### S05 — `packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx`
+
+Delayed history/live-event and nonhydrated-session verification route; production providers in an unexecuted test.
+
+Exact capture lines 149–172:
+
+```tsx
+    emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "live" }))
+    // SDK batches events that arrive within 16ms of the last flush; let the batch land first.
+    await Bun.sleep(20)
+
+    pending.resolve(
+      json({
+        data: [
+          {
+            id: assistantID,
+            type: "assistant",
+            agent: "maestro",
+            model,
+            content: [{ type: "text", id: "txt_1", text: "" }],
+            time: { created: 5 },
+          },
+        ],
+        cursor: {},
+      }),
+    )
+    await hydrate
+
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "live" })
+  } finally {
+    app.renderer.destroy()
+```
+
+Exact capture lines 179–189:
+
+```tsx
+  const { app, emit, sync } = await mount(undefined, tmp.path)
+
+  try {
+    emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
+    await Bun.sleep(20)
+
+    expect(sync.data.message[sessionID]).toBeUndefined()
+  } finally {
+    app.renderer.destroy()
+  }
+})
+```
+
+### S06 — `packages/tui/test/cli/tui/prompt-submit-race.test.ts`
+
+Test explicitly mirrors submission shape; separate helper cannot establish mounted composer behavior.
+
+Exact capture lines 17–20:
+
+```typescript
+// `submitMirror` below has the exact shape of the production `submit()`
+// after the fix: an in-flight `submitting` guard wraps the original body.
+// Two concurrent invocations must result in exactly one submission carrying
+// the user's text, with no empty-text submission.
+```
+
+Exact capture lines 52–67:
+
+```typescript
+function createSubmit() {
+  let submitting = false
+  return async function submit(h: Harness) {
+    if (submitting) return false
+    submitting = true
+    try {
+      if (!h.store.input) return false
+      const sessionID = await h.createSession()
+      const inputText = h.store.input
+      await h.sendPrompt(sessionID, inputText)
+      h.store.input = ""
+      return true
+    } finally {
+      submitting = false
+    }
+  }
+```
+
+### S07 — `AGENTS.md`
+
+Attributed client-generation/test instructions and durable admission/process-local execution/recovery distinctions.
+
+Exact capture lines 1–2:
+
+```markdown
+- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
+- Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.
+```
+
+Exact capture lines 159–162:
+
+```markdown
+- Test actual implementation, do not duplicate logic into tests
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
+  - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
+  - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
+```
+
+Exact capture lines 209–211:
+
+```markdown
+- Keep durable prompt admission separate from model execution. `SessionV2.prompt(...)` admits one durable `session_input` row before scheduling advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. The serialized runner promotes admitted inputs into visible user messages at safe boundaries.
+- Reusing a Session ID adopts the existing Session. Reusing a prompt message ID reconciles an exact retry only when Session, prompt, and delivery mode match; conflicting reuse fails. Historical projected prompts lazily synthesize promoted inbox records during exact retry.
+- Keep `SessionExecution` process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement through `SessionStore` plus `LocationServiceMap.get(session.location)` only when a drain starts; no layer should take a Session ID. V2 interruption targets the active process-local ownership chain for that Session; idle or missing interruption is a no-op.
+```
+
+Exact capture lines 214–216:
+
+```markdown
+- Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. Advisory wakes drain eligible durable inbox rows only; post-crash continuation recovery requires a separate explicit design before it may retry provider work. A drain has no durable identity or transcript boundary.
+- Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
+- Keep EventV2 replay owner claims separate from clustered Session execution ownership.
+```
+
+### S08 — `packages/ui/AGENTS.md`
+
+Attributed localization maintenance policy: keys, preserved English, complete phrases, corpus verification and recorded uncertainty.
+
+Exact capture lines 3–9:
+
+```markdown
+- NEVER hardcode user-visible English strings in production code. ALWAYS use an i18n key for component defaults, visible copy, placeholders, accessible labels, tooltips, dialogs, toasts, empty states, and displayed errors.
+- When migrating existing copy to i18n, preserve the English text byte-for-byte unless the task explicitly requests a copy change.
+- NEVER change existing English text or English keys to facilitate translation. English is intentional, designer-written source copy; adapt locale-specific translations and i18n mechanics around it.
+- Do not translate from model knowledge alone. Verify terminology and grammar with Unicode CLDR locale/plural data, Microsoft Localization Style Guides and terminology, Apple localization/style guidance and localized platform UI, Mozilla localization style guides, Mozilla Pontoon, and the Firefox localization corpus at `github.com/mozilla-l10n/firefox-l10n`.
+- For developer-facing terminology, prefer established usage in the target language's developer community over literal translations. Cross-check maintained Firefox, KDE, and VS Code localizations, using at least two independent corpora when available. Keep established English loanwords and acronyms instead of inventing unfamiliar terms.
+- Translate whole UI phrases in context rather than substituting glossary words. Audit recurring concepts for consistency and review every exact-English value; retain it only when it is an intentional product/provider/tool name, URL, code token, keyboard legend, acronym, asset name, or established borrowing.
+- Record the corpora used and flag uncertain or regional terminology in review notes.
+```
+
+### S09 — `.orchestra/skills/rtl-aware-development/SKILL.md`
+
+Attributed independent direction/language policy and behavior-oriented RTL verification matrix; external references not followed.
+
+Exact capture lines 8–14:
+
+```markdown
+Treat direction as independent from language. Test English in both directions as well as real RTL and mixed-script content.
+
+## Guidelines
+
+- Set `lang` and `dir` on the document, and propagate direction through component providers used by portaled menus and popovers. Do not change the selected locale merely to force RTL.
+- Keep DOM and focus order semantic. Flexbox and Grid already follow `dir`; do not add `row-reverse`, CSS `order`, or reversed markup just to mirror a layout.
+- Prefer logical CSS for semantic layout. Reserve physical coordinates for pointer positions, canvas geometry, native window controls, and other genuinely physical placement.
+```
+
+Exact capture lines 36–48:
+
+```markdown
+- Mirror directional meaning, not every image. Back/forward, previous/next, disclosure, indentation, and directional progress may need mirroring. Do not mirror brands, clocks, media controls, charts, or text. Reverse physical gradients, `translateX`, SVG transforms, and animation deltas explicitly.
+- Map interactions through direction. `clientX` remains physical; resizing a logical edge needs an RTL-aware delta. Logical previous/next keyboard controls may swap ArrowLeft/ArrowRight. Follow the relevant WAI-ARIA widget pattern.
+- Do not assume LTR scrolling. RTL `scrollLeft` can start at `0` and become negative. Prefer `scrollIntoView({ inline: "nearest" })` or a tested direction-normalizing helper.
+- For Electron title bars, prefer native caption controls and use `titleBarOverlay` plus `env(titlebar-area-*)` for the safe content rectangle. Keep Windows/macOS native-control avoidance and `trafficLightPosition` physical; keep app navigation inside that rectangle logical. Mark interactive titlebar children `app-region: no-drag`.
+- Verify behavior, not screenshots alone. Check computed styles, pseudo-element geometry, hit zones, focus order, keyboard behavior, submenu direction, zoom/scaling, and both LTR and RTL scroll endpoints.
+
+## Test Matrix
+
+- English + LTR
+- English + forced RTL
+- A real RTL locale + RTL
+- Mixed RTL/LTR content, long labels, numbers, code, and paths
+- Keyboard, pointer resize, scrolling, menus/submenus, and Electron titlebar controls in both directions
+```
+
+### S10 — `packages/app-shell/AGENTS.md`
+
+Attributed before/after production benchmark requirement and shared typed language ownership, not executed work.
+
+Exact capture lines 3–4:
+
+```markdown
+- Prioritise, in this order: stability, simplicity, performance.
+- Before changing session or timeline code, record a production benchmark baseline and compare it after the change.
+```
+
+Exact capture lines 23–28:
+
+```markdown
+- NEVER hardcode user-visible English strings in production code. ALWAYS use an i18n key for visible copy, placeholders, accessible labels, tooltips, menus, dialogs, toasts, empty states, and displayed errors.
+- When migrating existing copy to i18n, preserve the English text byte-for-byte unless the task explicitly requests a copy change.
+- NEVER change existing English text or English keys to facilitate translation. English is intentional, designer-written source copy; adapt locale-specific translations and i18n mechanics around it.
+- Keep locale complexity behind the shared typed i18n APIs. Feature and component code should use `language.t(...)` for ordinary copy and `language.plural(baseKey, count, params)` for count-sensitive copy. It must not inspect the locale, call `Intl.PluralRules`, construct or select plural-category keys such as `.one` or `.other`, or branch on locale-specific grammar.
+- Prefer complete translated phrases. Do not concatenate grammatical fragments or make call sites assemble sentences. Keep placeholders to irreducible dynamic values such as names, paths, and counts.
+- If a translation cannot be expressed by the current API, deepen the shared language/UI i18n module so one typed call owns locale selection, plural resolution, fallback, and interpolation. Do not leak that machinery into product code.
+```
+
+### S11 — `packages/ui/src/context/i18n.test.ts`
+
+Plural-category test scope does not establish translation completeness or UI geometry.
+
+Exact capture lines 1–22:
+
+```typescript
+import { describe, expect, test } from "bun:test"
+import { pluralCategory } from "./i18n"
+
+describe("pluralCategory", () => {
+  test.each([
+    ["en", 0, "other"],
+    ["en", 1, "one"],
+    ["fr", 0, "one"],
+    ["fr", 1_000_000, "many"],
+    ["ru", 1, "one"],
+    ["ru", 2, "few"],
+    ["ru", 5, "many"],
+    ["ru", 21, "one"],
+    ["ar", 0, "zero"],
+    ["ar", 1, "one"],
+    ["ar", 2, "two"],
+    ["ar", 3, "few"],
+    ["ar", 11, "many"],
+    ["ar", 100, "other"],
+    ["ja", 1, "other"],
+  ] as const)("selects %s for %d as %s", (locale, count, expected) => {

@@ -1,0 +1,71 @@
+{
+  "schema": "genesis-s2-author-byte-checks/v1",
+  "key": "s2.l3.desktop-web",
+  "scope": "Mechanical author checks only; no semantic verdict or product/runtime/CI execution.",
+  "body": {
+    "byte_length": 14715,
+    "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+    "utf8_decode": true,
+    "whitespace_word_count": 1760,
+    "whole_body_below_routine_16000_bytes": true,
+    "level_two_sections": [
+      {
+        "heading": "Orientation and evidence boundaries",
+        "byte_length": 1270
+      },
+      {
+        "heading": "Launch, choose a server and identify the health decision",
+        "byte_length": 2644
+      },
+      {
+        "heading": "Reconnect without transferring work to a replacement owner",
+        "byte_length": 1950
+      },
+      {
+        "heading": "Cross renderer, preload and main with a scoped capability",
+        "byte_length": 1904
+      },
+      {
+        "heading": "Move from a visible Dock to a browser, native or guest effect",
+        "byte_length": 2073
+      },
+      {
+        "heading": "Finish capture, persistence and installation at the right boundary",
+        "byte_length": 1832
+      },
+      {
+        "heading": "Carry changes through shared UI and distribution",
+        "byte_length": 2090
+      },
+      {
+        "heading": "Verification status and remaining evidence",
+        "byte_length": 895
+      }
+    ]
+  },
+  "source_checks": {
+    "direct_records": 6,
+    "content_bytes": 33520,
+    "sha256_matches": true,
+    "computed_git_blob_sha_matches": true,
+    "original_connector_contents_match": true,
+    "original_connector_blob_sha_matches": true,
+    "original_connector_response_hashes_match": true
+  },
+  "accepted_inputs": {
+    "manifest_count": 2,
+    "predecessor_body_count": 3,
+    "manifest_and_body_hashes_match": true,
+    "used_heading_strings_exist": true,
+    "actual_request_hash_matches": true
+  },
+  "dependency_counts": {
+    "build": 3,
+    "navigation": 0
+  },
+  "limits": [
+    "Mechanical byte/provenance checks do not establish semantic correctness.",
+    "No test, benchmark, generation, build or CI ran.",
+    "The six direct records are guidance sources; product facts come from explicitly bound accepted L2 bodies."
+  ]
+}

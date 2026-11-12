@@ -1,0 +1,1132 @@
+[
+  {
+    "id": "resume-l1-desktop-r1:1",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "INVALIDATED",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:2",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "FULL_REPLACEMENT",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:3",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:4",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:5",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 5,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:6",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 6,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:7",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 7,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:8",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 8,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:9",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 9,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:10",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 10,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:11",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 11,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:12",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 12,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-desktop-r1:13",
+    "receipt_group": "resume-l1-desktop-r1",
+    "record_number": 13,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:1",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:2",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:3",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:4",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:5",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 5,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:6",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 6,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:7",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 7,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:8",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 8,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "INVALIDATED",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:9",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 9,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "FULL_REPLACEMENT",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:10",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 10,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "INVALIDATED",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:11",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 11,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "FULL_REPLACEMENT",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:12",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 12,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "CONTEXT_TRUNCATED_UNCERTAIN",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:13",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 13,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:14",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 14,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:15",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 15,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:16",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 16,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:17",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 17,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:18",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 18,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:19",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 19,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:20",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 20,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:21",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 21,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-desktop-r2:22",
+    "receipt_group": "resume-l1-app-desktop-r2",
+    "record_number": 22,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:1",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:2",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:3",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:4",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:5",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 5,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:6",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 6,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:7",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 7,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:8",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 8,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:9",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 9,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:10",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 10,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:11",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 11,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:12",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 12,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:13",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 13,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:14",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 14,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:15",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 15,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:16",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 16,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:17",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 17,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:18",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 18,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:19",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 19,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-design-r2:20",
+    "receipt_group": "resume-l1-design-r2",
+    "record_number": 20,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-r3:1",
+    "receipt_group": "resume-l1-app-r3",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "resume-l1-app-r3:2",
+    "receipt_group": "resume-l1-app-r3",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-desktop-r1:1",
+    "receipt_group": "l2-desktop-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-desktop-r1:2",
+    "receipt_group": "l2-desktop-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-desktop-r1:3",
+    "receipt_group": "l2-desktop-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-desktop-r1:4",
+    "receipt_group": "l2-desktop-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-app-r1:1",
+    "receipt_group": "l2-app-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-app-r1:2",
+    "receipt_group": "l2-app-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-app-r1:3",
+    "receipt_group": "l2-app-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-app-r1:4",
+    "receipt_group": "l2-app-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-app-r1:5",
+    "receipt_group": "l2-app-r1",
+    "record_number": 5,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-app-r1:6",
+    "receipt_group": "l2-app-r1",
+    "record_number": 6,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-design-r1:1",
+    "receipt_group": "l2-design-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "INVALIDATED",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-design-r1:2",
+    "receipt_group": "l2-design-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "FULL_REPLACEMENT",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-design-r1:3",
+    "receipt_group": "l2-design-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-design-r1:4",
+    "receipt_group": "l2-design-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-design-r1:5",
+    "receipt_group": "l2-design-r1",
+    "record_number": 5,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-design-r1:6",
+    "receipt_group": "l2-design-r1",
+    "record_number": 6,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l2-design-r1:7",
+    "receipt_group": "l2-design-r1",
+    "record_number": 7,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-desktop-r1:1",
+    "receipt_group": "l3-desktop-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-desktop-r1:2",
+    "receipt_group": "l3-desktop-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-desktop-r1:3",
+    "receipt_group": "l3-desktop-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-desktop-r1:4",
+    "receipt_group": "l3-desktop-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-app-r1:1",
+    "receipt_group": "l3-app-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-app-r1:2",
+    "receipt_group": "l3-app-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-app-r1:3",
+    "receipt_group": "l3-app-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-app-r1:4",
+    "receipt_group": "l3-app-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r1:1",
+    "receipt_group": "l3-design-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r1:2",
+    "receipt_group": "l3-design-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r1:3",
+    "receipt_group": "l3-design-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r1:4",
+    "receipt_group": "l3-design-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r1:5",
+    "receipt_group": "l3-design-r1",
+    "record_number": 5,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r1:6",
+    "receipt_group": "l3-design-r1",
+    "record_number": 6,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r2:1",
+    "receipt_group": "l3-design-r2",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r2:2",
+    "receipt_group": "l3-design-r2",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r2:3",
+    "receipt_group": "l3-design-r2",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l3-design-r2:4",
+    "receipt_group": "l3-design-r2",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-desktop-r1:1",
+    "receipt_group": "l4-desktop-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "CONTEXT_TRUNCATED_UNCERTAIN",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-desktop-r1:2",
+    "receipt_group": "l4-desktop-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-desktop-r1:3",
+    "receipt_group": "l4-desktop-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-desktop-r1:4",
+    "receipt_group": "l4-desktop-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-app-r1:1",
+    "receipt_group": "l4-app-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-app-r1:2",
+    "receipt_group": "l4-app-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-app-r1:3",
+    "receipt_group": "l4-app-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-app-r1:4",
+    "receipt_group": "l4-app-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-design-r1:1",
+    "receipt_group": "l4-design-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-design-r1:2",
+    "receipt_group": "l4-design-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-design-r1:3",
+    "receipt_group": "l4-design-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-design-r1:4",
+    "receipt_group": "l4-design-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-design-r1:5",
+    "receipt_group": "l4-design-r1",
+    "record_number": 5,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-design-r1:6",
+    "receipt_group": "l4-design-r1",
+    "record_number": 6,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-entry-r1:1",
+    "receipt_group": "l4-entry-r1",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-entry-r1:2",
+    "receipt_group": "l4-entry-r1",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-entry-r1:3",
+    "receipt_group": "l4-entry-r1",
+    "record_number": 3,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-entry-r1:4",
+    "receipt_group": "l4-entry-r1",
+    "record_number": 4,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "INVALIDATED",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-entry-r1:5",
+    "receipt_group": "l4-entry-r1",
+    "record_number": 5,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "FULL_REPLACEMENT",
+    "visible_result": "CONTEXT_TRUNCATED_UNCERTAIN",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-entry-r2:1",
+    "receipt_group": "l4-entry-r2",
+    "record_number": 1,
+    "target": "/root/s2_resume_j1",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  },
+  {
+    "id": "l4-entry-r2:2",
+    "receipt_group": "l4-entry-r2",
+    "record_number": 2,
+    "target": "/root/s2_resume_j2",
+    "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+    "visible_result": "RETURNED_NO_REPORTED_ERROR",
+    "host_serialized_bytes": "NOT_EXPOSED",
+    "recipient_received_byte_attestation": "NOT_EXPOSED"
+  }
+]

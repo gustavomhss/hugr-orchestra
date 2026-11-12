@@ -1,0 +1,151 @@
+L4 entry r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL
+      "body_path": "layers/l1/desktop-web/l1.md",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "byte_length": 29075
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_path": "layers/l1/app-session/l1.md",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "body_path": "layers/l1/design-tui/l1.md",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "byte_length": 36964
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_path": "layers/l2/desktop-web/body.md",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "byte_length": 18440
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_path": "layers/l2/app-session/body.md",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_path": "layers/l2/design-tui/body.md",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "byte_length": 21535
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "body_path": "layers/l3/desktop-web/body.md",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715
+    },
+    {
+      "key": "s2.l3.app-session",
+      "body_path": "layers/l3/app-session/body.md",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_path": "layers/l3/design-tui/body.md",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780
+    }
+  ],
+  "same_layer_factual_inputs": [],
+  "build_navigation_overlap": "Intentional: the nine accepted bodies provide factual heading/scope evidence and are also consultation destinations. The three L4 units are navigation only. No newly authored L4 app body is an entry factual input.",
+  "navigation_heading_contract": [
+    {
+      "key": "s2.l1.desktop-web",
+      "headings": [
+        "1. Startup, readiness and shutdown"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "headings": [
+        "Prompt admission and draft ownership"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "headings": [
+        "V2 actions and prompt admission"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "headings": [
+        "Startup publishes readiness before the renderer proceeds"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "headings": [
+        "Durable admission, optimistic state and draft storage"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "headings": [
+        "V2 actions and prompt admission"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "headings": [
+        "Cross renderer, preload and main with a scoped capability"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.app-session",
+      "headings": [
+        "Submit once, then hand the draft to its session"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "headings": [
+        "Generated products reach consumers through distinct maintenance paths"
+      ],
+      "basis": "accepted body"
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    },
+    {
+      "key": "s2.l4.app-session",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "headings": [
+        "Orientation",
+        "Maintenance protocol",
+        "Verification and boundaries"
+      ],
+      "basis": "public L4 dispatch declaration"
+    }
+  ]
+}
+
+```

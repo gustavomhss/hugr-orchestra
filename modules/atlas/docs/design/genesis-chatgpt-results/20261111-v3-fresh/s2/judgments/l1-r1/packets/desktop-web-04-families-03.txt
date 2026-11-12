@@ -1,0 +1,163 @@
+      "presentation-source": 1,
+      "implementation-source": 1
+    }
+  },
+  {
+    "id": "web-host",
+    "purpose": "Vite browser host supplies platform/default-server/token/draft adapters to shared AppInterface.",
+    "representative_source_paths": [
+      "apps/web/src/entry.tsx",
+      "apps/web/vite.config.ts",
+      "apps/web/README.md"
+    ],
+    "consumers_and_boundary": "Browser storage/Notification/external navigation and backend HTTP origin; shared shell owns product screens.",
+    "maintenance_implications": "Preserve auth_token removal from address bar and selected-server behavior, allowed external schemes and optional Sentry/sourcemap handling.",
+    "evidence_limits": "No browser run; CLI serving and production origin deployment are documented boundary intent, not independently verified implementation.",
+    "entry_count": 7,
+    "depth_counts": {
+      "inspected": 5,
+      "family-supported": 2
+    },
+    "classification_counts": {
+      "repository-instructions": 1,
+      "documentation": 1,
+      "presentation-source": 1,
+      "build-runtime-or-type-configuration": 3,
+      "implementation-source": 1
+    }
+  },
+  {
+    "id": "generated-dock-corpus",
+    "purpose": "Generator renders a handwritten invariant register into four consolidated and per-invariant Markdown artifacts.",
+    "representative_source_paths": [
+      "apps/desktop/docs/corpus/app-dock/generate-corpus.mjs",
+      "apps/desktop/docs/corpus/app-dock/00-invariant-register.md",
+      "apps/desktop/docs/corpus/app-dock/invariants/https-only.md",
+      "apps/desktop/docs/corpus/app-dock/invariants/ipc-sender-validation.md"
+    ],
+    "consumers_and_boundary": "Maintainers and reviewers of historic Dock requirements/goldens/cards; no runtime consumer observed.",
+    "maintenance_implications": "Edit/check generator literals and actual cited tests together; emitted measured/ready labels are not execution receipts.",
+    "evidence_limits": "Representative outputs read. Generator not run and every historical test line reference not revalidated; source golden files are not reserved Genesis judges/oracles.",
+    "entry_count": 44,
+    "depth_counts": {
+      "inspected": 4,
+      "family-supported": 40
+    },
+    "classification_counts": {
+      "generated-documentation": 43,
+      "generator-source": 1
+    }
+  },
+  {
+    "id": "historical-proposals",
+    "purpose": "Dated Dock accessibility/Linux campaigns, contracts, handoffs and desktop brief record design and prior closure claims.",
+    "representative_source_paths": [
+      "apps/desktop/docs/plans/dock-accessibility/contract.md",
+      "apps/desktop/docs/plans/dock-accessibility/closeout.md",
+      "apps/desktop/docs/plans/linux-workspace/CAMPAIGN.md",
+      "apps/desktop/docs/plans/linux-workspace/skeleton-handoff.md",
+      "docs/architecture/phase-plans/70-90-briefs/RD-DESKTOP.md"
+    ],
+    "consumers_and_boundary": "Historical implementation planning and maintenance context, subordinate to current source and task authority.",
+    "maintenance_implications": "Retain dates/baselines and incomplete production boundaries; never carry historical PASS or requested future API forward as present proof.",
+    "evidence_limits": "Representative historical documents inspected; other leaves are family-supported, not read assertions or instructions followed.",
+    "entry_count": 19,
+    "depth_counts": {
+      "family-supported": 14,
+      "inspected": 5
+    },
+    "classification_counts": {
+      "historical-proposal-or-report": 19
+    }
+  },
+  {
+    "id": "native-proof-harness",
+    "purpose": "Development-only native images, probes, scenario/contract fixtures and assertion suites support real-provider validation.",
+    "representative_source_paths": [
+      "apps/desktop/test/native/README.md",
+      "apps/desktop/test/native/apps/README.md",
+      "apps/desktop/resources/linux/app-dock-accessibility/main.py",
+      "apps/desktop/src/main/app-dock-native-client-admission.test.ts"
+    ],
+    "consumers_and_boundary": "Developer proof environment for GTK/Qt/Electron, native helper and independent filesystem/config effects.",
+    "maintenance_implications": "Retain environment/version/image receipts, process birth identity and independent effects; setup success does not prove semantics and dev flags are not production policy.",
+    "evidence_limits": "No probes, fixtures, Docker recipes or Python/product tests executed. Most harness leaves are purpose/family supported, not individually audited.",
+    "entry_count": 36,
+    "depth_counts": {
+      "family-supported": 34,
+      "inspected": 2
+    },
+    "classification_counts": {
+      "test-fixture": 6,
+      "test-source-unexecuted": 14,
+      "build-runtime-or-type-configuration": 2,
+      "documentation": 2,
+      "proof-harness-unexecuted": 12
+    }
+  },
+  {
+    "id": "omni-proof-harness",
+    "purpose": "Packaged Electron smoke matrix distinguishes production shutdown cells from diagnostic and mutation controls.",
+    "representative_source_paths": [
+      "apps/desktop/test/omni-smoke/matrix.ts",
+      "apps/desktop/src/main/omni-process.ts",
+      "apps/desktop/src/main/omni-boot.ts"
+    ],
+    "consumers_and_boundary": "Packaged Electron proof harness and isolated process/keychain/LLM fixtures.",
+    "maintenance_implications": "Verify actual packaged provenance, live process counts and ownership before crash/quit; emergency cleanup cannot stand for an observed shutdown pass.",
+    "evidence_limits": "Matrix entry/control assertions inspected, supporting harness leaves family-supported. No packaged run or mutation control was executed.",
+    "entry_count": 12,
+    "depth_counts": {
+      "family-supported": 11,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "ignore-metadata": 1,
+      "proof-harness-unexecuted": 9,
+      "build-runtime-or-type-configuration": 2
+    }
+  },
+  {
+    "id": "runtime-proof-tools",
+    "purpose": "Operator scripts and standalone proof entrypoints drive Dock/Linux runtime or WSL transport for development checks.",
+    "representative_source_paths": [
+      "apps/desktop/src/main/app-dock-runtime.ts",
+      "apps/desktop/src/main/linux-workspace-access.ts",
+      "apps/desktop/test/native/README.md",
+      "apps/desktop/src/main/wsl/runtime.ts"
+    ],
+    "consumers_and_boundary": "Developer CLI/manual proof drivers; production runtime modules supply the semantic boundary.",
+    "maintenance_implications": "Keep proof configuration isolated and label actual source/runtime identities; scripts may create containers/processes and must not be mistaken for receipts.",
+    "evidence_limits": "Scripts captured where available but not fully selected; family-level purpose only, no execution or command-level assurance.",
+    "entry_count": 16,
+    "depth_counts": {
+      "family-supported": 16
+    },
+    "classification_counts": {
+      "proof-harness-unexecuted": 14,
+      "build-runtime-or-type-configuration": 1,
+      "documentation": 1
+    }
+  },
+  {
+    "id": "tooling-config",
+    "purpose": "Workspace/toolchain declarations and ignore rules support desktop build, tests and dependency/type resolution.",
+    "representative_source_paths": [
+      "apps/desktop/electron.vite.config.ts",
+      "apps/desktop/electron-builder.config.ts",
+      "apps/desktop/src/main/draft-store.node.test.ts"
+    ],
+    "consumers_and_boundary": "Build/test tooling; Node SQLite tests differ from Bun tests by source declaration.",
+    "maintenance_implications": "Maintain cross-platform artifact targets and entrypoint/alias consistency. Configuration existence does not establish a passing build.",
+    "evidence_limits": "Uncaptured config/ignore leaves are metadata-only; no dependency resolution or effective compiler configuration audit.",
+    "entry_count": 6,
+    "depth_counts": {
+      "metadata-only": 5,
+      "inspected": 1
+    },
+    "classification_counts": {
+      "ignore-metadata": 1,
+      "build-runtime-or-type-configuration": 5
+    }
+  }
+]

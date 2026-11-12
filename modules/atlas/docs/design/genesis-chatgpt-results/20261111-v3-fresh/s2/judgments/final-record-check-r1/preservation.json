@@ -1,0 +1,127 @@
+{
+  "schema": "genesis-s2-record-check-transport-preservation/v1",
+  "recorded_at": "2026-11-11T21:41:20.966080+00:00",
+  "files": [
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/disclosure-inventory-reviewed.json",
+      "preserved": "judgments/final-record-check-r1/disclosure-inventory-reviewed.json",
+      "byte_length": 209036,
+      "sha256": "327c1f57e66606672a7790a1cc13c97cd47eb79e7b3c50e9ed4d5c380fda650e"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/input-manifest.json",
+      "preserved": "judgments/final-record-check-r1/input-manifest.json",
+      "byte_length": 2522,
+      "sha256": "df39ea6718ab613853657903938d701130c206bd72553e09221a59c7c925f7ef"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/record-correction-packet.txt",
+      "preserved": "judgments/final-record-check-r1/record-correction-packet.txt",
+      "byte_length": 32906,
+      "sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/reviewed-records/evidence/final-criterion-matrix.json",
+      "preserved": "judgments/final-record-check-r1/reviewed-records/evidence/final-criterion-matrix.json",
+      "byte_length": 108664,
+      "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/reviewed-records/evidence/final-local-gates.json",
+      "preserved": "judgments/final-record-check-r1/reviewed-records/evidence/final-local-gates.json",
+      "byte_length": 6902,
+      "sha256": "fb2aad45351f3c03c59bb69458560d79aab07b56dff78a16e2006d7dae6a3f88"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/reviewed-records/evidence/final-record-consolidation.json",
+      "preserved": "judgments/final-record-check-r1/reviewed-records/evidence/final-record-consolidation.json",
+      "byte_length": 1585,
+      "sha256": "7c4a4cbc4e0dd591788e37ad76f852e9c9a336e2321c0d9ba10275aba5f0ce3a"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/reviewed-records/execution-ledger.jsonl",
+      "preserved": "judgments/final-record-check-r1/reviewed-records/execution-ledger.jsonl",
+      "byte_length": 47300,
+      "sha256": "c38acd169bc550babc87211c278f29f2370222f6b2fcae4449a4d80515e10578"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/reviewed-records/handoff.json",
+      "preserved": "judgments/final-record-check-r1/reviewed-records/handoff.json",
+      "byte_length": 18854,
+      "sha256": "17a6f55d2c4712879a7ea5a9242e1422a962f7ff35f7fb1b4a68747e66712d5f"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/reviewed-records/work.md",
+      "preserved": "judgments/final-record-check-r1/reviewed-records/work.md",
+      "byte_length": 25446,
+      "sha256": "335b5277098c14ffacd0456a9926dbeb512f0682d43e5641fc1b4cb1fda7be2e"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.message.txt",
+      "preserved": "judgments/final-record-check-r1/transport/call-01.message.txt",
+      "byte_length": 32906,
+      "sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.observation.json",
+      "preserved": "judgments/final-record-check-r1/transport/call-01.observation.json",
+      "byte_length": 1404,
+      "sha256": "e45070a3d8f1ab969b845c66505555983397833f92e297e08353fd79825f9e1e"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.request.json",
+      "preserved": "judgments/final-record-check-r1/transport/call-01.request.json",
+      "byte_length": 34567,
+      "sha256": "58675548f1946c997419ac752a013342eb8fc9f7d7e56ceaa411cc5476f26baa"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-01.result.txt",
+      "preserved": "judgments/final-record-check-r1/transport/call-01.result.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.message.txt",
+      "preserved": "judgments/final-record-check-r1/transport/call-02.message.txt",
+      "byte_length": 32906,
+      "sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.observation.json",
+      "preserved": "judgments/final-record-check-r1/transport/call-02.observation.json",
+      "byte_length": 1404,
+      "sha256": "fec0368cf81ae050defd1acb3569e648cd2bfa88da464aec5ef7d35a2508e7ab"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.request.json",
+      "preserved": "judgments/final-record-check-r1/transport/call-02.request.json",
+      "byte_length": 34567,
+      "sha256": "cdee3b24802a6ec77d6e4d966790468e4be557c818c8c13f34c2057f24a22671"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/call-02.result.txt",
+      "preserved": "judgments/final-record-check-r1/transport/call-02.result.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/prepared-calls.json",
+      "preserved": "judgments/final-record-check-r1/transport/prepared-calls.json",
+      "byte_length": 1349,
+      "sha256": "f18ac013e630ce4b4a40c1afadb726f5c30b0700a465bdcccb16bcdaa7a1657d"
+    },
+    {
+      "source": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/transport/receipt.json",
+      "preserved": "judgments/final-record-check-r1/transport/receipt.json",
+      "byte_length": 4287,
+      "sha256": "e5672a9d9a4869e0329621fd068056bb190979ffabbd5cfb3ab799e3cee8c352"
+    }
+  ],
+  "actual_followup_task_calls": 2,
+  "separate_send_message_calls": 0,
+  "actual_support_activation": 1,
+  "recipient_confirmation": "PENDING_ACTUAL_RESPONSES",
+  "new_artifact_verdicts": 0,
+  "provider_usage": "UNKNOWN",
+  "limit": "Prepared/preserved argument equality verified; no attestation of hidden host serialized bytes."
+}

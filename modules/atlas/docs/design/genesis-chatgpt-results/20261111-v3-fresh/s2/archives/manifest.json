@@ -1,0 +1,30 @@
+{
+  "schema": "genesis-evidence-archives/v1",
+  "layout": "Each archive expands to <unit>/, containing the original producer source, connector captures, helper scripts and initial versions. paths in sources.json resolve relative to that unit directory. Non-archived layers/l1 copies are byte-identical judged artifacts. Transport-only later receipts are separate.",
+  "archives": [
+    {
+      "unit": "desktop-web",
+      "path": "archives/desktop-web-l1-r1.zip",
+      "byte_length": 1258281,
+      "sha256": "ce55c75a005cb3beceb06a91123b4cc179d3405c7726fea35bd21964284ce9c9",
+      "members": 400,
+      "git_blob_sha": "73ff25ae486bb9b0a7c36cd2bfdb3722c49fabc7"
+    },
+    {
+      "unit": "app-session",
+      "path": "archives/app-session-l1-r1.zip",
+      "byte_length": 1982245,
+      "sha256": "42784d4d7e7df242c8c01c246a3dc505a6404be5fd844e5f2172183afb5a47ea",
+      "members": 280,
+      "git_blob_sha": "7ced7413061fccf7168fe4bed403306ce0dc2a25"
+    },
+    {
+      "unit": "design-tui",
+      "path": "archives/design-tui-l1-r1.zip",
+      "byte_length": 1166982,
+      "sha256": "25e445ef6824945cfcf78bf073b99c3977fd37c291b55e106a491a70a12c6c56",
+      "members": 406,
+      "git_blob_sha": "690395df32d91e76105fcc03ea06300eda57cabd"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "genesis-s2-l2-dependencies/v1",
+  "key": "s2.l2.desktop-web",
+  "build": [
+    "s2.l1.desktop-web"
+  ],
+  "navigation": [
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "rationale": {
+    "s2.l1.desktop-web": "Accepted predecessor supplies all inherited desktop/web implementation observations, family coverage, inspected-but-unexecuted test expectations and known gaps. Direct source rereads support selected boundaries and attributed guidance; they do not broaden L1 coverage.",
+    "s2.l2.app-session": "Navigation only to the shared application/session ownership explanation. Its L2 body was not read and contributes no factual evidence or build dependency here.",
+    "s2.l2.design-tui": "Navigation only to shared browser UI/TUI ownership and presentation concerns. Its L2 body was not read and contributes no factual evidence or build dependency here."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l1.desktop-web",
+      "path": "layers/l1/desktop-web/l1.md",
+      "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "byte_length": 29075
+    }
+  ],
+  "consulted_family_accounting": [
+    {
+      "path": "producers/desktop-web/coverage.json",
+      "sha256": "4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9",
+      "matches_deliverable_copy": "layers/l1/desktop-web/coverage.json",
+      "scope": "Thirty family summaries; no expanded leaf audit."
+    }
+  ],
+  "cross_unit_factual_dependency_note": "No app-session or design-tui body was consumed. Shared-shell ownership is evidenced by accepted desktop/web L1 and directly used captured host/package guidance."
+}

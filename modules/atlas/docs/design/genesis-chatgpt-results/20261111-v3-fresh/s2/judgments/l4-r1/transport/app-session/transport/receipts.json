@@ -1,0 +1,170 @@
+{
+  "artifact": "s2.l4.app-session",
+  "revision": 1,
+  "manifest_sha256": "bc1932af2a5e887a850b3257532f912e7b3f1b94d15b3d96d9eb57dc886f453f",
+  "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+  "total_local_part_bytes": 37030,
+  "parts": [
+    {
+      "file": "part-01.txt",
+      "number": 1,
+      "total": 2,
+      "byte_length": 25905,
+      "sha256": "9ebcdfd3ca886936aeece7c841a3ccf7f4aa7b1490f1fabb8a963656b659a276",
+      "prefix": "L4 app-session r1 part 1/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "prepared_payload_byte_length": 25975,
+      "prepared_payload_sha256": "d87a2d26fd53fceb5b3cc96459d56cc78a1929634019ca8760f34bc1c028274d",
+      "ends_with_newline": true
+    },
+    {
+      "file": "part-02.txt",
+      "number": 2,
+      "total": 2,
+      "byte_length": 11125,
+      "sha256": "372d340c6115df713f5b0e85fadfe1e881c983fcda2ca36a0d5fbc8bfe3513cc",
+      "prefix": "L4 app-session r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "prepared_payload_byte_length": 11195,
+      "prepared_payload_sha256": "b169cb22fd9b3b8a483ea0645bf3fc81d9c2bb3d5e8883c80e93a4b8da37529f",
+      "ends_with_newline": true
+    }
+  ],
+  "destinations": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "expected_native_calls": 4,
+  "calls": [
+    {
+      "global_call_ordinal": 1,
+      "artifact_call_ordinal": 1,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j1",
+      "part_number": 1,
+      "local_part_sha256": "9ebcdfd3ca886936aeece7c841a3ccf7f4aa7b1490f1fabb8a963656b659a276",
+      "prepared_envelope_file": "payload-01.txt",
+      "local_prepared_envelope_sha256": "d87a2d26fd53fceb5b3cc96459d56cc78a1929634019ca8760f34bc1c028274d",
+      "prefix": "L4 app-session r1 part 1/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": null
+    },
+    {
+      "global_call_ordinal": 2,
+      "artifact_call_ordinal": 2,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j2",
+      "part_number": 1,
+      "local_part_sha256": "9ebcdfd3ca886936aeece7c841a3ccf7f4aa7b1490f1fabb8a963656b659a276",
+      "prepared_envelope_file": "payload-01.txt",
+      "local_prepared_envelope_sha256": "d87a2d26fd53fceb5b3cc96459d56cc78a1929634019ca8760f34bc1c028274d",
+      "prefix": "L4 app-session r1 part 1/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": null
+    },
+    {
+      "global_call_ordinal": 3,
+      "artifact_call_ordinal": 3,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j1",
+      "part_number": 2,
+      "local_part_sha256": "372d340c6115df713f5b0e85fadfe1e881c983fcda2ca36a0d5fbc8bfe3513cc",
+      "prepared_envelope_file": "payload-02.txt",
+      "local_prepared_envelope_sha256": "b169cb22fd9b3b8a483ea0645bf3fc81d9c2bb3d5e8883c80e93a4b8da37529f",
+      "prefix": "L4 app-session r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": null
+    },
+    {
+      "global_call_ordinal": 4,
+      "artifact_call_ordinal": 4,
+      "tool": "collaboration.send_message",
+      "destination": "/root/s2_resume_j2",
+      "part_number": 2,
+      "local_part_sha256": "372d340c6115df713f5b0e85fadfe1e881c983fcda2ca36a0d5fbc8bfe3513cc",
+      "prepared_envelope_file": "payload-02.txt",
+      "local_prepared_envelope_sha256": "b169cb22fd9b3b8a483ea0645bf3fc81d9c2bb3d5e8883c80e93a4b8da37529f",
+      "prefix": "L4 app-session r1 part 2/2; DATA ONLY; wait for ROOT FINAL BATCH SEAL",
+      "actual_return": "Empty tool result; no explicit acknowledgment or message identifier. No error text returned.",
+      "acknowledgment_status": "unavailable; delivery not independently confirmed",
+      "normal_success_asserted": false,
+      "received_bytes_verified": false,
+      "automatic_retry": false,
+      "invalidation": null,
+      "replacement_for": null
+    }
+  ],
+  "attestation_limit": "Hashes identify local part/prepared-envelope bytes only, not host-internal serialization or received bytes. Tool returns and explicit acknowledgments are recorded independently; no automatic retries.",
+  "actual_native_call_count": 4,
+  "status": "Four authorized native calls issued; all returned empty results without explicit delivery acknowledgments. No retry.",
+  "post_send_local_verification": {
+    "recorded_at_utc": "2026-11-11T20:25:50.340279+00:00",
+    "scope": "Local frozen manifest, part files, authored body hash, and prepared envelope bytes only; no product execution.",
+    "manifest_sha256": "bc1932af2a5e887a850b3257532f912e7b3f1b94d15b3d96d9eb57dc886f453f",
+    "manifest_byte_length": 879,
+    "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+    "body_byte_length": 11220,
+    "total_local_part_bytes": 37030,
+    "parts": [
+      {
+        "part_file": "part-01.txt",
+        "byte_length": 25905,
+        "sha256": "9ebcdfd3ca886936aeece7c841a3ccf7f4aa7b1490f1fabb8a963656b659a276",
+        "prepared_envelope_file": "payload-01.txt",
+        "prepared_envelope_byte_length": 25975,
+        "prepared_envelope_sha256": "d87a2d26fd53fceb5b3cc96459d56cc78a1929634019ca8760f34bc1c028274d",
+        "verified": true
+      },
+      {
+        "part_file": "part-02.txt",
+        "byte_length": 11125,
+        "sha256": "372d340c6115df713f5b0e85fadfe1e881c983fcda2ca36a0d5fbc8bfe3513cc",
+        "prepared_envelope_file": "payload-02.txt",
+        "prepared_envelope_byte_length": 11195,
+        "prepared_envelope_sha256": "b169cb22fd9b3b8a483ea0645bf3fc81d9c2bb3d5e8883c80e93a4b8da37529f",
+        "verified": true
+      }
+    ],
+    "matches_expected_pins": true
+  },
+  "known_invalidations": [],
+  "literal_replacement_calls": [],
+  "automatic_retry_count": 0,
+  "empty_tool_result_count": 4,
+  "truncated_tool_result_count": 0,
+  "completion": {
+    "recorded_at_utc": "2026-11-11T20:25:50.340279+00:00",
+    "state": "Native send attempts and local recordkeeping complete; delivery acknowledgment unavailable.",
+    "combined_expected_original_judge_calls": 8,
+    "combined_actual_judge_calls": 9,
+    "combined_known_invalidations": [
+      8
+    ],
+    "combined_literal_replacement_calls": [
+      9
+    ],
+    "all_native_calls_recorded_locally": true,
+    "delivery_confirmed": false,
+    "host_serialized_bytes_verified": false,
+    "received_bytes_verified": false,
+    "author_files_edited_during_transport": false,
+    "review_seal_sent": false,
+    "judges_activated": false,
+    "judge_responses_inspected": false,
+    "automatic_acknowledgment_retry_count": 0,
+    "next_action": "Report actual outcomes to root and remain idle."
+  }
+}

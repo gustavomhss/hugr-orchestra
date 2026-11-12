@@ -1,0 +1,226 @@
+{
+  "schema": "genesis-s2-closure-call-index/v1",
+  "calls": [
+    {
+      "group": "a",
+      "ordinal": 1,
+      "part": 1,
+      "target": "/root/s2_resume_j1",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-a/call-01.request.json",
+        "sha256": "904f2d0df2c4e994936089f0a057b47e1c8662f03b2b3fdbd4c89ad0dc035239",
+        "byte_length": 26467
+      },
+      "visible_message_sha256": "2dd6222f0a52433f859261033ca518bf6118c364fbb797ad901987074bdbad3f",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "a",
+      "ordinal": 2,
+      "part": 1,
+      "target": "/root/s2_resume_j2",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-a/call-02.request.json",
+        "sha256": "4fa21e61c879fdedd2a23ee6a22569c3cc282ddfc27b5de2b97642f3c0f600d9",
+        "byte_length": 26467
+      },
+      "visible_message_sha256": "2dd6222f0a52433f859261033ca518bf6118c364fbb797ad901987074bdbad3f",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "a",
+      "ordinal": 3,
+      "part": 2,
+      "target": "/root/s2_resume_j1",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-a/call-03.request.json",
+        "sha256": "c95cca8bfb4ce5b8002844467b8b24900f1a5a2b4d5c909573c234d25d2ad359",
+        "byte_length": 26417
+      },
+      "visible_message_sha256": "9187be41e480a99883dd2f8e339cb483936a1170944f2f2c1a9a1b458107ba28",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "a",
+      "ordinal": 4,
+      "part": 2,
+      "target": "/root/s2_resume_j2",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-a/call-04.request.json",
+        "sha256": "bc736d8b4a8d04b0fbbd18fa1067ab2541cdd490fb4420134606ed4dee6e75f5",
+        "byte_length": 26417
+      },
+      "visible_message_sha256": "9187be41e480a99883dd2f8e339cb483936a1170944f2f2c1a9a1b458107ba28",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": true,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "b",
+      "ordinal": 1,
+      "part": 3,
+      "target": "/root/s2_resume_j1",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-b/call-01-arguments.json",
+        "sha256": "636169446047484dd6c69cb5571970878113ef303895a7fdd27af08b9b5fe53a",
+        "byte_length": 27910
+      },
+      "visible_message_sha256": "b06146b616e1e8ec58e167556bf9918faf443a1bb608cc622a493406f9d37a01",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "b",
+      "ordinal": 2,
+      "part": 3,
+      "target": "/root/s2_resume_j2",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-b/call-02-arguments.json",
+        "sha256": "087c2953866504a8b9ff61f16f6fc8dd99311af4efd1a3b22b95bb0e3384099b",
+        "byte_length": 27910
+      },
+      "visible_message_sha256": "b06146b616e1e8ec58e167556bf9918faf443a1bb608cc622a493406f9d37a01",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "b",
+      "ordinal": 3,
+      "part": 4,
+      "target": "/root/s2_resume_j1",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-b/call-03-arguments.json",
+        "sha256": "aca15e529a849e77b5663574caef476f78f7541ee1936591e1fbe7f3d7efe7f9",
+        "byte_length": 27872
+      },
+      "visible_message_sha256": "f542755da654473d627446af9e35043980e2fe904f9295fc7c5aa0f61d1cf796",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "b",
+      "ordinal": 4,
+      "part": 4,
+      "target": "/root/s2_resume_j2",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-b/call-04-arguments.json",
+        "sha256": "a6c08dba89be4843f8e922be6a205679a7c3a279f9f350fa01d03ea11fbe6685",
+        "byte_length": 27872
+      },
+      "visible_message_sha256": "f542755da654473d627446af9e35043980e2fe904f9295fc7c5aa0f61d1cf796",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "c",
+      "ordinal": 1,
+      "part": 5,
+      "target": "/root/s2_resume_j1",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-1-arguments.json",
+        "sha256": "2b7ae58257df2281875eb674215677968c754251555001ce71cbe37df283eafe",
+        "byte_length": 28372
+      },
+      "visible_message_sha256": "bfe7efb7bfb52570c39aa1f3ebc8ac3f56d21952b5e704a53f69a47a9335ecf5",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "c",
+      "ordinal": 2,
+      "part": 5,
+      "target": "/root/s2_resume_j2",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-c/part-005-judge-2-arguments.json",
+        "sha256": "624755236c27db1e0d948a1f2f14ea90ff3fce2ba7680cc76bd5bb8e699fc1c9",
+        "byte_length": 28372
+      },
+      "visible_message_sha256": "2794c5fb5b93d56666ae11a3396ecf4393d46457390c4b1f9bcadef2781498be",
+      "visible_message_bytes": 26000,
+      "payload_disposition": "INVALIDATED",
+      "uncertain_return_flag": false,
+      "local_literal_matches": false,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "c",
+      "ordinal": 3,
+      "part": 6,
+      "target": "/root/s2_resume_j1",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-c/part-006-judge-1-arguments.json",
+        "sha256": "f07c4454e6ee46a7b88ac67c22f69bec993a55c0f22b8e8d7e1687418d4cdc46",
+        "byte_length": 9579
+      },
+      "visible_message_sha256": "f37ef2e42f31c408cd93a8e468ea0963e6b35f54788aea23104db097f0466ab4",
+      "visible_message_bytes": 9174,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "c",
+      "ordinal": 4,
+      "part": 6,
+      "target": "/root/s2_resume_j2",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-c/part-006-judge-2-arguments.json",
+        "sha256": "d74c18b45ee0eddd671bb3f88f57f1f7a5fcf450d0605c6c81e62eabda075a9a",
+        "byte_length": 9579
+      },
+      "visible_message_sha256": "f37ef2e42f31c408cd93a8e468ea0963e6b35f54788aea23104db097f0466ab4",
+      "visible_message_bytes": 9174,
+      "payload_disposition": "ORIGINAL_NO_KNOWN_INVALIDATION",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    },
+    {
+      "group": "replacement",
+      "ordinal": 1,
+      "part": 5,
+      "target": "/root/s2_resume_j2",
+      "arguments": {
+        "path": "deliverable/judgments/final-closure-r1/transport-c-replacement/arguments.json",
+        "sha256": "628fbc3730e9c4d266275e8a5b06607861c452758217fc8746a9832ee941f152",
+        "byte_length": 28536
+      },
+      "visible_message_sha256": "2a6b87171b688af9bee1a68a7a315fc1c4769a6e1bbb4facbf8dcdbdc5d1431d",
+      "visible_message_bytes": 26161,
+      "payload_disposition": "FULL_REPLACEMENT",
+      "uncertain_return_flag": false,
+      "local_literal_matches": true,
+      "host_serialization_attested": false
+    }
+  ]
+}

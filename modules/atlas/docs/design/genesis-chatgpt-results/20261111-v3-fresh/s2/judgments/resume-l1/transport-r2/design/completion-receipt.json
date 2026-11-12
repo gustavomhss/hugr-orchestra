@@ -1,0 +1,65 @@
+{
+  "unit": "design-tui",
+  "revision": 2,
+  "verified_source_part_count": 14,
+  "verified_source_bytes": 178282,
+  "targets": [
+    "/root/s2_resume_j1",
+    "/root/s2_resume_j2"
+  ],
+  "parts_sent_per_target": 14,
+  "part_target_deliveries": 28,
+  "native_send_calls": 20,
+  "native_send_calls_per_target": 10,
+  "visible_send_errors": 0,
+  "retransmissions": 0,
+  "manifest_order_preserved_per_target": true,
+  "all_local_request_body_slices_equal_immutable_source_bytes": true,
+  "batch_manifest_orders": [
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      4
+    ],
+    [
+      5
+    ],
+    [
+      6
+    ],
+    [
+      7,
+      8
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      11,
+      12
+    ],
+    [
+      13,
+      14
+    ]
+  ],
+  "record_classification": "Verified local byte/hash receipts and local reconstruction of issued visible native requests. Host-internal serialized delivery bytes unavailable.",
+  "no_seal_or_activation_or_judgment_request_sent": true,
+  "no_judge_replies_read": true,
+  "no_semantic_artifacts_produced_or_judged": true,
+  "source_baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "execution": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "receipt_paths": [
+    "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/local-byte-hash-receipts.json",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/issued-visible-requests.local-reconstruction.json",
+    "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/judgments/resume-l1/transport-r2/design/native-send-observations.complete.json"
+  ]
+}

@@ -1,0 +1,2442 @@
+{
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "verified_files": 406,
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/package-lock.json",
+      "sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f",
+      "git_blob_sha": "52385ecfa7a9ee21c5ce3918790029687cddfcd0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/package.json",
+      "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605",
+      "git_blob_sha": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/package.json",
+      "sha256": "fbc7951f42ce0465ed53211516ee396aacaf66a0f43b500325330a0aa8c40132",
+      "git_blob_sha": "a18f668a4aa10741bc8d9244425cf2c210423336",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose-count.md",
+      "sha256": "6caf5d1409f3d7a3a21b968b958958d6bc29a406e9383cc13b7912132cf77fe9",
+      "git_blob_sha": "a790d731c9cbacd1e45068b083491fa71ffd5054",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose-definition.md",
+      "sha256": "89dbd2a9828cfb07a474e5de18aa98f85b88f5261170900a47df2032deef82a6",
+      "git_blob_sha": "e3f1a0fb05c067c3747fcfb7e98412479bcceeef",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose-dependency.md",
+      "sha256": "13a772178486ba22b10155250ee0fd0149493fdac4103f8bafe0ff83b22e4a30",
+      "git_blob_sha": "9a54ebaca536d519dacbb57b7719fdc09f63a347",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose-enriched.md",
+      "sha256": "7e54ca10f7c74f944a5a4b899cba02f6b91f7d5d3e0275333f9668254deb2776",
+      "git_blob_sha": "f8202dd0dcc221bd215bdd960ef321c88310cbe3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose-semantic.md",
+      "sha256": "43aa12697d2b2a079d85a33944c18c2f4def47f75afe8dec985febd503cfa7a6",
+      "git_blob_sha": "1908dbd61c3d89f2fb6a3af7c045a41902dd08db",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/prompts/propose.md",
+      "sha256": "33b591a3a7e928f04f01ed14d6422324d3e8fba3f3c7fce0d6184e189b2380b7",
+      "git_blob_sha": "3cb28531f718616b851c9bd380fda5d15e2a40a0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/anchor-scope.ts",
+      "sha256": "7696b6d56613c273d9653de2356c30d1aeeec0c6ec53d20658b35d8b3348b2f2",
+      "git_blob_sha": "388b7a6cd254f2fd57e712d50ed5d69aebcf84a9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ast.ts",
+      "sha256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+      "git_blob_sha": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/author-verdicts.ts",
+      "sha256": "9a0f6cd1700f198ef0f2b30705eae51858622b016a421ba60fec48e32b6b4430",
+      "git_blob_sha": "d87a60eefbf0cb96bb022dd530fb34a7007feb99",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/awareness-store.ts",
+      "sha256": "efbccbe213f3656252459e441b9417966ccb4da01a6438650f7fb829847f9127",
+      "git_blob_sha": "2e7c2a5ccbb153f9c392b7cab8b31c28f6c5349e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/calibration-ledger.ts",
+      "sha256": "fe565292b12117414cedfbc1e4b6ede02adb1de6255584857e5c6639e1810015",
+      "git_blob_sha": "32bd239bc0fd79fd18eaf51d38a8a66ab27d4df5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/calibration-verdicts.ts",
+      "sha256": "42c6f018e44f2645216dfb087f2547f98c97bd27dc74478ac4d72c3ac812eee3",
+      "git_blob_sha": "44abed0888146e20ca667dd1ce428d96eb447946",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/card-log.ts",
+      "sha256": "531cf6829e5186c73c27296a5977007cae7e0e290d688a0a047429a396f06a3d",
+      "git_blob_sha": "904153860f5415c6d58ed7c3549bc0a573bcdd66",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/check-source.ts",
+      "sha256": "4b65d7dbf4d2cced051791f3d383b7b6f3340964db3e24e546ecb1fdbe21d827",
+      "git_blob_sha": "ebed95e59b1518b29b49d85fa572114ea166d754",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "sha256": "6510288225449b58e599641f6501d46b03a96cd68eff1c9761ffce6ab8a02992",
+      "git_blob_sha": "106bccccf3aa40a29b33491243bbd41900b8e82e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose-mine-admission.ts",
+      "sha256": "6b289b3612b496d004d8623bdf7b26ce10014ef8d4a60f34abc27705b37f9bf8",
+      "git_blob_sha": "3374cf0e2bfbaddf6c01b37be332876af019359b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "sha256": "a838d4205ff1999627fbb14b8a1de25b91c897255332bd50a95e12799e6fb6c1",
+      "git_blob_sha": "e9c59d90819242087c1737108c2df689e1487f7f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose-test-vacuity.ts",
+      "sha256": "5d68d7a774811a1516e7af63a6d68281e028504aa775659e8f4ae56ad6cb46de",
+      "git_blob_sha": "1289b1b443409090e6923fe501f6bae6de97dde3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f",
+      "git_blob_sha": "6a8dacf0b8956979a49665c415f803b911c53138",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/containment.ts",
+      "sha256": "bce48882ea85ce75c89fbd2a2bb1ec5255aafe36fe46915dcb427cb7b1064f92",
+      "git_blob_sha": "bea9659b4ecbd2454dd4f7774fc2eea78020d1d9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/context-log.ts",
+      "sha256": "b1960b9f9230f8bf44a594a37e64900ded64ad0accf94ce9f4cd63d4d736cc9c",
+      "git_blob_sha": "1b0a9d09854e612f2271a6cc289fad307cd7b2da",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/doctor-source.ts",
+      "sha256": "3ef9865b2dcdb851d8cd070570246363b2bd7a33536a6f96209b7638e2e6cac5",
+      "git_blob_sha": "551603a6cf42d919a54ef88d8804d89d3920a790",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/draft-incumbent-source.ts",
+      "sha256": "c54fc4740d8e37647b7d933202c3fb1df9f1c23662b64d21c3df4b1e6b3e6b8a",
+      "git_blob_sha": "2fbf1a832385f705e886036bea48058981d7b0cc",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/durable-log.ts",
+      "sha256": "8eddcd47971e4d5e717f03d2753edd45f0feba9400dd922e51e737162b7f34b5",
+      "git_blob_sha": "3f9a3bbfc381692d8b9bdae51d8a6564e050fdae",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/escape/classifier.ts",
+      "sha256": "7dd6131ec713dc6c2de7032c9a1b0717f3469ecfcaa680e6c26ee247462d97af",
+      "git_blob_sha": "99b73e71eec4585e5cf70046ffb11737dd42ff3b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/escape/dynamic-reach.ts",
+      "sha256": "792749990ba564f3a108757d37298f101115dc2dfc97249c805e39c521e61f50",
+      "git_blob_sha": "b95a67d3c627a8d9213db75feae527c65b3c7d9d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/escape/target-escapes.ts",
+      "sha256": "1ec63f665bac2f1e224da16d3fa321d60749879476749040ea224f8e4157920d",
+      "git_blob_sha": "a5bc51ab409437f46ca170c79db277684f3dd094",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/freshness-watermark.ts",
+      "sha256": "d9d8ed29918b09cbc631422bbe8f69b5bbcc6e39cc4b6e8ed4bd61c4504a0184",
+      "git_blob_sha": "b92c48ef58ac8ab3fdd34fd28c61d85e8db9eb04",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/fs.ts",
+      "sha256": "4dab28f9ab15c38a31230d3d9c9eb44ed6a617a3375aea0560360ae6bda71fbe",
+      "git_blob_sha": "2e6d505c66a04ad72f66e743fa8682a8229e3c17",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+      "git_blob_sha": "5d8ebda609634ec02c4cdaff09499d1d615e2ec9",
+      "listed_as_changed_in_pinned_comparison": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "git_blob_sha": "9920e6b26bc68c392386b13146e352753c08aef1",
+      "listed_as_changed_in_pinned_comparison": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "git_blob_sha": "01a218ede3f71ef585fd280bc183e545f2a94321",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "git_blob_sha": "f89413ad102fba2d2d56fbf65da14c4d7e5b6c90",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/git-drift.ts",
+      "sha256": "b01fb97ea8995fa0226944b0b5d18c5bd058595ed156ffd808ee9e3aa04697f9",
+      "git_blob_sha": "c8e9edd7c98a9e776ad4ebe77bc35c75725f638f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/git-forge.ts",
+      "sha256": "ec9e7424c62956fed7d74ec37f83f447de924687e50b27014c035d3f9f7e1f91",
+      "git_blob_sha": "58c03b49b6f722506d2f10e3fc65a89b88193e14",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/git-history.ts",
+      "sha256": "9d62e93f8cad8d732b03a8e324d63195ca744351510047a10506110a25f808b1",
+      "git_blob_sha": "c0715d4daf78ec72be6094aa1b1bfcf3694049fb",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/gitignore.ts",
+      "sha256": "e4155ef9d24c2a6bb8a3fd2ee85574ae689252f7bdfe708e7d0b88a3e343f93d",
+      "git_blob_sha": "03870fd610e0b118f981ff31b850629cfd5caef2",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-address.ts",
+      "sha256": "f5d7d9cb311a29caf9c8851f8bf97ebe3d8955c863bf138d16204cbdfeffd63b",
+      "git_blob_sha": "43b1379c776304e5a310e7246a4dbae500ee4613",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee",
+      "git_blob_sha": "596d534ebb7da03dbef6002abf1dd3e398003cbf",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-identity.ts",
+      "sha256": "15a366b8f67456b4162b0b1c8d7f5a8e712fa5a489e23df75804cf2c3903c2c0",
+      "git_blob_sha": "36106e3402ef5ed79e0db84e32556500a7d85d2e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-incumbent.ts",
+      "sha256": "c7b4d446e79a64c01f3d871b6b8f6f96579293e9ed593921524b8eed0d5e506e",
+      "git_blob_sha": "ea45ea398dc1070d3709dadb1e742dc68fbd34c9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-negation.ts",
+      "sha256": "583d63f8910680cc1285c0a8c9eaf7ba22ed91ee340a994bbe0a20a06ec952ae",
+      "git_blob_sha": "c04eefc8034cac0f616dbec90e54b62a96f9c1be",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-reasons.ts",
+      "sha256": "e5dab308697afb2cce79cbffe8e21961e97c7b4ec6286c9cefab2f747b8f6e01",
+      "git_blob_sha": "5a41c7ff589619a52232046506f8cf11397f0b7b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-route.ts",
+      "sha256": "0d08d01f4b954f790bbb01d504b3ac124e1b3bf36d0e69a8a75d98a32656f1f8",
+      "git_blob_sha": "ceaf76dbf92d2bcc8e80ae7d92b4677de19d4a94",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-test-vacuity.ts",
+      "sha256": "fc433d772ce1037b829ca4c731c4c1dd0f9604b41616004784e6d5db203a9f19",
+      "git_blob_sha": "2b16b9360c9d4966cb87af5e5c15cfff21a68ae1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-transition.ts",
+      "sha256": "ba8ef42ac6498441c7c5bb2a2773d40384995e39abccf8ce54ee4b1aae448daf",
+      "git_blob_sha": "90c95a5fdcdcfce8f2d115f42537878545f39435",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "git_blob_sha": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-link-retract.ts",
+      "sha256": "cc645691be7af11790ef02ed7502fa180d4d04910ed0d69f32faa6bf2f7917fe",
+      "git_blob_sha": "8f18d0cd61ce19906951bba86a484712b970bda6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-link.ts",
+      "sha256": "16ab608e05031f0e69b97e29e467893468752f339ea7f0f2ec2b13b09c850db8",
+      "git_blob_sha": "eb627d724f5aa2cf173a41a37e132859fe36372c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-promote.ts",
+      "sha256": "15db8cbd288427ad7b05ea906f231f9993418f5c79f8c7153b88481a5af5d6e8",
+      "git_blob_sha": "d108e256f27f07a4429faa32bd00c51040fa11a7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/grounding-computer.ts",
+      "sha256": "f3a91e839da51677d6e1a51759c140779df9e6c4f7276276e3a10665b6e802e5",
+      "git_blob_sha": "75d996f66fdc2a13c590f31ef15a4f103e77e5f2",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/hits-log.ts",
+      "sha256": "79e36fa35770854ef3360c0bb2be56c0c1627c881abb3fd538ea3d55f9eef0b0",
+      "git_blob_sha": "67b918dae71deaf8ad3bf48649901e65e3ac068e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/identity-schema.ts",
+      "sha256": "c77038abd277de006cd44219588339a69365595fa3f147a259448af040387131",
+      "git_blob_sha": "71eccebbef85bb71b177ef6b64ee57d8c947851a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/index-adapter.ts",
+      "sha256": "5461085594912ba90fc3e0b41b7b6b9771bf7fb9d4346a403846cca6c87cf162",
+      "git_blob_sha": "7afc1f29d0c73a1627ebfa2ba156dc2381d628d9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/index.ts",
+      "sha256": "48007a15351581ac0eb7d70c032c5615d78aafeec3c1809d773e25c367bc4e35",
+      "git_blob_sha": "f3d724fb81062d3d1c726fb8863a9d2ea8744231",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/indexer-report.ts",
+      "sha256": "8bfa3ec7cf191478f7403aa52ece9c444ad3488d721db675ba215576bfa97a3d",
+      "git_blob_sha": "b81fe9cf95cd62c8790175432109fc60caecbd33",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+      "sha256": "3ea8b76fa10fd4d067d422bd182f9d4cd8af0dfad7c65e41cb87f2e0ce2d4b07",
+      "git_blob_sha": "0cf513c3b6ab9dabc25a2d4b92959a163bf588ee",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+      "sha256": "11831d4ccca67ded07159ae048fc9680d7f76660e6547bd32b9d2e9df61a78a6",
+      "git_blob_sha": "c6d4314141dc0cf71e42e9dc70a91166f2e04d0d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/layout.ts",
+      "sha256": "686c591c2a19c391d35cea5857dc773dfa57c4cc3ce6509f3a02f2ec9fa99d72",
+      "git_blob_sha": "39c5b2a24ccdfe051846dc75c50496eebe1e8839",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/llm-command-failure.ts",
+      "sha256": "1742585f3b57c45519bb4930b5cf42d752c4379216d983bb517944ef45af10fc",
+      "git_blob_sha": "693a56f8703365ad0368f0174efd95906d3f525c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/llm.ts",
+      "sha256": "44c071b98e422d6d17397bb54bf571145bba48724d1a7ad9e29eef17b14c7fe6",
+      "git_blob_sha": "b3cda38ea6b4c22c25ab3f9d7a1a81342865e895",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/memory-emit.ts",
+      "sha256": "eefac0b570c2c4daceae0b5104bcfaa8ae980160244fe63602a8756d5dc6527f",
+      "git_blob_sha": "f3164e8a7bc2e868afedb546c2511eaa901a805f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/memory-read.ts",
+      "sha256": "58b4b65868f524189ec597c76c8fb5114d0c88503fee062ebc6ee632788f9091",
+      "git_blob_sha": "67ca1d91873a6b7b232a7816e77c0473cdec7577",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/memory-store.ts",
+      "sha256": "f2d811206fb05f70d8900780a03c62662f330608e3573840957eb237139d4cde",
+      "git_blob_sha": "5a3ee6cf461f77f0f5f3fb3dc67228e45a3a906e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/memory-verdicts.ts",
+      "sha256": "6a2cf291e55f6bbebd2fdd518239d6ad9b3fcdc7c70993824cc984db871f6a56",
+      "git_blob_sha": "bad6570c33fcb8a2c4281c35e785e3cea092a707",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/migrate-layout.ts",
+      "sha256": "2a877293496e02aeb440a48564441070e3b8ecdc62c6c53f4719c39e804931c8",
+      "git_blob_sha": "c2d9488d4796e7be722ca957c92ca7437e896063",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/model-config.ts",
+      "sha256": "04fb3a30c01f4029cad39abcdb02854a31874b40b0badfc38db2b68dcb596ec9",
+      "git_blob_sha": "f8f50af6cda19aab82b8abf21621d9d7faeb05aa",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/native-bound.ts",
+      "sha256": "5cbc540bbacd553d5d9e4148273179a9a890f85b1b407eda41777d6c318e887b",
+      "git_blob_sha": "c77be4b3d2f491a306d15fd7e8ede34d4bef5385",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/native-header.ts",
+      "sha256": "5ed4d4366a298cb82a5ddd587fefd459c4cae07d79d1ab1831e7df1cb44a3696",
+      "git_blob_sha": "db42af08f3df24005863cf18fcbcb69494c2d365",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/native-memory.ts",
+      "sha256": "b25010f6ba5e07c46c9f6762dad48a81b098250fb3cb9a95fd915479ab1cdf91",
+      "git_blob_sha": "6a068cac301e804e234f24fa5eac0390aea1aa30",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/negation-source.ts",
+      "sha256": "c5898461be0dadca548476bf71cdc0f19befef9a83aa08b032099e27a0b0e348",
+      "git_blob_sha": "0f7b054b7dd7834030c604664911616c99766ee2",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/okf-store.ts",
+      "sha256": "49e4f420773e6a196f77c8893dcf33770133f68dba16e313ffd0c39d4f16e7c9",
+      "git_blob_sha": "d86105c0bb2d3e4f042130148ae6b6a5860ab047",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/open-questions-source.ts",
+      "sha256": "22201166fd85b8cf65117f4ce2bff3715ca8d267f67bfb0e0336e1af37fef532",
+      "git_blob_sha": "a0bc6d8951de631c4d0d821b73d01dc7668fad10",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/orientation-store.ts",
+      "sha256": "27f97414f37bcb64e14170db03e9c5992c1a5b9a8f45d330679bcdd2a7bde51c",
+      "git_blob_sha": "bf0e9b0323ec95c93283819fe8d3d2f4661c9088",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/own-bands.ts",
+      "sha256": "da69dded223cbd7489d0fe38731613bad3a58ff96fd6a53f012006988449f6b8",
+      "git_blob_sha": "f3a55fac95d92b8064dbc5bffa9eb778caee493c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/own-export.ts",
+      "sha256": "82ec83b1bafc1d6a77603e2294c8b4a7ef49bc4644a0491ef4abe96bc7827e51",
+      "git_blob_sha": "5aa02680458131ec7aceca9cb1964ad874c90b8c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/own-source.ts",
+      "sha256": "3adfdf6c7a04be31c8bb0827c7d59d0d6637ecaec35a6b677373ae541e8d884d",
+      "git_blob_sha": "9ffedf5ef15f3a6ea111cd79b9e4364ee7a6a331",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+      "git_blob_sha": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1",
+      "git_blob_sha": "d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+      "git_blob_sha": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/pack-shape.ts",
+      "sha256": "7f93d94e13d1f8690e086e837a8235666120eef4e5e86065b26e783e2957a456",
+      "git_blob_sha": "e3a52208d865e4b16f6029a85ae3686b3ac8084e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/poke-file.ts",
+      "sha256": "2fd4a88db14769d7a1f98917ac783aadda936c766c0120051759ff6bf836715c",
+      "git_blob_sha": "5b8b1f7bc2944134a8573f0a8a7ce60b1dac948c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+      "sha256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+      "git_blob_sha": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/projection-query-index.ts",
+      "sha256": "74320865e0756b0ac209ec7f1220d07a3022bae2508bda95e4d54f09824de54a",
+      "git_blob_sha": "acd611c56b03659ec786a0f64e8274ba599e44c5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/prompt.ts",
+      "sha256": "7696815a4f4ce447998e542483f2ec38e391be3f257390ee0d3ca5bb20eebb13",
+      "git_blob_sha": "a2570cc35f192c26b3c232a121470a619232b52e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/propose-template.ts",
+      "sha256": "58ab80cf6cdd2a4b28e40ee8ba17c31fdf70fcdb22f075fd6d71322ad93ec5d5",
+      "git_blob_sha": "9ed9bdde7a9dc36bb46be4167c5c5879e565d0c1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+      "sha256": "d02628dc0f7217cbb20da1d0c0b6e86bea9a90284f550702b0e987cfde011daa",
+      "git_blob_sha": "311b642473b15a5601503eced2256a6e5e3a5440",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/read-provenance.ts",
+      "sha256": "8c1820767f84c415ae3335dbbe9b83ad30d09ba24fdd5249b29e7ef32ae88d07",
+      "git_blob_sha": "4dbba0d4b9beb2de3c48ae9f4b83e039a6d8c1ac",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/record-log.ts",
+      "sha256": "22b5c91cab4e1782c1b80f0c2b1371feb4e85b62af2e775e839862144256858d",
+      "git_blob_sha": "56a075b00a57437deaf5fe3a1c0b8518e7bf257c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/relation-derive-run.ts",
+      "sha256": "b8791190c6f7158a1b8ec20cf38e8440de953d58ee804c7bbd95009a92e7cce4",
+      "git_blob_sha": "356957e444d4d824fdf36cdea3e2895d2947fe53",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/relation-derive.ts",
+      "sha256": "2049c86c0ed46c4296592e3611e8311782c4302535a0d3a0399dca88963d5390",
+      "git_blob_sha": "5ef147fc32002b2820bacee7570e9c0709ff35f0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/relation-source.ts",
+      "sha256": "b4a3ebda73742cf060e8c59a3ad1017614458c15f37c95b81b752a33159222cb",
+      "git_blob_sha": "839cf18f3e8142c5af86e7334374b08d63ab366f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+      "sha256": "f513da7f05ac4b65805aa200b8d0963b389faeb5769a91c73b95d58ea50d9e31",
+      "git_blob_sha": "ea4b43772a976e9a2ae55cb46770d7811726a501",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/respawn-brief.ts",
+      "sha256": "356119eef53435b6d21f7a2d09978c19ebd69c74d891167f173c7be6c4470207",
+      "git_blob_sha": "1ad84e3202e1bbdf9f28e6888f5a031f071e07d0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+      "sha256": "03f766ca2212717c99ef4c9bc7e0d25b6c61938a86653914271c235546d92f30",
+      "git_blob_sha": "16f8c5b0933c62c6f9269f7b9b69239821f62f05",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/rev-index.ts",
+      "sha256": "99c27015d61a8aceb6849e67e05cbd0ba6678337263a9d9fa1c8d51d4d8bf8f9",
+      "git_blob_sha": "a60b1809c2dc504e07914fa6f45cd499a7f2ae72",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/reverify-store.ts",
+      "sha256": "1647c34805aed4a753fc0972069edf6d88ee04e360b395ed71ba3624e0020f65",
+      "git_blob_sha": "8b6c95f2b7cbff0235ed82cfe11937233457e1b4",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/review-answer.ts",
+      "sha256": "d9f6d00a5abf557c3861ba24ed03c46961de8c1466588dc9c297584a59acade5",
+      "git_blob_sha": "cbfe58cd0d65307d91cb5171981f330a97ffd89b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/review-decide.ts",
+      "sha256": "d3233e39a4f1ea83b3e136a59a2df8e0cf42091525efc70e8a1795b98ff4209e",
+      "git_blob_sha": "df8e33f866809128e8f6139133a1c9c772736f27",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/review-log.ts",
+      "sha256": "6313aba2a643e8d4dd44c54d346bd0ee4bef79ee542b3149ab86c433c71fbc31",
+      "git_blob_sha": "18892828991da69f0b135970f7c6f62e05de1c3a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/review-store.ts",
+      "sha256": "4d5a7b5c1ac0b460b3d4cf0f685ec6ce911b1b5fb78f3c2b63897516fd76d6c5",
+      "git_blob_sha": "939bf136a408170b871c93f5e87fbc59aa71dae8",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/run-git.ts",
+      "sha256": "be7b78a1c3a2e84ba0d9b9b6c09e24d984948264f04173649dc30ed13bee0120",
+      "git_blob_sha": "18e94c77d4c5e34319a81f4007d2187ebb5f3d67",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/scanner.ts",
+      "sha256": "c161fe298609f1e17b0a9fc06ad79b7fe491d695978ed8ec38ea56fe8d9c82b1",
+      "git_blob_sha": "02fb7a3206dea948bf171bd649a0119bf8482fbe",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/scip.ts",
+      "sha256": "dbd0afe1618939160bc70cf1aba5b29deccbdb4b48cbd4004a226a16a4157ce0",
+      "git_blob_sha": "40d5a3b3f6b4bca14501fa919469dc607f57d69c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/sidecar-abstained.ts",
+      "sha256": "d1f3e4d9f5cfaf186b9e6e2edfb5148eee83682bba587bd9f67d35398f727bf5",
+      "git_blob_sha": "84a97d7d94b294e877c4afa9625c069f61e5f413",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+      "sha256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+      "git_blob_sha": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/sidecar.ts",
+      "sha256": "6cd61930f7030a2859b82a778166fa11ea5d651abf2f39611d5651155e982cf7",
+      "git_blob_sha": "4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/site-filter.ts",
+      "sha256": "157354251a93e35a34467aa810090d4d3818a53dfa19298c65d0a3862308c289",
+      "git_blob_sha": "7b5b129d63079c2bfc5fa4948a6c16a317cd565c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/skeleton-source.ts",
+      "sha256": "2dd04aeda56056512d4711ce4bc4b4b80a879c65009791706779b90e68e35d7a",
+      "git_blob_sha": "d469fe9ca3348163249f497e48664d01f5b56d83",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+      "sha256": "2641a60a83e8fba0a0e8e92efcd6c33eaf8cd6670fc28f954096f475f8bc2fbe",
+      "git_blob_sha": "6f7c46ecc16349553203a0c3da42d83cc6b0aaac",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c",
+      "git_blob_sha": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/compose-with.ts",
+      "sha256": "ca091e9d2b6fa0a6604a68fbee4bab5c087148906fc1e0458a4a290b3f62e439",
+      "git_blob_sha": "b39ea8dea96bee2d534014476dce1a16e5edb5f1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "sha256": "8560562009ce02522725630941c9fbd05dadceea64d09728ec32398641e8885f",
+      "git_blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/install.ts",
+      "sha256": "1b52216f18a275ae1007fe714b7b385592c5b753bb32e7d1063f8f9f6f1e50ae",
+      "git_blob_sha": "392b456ec69c74209e18216ede259ffa9271376b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/read-git.ts",
+      "sha256": "ff4477ec37b6140ce4770e61a6a5af5ae108cc53a581e6ed97b582a1d92f3650",
+      "git_blob_sha": "36602d3169385bddc0a59c9fa44ddac33eeb6bbc",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/read-index.ts",
+      "sha256": "c284c3d3f6953a2113cf7b02c0f9c1fb93802cc99cd8ecfce0df50cbd28c958d",
+      "git_blob_sha": "6b82d5a0918a04ae58b52ad16872e749791a3820",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/read-own-memory.ts",
+      "sha256": "216d5a57e2e6c13cea2e6c4c252e7b8bd8df136adc63de0f412c128bf252cede",
+      "git_blob_sha": "d696a3fb995ad98fd45cdd961ce5a86ac3e90525",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/read-store.ts",
+      "sha256": "17f5a9bd5513610f41a970273e70c8f181b6e2cc7747fa30d30f538358dcbaa7",
+      "git_blob_sha": "7564358ca7dc02142d35879d0e3849d0bd43e4c5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/review.ts",
+      "sha256": "b7e922af1b3df0613ef997539157067dbf9ed45e2581ae1a821bd7490e212fe9",
+      "git_blob_sha": "7767aba8e29f78962c25dae5934328c24548de99",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/types-memory.ts",
+      "sha256": "820ec36586a0e2212c7689e8a957bf6ef851b53dfeb796b136598278dc1f9153",
+      "git_blob_sha": "0ad91d27bf4b8dd0ee827ef68bbbdf75004d053e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/types-review.ts",
+      "sha256": "83199a715f773cbde5a13f30253821ac40993c7b8470a104975af960a5c658c7",
+      "git_blob_sha": "a1306451a4195f5fb78da46cfa7ad21d9324eec1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/types.ts",
+      "sha256": "7b9a36ab91c65ecde3d12c34a286336f5506ee296da80a294c872ff5955f5394",
+      "git_blob_sha": "621c3d4023c9841647507ad7e25162a44dbfc38c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/territory-write.ts",
+      "sha256": "8b73e2153b82eac8dcd318ace2b454728f257ea2336cf9be71192695663f8948",
+      "git_blob_sha": "52e7976a3aae19f1727b8b839cec06180bcfc3f0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/test-vacuity-source.ts",
+      "sha256": "42d4f31c6254d6e1207d45c03762ab4999692bb8147d5684dd2deab435c73784",
+      "git_blob_sha": "72559e9ef967cca26c9746273a7159f9e25fec2a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/test-vacuity.ts",
+      "sha256": "6a5adbad6f1010faf0c1c88f12cde2f4d51139ffeb2d3653c466bc0d907c7eef",
+      "git_blob_sha": "76fc11b1db73c746ba91fa06f109b39ba43e5ce6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/transcript-blobs.ts",
+      "sha256": "c7b00029f33c2f67061e872c7316153f4953ef9ddb8f1a953a11939c255124f9",
+      "git_blob_sha": "bbfe719867ef9f3d63846674a181ce3538839b39",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/transition-source.ts",
+      "sha256": "a3fa24097ba4e5fc2ed8ca198424f18dab6e29af950ea961ebc1729b3c726adf",
+      "git_blob_sha": "f4c9e2784d7680adebeae94d896f2219f97b14df",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/unit-candidates.ts",
+      "sha256": "cf7dd1f0ed41760850a3be16c39b239f19af76bff1456bee897339542030b7e4",
+      "git_blob_sha": "a612124baaa2c649dfdff65d9fa690efda9ee12a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/unit-count-candidates.ts",
+      "sha256": "dd6ba5c0cb443078ecbf43d4c20d215ff61981d8ecebaf3721ed5bd9019e8e12",
+      "git_blob_sha": "dd8c0d5a73db03b0132b507e63135fafd6eee54e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/unit-def-candidates.ts",
+      "sha256": "493d6672c59a9e9612a417c49a81705cfc4a6cd5b0a9461331d590c2d4c877b2",
+      "git_blob_sha": "70c296019582b9a83fc5ad8a8a0340644daf6358",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/unit-source.ts",
+      "sha256": "50cfaeebbd22da686026182ec74000bfbdce97c47102b3267f7ce5893d6d5205",
+      "git_blob_sha": "11f8514896ad54356a7107111057b335035d9513",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/verify-fact-source.ts",
+      "sha256": "106d0caa0aa346d52b5b70f02e9fd0de0ea8c72671a560559d06d2971c882556",
+      "git_blob_sha": "73844c4bdb27b240382a8240ff3b33071997968f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/wire.ts",
+      "sha256": "9a9982cf312157cfb8e621eced5c2e0221105f86711dc21edeaf2df423cd1f31",
+      "git_blob_sha": "bcfdc8e49684a7e4d29a57e16d60247677e6301f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/neg-collapsed-local/repo/packages/knowledge/src/brand.ts",
+      "sha256": "3141beaee8f733c6834006032ccdd75007789c40eec8d13462832467e2244ccb",
+      "git_blob_sha": "f546458d7b39ac5cbc655482c6e86cf292c99702",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/neg-collapsed-local/repo/packages/knowledge/src/negation-key.ts",
+      "sha256": "9119fca6c3c558685e460750f14309dcade9a975827c824d78442cf0bddeaed5",
+      "git_blob_sha": "926163b405f69ee83a6b3932120fd5dee09f1a58",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/neg-collapsed-local/repo/packages/other/src/companion.ts",
+      "sha256": "edd2888fc9694d995de3b09ba1ee098a489ed0952c77910c4e344c96ccb24d06",
+      "git_blob_sha": "aa7e3c7a56aafcece20e85ad99fe407e238051bf",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/tsconfig.json",
+      "sha256": "0be39c428345e8dee07c8304ec228132505b63e913a236c9c8379422fcc34e43",
+      "git_blob_sha": "529e3c0fa5d3ad2121cef1542d3b1fd000e83192",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/package.json",
+      "sha256": "1cca36e3549a07f85cf6c5297c3de7a0636f6facc5c6e291a1b90033d83ed240",
+      "git_blob_sha": "a7fe61cdbb50429cd107b55c6f2458013fae0902",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/anchors.ts",
+      "sha256": "ef9da9e40568152c8f760c67dfb49415ed6c794c1f4c28dd6b1d3b80285721ff",
+      "git_blob_sha": "9651731208945fdbd278b9a618f3c4b285f1ae41",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/bin.ts",
+      "sha256": "ef793b0a76b40abaa8cd1a8abcd6976e58762b6d748f002bd7a143012277f5c0",
+      "git_blob_sha": "3c51b3406560baa3f36833e2c69e5297585df462",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/cli-dispatch.ts",
+      "sha256": "ada9cf19aefb0e0438318270cea1701c31d10d4b982a06e9638505ff93e24fe6",
+      "git_blob_sha": "d39ae5b551f7f934c68ad2a890e1e72cbf7609ec",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/cli-verdict.ts",
+      "sha256": "72535b06c42da94d6fab48ae7cffcbeac155b79937a1ae6e152773ca4c4b2342",
+      "git_blob_sha": "286d6530a4c74a30c561ed6df7233fcebfd7743c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/cli.ts",
+      "sha256": "cc2315114a071cfd20830c0e29d1530d8674b1a93c96085df31f7ab68ddd2ef9",
+      "git_blob_sha": "ea25a553d10089e13737e10b981e1763e730afe4",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/decay-cli.ts",
+      "sha256": "5861e47e90b8e4d520986e5636fe7b27b634a210386430fbc9948d35a978b8ca",
+      "git_blob_sha": "2b997a04c338ae2a53b24fb757746d592b090045",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/derive-relations.ts",
+      "sha256": "acc2917a518f2b00bd2a29b6ea51103deb61c2c42eadbf06c89cf395dab1b535",
+      "git_blob_sha": "e92d1c999d5a1fa30f74e549a580acd681f939ae",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/doctor-index.ts",
+      "sha256": "8d181202b3f95b123a99cf8251ec8a2b19c032cd78072d8e580e67f1daa349ad",
+      "git_blob_sha": "46da3423692aa0506f62397884bcf6af1b1a3690",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/doctor.ts",
+      "sha256": "e1efb26e1b2c04122e9ff1f6047e260b69ba51456e9bc734f21cb9c967428b16",
+      "git_blob_sha": "83012ec8cc4dd675f91193150c297b301084a041",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/draft.ts",
+      "sha256": "dffd88949f119542e5201d29da105a7145b64417ae1cc6158ef1395dc41eb137",
+      "git_blob_sha": "c3607b2121f171117ead38d7a7b2b95e240d7fee",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/gitignore.ts",
+      "sha256": "959cde61218435bec2ad366c238b637e5cd4d6e4ad6427a11a30e655f5a1402f",
+      "git_blob_sha": "20e77a09ceb502ade5cd6bde289299b06a62b9a4",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/help.ts",
+      "sha256": "2bb7413be5208b01deb2c17432b814c8b68fb3569d09ce917acb80f11c5dc67e",
+      "git_blob_sha": "53963567091eb0d735b9e61d3340c4075d603efd",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/hold-cli.ts",
+      "sha256": "9538d20ebc4b7430a386e2f64c8bfafa2076c51d84aa7f3979ad79b9f1524924",
+      "git_blob_sha": "a32769dd7d048a47dbdc670517022c5d9fdfb331",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/index.ts",
+      "sha256": "ae6bbf351a2f6d188e75b3af1f13ff0203787e9e4a8d48afcb8869d4e5038807",
+      "git_blob_sha": "3e3fea14e8d9cb15898277e1565c2d1c85d49041",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/interview-cli.ts",
+      "sha256": "4def856f1d97c1b1853aaadbbbb2b5a07f85464d6dcbd591794aac6ace8b2095",
+      "git_blob_sha": "05a345b79f99a771ed46b93ef34cfebfa8167db5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/map.ts",
+      "sha256": "efcf64d68a5982b11b3ea32aeed236154a65c668015d4dce31622f2159bc25d5",
+      "git_blob_sha": "6096f1e1fe39871351a7d668771873633a5643fd",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/marshal.ts",
+      "sha256": "a22ebe4e3b1c8fdd1733bf9224a42ad3b17141a36f36575c888baefb6adfc2de",
+      "git_blob_sha": "3d50e71d640bb53bd1f2aae0b242096e1d8498a4",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/migrate-layout-cli.ts",
+      "sha256": "84106c1ee24781efa80f15a6845fff7bc41ef6492227b0649281b8d79330c0b4",
+      "git_blob_sha": "1e7e35eb4137a199c4bf297bcfe7daa8705503c9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-answer.ts",
+      "sha256": "0a218f5f1498358e5832fe40e696945ce4e385ffa2ccb98f9431296c9b3c4d3b",
+      "git_blob_sha": "e2e0eacb44370fa2c0961e429318a91796c93900",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-arms.ts",
+      "sha256": "5a4c5c8c0e31f2ddc4d3f8a7267bfce743b672a5d6dfcbd3c0b0056154c7fc3d",
+      "git_blob_sha": "f9c5fa8b72845f33113c8c1e76376f0ba313b42f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-claim-scrub.ts",
+      "sha256": "8da1261e126c6b04d95d3d3d5e56f9b0eeb37cc1aa11fe98e1d17821309ef854",
+      "git_blob_sha": "fd697896ca99449e68cdd3116b4ea5f9483b86e7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-decide.ts",
+      "sha256": "aeb272ae2022c3e1ac8bb053a207d9eafa67025ec664c17f568a69ad0e85d638",
+      "git_blob_sha": "243a33c2eb2f5014de0672fc87d0c7c47dd1e34a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-evidence.ts",
+      "sha256": "5ddf0673542c33f311ed1015622bfaa252c229d119f09ad2055e00c0bb798c86",
+      "git_blob_sha": "1ea1aabc88ddcfee0aeb9620491c64bee9fcd24a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-frontier.ts",
+      "sha256": "9d9cbb183efa9b22b71648a8878d5bc667962a6582c1435b39dd1dd758decbff",
+      "git_blob_sha": "9a3b3ef21674e6cbc30050485bb052392f16cb77",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-gate.ts",
+      "sha256": "9665067af0ee6a0bb55c889490a76939f9567f1420998ca88d76c5260052a2a0",
+      "git_blob_sha": "d390030e11b20cfdf4d42cf7aa9779a583286f77",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-pool.ts",
+      "sha256": "492b8e50c3639baff7cf1ddc026b8046dab526c7abaa42bd309ae5fdd1abeea1",
+      "git_blob_sha": "243743528531c336e27faf9cf4f8dbe3aa024ebe",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-progress.ts",
+      "sha256": "141ca2c82537b351709972b71a91014405bdb2d82a3b59a07639abb57385bdcd",
+      "git_blob_sha": "04d45a87bf1e7b06cf18b236984b1edd494a0aa4",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-proposer.ts",
+      "sha256": "f530bfaeff0b0035bab63f94ff868becd417165dd4d0cce006bd9cd9864e0a9a",
+      "git_blob_sha": "a492b8add89fb7fc7b6fb60f33150964ce98c54d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-render.ts",
+      "sha256": "f8d0230cba9241e34ffd8f28fa563ed22d5b1226dbd963a28bc2fddab29204ee",
+      "git_blob_sha": "f52bb5eb70eacc466a7a978f3307b4840e947c6b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-staging.ts",
+      "sha256": "dd4fd24a16a4ac784fac235a95ea8489c45198711ded031da0680c38d8ec1c13",
+      "git_blob_sha": "8d694dfccceab8d83eec024609525af28b7c7846",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine-worker.ts",
+      "sha256": "884832dae0fa096e81488208c0f3a210b2939474a4a88c8b6ba9deb5258bbb1b",
+      "git_blob_sha": "4d5c8c4ba12da4c998fda514368dc4e1ebbeb797",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/mine.ts",
+      "sha256": "bf4e57a75c3641a1fbd16d1666cb964355322246ea9625433938ad5199b35a2a",
+      "git_blob_sha": "91484d2600ae33114e711451481c0957c06a53ad",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/okf-cli.ts",
+      "sha256": "dc0899c0c808107ca60505abb609fc2f9c149c561b1148b3cb55bc945222ca59",
+      "git_blob_sha": "9a5fc55e212909c3c98b54d5b5f3d8008f6ceba6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/ops-cli.ts",
+      "sha256": "3d893ac4e3761c910e05af300801f9afce1842a6dbb0196b77b867eb6f59eb54",
+      "git_blob_sha": "99ee254750ae5a8b325a3649832ffa51af88ffa4",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/ops-common.ts",
+      "sha256": "961843ef537abe6bbe8d3b4ce49ef0c60008f313bd3e06f13de7dd8e3bd0dad9",
+      "git_blob_sha": "50b2772726079a94bc45b894f3d4d83ecbf95b04",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/own-export-cli.ts",
+      "sha256": "aea0795ff44862c20b0cbec5390d012a60e9bf6dd8b4123c23dc47420dd19bd9",
+      "git_blob_sha": "5407beac1380cd930018dda42704db33ff3120ae",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/own.ts",
+      "sha256": "87c129f71e5bbd6236a4f84d3934f266149587708118e316d6044057e9d721d6",
+      "git_blob_sha": "72f9e770821bcedaa300ca843fc39095e22bd627",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/parse.ts",
+      "sha256": "89df282a188daef7046c2cd87f8faeb35f21b6c051b62cf239df2dc1520e60e2",
+      "git_blob_sha": "ea78b5320f64e8c8ae839a4c3e574b04bac3208f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/promote.ts",
+      "sha256": "04d3d3148e40c7b4d2b773b3f13175952e54bbbbd3345608c4247db4113fedc5",
+      "git_blob_sha": "15737991e45f20377b1916dcb2a90181098bb2c6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/ratify-cli.ts",
+      "sha256": "a9eec4a576fbc1ce802346ee1b04aff45fe9399ffee815162c260e32bdddd478",
+      "git_blob_sha": "6fb36f1a9c4217b6befe2fbf98666337b0ab8f6a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/render.ts",
+      "sha256": "0938c1f2241b774afe2224ac90fd9e75fa85f52b99696e24f1290fa58a4bdb14",
+      "git_blob_sha": "d471d42bf42f09401d7d5b54359578f25d38a9a6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/repair-cli.ts",
+      "sha256": "f5c5343f7f0081b5ddc9a8b82623abca550586dbd23061775322546eef393a30",
+      "git_blob_sha": "515f3cb4581fdf502afa8263fd95c0f49eb27e11",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/repair-run.ts",
+      "sha256": "9ddde5aa204a472246fcfedf5f7567f3c5b131e3d80e7b1198fc4dc02474913e",
+      "git_blob_sha": "fbeeabc7cec071cea03618b5bf2048be6c97daa0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/respawn-cli.ts",
+      "sha256": "63b9a8051f3f2e09caa6d1282704368de417d5c263579766ecc01bdc618cca23",
+      "git_blob_sha": "771c628b42d7ba4f0f66c90f1552f52951554ae7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/reverify.ts",
+      "sha256": "cbac7563070785ba29b037e3d8261fd240d141d079a11e969606b6b52014c91f",
+      "git_blob_sha": "a75f7f96bcfa8d2b20e15224b69d46cea205acaf",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/review-cli.ts",
+      "sha256": "5acca14a32e203d702c7f057c263c8c7e943a5a752bf8cf4cfc9497730fd50da",
+      "git_blob_sha": "bb138f92d98fb14080c074d4fe090dcaf486cdfe",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/review-common.ts",
+      "sha256": "c3d6339ce064fa1e37fd1fdf565f397dd9cc7be7ffcb6cbae14af4af2731f079",
+      "git_blob_sha": "b00ff3e897a9a1b7545def15abf908b74d26337c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/slots.ts",
+      "sha256": "50f9b6424306b08ec71e09b2640172f4c946b67537da6b5cc2c31fe97f67dd94",
+      "git_blob_sha": "57f62e135baa2c6cdfb0362478d6d865dcff4e6a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/surface-mine.ts",
+      "sha256": "03e7a1007a0858a4023bc715b3b74191686b7d6bc2af6f45fbb050da17deace1",
+      "git_blob_sha": "634b50b31754c9597865557ede58ad63c8b7d254",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/territory-cli.ts",
+      "sha256": "52806bdf9a3f2f69d74eb2789b7a977148154477996df0653e95a369d82effc1",
+      "git_blob_sha": "b753854cee275431c45f07c342b7c2e32634919e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/test-vacuity.ts",
+      "sha256": "615db01ade9932d0bf23b649e3a22de197e113e42246e47b434e08ab366aa1ca",
+      "git_blob_sha": "64f5cbce63046081b48d3f8f9554703579efcff7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/transition.ts",
+      "sha256": "32e1c82f2ecc6611b283ab38edaef2a8ed39726c7e0aa4e0b12ba98e018d9aa3",
+      "git_blob_sha": "88f16d8d03405f31e32b87ecb1f3bac25381d0e8",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/cli/tsconfig.json",
+      "sha256": "103ec37fa97163efc138b55a5319d8a79cf79b1d3ee96d5b85b882ddf6e1c47e",
+      "git_blob_sha": "e879e4c4993cf186ca1127980095d2f4d6d8ca58",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/package.json",
+      "sha256": "5aee0da4189b543aacb4a591dc9d1366122e6a185daa2fa0059dea095baec144",
+      "git_blob_sha": "4e89aca093bd8cd739fbd12f107d01fb5220268e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/hash.ts",
+      "sha256": "7059498ddeab398df1ec7d0efb64c340b774ed156fe8c0b15fd556869d550816",
+      "git_blob_sha": "c8aa0ca7ba0700566ba79cff44cf4b43c4e293b3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/index.ts",
+      "sha256": "b7e712dfc1d4d923913dcc230a395d897a11562a92b62929bbcdcac2eb3e19c1",
+      "git_blob_sha": "d1b18f2a66e2e37b908cdb11d2cae8557dac8331",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/pack.ts",
+      "sha256": "44f566128c843dbe54ab5f89c2f2fec7c47bf9e2c78955f4ae2df0559b17a5d3",
+      "git_blob_sha": "f0bccb9d650476114819eaeb2d0fa5a10eef563b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/status.ts",
+      "sha256": "d8ff443c2fb8dd6497177e1584d6597505a1986191b3d9370acdfbdb7b2dc1c8",
+      "git_blob_sha": "d4426aea275a9ee5505f7f392d93fd1edd251641",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/struct.ts",
+      "sha256": "958aa62b56803fbb510ecc2a97842212962baa5fd335d2bad8ec9f5d645d8588",
+      "git_blob_sha": "c858ba3603c7d636d0fc8f3eec4d24fa28a70253",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/territory.ts",
+      "sha256": "d56d6ceeab31797a540e6e4d90ddc1771730d290a8935241b494a12077c05aad",
+      "git_blob_sha": "cf0c551693a1fa30bffc6cbe31b63f864528b988",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/tier.ts",
+      "sha256": "36a932254863157061ffdb6991d33416c0c98973f82a92ea3727417f78740232",
+      "git_blob_sha": "ba94d9dfe1c05587a9782177f007523659071da5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/src/tool.ts",
+      "sha256": "e9740189056ffc20db5ca0e85633e525e91d423912f1f3e9e46f7d5dceeef4db",
+      "git_blob_sha": "f21f867291e4a9711d78ce02073db47550e70a5f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/contracts/tsconfig.json",
+      "sha256": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+      "git_blob_sha": "5285d28af22ae3cc360d5d619a0aee65645c0571",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/package.json",
+      "sha256": "87dbd92ad1958d26906b227ffa2fc2116fb98ed57156652128a60153f6b84705",
+      "git_blob_sha": "5e7425adbb29116606daf98a79f7b678567ef3a3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/src/harness.ts",
+      "sha256": "d3d9a93e012c055d4b1d8e2392d6dac6637d61e29d4fb8e1a7dc949df77ee72c",
+      "git_blob_sha": "fa155dc54353a6b53e7ebed3a44b9b59e9321773",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/tsconfig.json",
+      "sha256": "1d15bf9705783e938a4643dcc4afb4940a791df64d6475cc2705bb437a78ac82",
+      "git_blob_sha": "939156a4dda96e524c8ea8f455bb2507e0c6cd72",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/e2e/package.json",
+      "sha256": "0d78c7ae80d8fb2b384d1b24287720c418346203360cf53613baec3a9284366f",
+      "git_blob_sha": "e192f8bffb060e9584b680da0d60a74ead303c57",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/e2e/tsconfig.json",
+      "sha256": "a8cdc8a33b8733d25512361c39eb88a6a8a1654b41ad63bc217f04a6866cd2c6",
+      "git_blob_sha": "e29bb8365cf6088e4128aff7140a70236423f0e6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/package.json",
+      "sha256": "0414bacef0cd4bfaea48268410a8adfb3cdc6f22e001f08e72694aea3a66cd90",
+      "git_blob_sha": "7a2a4b5d55d149d988a34e32f010df65a4ca8c8e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/admit-harness.ts",
+      "sha256": "31a10ea9a5d69c6d1747ed5400401c1b0e21f7580de314f6e4b94813dd8a5dc5",
+      "git_blob_sha": "d75280e5cf3e75c93a90a1db5075c558a9cdde3f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/admit-negation.ts",
+      "sha256": "1217516e52fe4224760686135e8493f5d394783e6902e599104c704fcd76a2c6",
+      "git_blob_sha": "4c9c127469d7da08ac036035c68b84cda5399dd5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/admit-proposals.ts",
+      "sha256": "1714e5436c1a61f5af399f526b733e618ee7605265019bd408c828df11882950",
+      "git_blob_sha": "499e8e1981d4c71f19ff2478c62fef7e55ddbc19",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/admit-relation.ts",
+      "sha256": "e8e3b4317b9165802a724adeda68405fb3b292849344164e4466ff8b5eb65cc3",
+      "git_blob_sha": "92eba12c1fb6a46b787bbce1941b831d07df2e4f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/admit-test-vacuity.ts",
+      "sha256": "29fb1b5caf597315eec856cd6ba5d7df5d625dc8a083ba99a33cac18b2a552b4",
+      "git_blob_sha": "4f8fa4fb380efef5966c32a0a435a5075f984001",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/admit-transition.ts",
+      "sha256": "fd42e0a6e0f92578efeb524bb98d5d6e0657d1967795e71e95eee21c0707c59a",
+      "git_blob_sha": "5f7d123a5d69934edb7b8caf928eb77cf278ca14",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/align.ts",
+      "sha256": "64efc9f8deff058723adf0b6014dece6cda7f855bcfefc78b1761821794bc817",
+      "git_blob_sha": "ace247f5d8c38da55d23f549298f66530e715f67",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/budget-types.ts",
+      "sha256": "feeaa1eefc20a6692793c9467ba8e041c78a4ea0ab02f77dd7e9122bca636d84",
+      "git_blob_sha": "35b7cb574b6fb00dac046bfb890e5dc22e2719a1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/coverage.ts",
+      "sha256": "3ed00476db3f8955b9dcf31f3dba2532df58e143aa1f48451650fd2bc4a719e3",
+      "git_blob_sha": "1a334eb1b017b8a774cfad92115e542a79d05df1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/drive.ts",
+      "sha256": "1877fb69c42be0a9ac51c4471673eacb49bfea99a58e05c09cd717c658600d90",
+      "git_blob_sha": "bd103844f3faa52361997aeb1e54e41c376fd521",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/extract.ts",
+      "sha256": "4cfd8f06e0603a82bed4e9886f7efee685dd463ed09d53e6ee1deeda36bbaf3e",
+      "git_blob_sha": "38ac7bc9437713e32d1442b66928282421384768",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/index.ts",
+      "sha256": "bc24beb79546ab144ae94ca1282702835e9d6183b01c26abbab8227fbf56c354",
+      "git_blob_sha": "d8fdab0ab2c23a4fa1093ddf67a829dd9e984b07",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/open-questions.ts",
+      "sha256": "eb2e67ad8653ff6b0dfdda2dac3c27086fc3bd259766d3b2b21487018193c29c",
+      "git_blob_sha": "4a2bad132c12158534f61e64eb1d9a3496b286fe",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/rank.ts",
+      "sha256": "a50bd3a64dc93a0c97e07a57a2f19884e014fbe750c41183f2556fdb2a9f38b3",
+      "git_blob_sha": "7123acfe64f7774bb03f7d33aab16a5b0f52dd4b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/run-controller.ts",
+      "sha256": "4ffa9a6daac128d430be98885e5f733a0fe576e87d02165f792ee5fb9bb5c098",
+      "git_blob_sha": "cbac32e400ff6a24ef78841704f7e367d053316b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/scope-predicate.ts",
+      "sha256": "c0717b971edb25b5c245de232d17d74fff84a804a000d323c9ab2d06fa472136",
+      "git_blob_sha": "9afbab63e1f188ca452040ca6236be1789fa6dec",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/seed.ts",
+      "sha256": "ce5c6484e24e4f026a2363fcd811f90c45d5ea301fa26faa0f82ff3add18c66c",
+      "git_blob_sha": "88653b3b2e6c191de03a46c442f3046c56172d26",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/seeds.ts",
+      "sha256": "09b32b20da5334889295666e8daaa5cd0975f5f00a10889fd8151f88e43d85d9",
+      "git_blob_sha": "a6100081aed642306b7470924eeedabc01a13ef1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/types.ts",
+      "sha256": "611cc56fb242368f2786d79d850c78e78efb561a462ea7fcc73d72e2b4325e00",
+      "git_blob_sha": "fddcbe579056fe66251e1fc98e50856fcc09269d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/unit-order.ts",
+      "sha256": "2bd761b1af1c74fa47f3f6dd7863c6e4a0ab7ae10b8371d3f594873f3eda2210",
+      "git_blob_sha": "237d56094ef3df6f7638fc3c0e08f7ecf395f179",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-count.test.ts",
+      "sha256": "b55023c2362af8bcd0cad0e089d135f4829644e0c17b61841ccb3a6b317fa948",
+      "git_blob_sha": "f1936d71d889ae1294dc2dc0b0300d7483cd829a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-count.ts",
+      "sha256": "34c0b09306c5a74ad206248125777f8ce2b94f440ac7a82e810105b752edf6a2",
+      "git_blob_sha": "0fb58d72ddd32449c22cd2e4c7a8fe9526856a45",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-definition.test.ts",
+      "sha256": "27b3b233a0769853bc25e3217a444406907a0c386c74aae66ce0dace0a503fa6",
+      "git_blob_sha": "fd69d43c654a510f3b5f2f8ee9e541b5f6f83f66",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-fact-relation.test.ts",
+      "sha256": "d0538a8538ed9b2c752f034689b8df745083f1913fcab1f72a3873dac5245379",
+      "git_blob_sha": "6e5055424b803f5390850f0b6d136a46b6a21e50",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-fact.test.ts",
+      "sha256": "a8227b35ed8175a12be6123c8ed71402fd62f3906441ed3720544891b1fb734c",
+      "git_blob_sha": "5c6f44cb83f1c8f511168d048a869fe77d5d4dfb",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-fact.ts",
+      "sha256": "9f2479eb31c0b3eb9a464336a7a38ec2d4c8f62b2abc0cc2b8cb3d32f083e449",
+      "git_blob_sha": "eb87e1a2736705ccc84e89ed9fe89270e0bdc90f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-negation.test.ts",
+      "sha256": "12a5bbf1b36c71010c520115ed54ca0974ad01c9f27f72323eac6074d9a9ce24",
+      "git_blob_sha": "5c176641cee5a5afae31c1dfc00b10b2023f95dd",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/src/verify-negation.ts",
+      "sha256": "5cc64c8d838e272c23c2858cb77107f7e6c400c7aa72ff2b8f1335458d0b0287",
+      "git_blob_sha": "84b147694a8059dc27e8771de550e8981fb29f35",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/genesis/tsconfig.json",
+      "sha256": "ad3f637ec4c62deaaebc649971b4cc7ed7955a745cc158cc88ffbead67c88ced",
+      "git_blob_sha": "059943df99d68067726dee72d6bbf2e698bfc5e0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/package.json",
+      "sha256": "ebcbcf204897e439999ae9d123a5f6a34635853394e93664574d7770d39a1cde",
+      "git_blob_sha": "5e4d273e2b29e1ba719ffb4af899506b12227803",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/drift.ts",
+      "sha256": "cd8266bf9d23f6f026f66268cc521682a84e14135f56178599c47a17d6314ca4",
+      "git_blob_sha": "ae7f5eda9a7b777a3aa8e2e39dbbd97d499c77ab",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/emit-guard.ts",
+      "sha256": "86cb0c9e321f11ffd780e017a49d64122f7cfa85c80cf527af6d688ff685778a",
+      "git_blob_sha": "0aa13e3db6a9df58f3546aa92e6c1258f8150dc8",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/freshness.ts",
+      "sha256": "bfbfd207b741265c3a65224435ed19394e4fd251023d6ae8140d5f9e82074c8b",
+      "git_blob_sha": "9bb38be70d611afcf240d18b2f1a6be04c8a623d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/gate.ts",
+      "sha256": "248dd37330af32de5352636a119f9b868cd63b168f231de88d997f196e8ffaa9",
+      "git_blob_sha": "cb4dcd03de89de4e8f6ce5b9cfd7d708dd17ecd5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/ground.ts",
+      "sha256": "c57526b98a73ea9d877bedb27d27b90c97c48141cb4594fcd2b06a439836c205",
+      "git_blob_sha": "d715c9e737f152bcb0f77d5d16ba19ee82c8920b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/index.ts",
+      "sha256": "73b91c6ae9b2e759c315b7eeef5d7f95d89c1f2bbf3e952f2952139466df6d37",
+      "git_blob_sha": "8f39067c7d26b73be5f789f3fa17f5effa7ade03",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/span.ts",
+      "sha256": "e600b193e5c8c10e04e6d2ef7b0a9ef611e2aa19aede09ccb50dcc151daaa101",
+      "git_blob_sha": "f4d9b0ba468189f9c462f63b66f9547c6e872c58",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/subtree.ts",
+      "sha256": "af827f8e869090422b090c88285192e3244501a9aa6fbc7bc634346c73d94803",
+      "git_blob_sha": "4cc4194b65a1aaa19a75dc3d3e365a8d4633d676",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/src/types.ts",
+      "sha256": "7a658555e8bc0c08a8cce4eff5f7543aabef719d73ebf5f422f700619110cd92",
+      "git_blob_sha": "93b6c395358ee2236adb49f637d5a00a92558719",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/grounding/tsconfig.json",
+      "sha256": "612caa85a885a3406c3b25d82ff794ee5436e8682c48e8d6196e73d844f9a9d3",
+      "git_blob_sha": "0216473e0e1db2c10e1679db28ad35bfbc2c8ef3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/package.json",
+      "sha256": "b0ef44726de02ef4bb4bef9b68637b0ef2567e6f75a922cc1e9c1813b2348ead",
+      "git_blob_sha": "e4b2304524e68731eb396e5efd8ee6fa1600122b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/build.ts",
+      "sha256": "aa62bef2e9c4714ef122ce7f8ad6d844a50c6a995d4174425bbc3109a59dca9c",
+      "git_blob_sha": "b39412f769f79a18f15b800c280c26f978ed4d84",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/cas.ts",
+      "sha256": "20f9d6b8cd9f3db3170fbb720c298ad3a726ab44c4bacd5da8e053f2260715cc",
+      "git_blob_sha": "c2bd657481a18ee49cf2a1d6790d1aca1270dfb8",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/compose.ts",
+      "sha256": "d40b913d275622fe75bf57e1eb186ad049c822e1d363d5481d2c17fcea416400",
+      "git_blob_sha": "10c0adf77f3dbd2b2be8a119fa06bd3172443eb9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/coverage.ts",
+      "sha256": "3616426904eb724ae41723c99b20d8371c9ea407f09bd287aadeeb58d40a58a9",
+      "git_blob_sha": "565426fbc4836c16478e4877199bda338c7ded7f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/depgraph.ts",
+      "sha256": "1fdfc8ababd686e47fe70cf028e1f7b9950d080c014825e046bc4eb10e49fb45",
+      "git_blob_sha": "95ff89788be6b4ea84d2d2c38fdd4f2d9b78377e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/fold.ts",
+      "sha256": "900eb9ccfff5588a6ae8496fef14021350fb80ff2ce48f633819a77ff5dd45c8",
+      "git_blob_sha": "684ddca13fd43bda50b5359fdc42614ad6535a65",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/index.ts",
+      "sha256": "86fcd852463d5d3d009d4c3219056609e6c337ac943083c29d9a4d30ac6eae03",
+      "git_blob_sha": "7f0675dda08ea7ae1f69a6f8e22fc02979dbd747",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/own-impact.ts",
+      "sha256": "93a91952e91a5303d52dacb68bf44e795fd274ca720235560dbe181c9d8fffdd",
+      "git_blob_sha": "77bcdb8eac50380823279790a6a705e6f153468a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/ownership.ts",
+      "sha256": "71968515c2a75bf865fefbe72848de37c5a202440cb67bc183a972f4cf1a1c53",
+      "git_blob_sha": "8e7918ffcd43a6aa7aebe418fe79ade40b9665c5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/resolve.ts",
+      "sha256": "dc05186874fd7230a9d96965dd1558c9959314511cc6053dffe6a8207a2b1a69",
+      "git_blob_sha": "54349d0797f86061502976aeb021ef920642481d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/retrieval.ts",
+      "sha256": "d4a138a8c65585d608b361daf3f3a266784d75468466e37506517fc439fec671",
+      "git_blob_sha": "011c1dc5422a7e863f30a81f25471e4b4742271c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/rollup.ts",
+      "sha256": "e074856e61c6f05d1b9914bdd442fb08d0a491e17d4b8a2e0b4768dc7b4c34a8",
+      "git_blob_sha": "4676e7f8fb8df12b85c66a915afe4e4fa9930222",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/symbol-reverse.ts",
+      "sha256": "53016a7f9845bdb02af56c41f91a42e89928ddec1d216655012b41e5f84c8fe3",
+      "git_blob_sha": "a4ec057cdbec20c3b34fbd47e79542a9f3376b6e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/territory-catalog.ts",
+      "sha256": "42d0c934c156922f2bc8ae5c48d427bdd0da86d043382e2d22f676080e561020",
+      "git_blob_sha": "0ad5a3e01f6ef5f45c0c0c3c7af813b8b8df574a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/territory.ts",
+      "sha256": "2a8a6e4292a520ab7f24d46cd6af35f92b661b060b6371b95054dbcf11b9b51b",
+      "git_blob_sha": "2b7b925302b2ac7d4a4d48d6ab90220c16ed0b72",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/types.ts",
+      "sha256": "6c20d2662d6f5a56f9ae6bd21c3b936cc40f53eb808bb40152e3189167cb03d6",
+      "git_blob_sha": "3680cf63aa50814622221125f946ef8b855df5ea",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/unit-defs.ts",
+      "sha256": "bd89ee1559dcbd579d963c29d0eb4f9c8b264847131df7306f385bd870f267b0",
+      "git_blob_sha": "d49d284bab0c679b531e4f818a61b3787c482f93",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/unit-deps.ts",
+      "sha256": "35dccfae4c94cc4da23e191ee7480ba149095fdc7a90bcab4435c12fa6567a6f",
+      "git_blob_sha": "2fbbf843dc911a9872745eafe6adf45e3bbc0d9e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/src/unit-exports.ts",
+      "sha256": "56628f3cd330aa3c52bbae88c085395efa955649e89f694656c8dee2f41c6005",
+      "git_blob_sha": "1b5635a782ef62823fc9661b5b10095c2928eaa0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/index/tsconfig.json",
+      "sha256": "72a5763b97b01b2991f6847636c005ec199d2259947d3c76668573cc4c0d2815",
+      "git_blob_sha": "36f49ffa7f9a189670b70a335e3182e2ecf1d396",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/package.json",
+      "sha256": "206932b96e640ace3b7e7591aa7854b74b990a76f2c965172252436011b1371d",
+      "git_blob_sha": "1799fc90de0718d074ea15e054ab3d4ea280e213",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/brand.ts",
+      "sha256": "c35755d2392c859b5e680d985272138138390040fa5835cd2869db61e1b50c03",
+      "git_blob_sha": "81c1bc010526b72b08bf00178df8e36b578ace61",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/canonical.ts",
+      "sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+      "git_blob_sha": "fefcf3b44c6bbebe4c23b47001fd25510f5a6fde",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/encoder.ts",
+      "sha256": "9fe7d781f1d2e70614419483e4abb51ebf036fd0420baef332b77dce5e4c07ad",
+      "git_blob_sha": "e6ab4f03ab3cc4c658a1455d555e1d868280cb67",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/fold.ts",
+      "sha256": "edf68f876386e6208c240ea908a8e716e33966f1bba2a06ba17841090e60dee8",
+      "git_blob_sha": "317e1f7cb418f83b5308930e20c22b43d86a8a45",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/index.ts",
+      "sha256": "7c2d40f2bc6c708d50393b771a0cc8e9dc382ee9452e1980a79573fb95a93b4b",
+      "git_blob_sha": "e0872c05d52259577d73b82db44a78d0f6ebd9e0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/jsonl.ts",
+      "sha256": "88ec2a81a73b11ab554a985ee5be5ed09ecde39f41e1d639228bf1282bf1d21b",
+      "git_blob_sha": "9d9b178e5e1d6c9541a18e73901f76116b594596",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/log.ts",
+      "sha256": "82d97746a125a5edfbe23687fff981c96d6b8e2f92fec871816a681594551651",
+      "git_blob_sha": "9a1b26966183e069c33487754928e5b2ab2fc072",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/portable.ts",
+      "sha256": "40bf65f1cecfbf6dcedaf6d2d87482ec401831673a669419283bcb87cc2f06bc",
+      "git_blob_sha": "bb060c37d48e7113be489da5d26a001dc03b1c1f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/store.ts",
+      "sha256": "7d07bc7c2cc3c2dab7b4af61956a3d9e693f039be9fa4a70e300c8a805c5dc9f",
+      "git_blob_sha": "d6fe64685aba959528ab4706f752fad81b789841",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/types.ts",
+      "sha256": "dcfaa14c100d2c923835ca1915d37123146a4326f5936f2e02206c00fde06be4",
+      "git_blob_sha": "ad4764856e3fd7e02aafcab8f661f442acc2b9aa",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/kernel/tsconfig.json",
+      "sha256": "4c44884bad8bcb2a9f1612ebe6af54f274176ad6cbbde6bb959bb807e1d1dec9",
+      "git_blob_sha": "a6804d99cc0d0b60d2cec841818d36fcf5973bd7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/package.json",
+      "sha256": "701583021baee1c98adf6f20e260b8bb2bb07303182888304659e98523731408",
+      "git_blob_sha": "0e706f1c80b6481c92520ca0e7d2870adb990fe5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26",
+      "git_blob_sha": "275102267ac1d26b1562772d1f20659a78d430e9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/emit.ts",
+      "sha256": "7a4fb331460b8015a5dc230427c42b9777626dc698264335d3c6099203717990",
+      "git_blob_sha": "c561aff8ec8d6911d945e1b28edb2002c9d814f3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/evaluator.ts",
+      "sha256": "e3cb478ad9113cee20db0a7ad5a8f30e5ebee1d3f871a98fff8e10ff9e909376",
+      "git_blob_sha": "39118c4d1fe693df37985f8326b9701d0daf41be",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/freshness.ts",
+      "sha256": "41883d3fc6168d3733f7967d4585929f8326b02f29c18f83669d282a5f7d49cd",
+      "git_blob_sha": "84ad894c94aac5ccd6489f5c820c2699d4cca996",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/hits.ts",
+      "sha256": "216844e90a1bb940eee9a9fbfa2c0cad649406fe341561451727aa1352fa268f",
+      "git_blob_sha": "6a24770af3d3f16df02d4a70ba73d73f84e800fc",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/produce.ts",
+      "sha256": "aafe6a84893b2d23161becb9cb9c097a1159b981c11eec1d338cb90d01db50bf",
+      "git_blob_sha": "e166f1c1fa47c670b514f96a56a3b3bfad8ff5b3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/reconcile.ts",
+      "sha256": "72b29376ef64a8da62a137502b19212b946d2617b46871f03506dced30e00955",
+      "git_blob_sha": "1239a624533b302af5858690ad0588d41dfb418e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+      "sha256": "44a7eb3ef16839138356f6f3a448752f55bca5050d9ce8b42a705420cf6423c1",
+      "git_blob_sha": "30f8390ca617aac48cdc02e3d819eb3ec543d405",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/negation-types.ts",
+      "sha256": "7b691815b2e905c6675daa9a93084c475e5107c771a4cd6c8bd6f6b62c0cef40",
+      "git_blob_sha": "d5e1b12e8f74b6fdb6d2ef010086e87acbf16f4d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+      "git_blob_sha": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338",
+      "git_blob_sha": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302",
+      "git_blob_sha": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+      "git_blob_sha": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/fastpath.ts",
+      "sha256": "18c75b70c472ff2fa196d2490d3c3a954d2750f5aa837c4369e6bfd2607c013a",
+      "git_blob_sha": "6d449b62a8980e1c5d0d8119e695164a59d5de47",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/init.ts",
+      "sha256": "ac11df48b18fe998e131505e70fb91f5f483b69266cfd18d940927d7d761c1ea",
+      "git_blob_sha": "3268c3fb266c6d2af82ff97dfcded3cefcac3b28",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+      "sha256": "c0afa0bed3f21548d6b99a10183d2cffa6161cb5fcbdf4aa6f6c7cee41dbc6a1",
+      "git_blob_sha": "03f0305f096c8f5e412e82f7c876e062d5b7e7c7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/tier.ts",
+      "sha256": "0a48d902bf1aace790af6e5e45837d12383b6cf6e882f269aec51dc93fdb8108",
+      "git_blob_sha": "83d8e3d5e74d8cdee39415c64cb211dd709407c9",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/read/anchor-match.ts",
+      "sha256": "f47613e04120aebba871c72cec9e7fd02bc9ef28b0c52204129966a8d24da140",
+      "git_blob_sha": "3d038b5f035ba1a8b081ae7c929dfd8e6931b228",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/read/negations.ts",
+      "sha256": "56344cc80d4b39bb27e318823960ad0756f4a38dbc86dbeff426f9342fadbec3",
+      "git_blob_sha": "314171c1e5a3b0a63514845a5b8e6ac5e5d43980",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/read/relations.ts",
+      "sha256": "e1012b197a25d7bc53d7cea44e0f5f3063f260bdc68def6055a3d56b5012e854",
+      "git_blob_sha": "d73340f346d21676dd6fff720dd06caeee4ca113",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/read/sameas.ts",
+      "sha256": "55406754a08f369bea8afb4cb0affb201f45d76bee025b746863968225fcd244",
+      "git_blob_sha": "e3040d686ea13463ad76c48f6e3626a21c52cfec",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/read/subsumes.ts",
+      "sha256": "ba7ba3fb81488ac2702bed9dab208574d5a412084b3dc0e1c8a3b86b46fcd8df",
+      "git_blob_sha": "fb9c74c6012389e8dd47ae82333c63cce6a0b4e1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/read/test-vacuity.ts",
+      "sha256": "fe90d8b7222ac8c420caf2dd7559f0cc8b9bb9b277fe9701390b538bd250921c",
+      "git_blob_sha": "d4704ae778490eec8bb8621428523cedcf03f884",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/read/transitions.ts",
+      "sha256": "123acace071a25ede3c1b2ed34488b3d6af947a410d9555e80154d4d12f3541b",
+      "git_blob_sha": "b136ad9862335c913537fc3fd925e94fb4cf783e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/retired.ts",
+      "sha256": "277f321aa3a641dc65d0ba88bcc3e5114983268fe14b9af2212a1e04023fd2d1",
+      "git_blob_sha": "a550916784bb3dc8b8bdd18914b57d2f0845d06b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/test-vacuity-types.ts",
+      "sha256": "62fb135d834b3494216101836e807c77def13cad9aa358d9946e3b4c34500d10",
+      "git_blob_sha": "0046bf323d3c58d20bf45e2b889ad54f5926eb46",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/transition-types.ts",
+      "sha256": "c9c731c2b8f291e17725ec51f0fc2245172e7c5e7f510a4dfb14d118412d4262",
+      "git_blob_sha": "5cf1973ffc7f867da203ce7359ea4c286fa7c845",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/types.ts",
+      "sha256": "0fc2b91027af352fd4b77a1aa715ce6eb53b6d93a5835c5311c53ca8c7f518fc",
+      "git_blob_sha": "d1b7997ea8cbb066cff511e6dc90ffa9e7994b6e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/archive.ts",
+      "sha256": "bd0032057f38749735bd00858d79818627c817d0c7aba938066216c85e35f9bf",
+      "git_blob_sha": "14348e03514a2bf0a56e37ade892ab84dd5ed345",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/authz.ts",
+      "sha256": "4a42cf1042f0a05b348c6c25962e5c0c14c113caf6461bb0e0d29e7ee20b99cf",
+      "git_blob_sha": "3a30a2be040488cc1e359fb16df0ef9eee4e30f6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/claim-evidence.ts",
+      "sha256": "cafcac9acd499881cb6a079d587ae4b39130593982da91cd6587bb387938371e",
+      "git_blob_sha": "1b49b91d07adc7223222edee529c46c7212b1dac",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/closed-slot.ts",
+      "sha256": "7a609503e730960cedbad45c11b11e92594de287654af42271104b527e8722db",
+      "git_blob_sha": "432fccfad330803454ac3f4481a3b0437d81e03d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/link.ts",
+      "sha256": "40abc2fd3c173f313872b7fb206a11c51fb508d55dc3c651f9b384b1a0a48521",
+      "git_blob_sha": "1b927102786daf0f024cfe27a455afd47974d8cd",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/negation-key.ts",
+      "sha256": "0c174f9fc2465f1e506e8b938503a38760c3b288c75150c031f49221422ddc60",
+      "git_blob_sha": "2c9c8897cbf7567f0079911fdf6af3a27c76f394",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/projection-types.ts",
+      "sha256": "4fc40ad703dc9ea47e3f2afd88eb08895bc5332f5c5e17d21d58cd6cac46cd1d",
+      "git_blob_sha": "82d5d2200b0f805fc42e8c34f1e0c1d1875a7c80",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/relation-key.ts",
+      "sha256": "2f3795f41d28353c84f248cdbe337b38bfe127c00cbc1ddcf9d16f0f49246dba",
+      "git_blob_sha": "661a0121457fa8e4f12f0e9f1a56c311b4854060",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+      "sha256": "0e6274c74bf48923b16da816b4bc2b6544c6c4da0a94c317a40011b55e06a77c",
+      "git_blob_sha": "9022c8d9fbf8009cc4d958215f6fab1a18ff6df1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/template.ts",
+      "sha256": "2ccd2c9dfce1d9b912c0601a5eaf9e81b466805dbc45963ad46e693006b87427",
+      "git_blob_sha": "5b67e624a87483156d12c6640e1cca3c2e47ffd1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/test-vacuity-key.ts",
+      "sha256": "7dd74a55f59b03b96de4fefcd056545c176c30e8b66d5460cb636fe1654d34c4",
+      "git_blob_sha": "e6a2dbb5bbb11969ddf66f8c2a27cb8044c6129a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/transition-key.ts",
+      "sha256": "8fd8b9c351e1f3994ce8d17aa9b4e82ce7bb71e153652d9a3396339097c86e23",
+      "git_blob_sha": "34551d77f25c8aed56bf2d69ac93cb037a77a86c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "sha256": "2519ffc19c23d46dc4772fbd81c048d39e535d9c18a9ab86d9b5209358410fef",
+      "git_blob_sha": "42113a5355976fa726ab79d65d5485d6e5ebffa7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/tsconfig.json",
+      "sha256": "64ec1560f6486f9b63a84216e693b350cb1c31237fef948dc7c5a4a48a72818f",
+      "git_blob_sha": "d0747678d2bda0f40480b5aa9c11321c29a78561",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/package.json",
+      "sha256": "0e4e6a2da872c35363949f6a2c5746c6568c3d361023f412fd95d7f062bbdcb3",
+      "git_blob_sha": "5a5b4a3cc091992016b1f359e8d62a6c88756add",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/src/bin.ts",
+      "sha256": "fb2a8ba98f16ded9feff29679c0d8a8a15f4ed634611a569ef74c7fc2378ef2e",
+      "git_blob_sha": "2a566afde4e9e61774835961196b484c9bf16322",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/src/index.ts",
+      "sha256": "aec21da227dd9a599b92467ee4b9ce944ad63b78cb44cec5bdae49db8a2e7fd3",
+      "git_blob_sha": "5ca61dab78bc63d31f8a0c747ede129033d2fc61",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/src/server-memory-tools.ts",
+      "sha256": "975a6ee93aa1d608633618b3327d4c659ac43cfdb61a93e0335b9dd8a11fef48",
+      "git_blob_sha": "0aa547c9d5f521ed04343497e5caa82f3d68561e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/src/server-read-tools.ts",
+      "sha256": "ffaade416578d5c360155db0a14118d380d395a995f3737c2e6666dbd70aefcf",
+      "git_blob_sha": "fd4b5eb5390f44dfa86da22f0b1ac4fdaefd5d77",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/src/server.ts",
+      "sha256": "ca068371df248bb7a08eee8ecef9fc302a71af62aeefc85ed31021a6f131812c",
+      "git_blob_sha": "7c53b24ae381ad4ed9e4cd96f112d936eedd8e18",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/mcp-server/tsconfig.json",
+      "sha256": "f43b48d67923b6c7d4b1fdeea2d0f4b4bbd20f9cacdd130fc4752cc8a8b4b4ba",
+      "git_blob_sha": "8848a0ca90eab1e632eca747eea54204bd06286c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/package.json",
+      "sha256": "6a2a1b78406197a58199880a9d100e060b701c28f9697607252931bdbf59624d",
+      "git_blob_sha": "2a8781c17f14b1a3f951e10d2cd9e87e44e4d22c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/awareness.ts",
+      "sha256": "b0a58bf1d576c80c00970849c1a523bec5bff121c5931cc7411a640a75c331bc",
+      "git_blob_sha": "1cb0e699913a3fc219a7b423a78b0074e6cc6a06",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/index.ts",
+      "sha256": "e81ce3fa23075565dcb7d5cd0d6b4a9d176749ce98907471ff098333ad233260",
+      "git_blob_sha": "a5266e5cf448cb73945cff165758d7253f01a807",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/inject.ts",
+      "sha256": "1e79629a5837e8eee26f9efb1c49cdcffdc2af2fd80b215809885a8749b01c18",
+      "git_blob_sha": "a09149a0f4c6ec512e036f1a912feb8ccadedcf8",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/kinds.ts",
+      "sha256": "8bcef2724e6813e5e4a0a89a0fe1e7a2a96ffcea75805d41b88285b075b6bcef",
+      "git_blob_sha": "9037f3682c929264ba0b1dd740dc4abdaffc2aa6",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/logbook.ts",
+      "sha256": "831c376501d31a32c3e8a31659695580115b1742ed740c616adff0904099ff4e",
+      "git_blob_sha": "e31fef9328691ae1e2053454505b3edca49cffbd",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/orient.ts",
+      "sha256": "22332ab867cf4729d6000a9db454080a8b99d04ddd0fd4f0e4fa7c7c5664a7e5",
+      "git_blob_sha": "d32464a9bef5054aedae0aad5657f187aaa51e9b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/portable.ts",
+      "sha256": "c6eb18f310cfb2f24e18ad9c8215bf33c655c21055b1ac3f7760f9adbd78c1a9",
+      "git_blob_sha": "665d8e6b39658e470f1ddf0dbb41efedbc460a1b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/respawn.ts",
+      "sha256": "7ef7df6e2a602ad21e51979e0114ca94d16da6da2d69b761cbeabca653752519",
+      "git_blob_sha": "9a4e27f13ab58c03f8f2de32d5fba06358a05001",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/rules.ts",
+      "sha256": "5be8ba64c7bf51ecf8436e7c6605da909691904fd329feebdfd8a43dbd25433f",
+      "git_blob_sha": "ec589cb70f06ee954d57e7960f7025de9b16117f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/template.ts",
+      "sha256": "112b92710030977a31099ed85766a0f5f622ed808883c8eefe2953bb3959dfcb",
+      "git_blob_sha": "7073f71e0a43808c82b4912b5126559233bce3ba",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/src/types.ts",
+      "sha256": "7bdbc0605df3d7d3f8c5e10d0119a084b373246c685508945c60ac9225cbc98f",
+      "git_blob_sha": "a8e8e32f77f1776957de91ba1a7315945bbd03cc",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/memory/tsconfig.json",
+      "sha256": "74e8038601315be418c963db1808c0b409dfc71b922ea313b30dc631465f5872",
+      "git_blob_sha": "67be04f53d6d1488f0adfccb2af85cbac0c35448",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/package.json",
+      "sha256": "ef3807f7db2788639a0b79353e82640bcfaf2f2ac4925ca84004d370a572efb4",
+      "git_blob_sha": "9c4c657b599d6e067247e63259230033e9354100",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/attach.ts",
+      "sha256": "8cef0b9453981617c9fea033b01be14a618fd6e1fb7af9b8213ea45765345c36",
+      "git_blob_sha": "2a9a6fcfe5600b1a6e87951a7dd8cbfd4ab2f28a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/diff.ts",
+      "sha256": "3ad16dbb91d51c369a26f829378729b0baf8096fd2b1f42d51736c024fa867ad",
+      "git_blob_sha": "8935aead6fb717a69bfb845dc202331001e05f36",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/host-adapter.ts",
+      "sha256": "a9fd6a8795dc78e7860f61e2999bb09b892de46c21f739cec623bd68b3b17e4b",
+      "git_blob_sha": "a328372d7d37faaca33615cb8fb13e03de5e28c2",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/index.ts",
+      "sha256": "bee6df884ad1510c284bca006655c53180aa49e707cb69138817bb82464abebb",
+      "git_blob_sha": "f0937e04ce53031fce101c7457914ca8dbfdb142",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/merge.ts",
+      "sha256": "5ed9e58a00e9970f3a6da8b15e59a2d0688416c001393e7c644a5718a304a6b3",
+      "git_blob_sha": "162162f14dfa32dc4873c6d85d9649ac0f2fe351",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/metering.ts",
+      "sha256": "1c201faa5eea0dc5dfb1440890fc765c027a0d2a22acb44fe7772f19ee8fb3a2",
+      "git_blob_sha": "c1be608b9c4eaede9c6eaa212b43ccc4bea073b0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/placement.ts",
+      "sha256": "2afe80dafe6f93da5fc05b5b51a4261de3b73989dded885ac6eb4b49f7e9f531",
+      "git_blob_sha": "ea8b7aea7d0e94d8fbd107b8fc11dac94a33326a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/provenance.ts",
+      "sha256": "8d393cb96705965c53c9ec649031895cb4eddb24ca55cc23bef51633bbd7dbf5",
+      "git_blob_sha": "e75df3889a94d76a3057f42d206829242df31fa7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/reconstruct.ts",
+      "sha256": "30c0d67e808618c13163db1fe6f90c86c506792991da8a63ca6c42b860181626",
+      "git_blob_sha": "eb6e99190e08ab55f56a2f6569a9f18b00dfb99d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/reinvoke.ts",
+      "sha256": "1881df11784d5fd11ea7d4cad027dfab452873c2e28a2643b6870bb858af215a",
+      "git_blob_sha": "d3bf074405cb4533f2eb52fccdea37e5d6dac947",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/scrub-scan.ts",
+      "sha256": "ba3db37c8924196e5f128c4fe53c5df24fb0e0bdd6e4ca6f6bdf3dd6ce1d4a5c",
+      "git_blob_sha": "a5997105c9556f3fd99b32d6c5243d0c8c7be52d",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/scrub-shapes.ts",
+      "sha256": "bcd776dceda68d391a8d98902fa628cbbc3b706bf2e692042b4d0aed8c0a047f",
+      "git_blob_sha": "bad24a937b269c8679f5220bff6dd07c59541f14",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/scrub.ts",
+      "sha256": "7b0546b71d861c65d205610be53a921ef37a3b0eff592b5c525efc577994de7b",
+      "git_blob_sha": "914d063628e8095bd96d0cab6dab4d76b0533eeb",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/source.ts",
+      "sha256": "6d67ec2847f685a739b2f0766bf6b10d02f80164466325e075635fc2efd46a4d",
+      "git_blob_sha": "43a349109b54db389d858f2f1d829b8624f3c842",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/transcript-store.ts",
+      "sha256": "92adb94687e72f76c9270cf65d2a68132eae305ccff7e60df876f3ccba2a350a",
+      "git_blob_sha": "5683e9ce4ef960f029ea79a1e003981a5a07073b",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/src/types.ts",
+      "sha256": "68efac58e81d3981c949193af45fc12f7d74054a7bfc316bcc1457f8d9d725ca",
+      "git_blob_sha": "ed3829f604723bf908109f8ad44cdb6b6343e4e8",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/persist/tsconfig.json",
+      "sha256": "72a5763b97b01b2991f6847636c005ec199d2259947d3c76668573cc4c0d2815",
+      "git_blob_sha": "36f49ffa7f9a189670b70a335e3182e2ecf1d396",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/package.json",
+      "sha256": "9f6cfeabce9bd08a6f55202deaafb4c9426eb13227ea8fcfaf14dc5a24b46fb9",
+      "git_blob_sha": "f59d414ae65ceec9b744d84b487aad260a08c7fa",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/drop.ts",
+      "sha256": "8652ec197040884563108f0478961642e592fdfdc5d7e9f5a1c7a44edd73f850",
+      "git_blob_sha": "af9bd743841bd390abfa7f876e427c0bf8d57fa0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "sha256": "c2a119e47de728839d10167cc8fd45bb74eb5502415f5b5162f56cae8d0c72ff",
+      "git_blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/index.ts",
+      "sha256": "56a6b13978ba487cc4427f07120962d4f0eea11376d2c66ee9579af3f4921859",
+      "git_blob_sha": "eca52eeb4da83e9269c85dfb138af61849aff20e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/ledger.ts",
+      "sha256": "6cadb8cd07d429e55de369439bdc356cf4774cfb7b90f969e74d6e1ede9d6563",
+      "git_blob_sha": "b3ecf0ba03127dde5a72587c1ceff9573e37e4d5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/offatlas.ts",
+      "sha256": "452b892ebc55a2ba961d321ab2eafc8c64017d678ccfa550810c1077f432b1f0",
+      "git_blob_sha": "db6ea4ada70ab03ef992b3014d6140b49869feed",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own-artifact.ts",
+      "sha256": "af8160ca92f9d467bd3340dbfd2c9fec3bd18fdf54315794f2e50414b7b72e0e",
+      "git_blob_sha": "45c4e72051a3557996c5c36f64beb9b8f0422fe5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own-coverage.ts",
+      "sha256": "722166c41ee96c5c30da2c6e4e67da4301d61157fefc0ea6998e401f89eee0fc",
+      "git_blob_sha": "bbb13dac1aa9b7b7148405d54b9e12880d5eac08",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own-model.ts",
+      "sha256": "7a73ac1f2f626e77ee26d673a607b5dc5b7b54cc786e4c9fc34ba9d7303afdfe",
+      "git_blob_sha": "2784d903c150748054885987619df29782bde80f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+      "sha256": "07c9256761297aa36cf99317b04899776875ec020e12c6410842e1f03cc3d4b3",
+      "git_blob_sha": "8affced0b807d94cb5776cc30cf69343e5abad2f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/own.ts",
+      "sha256": "8847c04f67b4d453f352223e51467ef13abd8fa2191b36ebee8d4bbb6e12627d",
+      "git_blob_sha": "081b09c0ca51426f8f78f0c6556cfc583a5dd54c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/pack.ts",
+      "sha256": "00e934967065ed6702c51f7969a27d375280aeef20346b0176471897f8b5a76c",
+      "git_blob_sha": "cdd16a9d7719b174fd36f9ff1994c9ed8ca3ca90",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/poke.ts",
+      "sha256": "2379d642db5a9fe0943fb08a8b364b76dce89e6dca96f8faf431d29141d2e0d0",
+      "git_blob_sha": "ca751d379e7d167a646740ab2e473bea626ce248",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/relate.ts",
+      "sha256": "1374098ed34692d38bd774b55d5702dbd94200628879ac6df0c2efeed3b62fd2",
+      "git_blob_sha": "c93dbe959622c7df1e730b6ad14865f574a55fa1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/types.ts",
+      "sha256": "df5d81729ee126fd286178e5b9c3c7b38e766554a80e967e113f379857027782",
+      "git_blob_sha": "359b26696e2703d41d727ad2811659f9525407f0",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/tsconfig.json",
+      "sha256": "741c278a46d812e19fe3a36a66e2b3c75d5e5bc130cdc8530b839e0a1fb0f75c",
+      "git_blob_sha": "b7cf63d102a909d16c80bbc43929c036cbc5c409",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/package.json",
+      "sha256": "e965b4fe16882e73fcba8448224e542844b14d7bdb7a4f086c2c71064cce646f",
+      "git_blob_sha": "9d0d62b42e43f56afb1352c6ae31450ca2aab060",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/anchors.ts",
+      "sha256": "fda355c83394ca2885a798cebb46b8eea6f4a09be9f7a8355d3ce567f4a0201d",
+      "git_blob_sha": "64e7edbe9315804cfabe2989c85ac233cfd4aef5",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/bands.ts",
+      "sha256": "4c391b8b8aa2c6b0217b1b67929ab02dc46321b4c1159104b32c8fd82a588c45",
+      "git_blob_sha": "c93c44b7237669536b1146fad68ce32145772011",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/check.ts",
+      "sha256": "ae102ecd9c10b5143a94c64bb04a3b53bc1d7851036aa89ed4734029b6942e29",
+      "git_blob_sha": "8e95779f2903b39e7060456fadb4b6532c082211",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/diff.ts",
+      "sha256": "1a1d657a1aa29ccdaa97d237c76f3773aeca8b5cdcca5731eaf143240569e696",
+      "git_blob_sha": "0e382fcf1b56683405f779b39b2dbaf7f35bdb7c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/doctor.ts",
+      "sha256": "d806c5ea34261dd0a47c23acdcead3eefb507a211f5684133f256d4aa6544edb",
+      "git_blob_sha": "69a4deb9eefe7c37665a8fa8cd1ec9fd4d1921f7",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/draft.ts",
+      "sha256": "5519b79bedbfe7a1fa5cb49ecc54fe0eb1a7cd610cb189c77a7123c43c7620ca",
+      "git_blob_sha": "095fcdb7c72ca37b2bc2b1d33e8967510974e6eb",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/emit.ts",
+      "sha256": "a1db5da0e113b7cac51e7d9b1c054a0cf16b9248142965624b616d485e1a8a12",
+      "git_blob_sha": "df9c68311fae974d9f7c9885b06e2727588ff812",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/fault.ts",
+      "sha256": "bfaad74cfc506fb05a42629c62eccbf32b10a45be63f0ba1c0fe47499bfb1424",
+      "git_blob_sha": "70c30d25bb9fcdb9390bba5aa9d8d9d3af4b0431",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/guard.ts",
+      "sha256": "613331e984837dffe8225d89ef1e3ed470e3ecbcbdd736ecee11fe0f04851536",
+      "git_blob_sha": "b229c9fe81ff24da5e10e77627ce6348709a9398",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/handler.ts",
+      "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc",
+      "git_blob_sha": "9b2f67a3e18dd0177074e3f18da4bc10d199c961",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/index.ts",
+      "sha256": "fbea08448b6d548a3c8009852caf0041cf929530e33cc4ab1612729b134e31b1",
+      "git_blob_sha": "cda8e26708608fe25c2020c7fb557e7419f8a193",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/init.ts",
+      "sha256": "ddbad5a80a98b903a869a3bd80280a116425b9f659d40c33d64f520b8d2edfc5",
+      "git_blob_sha": "00f1a9fcbda8a831353170012181e725b8c41783",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/push.ts",
+      "sha256": "c741b6092f014c821f9f535f5f0ffd5c53402260f76aa9358b694e0af91551e6",
+      "git_blob_sha": "016c1708c1c148770a5ba5e9e1242c90c6ef5237",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/query.ts",
+      "sha256": "e3bda74a4e8476ed7b6faa6865006ea6e0ffec94d3ecad8b6bba2feceb617a28",
+      "git_blob_sha": "ad566924d4e65112206bc29ceb8f7cc47d13174a",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/reconcile.ts",
+      "sha256": "61fecac71b4717791dcb45cde7a7ecbf6f49f054efca66ed768fb2a80b627f00",
+      "git_blob_sha": "5f0b3e675cb4dbece7d8a54e8bfa50cfc37d666e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/slots.ts",
+      "sha256": "3cb95899cdf6954b267c4769e3d42d40cb04e03911e015116920d958b3d7df5e",
+      "git_blob_sha": "31f2cd2a27b5754848be186f093f52f2142a936e",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/transport.ts",
+      "sha256": "44ddc57e8775d914578dd5df229e143d7acbbaa893a21719386ea4b3fc02453c",
+      "git_blob_sha": "7a8dc07ddf57643d99fe4d366678ccf50a1a5114",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/src/types.ts",
+      "sha256": "983f834d2f95ee24d1e23005e2e59a0a1264256bd3d32d24b7a4986553e44a94",
+      "git_blob_sha": "50fe1bf92b9ceb5e231205733461b6b4c3cc8ef1",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/packages/tools/tsconfig.json",
+      "sha256": "6398864d74823faef4ae48074360b5c30e2e3d2bd994a3e1d14c2a3960139910",
+      "git_blob_sha": "d2c783c925eedbb9cdbb3906ee8dd74e1df52299",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/scripts/fix-scip-types.mjs",
+      "sha256": "778b33746e905c9bd26f10e2766d4e8b04724b48ebb3c0b7a2c3ec79c8404aa7",
+      "git_blob_sha": "7e9dfd3a1704990c6169e85469f95de69e4c753f",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/tsconfig.base.json",
+      "sha256": "906647e8b3d37c122e900a3010a5c2682e9dffff0fc94e050e064e9da73377e8",
+      "git_blob_sha": "a1ea42b6351770666502738cc8578ea3946171cb",
+      "listed_as_changed_in_pinned_comparison": false
+    },
+    {
+      "path": "modules/atlas/tsconfig.json",
+      "sha256": "dccf7dfa53e333840fcce1ef84a2f9c6663c5d4c1a0bb9c74d79e23efa0be60e",
+      "git_blob_sha": "a6cc503f7191410eabd35731c34125fd404050f9",
+      "listed_as_changed_in_pinned_comparison": false
+    }
+  ]
+}

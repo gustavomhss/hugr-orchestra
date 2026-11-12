@@ -1,0 +1,109 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "complete": true,
+    "received": "18/18 partes: header 2, body 3, evidence 7, families 6.",
+    "missing_parts": [],
+    "corrections": "Utilizada a retransmissão integral de evidence-2/7, com expected.promptContext na linha 315; descartada a tentativa invalidada.",
+    "integrity_limit": "Hashes e tamanhos são recibos externos. Não recomputei hashes nem atesto os bytes internos do transporte."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l1.app-session",
+      "revision": 2,
+      "body_bytes": 40081,
+      "body_sha256": "0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc",
+      "verdict": "FIX-FIRST",
+      "required_l1_scope_resolved": false,
+      "mandatory_findings": [
+        {
+          "id": "J1-AS-01",
+          "decision": "FIX-FIRST",
+          "criteria": ["GO-A1", "AC-01", "CC-7", "QS-1", "QS-5", "L1-UI"],
+          "location": "l1.md: Authority, composition and identity; Assets, localization and verification evidence. Famílias authority, timeline e benchmarks.",
+          "expected": "O oráculo congelado exige preservar as prioridades de estabilidade/simplicidade/desempenho do app-shell, a obrigação de benchmark para alterações de sessão/timeline, a proibição de editar manualmente o cliente bruto gerado e a fronteira que impede dependências runtime de Core/Server no Client.",
+          "observed": "O corpo descreve diagnósticos de performance e a exceção browserSafe da camada UI, mas não registra essas obrigações de manutenção. E01 mostra a política UI e seus seis helpers permitidos; não demonstra a regra distinta do Client. As instruções locais pertinentes não aparecem nos trechos decisivos.",
+          "required_fix": "Adicionar uma disposição concisa dessas quatro regras, distinguindo expressamente a exceção da camada UI da fronteira runtime do Client. Citar e fornecer os trechos correspondentes de packages/app-shell/AGENTS.md, packages/session-ui/AGENTS.md e dos blocos de AGENTS.md sobre Client e arquivos gerados. Registrar a exigência de benchmark sem afirmar sua execução ou solicitar testes nesta correção."
+        },
+        {
+          "id": "J1-AS-02",
+          "decision": "FIX-FIRST",
+          "criteria": ["GO-A1", "AC-01", "QS-1"],
+          "location": "l1.md: Prompt admission and draft ownership, parágrafo iniciado por 'The boundary makes admission precise'; evidência E15, packages/core/src/session/input.ts:59–62,291–302.",
+          "expected": "Para um ID existente, a implementação retorna a admissão anterior quando sessão, prompt codificado e delivery são equivalentes; rejeita uma reutilização não equivalente.",
+          "observed": "O corpo diz 'rejects a different equivalent payload'. Essa formulação atribui rejeição a um payload equivalente, enquanto o código rejeita precisamente !equivalent(existing, input). O parágrafo posterior distingue corretamente os campos da comparação.",
+          "required_fix": "Substituir a frase por uma descrição inequívoca do retorno em caso equivalente e da rejeição em caso não equivalente. Preservar a distinção já correta entre equivalência de retry e equivalência de projeção. E15 já fornece a evidência necessária; não é preciso buscar outra fonte ou executar teste."
+        }
+      ],
+      "criteria": [
+        {
+          "ids": ["GO-A1", "AC-01", "CC-7", "QS-1"],
+          "decision": "FIX-FIRST",
+          "location": "Achados J1-AS-01–02.",
+          "reason": "O suporte funcional é amplo, mas faltam regras obrigatórias de manutenção e há uma inversão textual no contrato central de retry."
+        },
+        {
+          "ids": ["GO-A2", "GO-I1", "CC-1"],
+          "decision": "PASS",
+          "location": "Scope, identity and depth; recibo; 59 famílias.",
+          "reason": "Inventário, profundidades, identidades, capturas malsucedidas e versão inicial preservada são explícitos. PASS restrito à evidência documental local."
+        },
+        {
+          "ids": ["GO-A6", "QS-6"],
+          "decision": "PASS",
+          "location": "Abertura, recibo mecânico e evidência de correção.",
+          "reason": "Verificação determinística, interpretação e leitura adicional delimitada permanecem separadas; não há custos ou resultados inventados."
+        },
+        {
+          "ids": ["GO-I2", "GO-I7", "GO-I8"],
+          "decision": "PASS",
+          "location": "Transport, stream health and canonical recovery; Skills catalog, editing and ownership; E06–E08,E26,E38–E39.",
+          "reason": "Estado observado, protocolo, intenção, histórico e lacunas têm rótulos adequados. A inexatidão específica de equivalência está bloqueada em QS-1; não é disfarçada como execução comprovada."
+        },
+        {
+          "ids": ["AC-04", "QS-2", "QS-3", "QS-4"],
+          "decision": "PASS",
+          "location": "E02–E39; seção Skills; mapa completo das famílias.",
+          "reason": "Há construção real a partir de mecanismos concretos, organização útil e limites de autoridade/persistência. Não há framework especulativo nem mudança de produto. Controles posteriores de construção e preservação não estão aprovados."
+        },
+        {
+          "ids": ["QS-5"],
+          "decision": "REQUEST_EVIDENCE",
+          "location": "J1-AS-01.",
+          "reason": "Faltam apenas os trechos normativos delimitados necessários para encerrar as obrigações de manutenção do oráculo; não solicito auditoria integral ou runtime."
+        }
+      ],
+      "oracle": [
+        {
+          "id": "L1-COVERAGE",
+          "decision": "PASS",
+          "location": "Abertura, recibo e 59 famílias.",
+          "reason": "1.887 caminhos, com 234 inspecionados, 1.623 apoiados por família e 30 apenas metadados; não há equivalência indevida entre contagem e compreensão."
+        },
+        {
+          "id": "L1-AUTHORITY",
+          "decision": "REQUEST_EVIDENCE",
+          "location": "Authority, composition and identity; E01; J1-AS-01.",
+          "reason": "História, README e política executável são bem distinguidos; faltam os testemunhos das regras locais e da fronteira Client."
+        },
+        {
+          "id": "L1-UI",
+          "decision": "FIX-FIRST",
+          "location": "J1-AS-01.",
+          "reason": "As obrigações explícitas do caso não estão integralmente preservadas no artefato."
+        },
+        {
+          "id": "L1-SCOPE",
+          "decision": "PASS",
+          "location": "Todas as seções funcionais e mapa das famílias.",
+          "reason": "Famílias significativas, mecanismos concretos e limites explícitos. Skills distingue decoder, acesso lexical, escrita e enforcement de filesystem não inspecionado."
+        }
+      ],
+      "oracle_outside_unit": ["L1-DESKTOP: fora deste recorte; decisão anterior não reaberta."],
+      "optional_suggestions": []
+    }
+  ],
+  "acceptance_limit": "A unidade ainda não resolve seu escopo obrigatório L1. Este parecer não aceita a camada global, L2–L4, runtime, testes executados, consumidores, CI, publicação ou controles globais/S4."
+}

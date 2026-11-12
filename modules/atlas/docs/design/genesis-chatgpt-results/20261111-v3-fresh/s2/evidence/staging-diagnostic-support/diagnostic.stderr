@@ -1,0 +1,50 @@
+Timeout (0:00:05)!
+Thread 0x00007ff5f581f740 (most recent call first):
+  File "/workspace/scratch/7b5d6430f420/genesis-s2/assembly-tools/integrate_native_layer.py", line 45 in sha
+  File "assembly-tools/stage_final_native.py", line 170 in <genexpr>
+  File "assembly-tools/stage_final_native.py", line 170 in provenance
+  File "assembly-tools/stage_final_native.py", line 219 in walk
+  File "assembly-tools/stage_final_native.py", line 187 in walk
+  File "assembly-tools/stage_final_native.py", line 239 in walk
+  File "assembly-tools/stage_final_native.py", line 249 in finish
+  File "assembly-tools/stage_final_native.py", line 309 in build_plan
+  File "assembly-tools/stage_final_native.py", line 424 in main
+  File "assembly-tools/stage_final_native.py", line 445 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 98 in _run_module_code
+  File "<frozen runpy>", line 287 in run_path
+  File "<string>", line 1 in <module>
+Timeout (0:00:05)!
+Thread 0x00007ff5f581f740 (most recent call first):
+  File "/workspace/scratch/7b5d6430f420/genesis-s2/assembly-tools/integrate_native_layer.py", line 45 in sha
+  File "assembly-tools/stage_final_native.py", line 170 in <genexpr>
+  File "assembly-tools/stage_final_native.py", line 170 in provenance
+  File "assembly-tools/stage_final_native.py", line 182 in relative_ref
+  File "assembly-tools/stage_final_native.py", line 208 in walk
+  File "assembly-tools/stage_final_native.py", line 187 in walk
+  File "assembly-tools/stage_final_native.py", line 239 in walk
+  File "assembly-tools/stage_final_native.py", line 249 in finish
+  File "assembly-tools/stage_final_native.py", line 309 in build_plan
+  File "assembly-tools/stage_final_native.py", line 424 in main
+  File "assembly-tools/stage_final_native.py", line 445 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 98 in _run_module_code
+  File "<frozen runpy>", line 287 in run_path
+  File "<string>", line 1 in <module>
+Timeout (0:00:05)!
+Thread 0x00007ff5f581f740 (most recent call first):
+  File "/workspace/scratch/7b5d6430f420/genesis-s2/assembly-tools/integrate_native_layer.py", line 45 in sha
+  File "assembly-tools/stage_final_native.py", line 170 in <genexpr>
+  File "assembly-tools/stage_final_native.py", line 170 in provenance
+  File "assembly-tools/stage_final_native.py", line 182 in relative_ref
+  File "assembly-tools/stage_final_native.py", line 208 in walk
+  File "assembly-tools/stage_final_native.py", line 187 in walk
+  File "assembly-tools/stage_final_native.py", line 239 in walk
+  File "assembly-tools/stage_final_native.py", line 249 in finish
+  File "assembly-tools/stage_final_native.py", line 309 in build_plan
+  File "assembly-tools/stage_final_native.py", line 424 in main
+  File "assembly-tools/stage_final_native.py", line 445 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 98 in _run_module_code
+  File "<frozen runpy>", line 287 in run_path
+  File "<string>", line 1 in <module>

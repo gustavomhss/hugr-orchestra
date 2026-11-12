@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-s2-final-closure-response-preservation/v1",
+  "recorded_at": "2026-11-11T21:33:48.986288+00:00",
+  "packet_sha256": "069416fb6b9d6fe2b0d2c12664f9283a09dddd761d08392f1026b5ca948b8410",
+  "responses": {
+    "j1": {
+      "path": "judgments/final-closure-r1/j1.json",
+      "byte_length": 22520,
+      "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+    },
+    "j2": {
+      "path": "judgments/final-closure-r1/j2.json",
+      "byte_length": 19521,
+      "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+    }
+  },
+  "both_transports": "COMPLETE",
+  "criteria_per_judge": 50,
+  "criterion_ids_exact_once": true,
+  "j2_part2": "Complete recipient confirmation supersedes uncertainty about sender return only.",
+  "j2_part5": "Full replacement confirmed complete; original invalidated send remains preserved.",
+  "transport_limits": "File hashes and visible envelope capture do not attest hidden host serialization or provider attempts.",
+  "matrix": {
+    "path": "evidence/final-criterion-matrix.json",
+    "byte_length": 108664,
+    "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20"
+  }
+}

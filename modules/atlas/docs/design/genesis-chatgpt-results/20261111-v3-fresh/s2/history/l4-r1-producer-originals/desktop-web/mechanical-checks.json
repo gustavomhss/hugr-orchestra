@@ -1,0 +1,57 @@
+{
+  "schema": "genesis-s2-author-byte-checks/v1",
+  "key": "s2.l4.desktop-web",
+  "scope": "Mechanical author receipts only; no semantic, runtime, consumer or CI verdict.",
+  "body": {
+    "byte_length": 11183,
+    "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+    "utf8_decode": true,
+    "whitespace_word_count": 1248,
+    "required_headings_exact": [
+      "Orientation",
+      "Maintenance protocol",
+      "Verification and boundaries"
+    ],
+    "whole_body_below_routine_16000_bytes": true,
+    "sections": [
+      {
+        "heading": "Orientation",
+        "byte_length": 1224
+      },
+      {
+        "heading": "Maintenance protocol",
+        "byte_length": 6847
+      },
+      {
+        "heading": "Verification and boundaries",
+        "byte_length": 3062
+      }
+    ]
+  },
+  "source_checks": {
+    "direct_records": 10,
+    "content_bytes": 41984,
+    "sha256_matches": true,
+    "computed_git_blob_sha_matches": true,
+    "original_connector_content_matches": true,
+    "original_connector_blob_sha_matches": true,
+    "original_connector_response_hashes_match": true
+  },
+  "accepted_input_checks": {
+    "manifest_count": 3,
+    "predecessor_body_count": 2,
+    "manifest_and_body_hashes_match": true,
+    "used_section_headings_exist": true,
+    "actual_dispatch_hash_matches": true
+  },
+  "dependency_counts": {
+    "build": 2,
+    "navigation": 2
+  },
+  "executed_product_checks": [],
+  "limits": [
+    "Commands are prescribed future routes and were not executed.",
+    "No product code or prior artifact was changed.",
+    "Byte/source binding does not establish semantic acceptance."
+  ]
+}

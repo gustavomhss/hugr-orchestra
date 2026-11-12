@@ -1,0 +1,40 @@
+{
+  "schema": "genesis-s2-final-record-consolidation/v1",
+  "recorded_at": "2026-11-11T21:33:48.992324+00:00",
+  "work": {
+    "path": "work.md",
+    "byte_length": 25470,
+    "sha256": "9fb9a92d05757c405e3a968e09b1742feb3c41732d3d74119ac71c3ec6e62281"
+  },
+  "handoff": {
+    "path": "handoff.json",
+    "byte_length": 18694,
+    "sha256": "8fcb539cff07d5a55d3621951badc3b5c4355939563ce2e5e1eeb9f35888dd78"
+  },
+  "matrix": {
+    "path": "evidence/final-criterion-matrix.json",
+    "byte_length": 108664,
+    "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20"
+  },
+  "gates": {
+    "path": "evidence/final-local-gates.json",
+    "byte_length": 6926,
+    "sha256": "5f6523a6238b2468d58b52451094f30311279647a57820dfb90cc27def57549f"
+  },
+  "ledger": {
+    "path": "execution-ledger.jsonl",
+    "byte_length": 46840,
+    "sha256": "46f8d6f0adc90834f74dc9306f4b2e5ef052cbb8fdba8506dd7ce69a5fd4e025"
+  },
+  "ledger_rows": 88,
+  "prior_work_preserved": {
+    "path": "history/work-before-final-record-reconciliation.md",
+    "byte_length": 11735,
+    "sha256": "940639c0e0f52bee342830ca22ccfc4ba5de6c5a85a12df7d2b48baef88be71e"
+  },
+  "semantic_bodies_changed": 0,
+  "runtime_operations": 0,
+  "remote_writes": 0,
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "scope": "Faithful recording only; same-pair record correction check remains separately observable."
+}

@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "{\"kind\":\"publication-attempt\",\"candidate_id\":\"e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284\",\"ownership\":\"4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02\",\"at\":\"9194012e4f49f4ad5ecf3075b6a3804cc5fe09bb869a6797a41f686a39385b5e\",\"check\":{\"wouldEmit\":true,\"gates\":[{\"gate\":\"shape\",\"pass\":true},{\"gate\":\"truth\",\"pass\":true},{\"gate\":\"authz\",\"pass\":true},{\"gate\":\"ratify\",\"pass\":true}]},\"emission\":{\"ok\":true,\"data\":{\"emitted\":true,\"id\":\"f79051e87af7cc2fadb3a7d01b38ee4a9b1a85548b5ec8d2fcb63d30fbc68fc8\",\"nodeKey\":\"eaa787d42a89d3d145951a0b1b84299067d2229528c0894ecdcce9f4c7da8a86\"},\"guidance\":{\"next\":\"a rejected write did not re-derive at source@sha — fix the citation and re-emit\",\"invariant\":\"TOOLS-1/7: atlas-emit is a governed fail-closed write door (WRITE_PATHS: atlas-emit, atlas-link — ADR-0003)\"}}}\n",
+    "encoding": "utf-8",
+    "sha": "16bf5aee0d0ad4a95f97d77760c65fba08e0d2d3",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/6e43247103ac36e5adb635f2fccde2e61480c56d/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+    "display_title": "sample-publish-v1.stdout.json"
+  },
+  "isError": false
+}

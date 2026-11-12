@@ -1,0 +1,79 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "layer": 3,
+  "frozen_before_production": true,
+  "oracle_addendum_sha256": "3fe0f7a3d118fab05fba99f9348a7b434b23418cbc8a0e003ed46f80279d2a8f",
+  "fixed_checks": [
+    "For each of three units trace actual entry/state transitions/identity/transport/persistence/failure and the maintenance impact.",
+    "Build versus navigation reflects semantic use; no broad rebuilding inferred only from links.",
+    "No cluster/provider exactly-once claim; no generic security/a11y guarantee from source inspection."
+  ],
+  "critical_errors": [
+    "missing any assigned unit or mandatory family need",
+    "unknown facts promoted to guarantees",
+    "source/recipe/dependency mismatch",
+    "dependents produced before complete predecessor acceptance",
+    "raw source access passed off as Atlas consumer proof",
+    "copying semantic verdict as runtime binding verdict"
+  ],
+  "allowed_unknowns": [
+    "unmeasured product correctness or external platform behavior explicitly labeled",
+    "provider token/cost not exposed",
+    "common controls not yet provided by pinned S4, kept open"
+  ],
+  "future_actual_consumer_limits": {
+    "routine": {
+      "index_calls": 2,
+      "read_calls": 2,
+      "body_bytes_total": 16000
+    },
+    "deep": {
+      "index_calls": 6,
+      "read_calls": 5,
+      "body_bytes_total": 64000
+    },
+    "whole_suite": {
+      "source_access": "forbidden for consumer",
+      "context_isolation": "fresh context; instruction boundary observable, not claimed technical sandbox"
+    }
+  },
+  "reserved_cases": [
+    {
+      "id": "S2-I3D",
+      "kind": "direct-L3",
+      "target": "s2.l3.desktop-web",
+      "question": "Trace the trust boundary from privileged renderer navigation through preload to main IPC.",
+      "expected": [
+        "packaged ignores external dev URL",
+        "preload window.api",
+        "main sender origin check and specific validation"
+      ],
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I3A",
+      "kind": "direct-L3",
+      "target": "s2.l3.app-session",
+      "question": "Trace one safe first-send transition across source ownership, policy receipt, API dispatch and draft handoff.",
+      "expected": [
+        "ownership/credentials and policy revision check at dispatch",
+        "admission state not visible message",
+        "promote once with in-flight edits unsent"
+      ],
+      "depth": "deep"
+    },
+    {
+      "id": "S2-I3U",
+      "kind": "direct-L3",
+      "target": "s2.l3.design-tui",
+      "question": "Which contract-preserving path should shared i18n copy follow for app UI and native desktop, and what must remain outside feature code?",
+      "expected": [
+        "typed language.t/plural and nativeT bundles",
+        "no locale branches/fragment concatenation in feature/native callsites",
+        "English keys/source not casually rewritten"
+      ],
+      "depth": "routine"
+    }
+  ]
+}

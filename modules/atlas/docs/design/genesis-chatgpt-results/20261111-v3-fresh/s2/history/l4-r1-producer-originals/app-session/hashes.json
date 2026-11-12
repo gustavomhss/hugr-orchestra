@@ -1,0 +1,47 @@
+{
+  "unit": "s2.l4.app-session",
+  "algorithm": "SHA256",
+  "excludes_self": true,
+  "files": [
+    {
+      "path": "body.md",
+      "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+      "byte_length": 11220
+    },
+    {
+      "path": "sources.json",
+      "sha256": "decc7ca998568cf868e48d5099a19163dc8bc482d011fd7df897934619e1ead6",
+      "byte_length": 7088
+    },
+    {
+      "path": "dependencies.json",
+      "sha256": "42810b379057a96e86a914b626bcbd6fa1288720857fc0b84b33bd0641097a74",
+      "byte_length": 3270
+    },
+    {
+      "path": "decisive-evidence.md",
+      "sha256": "0d1c8100dd15c2030e26da124c8c6a7ee3b2c31a55608efffa4df50d9ea94551",
+      "byte_length": 17020
+    },
+    {
+      "path": "response.md",
+      "sha256": "343226f46bd885afa3c0773adf679e529f6ed7107ba0fbdf851e5646b7a6d293",
+      "byte_length": 4682
+    },
+    {
+      "path": "evidence-map.json",
+      "sha256": "f83a738b6a5f4b237b2db9218f4f4dac58474a309cc48b3cac42770c3f3747a9",
+      "byte_length": 8167
+    },
+    {
+      "path": "author-checks.json",
+      "sha256": "7c8f7d3f86fce5a6c3260724277f30d6220c0afe7f657dd6cf6b9f5a6695b100",
+      "byte_length": 1360
+    },
+    {
+      "path": "author_artifacts.py",
+      "sha256": "002d29a4ae43552633ae3e9a688ac16373be2e014a7a6045f4ec8dfa3366f731",
+      "byte_length": 32193
+    }
+  ]
+}

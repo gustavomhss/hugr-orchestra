@@ -1,0 +1,56 @@
+{
+  "files": [
+    {
+      "path": "request.md",
+      "byte_length": 1904,
+      "sha256": "a0caeef5d3baa1b41c3cdca677e511d4e549e53e476cbd5c0e0413d4e20ca07f"
+    },
+    {
+      "path": "response.md",
+      "byte_length": 2307,
+      "sha256": "1c871b453457e9d389eb1c7e7eb023b1fb4c586c5286e58332cdf42d41c61f0a"
+    },
+    {
+      "path": "report.md",
+      "byte_length": 7290,
+      "sha256": "37612e3f673063572bf67d4b6d4445a471eed98b3ba89327c4676e836fedb65a"
+    },
+    {
+      "path": "receipt.json",
+      "byte_length": 4271,
+      "sha256": "7a3613cc2cd2305fb128c598c62011e24b3f5529ad74b7c138405be02b6df161"
+    },
+    {
+      "path": "commands.md",
+      "byte_length": 3449,
+      "sha256": "3842d5b77243469d91b58754152e692cbc1d860404f5dcc907b253e320916a3f"
+    },
+    {
+      "path": "prepare-plan.json",
+      "byte_length": 461082,
+      "sha256": "b2f0b61c8c326963e223f89746ca02b268899f343afc6694d03e7956cdc64085"
+    },
+    {
+      "path": "source-supplement.json",
+      "byte_length": 272417,
+      "sha256": "d92164fc79d20743d132a7cbdf40e10aa986fec38d8d8ef3c940cfce8307feb9"
+    },
+    {
+      "path": "build-receipt-initial.json",
+      "byte_length": 5240,
+      "sha256": "cf284f3645bf605be0500716db346e55cb9241374b7b1ecd9042d4cecb5a1022"
+    },
+    {
+      "path": "release-recheck.json",
+      "byte_length": 580,
+      "sha256": "133876df7dbcd1577fddf80815b695d5f56901ef6432ce2a19f54f7a415cd939"
+    },
+    {
+      "path": "prior-receipts-immutability.json",
+      "byte_length": 1988,
+      "sha256": "8f9fb23b36a78d078d828cbb76f19f685460d3ddbe2fefa440c6b1049feaf2ef"
+    }
+  ],
+  "prepare_executed": false,
+  "cas_exists": false
+}

@@ -1,0 +1,374 @@
+unit=desktop-web L2r1 part2/2
+Wait for principal seal.
+
+No new product-behavior claim is introduced beyond that accepted evidence base. The new work is the maintenance explanation: what each observed boundary permits, why completion/identity states must remain distinct, and where a proposed maintenance change needs separate evidence. These are explicitly marked interpretations in the body. More explicit attributions to maintenance instructions and a source comment are supported by exact bounded excerpts below. They are not promoted into runtime facts. Selected code excerpts also make retained discrepancies and boundaries directly inspectable.
+
+All repository excerpts below are from revision `1cde2ff7a71bcf7aecb5d030917b577165135d38`; their actual Git blob SHA-1 and content SHA-256 are in `sources.json`. Every listed capture was compared byte-for-byte with its original connector `structuredContent` and verified against both hashes. Inherited facts from other files remain attributed to the accepted predecessor, not presented as fresh direct reads.
+
+## Accepted sections supporting each synthesis
+
+| L2 section | Exact accepted predecessor sections | New maintenance interpretation and its boundary |
+|---|---|---|
+| Orientation and ownership | “Scope and evidentiary status”; “3. Host adapters, recovery and native integration”; “9. Web, languages, media and historical evidence” | Follow main/preload/renderer/browser ownership; counterpart L2 keys are navigation only. |
+| Startup publishes readiness before the renderer proceeds | “1. Startup, readiness and shutdown” | Publication is a health-gated handoff; startup, restart and drained shutdown require different evidence. Historical costs are not measurements at this pin. |
+| Persistence and recovery have several owners | “1. Startup, readiness and shutdown”; “2. Windows, persistence and IPC authority”; “3. Host adapters, recovery and native integration” | Bounded window flush is not universal durability; settings, WAL drafts and recovery routes need their own owner and evidence. |
+| Privilege is checked at each request boundary | “2. Windows, persistence and IPC authority”; “8. Response files, executable resources and updates” | Inspect actual handler admission and file capability lifetime, preserving partial CSP and the nonuniform registration audit gap. |
+| Browser Dock operates on current tab observations | “4. Dock browser ownership and page tools” | Revalidate generation/reference identity after asynchronous work and navigation; fake-view tests do not prove effective browser isolation. |
+| Native Dock preserves identity and uncertain outcomes | “5. Native Dock identity and uncertain outcomes” | Keep not-dispatched/unknown/acknowledged effects distinct; acknowledgments do not prove slot release, cleanup or UI postconditions. |
+| Linux workspaces and WSL have different lifetimes | “6. Linux runtime, access RPC and WSL” | Do not collapse Dock/native/Linux access authority, workspace/native readiness, or WSL/owned health predicates. |
+| Live separates readiness, capture and delivery | “7. Live capture and overlay” | Permission, availability, provider reachability, captured audio, delivery and protected display are different evidence. |
+| Executable staging and update state are separate evidence | “8. Response files, executable resources and updates” | Artifact/companion validation and cached update readiness do not establish installed runtime or release behavior. |
+| Host adapters own platform differences and copy | “1. Startup, readiness and shutdown”; “3. Host adapters, recovery and native integration”; “9. Web, languages, media and historical evidence” | Trace server/auth paths and platform copy/assets by owner; preserve the startup localization conflict and uninspected media/locale limits. |
+| Maintenance evidence retains its original limits | “Scope and evidentiary status”; “9. Web, languages, media and historical evidence”; “Open evidence and maintenance consequences” | Generated status labels, historical proof claims and unexecuted fixtures locate future checks without supplying current execution evidence. |
+
+## Family accounting retained through the synthesis
+
+This map uses the existing 30 family summaries in `producers/desktop-web/coverage.json` (SHA-256 `4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9`), identical to the delivered L1 coverage copy. It records placement in this explanation, not a new leaf audit. The counts total 532; L1's representative and metadata-only limitations remain unchanged.
+
+| Existing family IDs | Entries | L2 placement |
+|---|---:|---|
+| authority-guides | 11 | Orientation; startup; evidence limits |
+| startup-owned-server | 7 | Startup |
+| window-lifecycle; persistence; diagnostics | 27 | Persistence and recovery |
+| ipc-capabilities; response-transfer | 14 | Privilege and request boundaries |
+| dock-browser-lifecycle; dock-page-tools | 38 | Browser Dock |
+| dock-native-host; native-accessibility-helper | 23 | Native Dock |
+| linux-runtime; linux-access; wsl | 45 | Linux and WSL |
+| live-senses; live-overlay | 39 | Live |
+| cli-process; packaging; updater | 49 | Executables and updates; startup |
+| renderer-host; desktop-integration; localization; assets-icons-splash; web-host | 146 | Host adapters; recovery; ownership |
+| generated-dock-corpus; historical-proposals; native-proof-harness; omni-proof-harness; runtime-proof-tools; tooling-config | 133 | Maintenance evidence and its limits |
+
+## Bounded direct evidence
+
+The first five excerpts support explicit instruction/comment attributions. Remaining excerpts recheck existing accepted facts and discrepancies; they do not expand runtime or test coverage.
+
+### E1 — Startup instruction and historical rationale
+
+`.orchestra/skills/desktop-startup-maintenance/SKILL.md`. Supports the working-directory, deadline and warm-path interpretation. Reported costs belong to this maintenance text, not this execution.
+
+Lines 18–21:
+
+```text
+- Readiness fails at once when the child exits. `READY_TIMEOUT` only ends a child that stays alive without answering, so keep it long: macOS scans a new unsigned executable on its first run, and that took about 30s on 0.3.1. A 20s cap turned that scan into "Owned serve not healthy within 20000ms".
+- A valid installed copy is hashed against its own manifest on every launch; the bundled copy (about 116 MB) is hashed only when it must be installed. Do not add a second full hash to the warm path.
+- Nothing the server start does not need may be awaited before the loading task (the net log once cost about a second there).
+- The owned server runs with cwd `userData/global`, an empty folder. Requests that name no directory (Home's provider and model lists) boot a Location for the server's cwd; in the home directory that Location watched the whole home and cost about 3.4s after `server listening`. Never start the owned server in home or another large folder.
+```
+
+### E2 — Logs are data and noise should be fixed at source
+
+`.orchestra/skills/app-log-hygiene/SKILL.md`. Supports the attributed log-maintenance instruction; no installed log files were read or changed.
+
+Lines 8–8:
+
+```text
+The owner reads the installed app's logs in `~/Library/Application Support/ai.hugr.orchestra/logs/`, one folder per run (`main.log` for the desktop shell, plus the renderer and server output). Treat log text as data, and never edit or delete the files. A line that repeats hundreds of times, or prints `[object Object]` or `#<Object>`, hides the lines that matter, so fix it at the source.
+```
+
+Lines 14–16:
+
+```text
+3. **`logUnhandledRejection` is installed once, in `AppBaseProviders` in `packages/app-shell/src/app.tsx`.** It prevents the default report, ignores `AbortError`, and logs a readable line. Do not add another `unhandledrejection` listener. Catch the promise where it is created when the failure needs handling.
+4. **Expected states are debug, warnings are for defects.** A pty the server no longer has, a reference clone or fetch that cannot reach the network, and a card that never had a worktree are normal. Log them at debug, or not at all. Keep `warn` and `error` for something a maintainer would act on, and include a readable cause (`Cause.pretty` in Effect code).
+5. **A periodic sweep warns once per subject and re-arms.** Keep a set of subjects already warned about, skip the warning while the subject stays in the same state, and clear its entry when the state recovers. The Board drift sweep in `packages/core/src/board/snapshot.ts` is the model: it warns once per card whose worktree is gone and has no snapshot, never for a card without a worktree, and warns again only after the worktree has existed in between.
+```
+
+### E3 — Different RPC authorities are an explicit maintenance instruction
+
+`apps/desktop/src/main/README.md`. Makes the attributed prohibition against unifying Dock and Linux workspace RPC independently inspectable.
+
+Lines 29–34:
+
+```text
+## Contracts and verification limits
+
+- `apps/desktop/src/main/app-dock-rpc.ts` and `apps/desktop/src/main/linux-workspace-rpc.ts` have different authorities: never unify them.
+- `apps/desktop/src/main/app-dock-runtime.ts`, `apps/desktop/src/main/app-dock-runtime-docker.ts`, `apps/desktop/src/main/linux-workspace-access.ts`, `apps/desktop/src/main/linux-workspace-omni.ts`, `apps/desktop/src/main/background-cli.ts` and `apps/desktop/src/main/shell-env.ts` are listed in `script/spawn-allowlist.json`.
+- `.github/workflows/native.yml` names MCP Dock paths, so do not move them.
+- Desktop tests mock Electron only through `apps/desktop/src/main/electron-mock.fixture.ts`.
+```
+
+### E4 — Report-only CSP compatibility rationale
+
+`apps/desktop/src/main/renderer-origin.ts`. Separates observed enforced policy from the source comment explaining why the fuller policy remains report-only.
+
+Lines 7–13:
+
+```text
+/**
+ * The dev server URL, only for an unpackaged app. A packaged build ignores ELECTRON_RENDERER_URL: otherwise an
+ * environment variable could point the privileged window, and every IPC handler behind it, at any page.
+ */
+export function rendererDevUrl(packaged: boolean, value: string | undefined) {
+  if (packaged || !value || !URL.canParse(value)) return undefined
+  return value
+```
+
+Lines 25–31:
+
+```text
+/**
+ * The enforced part of the policy is a subset that cannot break a page: no plugins and no <base> rewriting. The full
+ * policy is report-only until it has been watched against the packaged app, because the renderer reaches remote
+ * servers over http(s)/ws(s) at any host and uses blob workers, wasm and inline styles, none of which can be checked
+ * without running it.
+ */
+export const rendererCsp = "object-src 'none'; base-uri 'self'"
+```
+
+### E5 — Product tests belong to CI
+
+`AGENTS.md`. Supports only the repository test-location instruction; no product tests, uploads, workflow dispatches or CI runs occurred.
+
+Lines 160–163:
+
+```text
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
+  - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
+  - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
+  - A run takes a few minutes: give the shell call a long timeout or run it in the background.
+```
+
+### E6 — Stable-child exit reaches the undefined backoff
+
+`apps/desktop/src/main/owned-serve.ts`. The zero reset and index-minus-one establish the retained static control-flow discrepancy. They are not a reproduced crash.
+
+Lines 23–25:
+
+```text
+const BACKOFF = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000]
+// A child that served this long resets the backoff; a crash loop gives up after BACKOFF runs out.
+const STABLE_AFTER = 60_000
+```
+
+Lines 79–86:
+
+```text
+        if (state.stopping) return
+        state.failures = Date.now() - startedAt > STABLE_AFTER ? 0 : state.failures + 1
+        const wait = BACKOFF[state.failures - 1]
+        if (wait === undefined) return options.logger.error("owned serve crash loop; not restarting", { url })
+        options.logger.log("owned serve restarting", { attempt: state.failures, wait })
+        setTimeout(() => {
+          if (!state.stopping) launch()
+        }, wait).unref()
+```
+
+### E7 — Startup publishes credentials after health
+
+`apps/desktop/src/main/index.ts`. Direct ordering evidence for cwd and readiness publication.
+
+Lines 441–453:
+
+```text
+    // The app's global reads (providers, models) name no directory, so the server boots a Location for its cwd. In the
+    // home directory that Location watched the whole home and cost about three more seconds of startup; an empty
+    // directory of the app's own boots fast and watches nothing.
+    const cwd = join(app.getPath("userData"), "global")
+    mkdirSync(cwd, { recursive: true })
+    const owned = yield* Effect.promise(() =>
+      Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"))]).then(
+        ([binary, env]) =>
+          startOwnedServe({
+            logger,
+            command: [binary],
+            env: { ...env, ...dock.env },
+            cwd,
+```
+
+Lines 467–475:
+
+```text
+    // A server that never came up fails initialization, so the renderer shows why instead of a dead URL.
+    yield* Effect.tryPromise({
+      try: () => owned.health.wait,
+      catch: (e) => (e instanceof Error ? e : new Error(String(e))),
+    }).pipe(Effect.tapError((e) => Effect.sync(() => logger.error("owned serve health check failed", e.message))))
+    yield* Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password })
+    yield* Effect.promise(() => OmniBoot.report({ url: owned.url, username: owned.username, password: owned.password }, logger))
+    logger.log("loading task finished")
+  }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
+```
+
+### E8 — Renderer comment disagrees with publication ordering
+
+`apps/desktop/src/renderer/index.tsx`. The comment is preserved as a discrepancy; the main ordering in E7 controls the explanation.
+
+Lines 367–378:
+
+```text
+  // Fetch sidecar credentials (available immediately, before health check)
+  const [sidecar] = createResource(() => window.api.awaitInitialization())
+
+  const [defaultServer] = createResource(() => platform.getDefaultServer?.())
+  const [recovery] = createResource(
+    () => !sidecar.loading && !defaultServer.loading && sidecar.error !== undefined,
+    async () => {
+      const { checkServerHealth } = await import("../../../../packages/app-shell/src/utils/server-health")
+      const remote = await recoverRemoteServer(
+        await platform.storage?.("orchestra.global.dat").getItem("server") ?? null,
+        defaultServer.latest,
+        (http) => checkServerHealth(http, platform.fetch ?? fetch).then((result) => result.healthy),
+```
+
+### E9 — Main failure fallback uses hardcoded visible English
+
+`apps/desktop/src/main/index.ts`. The observer does not check window existence. The literal title and Logs label conflict with E10.
+
+Lines 498–508:
+
+```text
+// A failure before any window exists would otherwise leave a process with nothing on screen.
+Effect.runFork(main).addObserver((exit) => {
+  if (Exit.isSuccess(exit)) return
+  const reason = Cause.pretty(exit.cause)
+  writeLog("main", "desktop startup failed", { reason }, "error")
+  dialog.showErrorBox(
+    "HuGR Orchestra could not start",
+    `${reason.split("\n")[0]}\n\nLogs: ${join(app.getPath("userData"), "logs")}`,
+  )
+  app.exit(1)
+})
+```
+
+### E10 — Native copy instruction
+
+`apps/desktop/AGENTS.md`. Supports the retained instruction/source conflict; no translation or copy change was authorized or made.
+
+Lines 3–9:
+
+```text
+- Renderer process should only call `window.api` from `src/preload`.
+- Main process should register IPC handlers in `src/main/ipc.ts`.
+- NEVER hardcode user-visible English strings in production code. ALWAYS use an i18n key for native menus, picker titles, dialogs, buttons, accessible labels, and displayed errors.
+- When migrating existing copy to i18n, preserve the English text byte-for-byte unless the task explicitly requests a copy change.
+- NEVER change existing English text or English keys to facilitate translation. English is intentional, designer-written source copy; adapt locale-specific translations and i18n mechanics around it.
+- Keep locale and grammar logic in the shared typed i18n layer. Renderer code should resolve copy through the app language API, and the main process should consume typed native-translation bundles through `nativeT(...)`; native menus, dialogs, and IPC handlers must not inspect locales, choose plural categories, or assemble translated sentence fragments.
+- Prefer complete translated phrases with only irreducible dynamic placeholders. If native UI needs richer grammar, deepen the shared bundle/API instead of adding locale branches to desktop feature code.
+```
+
+### E11 — Live readiness deliberately leaves reachability unknown
+
+`apps/desktop/src/main/live-readiness.ts`. Separates permission, availability, key configuration and unprobed answer-provider reachability.
+
+Lines 28–45:
+
+```text
+export function sourcePermissions(): Record<LiveSource, LivePermission> {
+  if (process.platform !== "darwin") return { microphone: "granted", "system-audio": "granted" }
+  return {
+    microphone: permissionFor(systemPreferences.getMediaAccessStatus("microphone")),
+    "system-audio": permissionFor(systemPreferences.getMediaAccessStatus("screen")),
+  }
+}
+
+// The default input device's name is not known to main without native code, so the label stays undefined.
+export function readiness(answerModel: string | undefined): LiveReadiness {
+  return {
+    permissions: sourcePermissions(),
+    microphone: undefined,
+    systemAudio: { available: systemAudioAvailable(process.platform, release()) },
+    transcriptionKey: hasTranscriptionKey(),
+    // v1 never probes the provider, so reachability is unknown.
+    answerModel: answerModel ? { id: answerModel, reachable: "unknown" } : undefined,
+  }
+```
+
+### E12 — Browser preference and current-server token paths
+
+`apps/web/src/entry.tsx`. Supports existing L1 distinctions between saved default-server preference, current-origin authentication and URL token removal.
+
+Lines 99–110:
+
+```text
+const getDefaultUrl = () => {
+  const lsDefault = readDefaultServerUrl()
+  if (lsDefault) return lsDefault
+  return getCurrentUrl()
+}
+
+const clearAuthToken = () => {
+  const params = new URLSearchParams(location.search)
+  if (!params.has("auth_token")) return
+  params.delete("auth_token")
+  history.replaceState(null, "", location.pathname + (params.size ? `?${params}` : "") + location.hash)
+}
+```
+
+Lines 145–165:
+
+```text
+if (root instanceof HTMLElement) {
+  void loadInitialLocale().then((locale) => {
+    const auth = authFromToken(new URLSearchParams(location.search).get("auth_token"))
+    clearAuthToken()
+    const server: ServerConnection.Http = {
+      type: "http",
+      authToken: !!auth,
+      http: {
+        url: getCurrentUrl(),
+        ...auth,
+      },
+    }
+    render(
+      () => (
+        <PlatformProvider value={platform}>
+          <AppBaseProviders locale={locale}>
+            <AppInterface
+              defaultServer={ServerConnection.Key.make(getDefaultUrl())}
+              canonicalLocalServer={ServerConnection.key(server)}
+              servers={[server]}
+            />
+```
+
+## Unresolved evidence and unexecuted verification
+
+The evidence is static. No application, browser, Docker image/container, WSL command, SQLite database, product test, installed binary, media source, provider request, package build/signature, release feed or CI run was exercised. Original connector-capture checks and new-artifact hashes establish provenance and byte identity only. Cross-unit L2 bodies were not consumed. No judges, reserved review material, closure-work or transport records were consulted; the only acceptance information read was the permitted predecessor manifest, and its response references were not followed.
+
+The observed restart indexing, health-comment disagreement, startup localization conflict, nonuniform IPC registration and partial enforced CSP remain open. Native/provider postconditions, actual process reaping, platform capture/content protection, multilingual quality, media pixels and release integrity require separately authorized evidence. Direct-source rereads do not remove the accepted L1 family-supported or metadata-only limits.
+
+
+## Exact dependency rationale
+```json
+{
+  "schema": "genesis-s2-l2-dependencies/v1",
+  "key": "s2.l2.desktop-web",
+  "build": [
+    "s2.l1.desktop-web"
+  ],
+  "navigation": [
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "rationale": {
+    "s2.l1.desktop-web": "Accepted predecessor supplies all inherited desktop/web implementation observations, family coverage, inspected-but-unexecuted test expectations and known gaps. Direct source rereads support selected boundaries and attributed guidance; they do not broaden L1 coverage.",
+    "s2.l2.app-session": "Navigation only to the shared application/session ownership explanation. Its L2 body was not read and contributes no factual evidence or build dependency here.",
+    "s2.l2.design-tui": "Navigation only to shared browser UI/TUI ownership and presentation concerns. Its L2 body was not read and contributes no factual evidence or build dependency here."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l1.desktop-web",
+      "path": "layers/l1/desktop-web/l1.md",
+      "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "byte_length": 29075
+    }
+  ],
+  "consulted_family_accounting": [
+    {
+      "path": "producers/desktop-web/coverage.json",
+      "sha256": "4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9",
+      "matches_deliverable_copy": "layers/l1/desktop-web/coverage.json",
+      "scope": "Thirty family summaries; no expanded leaf audit."
+    }
+  ],
+  "cross_unit_factual_dependency_note": "No app-session or design-tui body was consumed. Shared-shell ownership is evidenced by accepted desktop/web L1 and directly used captured host/package guidance."
+}
+
+```

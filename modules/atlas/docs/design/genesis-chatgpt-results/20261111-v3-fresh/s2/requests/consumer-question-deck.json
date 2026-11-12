@@ -1,0 +1,122 @@
+{
+  "schema": "genesis-s2-consumer-question-deck/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "state": "PREPARED_NOT_DISPATCHED",
+  "read_limits": {
+    "routine": {
+      "index_calls": 2,
+      "read_calls": 2,
+      "body_bytes_total": 16000
+    },
+    "deep": {
+      "index_calls": 6,
+      "read_calls": 5,
+      "body_bytes_total": 64000
+    },
+    "whole_suite": {
+      "source_access": "forbidden for consumer",
+      "context_isolation": "fresh context; instruction boundary observable, not claimed technical sandbox"
+    }
+  },
+  "consumer_rules": [
+    "Fresh native consumer context; do not inspect sources, producer work, reserved oracles, expected answers or judge decisions.",
+    "Use actual ownership.index and ownership.read only through an authorized prepared/published isolated manifest.",
+    "Record each real tool call, selected component ID, returned section and body byte count; abstain if current authorized evidence is unavailable.",
+    "Never substitute raw Markdown file access for Atlas reader evidence."
+  ],
+  "cases": [
+    {
+      "id": "S2-C1",
+      "kind": "permitted-change",
+      "question": "You are adding a retry explanation beside the first-send failure state. The transport disconnected after a new Session prompt was dispatched but before its response arrived. What must the UI preserve, when may it remove an empty Session, and how do edits made while sending reach the next composer? Identify the safe change boundary and verification.",
+      "depth": "deep"
+    },
+    {
+      "id": "S2-C2",
+      "kind": "contract-violation",
+      "question": "A desktop change trusts ELECTRON_RENDERER_URL even in packaged builds to load an arbitrary support page, then lets that page call existing privileged IPC. Is this acceptable? Explain the enforcement boundary, what a safe fix must retain, and the CSP limits.",
+      "depth": "deep"
+    },
+    {
+      "id": "S2-C3",
+      "kind": "cross-component-impact",
+      "question": "To reduce repeated Settings payloads, a backend patch removes content from skill.list and returns only name/location/description. What breaks in the current UI, what coordinated change is required, and which generated boundaries and skills ownership rules must be retained?",
+      "depth": "deep"
+    },
+    {
+      "id": "S2-C4",
+      "kind": "operational-failure",
+      "question": "On first launch the owned server is alive but has not answered for 35 seconds; on another launch it exits immediately. A configured remote is present. How do you distinguish these failures, what recovery is allowed, and what do you inspect without restarting an existing app?",
+      "depth": "deep"
+    },
+    {
+      "id": "S2-C5",
+      "kind": "out-of-scope",
+      "question": "Does the interfaces knowledge prove that two Orchestra servers can automatically recover a crashed model turn on the same Session using durable clustered ownership and exactly-once provider execution? State the supported answer.",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I1D",
+      "kind": "direct-L1",
+      "target": "s2.l1.desktop-web",
+      "question": "Find the readiness cap and locate the primary source distinguishing early exit from timeout.",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I1A",
+      "kind": "direct-L1",
+      "target": "s2.l1.app-session",
+      "question": "What source distinguishes a validated skills catalog body from malformed metadata-only data?",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I1U",
+      "kind": "direct-L1",
+      "target": "s2.l1.design-tui",
+      "question": "Where does the TUI adapt V2 session actions, and what warns against using the legacy abort/shell paths?",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I2D",
+      "kind": "direct-L2",
+      "target": "s2.l2.desktop-web",
+      "question": "Explain why owned-server readiness and configured-remote recovery are distinct checks.",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I2A",
+      "kind": "direct-L2",
+      "target": "s2.l2.app-session",
+      "question": "Explain why a failed first send cannot be cleaned up by inspecting an empty visible timeline alone.",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I2U",
+      "kind": "direct-L2",
+      "target": "s2.l2.design-tui",
+      "question": "Explain TUI prompt context and model/agent ordering when using V2 actions.",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I3D",
+      "kind": "direct-L3",
+      "target": "s2.l3.desktop-web",
+      "question": "Trace the trust boundary from privileged renderer navigation through preload to main IPC.",
+      "depth": "routine"
+    },
+    {
+      "id": "S2-I3A",
+      "kind": "direct-L3",
+      "target": "s2.l3.app-session",
+      "question": "Trace one safe first-send transition across source ownership, policy receipt, API dispatch and draft handoff.",
+      "depth": "deep"
+    },
+    {
+      "id": "S2-I3U",
+      "kind": "direct-L3",
+      "target": "s2.l3.design-tui",
+      "question": "Which contract-preserving path should shared i18n copy follow for app UI and native desktop, and what must remain outside feature code?",
+      "depth": "routine"
+    }
+  ]
+}

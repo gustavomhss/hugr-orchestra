@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "import {\n  DESKTOP_NATIVE_ENGLISH,\n  DESKTOP_NATIVE_KEYS,\n  formatDesktopNativeMessage,\n  type DesktopNativeBundle,\n  type DesktopNativeKey,\n} from \"@orchestra/app/i18n/desktop-native\"\n\nlet bundle: DesktopNativeBundle = { locale: \"en\", messages: { ...DESKTOP_NATIVE_ENGLISH } }\n\nexport function setNativeTranslations(next: DesktopNativeBundle) {\n  if (\n    next.locale === bundle.locale &&\n    DESKTOP_NATIVE_KEYS.every((key) => next.messages[key] === bundle.messages[key])\n  ) {\n    return false\n  }\n  bundle = next\n  return true\n}\n\nexport function nativeT(key: DesktopNativeKey, params?: Record<string, string | number>) {\n  return formatDesktopNativeMessage(bundle.messages[key], params)\n}\n",
+    "encoding": "utf-8",
+    "sha": "5913dd7bc0df13e90170e049e3c6eea58790aaf0",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/desktop/src/main/native-translations.ts",
+    "display_title": "native-translations.ts"
+  },
+  "isError": false
+}

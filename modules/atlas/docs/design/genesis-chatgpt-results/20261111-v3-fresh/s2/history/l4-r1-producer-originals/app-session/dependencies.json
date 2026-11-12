@@ -1,0 +1,72 @@
+{
+  "unit": "s2.l4.app-session",
+  "build": [
+    "s2.l3.app-session",
+    "s2.l3.desktop-web",
+    "s2.l3.design-tui",
+    "s2.l2.app-session",
+    "s2.l1.app-session"
+  ],
+  "navigation": [
+    "s2.l4.desktop-web",
+    "s2.l4.design-tui",
+    "s2.l4.entry"
+  ],
+  "rationale": {
+    "s2.l3.app-session": "Build: primary accepted journey evidence for retained identities, first-send/admission, canonical recovery, requests/terminal, Skills and rendering failure/stop boundaries.",
+    "s2.l3.desktop-web": "Build: actual host facts used for startup/health, WSL distinction, remote fallback and stable-exit discrepancy; owner handoffs and remaining host evidence bound app-side diagnosis.",
+    "s2.l3.design-tui": "Build: actual TUI ordered/non-atomic prompt/retry compatibility and distinct generated-presentation consumer chains; shared UI ownership/verification limits prevent app overreach.",
+    "s2.l2.app-session": "Build: settings controller ownership, current feature boundaries and verification-depth limits directly referenced in the maintenance map.",
+    "s2.l1.app-session": "Build: concrete request/terminal/rendering source ownership, palette producer chain and exact existing test/benchmark assertion scopes.",
+    "s2.l4.desktop-web": "Navigation only: separate host maintenance protocol under common declared headings; no pending sibling prose used as evidence.",
+    "s2.l4.design-tui": "Navigation only: separate terminal/shared-design maintenance protocol under common declared headings; no pending sibling prose used as evidence.",
+    "s2.l4.entry": "Navigation only: compact cross-unit reading map; the separately authored entry is not a factual input to this unit."
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    },
+    {
+      "path": "accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c"
+    },
+    {
+      "path": "accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b"
+    }
+  ],
+  "consumed_predecessor_bodies": [
+    {
+      "key": "s2.l3.app-session",
+      "body_path": "layers/l3/app-session/body.md",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "body_path": "layers/l3/desktop-web/body.md",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_path": "layers/l3/design-tui/body.md",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_path": "layers/l2/app-session/body.md",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_path": "layers/l1/app-session/l1.md",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047
+    }
+  ],
+  "same_layer_factual_inputs": []
+}

@@ -1,0 +1,181 @@
+176:   afterSign: verifyPackagedResources,
+177:   extraResources: [
+178:     // Native windows and the macOS Dock read process.resourcesPath/icons outside app.asar.
+179:     {
+180:       from: "resources/icons",
+181:       to: "icons",
+182:     },
+183:     {
+184:       from: "resources/linux/app-dock-accessibility",
+185:       to: "app-dock-accessibility",
+186:       filter: ["*.py"],
+187:     },
+188:     {
+189:       from: "resources/linux-runtime",
+190:       to: "linux-runtime",
+191:     },
+```
+
+## E20. Updater persisted state and installation
+
+Stored version does not skip the update check; installation requires ready state and stops resources first.
+
+`apps/desktop/src/main/updater-controller.ts:82–103` · Git blob `02520c0aabcd9f85b72e5f293ec6007de807ed00` · SHA-256 `ed978923ed992c33fb226c367bc2f3a387bc3bc9411c9c28a6e292fb8aa3e4a3`
+
+```text
+82:     async start() {
+83:       const ready = await input.persistence.get()
+84:       if (ready?.version === input.currentVersion) await input.persistence.clear()
+85:       return check()
+86:     },
+87:     check,
+88:     async install() {
+89:       if (state.status !== "ready") throw new Error("Update is not ready to install")
+90:       const version = state.version
+91:       transition({ status: "installing", version })
+92:       await input
+93:         .stop()
+94:         .then(() => {
+95:           input.backend.quitAndInstall()
+96:           transition({ status: "ready", version })
+97:         })
+98:         .catch((error) => {
+99:           transition({ status: "ready", version })
+100:           throw error
+101:         })
+102:     },
+103:   }
+```
+
+## E21. Web token removal
+
+The browser host removes the auth_token query entry from history after extraction.
+
+`apps/web/src/entry.tsx:99–110` · Git blob `3b12a89db1e5b83c5692bfcf1482882fab94f7f6` · SHA-256 `3f9fbf2d2c59b3b203f9cb74a0f9b33c0e24a511b931775b908d76645383aa56`
+
+```text
+99: const getDefaultUrl = () => {
+100:   const lsDefault = readDefaultServerUrl()
+101:   if (lsDefault) return lsDefault
+102:   return getCurrentUrl()
+103: }
+104: 
+105: const clearAuthToken = () => {
+106:   const params = new URLSearchParams(location.search)
+107:   if (!params.has("auth_token")) return
+108:   params.delete("auth_token")
+109:   history.replaceState(null, "", location.pathname + (params.size ? `?${params}` : "") + location.hash)
+110: }
+```
+
+## E22. English locale fallback
+
+Representative non-English dictionary branches merge over English rather than replacing it.
+
+`apps/desktop/src/renderer/i18n/index.ts:114–128` · Git blob `58e3c1e26b59ed06852c38f455b37d5ec180284b` · SHA-256 `35b2d4853348e60dafb0e355b160eb96257862a00d1c1c6c1d8601d8b2a1e6b9`
+
+```text
+114: const base = i18n.flatten(desktopEn)
+115: 
+116: function build(locale: Locale): Dictionary {
+117:   if (locale === "en") return base
+118:   if (locale === "zh") return { ...base, ...i18n.flatten(desktopZh) }
+119:   if (locale === "zht") return { ...base, ...i18n.flatten(desktopZht) }
+120:   if (locale === "de") return { ...base, ...i18n.flatten(desktopDe) }
+121:   if (locale === "es") return { ...base, ...i18n.flatten(desktopEs) }
+122:   if (locale === "fr") return { ...base, ...i18n.flatten(desktopFr) }
+123:   if (locale === "da") return { ...base, ...i18n.flatten(desktopDa) }
+124:   if (locale === "ja") return { ...base, ...i18n.flatten(desktopJa) }
+125:   if (locale === "pl") return { ...base, ...i18n.flatten(desktopPl) }
+126:   if (locale === "ru") return { ...base, ...i18n.flatten(desktopRu) }
+127:   if (locale === "uk") return { ...base, ...i18n.flatten(desktopUk) }
+128:   if (locale === "ar") return { ...base, ...i18n.flatten(desktopAr) }
+```
+
+## E23. Generated corpus provenance
+
+The generator writes four consolidated documents and per-invariant pages, emitting measured labels from literal test references. No tests run in this excerpt.
+
+`apps/desktop/docs/corpus/app-dock/generate-corpus.mjs:704–726` · Git blob `4b9fc9841ff91f95437548022eb589af4b3bcfc0` · SHA-256 `48c7c08012d6295992660b381665b49daa0eba9f6d6b2298ceccd912832b2241`
+
+```text
+704: // Write all artifacts
+705: function writeAll() {
+706:   fs.writeFileSync(path.join(outDir, "00-invariant-register.md"), genInvariantRegister());
+707:   fs.writeFileSync(path.join(outDir, "01-requirements.md"), genRequirements());
+708:   fs.writeFileSync(path.join(outDir, "02-goldens.md"), genGoldens());
+709:   fs.writeFileSync(path.join(outDir, "03-cards.md"), genCards());
+710: 
+711:   // Split into per-invariant files
+712:   const invariantsDir = path.join(outDir, "invariants")
+713:   fs.mkdirSync(invariantsDir, { recursive: true })
+714:   for (const inv of invariants) {
+715:     let md = `# Invariant: \`${inv.id}\` - ${inv.title}\n\n`
+716:     md += `> Clauses: ${inv.clauses.length} | Unwanted: ${inv.unwanted.length} | Witnesses: ${inv.tests.join(", ")}\n\n`
+717:     md += "## Clauses\n"
+718:     for (const c of inv.clauses) {
+719:       md += `- ${c} *(measured: ${inv.tests.join(", ")})*\n`
+720:     }
+721:     md += "\n## Unwanted\n"
+722:     for (const u of inv.unwanted) {
+723:       md += `- ${u} *(measured: ${inv.tests.join(", ")})*\n`
+724:     }
+725:     md += "\n"
+726:     fs.writeFileSync(path.join(invariantsDir, `${inv.id}.md`), md)
+```
+
+## E24. Proof setup is not semantic readiness
+
+The development testbed documentation states limits of launch receipts and future package resolution.
+
+`apps/desktop/test/native/README.md:3–5` · Git blob `af310c247f23b1c53ee81c8ab107d35e6d9a36fb` · SHA-256 `32d28e19a87ddad44e00c28b34ce6522c5093e0463d60b46cfd177746303afe0`
+
+```text
+3: This bootstrap launches real Mousepad/GTK3, FeatherPad/Qt and official VS Code/Electron.
+4: Dependency installation, bus reachability and launch receipts do **not** prove semantic
+5: readiness or native operations. The lead runs W0's tree/action/file/config oracles separately.
+```
+
+`apps/desktop/test/native/README.md:21–24` · Git blob `af310c247f23b1c53ee81c8ab107d35e6d9a36fb` · SHA-256 `32d28e19a87ddad44e00c28b34ce6522c5093e0463d60b46cfd177746303afe0`
+
+```text
+21: Ubuntu apt repositories remain live. `/opt/orchestra-a11y/versions.json` records the
+22: complete installed package/version closure, Python/PyGObject/GLib and actual VS Code
+23: Electron/Chromium/Node versions. Retain the built image ID with every proof receipt;
+24: the Dockerfile alone does not promise a byte-identical future apt resolution.
+```
+
+## E25. Main-fiber failure and localization instruction
+
+Observed fallback logs the formatted cause, shows a native error box and exits. The visible title/Logs label are literals; the separate instruction requires typed localization. This is a source/instruction conflict, not an executed failure.
+
+`apps/desktop/src/main/index.ts:498–508` · Git blob `2a00cd582c5917716fe9061a46ca614ed45d086e` · SHA-256 `79e2de4c4f9e50a9b04cf78ad09b3d03585b1e49190943e230f1d45f49b08f11`
+
+```text
+498: // A failure before any window exists would otherwise leave a process with nothing on screen.
+499: Effect.runFork(main).addObserver((exit) => {
+500:   if (Exit.isSuccess(exit)) return
+501:   const reason = Cause.pretty(exit.cause)
+502:   writeLog("main", "desktop startup failed", { reason }, "error")
+503:   dialog.showErrorBox(
+504:     "HuGR Orchestra could not start",
+505:     `${reason.split("\n")[0]}\n\nLogs: ${join(app.getPath("userData"), "logs")}`,
+506:   )
+507:   app.exit(1)
+508: })
+```
+
+`apps/desktop/AGENTS.md:5–9` · Git blob `5040a3d090c75ff05ab0aab956b7efbbe0c1f6df` · SHA-256 `854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81`
+
+```text
+5: - NEVER hardcode user-visible English strings in production code. ALWAYS use an i18n key for native menus, picker titles, dialogs, buttons, accessible labels, and displayed errors.
+6: - When migrating existing copy to i18n, preserve the English text byte-for-byte unless the task explicitly requests a copy change.
+7: - NEVER change existing English text or English keys to facilitate translation. English is intentional, designer-written source copy; adapt locale-specific translations and i18n mechanics around it.
+8: - Keep locale and grammar logic in the shared typed i18n layer. Renderer code should resolve copy through the app language API, and the main process should consume typed native-translation bundles through `nativeT(...)`; native menus, dialogs, and IPC handlers must not inspect locales, choose plural categories, or assemble translated sentence fragments.
+9: - Prefer complete translated phrases with only irreducible dynamic placeholders. If native UI needs richer grammar, deepen the shared bundle/API instead of adding locale branches to desktop feature code.
+```
+
+## Reading limits
+
+A source check is evidence that the guard/state transition exists at this commit. It is not proof of actual provider behavior, process disappearance, installation integrity, UI outcome, platform permission or a passing test. Historical measured/ready labels and development-only proof recipes remain documentary claims. See `l1.md` for family context and `coverage.json` for every assigned leaf.
+END DECISIVE SOURCE EVIDENCE desktop-web

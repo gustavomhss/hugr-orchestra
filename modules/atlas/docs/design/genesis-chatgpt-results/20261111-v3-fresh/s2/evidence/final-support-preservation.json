@@ -1,0 +1,91 @@
+{
+  "schema": "genesis-s2-final-support-preservation/v1",
+  "recorded_at": "2026-11-11T21:33:48.898919+00:00",
+  "files": [
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/u1-final-binding/note.md",
+      "preserved_path": "evidence/u1-final-binding/note.md",
+      "byte_length": 4425,
+      "sha256": "a9ba5c9d6f6ebf40a2c23da1825eba744588082521c7b0cc0a17080bf18d2e39"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/u1-final-binding/receipt.json",
+      "preserved_path": "evidence/u1-final-binding/receipt.json",
+      "byte_length": 23481,
+      "sha256": "52d68d6aa2eb4b7bcfcf55f860e73de4d85a72271e502a97f5ce5d415b94a8fb"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/first-attempt-failure.json",
+      "preserved_path": "evidence/final-usage-delta/first-attempt-failure.json",
+      "byte_length": 843,
+      "sha256": "e92679208a10068d5ab3815cc4f5ff18129feeb75018095171797ec45d8cacb7"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/ledger-observed-82-rows.jsonl",
+      "preserved_path": "evidence/final-usage-delta/ledger-observed-82-rows.jsonl",
+      "byte_length": 43264,
+      "sha256": "f81f808b2cfd0657b1a951632af8a9d6dd63226be161bcb07bc9b5dcf25b4a62"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconcile_delta.py",
+      "preserved_path": "evidence/final-usage-delta/reconcile_delta.py",
+      "byte_length": 17545,
+      "sha256": "7bc6cc0eb74fb75f310fb0063b8e96226fb43cab89965497a223bbcec39da73c"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconcile_delta_v2.py",
+      "preserved_path": "evidence/final-usage-delta/reconcile_delta_v2.py",
+      "byte_length": 18829,
+      "sha256": "d04c7f904a78376c99c64634a81af0885e774f3a3cebdd1ce28be571d1fdd51e"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconciled-01/closure-call-index.json",
+      "preserved_path": "evidence/final-usage-delta/reconciled-01/closure-call-index.json",
+      "byte_length": 8718,
+      "sha256": "f5fd2334b09987698bdfe0df29f7b3a8c9b3e92dd8c6cf68eb25c65818455aaf"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconciled-01/ledger-observed-83-rows.jsonl",
+      "preserved_path": "evidence/final-usage-delta/reconciled-01/ledger-observed-83-rows.jsonl",
+      "byte_length": 43849,
+      "sha256": "62a8b2718bed50c02a5c36b05d1b7960f1848298a60434a66f80e2d2bc139a02"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconciled-01/notes.md",
+      "preserved_path": "evidence/final-usage-delta/reconciled-01/notes.md",
+      "byte_length": 3270,
+      "sha256": "bb677e6f6558a1cb662e195858d185547035fa1e4a5768d8a37f60fab6cccff2"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconciled-01/observable-usage-delta.json",
+      "preserved_path": "evidence/final-usage-delta/reconciled-01/observable-usage-delta.json",
+      "byte_length": 13952,
+      "sha256": "60ef81988c96b2f07c4acc4ffd96c82b823d6b256f5d31e6eba2267d78641feb"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-usage-delta/reconciled-01/source-receipt-manifest.json",
+      "preserved_path": "evidence/final-usage-delta/reconciled-01/source-receipt-manifest.json",
+      "byte_length": 17299,
+      "sha256": "125b84e8b89b054542b9a40da264ca188a96e274192acf6603986cd4bf645a91"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/export-support/build_review_zip.py",
+      "preserved_path": "evidence/export-support/build_review_zip.py",
+      "byte_length": 16596,
+      "sha256": "3d2eccd49ed95c6acab43d97fb02ebf07cf69f58f95b85411f4710eb20fa9de6"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/export-support/usage.md",
+      "preserved_path": "evidence/export-support/usage.md",
+      "byte_length": 4232,
+      "sha256": "2431c66ee54b6b7febda969b7a728b0649d3ad58750ac4468c3414af147b4e92"
+    },
+    {
+      "original_path": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-records-tools/finalize_blocked_records.py",
+      "preserved_path": "evidence/final-records-tools/finalize_blocked_records.py",
+      "byte_length": 32874,
+      "sha256": "0f91b55f4559a4100488e0175b8f8daf0186faa182a1b379bd1731bec2d5db59"
+    }
+  ],
+  "scope": "Exact copies; original helper outputs, scripts, failed attempts and partial snapshots preserved. Copying makes no new model/runtime/remote call."
+}

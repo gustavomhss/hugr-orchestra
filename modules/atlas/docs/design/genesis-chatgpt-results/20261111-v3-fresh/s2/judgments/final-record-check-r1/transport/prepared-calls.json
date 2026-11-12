@@ -1,0 +1,30 @@
+{
+  "prepared_at": "2026-11-11T21:36:55.088803+00:00",
+  "source_file": "/workspace/scratch/7b5d6430f420/genesis-s2/closure-work/final-record-check-01/record-correction-packet.txt",
+  "source_byte_length": 32906,
+  "source_sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae",
+  "source_ends_with_newline": true,
+  "calls": [
+    {
+      "call_number": 1,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j1",
+      "request_file": "call-01.request.json",
+      "request_file_sha256": "58675548f1946c997419ac752a013342eb8fc9f7d7e56ceaa411cc5476f26baa",
+      "message_byte_length": 32906,
+      "message_sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae",
+      "state": "PREPARED_NOT_YET_SENT"
+    },
+    {
+      "call_number": 2,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s2_resume_j2",
+      "request_file": "call-02.request.json",
+      "request_file_sha256": "cdee3b24802a6ec77d6e4d966790468e4be557c818c8c13f34c2057f24a22671",
+      "message_byte_length": 32906,
+      "message_sha256": "a390d8681f142aabe0310e1289c01d5de36c7d32a23a6adc0dbb21e3539d57ae",
+      "state": "PREPARED_NOT_YET_SENT"
+    }
+  ],
+  "limit": "Exact local visible argument objects only. Host serialization and recipient confirmation are not exposed by these files."
+}

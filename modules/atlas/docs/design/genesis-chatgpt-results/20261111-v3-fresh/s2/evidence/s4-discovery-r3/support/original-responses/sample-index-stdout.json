@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "{\"kind\":\"index\",\"manifest\":\"4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02\",\"artifact\":\"d8ff72835d6fa126c5525179a18d9eebed652df1d3531fe47d6b3487c06003d8\",\"result\":\"8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f\",\"receipt\":\"e58b1c0529ce4f0e885c04e632ae2662febd9a3415b0c072485bbeb827bf72c9\",\"key\":\"S4:L1:ownership-boundaries\",\"scope\":\"atlas-continuity-rag-genesis\",\"title\":\"Atlas ownership identity, input observation, and publication boundaries\",\"layer\":1,\"need\":\"evidence\",\"sections\":[\"Scope and purpose\",\"What each identity means\",\"How current inputs are observed\",\"Historical pilot: useful precedent, bounded entry point\",\"Native transport versus served knowledge\",\"Maintenance starting points and remaining evidence\",\"Exact source register\"],\"navigation\":[],\"dependencies\":[],\"bodyBytes\":17959,\"bodiesReturned\":false,\"bodyBytesVerified\":true,\"checked\":[\"S4:L1:ownership-boundaries\"]}\n",
+    "encoding": "utf-8",
+    "sha": "6b841e44606ddc7abf41c5d25bf9b75f1a4e1ff5",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/6e43247103ac36e5adb635f2fccde2e61480c56d/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.stdout.json",
+    "display_title": "sample-index-v1.stdout.json"
+  },
+  "isError": false
+}

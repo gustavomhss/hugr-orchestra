@@ -1,0 +1,39 @@
+{
+  "schema": "genesis-s2-original-preservation-verification/v1",
+  "recorded_at": "2026-11-11T19:11:24.737719+00:00",
+  "initial_capture_manifest": {
+    "path": "evidence/resumption.json",
+    "sha256": "5f8757dd7e90fc964446de0fca5a3a07c9c4241b4ea593f88fac7879d95d3e72",
+    "recorded_at": "2026-11-11T17:19:24.895279+00:00"
+  },
+  "initial_file_count": 1231,
+  "initial_bytes": 41076291,
+  "all_initial_file_bytes_preserved_and_verified": true,
+  "base_archive": {
+    "path": "archives/original-session-current-observation.zip",
+    "sha256": "bd85a37e17ffa9c8d0f0ea1fa1e7dd4a688b1c29a100b24609eb37c084b92dc3"
+  },
+  "exact_initial_version_overrides": {
+    "producers/app-session/transport-receipt.json": {
+      "payload_path": "history/late-original-app-transport/continuation-copy-receipt.json",
+      "sha256": "903fe7634fe0384704acb4338524e036c71a6124f01fc18b788e974604a7f26e",
+      "byte_length": 9899
+    }
+  },
+  "observed_later_original_changes": [
+    {
+      "path": "producers/app-session/transport-receipt.json",
+      "initial_sha256": "903fe7634fe0384704acb4338524e036c71a6124f01fc18b788e974604a7f26e",
+      "later_sha256": "ba7860613532f0f5dccf854f2db24327d9e3c50b37a51780b28d747118e28724",
+      "initial_bytes": 9899,
+      "later_bytes": 11296
+    }
+  ],
+  "unchanged_original_files": 1230,
+  "result": "Every initial snapshot file has exact bytes recoverable from the preserved current-original archive, with the one explicit initial receipt override. No initial source/body file differs.",
+  "limits": [
+    "Current old workspace is read-only for this continuation, not technically locked against its original late-running producer.",
+    "This supersedes the temporary unavailable-in-checkpoint limitation in the earlier late-receipt observation: the complete initial file hashes were located in evidence/resumption.json and now checked.",
+    "Late transport information does not create an old semantic verdict or change resumed same-pair acceptance."
+  ]
+}

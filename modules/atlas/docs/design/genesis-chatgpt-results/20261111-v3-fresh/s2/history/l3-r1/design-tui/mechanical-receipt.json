@@ -1,0 +1,445 @@
+{
+  "schema": "genesis-s2-native-layer-mechanical/v1",
+  "artifact_key": "s2.l3.design-tui",
+  "layer": 3,
+  "producer_root": "later-producers/design-tui/l3",
+  "destination": "layers/l3/design-tui",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "package_before_sha256": "b6392cde5debf0d07a323f0c890a8ad4b2e8aa3f38407e96ad3cf2fff7965790",
+  "utility_sha256": "664bbd0c1be81d9ec8606eb6a8f8909cb8434c1e17be3114c3ad1165750ff918",
+  "body": {
+    "method": "ATX headings outside fenced blocks; each slice ends at the next heading; no semantic completeness assertion",
+    "byte_length": 15143,
+    "sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5",
+    "line_count": 75,
+    "sections": [
+      {
+        "level": 1,
+        "heading": "Terminal submission and shared presentation across ownership boundaries",
+        "line": 1,
+        "byte_start": 0,
+        "byte_end_exclusive": 75,
+        "sha256": "0c6bc7f265c629ec7fef9abf2c078d4722171915456b084fe6574a6976bf87f9"
+      },
+      {
+        "level": 2,
+        "heading": "Orientation and accepted ownership",
+        "line": 3,
+        "byte_start": 75,
+        "byte_end_exclusive": 1271,
+        "sha256": "885296867abf5ca4c383ce27066c3c699d48c8df1253212d5b6185276cfeb2a9"
+      },
+      {
+        "level": 2,
+        "heading": "Terminal input becomes admission through ordered, separate operations",
+        "line": 9,
+        "byte_start": 1271,
+        "byte_end_exclusive": 3987,
+        "sha256": "eba708c0c1071f57aae698032f6ef743008bddf59972aca3a116dbc49e841230"
+      },
+      {
+        "level": 2,
+        "heading": "Ambiguous sends, live projection and request decisions keep different identities",
+        "line": 21,
+        "byte_start": 3987,
+        "byte_end_exclusive": 6856,
+        "sha256": "452a61b294f84a22cbe93994799fccad493ed71bea01dce6b4d3e37c617f72dd"
+      },
+      {
+        "level": 2,
+        "heading": "Rendered state follows caller and resource lifetimes",
+        "line": 34,
+        "byte_start": 6856,
+        "byte_end_exclusive": 8939,
+        "sha256": "4c6c880c3d07fef1d2938a389c6fafb905ecd05c1c02cd3bc4b906347582de86"
+      },
+      {
+        "level": 2,
+        "heading": "Language and appearance cross app and host contracts",
+        "line": 46,
+        "byte_start": 8939,
+        "byte_end_exclusive": 11645,
+        "sha256": "08c7103b45195e57f169d6a08e7a7568b8e6f21359e813555a513cf23a988600"
+      },
+      {
+        "level": 2,
+        "heading": "Generated products reach consumers through distinct maintenance paths",
+        "line": 58,
+        "byte_start": 11645,
+        "byte_end_exclusive": 13772,
+        "sha256": "8b2245485193c21453e420ffc3a5a648a87e37b99efc5d1fb7e2c5adb16f383f"
+      },
+      {
+        "level": 2,
+        "heading": "Change impact and verification ownership",
+        "line": 71,
+        "byte_start": 13772,
+        "byte_end_exclusive": 15143,
+        "sha256": "bbbdf00f7b080bb37afabc60b72004f0abc329193b3da9a943cb2db4eba20f6b"
+      }
+    ]
+  },
+  "source_checks": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/src/context/session-actions.ts",
+      "git_blob_sha": "255420d1e93ce0fca21b941c673abdede087e91e",
+      "sha256": "e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd",
+      "byte_length": 4172,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/src/context/session-actions.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/session.ts",
+      "git_blob_sha": "5830f50001c8dc01227a920f04276054c0e29570",
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+      "byte_length": 29273,
+      "canonical_capture": "producers/app-session/sources/packages/protocol/src/groups/session.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/context/session-actions.test.ts",
+      "git_blob_sha": "9d22d47f255e6a1c73a1ce2bfe40ce87c467a27a",
+      "sha256": "48423aa811be59b328fc29d306cca600f8aa9aaa91a96e1e53b832cb59e39e42",
+      "byte_length": 5839,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/test/context/session-actions.test.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/app-lifecycle.test.tsx",
+      "git_blob_sha": "7a32ed20d7c0d220070a4a93415863d375ee0b2a",
+      "sha256": "4bcb258ce72742e03239985f78e7a0aa19249b3fa4baeaf89998140e7470fda4",
+      "byte_length": 3934,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/test/app-lifecycle.test.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "git_blob_sha": "de09c3c7d6a229963050b82e428fee12e6c2c33e",
+      "sha256": "932db6f13478db87f40c5bcf2fa4b50631452a723e0fc15353fa6133d28739c2",
+      "byte_length": 7180,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/tui/test/cli/tui/prompt-submit-race.test.ts",
+      "git_blob_sha": "fb85a7f5b1288b111be7ea2679003104f3092f0d",
+      "sha256": "e26ac22aea38d16282587697f8b78ea9adbc18b198827c296424a0856e672e00",
+      "byte_length": 3410,
+      "canonical_capture": "producers/design-tui/sources/packages/tui/test/cli/tui/prompt-submit-race.test.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "canonical_capture": "producers/desktop-web/sources/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/AGENTS.md",
+      "git_blob_sha": "73b12de4d7cea0029707d89edff72c14575498cc",
+      "sha256": "4b6684b625e1bc84b7082ce401f07e3cbd3f2e5a120141e8e0b9a96ee2622769",
+      "byte_length": 2160,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/rtl-aware-development/SKILL.md",
+      "git_blob_sha": "3cdb0104fe2711f27a58967aaf63f3ea48ede33e",
+      "sha256": "ddbbfea78cd0a34dc5c8d8570103fa3db7dbaf801b669cb980365549d811a173",
+      "byte_length": 4098,
+      "canonical_capture": "producers/design-tui/sources/.orchestra/skills/rtl-aware-development/SKILL.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/app-shell/AGENTS.md",
+      "git_blob_sha": "a2bbdc5cb79a2fa1fc6bbcfea72c96e0d29130fe",
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "byte_length": 4508,
+      "canonical_capture": "producers/desktop-web/sources/packages/app-shell/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.test.ts",
+      "git_blob_sha": "fe9bc0aaea38192958fedb9929ee33e51fa8fc65",
+      "sha256": "d0515ba8faee1b3304bd23837589b821b954202f37f750280ab989aebc601591",
+      "byte_length": 629,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/i18n.test.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/dialog.tsx",
+      "git_blob_sha": "5f29db9a7937b353754659f1c63c6f7e0ea1bb97",
+      "sha256": "dbf846b187040405655aba89e6e16dcc5694120a884e6a78c147c100015b7406",
+      "byte_length": 7985,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/dialog.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/worker-pool.tsx",
+      "git_blob_sha": "5f788f7866abfd25e701e37ea377d416f87a4e4f",
+      "sha256": "d79c61272e84266658040aa32b85ce4f86089f1b3e19cd5bdea23b49c7778918",
+      "byte_length": 573,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/worker-pool.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/context/i18n.tsx",
+      "git_blob_sha": "757083f8f7842815c6e835d722a9f8887a9088bc",
+      "sha256": "e91e04c63c2b9d767bf3ee0180ea968782b882d5ad2eb166aa4a1f077f74b834",
+      "byte_length": 2564,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/context/i18n.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/loader.ts",
+      "git_blob_sha": "198d351221121a6bfeedbbb2ceb4591c914a4966",
+      "sha256": "ef53b0866ae75b695ac369dda09098e35f5dce7218f2d377807f375a34422021",
+      "byte_length": 3097,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/theme/loader.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/src/theme/context.tsx",
+      "git_blob_sha": "eb21b015ea2f6b1bbd1abc5c51eeec7f98718e90",
+      "sha256": "e51c86dc8fb695dedab9b512e0fc38c7c449dda6d377154528bf87ef48bf8a46",
+      "byte_length": 12536,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/src/theme/context.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/cli/script/schema-files.ts",
+      "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+      "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3",
+      "byte_length": 3409,
+      "canonical_capture": "producers/design-tui/sources/apps/cli/script/schema-files.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/tailwind.ts",
+      "git_blob_sha": "6e558a8fa11cc024b71d2e311f4d27ebc89c0cf8",
+      "sha256": "3b71ac2b9558b53397534f0ba476879715bd35779f939c415a70051af4699722",
+      "byte_length": 576,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/script/tailwind.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/script/build-oc2-v2-overrides.ts",
+      "git_blob_sha": "e5dae76ef374a90e940e32812715b939c69c0c1d",
+      "sha256": "4ad3bf3fe1eaf3c5030896cca81b3ec0d571fd2f82441149d8fcf2cef4d14e29",
+      "byte_length": 1413,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/script/build-oc2-v2-overrides.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/ui/vite.config.ts",
+      "git_blob_sha": "b89c666ae19be83a567d525687404fb6bc137857",
+      "sha256": "c869fbd57f4de3ff9aa64ec7c927e56331e1cee557ab97b80d9135eecfe55688",
+      "byte_length": 1465,
+      "canonical_capture": "producers/design-tui/sources/packages/ui/vite.config.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/preview.tsx",
+      "git_blob_sha": "a6052bf222a2146b2aca63109d3583f1cef399fd",
+      "sha256": "40729070062b15c71dc84047c6950c340e107d35c92f0e3753cec0434e545db1",
+      "byte_length": 3288,
+      "canonical_capture": "producers/design-tui/sources/apps/storybook/.storybook/preview.tsx",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "apps/storybook/.storybook/playground-css-plugin.ts",
+      "git_blob_sha": "cc73ecf667fd444d0d1ddde9ba30f9487906bead",
+      "sha256": "9e2ebdeca49703f3ee7aaca4ab877a16196e03a518f3f6658be12c6a3643b206",
+      "byte_length": 4943,
+      "canonical_capture": "producers/design-tui/sources/apps/storybook/.storybook/playground-css-plugin.ts",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    }
+  ],
+  "canonical_source_manifests": [
+    {
+      "path": "producers/desktop-web/sources.json",
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+    },
+    {
+      "path": "producers/app-session/sources.json",
+      "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+    },
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea"
+    }
+  ],
+  "build_dependencies": [
+    {
+      "key": "s2.l2.design-tui",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "accepted_manifests": [
+        "accepted/l2.json"
+      ],
+      "supported": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "accepted_manifests": [
+        "accepted/l2.json"
+      ],
+      "supported": true
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "accepted_manifests": [
+        "accepted/l2.json"
+      ],
+      "supported": true
+    }
+  ],
+  "navigation": [
+    "s2.l3.app-session",
+    "s2.l3.desktop-web"
+  ],
+  "navigation_targets_pending": [],
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "layer": 1,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    },
+    {
+      "path": "accepted/l2.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c",
+      "layer": 2,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    }
+  ],
+  "recipe": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-dispatch.md",
+    "sha256": "325383a663ac0c275419653f7b12c5836ed3c47efb8f066408bc25898b524949"
+  },
+  "producer_files": [
+    {
+      "name": "body.md",
+      "byte_length": 15143,
+      "sha256": "860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5"
+    },
+    {
+      "name": "sources.json",
+      "byte_length": 18108,
+      "sha256": "982dd9896c32842336fda4ff1c867993be974346d422ff4cb9cfc34931581c62"
+    },
+    {
+      "name": "dependencies.json",
+      "byte_length": 3917,
+      "sha256": "bbf98807d18cd9f8bed9d32ec6a524b7650863d1a3b1cd495a9abfbc36367855"
+    },
+    {
+      "name": "decisive-evidence.md",
+      "byte_length": 38616,
+      "sha256": "424ea704b58604af2404ff2bc7f53cfbea704f09e845f2b8a131907adfa7e190"
+    },
+    {
+      "name": "response.md",
+      "byte_length": 6869,
+      "sha256": "7cea345333be7979393876b3a93a0568be1c7a9e165d946e64f97b3785c0a3d7"
+    }
+  ],
+  "earlier_artifacts_unchanged": [
+    {
+      "key": "s2.l1.desktop-web",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "artifact_metadata_sha256": "537063a45589e162d694019d0e6a01a0ca893d3522af9f9210faa68651f39abf"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "artifact_metadata_sha256": "9738fecf0c280a7e0455839bc86be22fefc7a82c5cdcd017ab874579d1779f9a"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "artifact_metadata_sha256": "229652ae8a60e6eafc70bd4d75d82e811e49a305ac4d0efcdfa8b0037b2304b0"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "artifact_metadata_sha256": "c516a8627655539840a7a6c060926c2b33d2c311e894af7238b966789dd5e09c"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "artifact_metadata_sha256": "0acf73c277cc9a429c1ded3ba45009f5c875c6f0764fbd302678d2929c7a7ad4"
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "artifact_metadata_sha256": "24af4cc5eb9b8a33f37a350a9750d4903c445b76b52678d81ce96bde3a131db4"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "artifact_metadata_sha256": "4acd11e3e684255c60a41833e8aa71802fc7a9d6dea64d044bba62b0619de86d"
+    },
+    {
+      "key": "s2.l3.app-session",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "artifact_metadata_sha256": "b6f0639f6e2962f55cab34b4bc1294d59aa1f0c9565e6a8acfea3c7a0abeb36a"
+    }
+  ],
+  "semantic_status": "PENDING_ACTUAL_JUDGMENTS",
+  "runtime_status": "NOT_RUN",
+  "limits": [
+    "Mechanical identity and dependency bookkeeping only; no semantic judgment or new acceptance gate.",
+    "Manifest consumption is explicitly declared, not inferred or authenticated by this utility.",
+    "Declared build dependency completeness and navigation usefulness remain for the actual judgments."
+  ]
+}

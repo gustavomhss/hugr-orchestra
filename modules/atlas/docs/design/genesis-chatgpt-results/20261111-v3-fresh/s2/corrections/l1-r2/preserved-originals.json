@@ -1,0 +1,62 @@
+[
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/l1.md",
+    "bytes": 33830,
+    "sha256": "4cc99e2e59e275e9db2f997c31ddf6b1eb7d96be261276cb9089ff8251a74217"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/coverage.json",
+    "bytes": 1619985,
+    "sha256": "1a739929e76b11e44544a5257f523403364eb651e2d50b28df827ee397cb024a"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/sources.json",
+    "bytes": 317752,
+    "sha256": "e3a33f958136034df2bf84c7d43c29a8d81a132d3b80df159fad0cd5237af2c6"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/app-session/decisive-evidence.md",
+    "bytes": 71396,
+    "sha256": "4be9f1c37d2baf0ca6c6e543d0081a812602479ae0489c9df8c4173ed0232bab"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/l1.md",
+    "bytes": 31232,
+    "sha256": "70283bd624a777ca8fbcf4cfd67b1e779d348aff5f09e6e07a8b8ff3d9e50f5f"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/coverage.json",
+    "bytes": 1836555,
+    "sha256": "94bae97d00585674b9fece9e241fac6adc117dff369e44752c9b1014b53d9924"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/sources.json",
+    "bytes": 153291,
+    "sha256": "1c2c22167adb248b3ea064784005f7bbaec4e453e57e39ecda113993f642852d"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/design-tui/decisive-evidence.md",
+    "bytes": 32816,
+    "sha256": "b5932603ea68593fd68139b84d7fc415450df5f41a98e69519c366cd643dd9c2"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/l1.md",
+    "bytes": 28755,
+    "sha256": "f680f5e2900f4e5039e0d9be32b4756db66de7d776d59ee0232c26555fd362f9"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/coverage.json",
+    "bytes": 496639,
+    "sha256": "4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/sources.json",
+    "bytes": 143730,
+    "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+  },
+  {
+    "path": "/workspace/scratch/7b5d6430f420/genesis-s2/deliverable/layers/l1/desktop-web/decisive-evidence.md",
+    "bytes": 37930,
+    "sha256": "800ab91421d2f46571dd9114c84475d411ae2e3a07a18564a1da346e2045572d"
+  }
+]

@@ -1,0 +1,174 @@
+{
+  "schema": "genesis-s2-bounded-l4-entry-correction-mechanical/v1",
+  "recorded_at": "2026-11-11T20:40:29.405195+00:00",
+  "artifact_key": "s2.l4.entry",
+  "revision": 2,
+  "producer_root": "later-producers/app-session/l4-entry-r2",
+  "package_before_sha256": "d16156085a3b764b4b88e864d0f760416575b9dee44297d4164accb22a078aba",
+  "utility_sha256": "1d3b1764f649d8d11d27b749acb1bf37a6207b2788289ef466af9f6a84127be3",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "old_body": {
+    "sha256": "5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67",
+    "byte_length": 5305,
+    "preserved_path": "history/l4-r1/entry/body.md"
+  },
+  "body": {
+    "method": "ATX headings outside fenced blocks; each slice ends at the next heading; no semantic completeness assertion",
+    "byte_length": 5849,
+    "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+    "line_count": 40,
+    "sections": [
+      {
+        "level": 1,
+        "heading": "S2 interface knowledge entry",
+        "line": 1,
+        "byte_start": 0,
+        "byte_end_exclusive": 32,
+        "sha256": "44231ed61704321e86140ea1e08e44d11b13aaae3e7aecd1b4e1729d73f3f9d4"
+      },
+      {
+        "level": 2,
+        "heading": "Orientation",
+        "line": 3,
+        "byte_start": 32,
+        "byte_end_exclusive": 983,
+        "sha256": "412beb0693189c8fcdb3c0b42e70add912de673d5a41b71d919f655f711da497"
+      },
+      {
+        "level": 2,
+        "heading": "Maintenance protocol",
+        "line": 9,
+        "byte_start": 983,
+        "byte_end_exclusive": 4132,
+        "sha256": "3ee4c42ccfc6a5780b10e82f7aa3c159f3835c3ae4c8548459c949c9c71c761a"
+      },
+      {
+        "level": 2,
+        "heading": "Verification and boundaries",
+        "line": 34,
+        "byte_start": 4132,
+        "byte_end_exclusive": 5849,
+        "sha256": "ba084e9eaf6ee8144630150144199090973ebe1ade480a9eaaf3da8882de98a5"
+      }
+    ]
+  },
+  "changed_sections": [
+    "## Verification and boundaries"
+  ],
+  "unrelated_body_sections_byte_identical": true,
+  "source_checks": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "canonical_capture": "producers/desktop-web/sources/AGENTS.md",
+      "sha256_verified": true,
+      "git_blob_verified": true
+    }
+  ],
+  "new_direct_source_records": [],
+  "new_canonical_captures": 0,
+  "canonical_source_manifests": [
+    {
+      "path": "producers/desktop-web/sources.json",
+      "sha256": "1b6d4b1329976993e040e7780df2b946ba7413aa55c701254692e9e20f7d76c8"
+    },
+    {
+      "path": "producers/app-session/sources.json",
+      "sha256": "3750b58f6d9b35b83f1087fd6448987c8aef7ac25fb29c4bf0d04645ff30a73d"
+    },
+    {
+      "path": "producers/design-tui/sources.json",
+      "sha256": "81bcdd073415b903a43aef1f8ec53cad36490c7df54d2db8aa15ed8654d290ea"
+    }
+  ],
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+      "layer": 1,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    },
+    {
+      "path": "accepted/l2.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json",
+      "sha256": "27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c",
+      "layer": 2,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    },
+    {
+      "path": "accepted/l3.json",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l3.json",
+      "sha256": "dabee552a1eca7242365072a06604d3468b4de6be04a0085ed70286dbed1497b",
+      "layer": 3,
+      "consumption_basis": "Explicit producer metadata or principal CLI declaration; not inferred."
+    }
+  ],
+  "other_artifacts_unchanged": [
+    {
+      "key": "s2.l1.desktop-web",
+      "metadata_sha256": "537063a45589e162d694019d0e6a01a0ca893d3522af9f9210faa68651f39abf",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+    },
+    {
+      "key": "s2.l1.app-session",
+      "metadata_sha256": "9738fecf0c280a7e0455839bc86be22fefc7a82c5cdcd017ab874579d1779f9a",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "metadata_sha256": "229652ae8a60e6eafc70bd4d75d82e811e49a305ac4d0efcdfa8b0037b2304b0",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "metadata_sha256": "c516a8627655539840a7a6c060926c2b33d2c311e894af7238b966789dd5e09c",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457"
+    },
+    {
+      "key": "s2.l2.app-session",
+      "metadata_sha256": "0acf73c277cc9a429c1ded3ba45009f5c875c6f0764fbd302678d2929c7a7ad4",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7"
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "metadata_sha256": "24af4cc5eb9b8a33f37a350a9750d4903c445b76b52678d81ce96bde3a131db4",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "metadata_sha256": "ffb7f2f848b2a5558844aa0896d8b5f00cfba9d5e79f7d3c9beb85016eafe6de",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e"
+    },
+    {
+      "key": "s2.l3.app-session",
+      "metadata_sha256": "3fb38cd924e249952deeeb9e9311533133e8d940be9924db973549a08b760564",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7"
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "metadata_sha256": "f3e7bbac2193d2f4a8f58d12b280807429aeb950844318d72e99bcbb851a6ccf",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730"
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "metadata_sha256": "c7480be950aa4737998cfeed0e7e5e89c45999dd96834355f5454bc9e9050c44",
+      "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa"
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "metadata_sha256": "7d064d4a623fb5e2815e8c58b782c3dc9eada79dae0a2d098d1b90f39a27a9d6",
+      "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c"
+    },
+    {
+      "key": "s2.l4.app-session",
+      "metadata_sha256": "6f906ba869ad0a4f77f7876895dbb550e29ed50ae946ec95c4eb117b115dae82",
+      "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3"
+    }
+  ],
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "runtime_status": "NOT_RUN"
+}

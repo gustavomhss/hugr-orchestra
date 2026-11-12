@@ -1,0 +1,333 @@
+      // Acquiring the bounded stream installs its listener before readiness is observable.
+      const live = yield* EventV2.allBounded(events, subscriberCapacity)
+      return Stream.make(connected).pipe(Stream.concat(live))
+    }),
+  ).pipe(Stream.map(frame), Stream.pipeThroughChannel(Sse.encode()))
+  // A comment frame keeps idle connections open and tells the client the server is alive.
+  const heartbeat = Stream.tick("15 seconds").pipe(Stream.map(() => ": heartbeat\n\n"))
+  return output.pipe(Stream.merge(heartbeat, { haltStrategy: "left" }), Stream.encodeText)
+```
+
+### C4 — Corroboration: canonical read receipts are client-local ordering evidence
+
+L2 section: **Transport, liveness and canonical recovery**. Accepted support: `s2.l1.app-session` §Transport, stream health and canonical recovery.
+
+Generation rejection, policy-repeat behavior and snapshot provenance limits support the recovery explanation. This is not a backend revision or post-crash provider continuation proof.
+
+`packages/app-shell/src/context/session-recovery.ts:45–64` · file SHA256 `5812a355724bfe9ae15a5cff5abd273b17cfb657e778c93228780b88e85eb59e` · excerpt SHA256 `8a39dbd07bb88c2c0614516cca942b870abefc4651c45e6f0538221fdcfa7b20`
+
+```text
+    const state = { policyGeneration: {}, policy: floor ?? fences.get(sessionID) ?? cached }
+    const request = (): Promise<AppSession> => {
+      const policyGeneration = state.policyGeneration
+      return input.request(sessionID).then((result) => {
+        if (input.generations.get(sessionID) !== active) throw new DOMException("Session recovery superseded", "AbortError")
+        if (state.policyGeneration !== policyGeneration) return request()
+        const observed = mergeSessionManagementInfo(state.policy,
+          mergeSessionManagementInfo(fences.get(sessionID), input.read(sessionID) ?? result))
+        // Compatibility SDK snapshots carry no canonical V2 policy provenance.
+        if (input.source === "snapshot") return input.retain(mergeSessionManagementInfo(observed, result))
+        local.receipt = Math.max(local.receipt, observed.subagentModelsReadReceipt ?? 0) + 1
+        return input.retain({
+          ...result,
+          subagentModelsChangedAt: observed.subagentModelsChangedAt,
+          subagentModelsRevision: observed.subagentModelsRevision,
+          subagentModelsReadReceipt: local.receipt,
+        })
+      }, (error: unknown) => {
+        if (input.generations.get(sessionID) === active && state.policyGeneration !== policyGeneration) return request()
+        throw error
+```
+
+### C5 — Corroboration: Skills decoder, access and write lifecycle must remain separate
+
+L2 section: **Skills catalog, content and editing ownership**. Accepted support: `s2.l1.app-session` §Skills catalog, editing and ownership.
+
+All Skills facts in the body are inherited from the accepted L1r3 Skills section. These excerpts preserve the whole-array decoder, lexical governed-root precedence, path/mtime mapping and the absence of a page signal on write calls. No filesystem implementation is inferred.
+
+`packages/app-shell/src/orchestra/chapters/skills-data.ts:11–28` · file SHA256 `0001420dcb688c672b55f1070284df5b5086be8d1655df75f7a25585981f4931` · excerpt SHA256 `fab2c3bceb35ea5912556b9d16716f54baeb2f0c1995a10205d8c0a75f93b76a`
+
+```text
+
+const decodeSkills = Schema.decodeUnknownOption(
+  Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+      description: Schema.optional(Schema.NullOr(Schema.String)),
+      location: Schema.String,
+      content: Schema.String,
+      mtime: Schema.optional(Schema.NullOr(Schema.Number)),
+      internal: Schema.optional(Schema.NullOr(Schema.Boolean)),
+    }),
+  ),
+)
+
+// The catalog reply is untrusted: a malformed one fails the load, which the page shows as its error with Retry.
+export function readSkills(value: unknown): readonly SkillEntry[] {
+  return Option.getOrThrowWith(decodeSkills(value), () => new Error("Skills response is malformed"))
+}
+```
+
+`packages/app-shell/src/orchestra/chapters/skills-data.ts:54–56` · file SHA256 `0001420dcb688c672b55f1070284df5b5086be8d1655df75f7a25585981f4931` · excerpt SHA256 `5e7ce3ec9c0e0620f8c32ba3882ca5612a6ff138ce9b66f3a5687359df328e04`
+
+```text
+
+const PROJECT_ROOTS = [".orchestra/skills/", ".orchestra/skill/", ".claude/skills/", ".agents/skills/"]
+const GOVERNED_ROOT = ".orchestra/skills/own/"
+```
+
+`packages/app-shell/src/orchestra/chapters/skills-data.ts:69–81` · file SHA256 `0001420dcb688c672b55f1070284df5b5086be8d1655df75f7a25585981f4931` · excerpt SHA256 `d9e4bd803855c9bce06e4a4f420738335e84e5b5d935fd435cf07dbd2ce557dd`
+
+```text
+export function skillSource(location: string, directory: string): SkillSource {
+  if (location.startsWith("/builtin/")) return "builtin"
+  return slash(location).startsWith(root(directory)) ? "project" : "global"
+}
+
+export function skillAccess(location: string, directory: string): SkillAccess {
+  const source = skillSource(location, directory)
+  if (source !== "project") return source
+  const relative = slash(location).slice(root(directory).length)
+  if (relative.startsWith(GOVERNED_ROOT)) return "governed"
+  if (!relative.endsWith(".md") || !PROJECT_ROOTS.some((item) => relative.startsWith(item))) return "fixed"
+  return "edit"
+}
+```
+
+`packages/app-shell/src/orchestra/chapters/skills-dialog.tsx:43–57` · file SHA256 `4d765b72649145007edfaeed34a5a397b311c6518b75ca5fc25defd31a77251a` · excerpt SHA256 `0d2345674e0ec5f15617e613404844d09dab0fa2e13d03f2edd49318cb025d30`
+
+```text
+
+  function submit(event: SubmitEvent & { currentTarget: HTMLFormElement }) {
+    event.preventDefault()
+    const state = props.state
+    if (state.type === "remove") return void run(() => props.onRemove(state.skill))
+    const data = new FormData(event.currentTarget)
+    void run(() =>
+      props.onSave({
+        name: String(data.get("name") ?? ""),
+        description: String(data.get("description") ?? ""),
+        content: String(data.get("instructions") ?? ""),
+        path: skill?.location,
+        mtime: skill?.mtime ?? undefined,
+      }),
+    )
+```
+
+`packages/app-shell/src/orchestra/chapters/skills.tsx:100–125` · file SHA256 `7e60597bb282ef3fdd525224acfff4efd94c07cfc2a3069c403b4b39b1b0cd31` · excerpt SHA256 `c86663f9835c1576d1eb02c7a99af006b356b2d988388a075f0a0546de4fff72`
+
+```text
+  async function save(current: SkillDialogState, input: SkillSaveInput) {
+    const result = await sdk()
+      .orchestra.skills.save({ location: { directory: props.directory }, ...input })
+      .then(
+        (saved) => ({ saved, error: undefined }),
+        (error: unknown) => ({ saved: undefined, error }),
+      )
+    if (!result.saved) return writeFailure(result.error)
+    if (abort.signal.aborted) return
+    close(current)
+    setState("pending", result.saved.data.location)
+    await load().catch(() => refresh())
+  }
+
+  async function remove(current: SkillDialogState, skill: SkillEntry) {
+    const error = await sdk()
+      .orchestra.skills.remove({ location: { directory: props.directory }, path: skill.location })
+      .then(
+        () => undefined,
+        (error: unknown) => ({ error }),
+      )
+    if (error) return writeFailure(error.error)
+    if (abort.signal.aborted) return
+    close(current)
+    setState("pending", undefined)
+    await load().catch(() => refresh())
+```
+
+### C6 — Corroboration: rendering and permission policy retain narrow contracts
+
+L2 section: **Shared rendering, files and evidence interpretation**. Accepted support: `s2.l1.app-session` §Rendering, evidence and reusable utility contracts; `s2.l1.app-session` §Requests, terminals and auxiliary lifetimes.
+
+The renderer model declaration and sanitizer fallback support bounded rendering ownership. The Relay hook exclusion supports the separate request section. These are not broad security/accessibility assurances.
+
+`packages/session-ui/src/transcript-model.ts:1–6` · file SHA256 `23d5dbdc3efc71cb44f0284fa53b963f15a1690a8ac0fc1eed27b210cd829736` · excerpt SHA256 `ed4ec071a320647016f068ec5eade0122a25b27979d3dc511a9fa051462090d3`
+
+```text
+export * as Transcript from "./transcript-model"
+
+// Transcript view model: the message, part and session shapes the transcript renderer reads.
+// The app projects the server's V2 Session messages into these shapes; nothing here is a wire
+// contract. Free-form records (`metadata`, tool `input`, JSON schemas) stay `any`-valued because
+// renderers read nested fields from them directly.
+```
+
+`packages/session-ui/src/components/markdown-cache.tsx:35–38` · file SHA256 `c1ced6b1bc3299137f952aa74fe9decff11b2780d16386c9975d780427732079` · excerpt SHA256 `6abacc1c914a3e9c25bd998eeddfe27499b4a6ff02029086a79bda98efdb07e5`
+
+```text
+export function sanitizeMarkdown(html: string) {
+  if (!DOMPurify.isSupported) return ""
+  return DOMPurify.sanitize(html, config)
+}
+```
+
+`packages/app-shell/src/context/permission-auto-respond.ts:59–69` · file SHA256 `618f180631a888789103d7e23ccb21f7f69f9de25813a90658b2a1a1a5bbca39` · excerpt SHA256 `6156bdbc8d4a8769e5694496097f3dabd4228a4c68b1a107557d7e64cc934444`
+
+```text
+export function sessionAutoAccept(
+  autoAccept: Record<string, boolean>,
+  session: { id: string; parentID?: string }[],
+  permission: AutoRespondRequest,
+  directory?: string,
+) {
+  if (isHookAsk(permission)) return false
+  return sessionLineage(session, permission.sessionID)
+    .map((id) => accepted(autoAccept, id, directory))
+    .find((item): item is boolean => item !== undefined)
+}
+```
+
+### C7 — Corroboration: settings optimism does not prove server persistence
+
+L2 section: **Navigation, settings and feature controllers**. Accepted support: `s2.l1.app-session` §Navigation, settings and feature-family disposition.
+
+The accepted settings observation is explained as reversible client presentation; the source restores the previous shell value when updateConfig rejects.
+
+`packages/app-shell/src/components/settings-v2/general-controllers.ts:75–88` · file SHA256 `d43394eabf14250c3e052afb0f34465885866f68ec627cc6bf12d36c8c53c428` · excerpt SHA256 `e380c4dcfc67f694b66c756da255b4f907e75a9e48f6f11a4424e3ca3511f140`
+
+```text
+      serverSync().set("config", "shell", value)
+      serverSync()
+        .updateConfig({ shell: value })
+        .catch((err: unknown) => {
+          serverSync().set("config", "shell", before)
+          showToast({
+            title: language.t("common.requestFailed"),
+            description: err instanceof Error ? err.message : String(err),
+          })
+        })
+    },
+  }
+}
+
+```
+
+## Complete meaningful-family mapping
+
+The accepted coverage input is `producers/app-session/coverage.json`, SHA256 `c93eff70f252f2e7c4cb6f4676a0a193b2b64eccc7a836001033ce3656c34759`. The following 59 rows retain its 1,887-path partition. The machine-readable `family-map.json` also preserves each family's original depth counts and limitation. A family mapped here is not a claim that every member was read for L2.
+
+| Family ID | Paths | L2 explanation section | Accepted L1 support |
+|---|---:|---|---|
+| `authority` | 18 | Visual resources and prescribed maintenance | §Authority, composition and identity |
+| `history` | 8 | Visual resources and prescribed maintenance | §Authority, composition and identity |
+| `skills` | 5 | Visual resources and prescribed maintenance | §Authority, composition and identity |
+| `guides` | 6 | Visual resources and prescribed maintenance | §Authority, composition and identity |
+| `bootstrap` | 55 | Composition, identity and asynchronous ownership | §Authority, composition and identity |
+| `transport` | 27 | Transport, liveness and canonical recovery | §Transport, stream health and canonical recovery |
+| `sync` | 42 | Transport, liveness and canonical recovery | §Transport, stream health and canonical recovery |
+| `prompt` | 57 | Durable admission, optimistic state and draft storage | §Prompt admission and draft ownership |
+| `persistence` | 19 | Durable admission, optimistic state and draft storage | §Prompt admission and draft ownership |
+| `requests` | 10 | Permission requests and terminal boundaries | §Requests, terminals and auxiliary lifetimes |
+| `session-route` | 34 | Composition, identity and asynchronous ownership | §Authority, composition and identity |
+| `timeline` | 47 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `files` | 39 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `terminal` | 16 | Permission requests and terminal boundaries | §Requests, terminals and auxiliary lifetimes |
+| `dock` | 13 | Host capabilities and auxiliary lifetimes | §Requests, terminals and auxiliary lifetimes |
+| `home` | 39 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `commands` | 15 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `settings` | 66 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `agents` | 7 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `actions` | 73 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `relay` | 65 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `atlas` | 87 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `integrations` | 20 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `lean` | 8 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `board` | 13 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `guardrails` | 6 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `schedule` | 10 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `rag` | 4 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `mcp-skills` | 14 | Navigation, settings and feature controllers; Skills catalog, content and editing ownership | §Navigation, settings and feature-family disposition; §Skills catalog, editing and ownership |
+| `plugins` | 5 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `workspace-tools` | 14 | Navigation, settings and feature controllers | §Navigation, settings and feature-family disposition |
+| `live` | 16 | Host capabilities and auxiliary lifetimes | §Requests, terminals and auxiliary lifetimes |
+| `wsl` | 7 | Host capabilities and auxiliary lifetimes | §Requests, terminals and auxiliary lifetimes |
+| `cockpit` | 42 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `session-ui-contract` | 46 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `session-ui-markdown` | 19 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `session-ui-editor` | 10 | Durable admission, optimistic state and draft storage | §Prompt admission and draft ownership |
+| `session-ui-review` | 39 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `palette-source` | 15 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `palette-generated` | 7 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `styles` | 71 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `localization` | 190 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `avatars` | 90 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `wallpaper-assets` | 79 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `brand-assets` | 18 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `zen-assets` | 2 | Visual resources and prescribed maintenance | §Assets, localization and verification evidence |
+| `evidence-fixtures` | 37 | Shared rendering, files and evidence interpretation; Verification limits and ownership use | §Rendering, evidence and reusable utility contracts; §Assets, localization and verification evidence |
+| `browser-tests` | 106 | Verification limits and ownership use | §Assets, localization and verification evidence |
+| `e2e-tests` | 155 | Verification limits and ownership use | §Assets, localization and verification evidence |
+| `benchmarks` | 53 | Visual resources and prescribed maintenance; Verification limits and ownership use | §Authority, composition and identity; §Assets, localization and verification evidence |
+| `test-support` | 2 | Verification limits and ownership use | §Assets, localization and verification evidence |
+| `entry-recovery` | 5 | Composition, identity and asynchronous ownership | §Authority, composition and identity |
+| `janitor` | 6 | Host capabilities and auxiliary lifetimes | §Requests, terminals and auxiliary lifetimes |
+| `controls` | 4 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `diagnostics` | 1 | Host capabilities and auxiliary lifetimes | §Requests, terminals and auxiliary lifetimes |
+| `identity-utils` | 9 | Composition, identity and asynchronous ownership | §Rendering, evidence and reusable utility contracts |
+| `dom-input` | 7 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `feedback` | 7 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+| `pull-request` | 2 | Shared rendering, files and evidence interpretation | §Rendering, evidence and reusable utility contracts |
+
+## Captured maintenance guidance consulted
+
+Root and app-shell/session-ui/Schema AGENTS were read. The five captured `.orchestra/skills/.../SKILL.md` files listed in `sources.json` were read for scope and maintenance obligations: agent-screen, agent-avatars, HuGR Composer, onboarding and settings. They were treated as attributed instructions or intended workflows. Their installation, account, trust and native-operation instructions were not performed. Root/package dependency and generation rules, session/timeline benchmark obligations and immutable English localization rules remain prescribed rather than executed.
+
+## Preserved limits and discrepancies
+
+The app README/browserSafe policy distinction and separate Client prohibition; readiness PID-or-healthy versus health healthy-only predicates; admission/retry versus projection equivalence; local read receipt versus durable sequence; lexical skill access versus filesystem authority; unsignalled writes versus suppressed late UI; retained legacy CI source versus actual Actions routing; unregistered Guardrails; generic avatar sizing versus the captured sample; and generated palette outputs versus authored CSS remain explicit. The accepted L1 failed-lookup/capture ledger and 30 metadata-only leaves are not reclassified by this L2.
+
+Native host/scanner behavior, PTY slow-reader resolution, provider/OAuth/storage outcomes, Core scheduling, RAG retrieval quality, Board mutations, SkillV2/SkillFile filesystem enforcement, exhaustive specialized renderers and per-locale/per-asset provenance remain unestablished. Browser suites, E2E mocks, stories, fixture logs and benchmark guidance are evidence of intended checks, not passing executions. No pending navigation destination is used as proof.
+
+
+## Exact dependency rationale
+```json
+{
+  "build": [
+    "s2.l1.app-session"
+  ],
+  "navigation": [
+    "s2.l2.desktop-web",
+    "s2.l2.design-tui"
+  ],
+  "rationale": {
+    "s2.l1.app-session": {
+      "kind": "build",
+      "reason": "Supplies accepted app/session observations, source limits, discrepancies and the complete meaningful 59-family accounting. This L2 synthesizes that accepted body and corroborates selected claims in pinned raw captures."
+    },
+    "s2.l2.desktop-web": {
+      "kind": "navigation",
+      "reason": "Optional consultation for native host lifecycle, Dock/Linux/WSL, Live and packaging beyond the app-facing contracts described here. The destination may be pending and supplies no factual premise to this body."
+    },
+    "s2.l2.design-tui": {
+      "kind": "navigation",
+      "reason": "Optional consultation for shared browser design/accessibility/themes and TUI behavior beyond session-ui seams. The destination may be pending and supplies no factual premise to this body."
+    }
+  },
+  "consumed_layer_manifests": [
+    {
+      "path": "accepted/l1.json",
+      "sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8"
+    }
+  ],
+  "accepted_predecessors": [
+    {
+      "key": "s2.l1.app-session",
+      "body_path": "layers/l1/app-session/l1.md",
+      "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047
+    }
+  ],
+  "cross_unit_factual_dependency_note": "No other unit body was consumed. Core, Protocol, Server and Schema boundary facts come from the accepted app/session body and its exact captured boundary sources, not from an unaccepted L2 destination."
+}
+
+```
