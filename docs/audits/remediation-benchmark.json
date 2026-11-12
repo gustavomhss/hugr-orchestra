@@ -1128,5 +1128,24 @@
     },
     "config": "identical Linux/current renderer/production build/no reused server/one worker/fullyParallelfalse",
     "claim": "completion and metrics only; no thresholds or causal performance claim"
+  },
+  "e1": {
+    "before_run": "43197751238",
+    "before_source": "ef4961ca6afaa33132ab6e42817553db5536069f",
+    "before_snapshot": "30b65113aefd88971f77a11fb14d37c096bdd886",
+    "reused_existing_before": true,
+    "reason": "Run predates E1 source; seven frontend production trees equal E1 baseline7e4a75f3d288ab22e6e2c2fe59533e6080eddd3b. Only unrelated engine catalog devDependency lock delta; resolutions unchanged.",
+    "after_run": "43236422033",
+    "after_source": "4026b496de561f902695fafc2b6ece02948a52c1",
+    "after_snapshot": "c24f58f56cc246ec2b1bf5c8bd3c4034a5601f9c",
+    "passes_per_run": 6,
+    "page_records_per_run": 90,
+    "summary_records_per_run": 6,
+    "renderer": "current",
+    "workers": 1,
+    "production_build": true,
+    "before_duration_ms": 317432.572,
+    "after_duration_ms": 312306.4,
+    "claim": "Completion and preserved collection only; no threshold or causal performance inference."
   }
 }

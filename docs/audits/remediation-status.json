@@ -13,9 +13,18 @@
       "id": "E1",
       "severity": "P2",
       "owner": "ui",
-      "status": "behavioral_red_source_authorized",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "3c1190230f",
+        "d947c0f3e0",
+        "6f137ac20f",
+        "b667b81155",
+        "f0c0f48f09",
+        "d00e908fa0",
+        "2e66c62cac",
+        "14f97e7363"
+      ],
       "evidence": [
         {
           "kind": "controls_compositional_green_both_os",
@@ -29,8 +38,24 @@
           "kind": "full_baseline_behavioral_red_both_os",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43227911160",
           "result": "16pass/18behavioral failures/260assertions/2Omni spawns perOS; all34outcomes and18first-failure lines match. RealHTTP200+SQL admission/event1 witnessed BEFORE ACK loss; retry200 rotates ID. Later final row count and part identity assertions remain final-green obligations."
+        },
+        {
+          "kind": "full_final_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43235251521",
+          "result": "34pass/295assertions/2Omni spawns perOS; exact4026 source and9032a053f798243485f64e86dfa03ef06fec8021 snapshot. Final SQL row/event and immutable parts criteria reached and pass after commit-before-ACK-loss."
+        },
+        {
+          "kind": "production_benchmark_comparison",
+          "before": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197751238",
+          "after": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43236422033",
+          "result": "6pass per run;90PAGE+6summary records each. Existing BEFORE predates E1 source, seven frontend trees equal E1 baseline, only unrelated engine Drizzle devDependency lock delta. Same production/current-renderer/one-worker harness. AFTER312306.4ms versus BEFORE317432.572ms; collection/completion only, no threshold or causal performance claim."
+        },
+        {
+          "kind": "integrated_hashes_types_cold_review",
+          "result": "Root and Elon SOURCE APPROVE4026. Eight own commits integrated through14f97e7363;7/7 exact hashes including unchanged final acceptance files. App typecheck0, root guards78rules337paths0gate0error/one inherited advisory; boundaries0new0stale; spawn0."
         }
-      ]
+      ],
+      "remaining": "Closed for retries within one live existing-Session composer owner. No remount/reload, atomic configuration transaction or provider/tool exactly-once guarantee; native fixture proves admission only."
     },
     {
       "id": "E2",
@@ -2854,9 +2879,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 50,
+    "new_fixes_verified": 51,
     "already_fixed_verified": 1,
-    "remaining": 14,
+    "remaining": 13,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "90420b0721",
