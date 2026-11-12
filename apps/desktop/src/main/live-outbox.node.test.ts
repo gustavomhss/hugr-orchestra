@@ -266,6 +266,7 @@ test("100000 remembered IDs includes ACKed receipts; one-transaction near-limit 
   const other = f.store.create(f.input(1)), last = segment(100000, "last")
   assert.equal(f.store.append(other.id, last), "accepted"); f.store.acknowledge(other.id, [last.id])
   assert.equal(f.store.summary(other.id).pendingCount, 0); assert.equal(f.usage().remembered, 100000)
+  refused(() => f.store.assertCanCreate(), "quota")
   assert.equal(f.store.append(other.id, last), "duplicate")
   refused(() => f.store.append(f.record.id, segment(100001)), "quota"); refused(() => f.store.append(other.id, segment(100002)), "quota")
 })
