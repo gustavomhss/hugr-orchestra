@@ -1,0 +1,396 @@
+id	requirements	primary_domain	wp	implementation_task	executable_check	evidence	oracle
+A01	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Célula com fonte nomeada mostra o valor, o nome da leitura, e a idade. Valor velho permanece, com a idade.
+A02	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A fonte de uma célula preenchida é removida. A palavra não lido aparece. Zero falha.
+A03	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A mesma célula removida mostra traço. Falha.
+A04	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A mesma célula removida omite a coluna. Falha.
+A05	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um resto é pedido a partir de pressão não lida. A primeira linha o publica. Falha.
+A06	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Residência aparece sem frequência e sem "frequência não lida" na mesma célula. Falha.
+A07	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`df` aparece como saúde, livre, ou importante. Falha.
+A08	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O cliente soma uma segunda conta a partir das células. Falha.
+A09	R2	R2	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Dono é o nome da sessão gravada no spawn, a mesma string na árvore, na worktree, no cache, no Docker, no log, no temporário, no IN/OUT e na quarentena. Sem sessão gravada, fica vazio.
+A10	R2	R2	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma aba mostra um dono que o spawn não gravou. Falha.
+A11	R2	R2	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma sessão é selecionada. Outra aba marca string diferente. Falha.
+A12	R2	R2	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma sessão é selecionada. Um dono vazio é preenchido. Falha.
+A13	R2	R2	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Dono vazio vira nosso porque o nome do diretório parece. Falha.
+A14	R3 R14	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar ou suspender pelo pid que a amostra segurou. Falha.
+A15	R3 R14 R15	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar ou suspender por um pid de amostra que falhou. Falha.
+A16	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um membro que o supervisor ainda segura fica fora do stop porque a amostra não o viu. Falha.
+A17	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar legal. O confirmamento nomeia um pid, não o id do supervisor. Falha.
+A18	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Árvore com descendente fora da sessão. O resultado declara a árvore inteira parada. Falha.
+A19	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	No Windows, a inspeção falha e o produto para ou suspende. Falha.
+A20	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	No Windows, parar ou suspender não passa pelo Job. Falha.
+A21	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O produto reconstrói árvore por PPID. Falha.
+A22	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Ordenar desfaz a soma, ou esconde filho que o ledger ainda segura. Falha.
+A23	R3 R14	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar a árvore nossa, viva, pelo id do supervisor, com a geração de R12 conferindo. O confirmamento mostra esse id. Descendente fora da sessão fica visível como fora.
+A24	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece parar, com botão ou sem. Falha.
+A25	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece parar a consulta, com botão ou sem. Falha.
+A26	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece suspender, com botão ou sem. Falha.
+A27	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece retomar, com botão ou sem. Falha.
+A28	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece atestar, com botão ou sem. Falha.
+A29	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece aceitar custo, com botão ou sem. Falha.
+A30	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece armar, com botão ou sem. Falha.
+A31	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece aplicar, com botão ou sem. Falha.
+A32	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece restaurar, com botão ou sem. Falha.
+A33	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece esvaziar, com botão ou sem. Falha.
+A34	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece mover, com botão ou sem. Falha.
+A35	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece quarentena, com botão ou sem. Falha.
+A36	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: corre ou oferece vacuum, com botão ou sem. Falha.
+A37	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto ou caminho: a tela oferece a caixa de confirmação. Falha.
+A38	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um número de visto entra na coluna de footprint. Falha.
+A39	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O caminho medido, inclusive o servidor que cresce porque um cliente parou de ler, é omitido. Falha.
+A40	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Estado e flag são colunas diferentes. Estado é uma das sete: vivo, saindo, zumbi, ido, desconhecido, suspenso, parcial. Flag é uma das três, só com dono gravado.
+A41	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um suspender parcial é gravado como suspenso. Falha.
+A42	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma quarta flag. Falha.
+A43	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma flag em visto. Falha.
+A44	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Falha de inspeção pintada como não lido. A palavra desconhecido não aparece. Falha.
+A45	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Falha de inspeção pintada como zero. Falha.
+A46	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma oitava palavra de estado. Falha.
+A47	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Desconhecido vira zero para ir ao fim da tabela. Falha.
+A48	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	PPID=1 é gravado como flag. Falha.
+A49	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem footprint, a hipótese não é insuficiente. Falha.
+A50	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Leak lógico é emitido só com footprint alto, sem a subida depois do trabalho gravado. Falha.
+A51	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A hipótese emite cache. Falha.
+A52	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Série de RSS emite hipótese. Falha.
+A53	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O produto injeta pressão para classificar. Falha.
+A54	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Leak verdadeiro ou retenção de alocador é emitido. Falha.
+A55	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Ocioso é marcado com um método faltando. Falha.
+A56	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A palavra ocioso é aceita sem a lista dos métodos. Falha.
+A57	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Vazio de stub é aceito como prova. Falha.
+A58	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	PID de lock file velho é tratado como PID vivo. Falha.
+A59	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Ocioso só quando cwd, `git -C`, arquivo aberto e lock com PID vivo rodaram e voltaram vazios. A célula lista esses métodos.
+A60	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	registry entra no conjunto fechado. Falha.
+A61	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`~/.bun` entra no conjunto fechado. Falha.
+A62	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`~/.npm` entra no conjunto fechado. Falha.
+A63	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Playwright entra no conjunto fechado. Falha.
+A64	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Checkout em `/tmp` entra no conjunto fechado. Falha.
+A65	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`dist` sai sem atestação. Falha.
+A66	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`out` sai sem atestação. Falha.
+A67	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`target` ou `.env` sai sem atestação. Falha.
+A68	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Ignorado pelo git é descartado por isso. Falha.
+A69	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Cópia ociosa de `node_modules` ou `.turbo`, provada cópia e não elo de store não medido, sai sem atestação e sem aceitar custo.
+A70	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um path com claimant é movido. Falha.
+A71	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um path cuja prova voltou vazia e que tem claimant fica Ready. Falha.
+A72	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Move sem a referência gravada passar a apontar o destino. Falha.
+A73	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar apaga um objeto que foi movido. Falha.
+A74	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar o movido com claimant no destino novo. Falha.
+A75	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Compartilhado dentro de worktree, sem claimant, move no mesmo volume, devolve zero, e a referência gravada aponta o destino. Restaurar o movido só volta se o destino novo não tiver claimant.
+A76	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Mover para outro volume é tratado como este efeito. Falha.
+A77	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A tela oferece remover a worktree do git. A worktree deixa de estar registrada. Falha.
+A78	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`git worktree remove` corre sem `--force` e sem botão. A worktree deixa de estar registrada. Falha.
+A79	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`git worktree remove --force` corre sem botão. A worktree deixa de estar registrada. Falha.
+A80	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Quarentena é dada por sucesso deixando o diretório. Falha.
+A81	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Filho provado sai por rename que não é R8 nem R9. Falha.
+A82	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Filho provado sai por R8 ou R9. A worktree continua registrada.
+A83	R11	R11	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem identidade colapsada, a coluna de único é omitida. A palavra não colapsei não aparece. Falha.
+A84	R11	R11	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem identidade colapsada, a coluna mostra zero. Falha.
+A85	R11	R11	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem identidade colapsada, a coluna mostra traço. Falha.
+A86	R11	R11	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem identidade colapsada, a coluna mostra branco. Falha.
+A87	R11	R11	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem identidade colapsada, a coluna mostra um número. Falha.
+A88	R11	R11	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A coluna de único é somada enquanto o clone do APFS não se colapsa. Falha.
+A89	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Out é pintado sem a segunda leitura. Falha.
+A90	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Armar move o path para fora da origem antes de aplicar. A segunda leitura pinta Out. Falha.
+A91	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Pedido do agent é tratado como Ready. Falha.
+A92	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Pedido do agent é tratado como Armed. Falha.
+A93	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Pedido do agent cuja prova passou. A pessoa arma. O passo não fica Armed. Falha.
+A94	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Path com claimant cuja prova voltou vazia fica Ready. Falha.
+A95	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O rodapé publica uma soma de bytes. Falha.
+A96	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Waiting ou Queue é estado do passo. Falha.
+A97	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Prova passou, path sem claimant, não é pedido do agent, ainda não armado: o passo é Ready. Entre armar e aplicar é Armed, e o path continua na origem. A segunda leitura acha o objeto no destino e não na origem: o passo é Out.
+A98	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent arma. Falha.
+A99	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent aplica. Falha.
+A100	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent esvazia. Falha.
+A101	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent atesta. Falha.
+A102	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent aceita custo. Falha.
+A103	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent para. Falha.
+A104	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent suspende. Falha.
+A105	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent retoma. Falha.
+A106	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aplicar com token diferente do que o botão mostrou. Falha.
+A107	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Entra um membro e o token preso não anda. Armar ou aplicar segue. Falha.
+A108	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Muda a identidade de path e o token preso não anda. Armar ou aplicar segue. Falha.
+A109	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Marca sujo e o token preso não anda. Armar ou aplicar segue. Falha.
+A110	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Membro, identidade de path e sujo não mudaram. O token estável é o do botão. Aplicar recusa porque o token não andou. Falha.
+A111	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Dois botões saturados, ou botão saturado sem ato armado. Falha.
+A112	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um ato corre porque a tela abriu, ou porque a amostra atrasou. Falha.
+A113	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar um desconhecido. Falha.
+A114	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar uma falha de inspeção pintada como não lido. Falha.
+A115	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar um parcial alcança um membro que a marca já listou como parado. Falha.
+A116	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A consulta é armada com "1 entra · 2 fica" sem os ids. Falha.
+A117	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agent confirma a consulta. Falha.
+A118	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar a consulta confirma por pid da tabela de membros. Falha.
+A119	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parcial, pelo id do supervisor, para só quem a marca não listou como parado.
+A120	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Suspender é oferecido sem marca durável. Falha.
+A121	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Suspender é sucesso com um membro reivindicado ainda vivo. Falha.
+A122	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um parcial se retoma sozinho. Falha.
+A123	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Retomar com token diferente da marca. Falha.
+A124	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Retomar com token que não andou quando membro, identidade de path ou sujo mudou. Falha.
+A125	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A tela baixa o footprint porque suspendeu. Falha.
+A126	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A marca sobrevive ao restart do nosso processo. Depois desse restart, sucesso só se cada membro reivindicado parou. Senão é parcial. A tela mostra que o footprint não desceu. Retomar só quem a marca lista.
+A127	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar por cima de path que existe. Falha.
+A128	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar como efeito de aplicar. Falha.
+A129	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar com uma recusa na lista. Falha.
+A130	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A recusa é tirada da lista e o resto é esvaziado. Falha.
+A131	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar um mover de R9 pela lista de quarentena. Falha.
+A132	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restorable é marcado sem a segunda leitura de R12. Falha.
+A133	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Quarentena é rename no mesmo volume, com o path original gravado. Restaurar aparece só se esse path não existe, o registro existe, e a segunda leitura de R12 passou. Esvaziar é outro ato.
+A134	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Snapshot sem commit sai por atestar que aterrou, sem aceite de custo naquele objeto. Falha.
+A135	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Snapshot sem commit sai por atestar que regenera, sem aceite de custo naquele objeto. Falha.
+A136	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Atestar que aterrou cobre um arquivo. Falha.
+A137	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Atestar que regenera é usado no lugar de aceitar custo. Falha.
+A138	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Atestar que aterrou é usado no lugar de atestar que regenera. Falha.
+A139	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aceitar custo é usado no lugar da atestação, numa única cópia. Falha.
+A140	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O aceite de um objeto passa ao vizinho. Falha.
+A141	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Única cópia sai porque o teste inverso disse que aterrou. Falha.
+A142	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Já aterrou é inferido por ancestralidade, ou por squash-merge. Falha.
+A143	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Atestar que regenera cobre o irmão, sujo rastreado, em uso, ou alheio. Falha.
+A144	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa atesta a única cópia com a frase que cabe, naquele objeto. Esse objeto sai. O vizinho não sai. A pessoa aceita o custo do snapshot sem commit, na frase, naquele objeto. Esse objeto sai. O vizinho não sai.
+A145	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Kill aparece sem valor, limiar e hora. Falha.
+A146	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Kill gravado com valor, limiar e hora, e a árvore não mostra os três. Falha.
+A147	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A soma de residentes entra na coluna de footprint. Falha.
+A148	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A amostra do teto aparece sem dizer que a página compartilhada é contada por processo. Falha.
+A149	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Amostra do teto jogada fora vira célula. Falha.
+A150	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A tela não diz que o teto não vê caminho. Falha.
+A151	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O teto é estendido a caminho. Falha.
+A152	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Efeito é oferecido num objeto Docker. Falha.
+A153	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma sessão é selecionada e a aba troca. A string do dono muda. Falha.
+A154	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A aba troca e um dono vazio é preenchido. Falha.
+A155	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O agregado "46 locks" entra no plano como um objeto. Falha.
+A156	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma contagem de árvores entra no plano como um objeto. Falha.
+A157	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma soma de cache entra no plano como um objeto. Falha.
+A158	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma nota de modelo é escrita sobre processo, disco ou hipótese. Falha.
+A159	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Filtro que não casou diz que a máquina está vazia. Falha.
+A160	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A tela tem barra. Falha.
+A161	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	As abas não são as oito de R19, ou um nome é traduzido. Falha.
+A162	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A primeira amostra não chegou e a célula pinta vazio. A palavra não lido não aparece. Falha.
+A163	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A primeira amostra não chegou e a célula pinta zero. Falha.
+A164	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A primeira amostra não chegou e a célula pinta traço. Falha.
+A165	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A primeira amostra não chegou e a célula é omitida. Falha.
+A166	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick atrasa. A idade não sobe. Falha.
+A167	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick atrasa. O valor anterior some. Falha.
+A168	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick atrasa. O valor anterior vira zero. Falha.
+A169	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick atrasa. O valor anterior vira traço. Falha.
+A170	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick atrasa. O valor anterior vira não lido. Falha.
+A171	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick atrasa. A célula é omitida. Falha.
+A172	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Caminhada parcial é tratada como soma fechada. Falha.
+A173	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O intervalo é alargado em silêncio. Falha.
+A174	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um diretório da raiz não foi medido nem gravado como não lido, e a caminhada é conta fechada. Falha.
+A175	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`/tmp` inteiro é raiz. Falha.
+A176	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick corre na thread da interface. Falha.
+A177	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick varre a tabela inteira de processos para pintar. Falha.
+A178	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O caminho medido aparece, e a tela não diz que o teto não o vê. Falha.
+A179	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aplicar segue quando a identidade de arquivo, ou o que a prova disse, diverge do que foi armado, ainda que o token confira. Falha.
+A180	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aplicar, depois da divergência, tenta mesmo assim. Falha.
+A181	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A segunda leitura acha o objeto no destino e não na origem, e o passo não é Out. Falha.
+A182	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Unknown se tenta de novo sozinho. Falha.
+A183	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Resto que ficou é apagado para consertar sucesso. Falha.
+A184	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Recusa fica oculta, ou entra na soma. Falha.
+A185	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar segue com token diferente do que o confirmamento mostrou. Falha.
+A186	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Suspender segue com token diferente do que o confirmamento mostrou. Falha.
+A187	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar segue com token diferente do que o confirmamento mostrou. Falha.
+A188	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar segue com token diferente do que o confirmamento mostrou. Falha.
+A189	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Atestar segue com token diferente do que o confirmamento mostrou. Falha.
+A190	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aceitar custo segue com token diferente do que o confirmamento mostrou. Falha.
+A191	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Pedido do agent que a pessoa não armou é Held, Refused, Out ou Unknown. Falha.
+A192	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Pedido do agent que a pessoa não armou entra na soma. Falha.
+A193	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aplicar leva pedido do agent que a pessoa não armou. Falha.
+A194	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Pedido do agent cuja prova não passou. A pessoa arma. O passo fica Armed. Falha.
+A195	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar saindo. Falha.
+A196	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar zumbi. Falha.
+A197	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A consulta é confirmada por nome, sem prévia que nomeia quem entra e quem fica. Falha.
+A198	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Árvore suspensa por nós, id do supervisor, geração confere. Parar recusa. Falha.
+A199	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O nosso processo reinicia. A marca não sobreviveu. Suspender é oferecido. Falha.
+A200	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Suspender desconhecido. Falha.
+A201	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Suspender o supervisor. Falha.
+A202	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Retomar alcança um STOP que não gravamos. Falha.
+A203	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar um objeto já esvaziado. Falha.
+A204	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar sem o registro do path original. Falha.
+A205	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar sem a lista do que sai de vez na tela. Falha.
+A206	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar é sucesso e o path da quarentena ainda está lá. Falha.
+A207	R12 R20	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Temporário fora de raiz declarada nomeada aparece como ausente. Falha.
+A208	R12 R20	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Temporário fora de raiz declarada nomeada aparece como zero. Falha.
+A209	R12 R20	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Temporário fora de raiz declarada nomeada entra como passo. Falha.
+A210	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Método que rodou e falhou é marcado ocioso. Falha.
+A226	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Método que rodou e falhou entra em quarentena. Falha.
+A211	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Path que não casou é marcado ocioso. Falha.
+A227	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Path que não casou entra em quarentena. Falha.
+A212	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem enumeração de handle que rodou vazia, o objeto é ocioso ou entra em quarentena. Falha.
+A213	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar corre sem a pessoa, sem o id, ou sem o token que o confirmamento mostrou. Falha.
+A220	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Suspender corre sem a pessoa, sem o id, ou sem o token que o confirmamento mostrou. Falha.
+A221	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aplicar corre sem a pessoa, sem o id, ou sem o token que o confirmamento mostrou. Falha.
+A222	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Esvaziar corre sem a pessoa, sem o id, ou sem o token que o confirmamento mostrou. Falha.
+A223	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar corre sem a pessoa, sem o id, ou sem o token que o confirmamento mostrou. Falha.
+A224	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Atestar corre sem a pessoa, sem o id, ou sem o token que o confirmamento mostrou. Falha.
+A225	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aceitar custo corre sem a pessoa, sem o id, ou sem o token que o confirmamento mostrou. Falha.
+A214	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Registro morto é tratado como claimant. Falha.
+A215	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Flag do pai é tratada como claimant. Falha.
+A216	R9 R11	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Zero de mover é escrito na célula de único no lugar de não colapsei. Falha.
+A217	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Elo de store não medido de `node_modules` ou `.turbo` sai como conjunto fechado. Falha.
+A218	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Taxa sem janela não é não lida. Falha.
+A219	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Lista que falhou no meio é desenhada como máquina vazia. Falha.
+A228	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Árvore viva cujo env ou cwd gravado aponta o path não é claimant. Esse path se move. Falha.
+A229	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Holder vivo da prova de ocioso não é claimant. Esse path se move. Falha.
+A230	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Mais de um claimant não é compartilhado. Falha.
+A231	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Path referido de fora do diretório que se removeria não é compartilhado. Falha.
+A232	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um claimant só é compartilhado. Falha.
+A233	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Única cópia sai sem atestação nenhuma naquele objeto. Falha.
+A234	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Snapshot sem commit sai sem aceite de custo na frase, naquele objeto. Falha.
+A235	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aceitar custo num objeto em uso o deixa sair. Falha.
+A236	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Depois do efeito, a segunda leitura não acha o objeto no destino e ausente na origem. O passo não é Unknown. Falha.
+A237	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O descarte que a ferramenta de task já faz é alargado a um filho que ela não criou. Falha.
+A238	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O descarte que a ferramenta de task já faz é alargado a uma sessão filha que já nasceu. Falha.
+A239	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Worktree em uso perde o filho. Falha.
+A240	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A célula de efeito não diz que a worktree fica no git. Falha.
+A241	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Cópia entre volumes é quarentena. Falha.
+A242	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar uma cópia entre volumes é o restaurar da quarentena. Falha.
+A243	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de parar não mostra a geração que prendeu. Falha.
+A244	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de suspender não mostra a geração que prendeu. Falha.
+A245	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de retomar não mostra a geração que prendeu. Falha.
+A246	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de restaurar não mostra a geração que prendeu. Falha.
+A247	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de esvaziar não mostra a geração que prendeu. Falha.
+A248	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de parar não nomeia os objetos. Falha.
+A249	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de suspender não nomeia os objetos. Falha.
+A250	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de retomar não nomeia os objetos. Falha.
+A251	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de restaurar não nomeia os objetos. Falha.
+A252	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de esvaziar não nomeia os objetos. Falha.
+A253	R3 R18	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Descendente que saiu da sessão entra na amostra do teto. Falha.
+A254	R3 R18	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Descendente que saiu da sessão entra no kill do teto. Falha.
+A255	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um verbo que não é manter, quarentena ou mover entra no plano. Falha.
+A256	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A célula de pressão de memória da máquina mostra número. A palavra não lido não aparece. Falha.
+A257	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A célula de pressão de memória da máquina mostra verde. Falha.
+A258	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A célula de pressão de memória da máquina nomeia um pid. Falha.
+A259	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A primeira linha nomeia um culpado a partir da pressão. Falha.
+A260	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	cwd não rodou. O path não tem claimant e não é pedido do agent. O passo é Ready. Falha.
+A261	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`git -C` não rodou. O path não tem claimant e não é pedido do agent. O passo é Ready. Falha.
+A262	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Arquivo aberto não rodou. O path não tem claimant e não é pedido do agent. O passo é Ready. Falha.
+A263	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Lock com PID vivo não rodou. O path não tem claimant e não é pedido do agent. O passo é Ready. Falha.
+A264	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	cwd não rodou. A pessoa arma. O passo fica Armed. Falha.
+A265	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`git -C` não rodou. A pessoa arma. O passo fica Armed. Falha.
+A266	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Arquivo aberto não rodou. A pessoa arma. O passo fica Armed. Falha.
+A267	R7 R12	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Lock com PID vivo não rodou. A pessoa arma. O passo fica Armed. Falha.
+A268	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa arma um plano vazio. O passo fica Armed. Falha.
+A269	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa arma sem identidade de arquivo capturada. O passo fica Armed. Falha.
+A270	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa arma sem identidade de arquivo capturada. Aplicar segue. Falha.
+A271	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O que está armado é parar. O único botão saturado é aplicar. Falha.
+A272	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O que está armado é aplicar. O único botão saturado é parar. Falha.
+A273	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A sessão gravada morreu e o processo vive. A flag não é essa, ou o nome do dono é substituído. Falha.
+A274	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Shutdown foi pedido e ignorado. A flag não é essa. Falha.
+A275	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O pai existe e o agent que precisava dele já foi. A flag não é essa. Falha.
+A276	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A flag da sessão morta aparece quando a sessão gravada vive. Falha.
+A277	R7 R19	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Nove filhos passaram a prova e um não. O agregado herda a prova. Falha.
+A278	R7 R19	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Nove filhos passaram a prova e um não. O agregado fica ocioso. Falha.
+A279	R7 R19	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Nove filhos passaram a prova e um não. O agregado fica Ready. Falha.
+A280	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	cwd não rodou. O objeto entra em quarentena. Falha.
+A281	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`git -C` não rodou. O objeto entra em quarentena. Falha.
+A282	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Arquivo aberto não rodou. O objeto entra em quarentena. Falha.
+A283	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	cwd não rodou. A célula de prova não lista o método e não é a palavra não provado. Falha.
+A284	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`git -C` não rodou. A célula de prova não lista o método e não é a palavra não provado. Falha.
+A285	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Arquivo aberto não rodou. A célula de prova não lista o método e não é a palavra não provado. Falha.
+A286	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	GPU é atribuída a um pid. Falha.
+A287	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	VRAM é atribuída a um pid. Falha.
+A288	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A primeira linha exige GPU sem leitura. Falha.
+A289	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	GPU não foi lida. A célula não é a palavra não lido. Falha.
+A290	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	VRAM não foi lida. A célula não é a palavra não lido. Falha.
+A291	R9	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um path com claimant entra em quarentena. Falha.
+A292	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`node_modules` sem prova de cópia, e que não é elo de store, sai como conjunto fechado. Falha.
+A293	R8	R8	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`.turbo` sem prova de cópia, e que não é elo de store, sai como conjunto fechado. Falha.
+A294	R7	R7	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Enumeração de handle rodou vazia. Lock com PID vivo não rodou. O objeto entra em quarentena. Falha.
+A295	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar é oferecido por nome de processo, não pelo id do supervisor. Falha.
+A296	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar corre por nome de processo, não pelo id do supervisor. Falha.
+A297	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A soma de residentes do teto emite hipótese. Falha.
+A298	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Purgeable aparece como livre. Falha.
+A299	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Reiniciar aparece como reclaim de worktree, objeto solto, SQLite ou state alheio. Falha.
+A300	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A lista de quarentena omite o dono. Falha.
+A301	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A lista de quarentena omite o path original. Falha.
+A302	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A lista de quarentena omite Restorable ou Occupied. Falha.
+A303	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O rodapé não conta Ready, Armed, Held, Refused, Out e Unknown. Falha.
+A304	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O rodapé conta esses seis estados com função diferente da aba. Falha.
+A305	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Residência aparece com um número de frequência que não veio de clock lido. Falha.
+A306	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem clock lido, a célula mostra percentual em vez de "frequência não lida". Falha.
+A307	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A taxa tem janela e bytes por caminho, e a tela diz que enche em N horas sem dizer que é uma escrita só. Falha.
+A308	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Residência alta com frequência baixa é pintada como pressão. Falha.
+A309	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Residência modesta com a máquina travada é pintada como ociosidade. Falha.
+A310	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A prévia nomeou quem entra e quem fica. O confirmamento não nomeia esses ids, e parar a consulta segue. Falha.
+A311	R14	R14	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento nomeia os ids da prévia. O ato alcança quem a prévia listou como fica. Falha.
+A312	R9 R16	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um mover de R9 aparece na lista de quarentena. Falha.
+A313	R9 R16	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar pela lista de quarentena devolve o mover. Falha.
+A314	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A árvore selecionada tem footprint, e a alcançabilidade não foi lida. A hipótese não escreve não lido para essa alcançabilidade. Falha.
+A315	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Alcançabilidade não lida escolhe a classe da hipótese. Falha.
+A316	R20	R20	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O tick varre a máquina inteira para pintar um frame. Falha.
+A317	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Visto mostra o que se observou, e a célula não é rotulada como observação. Falha.
+A318	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem a subida do footprint depois do trabalho gravado, `leaks == 0` escolhe a classe da hipótese. Falha.
+A319	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Jetsam ou OOM aparece como previsão. Falha.
+A320	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Jetsam ou OOM aparece como evento que não foi lido. Falha.
+A321	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Jetsam ou OOM aparece sem o quando. Falha.
+A322	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Processo alheio é agrupado por bundle path. Falha.
+A323	R4	R4	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Bundle path torna visto nosso. Falha.
+A324	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O footprint subiu depois que o trabalho gravado acabou e não desceu nas amostras seguintes. A hipótese da árvore selecionada não é compatível com leak lógico. Falha.
+A325	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Footprint é chamado de memória. Falha.
+A326	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O valor de footprint aparece como RSS. Falha.
+A327	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Um RSS que não é a soma de residentes entra na coluna de footprint. Falha.
+A328	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	PSI é atribuído a um pid. Falha.
+A329	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A tela lê o arquivo de PSI do Linux no desktop. Falha.
+A330	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`statfs` aparece como saúde. Falha.
+A331	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`statfs` aparece como livre. Falha.
+A332	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	`statfs` aparece como importante. Falha.
+A333	R9 R12	R9	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Path com claimant não é Held. Falha.
+A334	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Sem marca que sobrevive ao restart do nosso processo, um STOP é enviado. O processo fica preso. Falha.
+A335	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar é sucesso e o objeto não está no path original. Falha.
+A336	R16	R16	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Restaurar é sucesso e o objeto ainda está na quarentena. Falha.
+A337	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Aplicar segue quando o path diverge do que foi armado, ainda que o token e a identidade de arquivo confiram. Falha.
+A338	R15	R15	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Suspender tem sucesso. A marca não nomeia quem parou. Falha.
+A339	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O ato armado é esvaziar. O botão saturado nomeia outro ato. Falha.
+A340	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O ato armado é restaurar. O botão saturado nomeia outro ato. Falha.
+A341	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O ato armado é suspender. O botão saturado nomeia outro ato. Falha.
+A342	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O ato armado é retomar. O botão saturado nomeia outro ato. Falha.
+A343	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	RSS somado aparece como memória, fora da coluna de footprint. Falha.
+A344	R3	R3	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A soma da árvore conta a página compartilhada por membro, em vez do footprint desduplicado dos membros gravados. Falha.
+A345	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Lógico não foi lido. A célula não é não lido. Falha.
+A346	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Idade não foi lida. A célula não é não lido. Falha.
+A347	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Lógico não lido some da linha. Falha.
+A348	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Idade não lida some da linha. Falha.
+A349	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento prende o id X e o token. Parar corre no id Y com o mesmo token. Falha.
+A350	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento prende o id X e o token. Suspender corre no id Y com o mesmo token. Falha.
+A351	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento prende o id X e o token. Aplicar corre no id Y com o mesmo token. Falha.
+A352	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento prende o id X e o token. Restaurar corre no id Y com o mesmo token. Falha.
+A353	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento prende o id X e o token. Esvaziar corre no id Y com o mesmo token. Falha.
+A354	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa atesta a única cópia com uma frase que não é a dos commits. O objeto sai. Falha.
+A355	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa atesta um diretório com uma frase que não é a de regenerar. O objeto sai. Falha.
+A356	R13 R14	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Parar a consulta segue com token diferente do que o confirmamento mostrou. Falha.
+A357	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa arma sem o path capturado. O passo fica Armed. Falha.
+A358	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa arma sem o que a prova disse. O passo fica Armed. Falha.
+A359	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa arma sem o path capturado. Aplicar segue. Falha.
+A360	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	A pessoa arma sem o que a prova disse. Aplicar segue. Falha.
+A361	R10	R10	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O descarte que a ferramenta de task já faz, no filho que ela criou e cuja sessão nunca nasceu, é a implementação da quarentena. Falha.
+A362	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Retomar corre sem a pessoa, por uma porta que não é o agent. Falha.
+A363	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de aplicar não mostra a geração que prendeu. Falha.
+A364	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de atestar não mostra a geração que prendeu. Falha.
+A365	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de aceitar custo não mostra a geração que prendeu. Falha.
+A366	R13 R14	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	O confirmamento de parar a consulta não mostra a geração que prendeu. Falha.
+A367	R5	R5	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	Uma árvore em estado desconhecido não está na tabela. Falha.
+S01	R12 R13	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	membership changes, path identity changes and dirty-state changes each write a strictly newer ledger generation. Reused or decreasing tokens fail. A PID is not the generation.
+S02	R12 R19	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	switch EN and pt-BR; Ready, Armed, Held, Refused, Out and Unknown retain their exact English spelling in rows, confirmation and footer.
+S03	R12 R19	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	aggregates cannot receive requests or expose action rows, even if their children all pass proofs.
+S04	R12	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	a refused step keeps its request visible beside the refusal, outside the accepted counts/bytes.
+S05	R13	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	arming through every exposed route requires person authority and the exact object ID and generation presented. Agent or other unauthorized callers, missing identity or stale tokens refuse without effects.
+S06	R13 R15	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	a valid suspension mark cannot authorize resume when confirmation binds another object ID or generation. Reusing X's token on Y refuses.
+S07	R13 R17	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	confirming attestation for X cannot attest Y with the same token. Confirmation ID, generation and statement type must all match.
+S08	R13 R17	R13	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	confirming cost acceptance for X cannot accept Y's cost with the same token. Confirmation ID, generation and cost statement must all match.
+S09	R17	R17	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	cost acceptance for a foreign object cannot authorize removal, even with the matching phrase and no live claimant.
+S10	R18	R18	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	displaying the ceiling's sampled value requires the metric name “sum of residents” and disclosure that shared pages count once per process. Disclosure alone with another metric name fails.
+S11	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	there is one chapter; tabs and top counts remain visible; changing tabs replaces the category panel rather than stacking categories.
+S12	R19	R19	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	competitor copy and generated interface explanations fail. Class labels are measured class words and action labels are verbs; no model-written note is requested or rendered.
+S13	R1	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	a reader executable name cannot replace the named metric/source semantics; the UI identifies the reading, its value and age, or explicitly unread.
+S14	R1 DESIGN	R1	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	per-PID stall percentages are never published. ANE/media counters never produce invented energy readings.
+S15	R6	R6	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	the selected-tree hypothesis has exactly two allowed emissions: insufficient and compatible with logical leak. Any third class fails, even if it is not one of the explicitly forbidden examples.
+S16	R12 R19	R12	not-yet-decomposed	not-yet-assigned	not-yet-mapped	unverified	a Docker object cannot enter IN/OUT as a plan step, even when the interface exposes no effect button.
+W01	R1 R20	R1	WP-W1	W1-B	proposed:packages/core/test/activity-worktree.test.ts::W01	unverified	a new registered row has absent attempt/logical readings. Cached snapshots perform no filesystem reads; only an explicit read measures the row, using existing metadata budgets and gap semantics.
+W02	R1 R11 R20	R1	WP-W1	W1-B	proposed:packages/core/test/activity-worktree.test.ts::W02	unverified	an actual nested fixture with a hardlink returns logical path bytes, source and timestamp; a subsequent symlink/missing-path/budget partial attempt preserves the last complete bytes and timestamp. No unique or reclaimable total is inferred.
+W03	R2 R10 R20	R2	WP-W1	W1-B	proposed:packages/core/test/activity-worktree.test.ts::W03	unverified	refreshing registration preserves readings for unchanged project+directory identity, removes absent registrations, isolates identical directory strings across projects and publishes copies. Deleted/replaced registrations do not inherit another row's reading; no registration or fixture content is mutated.
+W04	R1 R20	R1	WP-W1	W1-B	proposed:packages/core/test/activity-worktree.test.ts::W04	unverified	same-row concurrent reads coalesce, different rows are independent, unknown/removed IDs refuse, and an in-flight result from a retired registration cannot resurrect it or replace a new row. Test re-registration and server-lifetime reset explicitly.
+W05	R10 R19	R10	WP-W2	W2-B	proposed:packages/server/test/activity-http.test.ts::W05	unverified	authenticated inventory returns only ProjectDirectories entries with strategy git_worktree; root/main/copy and unregistered paths cannot become measurement targets. The server resolves paths from its registry, never a submitted path.
+W06	R1 R20	R1	WP-W2	W2-B	proposed:packages/server/test/activity-http.test.ts::W06	unverified	both inventory/read endpoints require authentication, malformed or unknown IDs refuse, and GET never starts a filesystem walk. Each manual read rechecks registration; removal or strategy change refuses before measuring.
+W07	R1 R2 R11	R1	WP-W2	W2-B	proposed:packages/server/test/activity-http.test.ts::W07	unverified	an actual HTTP request measures an owned fixture through the real registry, collector and schema codec; generated Client decodes the same shape with omission-based optional fields. No provenance means blank owner; unique and use-proof claims remain absent.
+W08	R10 R20	R10	WP-W2	W2-B	proposed:packages/server/test/activity-http.test.ts::W08	unverified	failed registry lookup returns an explicit HTTP failure; it cannot publish an empty successful inventory. No worktree create/delete/remove, cleanup, process inspection or process action occurs. Client retention after that failure is verified by W12.
+W09	R1 R19 R20	R1	WP-W3	W3-B	proposed:packages/app-shell/test-browser/activity-worktree.test.ts::W09	unverified	mounting/refreshing Worktrees reads inventory only; walking requires that row's button. Changing category/server aborts obsolete requests. A late response cannot populate the next category or server lifetime.
+W10	R1 R11 R20	R1	WP-W3	W3-B	proposed:packages/app-shell/test-browser/activity-worktree.test.ts::W10	unverified	unread, complete and partial-retry rows render logical reading/age correctly. Old complete value keeps its original increasing age; the latest attempt shows its own gaps and age. Server-clock offset cannot corrupt reading age.
+W11	R2 R19	R2	WP-W3	W3-B	proposed:packages/app-shell/test-browser/activity-worktree.test.ts::W11	unverified	selection, sorting, filtering, refresh and category changes never invent owner. A filter miss differs from an empty successful registry; unique stays “não colapsei” and use proof stays unproved.
+W12	R19	R19	WP-W3	W3-B	proposed:packages/app-shell/test-browser/activity-worktree.test.ts::W12	unverified	EN/pt-BR formatter tests and isolated actual-HTTP browser inspection confirm substituted values, English tab names, keyboard operation and narrow readable layout. Failures show an inline error and console.error; prior values survive. This is not a packaged-Electron or installed-app acceptance claim.
