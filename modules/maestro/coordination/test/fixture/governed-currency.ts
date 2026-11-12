@@ -2,7 +2,7 @@ import { mkdtemp, realpath, mkdir, writeFile, appendFile, rm } from "node:fs/pro
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { eq } from "drizzle-orm"
-import { DateTime, Effect, Layer, Option, Schema } from "effect"
+import { DateTime, Deferred, Effect, Layer, Option, Schema } from "effect"
 import { publishTerritoryCatalog } from "@orchestra/atlas-boundary"
 import { materializeStaticOwnSnapshot, parseOwnSnapshot } from "@orchestra/atlas-boundary/materialize"
 import { AgentV2 } from "@orchestra/core/agent"
@@ -248,6 +248,26 @@ const approval = Effect.fn("CurrencyFixture.approval")(function* (directory: str
     current: () => GovernanceEvidenceV2.current(cli, directory),
     isCurrent: () => GovernanceEvidenceV2.contextIsCurrent(services, context),
     consume: (id: string) => GovernanceReservationV2.consume(services, id),
+    publicationCollision: () => Effect.gen(function* () {
+      const bothArrived = yield* Deferred.make<void>()
+      const release = yield* Deferred.make<void>()
+      const arrivals = { count: 0 }
+      const publish: EventV2.Interface["publish"] = (definition, data, options) => {
+        if (definition.type !== MaestroEvent.Approval.ConsumedV2.type) return events.publish(definition, data, options)
+        return Effect.gen(function* () {
+          arrivals.count++
+          if (arrivals.count === 2) yield* Deferred.succeed(bothArrived, undefined)
+          yield* Deferred.await(release)
+          return yield* events.publish(definition, data, options)
+        })
+      }
+      return {
+        arrivals: () => arrivals.count,
+        bothArrived: Deferred.await(bothArrived),
+        release: Deferred.succeed(release, undefined),
+        consume: (id: string) => GovernanceReservationV2.consume({ ...services, events: { ...events, publish } }, id),
+      }
+    }),
     beforeTurn: (id: SessionSchema.ID) => store.get(id).pipe(Effect.flatMap((session) =>
       session ? governance.beforeTurn(session) : Effect.die("reserved child missing"),
     )),

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { rm } from "node:fs/promises"
 import path from "node:path"
 import { eq } from "drizzle-orm"
-import { Effect, Exit, Cause, Schema } from "effect"
+import { Effect, Exit, Cause, Fiber, Schema } from "effect"
 import { ToolFailure } from "@orchestra/llm"
 import { EventV2 } from "@orchestra/core/event"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
@@ -201,7 +201,17 @@ test("currency control: concurrent exact first consumes publish one immutable re
   return withApproval((fixture) => Effect.gen(function* () {
     const reserved = yield* fixture.reserve()
     yield* fixture.child(reserved.childSessionID)
-    yield* Effect.all([fixture.consume(reserved.childSessionID), fixture.consume(reserved.childSessionID)], { concurrency: 2 })
+    const collision = yield* fixture.publicationCollision()
+    yield* Effect.gen(function* () {
+      const completed = yield* Effect.forkChild(Effect.all([
+        collision.consume(reserved.childSessionID), collision.consume(reserved.childSessionID),
+      ], { concurrency: 2 }))
+      yield* collision.bothArrived.pipe(Effect.timeout("5 seconds"))
+      expect(collision.arrivals()).toBe(2)
+      expect((yield* counts(fixture)).consumed).toHaveLength(0)
+      yield* collision.release
+      yield* Fiber.join(completed)
+    }).pipe(Effect.ensuring(collision.release))
     const before = yield* counts(fixture)
     expect(before.reservations).toHaveLength(1)
     expect(before.consumed).toHaveLength(1)
