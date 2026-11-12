@@ -102,7 +102,8 @@ export function make() {
         if (!state.sqlFinalizer || Exit.isSuccess(exit)) return Effect.void
         state.sqlFinalizer = false
         // Genuine SQLite refusal in a finalizer; the real adapter must still roll back the original transaction.
-        return real.db.run("INSERT INTO h8_missing_storage_table VALUES (1)").pipe(
+        return real.db.$client.unsafe("INSERT INTO h8_missing_storage_table VALUES (1)").withoutTransform.pipe(
+          Effect.asVoid,
           Effect.tapError((error) => Effect.sync(() => { state.sqlFailure = error })),
           Effect.catchCause((cause) => Effect.failCause(Cause.fromReasons(cause.reasons.map((reason) =>
             reason.annotate(new Map([["h8-storage", "actual-sql-finalizer"]])))))),
@@ -175,8 +176,10 @@ export function make() {
       },
     })
     const native = ToolRegistry.nativeNode
+    if (!Layer.isLayer(native.implementation)) return yield* Effect.die("Expected the concrete native registry Layer")
     // Actual native registry/profile loader/hook evaluation, with a barrier AFTER the real prompt hook returns.
-    const registry = { ...native, implementation: native.implementation.pipe(
+    // The native descriptor exposes an erased implementation type; its real Layer exports this registry service.
+    const registry = { ...native, implementation: (native.implementation as Layer.Layer<ToolRegistry.Service>).pipe(
       Layer.provide(Layer.effect(ToolSafety.RuntimeProfileLoader, Effect.gen(function* () {
         const fs = yield* FSUtil.Service
         const global = yield* Global.Service
