@@ -6,6 +6,7 @@ import type { Message, Part, Session } from "@/v2-wire"
 import type { ServerApi } from "@/utils/server"
 import { sessionMessagePartID } from "@/utils/session-message"
 import { createServerSession, type ServerSession } from "./server-session"
+import { resyncAfterReconnect } from "./server-resync"
 
 type SessionApi = Pick<ServerApi["session"], "get" | "message">
 type MessageApi = ServerApi["message"]
@@ -148,6 +149,30 @@ function setup(sessions: Record<string, Session>) {
 }
 
 describe("server session", () => {
+  test("reconnect force reads a new history snapshot after a pre-gap read settles", async () => {
+    const old = deferredPage()
+    const fresh = page([v2User("message-1"), v2Assistant("message-2", 2, "completed during gap")])
+    const client = messageClient(old.promise, fresh)
+    const store = create(client)
+    store.pin("ses_child")
+    const beforeGap = store.sync("ses_child")
+    await client.requested(1)
+    expect(client.requests).toHaveLength(1)
+    expect(store.history.loading("ses_child")).toBe(true)
+
+    const reconnect = resyncAfterReconnect(store, {})
+    // The snapshot was captured before disconnect and contains none of the reply completed during the gap.
+    old.resolve(page([v2User("message-1")]))
+    await Promise.all([beforeGap, reconnect])
+
+    expect(client.requests).toHaveLength(2)
+    expect(ids(store)).toEqual(["message-1", "message-2"])
+    expect(store.data.session_message.ses_child?.at(-1)).toMatchObject({
+      id: "message-2", content: [{ type: "text", text: "completed during gap" }],
+    })
+    expect(store.history.loading("ses_child")).toBe(false)
+  })
+
   test("projects V2 session events into current and wire message state", () => {
     const ctx = setup({ ses_child: session("ses_child") })
     ctx.store.remember(session("ses_child"))

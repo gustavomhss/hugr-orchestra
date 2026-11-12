@@ -4,12 +4,114 @@ import type { GlobalEvent, SessionMessage } from "../../../../src/types"
 import { tmpdir } from "../../../fixture/fixture"
 import { toolOutput, toolTitle } from "../../../../src/util/session-message"
 import { json, mount, wait } from "./sync-fixture"
-import { v2Session } from "../../../fixture/tui-sdk"
+import { createFetch, v2Session } from "../../../fixture/tui-sdk"
 
 const sessionID = "ses_hydration_race"
 const assistantID = "msg_hydration_assistant"
 const directory = "/tmp/orchestra/apps/cli"
 const model = { id: "model", providerID: "test" }
+
+test("a mounted fully synced Session reloads history and status after a real SSE reconnect", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const state = { afterGap: false, historyReads: 0, activeReads: 0 }
+  const historyAgain = Promise.withResolvers<void>()
+  const activeAgain = Promise.withResolvers<void>()
+  const streams: ReadableStreamDefaultController<Uint8Array>[] = []
+  const unexpected: string[] = []
+  const routes = createFetch((url) => {
+    if (url.pathname === `/api/session/${sessionID}`)
+      return json({ data: v2Session({ id: sessionID, directory }) })
+    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
+    if (url.pathname === `/api/session/${sessionID}/message`) {
+      state.historyReads++
+      if (state.afterGap) historyAgain.resolve()
+      return json({ data: [
+        {
+          id: assistantID, type: "assistant", agent: "maestro", model,
+          content: [{ type: "text", id: "txt_gap", text: state.afterGap ? "completed while disconnected" : "before gap" }],
+          time: { created: 2, ...(state.afterGap ? { completed: 5 } : {}) },
+        },
+        { id: "msg_gap_user", type: "user", text: "hello", time: { created: 1 } },
+      ], cursor: {} })
+    }
+    if (url.pathname === "/api/session/active") {
+      state.activeReads++
+      if (state.afterGap) activeAgain.resolve()
+      return json({ data: state.afterGap ? {} : { [sessionID]: { type: "running" } } })
+    }
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request")
+      return json({ data: [] })
+    if (url.pathname === "/api/mcp/resource")
+      return json({ location: { directory }, data: { resources: [] } })
+    return undefined
+  })
+  const server = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    fetch(request) {
+      if (new URL(request.url).pathname === "/api/event")
+        return new Response(new ReadableStream<Uint8Array>({
+          start(controller) {
+            streams.push(controller)
+            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+              id: `evt_connected_${streams.length}`, type: "server.connected", data: {},
+            })}\n\n`))
+          },
+        }), { headers: { "content-type": "text/event-stream" } })
+      return routes.fetch(request).catch((error) => {
+        unexpected.push(new URL(request.url).pathname)
+        throw error
+      })
+    },
+  })
+  const mounted = await mount(undefined, tmp.path, undefined, { url: server.url.origin }).catch((error) => {
+    server.stop(true)
+    throw error
+  })
+  const greetings = () => mounted.received.filter((event) => event.payload.type === "server.connected")
+
+  try {
+    await wait(() => greetings().length === 1)
+    await mounted.sync.session.sync(sessionID)
+    expect(mounted.mounts.count).toBe(1)
+    expect(streams).toHaveLength(1)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1"])
+    expect(state.historyReads).toBe(1)
+    expect(state.activeReads).toBe(1)
+    expect(content(mounted.sync)?.[0]).toMatchObject({ type: "text", text: "before gap" })
+    expect(mounted.sync.session.status(sessionID)).toBe("working")
+    expect(mounted.sync.data.session_status[sessionID]).toEqual({ type: "busy" })
+    expect(unexpected).toEqual([])
+
+    streams[0].close()
+    await wait(() => mounted.sdk.offline())
+    // The server's reply completes while the stream is disconnected: no corresponding event is sent to the TUI.
+    state.afterGap = true
+    await wait(() => greetings().length === 2, 5_000)
+    expect(streams).toHaveLength(2)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1", "evt_connected_2"])
+    expect(mounted.sdk.offline()).toBe(false)
+    expect(mounted.mounts.count).toBe(1)
+    expect(unexpected).toEqual([])
+
+    // Bound only the observation of the required reads; the disconnect/reconnect order above uses observable state.
+    const reloaded = await Promise.race([
+      Promise.all([historyAgain.promise, activeAgain.promise]).then(() => true),
+      Bun.sleep(3_000).then(() => false),
+    ])
+    expect({ reloaded, historyReads: state.historyReads > 1, activeReads: state.activeReads > 1 }).toEqual({
+      reloaded: true, historyReads: true, activeReads: true,
+    })
+    await wait(() => mounted.sync.session.status(sessionID) === "idle")
+    expect(content(mounted.sync)?.[0]).toMatchObject({ type: "text", text: "completed while disconnected" })
+    expect(mounted.sync.data.session_status[sessionID]?.type ?? "idle").toBe("idle")
+    expect(mounted.mounts.count).toBe(1)
+  } finally {
+    mounted.app.renderer.destroy()
+    server.stop(true)
+  }
+}, 15_000)
 
 function content(sync: { data: { message: Record<string, SessionMessage[]> } }) {
   const message = sync.data.message[sessionID]?.find((item) => item.id === assistantID)
