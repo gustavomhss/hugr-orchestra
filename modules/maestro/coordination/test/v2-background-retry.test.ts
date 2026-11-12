@@ -6,6 +6,11 @@ import { Catalog } from "@orchestra/core/catalog"
 import { Database } from "@orchestra/core/database/database"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { EventV2 } from "@orchestra/core/event"
+import { Location } from "@orchestra/core/location"
+import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import type { LocationServices } from "@orchestra/core/location-services"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { ProjectV2 } from "@orchestra/core/project"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -19,7 +24,7 @@ import { SystemContext } from "@orchestra/core/system-context"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
-import { Context, DateTime, Deferred, Effect, Layer, Schedule, Stream } from "effect"
+import { Context, DateTime, Deferred, Effect, Layer, LayerMap, Schedule, Stream } from "effect"
 import { eq } from "drizzle-orm"
 import { Harness, fragmentFixture } from "../../../../packages/core/test/session-runner-harness"
 import { settleTool } from "../../../../packages/core/test/lib/tool"
@@ -59,14 +64,29 @@ const governance = makeLocationNode({ service: TaskGovernance.Service, deps: [st
 })
 const fixture = Harness.make({
   client: Layer.succeed(LLMClient.Service, LLMClient.Service.of({
-    prepare: () => Effect.die("unused"), generate: () => Effect.die("unused"),
+    prepare: () => Effect.die(new Error("Unexpected LLM prepare; fixture streams provider turns")),
+    generate: () => Effect.die(new Error("Unexpected LLM generate; fixture streams provider turns")),
     stream: () => Stream.fromIterable(fragmentFixture("text", "answer", ["child result"]).completeEvents),
   })),
   models: SessionRunnerModel.layerWith(() => Effect.succeed(Model.make({ id: "cheap", provider: "fake", route }))),
   echo: Layer.effectDiscard(ToolRegistry.Service.use((registry) => registry.register({}))),
   systemContext: Harness.systemContextLayer,
   skillGuidance: Layer.mock(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) }),
-  nodes: [TaskTool.node, Catalog.node, stateNode], replacements: [[TaskGovernance.node, governance]],
+  nodes: [TaskTool.node, Catalog.node, stateNode],
+  replacements: [
+    // Task invokes assert(), so replace the runner harness's fail-closed permission stub with its real node.
+    [PermissionV2.node, PermissionV2.node],
+    [TaskGovernance.node, governance],
+    [ProjectV2.node, Layer.succeed(ProjectV2.Service, ProjectV2.Service.of({
+      resolve: (directory) => Effect.succeed({ id: ProjectV2.ID.global, directory }),
+      list: () => Effect.succeed([]),
+      directories: () => Effect.die("Unexpected directories"),
+      commit: () => Effect.die("Unexpected project commit"),
+    }))],
+    [LocationServiceMap.node, Layer.effect(LocationServiceMap.Service,
+      LayerMap.make((_ref: Location.Ref) =>
+        Layer.effectContext<LocationServices, never, never>(Effect.die("Unexpected hook Location acquisition"))))],
+  ],
 })
 
 fixture.live("completed Task exact retry reconciles and retires without a second child provider turn", () =>
