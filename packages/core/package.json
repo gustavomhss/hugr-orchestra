@@ -273,6 +273,8 @@
     "./policy": "./src/policy.ts",
     "./process": "./src/process.ts",
     "./test/fixture/omni-expect": "./test/fixture/omni-expect.ts",
+    "./test/fixture/git": "./test/fixture/git.ts",
+    "./test/lib/sandbox-host": "./test/lib/sandbox-host.ts",
     "./test/session-runner-harness": "./test/session-runner-harness.ts",
     "./test/lib/tool": "./test/lib/tool.ts",
     "./test/lib/effect": "./test/lib/effect.ts",
