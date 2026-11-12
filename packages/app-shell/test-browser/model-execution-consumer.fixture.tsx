@@ -192,17 +192,18 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
   const sdk = actual?.directory ?? { ...sdkFor(calls.directory, server), api: server.api, orchestra: calls.orchestra, url: calls.url }
   const [metadata, setMetadata] = createStore({ agent: mixedEngineAgents("orchestra"), config: {} })
   const sync = { data: metadata }
+  const providers = { all: () => view.catalog.all, connected: () => view.catalog.connected.flatMap((id) => view.catalog.all.get(id) ?? []),
+    default: () => view.catalog.default, defaultModel: () => view.catalog.defaultModel }
   return createRoot((dispose) => {
     const local = localModule.createLocal({
       params: { get id() { return view.sessionID } },
       sdk: () => sdk,
       sync: () => sync,
       serverSDK: () => server,
-      providers: { all: () => view.catalog.all, connected: () => view.catalog.connected.flatMap((id) => view.catalog.all.get(id) ?? []),
-        default: () => view.catalog.default, defaultModel: () => view.catalog.defaultModel },
+      providers,
       models, saved, setSaved, savedReady: () => true,
     } as Parameters<typeof localModule.createLocal>[0])
-    return { local, dispose, setView, saved, setSaved, models, sdk, server, sync, setMetadata, calls,
+    return { local, dispose, setView, saved, setSaved, models, sdk, server, sync, setMetadata, providers, calls,
       removeModel() {
         const provider = view.catalog.all.get(ref.providerID)
         if (!provider) throw new Error("Missing catalog provider control")
@@ -295,14 +296,7 @@ const draftHooks = {
   sync: { useSync: () => { const sync = draftBoundary.current!.source.sync; return () => sync } },
   tabs: { useTabs: () => ({ store: [] }) },
   router: { useSearchParams: () => [{ draftId: "draft-1" }] },
-  providers: { useProviders: () => {
-    const source = draftBoundary.current!.source
-    return {
-      all: () => new Map(source.local.model.list().map((item) => [item.provider.id, item.provider])),
-      connected: () => [...new Map(source.local.model.list().map((item) => [item.provider.id, item.provider])).values()],
-      default: () => ({ [ref.providerID]: ref.id }), defaultModel: () => ({ providerID: ref.providerID, modelID: ref.id }),
-    }
-  } },
+  providers: { useProviders: () => draftBoundary.current!.source.providers },
 }
 Bun.plugin({ name: "canonical-model-consumer-draft", setup(build) {
   build.onResolve({ filter: /^consumer-draft:/ }, (args) => ({ path: args.path.slice("consumer-draft:".length), namespace: "consumer-draft" }))
