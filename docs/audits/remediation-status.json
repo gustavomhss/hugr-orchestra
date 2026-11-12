@@ -640,9 +640,33 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
           "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
           "result": "Linux six cases reach valid CPU marks256–307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51–52ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79–5.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
+        },
+        {
+          "kind": "rejected_full_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288281159",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Both OS275pass/5fail/867assertions,280cases finish; no universal hangs. Four legacy100ms cases miss intended host admission because worker startup consumes budget. Fifth concurrent fixture assumes task index equals host arrival order. Neither limits nor order fixture changed/waived. Whole Worker implementation not integrated."
+        },
+        {
+          "kind": "rejected_cpu_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Windows all6 have valid marks421–637ms<750, warmup/ready true,106–109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
+        },
+        {
+          "kind": "native_cpu_termination_diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43290694993",
+          "source": "a597d5c002a9e401e898ee6ce8c48a9568b7dcb1",
+          "result": "Pinned Linux actual Worker with native2048regex/8MiB and ZEROhosttools: ready622ms/start623/log712, original terminate invoked1521ms. Snapshot3019ms still pending original terminate Promise/live thread1; no actual exit/result before owned6500ms kill. Protocol1pass/5assertions/Omni1 is not productGREEN. Delayed termination is independent of host cleanup."
+        },
+        {
+          "kind": "rejected_corrected_cpu_case",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43290827027",
+          "source": "a597d5c002a9e401e898ee6ce8c48a9568b7dcb1",
+          "result": "Original literal source case after read-before-matcher fixture correction fails RESULT absent: valid408ms mark,129 heartbeats, no setup errors, owned6500ms containment. Timing/decode tails unexecuted; no criterion/workload relaxation."
         }
       ],
-      "remaining": "Private11/public6 staged green both OS; CPU source still fails timing observations. Narrow fixture read-order correction and actual native-CPU termination diagnostic require cold review; no early return before Worker exit or timing relaxation authorized. Full package running."
+      "remaining": "Whole Worker approach rejected: native terminate fails to settle by6500ms even with zero host tools; four100ms compatibility regressions remain. No prototype production integrated. Existing process/native operation ports inventoried; new production architecture requires a new frozen independently reviewed plan."
     },
     {
       "id": "E11",
@@ -2529,9 +2553,26 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43285750973",
           "source": "baaa0296bc7544428e50fa49500b86c8dff65f82",
           "result": "One actual Node SQLite/FULL/FK control per OS; Node24.22.2/SQLite3.53.4 measured, cleanup success. Setup Bun action selects Node24 after validator24.15; no Electron qualification. Future37 store cases/crash not executed against refusing scaffold."
+        },
+        {
+          "kind": "cold_source_fix_first",
+          "source": "47601e11e5d710c64458d1d4440b84cf96fab368",
+          "result": "Root and independent critic find quota authorization trusts stored body_bytes. Reducing existing segment/receipt charge can permit new unrelated append against an incorrect subtotal. Source rejected before any compile/runtime gate; frozen repair validates actual global UTF8 body/receipt charges inside same transaction before operations, with two added real-SQL counter-corruption regressions. Other37future cases unchanged."
+        },
+        {
+          "kind": "private_store_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43291099304",
+          "source": "d1613bd057a1e91eec65999f95d27d72226ea130",
+          "result": "Actual Node24.22.2/SQLite3.53.4 both OS:40pass/0fail/0skip; includes original37 store cases,2 charge-corruption regressions and1 runtimecontrol. Exact SQL json_object charge port executed; Linux4.48s/Windows14.98s. Desktop type0 and independent full-source approval."
+        },
+        {
+          "kind": "private_store_parent_kill_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43291173235",
+          "source": "d1613bd057a1e91eec65999f95d27d72226ea130",
+          "result": "One case/14 assertions/2 actual Omni Node children per OS. After committed atomic marker actual PID/live checks, parent SIGKILL, no normal-exit witnesses, actual exit/readers before exact profile/ID/body reopen. Signal exit numbers diagnostic only; no Electron/powerloss/fullsender claim."
         }
       ],
-      "remaining": "Private store source authorized under frozen receipt/quota/close-seal contract after actual Node control and cold acceptance review. Manager/target/producer/IPC/UI integration remains planned and not implemented."
+      "remaining": "Private store d161 repaired and verified on both OS; green8path stage integration underway. Original3 sender/redirect failures and manager/target/producer/IPC/UI remain open. PhaseA RED tests retained privately until integration source fixes them."
     },
     {
       "id": "M14",
