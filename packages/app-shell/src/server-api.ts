@@ -52,6 +52,7 @@ export type ClientOutput<G extends keyof Client, M extends keyof Client[G]> = Cl
   : never
 
 export type RequestOptions = { signal?: AbortSignal; headers?: HeadersInit }
+export type AdmissionOptions = RequestOptions & { beforeAdmission?: () => void }
 
 /** A file or directory entry. */
 export type FileEntry = { path: string; name?: string; type: "file" | "directory" }
@@ -135,8 +136,8 @@ export type ServerApi = {
     switchModel: (input: ClientInput<"sessions", "switchModel">, requestOptions?: RequestOptions) => Promise<void>
     rename: (input: ClientInput<"sessions", "rename">, requestOptions?: RequestOptions) => Promise<void>
     move: (input: ClientInput<"sessions", "move">, requestOptions?: RequestOptions) => Promise<void>
-    prompt: (input: SessionPromptInput, requestOptions?: RequestOptions) => Promise<SessionPromptOutput>
-    command: (input: SessionCommandInput, requestOptions?: RequestOptions) => Promise<SessionCommandOutput>
+    prompt: (input: SessionPromptInput, requestOptions?: AdmissionOptions) => Promise<SessionPromptOutput>
+    command: (input: SessionCommandInput, requestOptions?: AdmissionOptions) => Promise<SessionCommandOutput>
     shell: (input: ClientInput<"sessions", "shell">, requestOptions?: RequestOptions) => Promise<SessionShellOutput>
     compact: (input: SessionCompactInput, requestOptions?: RequestOptions) => Promise<SessionCompactOutput>
     archive: (input: ClientInput<"sessions", "archive">, requestOptions?: RequestOptions) => Promise<void>
