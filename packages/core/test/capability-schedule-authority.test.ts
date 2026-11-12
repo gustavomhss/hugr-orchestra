@@ -6,7 +6,7 @@ import { SessionV2 } from "@orchestra/core/session"
 import { SessionInput } from "@orchestra/core/session/input"
 import { ScheduledTaskRunTable } from "@orchestra/core/scheduled-task/sql"
 import { SessionMessage } from "@orchestra/core/session/message"
-import { Cause, Deferred, Effect, Exit, Fiber, Queue } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Queue } from "effect"
 import { ScheduleAuthorityFixture } from "./fixture/capability-schedule-authority"
 import { it } from "./lib/effect"
 
@@ -180,8 +180,8 @@ describe("Capability schedule authority", () => {
       const f = yield* ScheduleAuthorityFixture.make()
       const one = new Error("H8 first identity")
       const two = new Error("H8 second identity")
-      const first = Cause.makeDieReason(one).annotate(new Map([["h8", "first"]]))
-      const second = Cause.makeDieReason(two).annotate(new Map([["h8", "second"]]))
+      const first = Cause.makeDieReason(one).annotate(Context.makeUnsafe(new Map([["h8", "first"]])))
+      const second = Cause.makeDieReason(two).annotate(Context.makeUnsafe(new Map([["h8", "second"]])))
       f.state.afterCommitFailure = Cause.fromReasons([first, second])
       const exit = publication === "created-commit"
         ? yield* f.sessions.create({ location: f.owner.location }).pipe(Effect.exit)

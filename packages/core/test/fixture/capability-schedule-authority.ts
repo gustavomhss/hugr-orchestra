@@ -113,7 +113,7 @@ export function make() {
           Effect.asVoid,
           Effect.tapError((error) => Effect.sync(() => { state.sqlFailure = error })),
           Effect.catchCause((cause) => Effect.failCause(Cause.fromReasons(cause.reasons.map((reason) =>
-            reason.annotate(new Map([["h8-storage", "actual-sql-finalizer"]])))))),
+            reason.annotate(Context.makeUnsafe(new Map([["h8-storage", "actual-sql-finalizer"]]))))))),
         )
       }))
       if (settlement && state.settleFailure) return yield* Effect.failCause(state.settleFailure)
