@@ -1600,9 +1600,17 @@
       "id": "L7",
       "severity": "P2",
       "owner": "lead",
-      "status": "behavioral_red_source_authorized",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "3ff797b202",
+        "b6f9ddc42d",
+        "0b07d81627",
+        "f9fc9a5470",
+        "c5d1da93e0",
+        "96c6be683d",
+        "e7c3599a6e"
+      ],
       "evidence": [
         {
           "kind": "actual_chain_controls_both_os",
@@ -1613,8 +1621,18 @@
           "kind": "behavioral_red_both_os",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43230769654",
           "result": "21fail/52assertions and3623Omni spawns per OS; every refusal assertion instead receives actual success after real stale/binding/missing preconditions. No later SQL-zero/provider-zero assertion is claimed from RED."
+        },
+        {
+          "kind": "full_final_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43238996076",
+          "result": "36pass/189assertions/5119Omni spawns perOS, exact frozenfceb source+fixture. All27 currency and9 legacy cases pass; final SQL refusal/receipt/collision assertions reached."
+        },
+        {
+          "kind": "integrated_source_cold_types",
+          "result": "Root+Lamport source APPROVE097b; exacttwo-line fixture type correction approvedfceb. Seven own commits integrated through e7c3599a6e,5/5 SHA256 match. Maestro typecheck0. Root guards78rules342paths0gates0errors/one inherited advisory, boundaries0new0stale, spawn0. No Protocol/generated/dependency/event/ID/permission changes."
         }
-      ]
+      ],
+      "remaining": "Closed at explicit new-reservation and first-consumption evidence checkpoints. Exact historical consumed receipts remain idempotent; unbound legacy rows cannot acquire new authority. Actual beforeTurn hook/SQL tested; no provider-zero observation or atomic external-filesystem snapshot guarantee."
     },
     {
       "id": "L8",
@@ -2879,9 +2897,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 51,
+    "new_fixes_verified": 52,
     "already_fixed_verified": 1,
-    "remaining": 13,
+    "remaining": 12,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "90420b0721",
