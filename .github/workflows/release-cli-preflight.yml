@@ -1,0 +1,54 @@
+name: release-cli-preflight
+on:
+  push:
+    branches: [runtime-preflight]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  isolated-cli-diagnostic:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_SHA: 3e255c8f030b3e7202a9ac89050d695464f0cddf
+      CLI_RUN: '43169421906'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Require the exact successful CLI producer
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CLI_RUN" | jq -e --arg sha "$SOURCE_SHA" --arg repo "$GITHUB_REPOSITORY" '.head_sha==$sha and .head_repository.full_name==$repo and .head_branch=="release-0.3.7" and .path==".github/workflows/release-cli.yml" and .status=="completed" and .conclusion=="success"'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: '43169421906'
+          name: release-assembled
+          path: ${{ runner.temp }}/cli
+      - name: Diagnostic only - verify and execute existing CLI bytes
+        run: |
+          python3 - <<'PY_PREFLIGHT'
+          import hashlib,json,os,subprocess,sys,tarfile
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP']);cli=root/'cli';name='orchestra-0.3.7-darwin-x64-baseline.tar.gz'
+          expected=next(line.split()[0] for line in (cli/'SHA256SUMS').read_text().splitlines() if line.split()[1]==name)
+          assert hashlib.sha256((cli/name).read_bytes()).hexdigest()==expected
+          payload=root/'payload';payload.mkdir()
+          with tarfile.open(cli/name) as archive:archive.extractall(payload,filter='data')
+          descriptor=json.loads((payload/'distribution.json').read_text());assert descriptor['version']=='0.3.7' and descriptor['target']=='darwin-x64-baseline'
+          for item in descriptor['files']:
+              file=payload/item['path'];assert file.resolve().is_relative_to(payload.resolve()) and file.is_file() and not file.is_symlink()
+              assert hashlib.sha256(file.read_bytes()).hexdigest()==item['sha256'];file.chmod(0o755 if item['executable'] else 0o644)
+          binary=payload/'bin/orchestra';digest=hashlib.sha256(binary.read_bytes()).hexdigest()
+          subprocess.run([sys.executable,'script/release-runtime/validate-runtime-session.py','--binary',str(binary),'--version','0.3.7','--source',os.environ['SOURCE_SHA'],'--expected-sha256',digest,'--evidence',str(root/'preflight.json')],check=True)
+          PY_PREFLIGHT
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: cli-preflight-diagnostic
+          path: |
+            ${{ runner.temp }}/preflight.json
+            ${{ runner.temp }}/runtime-session-*/serve-*.log
+            ${{ runner.temp }}/runtime-session-*/provider-requests.json
+          if-no-files-found: error
