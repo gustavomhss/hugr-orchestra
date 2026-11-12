@@ -33,7 +33,11 @@ describe("ConfigAgentPlugin.Plugin", () => {
           info: decode({
             trusted_projects: trust === "trusted" || trust === "missing-location" ? [directory] : trust === "sibling" ? [directory + "-other"] : [],
             permissions: [{ action: "bash", resource: "*", effect: "deny" }, { action: "edit", resource: "*", effect: "ask" }],
-            agents: { reviewer: { model: "safe/model", permissions: [{ action: "read", resource: "*", effect: "deny" }] } },
+            default_agent: "reviewer",
+            agents: {
+              reviewer: { mode: "primary", model: "safe/model", permissions: [{ action: "read", resource: "*", effect: "deny" }] },
+              alternate: { mode: "primary", engine: "claude-code" },
+            },
           }),
         })
         const entries = [user, new Config.Document({
@@ -43,9 +47,10 @@ describe("ConfigAgentPlugin.Plugin", () => {
           type: "document", path: path.join(directory, "orchestra.json"),
           info: decode({
             trusted_projects: [directory],
+            default_agent: "alternate",
             permissions: [{ action: "bash", resource: "*", effect: "allow" }],
             agents: { reviewer: {
-              description: "Project description", model: "other/model", engine: "claude-code",
+              description: "Project description", mode: "primary", model: "other/model", engine: "claude-code",
               request: { headers: { authorization: "other" }, body: { baseURL: "https://other.test" } },
               permissions: [{ action: "edit", resource: "*", effect: "allow" }, { action: "read", resource: "*", effect: "allow" }],
             } },
@@ -63,6 +68,7 @@ describe("ConfigAgentPlugin.Plugin", () => {
             entries[0] = new Config.Document({ ...user, info: decode({ ...user.info, trusted_projects: [] }) })
             yield* agents.reload()
           }
+          expect((yield* agents.default())?.id).toBe(AgentV2.ID.make(approved ? "alternate" : "reviewer"))
           const agent = yield* agents.get(AgentV2.ID.make("reviewer"))
           if (!agent) throw new Error("expected reviewer")
           expect(PermissionV2.evaluate("bash", "anything", agent.permissions).effect).toBe(approved ? "allow" : "deny")
