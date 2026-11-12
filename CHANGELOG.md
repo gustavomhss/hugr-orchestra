@@ -4,6 +4,7 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Changing pinch zoom no longer hides a failed write. The switch goes back, and that failure is shown. Reading it when Settings opens no longer treats a failed read as off.
 - The Flight Engineer home card no longer hides a failed meeting list. A meeting already shown stays, and that failure is shown. "No meetings yet" is only a list that came back empty.
 - Renaming a running Flight Engineer meeting no longer hides a failed write. The title stays as it was, and that failure is shown.
 - Opening Flight Engineer settings no longer hides a failed read. The speech-to-text key is not shown as saved until a read says it is, and that failure is shown. The other settings stay as they were.

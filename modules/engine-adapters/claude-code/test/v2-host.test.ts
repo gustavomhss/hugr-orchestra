@@ -1,4 +1,5 @@
 import { beforeEach, expect, test } from "bun:test"
+import path from "node:path"
 import type { HookInput, McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
@@ -325,7 +326,7 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
   }))
 
   expect(asked).toEqual([
-    { callID: "tu-1", tool: "Edit", action: "edit", resources: ["src/a.ts"], safety: { tool: "edit", args: { filePath: "/project/src/a.ts" } } },
+    { callID: "tu-1", tool: "Edit", action: "edit", resources: [path.join("src", "a.ts")], safety: { tool: "edit", args: { filePath: "/project/src/a.ts" } } },
     { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], safety: { tool: "bash", args: { command: "rm -rf /" } } },
   ])
   expect(decisions).toEqual([
@@ -636,7 +637,7 @@ test("after Claude Code compacts, Orchestra's working memory comes back and the 
 
   expect(results[0]).toEqual({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "## Todos\n- [pending] ship it" } })
   expect(results[1]).toEqual({})
-  expect(archived).toEqual([{ summary: "We fixed the bug.", trigger: "auto", nativeSessionID: "claude-1" }])
+  expect(archived).toEqual([{ summary: "We fixed the bug.", trigger: "auto", nativeSessionID: "claude-1", messageID: expect.any(String) }])
 })
 
 test("a steer that arrives mid-turn reaches the running query through its streaming input, in the same single stream", async () => {
@@ -741,7 +742,7 @@ test("a background task that reports after the turn is handed to the runner as a
   }
 })
 
-test("a query kept up for background work is closed before the session's next turn starts its own", async () => {
+test("a subsequent turn drains background completion before starting its own query", async () => {
   const trace = { closed: false, closedWhenNextStarted: undefined as boolean | undefined }
   let starts = 0
   pump = async function* (input, options) {
@@ -755,7 +756,8 @@ test("a query kept up for background work is closed before the session's next tu
     }
     yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [{ task_id: "t1", task_type: "bash", description: "sleep" }] })
     yield done
-    await new Promise((resolve) => options.abortController?.signal.addEventListener("abort", resolve, { once: true }))
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    yield frame({ type: "system", subtype: "task_notification", task_id: "t1", status: "completed", summary: "done", output_file: "/tmp/t1" })
   }
   try {
     // One host serves both turns, as the layer's does: it is the host that remembers the query it kept up.
@@ -779,7 +781,7 @@ test("a query kept up for background work is closed before the session's next tu
 })
 
 test("a file whose name starts with two dots inside the workspace is matched by its relative path", () => {
-  expect(permission("Read", { file_path: "/project/..cache/x" }, "/project")).toEqual({ action: "read", resources: ["..cache/x"] })
+  expect(permission("Read", { file_path: "/project/..cache/x" }, "/project")).toEqual({ action: "read", resources: [path.join("..cache", "x")] })
   expect(permission("Read", { file_path: "/project/../outside/x" }, "/project")).toEqual({ action: "read", resources: ["/project/../outside/x"] })
   expect(permission("Read", { file_path: "/other/x" }, "/project")).toEqual({ action: "read", resources: ["/other/x"] })
 })
