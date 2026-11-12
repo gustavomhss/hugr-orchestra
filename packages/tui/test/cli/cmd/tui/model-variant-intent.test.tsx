@@ -1,5 +1,5 @@
 /** @jsxImportSource @opentui/solid */
-import { expect, test } from "bun:test"
+import { expect, spyOn, test } from "bun:test"
 import { reconcile } from "solid-js/store"
 import { Schema } from "effect"
 import { Model } from "@orchestra/schema/model"
@@ -62,6 +62,21 @@ test("E6 TUI pinned named default stays literal after catalog removal and reload
     await wait(() => fixture.context.local.model.ready, "pinned preference reloaded without named default metadata")
     expect(fixture.context.local.model.intent().variant).toBe("default")
     expect(fixture.context.local.model.variant.current()).toBe("default")
+    await wait(() => fixture.context.sync.status === "complete" && fixture.context.local.model.variant.list().includes("high") &&
+      !fixture.context.local.model.variant.list().includes("default"), "actual reloaded catalog has high but no named default")
+    const selecting = spyOn(fixture.context.local.model.variant, "set")
+    try {
+      fixture.showVariants()
+      await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Selected variant is unavailable") }, "actual removed named variant row remains visible with its reason")
+      await fixture.app.renderOnce()
+      expect(fixture.app.captureCharFrame()).toContain("Model default")
+      expect(fixture.app.captureCharFrame()).toContain("default")
+      await fixture.app.mockInput.pressEnter()
+      await fixture.app.renderOnce()
+      expect(selecting.mock.calls).toHaveLength(0)
+      expect(fixture.context.dialog.stack).toHaveLength(1)
+      expect(fixture.context.local.model.intent().variant).toBe("default")
+    } finally { selecting.mockRestore(); fixture.context.dialog.clear() }
     fixture.prompt.set({ input: "removed named default", parts: [], mode: "normal" })
     fixture.prompt.submit()
     await wait(() => fixture.admissions().length === 1, "literal pinned variant reaches actual adapter")

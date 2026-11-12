@@ -1,5 +1,5 @@
 import { createMemo } from "solid-js"
-import { useLocal } from "../context/local"
+import { modelExecutionReason, useLocal } from "../context/local"
 import { DialogSelect } from "../ui/dialog-select"
 import { useDialog } from "../ui/dialog"
 
@@ -8,6 +8,7 @@ export function DialogVariant() {
   const dialog = useDialog()
 
   const options = createMemo(() => {
+    const raw = local.model.variant.selected()
     return [
       {
         value: JSON.stringify(["model-default"]),
@@ -21,10 +22,16 @@ export function DialogVariant() {
         value: JSON.stringify(["variant", variant]),
         title: variant,
         onSelect: () => {
+          if (!local.model.variant.list().includes(variant)) return
           dialog.clear()
           local.model.variant.set(variant)
         },
       })),
+      ...(typeof raw === "string" && !local.model.variant.list().includes(raw) ? [{
+        value: JSON.stringify(["variant", raw]),
+        title: raw, disabled: true,
+        footer: modelExecutionReason("variant-unavailable"), onSelect() {},
+      }] : []),
     ]
   })
 
@@ -38,6 +45,7 @@ export function DialogVariant() {
           : typeof local.model.variant.current() === "string" ? JSON.stringify(["variant", local.model.variant.current()])
             : JSON.stringify(["model-default"])}
       flat={true}
+      showDisabled={true}
     />
   )
 }
