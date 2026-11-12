@@ -57,6 +57,7 @@ test("desktop feed API accepts real producer and legacy fields without coercion"
 
 for (const invalid of [
   { ...local, version: "0.3.6-beta.1" },
+  { ...local, version: "1.2.3\n" },
   { ...local, version: "9007199254740992.0.0" },
   { ...local, version: "0.9007199254740992.0" },
   { ...local, version: "0.0.9007199254740992" },

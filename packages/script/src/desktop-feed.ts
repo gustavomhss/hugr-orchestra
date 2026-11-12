@@ -137,11 +137,10 @@ function object(value: unknown): Record<string, unknown> {
 }
 
 function stable(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(value) &&
-    value.split(".").every((part) => Number.isSafeInteger(Number(part)))
-  )
+  if (typeof value !== "string" || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(value))
+    return false
+  const parts = value.split(".").map(Number)
+  return parts.every(Number.isSafeInteger) && parts.join(".") === value
 }
 
 // Callers first validate the three canonical stable integer segments.
