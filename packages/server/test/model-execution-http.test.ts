@@ -1,6 +1,8 @@
 import { expect } from "bun:test"
 import { Orchestra } from "@orchestra/client"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Credential } from "@orchestra/core/credential"
+import { Integration } from "@orchestra/core/integration"
 import { ModelExecution } from "@orchestra/core/model-execution"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { Location } from "@orchestra/schema/location"
@@ -40,6 +42,7 @@ it.live("CONTROL E6 wire: actual TCP list/default and both imported clients keep
   Effect.gen(function* () {
     const fixture = yield* ModelExecutionFixture.setup
     const before = yield* fixture.snapshot()
+    expect((yield* fixture.catalog.model.available()).some((model) => model.providerID === "openai")).toBe(true)
     const list = yield* fixture.request("/api/model")
     expect(list.status).toBe(200)
     expect(yield* json(list)).toMatchObject({
@@ -59,6 +62,11 @@ it.live("CONTROL E6 wire: actual TCP list/default and both imported clients keep
     }).pipe(Effect.provide(FetchHttpClient.layer))
     expect(decoded.list.data.some((model) => model.providerID === "anthropic")).toBe(false)
     expect(decoded.fallback.data?.providerID).toBe("openai")
+    const credentials = yield* Credential.Service
+    expect(yield* credentials.list(Integration.ID.make("openai"))).toHaveLength(1)
+    expect(yield* credentials.list(Integration.ID.make("google"))).toHaveLength(1)
+    expect(yield* credentials.list(Integration.ID.make("anthropic"))).toEqual([])
+    expect(ModelExecutionFixture.state.boots).toBeGreaterThanOrEqual(1)
     expect(yield* fixture.snapshot()).toEqual(before)
     untouched()
   }),
@@ -178,7 +186,10 @@ for (const reason of [
         Effect.promise(() => tmpdir()),
         (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
       )
-      if (reason === "omitted-agent") yield* fixture.agents.transform((draft) => draft.remove(AgentV2.defaultID))
+      if (reason === "omitted-agent") {
+        ModelExecutionFixture.state.defaultMissing = true
+        yield* fixture.agents.transform((draft) => draft.remove(AgentV2.defaultID))
+      }
       const context =
         reason === "session-missing"
           ? { type: "session", sessionID: "ses_wire_missing" }

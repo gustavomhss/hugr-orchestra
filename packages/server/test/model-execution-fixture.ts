@@ -4,6 +4,10 @@ import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
 import { Database } from "@orchestra/core/database/database"
+import { Credential } from "@orchestra/core/credential"
+import { Global } from "@orchestra/core/global"
+import { makeLocationNode } from "@orchestra/core/effect/app-node"
+import { locationServices } from "@orchestra/core/location-services"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -29,7 +33,8 @@ import { SchemaErrorMiddleware } from "@orchestra/protocol/middleware/schema-err
 import { Context, Deferred, Effect, Layer, Option, Schema, Stream } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
-import { realpath } from "node:fs/promises"
+import { mkdir, realpath } from "node:fs/promises"
+import path from "node:path"
 import { ServerAuth } from "../src/auth"
 import { ModelHandler } from "../src/handlers/model"
 import { LocationMiddleware, layer } from "../src/location"
@@ -38,6 +43,9 @@ import { schemaErrorLayer } from "../src/middleware/schema-error"
 
 export const state = {
   ready: true,
+  defaultMissing: false,
+  providerUrl: "http://127.0.0.1:1",
+  boots: 0,
   streams: 0,
   materializations: 0,
   tools: 0,
@@ -75,20 +83,121 @@ const hosts = Layer.succeed(
     },
   ]),
 )
-const services = AppNodeBuilder.build(
-  LayerNode.group([
-    Database.node,
-    LocationServiceMap.node,
-    AppProcess.node,
-    FSUtil.node,
-    SessionV2.node,
-    SessionExecution.node,
-  ]),
-  [
-    [Database.node, Database.layerFromPath(":memory:")],
-    [ExecutionHost.node, hosts],
-    [SessionExecution.node, SessionExecution.noopLayer],
-  ],
+// Run after the actual Location graph finishes booting. Every real middleware acquisition gets its own seed.
+const seed = makeLocationNode({
+  name: "model-wire-seed",
+  layer: Layer.effectDiscard(
+    Effect.gen(function* () {
+      state.boots++
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) => {
+        draft.update(AgentV2.defaultID, (agent) => {
+          agent.engine = "orchestra"
+          agent.mode = "primary"
+        })
+        if (state.defaultMissing) draft.remove(AgentV2.defaultID)
+        draft.update(AgentV2.ID.make("host-seat"), (agent) => {
+          agent.engine = "claude-code"
+          agent.mode = "all"
+        })
+      })
+      const integrations = yield* Integration.Service
+      yield* integrations.transform((draft) => {
+        draft.update(Integration.ID.make("openai"), () => {})
+        draft.update(Integration.ID.make("anthropic"), () => {})
+        draft.update(Integration.ID.make("google"), () => {})
+      })
+      const credentials = yield* Credential.Service
+      for (const id of ["openai", "google"]) {
+        const integrationID = Integration.ID.make(id)
+        if ((yield* credentials.list(integrationID)).length === 0)
+          yield* credentials.create({
+            integrationID,
+            value: Credential.Key.make({ type: "key", key: `FICTITIOUS_WIRE_${id}` }),
+          })
+      }
+      const catalog = yield* Catalog.Service
+      yield* catalog.transform((draft) => {
+        for (const id of ["openai", "anthropic", "google"]) {
+          const providerID = ProviderV2.ID.make(id)
+          draft.provider.update(providerID, (item) => {
+            item.api = {
+              type: "aisdk",
+              package: `@ai-sdk/${id}`,
+              url: state.providerUrl,
+              settings: {},
+            }
+          })
+          draft.model.update(providerID, ModelV2.ID.make("wire-model"), (model) => {
+            model.enabled = true
+            model.name = id
+            model.variants = [{ id: ModelV2.VariantID.make("high"), headers: {}, body: {} }]
+          })
+        }
+        draft.model.default.set(ProviderV2.ID.openai, ModelV2.ID.make("wire-model"))
+      })
+      const tools = yield* ToolRegistry.Service
+      yield* tools.register({
+        wire_probe: Tool.make({
+          get description() {
+            state.materializations++
+            return "Wire materialization probe"
+          },
+          input: Schema.Struct({}),
+          output: Schema.Struct({}),
+          toModelOutput: () => [],
+          execute: () =>
+            Effect.sync(() => {
+              state.tools++
+              return {}
+            }),
+        }),
+      })
+    }),
+  ),
+  deps: [locationServices, Credential.node],
+})
+const services = Layer.unwrap(
+  Effect.gen(function* () {
+    const temporary = yield* Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    )
+    const paths = {
+      home: temporary.path,
+      data: path.join(temporary.path, "data"),
+      cache: path.join(temporary.path, "cache"),
+      config: path.join(temporary.path, "config"),
+      state: path.join(temporary.path, "state"),
+      tmp: path.join(temporary.path, "tmp"),
+      bin: path.join(temporary.path, "bin"),
+      log: path.join(temporary.path, "log"),
+      repos: path.join(temporary.path, "repos"),
+    }
+    yield* Effect.promise(() =>
+      Promise.all(Object.values(paths).map((directory) => mkdir(directory, { recursive: true }))),
+    )
+    return AppNodeBuilder.build(
+      LayerNode.group([
+        Database.node,
+        Credential.node,
+        Global.node,
+        LocationServiceMap.node,
+        AppProcess.node,
+        FSUtil.node,
+        SessionV2.node,
+        SessionExecution.node,
+      ]),
+      [
+        [Database.node, Database.layerFromPath(":memory:")],
+        [Global.node, Global.layerWith(paths)],
+        [Credential.node, Credential.layerFrom(undefined)],
+        [ExecutionHost.node, hosts],
+        [SessionExecution.node, SessionExecution.noopLayer],
+      ],
+      [seed],
+    )
+  }),
 )
 const routes = HttpApiBuilder.layer(
   HttpApi.make("server")
@@ -118,6 +227,8 @@ export const ref = (providerID = "openai", id = "wire-model", variant?: string) 
 export const json = (response: Response): Effect.Effect<unknown> => Effect.promise(() => response.json())
 export const setup = Effect.gen(function* () {
   state.ready = true
+  state.defaultMissing = false
+  state.boots = 0
   state.streams = 0
   state.materializations = 0
   state.tools = 0
@@ -140,63 +251,12 @@ export const setup = Effect.gen(function* () {
     ),
     (server) => Effect.promise(() => server.stop(true)),
   )
+  state.providerUrl = provider.url.origin
   const location = Location.Ref.make({ directory })
   const locations = yield* LocationServiceMap.Service
   const context = yield* locations.contextEffect(location)
   const agents = Context.get(context, AgentV2.Service)
-  yield* agents.transform((draft) => {
-    draft.update(AgentV2.defaultID, (agent) => {
-      agent.engine = "orchestra"
-      agent.mode = "primary"
-    })
-    draft.update(AgentV2.ID.make("host-seat"), (agent) => {
-      agent.engine = "claude-code"
-      agent.mode = "all"
-    })
-  })
-  const integrations = Context.get(context, Integration.Service)
-  yield* integrations.transform((draft) => {
-    draft.update(Integration.ID.make("openai"), () => {})
-    draft.update(Integration.ID.make("anthropic"), () => {})
-    draft.update(Integration.ID.make("google"), () => {})
-  })
   const catalog = Context.get(context, Catalog.Service)
-  yield* catalog.transform((draft) => {
-    for (const id of ["openai", "anthropic", "google"]) {
-      const providerID = ProviderV2.ID.make(id)
-      draft.provider.update(providerID, (item) => {
-        item.api = {
-          type: "aisdk",
-          package: `@ai-sdk/${id}`,
-          url: provider.url.origin,
-          settings: id === "anthropic" ? {} : { apiKey: "FICTITIOUS_WIRE_KEY" },
-        }
-      })
-      draft.model.update(providerID, ModelV2.ID.make("wire-model"), (model) => {
-        model.enabled = true
-        model.name = id
-        model.variants = [{ id: ModelV2.VariantID.make("high"), headers: {}, body: {} }]
-      })
-    }
-    draft.model.default.set(ProviderV2.ID.openai, ModelV2.ID.make("wire-model"))
-  })
-  const tools = Context.get(context, ToolRegistry.Service)
-  yield* tools.register({
-    wire_probe: Tool.make({
-      get description() {
-        state.materializations++
-        return "Wire materialization probe"
-      },
-      input: Schema.Struct({}),
-      output: Schema.Struct({}),
-      toModelOutput: () => [],
-      execute: () =>
-        Effect.sync(() => {
-          state.tools++
-          return {}
-        }),
-    }),
-  })
   const sessions = yield* SessionV2.Service
   const session = yield* sessions.create({ location, agent: AgentV2.defaultID, model: ref() })
   yield* sessions.prompt({
