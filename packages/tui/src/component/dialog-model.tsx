@@ -24,6 +24,29 @@ export function DialogModel(props: { providerID?: string }) {
     const canonical = local.model.execution.read()
     const listed = (providerID: string, modelID: string) => canonical.status !== "ready" ||
       canonical.response.data.models.some((entry) => entry.model.providerID === providerID && entry.model.id === modelID)
+    const unavailable = (providerID: string, modelID: string) => {
+      if (canonical.status === "idle") return "Model availability has not been checked"
+      if (canonical.status === "loading") return "Checking model availability"
+      if (canonical.status === "error") return "Could not check model availability"
+      const selection = canonical.response.data.selection
+      const entry = canonical.response.data.models.find((item) => item.model.providerID === providerID && item.model.id === modelID)
+      const reason = selection?.ref.providerID === providerID && selection.ref.id === modelID && selection.status !== "ready"
+        ? selection.reason : entry && entry.status !== "ready" ? entry.reason : undefined
+      if (!reason) return "Model is unavailable for this session"
+      return {
+        "model-missing": "Model is no longer available",
+        "model-disabled": "Model is disabled",
+        "connection-unavailable": "Connect this provider to use the model",
+        "model-denied": "Model is not allowed for this session",
+        "unsupported-api": "Model is not supported by this engine",
+        "invalid-options": "Model settings are invalid",
+        "variant-unavailable": "Selected variant is unavailable",
+        "host-unregistered": "Selected engine is not installed",
+        "host-unavailable": "Selected engine is unavailable",
+        "host-model-unsupported": "Model is not supported by this engine",
+        "host-options-unsupported": "Selected settings are not supported by this engine",
+      }[reason]
+    }
     const needle = query().trim()
     const showSections = showExtra() && needle.length === 0
     const favorites = connected() ? local.model.favorite() : []
@@ -45,7 +68,7 @@ export function DialogModel(props: { providerID?: string }) {
             description: provider.name,
             category,
             disabled: !local.model.execution.allows(item),
-            footer: !local.model.execution.allows(item) ? "Unavailable for this session" :
+            footer: !local.model.execution.allows(item) ? unavailable(item.providerID, item.modelID) :
               model.cost?.input === 0 && provider.id === "opencode" ? "Free" : undefined,
             onSelect: () => {
               onSelect(provider.id, model.id)
@@ -85,7 +108,7 @@ export function DialogModel(props: { providerID?: string }) {
               : undefined,
             category: connected() ? provider.name : undefined,
             disabled: !local.model.execution.allows({ providerID: provider.id, modelID: model }),
-            footer: !local.model.execution.allows({ providerID: provider.id, modelID: model }) ? "Unavailable for this session" :
+            footer: !local.model.execution.allows({ providerID: provider.id, modelID: model }) ? unavailable(provider.id, model) :
               info.cost?.input === 0 && provider.id === "opencode" ? "Free" : undefined,
             onSelect() {
               onSelect(provider.id, model)
@@ -116,7 +139,7 @@ export function DialogModel(props: { providerID?: string }) {
       const known = local.model.known(selected)
       providerOptions.push({ value: selected, title: known?.title ?? selected.modelID, releaseDate: undefined,
         description: undefined, category: known?.provider ?? selected.providerID, disabled: true,
-        footer: "Unavailable for this session", onSelect() {} })
+        footer: unavailable(selected.providerID, selected.modelID), onSelect() {} })
     }
 
     const popularProviders = !connected()
@@ -192,6 +215,7 @@ export function DialogModel(props: { providerID?: string }) {
       onFilter={setQuery}
       flat={true}
       skipFilter={true}
+      showDisabled={true}
       title={title()}
       current={local.model.current()}
     />

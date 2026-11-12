@@ -33,6 +33,7 @@ export interface DialogSelectProps<T> {
   onFilter?: (query: string) => void
   onSelect?: (option: DialogSelectOption<T>) => void
   skipFilter?: boolean
+  showDisabled?: boolean
   renderFilter?: boolean
   locked?: boolean
   preserveSelection?: boolean
@@ -152,11 +153,11 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
   })
 
   const filtered = createMemo(() => {
-    if (props.skipFilter || props.renderFilter === false) return props.options.filter((x) => x.disabled !== true)
+    if (props.skipFilter || props.renderFilter === false) return props.options.filter((x) => props.showDisabled || x.disabled !== true)
     const needle = store.filter.toLowerCase()
     const options = pipe(
       props.options,
-      filter((x) => x.disabled !== true),
+      filter((x) => props.showDisabled || x.disabled !== true),
     )
     if (!needle) return options
 
@@ -350,7 +351,7 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
       return
     }
     const option = selected()
-    if (!option) return
+    if (!option || option.disabled) return
     option.onSelect?.(dialog)
     props.onSelect?.(option)
   }
@@ -634,7 +635,7 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
                   </Show>
                   <For each={options}>
                     {(option) => {
-                      const active = createMemo(() => !props.locked && isDeepEqual(option.value, selected()?.value))
+                      const active = createMemo(() => !props.locked && !option.disabled && isDeepEqual(option.value, selected()?.value))
                       const current = createMemo(() => isDeepEqual(option.value, props.current))
                       return (
                         <box
@@ -646,7 +647,7 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
                             setFocusedAction(undefined)
                           }}
                           onMouseUp={() => {
-                            if (props.locked) return
+                            if (props.locked || option.disabled) return
                             option.onSelect?.(dialog)
                             props.onSelect?.(option)
                           }}
@@ -691,7 +692,8 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
                               description={option.description !== category ? option.description : undefined}
                               active={active()}
                               current={current()}
-                              muted={actionFocused()}
+                              muted={actionFocused() || option.disabled}
+                              disabled={option.disabled}
                               gutter={option.gutter}
                             />
                           </box>
@@ -740,11 +742,13 @@ function Option(props: {
   titleWidth?: number
   truncateTitle?: boolean | "left"
   gutter?: () => JSX.Element
+  disabled?: boolean
   onMouseOver?: () => void
 }) {
   const { theme } = useTheme()
   const fg = selectedForeground(theme)
   const text = createMemo(() => {
+    if (props.disabled) return theme.textMuted
     if (props.active && !props.muted) return fg
     if (props.muted && (props.active || props.current)) return theme.textMuted
     if (props.current) return theme.primary
