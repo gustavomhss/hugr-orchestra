@@ -129,7 +129,7 @@ export function tools(services: Services) {
     }),
     [names.probe]: Tool.make({
       description:
-        "Run one probe option the brief offers for a candidate, in the review's scratch copy: the `candidate`, the `option` id and its `target` (a hunk, a test or a short script).",
+        "Run one probe option the brief offers for a candidate, in the review's scratch copy: the `candidate`, the `option` id and its `target`: hunk, test, script, integer property (language, law, source, seed, cases), interleave scenario (language, source, schedule), or Rust mutants (path, startLine, endLine).",
       input: ReviewProbe.Input,
       output: Output,
       toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
