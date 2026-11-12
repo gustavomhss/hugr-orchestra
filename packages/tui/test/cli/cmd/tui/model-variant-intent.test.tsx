@@ -136,5 +136,10 @@ test("E6 TUI invalid new preference entries do not erase a valid explicit defaul
     fixture.context.local.model.variant.set(undefined)
     const stored = await preferences(fixture.preferenceFile, (value) => value.variantIntent?.[key] === null && !("ignored" in value.variantIntent) && !("other" in value.variantIntent))
     expect(stored.variantIntent).toEqual({ [key]: null })
+    expect(stored.variant).toEqual({ [key]: "high" })
+    fixture.context.local.model.variant.set("default")
+    const named = await preferences(fixture.preferenceFile, (value) => value.variantIntent?.[key] === "default")
+    expect(named.variantIntent).toEqual({ [key]: "default" })
+    expect(named.variant).toEqual({ [key]: "high" })
   } finally { await fixture.dispose() }
 })

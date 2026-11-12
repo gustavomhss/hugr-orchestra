@@ -473,10 +473,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
             const m = chosen() ?? candidate()
             if (!m) return
             const key = `${m.providerID}/${m.modelID}`
-            batch(() => {
-              setModelStore("variant", key, value ?? "default")
-              setModelStore("variantIntent", key, value === undefined ? null : value)
-            })
+            setModelStore("variantIntent", key, value === undefined ? null : value)
             save()
           },
           cycle() {
