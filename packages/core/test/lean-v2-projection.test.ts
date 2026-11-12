@@ -187,6 +187,7 @@ describe("V2 Lean projection", () => {
 test("the handed-over metadata reaches the Tool.Success event once and decodes on the completed tool state", async () => {
   const published: Array<{ readonly type: string; readonly data: unknown }> = []
   const events = EventV2.Service.of({
+    transact: () => Effect.die("Event capture has no durable SQL transaction"),
     publish: (definition, data) =>
       Effect.sync(() => {
         published.push({ type: definition.type, data })

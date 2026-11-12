@@ -133,3 +133,15 @@ index f2920365cf0328146523ce2e2dba04d6a8809a4a..5482d635cdf01a72063ff683d244fab8
  /**
   * Creates a streaming `Uint8Array` success response schema.
   *
+diff --git a/src/unstable/socket/Socket.ts b/src/unstable/socket/Socket.ts
+--- a/src/unstable/socket/Socket.ts
++++ b/src/unstable/socket/Socket.ts
+@@ -722,1 +722,1 @@
+-        if (opts?.onOpen) yield* opts.onOpen
++        if (opts?.onOpen) yield* Effect.provideService(opts.onOpen, WebSocket, ws)
+diff --git a/dist/unstable/socket/Socket.js b/dist/unstable/socket/Socket.js
+--- a/dist/unstable/socket/Socket.js
++++ b/dist/unstable/socket/Socket.js
+@@ -431,1 +431,1 @@
+-    if (opts?.onOpen) yield* opts.onOpen;
++    if (opts?.onOpen) yield* Effect.provideService(opts.onOpen, WebSocket, ws);

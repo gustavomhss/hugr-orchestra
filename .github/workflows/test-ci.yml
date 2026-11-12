@@ -149,12 +149,13 @@ jobs:
             key=${line%%=*}
             value=${line#*=}
             case "$key" in
-              ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) ;;
+              ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) pattern='^(1|strict)$' ;;
+              ORCHESTRA_CHANNEL) pattern='^prod$' ;;
               *) echo "::error::.ci-run.json env key $key is not allow-listed"; exit 2 ;;
             esac
-            # Only omni's two on states: "0" or an invalid value would run on legacy with the omni control off.
-            if ! printf '%s' "$value" | grep -Eq '^(1|strict)$'; then
-              echo "::error::.ci-run.json env value for $key is not 1 or strict"
+            # Omni permits only its two on states; channel checks permit only the production value.
+            if ! printf '%s' "$value" | grep -Eq "$pattern"; then
+              echo "::error::.ci-run.json env value for $key is not allowed"
               exit 2
             fi
             echo "$key=$value" >> "$GITHUB_ENV"
