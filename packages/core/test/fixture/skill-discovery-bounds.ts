@@ -1,6 +1,6 @@
 import fs from "fs/promises"
 import path from "path"
-import { Effect, ManagedRuntime } from "effect"
+import { Effect, Exit, ManagedRuntime, Scope } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Global } from "@orchestra/core/global"
 import { SkillV2 } from "@orchestra/core/skill"
@@ -113,13 +113,16 @@ export async function remote() {
   const runtime = ManagedRuntime.make(AppNodeBuilder.build(SkillV2.node, [
     [Global.node, Global.layerWith({ cache: tmp.path })],
   ]))
+  const registrationScope = await Effect.runPromise(Scope.make())
   await runtime.runPromise(Effect.gen(function* () {
     const skills = yield* SkillV2.Service
     yield* skills.transform((editor) => editor.source({ type: "url", url }))
-  })).catch(async (error: unknown) => {
-    await runtime.dispose()
-    await server.stop(true)
-    await tmp[Symbol.asyncDispose]()
+  }).pipe(Effect.provideService(Scope.Scope, registrationScope))).catch(async (error: unknown) => {
+    try { await Effect.runPromise(Scope.close(registrationScope, Exit.void)) } finally {
+      try { await runtime.dispose() } finally {
+        try { await server.stop(true) } finally { await tmp[Symbol.asyncDispose]() }
+      }
+    }
     throw error
   })
 
@@ -190,10 +193,12 @@ export async function remote() {
       operations.forEach((operation) => operation.controller.abort())
       try {
         await Promise.all(operations.map((operation) => operation.done))
-        await runtime.dispose()
+        await Effect.runPromise(Scope.close(registrationScope, Exit.void))
       } finally {
-        ;[...cleanup].forEach((stop) => stop())
-        try { await server.stop(true) } finally { await tmp[Symbol.asyncDispose]() }
+        try { await runtime.dispose() } finally {
+          ;[...cleanup].forEach((stop) => stop())
+          try { await server.stop(true) } finally { await tmp[Symbol.asyncDispose]() }
+        }
       }
     },
   }
