@@ -5,13 +5,16 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 ## Current checkpoint
 
 Planning follow-up: [PLAN.md](PLAN.md) records the whole R1–R20 coverage ledger
-and a first wave of three specified WPs / six tasks, each with the owner's six
-required quality fields. Independent acceptance criticism added sixteen explicit
-oracles and completed two clean rounds; a separate reviewer approved preparation
-only. The first-wave structural ownership/conflict checks passed. Contract code,
-stubs, executable mapping and hosted red baselines still precede implementation
-dispatch. See [PLANNING-RECEIPT.md](PLANNING-RECEIPT.md); no runtime source or
-previous implementation evidence changed in this documentation follow-up.
+and a corrected first wave of four specified WPs / eight tasks, each with the
+owner's six required quality fields. The adversarial findings required a new
+persisted-registration producer WP and exact monotonic snapshot ordering;
+the TSV reference was also corrected. Two fresh independent adversarial reviews
+approved preparation only, without new P1/P2 findings. Structural ownership,
+conflict checks and guards passed. Contract code, stubs, executable mapping and
+hosted red baselines still precede implementation dispatch. See
+[ADVERSARIAL-FIXES.md](ADVERSARIAL-FIXES.md) for current closure and
+[PLANNING-RECEIPT.md](PLANNING-RECEIPT.md) for the historical initial receipt.
+No runtime source or previous implementation evidence changed in this follow-up.
 
 The manual disk-reading checkpoint is now implemented and validated: Cache, Temporary and Logs read the server's three declared Orchestra roots through authenticated cached/manual APIs. Hosted Core passed 10 tests on Linux and seven on Windows (three explicit platform skips); Server passed three HTTP tests; App passed 25 unit tests and three browser-condition store tests. Package typechecks, Client generation, formatting, spawn-import checks, guardrails and independent scoped reviews passed. Final receipts and exact snapshot boundaries appear below.
 

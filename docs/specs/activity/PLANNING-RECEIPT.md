@@ -1,5 +1,9 @@
 # Planning review receipt
 
+Historical initial preparation receipt, before adversarial corrections. The
+current four-WP wave adds G01–G04 and the normative FIRST-WAVE-CONTRACT.md;
+see ADVERSARIAL-FIXES.md for the current scope, digests and re-review result.
+
 Scope: documentation and preparation only, against implementation baseline
 `d20520c2d04221b77b4fdad6785d65886559e322`. No runtime source changed.
 

@@ -1,6 +1,22 @@
 {
   "items": [
     {
+      "id": "G01",
+      "test": "packages/core/test/activity-registration.test.ts :: G01 (proposed; not executable yet)"
+    },
+    {
+      "id": "G02",
+      "test": "packages/core/test/activity-registration.test.ts :: G02 (proposed; not executable yet)"
+    },
+    {
+      "id": "G03",
+      "test": "packages/core/test/activity-registration.test.ts :: G03 (proposed; not executable yet)"
+    },
+    {
+      "id": "G04",
+      "test": "packages/core/test/activity-registration.test.ts :: G04 (proposed; not executable yet)"
+    },
+    {
       "id": "W01",
       "test": "packages/core/test/activity-worktree.test.ts :: W01 (proposed; not executable yet)"
     },
@@ -51,6 +67,20 @@
   ],
   "wps": [
     {
+      "id": "WP-R0",
+      "covers": ["G01", "G02", "G03", "G04"],
+      "writes": [
+        "packages/core/src/project/sql.ts",
+        "packages/core/src/project/directories.ts",
+        "packages/core/test/activity-registration.test.ts",
+        "packages/core/src/database/migration/*_activity_registration_identity.ts",
+        "packages/core/src/database/migration.gen.ts",
+        "packages/core/src/database/schema.gen.ts",
+        "packages/core/schema.json"
+      ],
+      "reads": ["packages/core/script/migration.ts"]
+    },
+    {
       "id": "WP-W1",
       "covers": ["W01", "W02", "W03", "W04"],
       "writes": [
@@ -59,7 +89,7 @@
         "packages/core/package.json",
         "packages/schema/src/activity-monitor.ts"
       ],
-      "reads": ["packages/core/src/activity-disk.ts"]
+      "reads": ["packages/core/src/activity-disk.ts", "packages/core/src/project/directories.ts"]
     },
     {
       "id": "WP-W2",
@@ -95,12 +125,14 @@
   "baseline": "d20520c2d04221b77b4fdad6785d65886559e322",
   "status": "preparation-only",
   "readyForImplementationDispatch": false,
-  "integrationOrder": ["WP-W1", "WP-W2", "WP-W3"],
+  "integrationOrder": ["WP-R0", "WP-W1", "WP-W2", "WP-W3"],
   "prerequisites": [
+    "persisted-registration-incarnation-producer",
     "frozen-anchor-code",
     "compilable-stubs",
     "executable-acceptance",
     "hosted-red-baselines",
     "approved-final-write-sets"
-  ]
+  ],
+  "normativeContract": "docs/specs/activity/FIRST-WAVE-CONTRACT.md"
 }
