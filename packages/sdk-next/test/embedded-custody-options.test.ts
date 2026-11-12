@@ -74,6 +74,8 @@ it.live(
           agent: Agent.ID.make("maestro"),
           location: Location.Ref.make({ directory: AbsolutePath.make(tmp.path) }),
         })
+        yield* first.client.sessions.rename({ sessionID: session.id, title: "Custody provider turn" })
+        expect((yield* first.client.sessions.get({ sessionID: session.id })).title).toBe("Custody provider turn")
         yield* first.client.sessions.prompt({
           sessionID: session.id,
           prompt: Prompt.make({ text: "Keep the provider alive" }),
