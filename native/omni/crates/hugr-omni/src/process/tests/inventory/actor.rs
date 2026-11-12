@@ -35,17 +35,20 @@ fn root() {
         _ => panic!("unknown actor mode {mode}"),
     }
     // A child of this actual supervised root, not a stand-in PID or a shell descendant.
-    let _child = cmd
+    let mut child = cmd
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
         .expect("fixture descendant");
+    let _reaper = std::thread::spawn(move || {
+        let _ = child.wait();
+    });
     std::fs::write(directory.join("root-ready"), format!("{}\n", std::process::id())).expect("root marker");
     let until = Instant::now() + Duration::from_secs(20);
     while !std::fs::read_to_string(directory.join("root-exit")).is_ok_and(|s| s.ends_with('\n')) {
         assert!(Instant::now() < until, "root exit gate was never released");
         std::thread::sleep(Duration::from_millis(5));
     }
-    // std::process::Child Drop closes its handle, leaving the descendant for the real supervisor to track.
+    // The detached reaper does not hold this root alive; the gate controls its exit, not the descendant's.
 }
