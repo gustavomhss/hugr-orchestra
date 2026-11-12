@@ -389,21 +389,20 @@ describe("SessionV2.create", () => {
     }),
   )
 
-  it.effect("treats an omitted variant as the default variant", () =>
+  it.effect("keeps omitted and literal default variants as distinct durable selections", () =>
     Effect.gen(function* () {
       const session = yield* SessionV2.Service
       const model = ModelV2.Ref.make({ id: ModelV2.ID.make("sonnet"), providerID: ProviderV2.ID.anthropic })
       const created = yield* session.create({ location, model })
+      const named = ModelV2.Ref.make({ ...model, variant: ModelV2.VariantID.make("default") })
 
-      yield* session.switchModel({
-        sessionID: created.id,
-        model: ModelV2.Ref.make({ ...model, variant: ModelV2.VariantID.make("default") }),
-      })
+      yield* session.switchModel({ sessionID: created.id, model: named })
 
       const { db } = yield* Database.Service
       expect(
         yield* db.select().from(EventTable).where(eq(EventTable.aggregate_id, created.id)).all().pipe(Effect.orDie),
-      ).toHaveLength(1)
+      ).toHaveLength(2)
+      expect((yield* session.get(created.id)).model).toEqual(named)
     }),
   )
 
