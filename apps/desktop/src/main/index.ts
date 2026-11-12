@@ -202,8 +202,7 @@ const main = Effect.gen(function* () {
     },
   )
   const stopSidecars = async () => {
-    await killSidecar()
-    wslServers.stopAll()
+    await killSidecar().finally(() => wslServers.stopAll())
   }
   const shutdown = {
     runtimeStop: undefined as (() => Promise<void>) | undefined,
@@ -331,7 +330,7 @@ const main = Effect.gen(function* () {
   // The About panel would show the inherited process name (APP_NAMES); it names the product instead. Its icon is
   // still the bundle's, until HuGR desktop icons exist.
   app.setAboutPanelOptions({ applicationName: nativeT("desktop.menu.app"), applicationVersion: app.getVersion() })
-  const updater = setupAutoUpdater(() => flushWindows().then(stopSidecars))
+  const updater = setupAutoUpdater()
   const menuDeps = {
     trigger: (id: string) => {
       const win = getLastFocusedWindow()
