@@ -11,8 +11,8 @@ const Envelope = Schema.Struct({ type: Schema.String, payload: Schema.Unknown })
 const maxBytes = 64 * 1024
 const layer = AppNodeBuilder.build(AppProcess.node)
 
-for (const mode of ["A-default", "B-no-await"] as const) {
-  test(`PROBE ONLY E10 worker entry A/B ${mode}`, () => {
+for (const mode of ["CPU-native"] as const) {
+  test(`PROBE ONLY E10 actual native CPU termination ${mode}`, () => {
     expectSpawn(import.meta.path)
     return Effect.runPromise(Effect.gen(function* () {
       const processes = yield* AppProcess.Service
@@ -20,7 +20,6 @@ for (const mode of ["A-default", "B-no-await"] as const) {
         path.join(import.meta.dir, "fixture/codemode-worker-probe.mjs"),
         pathToFileURL(path.resolve(import.meta.dir, "../../codemode/src/worker.ts")).href,
         mode,
-        ...(mode === "B-no-await" ? [pathToFileURL(path.join(import.meta.dir, "fixture/codemode-worker-no-await-entry.mjs")).href] : []),
       ], { stdin: "ignore", stdout: "pipe", stderr: "pipe", killSignal: "SIGKILL", forceKillAfter: 100 }))
       const ready = yield* Deferred.make<void>()
       const messages = new Array<typeof Envelope.Type>()

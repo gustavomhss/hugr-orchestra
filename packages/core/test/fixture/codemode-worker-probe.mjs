@@ -19,6 +19,10 @@ const errorFacts = (error) => ({
 
 async function main() {
   const { executeWithLimits } = await import(process.argv[2])
+  const pattern = "^" + "(?=a+$)".repeat(2048) + "a+$"
+  const code = process.argv[3] === "CPU-native"
+    ? `console.log("regex-phase"); const subject = "a".repeat(8388608); /${pattern}/.test(subject); console.log("regex-completed"); return 1`
+    : "return 1"
   emit("HOST_READY", { atMs: performance.now() - clock, mode: process.argv[3] })
   state.timer = setTimeout(() => emit("SNAPSHOT", {
     atMs: performance.now() - clock, ready: state.ready, online: state.online, start: state.start, done: state.done,
@@ -27,8 +31,8 @@ async function main() {
   }), 3000)
   try {
     const exit = await Effect.runPromiseExit(executeWithLimits(
-      { code: "return 1" },
-      { timeoutMs: undefined, maxToolCalls: undefined, maxOutputBytes: undefined },
+      { code },
+      { timeoutMs: process.argv[3] === "CPU-native" ? 1500 : undefined, maxToolCalls: undefined, maxOutputBytes: undefined },
       [],
       (worker) => {
         state.worker = worker
