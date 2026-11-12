@@ -17,6 +17,7 @@ import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
 import { Location } from "../../location"
+import { LocationMutation } from "../../location-mutation"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
 import { ProviderV2 } from "../../provider"
@@ -95,6 +96,7 @@ const layer = Layer.effect(
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
     const location = yield* Location.Service
+    const mutations = yield* LocationMutation.Service
     const systemContext = yield* SystemContextRegistry.Service
     const skillGuidance = yield* SkillGuidance.Service
     const referenceGuidance = yield* ReferenceGuidance.Service
@@ -326,17 +328,40 @@ const layer = Layer.effect(
             const decision = yield* store.charge(session.id, { type: "tool", name: input.safety?.tool ?? input.action })
             if (!decision.admitted) return yield* new PermissionV2.CorrectedError({ feedback: decision.deviation.detail })
           }
+          const target = input.filesystem
+            ? yield* mutations.resolve(input.filesystem).pipe(
+                Effect.mapError(() => new ToolSafety.Denied({ reason: "hosted-filesystem-path" })),
+              )
+            : undefined
+          if (target?.externalDirectory)
+            yield* permissions
+              .authorize({
+                ...LocationMutation.externalDirectoryPermission(target.externalDirectory),
+                sessionID: session.id,
+                agent: agent.id,
+                metadata: { tool: input.tool, callID: input.callID },
+              })
+              .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           yield* permissions
             .authorize({
               sessionID: session.id,
               agent: agent.id,
               action: input.action,
-              resources: [...input.resources],
+              resources: target && input.filesystem?.resource === "path" ? [target.resource] : [...input.resources],
               metadata: { tool: input.tool, callID: input.callID },
             })
             .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           if (!input.safety) return {}
-          const call = input.safety
+          // The SDK keeps its input; policy and safety must judge the same physical target.
+          const call = target
+            ? {
+                ...input.safety,
+                args: {
+                  ...input.safety.args,
+                  ...(input.filesystem?.resource === "path" ? { filePath: target.canonical } : { path: target.canonical }),
+                },
+              }
+            : input.safety
           return yield* safety.run(
             {
               tool: call.tool,
@@ -744,6 +769,7 @@ export const node = makeLocationNode({
     SessionSubagentModels.node,
     SessionStore.node,
     Location.node,
+    LocationMutation.node,
     SystemContextRegistry.node,
     SkillGuidance.node,
     ReferenceGuidance.node,

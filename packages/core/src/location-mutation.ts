@@ -81,7 +81,8 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
     const location = yield* Location.Service
-    const locationRoot = yield* fs.realPath(location.directory)
+    // Capturing this service need not access disk; the first actual resolution fixes the physical root for this Location.
+    const locationRoot = yield* Effect.cached(fs.realPath(location.directory))
 
     function notFound<A>(effect: Effect.Effect<A, FSUtil.Error>) {
       return effect.pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)))
@@ -132,20 +133,21 @@ const layer = Layer.effect(
     })
 
     const resolve = Effect.fn("LocationMutation.resolve")(function* (input: ResolveInput) {
+      const root = yield* locationRoot
       const relative = !path.isAbsolute(input.path)
       const absolute = path.resolve(location.directory, input.path)
       const lexicallyInternal = FSUtil.contains(location.directory, absolute)
       if (relative && !lexicallyInternal) return yield* new PathError({ path: input.path, reason: "relative_escape" })
 
       const resolved = yield* resolvePath(absolute)
-      if (lexicallyInternal && !FSUtil.contains(locationRoot, resolved.canonical)) {
+      if (lexicallyInternal && !FSUtil.contains(root, resolved.canonical)) {
         return yield* new PathError({ path: input.path, reason: "location_escape" })
       }
 
       const external = !lexicallyInternal
       const resource = external
         ? slash(resolved.canonical)
-        : slash(path.relative(locationRoot, resolved.canonical) || ".")
+        : slash(path.relative(root, resolved.canonical) || ".")
       const externalDirectory =
         input.kind === "directory" && resolved.type === "Directory" ? resolved.canonical : resolved.directory
       const externalResource = slash(path.join(externalDirectory, "*"))

@@ -261,11 +261,14 @@ export const make = Effect.gen(function* () {
                 }
                 if (turn.agent.id === "maestro" && !PERMISSIONS[tool] && !MAESTRO_BOOKKEEPING.has(tool))
                   return { allow: false, reason: UNMAPPED }
+                const filesystem = filesystemTarget(tool, input)
+                if (filesystem === false) return { allow: false, reason: "Filesystem calls require a nonempty string path." }
                 return Effect.runPromise(
                   turn.authorize({
                     callID: toolUseID,
                     tool,
                     ...permission(tool, input, turn.session.location.directory),
+                    filesystem,
                     safety: safetyCall(tool, input),
                   }).pipe(
                     Effect.map((authorization): Decision => ({ allow: true, input: replacements(tool, authorization) })),
@@ -754,6 +757,20 @@ function questions(input: Record<string, unknown>) {
     options: list(item.options).map((option) => ({ label: text(option.label), description: text(option.description) })),
     multiple: item.multiSelect === true,
   }))
+}
+
+/** Validate the SDK target without resolving it; physical authority belongs to the runner's Location. */
+function filesystemTarget(tool: string, input: Record<string, unknown>) {
+  const rule = PERMISSIONS[tool]
+  const search = tool === "Glob" || tool === "Grep"
+  if (!rule?.path && !search) return
+  const value = rule?.path ? input[rule.field] : Object.hasOwn(input, "path") ? input.path : "."
+  if (typeof value !== "string" || value.length === 0) return false
+  return {
+    path: value,
+    kind: rule?.path && tool !== "Read" ? ("file" as const) : ("directory" as const),
+    resource: search ? ("pattern" as const) : ("path" as const),
+  }
 }
 
 /** The call as ToolSafety reads it, under Orchestra's tool name and argument names (legacy `gate.invocation`). */

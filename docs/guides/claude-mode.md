@@ -95,6 +95,11 @@ These follow from Claude Code running the model. None of them changes what you s
 - Built-in reading, editing and shell work still pass Orchestra's authorization gate. Orchestra-specific tools are served
   as `mcp__orchestra__*`, with their permissions settled by Orchestra's runner; selecting Claude Code is not permission
   bypass. See the [host's tool gate](../../modules/engine-adapters/claude-code/src/v2/host.ts#L152-L224).
+- Built-in file tools and Glob/Grep search roots are checked against the physical project Location. An absolute path
+  outside it needs `external_directory` approval as well as permission for the read, edit or search. Relative escapes
+  and project aliases that point outside are refused; aliases inside the project use the target's permissions and safety
+  restrictions. Claude Code receives your original arguments. These checks do not guarantee safety against another
+  process replacing a symlink between approval and the filesystem operation.
 - Claude Code's own subagent tool is not used. Seats are always Orchestra Sessions.
 
 ## Known limits
