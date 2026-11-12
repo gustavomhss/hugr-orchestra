@@ -1,5 +1,13 @@
 # WP-W2 HTTP acceptance anchor
 
+Current checkpoint: W1 is complete (43279701564). W2's actual hosted red is
+verified on Linux and Windows (43282200736): W05–W08 fail for explicit unavailable
+HTTP behavior; all three older HTTP cases pass and Omni control passes with
+one real spawn per OS, zero delegated. Named outcomes and exact five-package
+trees are in worktree-http-baseline.json. W2-A is complete; W2-B may implement
+only the frozen source/handler/composition seams below. Subsequent pending-request
+wording is historical preparation, superseded by this checkpoint and final receipt.
+
 Baseline: 3bf327f497 (W1 scalar metadata correction). This is W2-A acceptance
 preparation, not the registry-backed HTTP implementation. W1's corrected hosted
 rerun remains pending; it is not a passing W1 claim or W2-B dispatch permission.
@@ -124,3 +132,27 @@ The real source must call the void afterRegistryRead hook only after its actual
 single-statement SELECT and before returning those rows. The callback receives
 no data and cannot replace the authoritative result. These are frozen integration
 decisions, not an implementation or a waiver of W2's hosted-red prerequisite.
+
+## Verified HTTP baseline and W2-B release
+
+Run [43282200736](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282200736)
+completed with three passes and four expected failures on each OS (31 expects).
+W05, W07, W08 and W06 fail on the explicit 503 unavailable anchors; authentication,
+declared-root disk reads, process snapshot and native identity regression pass.
+Each declared Omni control passed with one real spawn, zero delegated. This is
+red acceptance evidence, not a passing API implementation.
+
+Fetched snapshot 5a9799069735f815ada51892f4d6cd9b717a727e matches the requested
+Server/Protocol/Client/Core/Schema trees above. All seven named outcomes per OS
+and controls are in worktree-http-baseline.json. W1 has separately passed its
+unchanged collector suite. Coverage, cold quality, generator, package typechecks
+and guard prerequisites were already approved. No W2 acceptance or anchor was
+changed to obtain this baseline.
+
+W2-B is split conflict-free: a source worker owns only src/activity-worktree.ts;
+the lead owns handlers/activity.ts, routes.ts and legacy activity-http.test.ts
+database/service composition. The source/Monitor/Service contract and placement
+above stay frozen. Each source unit must receive independent cold review;
+Server typecheck and the unchanged three-file both-OS hosted pack gate integration.
+No owner app/server/database operations are included. W2 remains incomplete until
+the same named red cases become green without losing the existing passes/control.

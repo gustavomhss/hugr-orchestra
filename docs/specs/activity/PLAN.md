@@ -198,8 +198,8 @@ validation seam; parent closure still requires W01–W04.
 
 ## WP-W2 — authenticated registered-root API
 
-Status: W2-A anchors and executable acceptance reviewed/typechecked; hosted red pending.
-Owner: lead integration. W2-B remains undispatched.
+Status: W2-A complete; exact-source hosted red verified (43282200736).
+Owner: lead integration. W2-B ready for the frozen source/handler/composition work.
 Depends on R0 persisted internal reads and W1 frozen Schema/collector anchor. Writes: activity Protocol,
 Server handler and internal activity-worktree service, focused HTTP tests/fixture,
 actual composition/regression wiring, generated Client through generator only.
@@ -214,11 +214,11 @@ Acceptance owner: W05–W08. No arbitrary path input or project mutation.
 
 ### Task W2-A — HTTP acceptance and red evidence
 
-Owner: lead; state: unavailable API/service anchors and focused tests reviewed/typechecked.
+Owner: lead; state: complete, exact-source hosted red verified (43282200736).
 Writes: focused HTTP tests/fixture, unavailable anchors and generated Client.
 
 - **Axioms:** codec/auth behavior must be exercised through the real HTTP implementation; a mocked handler cannot prove it (R1/R19).
-- **DoD:** write named W05–W08 cases, review coverage, capture hosted `bun run test:ci server test/activity-http.test.ts` red baseline and preserve tested snapshot/expected failure.
+- **DoD:** write named W05–W08 cases, review coverage, capture hosted `bun run test:ci server test/activity-worktree-http.test.ts test/activity-worktree-races.test.ts test/activity-http.test.ts --os both` red baseline and preserve tested snapshot/expected failure.
 - **Completeness criteria:** both endpoints unauthenticated; malformed/retired IDs; unobserved recreation and strategy ABA during a walk; registry error; complete/partial measurement; unchanged fixture/registry; exact revision strings and omitted optional data; older registry refresh finishing after a newer one.
 - **Invariants:** fixture roots are server-resolved; tests do not accidentally target user directories or assert a machine-wide empty inventory; no owner title inferred from path.
 - **Success criteria:** failures identify missing new behavior, and the unchanged acceptance tests later pass against the complete implementation. If the pack spawns through Omni, the required positive control must pass.
@@ -226,7 +226,8 @@ Writes: focused HTTP tests/fixture, unavailable anchors and generated Client.
 
 ### Task W2-B — routes, registry integration and generation
 
-Owner: lead integration; state: awaits W2-A and W1 contract.
+Owner: lead integration and disjoint source worker; state: W2-A/W1 gates passed,
+ready for frozen implementation and independent integration review.
 Writes: Protocol activity group, Server activity handler/internal service and
 actual composition/regression wiring, generated Client outputs.
 

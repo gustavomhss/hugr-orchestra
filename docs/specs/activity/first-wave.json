@@ -59,22 +59,26 @@
     {
       "id": "W05",
       "test": "packages/server/test/activity-worktree-http.test.ts :: W05 HTTP inventory authenticates and selects only persisted git worktree roots",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282200736"
     },
     {
       "id": "W06",
       "test": "packages/server/test/activity-worktree-races.test.ts :: W06 real HTTP walks coalesce, enforce capacity and reject retired incarnations before publication",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282200736"
     },
     {
       "id": "W07",
       "test": "packages/server/test/activity-worktree-http.test.ts :: W07 generated Client measures real worktrees and retains complete bytes after partial HTTP reads",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282200736"
     },
     {
       "id": "W08",
       "test": "packages/server/test/activity-worktree-http.test.ts :: W08 registry failure is explicit HTTP failure and recovery preserves readings and server lifetime isolation",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-awaiting-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282200736"
     },
     {
       "id": "W09",
@@ -158,7 +162,8 @@
         "packages/core/src/project/directories.ts"
       ],
       "executionAnchor": "docs/specs/activity/WORKTREE-HTTP-EXECUTION.md",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
+      "executionStatus": "hosted-red-verified-ready-for-implementation",
+      "acceptanceBaseline": "5a9799069735f815ada51892f4d6cd9b717a727e"
     },
     {
       "id": "WP-W3",

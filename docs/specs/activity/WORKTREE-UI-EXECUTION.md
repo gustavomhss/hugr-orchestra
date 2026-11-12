@@ -1,8 +1,8 @@
 # WP-W3 UI acceptance anchor
 
 This is W3-A acceptance preparation, not a working manual-reading interface.
-W1 is complete; W2's hosted red is running and W2 implementation remains
-undispatched. W3-B still requires its own verified hosted red and W2 integration.
+W1 is complete; W2's hosted red is verified and W2 implementation is next.
+W3-B still requires its own verified hosted red and W2 integration.
 PLAN.md retains the six explicit fields for WP-W3 and each task.
 
 ## Frozen source and ownership
@@ -70,5 +70,7 @@ the snapshot and compare the complete App tree, including the typed copy keys.
 
 Acceptance commits: 5d5024e89d (lead unit) and a57402023d (request/lifetime unit).
 Requested App tree: 04f66395d9d666268842a0e4c4bc86b175f152f6.
+The reviewed pack is now active in test:ci; log /tmp/activity-worktree-ui-red-ci.log,
+exit /tmp/activity-worktree-ui-red-ci.exit. Do not start a duplicate request.
 No hosted W3 result exists yet. Rendered actual-HTTP EN/BR/narrow/keyboard/source/
 error observations remain explicitly pending until W2 and W3 implementation.

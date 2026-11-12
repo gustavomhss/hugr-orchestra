@@ -14,8 +14,11 @@ The first implementation's scalar identifier failure and correction are preserve
 in worktree-first-validation.json and WORKTREE-EXECUTION.md. W2-A has explicit unavailable API/service anchors, generated Client
 and real HTTP acceptance W05–W08: two clean coverage reviews and independent
 quality review approved; Protocol/Server/Client typechecks and guards passed.
-The W2 hosted red request uploaded its snapshot and is waiting for runners at
-/tmp/activity-worktree-http-red-ci.log; W2-B is not dispatched. No
+W2 hosted red 43282200736 is verified: all four new cases fail for unavailable
+HTTP behavior, all three legacy cases pass, and declared Omni control passes
+with one real spawn/zero delegated on each OS. Exact fetched trees and named
+outcomes are in worktree-http-baseline.json. W2-A is complete; frozen W2-B source
+and composition work is next. No
 functional Worktrees manual-read API/button is exposed yet. See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
 worktree-validation.json for actual named outcomes.
@@ -29,7 +32,8 @@ approved preparation. A compilable unavailable controller anchor now freezes
 the generated Client/store/request/clock signatures. W09–W12 executable cases
 and translation assertions received independent quality review and two clean
 coverage sweeps per disjoint scope after closing identified gaps. App typecheck,
-formatting and guards passed; hosted red is next. See WORKTREE-UI-EXECUTION.md.
+formatting and guards passed; the scoped hosted red request is active at
+/tmp/activity-worktree-ui-red-ci.log. See WORKTREE-UI-EXECUTION.md.
 The mistaken root typecheck was stopped and a scoped App rerun passed. No local
 tests ran. W3 runtime implementation is not dispatched. Grok 4.7
 was attempted for a read-only W2 review: opencode-go produced no verdict within
