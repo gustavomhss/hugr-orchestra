@@ -174,6 +174,7 @@ describe("server session", () => {
   })
 
   test("forced history settles failed predecessors, coalesces callers and leaves another Session independent", async () => {
+    const messageID = "msg_force_boundary"
     const results: {
       failure: string
       problem: Error
@@ -184,6 +185,8 @@ describe("server session", () => {
       maximum: number
       ids: string[] | undefined
       later: unknown[]
+      message: SessionMessageInfo | undefined
+      parts: Part[] | undefined
     }[] = []
     for (const failure of ["history", "metadata", "trailing"] as const) {
       const pending = deferredPage()
@@ -218,7 +221,7 @@ describe("server session", () => {
               secondStarted.resolve()
               return failure === "trailing" && state.reads === 2
                 ? await trailingPage.promise
-                : page([v2User("fresh-after-failure")])
+                : page([v2User(messageID, 1, "fresh-after-failure")])
             } finally {
               state.active--
             }
@@ -244,7 +247,7 @@ describe("server session", () => {
       const later: ReturnType<typeof outcome>[] = []
       try {
         if (failure === "history") pending.reject(problem)
-        if (failure !== "history") pending.resolve(page([v2User("old-captured-page")]))
+        if (failure !== "history") pending.resolve(page([v2User(messageID, 1, "old-captured-page")]))
         if (failure === "trailing") {
           await first
           // This deadline only bounds observation; the actual second HTTP read establishes the ordering.
@@ -253,7 +256,7 @@ describe("server session", () => {
           expect(state.active).toBe(1)
           later.push(outcome(store.sync("ses_child", { force: true })), outcome(store.sync("ses_child", { force: true })))
           expect(state.reads).toBe(2)
-          trailingPage.resolve(page([v2User("captured-trailing-page")]))
+          trailingPage.resolve(page([v2User(messageID, 1, "captured-trailing-page")]))
         }
         const laterResults = await Promise.all(later)
         results.push({
@@ -266,6 +269,8 @@ describe("server session", () => {
           maximum: state.maximum,
           ids: ids(store),
           later: laterResults,
+          message: store.data.session_message.ses_child?.find((message) => message.id === messageID),
+          parts: store.data.part[messageID],
         })
       } finally {
         metadata.resolve(info("ses_child"))
@@ -280,15 +285,18 @@ describe("server session", () => {
       expect(result.duplicate).toEqual({ ok: true })
       expect(result.reads).toBe(result.failure === "trailing" ? 3 : 2)
       expect(result.maximum).toBe(1)
-      expect(result.ids).toEqual(["fresh-after-failure"])
+      expect(result.ids).toEqual([messageID])
+      expect(result.message).toMatchObject({ id: messageID, type: "user", text: "fresh-after-failure" })
+      expect(result.parts).toEqual([textPart(messageID, { text: "fresh-after-failure" })])
       expect(result.later).toEqual(result.failure === "trailing" ? [{ ok: true }, { ok: true }] : [])
     }
   })
 
   test("deletion cancels the old trailing read without letting its finalizer erase a replacement owner", async () => {
+    const messageID = "msg_replacement_boundary"
     const old = deferredPage()
     const replacement = deferredPage()
-    const client = messageClient(old.promise, replacement.promise, page([v2User("replacement-fresh")]))
+    const client = messageClient(old.promise, replacement.promise, page([v2User(messageID, 1, "replacement-fresh")]))
     const store = create(client)
     const first = store.sync("ses_child")
     await client.requested(1)
@@ -298,15 +306,19 @@ describe("server session", () => {
     await client.requested(2)
     const nextForce = store.sync("ses_child", { force: true })
     try {
-      old.resolve(page([v2User("deleted-owner")]))
+      old.resolve(page([v2User(messageID, 1, "deleted-owner")]))
       await Promise.all([first, obsolete])
       expect(client.requests).toHaveLength(2)
-      expect(ids(store) ?? []).not.toContain("deleted-owner")
+      expect(ids(store) ?? []).not.toContain(messageID)
       const sameReplacement = store.sync("ses_child", { force: true })
-      replacement.resolve(page([v2User("replacement-captured")]))
+      replacement.resolve(page([v2User(messageID, 1, "replacement-captured")]))
       await Promise.all([next, nextForce, sameReplacement])
       expect(client.requests).toHaveLength(3)
-      expect(ids(store)).toEqual(["replacement-fresh"])
+      expect(ids(store)).toEqual([messageID])
+      expect(store.data.session_message.ses_child?.find((message) => message.id === messageID)).toMatchObject({
+        id: messageID, type: "user", text: "replacement-fresh",
+      })
+      expect(store.data.part[messageID]).toEqual([textPart(messageID, { text: "replacement-fresh" })])
     } finally {
       old.resolve(page())
       replacement.resolve(page())
