@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import { createComponent, createRoot } from "solid-js"
+import { createComponent } from "solid-js"
+import { render } from "solid-js/web"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import type { SessionActiveOutput } from "@/v2-wire"
 import { solidDom } from "./solid-dom"
@@ -19,6 +20,7 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
   const connections: ReadableStreamDefaultController<Uint8Array>[] = []
   const activeReads: string[] = []
   const unexpected: string[] = []
+  const requests: string[] = []
   const location = { directory: "/repo", project: { id: "project", directory: "/repo" } }
   const send = (controller: ReadableStreamDefaultController<Uint8Array>, event: object) =>
     controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`))
@@ -27,6 +29,7 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
     hostname: "127.0.0.1",
     fetch(request) {
       const pathname = new URL(request.url).pathname
+      requests.push(pathname)
       if (pathname === "/api/event")
         return new Response(new ReadableStream<Uint8Array>({
           start(controller) {
@@ -68,8 +71,9 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const greetings: string[] = []
   let sync!: ReturnType<typeof createServerSyncContextInner>
-  const dispose = createRoot((dispose) => {
-    createComponent(PlatformProvider, {
+  const host = document.createElement("div")
+  document.body.appendChild(host)
+  const dispose = render(() => createComponent(PlatformProvider, {
       value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
       get children() {
         return createComponent(LanguageProvider, {
@@ -89,12 +93,17 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
           },
         })
       },
-    })
-    return dispose
-  })
+    }), host)
 
   try {
-    await until(() => greetings.length === 1 && activeReads.length === 1 && sync.ready)
+    expect(sync).toBeDefined()
+    await until(() => greetings.length === 1 && activeReads.length === 1 && sync.ready).catch((error) => {
+      console.error("initial browser resync fixture did not become ready", {
+        connections: connections.length, greetings, activeReads: activeReads.length, ready: sync?.ready, requests,
+        queries: client.getQueryCache().getAll().map((query) => ({ key: query.queryKey, status: query.state.status, error: String(query.state.error) })),
+      })
+      throw error
+    })
     expect(unexpected).toEqual([])
     expect(connections).toHaveLength(1)
     sync.session.set("session_status", "ses_started", { type: "idle" })
@@ -121,6 +130,7 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
   } finally {
     release.resolve()
     dispose()
+    host.remove()
     client.clear()
     server.stop(true)
   }
