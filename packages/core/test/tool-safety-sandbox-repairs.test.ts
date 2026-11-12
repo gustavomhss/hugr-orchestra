@@ -246,6 +246,19 @@ it.live("later multi-root mkdir failure rolls back only owned empty directories 
   }),
 )
 
+it.live("sandbox parent identities retain file ID and creation-time precision", () => Effect.sync(() => {
+  const original = { dev: 1n, ino: 9007199254740992n, birthtimeNs: 1794471187150926600n }
+  const replacement = { ...original, ino: original.ino + 1n }
+  // Distinct NTFS directories can share creation time; rounded file IDs must not identify them as one.
+  expect(Number(original.ino)).toBe(Number(replacement.ino))
+  expect(SandboxParents.sameIdentity(original, replacement)).toBe(false)
+  const later = { ...original, birthtimeNs: original.birthtimeNs + 1n }
+  expect(Number(original.birthtimeNs)).toBe(Number(later.birthtimeNs))
+  expect(SandboxParents.sameIdentity(original, later)).toBe(false)
+  expect(SandboxParents.sameIdentity(original, { ...original })).toBe(true)
+  expect(SandboxParents.sameIdentity(original, { ...original, dev: 2n })).toBe(false)
+}))
+
 it.live("failed preparation preserves a replacement directory with a different identity", () =>
   Effect.gen(function* () {
     const f = yield* fixture
