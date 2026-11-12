@@ -156,7 +156,7 @@ export interface Interface {
   /**
    * Commit nested publications atomically, then deliver their notifications outside SQL/lifecycle guards.
    * Boundary-less nested calls flatten. New nested boundaries or unmanaged ambient SQL transactions are programmer
-   * defects, rejected before their effects run.
+   * defects, rejected before their effects run. Replay/replayAll composition is likewise rejected before effects.
    * Cancellation after commit still schedules all committed notifications in the event service scope.
    */
   readonly transact: <A, E, R>(effect: Effect.Effect<A, E, R>, boundary?: CommitBoundary) => Effect.Effect<A, E, R>
@@ -601,6 +601,9 @@ export const layerWith = (options?: LayerOptions) =>
         options?: { readonly publish?: boolean; readonly ownerID?: string; readonly strictOwner?: boolean },
       ) {
         return Effect.gen(function* () {
+          if (yield* batch) return yield* Effect.die(new InvalidDurableEventError({
+            type: "event.transaction", message: "Replay is not supported inside an event transaction",
+          }))
           const definition = Durable.get(event.type)
           if (!definition?.durable) {
             yield* Effect.die(
@@ -642,6 +645,9 @@ export const layerWith = (options?: LayerOptions) =>
         options?: { readonly publish?: boolean; readonly ownerID?: string; readonly strictOwner?: boolean },
       ) {
         return Effect.gen(function* () {
+          if (yield* batch) return yield* Effect.die(new InvalidDurableEventError({
+            type: "event.transaction", message: "Replay is not supported inside an event transaction",
+          }))
           const source = events[0]?.aggregateID
           if (!source) return undefined
           if (events.some((event) => event.aggregateID !== source)) {
@@ -653,7 +659,7 @@ export const layerWith = (options?: LayerOptions) =>
             )
           }
           const box: { ticket?: EventOrder.Ticket } = {}
-          const batch = db
+          const committing = db
             .transaction(
               () =>
                 Effect.gen(function* () {
@@ -677,7 +683,7 @@ export const layerWith = (options?: LayerOptions) =>
               { behavior: "immediate" },
             )
             .pipe(order.guard(box), Effect.orDie)
-          yield* order.commit(batch, (committed) => ({
+          yield* order.commit(committing, (committed) => ({
             value: undefined,
             notifying: Effect.forEach(
               options?.publish ? committed.replayed.filter((event): event is Payload => event !== undefined) : [],
