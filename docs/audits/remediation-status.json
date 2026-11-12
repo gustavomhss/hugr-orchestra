@@ -12,11 +12,25 @@
     {
       "id": "E1",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "ui",
+      "status": "behavioral_red_source_authorized",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "controls_compositional_green_both_os",
+          "runs": [
+            "43223282235",
+            "43225383063"
+          ],
+          "result": "Four UI controls pass in original run; native control corrected to exact204 selection/200 prompt and versioned SQL event counts then passes29assertions perOS. Original native failure was fixture, not product RED."
+        },
+        {
+          "kind": "full_baseline_behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43227911160",
+          "result": "16pass/18behavioral failures/260assertions/2Omni spawns perOS; all34outcomes and18first-failure lines match. RealHTTP200+SQL admission/event1 witnessed BEFORE ACK loss; retry200 rotates ID. Later final row count and part identity assertions remain final-green obligations."
+        }
+      ]
     },
     {
       "id": "E2",
@@ -1520,17 +1534,42 @@
     {
       "id": "L6",
       "severity": "P2",
-      "owner": "lead",
-      "status": "acceptance_controls_verified_baseline_pending",
-      "runtime_reproduced": false,
-      "commits": [],
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "1ceb97962a",
+        "877a32ca83",
+        "cce2186c25",
+        "90420b0721"
+      ],
       "evidence": [
         {
           "kind": "actual_implementation_bridge_controls",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43221084330",
           "result": "2pass/27assertions; actual Bun.build and8export controls pass. Production unchanged; five fault cases pending."
+        },
+        {
+          "kind": "behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43222105190",
+          "result": "Five actual behavioral failures; post-first-failure sentinel/projection assertions were not reached and are not counted as observed damage."
+        },
+        {
+          "kind": "final_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43227447509",
+          "result": "7pass/126assertions per OS; actual source bundled at runtime, snapshot4b121d20f9a17be805352020fb510b9fec82e70c."
+        },
+        {
+          "kind": "integrated_source_generation_types",
+          "result": "4 owncommits through90420b0721; all6raw/test+18generated hashes match seal. Official generator twice0 and18files identical;4runtimeJS changed,9DTS preserved. Atlas15project references andboundary types0. OwnGuard0/no stale units/no L6 anchors. Rootguards0/boundaries0/spawn0."
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE246a +root read exact four files and24hashes."
         }
-      ]
+      ],
+      "remaining": "Closed with seven actual-implementation cases per OS and official shipped bundle generation. No concurrency, mid-write kill, power-loss, hostile filesystem swap or full Vitest-suite proof claimed."
     },
     {
       "id": "L7",
@@ -2346,15 +2385,25 @@
     {
       "id": "N2",
       "severity": "P2",
-      "owner": "lead",
-      "status": "acceptance_baseline_setup_fix",
-      "runtime_reproduced": false,
+      "owner": "desktop",
+      "status": "behavioral_red_source_authorized",
+      "runtime_reproduced": true,
       "commits": [],
       "evidence": [
         {
           "kind": "baseline_setup_failure_not_behavioral_red",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43221281046",
           "result": "Pinnedfbb checkout; Linux clippy zombie_processes prevents all new tests; Windows succeeds with0 Linux-only test matches and existing Node11/Bun11 controls; Mac queued at recording. Actor-only4a94 adds real wait thread, no suppression or production change, cold approved."
+        },
+        {
+          "kind": "rss_and_timeout_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43222763304",
+          "result": "Linux3actual enforcement failures (RSS/two original timeouts) after realAckError+restore. Two cancellation tests initially passed by race, not RED; Windows/Mac0Linux-only matches."
+        },
+        {
+          "kind": "cancellation_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43225258741",
+          "result": "Linux2actual cancellation failures after realAckError+restore, observed old watcher ended, then original token cancelled and OS descendant remains alive3s. Checkpoint is not OS death proof; actual OS assertions remain mandatory. Source retry authorized only afterward."
         }
       ]
     },
@@ -2776,12 +2825,12 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 48,
+    "new_fixes_verified": 49,
     "already_fixed_verified": 1,
-    "remaining": 16,
+    "remaining": 15,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "9850d20eb7",
+  "integration_checkpoint": "90420b0721",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
