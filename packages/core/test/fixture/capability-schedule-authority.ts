@@ -134,7 +134,7 @@ export function make() {
             if (!Effect.isEffect(result)) throw new Error("Expected the actual SQLite run effect")
             return result.pipe(Effect.tap(() => checkpoint("writer-after-sql")))
           }
-          return typeof result === "object" && result !== null && !Effect.isEffect(result) ? observedWrite(result) : result
+          return (key === "set" || key === "where") && typeof result === "object" && result !== null ? observedWrite(result) : result
         }
       } })
     }
