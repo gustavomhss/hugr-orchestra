@@ -136,6 +136,7 @@ export const state = {
   statusObserved: (_args: unknown[]) => {},
   modelID: "model",
   agentID: "backend",
+  agentConfig: undefined as { model?: { providerID: string; modelID: string }; variant?: string } | undefined,
 }
 
 const [promptStore, setPromptStore] = createStore<PromptStore>({
@@ -339,7 +340,7 @@ beforeAll(async () => {
       },
       agent: {
         // A seat renamed from its default label: payloads must carry the stable id, never the label.
-        current: () => ({ id: state.agentID, name: "Pikachu" }),
+        current: () => ({ id: state.agentID, name: "Pikachu", ...state.agentConfig }),
       },
       session: {
         promote(directory: string, sessionID: string, selection: { agent?: string }) {
@@ -562,6 +563,7 @@ beforeEach(() => {
   state.statusObserved = () => {}
   state.modelID = "model"
   state.agentID = "backend"
+  state.agentConfig = undefined
   policyWrites.length = 0
   toasts.length = 0
   canonicalPolicies.clear()
