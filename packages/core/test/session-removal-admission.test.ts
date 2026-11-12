@@ -63,6 +63,53 @@ it.live("CONTROL L1: outside removal an existing Session ID still adopts its rec
   }),
 )
 
+// Listener escape gates make a broken uninterruptible publisher diagnosable without trapping fixture teardown.
+for (const boundary of ["Created", "PromptAdmitted"] as const) {
+  it.live(`CONTROL L1: ${boundary} listeners can await another Session admission after durable commit`, () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      const stop = yield* Deferred.make<void>()
+      const observed = yield* Queue.unbounded<{ durable: boolean; nested: boolean }>()
+      yield* Effect.gen(function* () {
+        const sessions = yield* SessionV2.Service
+        const events = yield* EventV2.Service
+        const database = yield* Database.Service
+        const other = yield* sessions.create({ location: f.location })
+        const sessionID = boundary === "Created"
+          ? SessionV2.ID.create()
+          : (yield* sessions.create({ location: f.location })).id
+        const messageID = SessionMessage.ID.create()
+        const unsubscribe = yield* events.listen((event) => {
+          const selected = boundary === "Created"
+            ? Schema.is(SessionEvent.Created)(event) && event.data.sessionID === sessionID
+            : Schema.is(SessionEvent.PromptAdmitted)(event) && event.data.messageID === messageID
+          if (!selected) return Effect.void
+          return Effect.gen(function* () {
+            const rows = boundary === "Created"
+              ? yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).all().pipe(Effect.orDie)
+              : yield* database.db.select().from(SessionInputTable).where(eq(SessionInputTable.id, messageID)).all().pipe(Effect.orDie)
+            const nested = boundary === "Created"
+              ? (yield* sessions.create({ location: f.location, parentID: other.id })).parentID === other.id
+              : (yield* sessions.prompt({ sessionID: other.id, prompt: { text: "nested listener admission" }, resume: false })).sessionID === other.id
+            yield* Queue.offer(observed, { durable: rows.length === 1, nested })
+          }).pipe(Effect.raceFirst(Deferred.await(stop)), Effect.interruptible)
+        })
+        yield* Effect.gen(function* () {
+          const publishing = yield* (boundary === "Created"
+            ? sessions.create({ id: sessionID, location: f.location }).pipe(Effect.asVoid)
+            : sessions.prompt({ id: messageID, sessionID, prompt: { text: "outer admission" }, resume: false }).pipe(Effect.asVoid)
+          ).pipe(Effect.forkChild)
+          const result = yield* Queue.take(observed).pipe(Effect.timeoutOption("2 seconds"))
+          // Release before assertions so even a regressed publisher can finish its actual notification.
+          yield* Deferred.succeed(stop, undefined)
+          yield* Fiber.join(publishing)
+          expect(result).toEqual(Option.some({ durable: true, nested: true }))
+        }).pipe(Effect.ensuring(Deferred.succeed(stop, undefined)), Effect.ensuring(unsubscribe))
+      }).pipe(Effect.ensuring(Deferred.succeed(stop, undefined)), Effect.ensuring(f.release()), Effect.provide(f.layer))
+    }),
+  )
+}
+
 it.live("removal cannot return while a child admitted after enumeration still owns a late tool effect", () =>
   Effect.gen(function* () {
     const f = yield* fixture()
