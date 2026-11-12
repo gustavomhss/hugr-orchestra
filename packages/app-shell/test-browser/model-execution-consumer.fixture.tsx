@@ -2,13 +2,14 @@ import { expect, mock } from "bun:test"
 import { mkdtemp, mkdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { createRoot } from "solid-js"
+import { createRoot, mergeProps } from "solid-js"
 import { createComponent, Dynamic, render } from "solid-js/web"
 import { createStore } from "solid-js/store"
 import { createModelCatalog } from "@/hooks/provider-catalog"
 import { mixedEngineAgents } from "@/testing/model-execution-fixture"
 import { normalizeProviderList } from "@/context/global-sync/utils"
 import { isolatedSolid } from "./orchestra/integrations-solid.fixture"
+import { virtualScrollElement } from "../src/components/virtual-scroll-element"
 import { DateTime, Effect, Fiber, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
@@ -72,7 +73,7 @@ export function transport(options: { native?: NativeServer; reply?: (request: Re
       body: request.method === "GET" ? undefined : await request.clone().json(), url, signal: request.signal })
     await control.before(url.pathname)
     if (url.pathname === "/api/health") return json({ pid: 123 })
-    if (!options.native && url.pathname.endsWith("/subagent-models")) return json({ mode: "inherit" })
+    if (!options.native && url.pathname.endsWith("/subagent-models")) return json({ data: { mode: "inherit" } })
     if (url.pathname === "/api/event") return new Response(new ReadableStream<Uint8Array>({
       start(controller) {
         streams.push(controller)
@@ -212,6 +213,20 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
 
 const loadRows = isolatedSolid("canonical-model-consumer-rows")
 const currentRows: { local?: ReturnType<typeof selection>["local"] } = {}
+const measuredRows = new WeakSet<HTMLElement>()
+mock.module(`${Bun.resolveSync("../src/components/virtual-scroll-element.ts", import.meta.dir)}?canonical-model-consumer-rows`, () => ({
+  virtualScrollElement(root: HTMLElement | undefined) {
+    const viewport = virtualScrollElement(root)
+    if (!viewport || measuredRows.has(viewport)) return viewport
+    // Synthetic layout for this owned viewport only; the controller and TanStack still compute all visible rows.
+    Object.defineProperties(viewport, {
+      offsetWidth: { configurable: true, value: 600 },
+      offsetHeight: { configurable: true, value: 220 },
+    })
+    measuredRows.add(viewport)
+    return viewport
+  },
+}))
 mock.module(`${Bun.resolveSync("../src/context/local.tsx", import.meta.dir)}?canonical-model-consumer-rows`, () => ({
   useLocal: () => { if (!currentRows.local) throw new Error("Selector not mounted"); return currentRows.local },
 }))
@@ -226,7 +241,7 @@ export async function selectorDOM(owner: ReturnType<typeof selection>) {
   const dispose = render(() => createComponent(platformModule.PlatformProvider, {
     value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
     get children() { return createComponent(languageModule.LanguageProvider, { locale: "en", get children() {
-      return createComponent(rowsModule.ModelSelectorPopoverV2, { model: owner.local.model, trigger: (props) => createComponent(Dynamic, { component: "button", ...props, children: "Choose model" }) })
+      return createComponent(rowsModule.ModelSelectorPopoverV2, { model: owner.local.model, trigger: (props) => createComponent(Dynamic, mergeProps({ component: "button" }, props, { children: "Choose model" })) })
     } }) },
   }), root)
   const button = root.querySelector("button")
