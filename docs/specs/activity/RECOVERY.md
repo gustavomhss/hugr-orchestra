@@ -4,6 +4,15 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
+WP-R0 acceptance preparation is now active: four executable G01–G04 tests,
+three strengthened real ProjectCopy integration cases and explicit unavailable
+internal-read anchors exist. Two clean coverage rounds and two separate cold
+quality reviews completed; the final Core typecheck passed. The corrected hosted
+Linux/Windows red baseline is waiting for shared runner capacity, not passing.
+Persistence implementation R0-B has not started; no owner database was migrated
+and no running app/server was restarted. Exact anchors, cases and pending run
+receipt are in [REGISTRATION-EXECUTION.md](REGISTRATION-EXECUTION.md).
+
 Planning follow-up: [PLAN.md](PLAN.md) records the whole R1–R20 coverage ledger
 and a corrected first wave of four specified WPs / eight tasks, each with the
 owner's six required quality fields. The adversarial findings required a new

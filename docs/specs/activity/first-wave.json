@@ -2,19 +2,23 @@
   "items": [
     {
       "id": "G01",
-      "test": "packages/core/test/activity-registration.test.ts :: G01 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-registration.test.ts :: G01 migration backfills unique IDs without losing fields and matches fresh constraints",
+      "executionStatus": "awaiting-hosted-red"
     },
     {
       "id": "G02",
-      "test": "packages/core/test/activity-registration.test.ts :: G02 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-registration.test.ts :: G02 unobserved same-path recreation and strategy ABA renew persisted identity at equal timestamps",
+      "executionStatus": "awaiting-hosted-red"
     },
     {
       "id": "G03",
-      "test": "packages/core/test/activity-registration.test.ts :: G03 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-registration.test.ts :: G03 no-op and failed producer transactions preserve the committed incarnation",
+      "executionStatus": "awaiting-hosted-red"
     },
     {
       "id": "G04",
-      "test": "packages/core/test/activity-registration.test.ts :: G04 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-registration.test.ts :: G04 reopened storage retains identity and internal reads preserve public output without mutation",
+      "executionStatus": "awaiting-hosted-red"
     },
     {
       "id": "W01",
@@ -78,7 +82,9 @@
         "packages/core/src/database/schema.gen.ts",
         "packages/core/schema.json"
       ],
-      "reads": ["packages/core/script/migration.ts"]
+      "reads": ["packages/core/script/migration.ts"],
+      "acceptanceBaseline": "03aadc3a75",
+      "executionAnchor": "docs/specs/activity/REGISTRATION-EXECUTION.md"
     },
     {
       "id": "WP-W1",

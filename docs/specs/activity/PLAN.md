@@ -93,7 +93,7 @@ preparation; code anchors, migrations, stubs and runtime proof still do not exis
 
 ## WP-R0 — observable registration incarnations
 
-Status: specified; not dispatched. Owner: lead integration. Dependency: existing
+Status: acceptance in progress; implementation not dispatched. Owner: lead integration. Dependency: existing
 ProjectDirectories persistence and migration mechanism. Writes: Core project
 SQL/service, focused registration test, one new migration and generator-owned
 Core schema/registry outputs. It does not change existing public project APIs.
@@ -109,8 +109,9 @@ the monitor never creates or edits a registration to manufacture identity.
 
 ### Task R0-A — persistence acceptance and red evidence
 
-Owner: lead; state: pending frozen internal-read anchor. Writes: proposed
-`packages/core/test/activity-registration.test.ts`. G01–G04 test authoring only;
+Owner: lead; state: awaiting hosted red baseline. The internal-read anchor and
+`packages/core/test/activity-registration.test.ts` now exist; details and exact
+gates are in REGISTRATION-EXECUTION.md. G01–G04 test authoring only;
 R0-B owns making the implementation checks pass.
 
 - **Axioms:** an observer refreshing during the deletion gap does not test the unobservable-replacement bug; the producer's persisted token is the oracle (R10/R20).
