@@ -1,0 +1,78 @@
+{
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "s1",
+  "execution_id": "a753db9b-40c6-4b3e-8953-c242affde3cb",
+  "branch": "genesis-fresh-s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "candidate_revision": null,
+  "artifact_revision": "66f1c744c700b7e052caa345f29e75fba1a52f7d",
+  "observed_branch_head": "e037a9105d4b54d1c81565d5a4514353ac970817",
+  "kind": "unaccepted-A1-recovery-candidate-checkpoint",
+  "completion_state": "IN_PROGRESS",
+  "payload": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/candidate/bodies/persistence.md",
+      "byte_length": 5290,
+      "sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/candidate/persistence.patch",
+      "byte_length": 2813,
+      "sha256": "49f3a718a6eec71f6b69a0a7f40f4d8a1a211e5199f7b4666bd643c1a81382e0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/evidence/E1-admission.md",
+      "byte_length": 11160,
+      "sha256": "4a0adde9c08a096ef509ce834fcb6314801872c811faaf4f227d1b1bed8796c3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/evidence/E2-execution.md",
+      "byte_length": 18448,
+      "sha256": "6253fa2bece85d9100a30d32b7b49f46cac9bccd1274aefaa43ee98c94f7d6ce"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/evidence/E3-persistence.md",
+      "byte_length": 32941,
+      "sha256": "3d544817f5ed2183c57f33d0a5c120aa84d452e7355ae2fc7b93133986b680e6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/evidence/E4-context.md",
+      "byte_length": 44979,
+      "sha256": "f7596e8a56b6eb8e2f1329ee4c0a5add10c3b835873a9587f0e746dd726a8e73"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/request.txt",
+      "byte_length": 1048,
+      "sha256": "90660fbd38668d66f622e066c87b27744582e7fb7c30d1b03f32c59273b07c06"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/response.md",
+      "byte_length": 2024,
+      "sha256": "b94e1b42fc523f6094986343f10f2013f473008c741f4fe1995a6ca9b061544a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/metadata-delta.json",
+      "byte_length": 10043,
+      "sha256": "a30d6ee1f4bb89644c9606c1b8cfda0636be8dcd433233f3cce5a186e4451f72"
+    }
+  ],
+  "judgments": [],
+  "local_obligations_open": [
+    "Both independent A1 recovery decisions",
+    "Pending A2-A4 and B-v3 decisions",
+    "Complete cumulative L1-L4 production",
+    "Exact runtime binding, consumers, maintenance and gates"
+  ],
+  "global_integration": {
+    "owner": "root",
+    "status": "NOT_REVIEWED"
+  },
+  "limits": [
+    "Historical canonical bodies and native package unchanged.",
+    "This checkpoint preserves a correction candidate, not semantic acceptance or runtime execution.",
+    "Original sources and historical decisions remain in earlier refs; nine newly authored/captured recovery files are listed, not the complete local 49-file working dossier."
+  ]
+}
