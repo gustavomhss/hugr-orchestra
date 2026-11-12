@@ -1,8 +1,10 @@
 # WP-W3 UI acceptance anchor
 
 This is W3-A acceptance preparation, not a working manual-reading interface.
-W1 is complete; W2's hosted red is verified and W2 implementation is next.
-W3-B still requires its own verified hosted red and W2 integration.
+W1 is complete; W2's hosted red is verified and its candidate is implemented
+and independently reviewed; hosted green remains pending.
+W3-B dispatch requires its own verified hosted red and the frozen API/Client;
+W2 integration still gates W3 closure and actual-HTTP rendered acceptance.
 PLAN.md retains the six explicit fields for WP-W3 and each task.
 
 ## Frozen source and ownership
@@ -77,8 +79,13 @@ error observations remain explicitly pending until W2 and W3 implementation.
 
 ## Frozen W3-B execution decisions, not dispatch permission
 
-W3's red and W2's integration gates still precede runtime dispatch. Once both
-are verified, the controller worker owns only activity/worktree-reading.ts;
+W3's own hosted red still precedes runtime dispatch. W2's API/Client contract is
+frozen and its implementation is independently reviewed, so its pending green
+does not block disjoint controller/component authoring after that red. This
+follows PLAN.md's existing overlap rule: dependencies with frozen contracts gate
+integration order, not dispatch. W2 must pass before W3 closes or its actual-HTTP
+rendered gate begins; no test/review/completion requirement is removed.
+Once W3's red is verified, the controller worker owns only activity/worktree-reading.ts;
 the lead owns worktrees.tsx, copy, guide, any narrow CSS/page changes and rendered
 inspection. Their only shared seam is the existing Controller/State signature.
 The worker does not change tests, Client, Server, Schema or component files.
