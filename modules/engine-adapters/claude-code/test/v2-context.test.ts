@@ -6,9 +6,10 @@ import { ToolDefinition } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { SessionSchema } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/core/session/message"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
-import { Effect, Layer, Schema, Stream } from "effect"
+import { Cause, DateTime, Effect, Exit, Layer, Schema, Stream } from "effect"
 import { QuestionV2 } from "@orchestra/core/question"
 import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
@@ -185,4 +186,173 @@ test("MCP bridge preserves mixed document/text and errors, and refuses unsupport
   expect(replies[1]).toMatchObject({ isError: true })
   expect(replies[2]).toMatchObject({ isError: true })
   expect(replies[3]).toMatchObject({ isError: true, content: [{ type: "text", text: "failed" }] })
+})
+
+test("audit: all background completions are delivered before closing a Claude query", async () => {
+  const notified: { id: string; text: string }[] = []
+  const trace = { closed: false }
+  pump = async function* (input, options) {
+    options.abortController?.signal.addEventListener("abort", () => void (trace.closed = true), { once: true })
+    await input[Symbol.asyncIterator]().next()
+    yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [
+      { task_id: "t1", task_type: "bash", description: "first" },
+      { task_id: "t2", task_type: "bash", description: "second" },
+    ] })
+    yield done
+    // The active list can empty before queued completion notifications have been read.
+    yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [] })
+    yield frame({ type: "system", subtype: "task_notification", task_id: "t1", status: "completed", summary: "first", output_file: "/tmp/t1.out" })
+    yield frame({ type: "system", subtype: "task_notification", task_id: "t2", status: "completed", summary: "second", output_file: "/tmp/t2.out" })
+    yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [] })
+  }
+  try {
+    await collect(turnOf({ notify: (input) => Effect.sync(() => void notified.push(input)) }))
+    for (let waited = 0; !trace.closed && waited < 100; waited++) await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(notified.map((item) => item.id)).toEqual([
+      "msg_ses_host_task_t1_completed", "msg_ses_host_task_t2_completed",
+    ])
+  } finally {
+    pump = undefined
+  }
+})
+
+test("PostCompact archives carry explicit identity and are not replayed after history reload", async () => {
+  const stored = { value: undefined as unknown }
+  const archived: Array<ExecutionHost.Turn["history"][number]> = []
+  const state: ExecutionHost.Turn["state"] = { get: Effect.sync(() => stored.value), update: (fn) => Effect.sync(() => void (stored.value = fn(stored.value))) }
+  during = async (options) => {
+    await options.hooks?.PostCompact?.[0]?.hooks[0]?.({ hook_event_name: "PostCompact", compact_summary: "SDK_OWNED_SUMMARY", trigger: "auto", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput, undefined, { signal: new AbortController().signal })
+  }
+  script = [done]
+  const before = calls.length
+  await collect(turnOf({ state, memory: { recall: Effect.succeed(undefined), archive: (value) => Effect.sync(() => {
+    archived.push(SessionMessage.Synthetic.make({
+      id: value.messageID ?? SessionMessage.ID.make("msg_archive_fallback"),
+      sessionID: SessionSchema.ID.make("ses_host"),
+      type: "synthetic",
+      text: `Engine compaction summary (${value.trigger}):\nNative owner: ${value.nativeSessionID}\n\n${value.summary}`,
+      time: { created: DateTime.makeUnsafe(1) },
+    }))
+  }) } }))
+  expect(archived).toHaveLength(1)
+  during = async () => {}
+  await collect(turnOf({ state, history: [user("msg_1", "Go"), ...archived] as ExecutionHost.Turn["history"] }))
+  expect(calls.length).toBe(before + 1)
+  expect(stored.value).toMatchObject({ delivered: expect.arrayContaining([archived[0]!.id]) })
+})
+
+test("tracked work receives a durable pending notice before cancellation, query failure or unsuccessful result aborts it", async () => {
+  for (const mode of ["cancel", "throw", "error"]) {
+    const notified: Array<{ id: string; text: string }> = []
+    let ready: () => void = () => {}
+    const reached = new Promise<void>((resolve) => { ready = resolve })
+    let notifiedBeforeAbort = false
+    pump = async function* (input, options) {
+      await input[Symbol.asyncIterator]().next()
+      options.abortController?.signal.addEventListener("abort", () => { notifiedBeforeAbort = notified.length === 1 }, { once: true })
+      yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [{ task_id: "pending", task_type: "bash", description: "work" }] })
+      ready()
+      if (mode === "throw") throw new Error("query broke")
+      if (mode === "error") { yield frame({ type: "result", subtype: "error_during_execution", is_error: true, session_id: "claude-1", errors: ["failed"], usage }); return }
+      await new Promise<void>(() => {})
+    }
+    const signal = new AbortController()
+    try {
+      const host = await Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
+      const running = Effect.runPromise(Stream.runCollect(host.stream(turnOf({ notify: (event) => Effect.sync(() => void notified.push(event)) }))), { signal: signal.signal }).catch(() => undefined)
+      await reached
+      if (mode === "cancel") signal.abort()
+      await running
+      expect(notified).toHaveLength(1)
+      expect(notified[0]?.text).toContain("pending")
+      expect(notifiedBeforeAbort).toBe(true)
+      pump = undefined
+      script = [done]
+      await Effect.runPromise(Stream.runCollect(host.stream(turnOf({ history: [SessionMessage.User.make({ id: SessionMessage.ID.make("msg_next"), type: "user", text: "Continue", files: [], agents: [], time: { created: DateTime.makeUnsafe(0) } })] }))))
+      expect(notified).toHaveLength(1)
+    } finally { pump = undefined }
+  }
+})
+
+test("ambient and skip_transcript notifications never wake the Session in foreground or tail", async () => {
+  const notified: Array<{ id: string; text: string }> = []
+  let closed: () => void = () => {}
+  const ended = new Promise<void>((resolve) => { closed = resolve })
+  pump = async function* (input, options) {
+    await input[Symbol.asyncIterator]().next()
+    options.abortController?.signal.addEventListener("abort", closed, { once: true })
+    yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [{ task_id: "real", task_type: "bash", description: "work" }, { task_id: "watcher", ambient: true }] })
+    yield frame({ type: "system", subtype: "task_notification", task_id: "foreground_ambient", ambient: true, status: "completed", summary: "watcher", output_file: "" })
+    yield frame({ type: "system", subtype: "task_notification", task_id: "foreground_skip", skip_transcript: true, status: "completed", summary: "watcher", output_file: "" })
+    yield done
+    yield frame({ type: "system", subtype: "task_notification", task_id: "watcher", ambient: true, status: "completed", summary: "watcher", output_file: "" })
+    yield frame({ type: "system", subtype: "task_notification", task_id: "tail_skip", skip_transcript: true, status: "completed", summary: "watcher", output_file: "" })
+    // A tracked task can later become ambient: retire it without admitting a steer.
+    yield frame({ type: "system", subtype: "task_notification", task_id: "real", ambient: true, status: "completed", summary: "watcher", output_file: "" })
+  }
+  try {
+    await collect(turnOf({ notify: (event) => Effect.sync(() => void notified.push(event)) }))
+    await ended
+    expect(notified).toEqual([])
+  } finally { pump = undefined }
+})
+
+test("failed PostCompact publication never marks an archive delivered", async () => {
+  const stored = { value: undefined as unknown }
+  during = async (options) => {
+    await options.hooks?.PostCompact?.[0]?.hooks[0]?.({ hook_event_name: "PostCompact", compact_summary: "failed", trigger: "auto", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput, undefined, { signal: new AbortController().signal })
+  }
+  script = [done]
+  await collect(turnOf({
+    state: { get: Effect.sync(() => stored.value), update: (fn) => Effect.sync(() => void (stored.value = fn(stored.value))) },
+    memory: { recall: Effect.succeed(undefined), archive: () => Effect.die("archive publish failed") },
+  }))
+  expect(stored.value).toMatchObject({ delivered: ["msg_1"] })
+})
+
+test("notify defect still settles handed input and closes the query without replay after cancellation or error", async () => {
+  for (const mode of ["cancel", "error"]) {
+    const stored = { value: undefined as unknown }
+    const state: ExecutionHost.Turn["state"] = { get: Effect.sync(() => stored.value), update: (fn) => Effect.sync(() => void (stored.value = fn(stored.value))) }
+    let ready: () => void = () => {}
+    const reached = new Promise<void>((resolve) => { ready = resolve })
+    let closed = false
+    let noticeAttempts = 0
+    pump = async function* (input, options) {
+      const incoming = input[Symbol.asyncIterator]()
+      await incoming.next()
+      // Asking for the next message acknowledges that the SDK wrote the first one to its transcript.
+      const waiting = incoming.next()
+      options.abortController?.signal.addEventListener("abort", () => { closed = true }, { once: true })
+      yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [{ task_id: "pending", task_type: "bash", description: "work" }] })
+      ready()
+      if (mode === "error") throw new Error("QUERY_FAILED_BEFORE_RESULT")
+      await waiting
+    }
+    const signal = new AbortController()
+    try {
+      const host = await Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
+      const providerErrors: string[] = []
+      const running = Effect.runPromiseExit(host.stream(turnOf({ state, notify: () => Effect.sync(() => { noticeAttempts++; throw new Error("NOTICE_WRITE_FAILED") }) })).pipe(
+        Stream.runForEach((event) => Effect.sync(() => { if (event.type === "provider-error") providerErrors.push(event.message) })),
+      ), { signal: signal.signal })
+      await reached
+      if (mode === "cancel") signal.abort()
+      const exit = await running
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isFailure(exit)) {
+        expect(Cause.pretty(exit.cause)).toContain("NOTICE_WRITE_FAILED")
+        if (mode === "cancel") expect(Cause.hasInterrupts(exit.cause)).toBe(true)
+      }
+      if (mode === "error") expect(providerErrors).toContain("QUERY_FAILED_BEFORE_RESULT")
+      expect(noticeAttempts).toBe(1)
+      expect(closed).toBe(true)
+      expect(stored.value).toMatchObject({ delivered: ["msg_1"] })
+      pump = undefined
+      script = [done]
+      const before = calls.length
+      await Effect.runPromise(Stream.runCollect(host.stream(turnOf({ state }))))
+      expect(calls.length).toBe(before)
+    } finally { pump = undefined }
+  }
 })
