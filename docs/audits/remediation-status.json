@@ -564,6 +564,18 @@
           "kind": "diagnostic",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43264461440",
           "result": "Bounded Linux workload calibration only; not product GREEN."
+        },
+        {
+          "kind": "rejected_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43275767597",
+          "source": "341215e6ba0f169edacbce5b6dbb7a0c2ef4b30a",
+          "result": "Both OS fail ordinary controls without RESULT; CPU cases fail startup before mark. This is a worker integration regression, not a new CPU RED or GREEN."
+        },
+        {
+          "kind": "cancelled_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43275581639",
+          "source": "341215e6ba0f169edacbce5b6dbb7a0c2ef4b30a",
+          "result": "Lead cancelled only this owned full-package run after the same-source Core gate proved universal ordinary hangs; avoid repeating hundreds of 120-second timeouts. Both jobs cancelled, cleanup successful. Not GREEN."
         }
       ]
     },
@@ -2406,9 +2418,30 @@
       "severity": "P2",
       "owner": "lead",
       "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43269304058",
+          "source": "a7a204e5db30113ff104e9cecfa7c987712f47b0",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "result": "Three controls/14 assertions/three Omni spawns per OS: actual Core SQL lifecycle, auth/Location and retry identity."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43271231681",
+          "source": "a7a204e5db30113ff104e9cecfa7c987712f47b0",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "result": "Three behavioral failures per OS: remote close with known pending text; foreign transcript forwarding for 307/308. Authorization absent at foreign peer, no credential-leak claim. Later tails not reached."
+        }
+      ]
     },
     {
       "id": "M14",
