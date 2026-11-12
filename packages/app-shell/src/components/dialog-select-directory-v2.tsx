@@ -140,10 +140,14 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     } catch (error) {
       console.error(error)
       setSearchFailed(true)
-      return previous ?? { query: value, items: [] }
+      if (previous) return previous
+      throw error
     }
   })
-  const currentSuggestions = createMemo(() => currentPickerSuggestions(suggestions(), input()))
+  const currentSuggestions = createMemo(() => {
+    if (searchFailed()) return held()?.items ?? []
+    return currentPickerSuggestions(suggestions(), input())
+  })
 
   async function load(path: string, generation: number, eager = false) {
     const key = path.replace(/\/+$/, "")
