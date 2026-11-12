@@ -542,9 +542,30 @@
       "severity": "P2",
       "owner": "lead",
       "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43265565788",
+          "source": "9ffff1633968b3a17325c4653afd4e2b13f0dbdf",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "result": "Six behavioral failures per OS with valid setup; Linux owned containment, Windows late timeout after native CPU completed. Later assertions not reached."
+        },
+        {
+          "kind": "control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43248008786",
+          "result": "Six unchanged controls/41 assertions per OS; compositional."
+        },
+        {
+          "kind": "diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43264461440",
+          "result": "Bounded Linux workload calibration only; not product GREEN."
+        }
+      ]
     },
     {
       "id": "E11",
@@ -3004,7 +3025,7 @@
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
-    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   },
   "integrated_checks": {
     "guards": {
