@@ -7,7 +7,7 @@ import { Global } from "@orchestra/core/global"
 import { CredentialCipher } from "@orchestra/core/credential/cipher"
 import { EffectFlock } from "@orchestra/core/util/effect-flock"
 
-const { McpIdentity } = await import("@orchestra/core/mcp/identity")
+const { McpIdentity } = await import("../../src/mcp/identity")
 const directory = process.argv[2]
 const filename = process.argv[3]
 const authority = JSON.parse(process.argv[4])

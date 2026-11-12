@@ -374,7 +374,7 @@ export const identity = Effect.fn(function* (
     digest?: (canonical: string, seed: import("effect").Redacted.Redacted<Uint8Array>) => string
   } = {},
 ) {
-  const { McpIdentity } = yield* Effect.promise(() => import("@orchestra/core/mcp/identity"))
+  const { McpIdentity } = yield* Effect.promise(() => import("../../src/mcp/identity"))
   const { CredentialCipher } = yield* Effect.promise(() => import("@orchestra/core/credential/cipher"))
   const { EffectFlock } = yield* Effect.promise(() => import("@orchestra/core/util/effect-flock"))
   const layer = McpIdentity.layerWith({ filename: f.seed, ...options }).pipe(
