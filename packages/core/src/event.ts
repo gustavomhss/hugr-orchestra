@@ -1,6 +1,6 @@
 export * as EventV2 from "./event"
 
-import { Cause, Context, Effect, Exit, Layer, Option, PubSub, Queue, Schema, Scope, Stream } from "effect"
+import { Cause, Context, Effect, Layer, Option, PubSub, Queue, Schema, Scope, Stream } from "effect"
 import { Event } from "@orchestra/schema/event"
 import type { Data, Definition, Payload } from "@orchestra/schema/event"
 import { and, asc, eq, gt, inArray, sql } from "drizzle-orm"
@@ -257,9 +257,8 @@ export const layerWith = (options?: LayerOptions) =>
             return yield* outcome
           }
           const waits = yield* Effect.forEach(current.pending, (pending) => order.schedule(pending.ticket, pending.notifying))
-          if (Exit.isFailure(outcome)) return yield* outcome
           yield* restore(Effect.all(waits, { concurrency: "unbounded", discard: true }))
-          return outcome.value
+          return yield* outcome
         }),
       )
 
