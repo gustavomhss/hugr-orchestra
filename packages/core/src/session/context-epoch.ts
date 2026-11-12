@@ -81,7 +81,7 @@ const prepareOnce = Effect.fnUntraced(function* (
 // Revert removes projected deltas, but the snapshot still records their admission.
 // Fold the durable deltas into the baseline before removing their projection.
 export const rebaseForRevert = Effect.fn("SessionContextEpoch.rebaseForRevert")(function* (
-  db: DatabaseService,
+  db: Pick<DatabaseService, "select" | "update">,
   sessionID: SessionSchema.ID,
   commitSequence: number,
 ) {
@@ -176,7 +176,10 @@ const exists = Effect.fn("SessionContextEpoch.exists")(function* (db: DatabaseSe
   )
 })
 
-const find = Effect.fn("SessionContextEpoch.find")(function* (db: DatabaseService, sessionID: SessionSchema.ID) {
+const find = Effect.fn("SessionContextEpoch.find")(function* (
+  db: Pick<DatabaseService, "select">,
+  sessionID: SessionSchema.ID,
+) {
   return yield* db
     .select()
     .from(SessionContextEpochTable)
