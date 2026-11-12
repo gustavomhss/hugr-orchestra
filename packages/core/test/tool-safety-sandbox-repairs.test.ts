@@ -1,4 +1,4 @@
-import { aroundEach, expect } from "bun:test"
+import { expect } from "bun:test"
 import path from "node:path"
 import { createServer } from "node:net"
 import { pathToFileURL } from "node:url"
@@ -13,17 +13,25 @@ import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
 import { jail, sandboxHost } from "./lib/sandbox-host"
 
-const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
+const raw = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
 // The last test exits the process on Windows so a stuck scope release cannot hold the step.
 // An earlier failure must still fail that process: Bun would report it only when the runner finishes.
 let failed = false
-if (process.platform === "win32") {
-  aroundEach(async (runTest, context) => {
-    await runTest().catch(() => {
-      failed = true
-    })
-    if (context.task.result.state === "fail") failed = true
-  })
+const watch = (value: Parameters<typeof raw.live>[1]) => {
+  const effect = typeof value === "function" ? value() : value
+  return effect.pipe(Effect.catchCause((cause) => {
+    failed = true
+    return Effect.failCause(cause)
+  }))
+}
+const it = {
+  live: Object.assign(
+    (name, value, opts) => raw.live(name, () => watch(value), opts),
+    {
+      skip: raw.live.skip,
+      skipIf: (condition) => (name, value, opts) => raw.live.skipIf(condition)(name, () => watch(value), opts),
+    },
+  ),
 }
 // Unsupported/unavailable hosts measure HOLD separately, never count it as confinement conformance.
 // These probes run node, which Windows' AppContainer jail does not take (pwsh and cmd only, tool-safety-appcontainer.test.ts).
