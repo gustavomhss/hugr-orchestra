@@ -4,6 +4,14 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
+Docker container inventory preparation is linked from PLAN.md and specified in
+DOCKER-WAVE.md. Status is preparation only, not implementation-ready, and it
+records no runtime proof. The first-wave receipt below is unchanged. R1–R20
+remains open. Execution stays on direct grok, model grok-4.7. The relay stop
+hook is still unconfigured.
+An independent Grok review APPROVE recorded no findings on this preparation text.
+That approval is not code or runtime approval; anchors, stubs, cold tests, and hosted red remain pending.
+
 The registered Worktrees first wave is complete on activity-monitor: R0/W1/W2/W3,
 four WPs/nine tasks with all six quality fields. W3 final hosted run 43300730127
 passed all 31 cases (Solid 17/109 expects, browser 14/199 expects), zero failures

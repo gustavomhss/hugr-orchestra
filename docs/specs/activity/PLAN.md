@@ -63,6 +63,10 @@ and Quarantine depend on actual durable ledgers; they cannot be completed by
 inventing empty collectors. Footprint/source research, R5/R6 and R18 remain
 visible obligations, even though the earlier five-block summary omitted them.
 
+Next preparation: [DOCKER-WAVE.md](DOCKER-WAVE.md) at this HEAD. It is not
+implementation-ready. It names individual containers and one read-only argv,
+and it leaves R1–R20 open.
+
 ## Dispatch decision
 
 **HYBRID, first wave complete.** R0/W1/W2/W3 have reviewed source, unchanged
