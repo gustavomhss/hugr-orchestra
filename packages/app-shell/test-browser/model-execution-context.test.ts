@@ -1,9 +1,12 @@
+import { registerSubmitHarnessLifecycle } from "@/components/prompt-input/submit-harness"
 import { expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { Schema } from "effect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
 import { state } from "@/components/prompt-input/submit-harness"
 import { composer, decision, draftSelection, json, liveSDK, model, ref, selection, send, transport, wait } from "./model-execution-consumer.fixture"
+
+registerSubmitHarnessLifecycle()
 
 // Controlled canonical outcomes test consumption, never the backend eligibility algorithm.
 function refused(variant?: string) {

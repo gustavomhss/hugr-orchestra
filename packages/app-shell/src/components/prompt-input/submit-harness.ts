@@ -44,7 +44,7 @@ type ReactiveOwner = { read?: () => { sdk: FixtureSDK; server: FixtureServer } }
 export const canonicalPolicies = new Map<string, SubagentModelPolicy>()
 const policyVersions = new Map<string, number>()
 const roots: VoidFunction[] = []
-afterEach(() => roots.splice(0).forEach((dispose) => dispose()))
+const disposeSubmitHarness = () => roots.splice(0).forEach((dispose) => dispose())
 export const [reactiveOwner, setReactiveOwner]: [Store<ReactiveOwner>, SetStoreFunction<ReactiveOwner>] = createStore<ReactiveOwner>({})
 export const policyFixture: { server: FixtureServer; sdk: FixtureSDK } = {
   server: undefined as unknown as FixtureServer,
@@ -510,7 +510,7 @@ beforeAll(async () => {
   acknowledgeDraftPolicy = mod.acknowledgeDraftPolicy
 })
 
-beforeEach(() => {
+function resetSubmitHarness() {
   createdSessions.length = 0
   worktreeCreateInputs.length = 0
   sessionCreateInputs.length = 0
@@ -574,4 +574,10 @@ beforeEach(() => {
   ;[draftSessionKey(ServerScope.local, "/repo/main"), draftSessionKey(ServerScope.local, "/repo/main", "draft-1")]
     .forEach((key) => clearPending(key, pendingSnapshot(key).revision))
   for (const key of Object.keys(storedSessions)) delete storedSessions[key]
-})
+}
+
+// Register at the actual discovered file/isolated suite boundary, never only the first importer.
+export function registerSubmitHarnessLifecycle() {
+  beforeEach(resetSubmitHarness)
+  afterEach(disposeSubmitHarness)
+}

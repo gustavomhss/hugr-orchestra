@@ -1,3 +1,4 @@
+import { registerSubmitHarnessLifecycle } from "@/components/prompt-input/submit-harness"
 import { beforeAll, expect, spyOn, test } from "bun:test"
 import { createComponent, render } from "solid-js/web"
 import { createStore } from "solid-js/store"
@@ -10,6 +11,8 @@ import type { PromptInputV2StoreInput } from "@orchestra/session-ui/v2/prompt-in
 import type { useLanguage } from "@/context/language"
 import { solidDom } from "./solid-dom"
 import { composer, decision, json, model, ref, selection, send, transport, wait } from "./model-execution-consumer.fixture"
+
+registerSubmitHarnessLifecycle()
 
 const consumer = Bun.resolveSync("../src/components/prompt-input-v2.tsx", import.meta.dir)
 beforeAll(() => {

@@ -1,3 +1,4 @@
+import { registerSubmitHarnessLifecycle } from "@/components/prompt-input/submit-harness"
 import { expect, spyOn, test } from "bun:test"
 import { mkdtemp, mkdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
@@ -20,6 +21,8 @@ import {
   commands, createPromptSubmit, createdSessions, optimistic, optimisticRemovals, policyFixture, promptInputs,
   sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, submitInput, toasts,
 } from "@/components/prompt-input/submit-harness"
+
+registerSubmitHarnessLifecycle()
 
 // These tests exercise the existing composer API. The shared harness stubs UI services, not admission semantics.
 // Only the final two native-child cases claim real HTTP/Core/SQLite evidence.
