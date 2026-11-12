@@ -56,7 +56,10 @@ export const prepare = Effect.fn("SandboxParents.prepare")(function* (
   return yield* Effect.gen(function* () {
     yield* Effect.forEach(targets, (target) => Effect.gen(function* () {
       if ((yield* fs.realPath(path.dirname(target)).pipe(
-        Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
+        Effect.mapError((error) => {
+          if (diagnostic.path === target) diagnostic.entries.push({ stage: "acquisition-error", operation: "parent-realpath", error })
+          return new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })
+        }),
       )) !== path.dirname(target)) return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
       // Register identity synchronously with exclusive mkdir, so interruption cannot lose the cleanup record.
       const info = yield* Effect.try({
@@ -69,14 +72,20 @@ export const prepare = Effect.fn("SandboxParents.prepare")(function* (
         catch: () => new ToolSafety.Denied({ reason: "sandbox-parent-exclusive-mkdir" }),
       })
       const physical = yield* fs.realPath(target).pipe(
-        Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
+        Effect.mapError((error) => {
+          if (diagnostic.path === target) diagnostic.entries.push({ stage: "acquisition-error", operation: "target-realpath", error })
+          return new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })
+        }),
       )
       if (!info.isDirectory() || info.isSymbolicLink() || physical !== target || !FSUtil.contains(directory, physical))
         return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
     }), { discard: true })
     yield* Effect.forEach(targets, (target) => Effect.gen(function* () {
       const physical = yield* fs.realPath(target).pipe(
-        Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
+        Effect.mapError((error) => {
+          if (diagnostic.path === target) diagnostic.entries.push({ stage: "acquisition-error", operation: "validation-realpath", error })
+          return new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })
+        }),
       )
       if (physical !== target) return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
     }), { discard: true })

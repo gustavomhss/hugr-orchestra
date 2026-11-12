@@ -248,7 +248,7 @@ it.live("later multi-root mkdir failure rolls back only owned empty directories 
   }),
 )
 
-it.live("failed preparation preserves a replacement directory with a different identity", () =>
+const replacementCase = (iteration: number | "original") =>
   Effect.gen(function* () {
     const f = yield* fixture
     const target = path.join(f.directory, "owned")
@@ -257,15 +257,37 @@ it.live("failed preparation preserves a replacement directory with a different i
     SandboxParents.diagnostic.entries = []
     FSUtil.diagnostic.path = target
     FSUtil.diagnostic.entries = []
+    let injectionStage = "not-entered"
+    let parentQueries = 0
+    let targetQueries = 0
+    let entered = 0
+    let renameDone = 0
+    let mkdirDone = 0
+    let controlQueries = 0
+    let controlSucceeded = 0
     try {
       const failed = yield* Effect.flip(SandboxParents.prepare({
         ...f.fs,
-        realPath: (entry) => f.fs.realPath(entry).pipe(Effect.tap(() => Effect.gen(function* () {
-          if (entry !== target) return
-          yield* f.fs.rename(target, moved)
-          yield* f.fs.makeDirectory(target)
-          yield* f.fs.realPath(path.join(f.directory, "absent-control"))
-        }))),
+        realPath: (entry) => {
+          if (entry === f.directory) { injectionStage = "parent-query-before-create"; parentQueries++ }
+          if (entry === target) { injectionStage = "target-realpath-requested"; targetQueries++ }
+          return f.fs.realPath(entry).pipe(Effect.tap(() => Effect.gen(function* () {
+            if (entry !== target) return
+            injectionStage = "entered"
+            entered++
+            yield* f.fs.rename(target, moved)
+            injectionStage = "rename-done"
+            renameDone++
+            yield* f.fs.makeDirectory(target)
+            injectionStage = "mkdir-done"
+            mkdirDone++
+            injectionStage = "control-query"
+            controlQueries++
+            yield* f.fs.realPath(path.join(f.directory, "absent-control"))
+            injectionStage = "control-unexpected-success"
+            controlSucceeded++
+          })))
+        },
       }, f.directory, [target]))
       expect(failed.reason).toBe("sandbox-parent-placement-acquisition")
       const isDir = yield* f.fs.isDir(target)
@@ -277,7 +299,9 @@ it.live("failed preparation preserves a replacement directory with a different i
         }
       })
       try {
-        console.error("sandbox cause", inspect({ cleanup: SandboxParents.diagnostic.entries,
+        console.error("sandbox cause", inspect({ iteration, pid: process.pid, injectionStage, parentQueries,
+          targetQueries, entered, renameDone, mkdirDone, controlQueries, controlSucceeded,
+          cleanup: SandboxParents.diagnostic.entries,
           isDir: FSUtil.diagnostic.entries, actual: isDir, native }, {
           depth: 6, maxArrayLength: 16, maxStringLength: 4000, customInspect: false, getters: false,
           compact: true, breakLength: Infinity, colors: false,
@@ -291,8 +315,9 @@ it.live("failed preparation preserves a replacement directory with a different i
       SandboxParents.diagnostic.path = undefined
       FSUtil.diagnostic.path = undefined
     }
-  }),
-)
+  })
+
+it.live("failed preparation preserves a replacement directory with a different identity", () => replacementCase("original"))
 
 it.live("interrupted multi-root preparation rolls back its own empty directories", () =>
   Effect.gen(function* () {
