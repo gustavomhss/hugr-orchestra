@@ -1,9 +1,12 @@
 import type { LiveOutbox, OutboxErrorReason } from "./live-outbox-contract"
 
 export class OutboxError extends Error {
-  constructor(readonly reason: OutboxErrorReason) {
+  readonly reason: OutboxErrorReason
+
+  constructor(reason: OutboxErrorReason) {
     super("Live delivery storage refused the operation.")
     this.name = "OutboxError"
+    this.reason = reason
   }
 }
 
