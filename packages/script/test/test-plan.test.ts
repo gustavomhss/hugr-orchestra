@@ -33,7 +33,7 @@ describe("test shard planner", () => {
   })
 
   test("a core shard does not compile plugin inside the timed test step", () => {
-    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8").replaceAll("\r\n", "\n")
     const step = workflow.split("- name: Run unit tests")[1]?.split("- name:")[0] ?? ""
     const code = step.split("\n").filter((line) => !line.trim().startsWith("#")).join("\n")
     const invocations = [...code.matchAll(/bun turbo test --filter=@orchestra\/core[^\n]*/g)].map((match) => match[0])

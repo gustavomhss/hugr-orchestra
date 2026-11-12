@@ -92,9 +92,7 @@ function crossDeviceHost(from: string) {
     for (const candidate of ["/dev/shm", process.cwd(), os.tmpdir()]) {
       try {
         if (statSync(candidate).dev !== dev) return candidate
-      } catch {
-        // A missing candidate is not a second volume.
-      }
+      } catch { /* not a second volume */ }
     }
   } catch {
     return undefined
@@ -111,9 +109,7 @@ async function otherDevice(from: string) {
   return undefined
 }
 
-// Physical EXDEV needs two stat.dev values. Without a second volume this case is not evidence of
-// hardlink isolation: Mac and Windows register it skipped. Linux must fail closed, not skip.
-// A portable refusal and a Linux EXDEV run do not prove a Mac volume. Shared-inode checks still run.
+// EXDEV needs two volumes. Linux fails closed if it skips; Mac and Windows may skip. Shared-inode checks still run.
 const hardlinkHost = crossDeviceHost(os.tmpdir())
 const hardlinkRuns = Boolean(hardlinkHost) || process.platform === "linux"
 const hardlink = hardlinkRuns ? it.live : it.live.skip
@@ -196,7 +192,7 @@ it.live("direct and transitive CJS/ESM resolution selects the reviewed snapshot,
       const copies = [base, head, live]
       for (const copy of copies) {
         expect((yield* Effect.promise(() => lstat(path.join(copy.root, "node_modules")))).isSymbolicLink()).toBe(false)
-        expect(posixLink(yield* Effect.promise(() => readlink(path.join(copy.root, "node_modules", "@ws", "lib"))))).toBe("../../packages/lib")
+        expect((yield* Effect.promise(() => readlink(path.join(copy.root, "node_modules", "@ws", "lib")))).replaceAll("\\", "/")).toBe("../../packages/lib")
         expect(yield* Effect.promise(() => realpath(path.join(copy.root, "node_modules", "@ws", "lib")))).toBe(path.join(copy.root, "packages", "lib"))
       }
       const rel = (copy: ReviewScratch.Snapshot) => createRequire(path.join(copy.root, "package.json"))(
@@ -227,7 +223,7 @@ it.live("direct and transitive CJS/ESM resolution selects the reviewed snapshot,
       expect(base.dependencyRoots.some((root) => FSUtil.contains(root, shadow))).toBe(true)
       expect(base.files).toBeLessThan(20)
       const bin = path.join(base.root, "node_modules", ".bin", "tool")
-      expect(posixLink(yield* Effect.promise(() => readlink(bin)))).toBe("../third/bin/tool.js")
+      expect((yield* Effect.promise(() => readlink(bin))).replaceAll("\\", "/")).toBe("../third/bin/tool.js")
       expect(yield* Effect.promise(() => realpath(bin))).toBe(path.join(base.root, "node_modules", "third", "bin", "tool.js"))
       if (process.platform !== "win32") expect((yield* Effect.promise(() => lstat(path.join(base.root, "node_modules", "third", "bin", "tool.js")))).mode & 0o777).toBe(0o755)
       const ran = yield* ResearchProcess.run({
@@ -308,7 +304,6 @@ it.live("an unreadable dependency candidate is layout-unsupported, a missing roo
     yield* Effect.promise(() => chmod(app, 0o000))
     yield* Effect.gen(function* () {
       const probe = yield* Effect.promise(() => lstat(candidate).then(() => "readable", (error: { code?: string }) => error.code ?? "unknown"))
-      // Windows chmod 0 does not deny the owner. Dying here hung the file until the step died (run 43150681461).
       if (probe !== "EACCES") {
         if (process.platform !== "win32") return yield* Effect.die(new Error(`snapshot-dependency-unreadable-unsupported: ${probe}`))
       } else {
@@ -325,10 +320,6 @@ it.live("an unreadable dependency candidate is layout-unsupported, a missing roo
     expect(copy.dependencyRoots).toEqual([])
   }), 120_000,
 )
-
-function posixLink(target: string) {
-  return target.replaceAll("\\", "/")
-}
 
 /** One attack symlink only. Ordinary package and relative .bin stay inside the closure. */
 function refuseOneOutside(name: string, attack: string, plant: (paths: { root: string; sibling: string; external: string }) => Promise<void>) {
