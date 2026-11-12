@@ -183,6 +183,19 @@ $GAPI drive delete FILE_ID
 $GAPI drive delete FILE_ID --permanent
 ```
 
+Without `--output`, a download requires a portable single filename from Drive (or the file ID when the name is
+missing). Paths, reserved device names and invalid characters are refused with guidance to choose `--output`.
+The default creates a new file in the current directory, uses mode `0600` on POSIX, and preserves any existing file,
+directory or link instead of overwriting or following it.
+
+An explicit `--output` keeps the caller's relative, absolute or `~` path, creates missing parents and intentionally
+overwrites an existing destination. It receives no automatic extension. For default Google-native exports, an
+existing suffix stays unchanged; `--export-mime` changes the export MIME but retains the usual inferred suffix.
+
+Construction or transfer failures close the local file handle and do not print a downloaded-success result. A newly
+created partial file may remain; retrying the same default name will refuse that existing file. Choose an explicit
+output only when overwriting that destination is intended. Downloads do not publish via an atomic final rename.
+
 ### Contacts
 
 ```bash
