@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version: { description: Stable X.Y.Z, required: true, type: string }
+      source_sha: { description: Frozen release source when using the reviewed dev publisher, type: string }
       cli_run: { description: Successful release-cli dry run, required: true, type: string }
       desktop_run: { description: Successful release-desktop dry run, required: true, type: string }
       qualification_run: { description: Successful distribution-bundle run, required: true, type: string }
@@ -21,6 +22,8 @@ defaults:
 env:
   GH_TOKEN: ${{ github.token }}
   VERSION: ${{ inputs.version }}
+  SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
+  REQUESTED_SOURCE: ${{ inputs.source_sha }}
   CLI_RUN_ID: ${{ inputs.cli_run }}
   DESKTOP_RUN_ID: ${{ inputs.desktop_run }}
   QUALIFICATION_RUN_ID: ${{ inputs.qualification_run }}
@@ -44,13 +47,20 @@ jobs:
           set -euo pipefail
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$RECEIPT_SHA256" =~ ^[a-f0-9]{64}$ ]]
-          [ "$GITHUB_REF" = "refs/heads/release-$VERSION" ]
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          case "$GITHUB_REF" in
+            "refs/heads/release-$VERSION") [ "$SOURCE_SHA" = "$GITHUB_SHA" ] ;;
+            refs/heads/dev) [ -n "$REQUESTED_SOURCE" ] ;;
+            *) echo RELEASE_PUBLISHER_REF_INVALID >&2; exit 1 ;;
+          esac
+          frozen=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/release-$VERSION" --jq .object.sha)
+          [ "$frozen" = "$SOURCE_SHA" ]
           for id in "$CLI_RUN_ID" "$DESKTOP_RUN_ID" "$QUALIFICATION_RUN_ID" "$FULL_RUN_ID"; do [[ "$id" =~ ^[1-9][0-9]*$ ]]; done
-          relation=$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...dev" --jq .status)
+          relation=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SOURCE_SHA...dev" --jq .status)
           case "$relation" in identical|ahead) ;; *) echo "RELEASE_SOURCE_NOT_IN_DEV" >&2; exit 1 ;; esac
           while read -r id workflow; do
             gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" | jq -e \
-              --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" --arg branch "$GITHUB_REF_NAME" \
+              --arg sha "$SOURCE_SHA" --arg repo "$GITHUB_REPOSITORY" --arg branch "release-$VERSION" \
               --arg path ".github/workflows/$workflow" \
               '.head_sha == $sha and .head_repository.full_name == $repo and .head_branch == $branch and
                .path == $path and .event == "workflow_dispatch" and .status == "completed" and .conclusion == "success"' >/dev/null
@@ -72,7 +82,7 @@ jobs:
           name: test-scope
           path: ${{ runner.temp }}/qualification
       - name: Require the full test scope
-        run: jq -e --arg sha "$GITHUB_SHA" '.sourceSha == $sha and .packages == ""' "$RUNNER_TEMP/qualification/test-scope.json"
+        run: jq -e --arg sha "$SOURCE_SHA" '.sourceSha == $sha and .packages == ""' "$RUNNER_TEMP/qualification/test-scope.json"
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           github-token: ${{ github.token }}
@@ -96,7 +106,8 @@ jobs:
         with:
           bun-version-file: package.json
       - name: Verify the exact bytes approved by installed-app validation
-        run: bun script/release-artifact-identity.ts "$RUNNER_TEMP/validated" "$RUNNER_TEMP/validated/VALIDATION.json"
+        run: |
+          bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.RUNNER_TEMP+"/validated"; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:process.env.VERSION,sourceSha:process.env.SOURCE_SHA,cliRunId:Number(process.env.CLI_RUN_ID),desktopRunId:Number(process.env.DESKTOP_RUN_ID),qualificationRunId:Number(process.env.QUALIFICATION_RUN_ID)});'
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         if: inputs.publish == true
         with:
@@ -110,11 +121,11 @@ jobs:
             if ref=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" 2>/dev/null); then
               [ "$(jq -r .object.type <<<"$ref")" = tag ]
               object=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$(jq -r .object.sha <<<"$ref")")
-              jq -e --arg sha "$GITHUB_SHA" --arg receipt "$RECEIPT_SHA256" \
+              jq -e --arg sha "$SOURCE_SHA" --arg receipt "$RECEIPT_SHA256" \
                 '.object.type == "commit" and .object.sha == $sha and (.message | contains($receipt))' <<<"$object" >/dev/null
             else
               object=$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/tags" -f tag="$tag" \
-                -f message="Validated release $VERSION; receipt SHA256 $RECEIPT_SHA256" -f object="$GITHUB_SHA" -f type=commit --jq .sha)
+                -f message="Validated release $VERSION; receipt SHA256 $RECEIPT_SHA256" -f object="$SOURCE_SHA" -f type=commit --jq .sha)
               gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$tag" -f sha="$object" >/dev/null
             fi
           done
@@ -151,12 +162,13 @@ jobs:
             files+=("$root/VALIDATION.json")
             if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
               gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --latest=false --title "$title" \
-                --notes "Validated source $GITHUB_SHA. Exact artifact identities and runtime checks are in VALIDATION.json. These binaries are unsigned, matching the validated build."
+                --notes "Validated source $SOURCE_SHA. Exact artifact identities and runtime checks are in VALIDATION.json. These binaries are unsigned, matching the validated build."
             fi
             draft=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)
             if [ "$draft" = true ]; then gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber "${files[@]}"; fi
             for attempt in {1..10}; do
-              gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" > "$root/assets.json"
+              api=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json apiUrl --jq .apiUrl)
+              gh api "$api" > "$root/assets.json"
               if node --input-type=module - "$root/assets.json" "${files[@]}" <<'NODE'
           import { readFileSync } from 'node:fs'; import { basename } from 'node:path'; import { createHash } from 'node:crypto';
           const [metadata, ...files] = process.argv.slice(2); const assets = JSON.parse(readFileSync(metadata)).assets;
