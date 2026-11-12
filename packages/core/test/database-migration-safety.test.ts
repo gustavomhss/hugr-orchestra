@@ -8,16 +8,21 @@ import { DatabaseMigration } from "../src/database/migration"
 import { migrations } from "../src/database/migration.gen"
 import sessionMetadataMigration from "../src/database/migration/20260511173437_session-metadata"
 import { tmpdir } from "./fixture/tmpdir"
-import { run, migration, seed, ids, notes, snapshots, namedLegacy } from "./fixture/migration-safety"
+import { run, migration, seed, ids, notes, snapshots, namedLegacy, inspectBackupFootprint } from "./fixture/migration-safety"
 
 // M5: simulate a backup made before a destructive migration that an older build already committed.
 test("M5 pins the pre-A legacy backup through four failed retries and later success, capturing new data each time", async () => {
   await using tmp = await tmpdir()
   const file = join(tmp.path, "source.db")
-  const original = `${file}.backup-before-A-1`
   await seed(file, ["000_base"])
-  await run(file, (db) => db.run(sql`VACUUM INTO ${original}`))
-  const originalHash = createHash("sha256").update(await readFile(original)).digest("hex")
+  const originals: { file: string; hash: string; rows: string[] }[] = []
+  for (const version of [1, 2, 3, 4]) {
+    await run(file, (db) => db.run(sql`INSERT INTO note VALUES (${`legacy-version-${version}`})`))
+    const name = `${file}.backup-before-A-${version}`
+    await run(file, (db) => db.run(sql`VACUUM INTO ${name}`))
+    originals.push({ file: name, hash: createHash("sha256").update(await readFile(name)).digest("hex"), rows: await notes(name) })
+  }
+  expect(new Set(originals.map((entry) => entry.hash)).size).toBe(4)
   await run(file, (db) => db.transaction((tx) => Effect.gen(function* () {
     yield* tx.run("DELETE FROM note")
     yield* tx.run("INSERT INTO migration VALUES ('001_A',1)")
@@ -30,14 +35,21 @@ test("M5 pins the pre-A legacy backup through four failed retries and later succ
     expect(Exit.isFailure(outcome)).toBe(true)
     const captured = await Promise.all((await snapshots(file)).map((name) => notes(join(tmp.path, name))))
     expect(captured.some((rows) => rows.includes(`between-retries-${attempt}`))).toBe(true)
-    expect(await readFile(original).then((bytes) => createHash("sha256").update(bytes).digest("hex"), () => null)).toBe(originalHash)
+    for (const original of originals) {
+      expect(await readFile(original.file).then((bytes) => createHash("sha256").update(bytes).digest("hex"), () => null)).toBe(original.hash)
+    }
+    await inspectBackupFootprint(file)
     await Bun.sleep(2)
   }
   await run(file, (db) => DatabaseMigration.apply(db, [migration("000_base"), migration("001_A"), migration("002_B")]))
-  expect(await readFile(original).then((bytes) => createHash("sha256").update(bytes).digest("hex"), () => null)).toBe(originalHash)
-  expect(await notes(original)).toEqual(["precious"])
+  for (const original of originals) {
+    expect(await readFile(original.file).then((bytes) => createHash("sha256").update(bytes).digest("hex"), () => null)).toBe(original.hash)
+    expect(await notes(original.file)).toEqual(original.rows)
+  }
   expect(await ids(file)).toEqual(["000_base", "001_A", "002_B"])
-  expect((await snapshots(file)).length).toBeLessThanOrEqual(6) // fixed legacy pin + ring3 + current + active
+  const footprint = await inspectBackupFootprint(file)
+  expect(footprint.state.legacyPins.map((entry) => entry.name).sort()).toEqual(originals.map((entry) => entry.file.split(/[\\/]/).at(-1)!).sort())
+  expect(footprint.directories).toEqual([])
 })
 
 test("M5 rolls back the entire new batch when a later migration fails", async () => {
@@ -199,4 +211,16 @@ test("M7 a non-null empty legacy name cannot fall back to its otherwise valid ti
   const outcome = await run(file, (db) => DatabaseMigration.applyOnly(db, []).pipe(Effect.exit))
   expect(await ids(file)).toEqual([])
   expect(Exit.isFailure(outcome)).toBe(true)
+})
+
+test("M7 the historical alias is refused when full apply has no canonical migration in its universe", async () => {
+  await using tmp = await tmpdir()
+  const file = join(tmp.path, "source.db")
+  const historical = "20260530232709_lovely_romulus"
+  await seed(file, [historical])
+  const outcome = await run(file, (db) => DatabaseMigration.apply(db, [migration("000_other")]).pipe(Effect.exit))
+  expect(Exit.isFailure(outcome)).toBe(true)
+  expect(await ids(file)).toEqual([historical])
+  expect(await notes(file)).toEqual(["precious"])
+  expect(await snapshots(file)).toEqual([])
 })

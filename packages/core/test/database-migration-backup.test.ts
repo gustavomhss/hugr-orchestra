@@ -8,14 +8,15 @@ import { Effect } from "effect"
 import { sql } from "drizzle-orm"
 import { DatabaseMigration } from "@orchestra/core/database/migration"
 import { tmpdir } from "./fixture/tmpdir"
+import { inspectBackupFootprint } from "./fixture/migration-safety"
 
 const makeDb = EffectDrizzleSqlite.makeWithDefaults()
 
-const run = <A, E>(file: string, body: (db: Effect.Success<typeof makeDb>) => Effect.Effect<A, E>) =>
+const run = <A, E>(file: string, body: (db: Effect.Success<typeof makeDb>) => Effect.Effect<A, E>, readonly = false) =>
   Effect.runPromise(
     Effect.gen(function* () {
       return yield* body(yield* makeDb)
-    }).pipe(Effect.provide(SqliteClient.layer({ filename: file })), Effect.scoped),
+    }).pipe(Effect.provide(SqliteClient.layer({ filename: file, ...(readonly ? { readonly: true, readwrite: false, create: false, disableWAL: true } : {}) })), Effect.scoped),
   )
 
 const addNote = (id: string): DatabaseMigration.Migration => ({
@@ -46,9 +47,9 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
 
     const [name, ...rest] = await backups(tmp.path)
     expect(rest).toEqual([])
-    expect(name).toMatch(/^orchestra\.db\.backup-001_a-\d+$/)
+    expect((await inspectBackupFootprint(file)).backupNames).toContain(name)
     // the copy holds the pre-migration state; the live database moved on
-    const copy = await run(path.join(tmp.path, name), (db) => db.all(sql`SELECT body FROM note`))
+    const copy = await run(path.join(tmp.path, name), (db) => db.all(sql`SELECT body FROM note`), true)
     expect(copy).toEqual([{ body: "precious" }])
     const live = await run(file, (db) => db.all(sql`SELECT body FROM note ORDER BY rowid`))
     expect(live).toEqual([{ body: "precious" }, { body: "002_b" }])
@@ -60,7 +61,7 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
     await seed(file, ["001_a"])
     await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a"), addNote("002_b")]))
     const [name] = await backups(tmp.path)
-    expect(name).toMatch(/^orchestra\.db\.backup-001_a-\d+$/)
+    expect((await inspectBackupFootprint(file)).backupNames).toContain(name)
     const backup = path.join(tmp.path, name)
     const backupBytes = await fs.readFile(backup)
     const backupHash = createHash("sha256").update(backupBytes).digest("hex")

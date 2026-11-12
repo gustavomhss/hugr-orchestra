@@ -8,7 +8,7 @@ import { expectSpawn } from "./fixture/omni-expect"
 import { DatabaseMigration } from "../src/database/migration"
 import sessionMetadataMigration from "../src/database/migration/20260511173437_session-metadata"
 import { tmpdir } from "./fixture/tmpdir"
-import { run, migration, seed, ids, notes, snapshots, namedLegacy } from "./fixture/migration-safety"
+import { run, migration, seed, ids, notes, snapshots, namedLegacy, inspectBackupFootprint } from "./fixture/migration-safety"
 
 type Manifest = {
   version: number; legacyPins: { name: string }[]; recentAttempts: unknown[]
@@ -82,7 +82,7 @@ for (const phase of ["prepared", "captured", "ready", "garbage", "finalize"]) {
       expect(state.version).toBe(1)
       expect(state.active).toBe(null)
       expect(state.recentAttempts.length).toBeLessThanOrEqual(3)
-      expect((await snapshots(file)).length).toBeLessThanOrEqual(state.legacyPins.length + 5)
+      expect((await inspectBackupFootprint(file)).directories).toEqual([])
       expect(await readFile(sentinel, "utf8")).toBe("neighbor-sentinel")
       expect((await readdir(`${file}.migration-work`)).filter((name) => name === "manifest.pending" || name.endsWith(".tmp"))).toEqual([])
     }, 30_000)
@@ -123,6 +123,26 @@ test("M5 real EEXIST publication leaves foreign final bytes intact and refuses m
   expect(await readFile(collision.target, "utf8")).toBe("foreign-final-sentinel")
   expect(await notes(file)).toEqual(["precious"])
   expect(await ids(file)).toEqual(["000_base"])
+  const initial = await inspectBackupFootprint(file, [collision.target])
+  const entries = (await readdir(`${file}.migration-work`, { recursive: true })).sort()
+  const files = (await snapshots(file)).sort()
+  for (const retry of [1, 2, 3]) {
+    const observed: string[] = []
+    const again = await run(file, (db) => DatabaseMigration.apply(db, [migration("000_base"), migration("001_A")], { backup: {
+      observe: (event: { kind: string }) => Effect.sync(() => { observed.push(event.kind) }),
+    } }).pipe(Effect.exit))
+    expect(Exit.isFailure(again)).toBe(true)
+    expect(observed.filter((kind) => ["prepared", "captured", "ready"].includes(kind))).toEqual([])
+    const footprint = await inspectBackupFootprint(file, [collision.target])
+    expect(footprint.state.active?.id).toBe(initial.state.active?.id)
+    expect(footprint.state.active?.phase).toBe("captured")
+    expect(footprint.state.currentBaselinePin).toEqual(initial.state.currentBaselinePin)
+    expect(footprint.physicalBytes).toBe(initial.physicalBytes)
+    expect((await readdir(`${file}.migration-work`, { recursive: true })).sort()).toEqual(entries)
+    expect((await snapshots(file)).sort()).toEqual(files)
+    expect(await readFile(collision.target, "utf8")).toBe("foreign-final-sentinel")
+    expect(await ids(file)).toEqual(["000_base"])
+  }
 })
 
 test("M5 unsupported link has no rename or copy fallback and never reaches SQL mutation", async () => {
@@ -184,6 +204,7 @@ test("M5 failed garbage unlink blocks retry allocation instead of growing backup
     await run(file, (db) => DatabaseMigration.apply(db, inputs, options).pipe(Effect.exit))
     expect(seen.prepared).toBe(prepared)
     expect((await snapshots(file)).sort()).toEqual(files)
+    await inspectBackupFootprint(file)
   }
   expect(await ids(file)).toEqual(["000_base"])
 })
@@ -262,6 +283,9 @@ test("M5 process crash after publication recovers its real hardlink then capture
   await seed(file, ["000_base"])
   await crash(file, "published")
   expect((await manifest(file)).active?.phase).toBe("captured")
+  const linked = await inspectBackupFootprint(file)
+  expect(linked.physicalCopies).toBe(1)
+  expect(linked.namedBytes).toBe(linked.physicalBytes * 2n)
   expect(await notes(file)).toEqual(["precious"])
   await run(file, (db) => db.run("INSERT INTO note VALUES ('between-crash-and-retry')"))
   await run(file, (db) => DatabaseMigration.apply(db, [migration("000_base"), migration("001_A", "applied-once")]))
@@ -269,6 +293,7 @@ test("M5 process crash after publication recovers its real hardlink then capture
   const captured = await Promise.all((await snapshots(file)).map((name) => notes(join(tmp.path, name))))
   expect(captured.some((rows) => rows.includes("between-crash-and-retry") && !rows.includes("applied-once"))).toBe(true)
   expect((await manifest(file)).active).toBe(null)
+  expect((await inspectBackupFootprint(file)).directories).toEqual([])
 }, 30_000)
 
 test("M5 process crash after SQL COMMIT finalizes without repeating the destructive attempt", async () => {
@@ -292,3 +317,26 @@ test("M5 a real process crash inside B rolls back earlier A and both journal wri
   expect(await notes(file)).toEqual(["precious"])
   expect(await ids(file)).toEqual(["000_base"])
 })
+
+test("M5 four repeated captured-slot process crashes leave only the active UUID and no finalized scratch orphans", async () => {
+  await using tmp = await tmpdir()
+  const file = join(tmp.path, "source.db")
+  await seed(file, ["000_base"])
+  const sentinel = `${file}.manifest.pending.foreign`
+  await writeFile(sentinel, "foreign-neighbor")
+  for (const attempt of [1, 2, 3, 4]) {
+    await crash(file, "slot-synced:manifest:captured")
+    const footprint = await inspectBackupFootprint(file)
+    expect(footprint.state.active?.phase).toBe("prepared")
+    expect(footprint.directories).toEqual([footprint.state.active!.id])
+    expect(footprint.physicalCopies).toBeLessThanOrEqual(footprint.state.legacyPins.length + 5)
+    expect(await ids(file)).toEqual(["000_base"])
+    expect(await readFile(sentinel, "utf8")).toBe("foreign-neighbor")
+  }
+  await run(file, (db) => DatabaseMigration.apply(db, [migration("000_base"), migration("001_A", "applied-once")]))
+  const final = await inspectBackupFootprint(file)
+  expect(final.state.active).toBe(null)
+  expect(final.directories).toEqual([])
+  expect(final.state.recentAttempts.length).toBeLessThanOrEqual(3)
+  expect(await notes(file)).toEqual(["precious", "applied-once"])
+}, 60_000)
