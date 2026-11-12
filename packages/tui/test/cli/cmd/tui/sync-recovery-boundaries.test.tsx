@@ -131,6 +131,59 @@ test("a reconnect forces a Session whose first history hydration is still pendin
   }
 }, 15_000)
 
+test("an ordinary sync retries a failed forced history while retaining cached and live messages", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const failed = Promise.withResolvers<Response>()
+  const state = { reads: 0 }
+  const mounted = await mount(
+    routes((url) => {
+      if (url.pathname !== `/api/session/${sessionID}/message`) return
+      state.reads++
+      return state.reads === 1
+        ? messages("initial cached")
+        : state.reads === 2
+          ? failed.promise
+          : messages("ordinary retry")
+    }),
+    tmp.path,
+  )
+  const synchronize: (id: string, options?: { force?: boolean }) => Promise<void> = mounted.sync.session.sync
+  await synchronize(sessionID)
+  expect(state.reads).toBe(1)
+  expect(text(mounted.sync)).toBe("initial cached")
+  const forced = observe(synchronize(sessionID, { force: true }))
+  try {
+    await wait(() => state.reads === 2)
+    await emit(
+      mounted,
+      event({
+        id: "evt_live_during_failed_force",
+        type: "session.next.step.started",
+        data: {
+          timestamp: 5,
+          sessionID,
+          assistantMessageID: "msg_live_during_failed_force",
+          agent: "maestro",
+          model: { id: "model", providerID: "test" },
+        },
+      }),
+    )
+    failed.reject(new Error("forced history failure"))
+    expect(await forced).toBeUndefined()
+    expect(text(mounted.sync)).toBe("initial cached")
+    expect(mounted.sync.data.message[sessionID].map((message) => message.id)).toContain("msg_live_during_failed_force")
+    await synchronize(sessionID)
+    expect(state.reads).toBe(3)
+    expect(text(mounted.sync)).toBe("ordinary retry")
+    expect(mounted.sync.data.message[sessionID].map((message) => message.id)).toContain("msg_live_during_failed_force")
+  } finally {
+    failed.resolve(messages("cleanup"))
+    await forced
+    mounted.app.renderer.destroy()
+  }
+}, 15_000)
+
 test("deletion skips old trailing hydration and reentry has a separate owner", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")
@@ -414,6 +467,53 @@ test("SDK owner disposed during async subscribe releases its future subscription
     if (!state.disposed) mounted.app.renderer.destroy()
   }
 }, 10_000)
+
+test.each(["dispose", "late"])(
+  "SDK cleanup observes a throwing %s unsubscribe exactly once",
+  async (phase) => {
+    await using tmp = await tmpdir()
+    await Bun.write(`${tmp.path}/kv.json`, "{}")
+    const subscription = Promise.withResolvers<() => void>()
+    const state = { calls: 0, releases: 0, disposed: false }
+    let deliver: ((event: GlobalEvent) => void) | undefined
+    const release = () => {
+      state.releases++
+      throw new Error("deliberate delegated unsubscribe failure")
+    }
+    const mounted = await mount(routes(), tmp.path, undefined, undefined, {
+      delaySync: phase === "late",
+      events: {
+        subscribe(handler) {
+          deliver = handler
+          state.calls++
+          return phase === "late" ? subscription.promise : Promise.resolve(release)
+        },
+      },
+    })
+    try {
+      await wait(() => state.calls === 1)
+      const send = deliver
+      if (!send) throw new Error("event subscription did not supply its callback")
+      const greeting = connected(10)
+      send(greeting)
+      await wait(() => mounted.received.includes(greeting))
+      const before = epoch(mounted.sdk)
+      expect(before).toBe(1)
+      state.disposed = true
+      expect(() => mounted.app.renderer.destroy()).not.toThrow()
+      if (phase === "late") subscription.resolve(release)
+      await wait(() => state.releases === 1)
+      send(connected(99))
+      expect(epoch(mounted.sdk)).toBe(before)
+      expect(state.calls).toBe(1)
+      expect(state.releases).toBe(1)
+    } finally {
+      subscription.resolve(release)
+      if (!state.disposed) mounted.app.renderer.destroy()
+    }
+  },
+  15_000,
+)
 
 function routes(override?: FetchHandler): FetchHandler {
   return (url) => {

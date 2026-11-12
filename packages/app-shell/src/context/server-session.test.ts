@@ -190,7 +190,9 @@ describe("server session", () => {
       const trailingPage = deferredPage()
       const started = Promise.withResolvers<void>()
       const secondStarted = Promise.withResolvers<void>()
-      const metadata = Promise.withResolvers<Session>()
+      const metadata = Promise.withResolvers<Awaited<ReturnType<SessionApi["get"]>>>()
+      const info = (id: string) => ({ ...session(id), location: { directory: "/repo" }, cost: 0,
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } })
       const problem = new Error(`${failure} read failed`)
       const state = { reads: 0, active: 0, maximum: 0, gets: 0 }
       const base = messageClient()
@@ -198,9 +200,9 @@ describe("server session", () => {
         {
           ...base.sessionApi,
           get: async (input) => {
-            if (input.sessionID !== "ses_child") return session(input.sessionID)
+            if (input.sessionID !== "ses_child") return info(input.sessionID)
             state.gets++
-            return failure === "metadata" && state.gets === 1 ? metadata.promise : session(input.sessionID)
+            return failure === "metadata" && state.gets === 1 ? metadata.promise : info(input.sessionID)
           },
         },
         {
@@ -266,7 +268,7 @@ describe("server session", () => {
           later: laterResults,
         })
       } finally {
-        metadata.resolve(session("ses_child"))
+        metadata.resolve(info("ses_child"))
         pending.resolve(page())
         trailingPage.resolve(page())
         await Promise.all([first, trailing, samePredecessor, ...later])
@@ -1037,6 +1039,43 @@ describe("server session", () => {
     await store.sync("ses_child", { force: true })
 
     expect(ids(store)).toEqual(["message-1", "message-2", "message-3"])
+  })
+
+  test("force waits for an actual history prepend and then reads one fresh page", async () => {
+    const older = deferredPage()
+    const fresh = deferredPage()
+    const client = messageClient(page([v2User("message-2", 2)], "older"), older.promise, fresh.promise)
+    const state = { active: 0, maximum: 0 }
+    const store = createServerSession(client.sessionApi, {
+      ...client.messageApi,
+      list: (input) => {
+        state.maximum = Math.max(state.maximum, ++state.active)
+        return Promise.resolve(client.messageApi.list(input)).finally(() => state.active--)
+      },
+    }, { todo: async () => [] })
+    await store.sync("ses_child")
+    const pagination = store.history.loadMore("ses_child", 7)
+    await client.requested(2)
+    const forced = store.sync("ses_child", { force: true })
+    const duplicate = store.sync("ses_child", { force: true })
+    try {
+      expect(client.requests[1]).toEqual({ sessionID: "ses_child", limit: 7, cursor: "older" })
+      expect(store.history.loading("ses_child")).toBe(true)
+      expect(client.requests).toHaveLength(2)
+      older.resolve(page([v2User("message-1")]))
+      await pagination
+      expect(ids(store)).toEqual(["message-1", "message-2"])
+      expect(await Promise.race([client.requested(3).then(() => true), Bun.sleep(2_000).then(() => false)])).toBe(true)
+      fresh.resolve(page([v2User("message-1"), v2User("message-2", 2), v2User("message-3", 3)]))
+      await Promise.all([forced, duplicate])
+      expect(client.requests).toHaveLength(3)
+      expect(state.maximum).toBe(1)
+      expect(ids(store)).toEqual(["message-1", "message-2", "message-3"])
+    } finally {
+      older.resolve(page())
+      fresh.resolve(page())
+      await Promise.allSettled([pagination, forced, duplicate])
+    }
   })
 
   test("preserves a part update for a message being loaded from history", async () => {
