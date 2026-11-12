@@ -114,7 +114,13 @@ export function WslServerSettings(props: {
                 </div>
               </div>
               <div class="settings-v2-servers-actions">
-                <Show when={props.controller.canDefault() && props.controller.defaultKey() === key}>
+                <Show
+                  when={
+                    props.controller.defaultKnown() &&
+                    props.controller.canDefault() &&
+                    props.controller.defaultKey() === key
+                  }
+                >
                   <Tag>{language.t("dialog.server.status.default")}</Tag>
                 </Show>
                 <Show when={orchestraAction()}>
