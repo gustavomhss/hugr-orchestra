@@ -96,23 +96,22 @@ test("remote close interrupts a blocked writer and detaches once", async () => {
 })
 
 test("real Node WebSocket slow reader bounds native buffers and terminates only its connection", async () => {
-  const { WebSocket, WebSocketServer } = await import("ws")
+  const { NodeWS } = await import("@effect/platform-node/NodeSocket")
   const { connect } = await import("node:net")
-  const { once } = await import("node:events")
-  const server = new WebSocketServer({ port: 0, host: "127.0.0.1" })
-  await once(server, "listening")
+  const server = new NodeWS.WebSocketServer({ port: 0, host: "127.0.0.1" })
+  await new Promise<void>((resolve, reject) => server.once("listening", resolve).once("error", reject))
   const address = server.address()
   if (typeof address === "string" || !address) throw new Error("Expected TCP address")
-  const connected = once(server, "connection")
+  const connected = new Promise<InstanceType<typeof NodeWS.WebSocket>>((resolve) => server.once("connection", resolve))
   const client = connect(address.port, "127.0.0.1")
-  await once(client, "connect")
-  const handshake = once(client, "data")
+  await new Promise<void>((resolve, reject) => client.once("connect", resolve).once("error", reject))
+  const handshake = new Promise<void>((resolve, reject) => client.once("data", () => resolve()).once("error", reject))
   client.write([
     "GET / HTTP/1.1", `Host: 127.0.0.1:${address.port}`, "Upgrade: websocket", "Connection: Upgrade",
     "Sec-WebSocket-Version: 13", "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==", "", "",
   ].join("\r\n"))
   await handshake
-  const [native] = await connected as [InstanceType<typeof WebSocket>]
+  const native = await connected
   client.pause()
   const f = fixture()
   try {
@@ -132,7 +131,7 @@ test("real Node WebSocket slow reader bounds native buffers and terminates only 
       expect(f.state.detached).toBe(1)
       expect(peak).toBeGreaterThan(0)
       expect(peak).toBeLessThan(8 * 1024 * 1024)
-      expect(native.readyState).toBe(WebSocket.CLOSED)
+      expect(native.readyState).toBe(NodeWS.WebSocket.CLOSED)
       // The producer fixture has no termination hook: only attachment.detach
       // and native transport termination are involved.
     })))
