@@ -1169,7 +1169,7 @@ describe("E6 literal Task and shared model authority", () => {
     const f = yield* e6VariantTask("high")
     const call = yield* record(f.parent.id, "e6-named-task")
     const completed = result(yield* settleTool(f.registry, call))
-    expect((yield* f.sessions.get(completed.sessionID)).model).toEqual({ ...cheap, variant: "high" })
+    expect((yield* f.sessions.get(completed.sessionID)).model).toEqual({ ...cheap, variant: ModelV2.VariantID.make("high") })
     expect(yield* inputRows(completed.sessionID)).toHaveLength(1)
     expect(f.harness.requests).toHaveLength(1)
     expect(f.harness.requests[0].model.route.defaults.headers).toMatchObject({ "x-variant": "high" })
@@ -1192,7 +1192,7 @@ describe("E6 literal Task and shared model authority", () => {
     )
     // A baseline permission prompt is observed and explicitly refused before asserting the earlier eligibility boundary.
     if (first.type === "asked") {
-      yield* f.permission.reply({ requestID: first.requests[0].id, reply: "deny" })
+      yield* f.permission.reply({ requestID: first.requests[0].id, reply: "reject" })
       yield* Fiber.join(pending)
     }
     expect(first.type).toBe("settled")
@@ -1207,14 +1207,14 @@ describe("E6 literal Task and shared model authority", () => {
     const f = yield* e6VariantTask("default")
     const call = yield* record(f.parent.id, "e6-default-retry")
     const first = result(yield* settleTool(f.registry, call))
-    expect((yield* f.sessions.get(first.sessionID)).model?.variant).toBe("default")
+    expect((yield* f.sessions.get(first.sessionID)).model?.variant).toBe(ModelV2.VariantID.make("default"))
     const before = yield* inputRows(first.sessionID)
     yield* f.agents.transform((draft) => draft.update(worker, (agent) => { agent.model = cheap }))
     const retry = yield* settleTool(f.registry, call)
     expect(retry.result).toMatchObject({ type: "error", value: expect.stringContaining("cannot change the recorded child model") })
     expect(yield* inputRows(first.sessionID)).toEqual(before)
     expect(f.harness.requests).toHaveLength(1)
-    expect((yield* f.sessions.get(first.sessionID)).model?.variant).toBe("default")
+    expect((yield* f.sessions.get(first.sessionID)).model?.variant).toBe(ModelV2.VariantID.make("default"))
   }))
 
   it.effect("E6: target revalidation after real permission wait distinguishes omission from literal default", () => Effect.gen(function* () {
