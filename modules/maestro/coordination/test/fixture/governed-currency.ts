@@ -140,7 +140,7 @@ const approval = Effect.fn("CurrencyFixture.approval")(function* (directory: str
   const skills = yield* SkillV2.Service
   const governance = yield* TaskGovernance.Service
   const services = { db: database.db, store, events, atlas: { config, git: cli, fs, skills }, canonical: (id: string) => id }
-  yield* database.db.insert(ProjectTable).values({ id: projectID, worktree: directory, sandboxes: [] }).run().pipe(Effect.orDie)
+  yield* database.db.insert(ProjectTable).values({ id: projectID, worktree: AbsolutePath.make(directory), sandboxes: [] }).run().pipe(Effect.orDie)
   yield* database.db.insert(SessionTable).values({
     id: sessionID, project_id: projectID, directory, version: "test", slug: "currency", title: "currency", agent: "maestro",
   }).run().pipe(Effect.orDie)
@@ -244,7 +244,7 @@ const approval = Effect.fn("CurrencyFixture.approval")(function* (directory: str
   }).onConflictDoNothing().run().pipe(Effect.orDie)
   return {
     directory, services, sessionID, context, validation, governed, approved, reserve, child,
-    git: (args: string[]) => git(directory, args),
+    git: (args: string[]) => git(directory, args).pipe(Effect.provideService(GitCli.Service, cli)),
     current: () => GovernanceEvidenceV2.current(cli, directory),
     isCurrent: () => GovernanceEvidenceV2.contextIsCurrent(services, context),
     consume: (id: string) => GovernanceReservationV2.consume(services, id),
