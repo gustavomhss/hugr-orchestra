@@ -26,12 +26,12 @@ Sources: https://github.com/open-policy-agent/conftest/releases/tag/v0.71.1 · h
 
 ## ScanCode 32.5.0
 
-- **Artifact:** Selected dist is the PyPI wheel, not the GitHub app bundle, and not a standalone binary. `scancode_toolkit-32.5.0-cp310-none-any.whl` publisher SHA-256 `b73eac8ae8aecff583d8eed79e1cb4270559c99938bb29ec08c96f2f417b420b` (not a local rehash). Native deps may need a C toolchain at install; that is not a bundle checksum.
+- **Artifact:** Selected dist is the PyPI wheel, not the GitHub app bundle. `scancode_toolkit-32.5.0-cp310-none-any.whl` publisher SHA-256 `b73eac8ae8aecff583d8eed79e1cb4270559c99938bb29ec08c96f2f417b420b` (not a local rehash). Native deps may need a C toolchain at install; that is not a bundle checksum.
 - **License:** Publisher field: Apache-2.0 AND CC-BY-4.0 AND LicenseRef-scancode-other-permissive AND LicenseRef-scancode-other-copyleft (.ABOUT closure not inventoried). Primary apache-2.0.LICENSE text SHA-256 `c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4` (that file only, not the wheel). https://raw.githubusercontent.com/aboutcode-org/scancode-toolkit/v32.5.0/apache-2.0.LICENSE NOTICE: Apache-2.0 AND CC-BY-4.0 for software and data; third-party permissive and copyleft licences live only in unreviewed per-package .ABOUT files. Not a redistribution approval.
 - **Use:** `scancode --license --json-pp OUT.json INPUT`.
 - **Output/exits:** Pretty JSON (headers, files, license_detections) to the named file. HTML/CSV are other plugins. Progress/summary on stderr unless `--quiet`. Success exits 0, else 1 (`ctx.exit`). UsageError and ScancodeError also exit via click.
 - **Effects:** Config: none required. Network: `--check-version` defaults true; can GET `https://pypi.org/pypi/scancode-toolkit/json` weekly. Version check, not a licence-index update. Not offline-qualified. Children: process pool (`-n`); libmagic and typecode load in-process. Writes: named JSON, version-check cache, temp dir, and an on-disk cache above max-in-memory 10000. Inputs not rewritten by this path.
-- **Limits:** No standalone binary. App-bundle digest not selected. Third-party .ABOUT set not reviewed. C-toolchain need is not a checksum. Not redistribution or offline clearance.
+- **Limits:** App-bundle digest not selected. Third-party .ABOUT set not reviewed. C-toolchain need is not a checksum. Not redistribution or offline clearance.
 
 Sources: https://pypi.org/pypi/scancode-toolkit/32.5.0/json · https://github.com/aboutcode-org/scancode-toolkit/blob/v32.5.0/NOTICE · https://github.com/aboutcode-org/scancode-toolkit/blob/v32.5.0/src/scancode/cli.py
 
