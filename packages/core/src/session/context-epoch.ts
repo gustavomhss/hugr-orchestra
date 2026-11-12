@@ -1,9 +1,10 @@
 export * as SessionContextEpoch from "./context-epoch"
 
-import { eq } from "drizzle-orm"
+import { and, asc, desc, eq, gt, lt } from "drizzle-orm"
 import { DateTime, Effect, Schema } from "effect"
 import type { Database } from "../database/database"
 import { EventV2 } from "../event"
+import { EventTable } from "../event/sql"
 import { SystemContext } from "../system-context/index"
 import { ContextSnapshotDecodeError } from "./error"
 import { SessionEvent } from "./event"
@@ -44,7 +45,7 @@ const prepareOnce = Effect.fnUntraced(function* (
   sessionID: SessionSchema.ID,
 ) {
   const [value, stored, compaction] = yield* Effect.all(
-    [context, find(db, sessionID), SessionHistory.latestCompaction(db, sessionID)],
+    [context, repairRevert(db, sessionID), SessionHistory.latestCompaction(db, sessionID)],
     { concurrency: "unbounded" },
   )
   if (!stored) {
@@ -75,6 +76,82 @@ const prepareOnce = Effect.fnUntraced(function* (
     { commit: () => advance(db, sessionID, result.snapshot).pipe(Effect.orDie) },
   )
   return { baseline: stored.baseline, baselineSeq: stored.baseline_seq }
+})
+
+// Revert removes projected deltas, but the snapshot still records their admission.
+// Fold the durable deltas into the baseline before removing their projection.
+export const rebaseForRevert = Effect.fn("SessionContextEpoch.rebaseForRevert")(function* (
+  db: DatabaseService,
+  sessionID: SessionSchema.ID,
+  commitSequence: number,
+) {
+  const stored = yield* find(db, sessionID)
+  if (!stored || stored.baseline_seq >= commitSequence) return
+  const version = SessionEvent.ContextUpdated.durable?.version
+  if (version === undefined) return yield* Effect.die("Context update is not durable")
+  const rows = yield* db
+    .select({ data: EventTable.data })
+    .from(EventTable)
+    .where(
+      and(
+        eq(EventTable.aggregate_id, sessionID),
+        eq(EventTable.type, EventV2.versionedType(SessionEvent.ContextUpdated.type, version)),
+        gt(EventTable.seq, stored.baseline_seq),
+        lt(EventTable.seq, commitSequence),
+      ),
+    )
+    .orderBy(asc(EventTable.seq))
+    .all()
+    .pipe(Effect.orDie)
+  const deltas = yield* Effect.forEach(rows, (row) =>
+    Schema.decodeUnknownEffect(SessionEvent.ContextUpdated.data)(row.data).pipe(
+      Effect.flatMap((event) =>
+        event.sessionID === sessionID
+          ? Effect.succeed(event.text)
+          : Effect.die("Context delta belongs to another Session"),
+      ),
+      Effect.orDie,
+    ),
+  )
+  yield* db
+    .update(SessionContextEpochTable)
+    .set({ baseline: [stored.baseline, ...deltas].join("\n\n"), baseline_seq: commitSequence })
+    .where(eq(SessionContextEpochTable.session_id, sessionID))
+    .run()
+    .pipe(Effect.orDie)
+})
+
+const repairRevert = Effect.fn("SessionContextEpoch.repairRevert")(function* (
+  db: DatabaseService,
+  sessionID: SessionSchema.ID,
+) {
+  return yield* db
+    .transaction((tx) =>
+      Effect.gen(function* () {
+        const stored = yield* find(tx, sessionID)
+        if (!stored) return
+        const version = SessionEvent.RevertEvent.Committed.durable?.version
+        if (version === undefined) return yield* Effect.die("Revert commit is not durable")
+        const committed = yield* tx
+          .select({ seq: EventTable.seq })
+          .from(EventTable)
+          .where(
+            and(
+              eq(EventTable.aggregate_id, sessionID),
+              eq(EventTable.type, EventV2.versionedType(SessionEvent.RevertEvent.Committed.type, version)),
+              gt(EventTable.seq, stored.baseline_seq),
+            ),
+          )
+          .orderBy(desc(EventTable.seq))
+          .limit(1)
+          .get()
+          .pipe(Effect.orDie)
+        if (!committed) return stored
+        yield* rebaseForRevert(tx, sessionID, committed.seq)
+        return yield* find(tx, sessionID)
+      }),
+    )
+    .pipe(Effect.orDie)
 })
 
 const initializeOnce = Effect.fnUntraced(function* (
