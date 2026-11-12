@@ -122,6 +122,7 @@ function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSu
 
 export function MessageTimeline(props: {
   actions?: UserActions
+  onInitialContentRendered?: () => void
   scroll: { overflow: boolean; bottom: boolean; jump: boolean }
   onResumeScroll: () => void
   setScrollRef: (el: HTMLDivElement | undefined) => void
@@ -159,6 +160,12 @@ export function MessageTimeline(props: {
   const language = sessionRecoveryLanguage(useLanguage())
   const { params, sessionKey } = useSessionKey()
   const ownerSessionKey = sessionKey()
+  let initialContentRendered = false
+  const reportInitialContent = () => {
+    if (initialContentRendered) return
+    initialContentRendered = true
+    props.onInitialContentRendered?.()
+  }
   const cached = timelineCache.get(ownerSessionKey)
   const initialMeasurements = cached?.measurements
   const coldBottomMount = !initialMeasurements?.length && props.shouldAnchorBottom()
@@ -412,6 +419,10 @@ export function MessageTimeline(props: {
 
   let overscanFrame: number | undefined
   onMount(() => {
+    createEffect(() => {
+      // Reverting the first user message can leave loaded history with no visible rows.
+      if (timelineRows().length === 0) reportInitialContent()
+    })
     overscanFrame = requestAnimationFrame(() => {
       if (props.shouldAnchorBottom()) virtualizer.scrollToEnd()
       overscanFrame = requestAnimationFrame(() => {
@@ -1042,7 +1053,10 @@ export function MessageTimeline(props: {
     const [ready, setReady] = createSignal(initialItem.size <= timelineFallbackItemSize || !asyncFile())
     let contentMeasureFrame: number | undefined
 
-    onMount(() => virtualizer.measureElement(element))
+    onMount(() => {
+      virtualizer.measureElement(element)
+      if (element.isConnected && row()._tag !== "TurnGap") reportInitialContent()
+    })
 
     createEffect(
       on(
