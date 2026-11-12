@@ -178,6 +178,9 @@ for (const conflict of [
   "malformed-manifest",
   "unmarked-partial",
   "forbidden-read",
+  "malformed-floor",
+  "duplicate-floor",
+  "transport-read-error",
 ]) {
   linux(`M10 current feed ${conflict} refuses before any tag npm or release mutation`, async () => {
     expectSpawn(import.meta.path)
@@ -189,7 +192,7 @@ for (const conflict of [
       current.assets["latest-mac.yml"] = asset("latest-mac.yml", feed("0.3.7", desktopNames[3], "newer", false))
     if (conflict === "newer-floor") {
       current.body += `\n${floor("0.3.7", "f".repeat(64))}`
-      current.assets = {}
+      for (const name of canonicalFeeds) delete current.assets[name]
     }
     if (conflict === "other-receipt") current.body += `\n${floor(fixture.version, "f".repeat(64))}`
     if (conflict === "malformed-manifest")
@@ -197,6 +200,11 @@ for (const conflict of [
     if (conflict === "unmarked-partial") delete current.assets["latest.yml"]
     if (conflict === "forbidden-read")
       state.fault = { operation: "release.read:desktop-latest", remaining: 1, status: 403 }
+    if (conflict === "malformed-floor") current.body += "\n<!-- orchestra-feed-v1:{partial -->"
+    if (conflict === "duplicate-floor")
+      current.body += `\n${floor(fixture.version, fixture.receiptSha256)}\n${floor(fixture.version, fixture.receiptSha256)}`
+    if (conflict === "transport-read-error")
+      state.fault = { operation: "release.read:desktop-latest", remaining: 1, status: 503 }
     await fixture.save(state)
     expect((await fixture.promote()).exitCode).not.toBe(0)
     expect(mutations(await fixture.read())).toEqual([])
@@ -355,3 +363,50 @@ linux("release fixture refuses unknown gh npm operations and carries only fictit
   }
   expect(mutations(await fixture.read())).toEqual([])
 })
+
+linux("M9 actual partial draft upload resumes under the same source receipt and original bytes", async () => {
+  expectSpawn(import.meta.path)
+  await using tmp = await tmpdir()
+  const fixture = await releaseFixture(join(tmp.path, "draft-partial"))
+  await fixture.save({
+    ...(await fixture.read()),
+    fault: { operation: "asset.upload:v0.3.6/SHA256SUMS", remaining: 1 },
+  })
+  expect((await fixture.promote()).exitCode).not.toBe(0)
+  const partial = await fixture.read()
+  expect(partial.releases["v0.3.6"].draft).toBe(true)
+  expect(Object.keys(partial.releases["v0.3.6"].assets).length).toBeGreaterThan(0)
+  expect(partial.releases["v0.3.6"].assets["SHA256SUMS"]).toBeUndefined()
+  const result = await fixture.promote()
+  expect(result.exitCode, result.stderr.toString()).toBe(0)
+  const after = await fixture.read()
+  expect(after.releases["v0.3.6"].draft).toBe(false)
+  expect(after.releases["v0.3.6"].assets["VALIDATION.json"].digest).toBe(`sha256:${fixture.receiptSha256}`)
+  expect(npmWrites(after)).toHaveLength(9)
+})
+
+linux(
+  "M10 actual remote metadata digest mismatch fails without rewriting payloads or approved local feeds",
+  async () => {
+    expectSpawn(import.meta.path)
+    await using tmp = await tmpdir()
+    const fixture = await releaseFixture(join(tmp.path, "remote-digest"))
+    const state = await fixture.read()
+    const before = structuredClone(state.releases["desktop-latest"].assets)
+    state.badDigest = { tag: "desktop-latest", name: "latest.yml" }
+    const source = await readFile(join(fixture.source, "feed/latest.yml"), "utf8")
+    await fixture.save(state)
+    expect((await fixture.promote()).exitCode).not.toBe(0)
+    const after = await fixture.read()
+    for (const name of desktopNames) expect(after.releases["desktop-latest"].assets[name]).toEqual(before[name])
+    expect(
+      mutations(after).filter(
+        (entry) =>
+          entry.operation.startsWith("asset.") &&
+          entry.operation.includes("desktop-latest/") &&
+          !canonicalFeeds.some((name) => entry.operation.endsWith(`/${name}`)),
+      ),
+    ).toEqual([])
+    expect(await readFile(join(fixture.source, "feed/latest.yml"), "utf8")).toBe(source)
+  },
+)

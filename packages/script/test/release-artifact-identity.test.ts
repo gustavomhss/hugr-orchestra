@@ -304,3 +304,35 @@ for (const change of [
     await expect(verifyReleaseArtifacts(root, { ...receipt, files }, expected)).rejects.toThrow()
   })
 }
+
+for (const approved of [false, true]) {
+  test(`real artifact verifier requires the adjacent blockmap used by an immutable feed, approved=${approved}`, async () => {
+    const { root, receipt } = await fixture()
+    const path = "feed/latest.yml"
+    const feed = Bun.YAML.parse(await readFile(join(root, path), "utf8")) as {
+      version: string
+      files: { url: string; size: number; sha512: string; blockMapSize?: number }[]
+    }
+    const blockmap = "approved adjacent blockmap"
+    feed.files[0]!.blockMapSize = Buffer.byteLength(blockmap)
+    const bytes = [`version: ${feed.version}`, `files: ${JSON.stringify(feed.files)}`].join("\n") + "\n"
+    await writeFile(join(root, path), bytes)
+    const files = receipt.files.map((entry) =>
+      entry.path === path
+        ? { ...entry, size: Buffer.byteLength(bytes), sha256: createHash("sha256").update(bytes).digest("hex") }
+        : entry,
+    )
+    if (approved) {
+      const name = "desktop/orchestra-desktop-win-x64.exe.blockmap"
+      await writeFile(join(root, name), blockmap)
+      files.push({
+        path: name,
+        size: Buffer.byteLength(blockmap),
+        sha256: createHash("sha256").update(blockmap).digest("hex"),
+      })
+    }
+    const result = verifyReleaseArtifacts(root, { ...receipt, files }, expected)
+    if (approved) return await expect(result).resolves.toBeUndefined()
+    await expect(result).rejects.toThrow()
+  })
+}
