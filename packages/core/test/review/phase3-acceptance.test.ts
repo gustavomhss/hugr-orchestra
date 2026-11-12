@@ -119,7 +119,7 @@ describe("phase 3 acceptance", () => {
       "security.supply-chain",
     ])
     expect(catalog.lenses.filter((lens) => lens.id === "security" || lens.id.startsWith("security-")).map((lens) => lens.id)).toEqual([
-      "security",
+      "security-release", "security",
     ])
     for (const [id, node] of CLASSES) {
       const entry = catalog.classes.find((item) => item.id === id)
@@ -154,7 +154,8 @@ describe("phase 3 acceptance", () => {
       ["standard", true, "standard"],
       ["deep", false, "standard"],
     ])
-    expect(catalog.options.map((option) => option.id)).not.toContain("probe:mutants")
+    expect(catalog.options.map((option) => option.id)).toEqual(expect.arrayContaining(["probe:mutants", "probe:interleave", "probe:property"]))
+    for (const id of ["probe:formal", "probe:fuzz"]) expect(catalog.options.map((option) => option.id)).not.toContain(id)
   })
 
   test("profile pr keeps risk code overlays and the quick standard deep budget contract", () => {

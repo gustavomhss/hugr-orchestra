@@ -10,6 +10,7 @@ import { current } from "./entries"
 // options; no model ever sees it whole. Every id is an open string validated against this catalog, so a later phase
 // adds entries without a schema change.
 export { current }
+export { releaseChecks } from "./release-checks"
 export { zizmor } from "./zizmor"
 
 const Id = Schema.NonEmptyString.check(Schema.isPattern(/^[a-z0-9*][a-z0-9.*/:-]*$/))

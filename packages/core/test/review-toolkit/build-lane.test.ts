@@ -39,11 +39,12 @@ const TSCONFIG = `${JSON.stringify({
 const GUARD = "echo 'do not run tests from root' && exit 1"
 
 describe("build lane catalog", () => {
-  test("standard routes tsc, quick does not, and the unbuilt probes stay out", () => {
-    const ids = ReviewCatalog.current.options.map((option) => option.id)
+  test("standard routes tsc, quick does not, and formal and fuzz stay out", () => {
+    const ids: string[] = ReviewCatalog.current.options.map((option) => option.id)
     expect(ids).toContain("probe:test")
     expect(ids).toContain("probe:race")
-    for (const id of ["probe:mutants", "probe:interleave", "probe:property"]) expect(ids).not.toContain(id)
+    for (const id of ["probe:mutants", "probe:interleave", "probe:property"]) expect(ids).toContain(id)
+    for (const id of ["probe:formal", "probe:fuzz"]) expect(ids).not.toContain(id)
     expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")).toMatchObject({ built: false, runs: "standard" })
     const base = { files: ["package.json", "tsconfig.json"] }
     const head = {
