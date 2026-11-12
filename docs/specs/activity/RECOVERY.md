@@ -4,6 +4,15 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
+Planning follow-up: [PLAN.md](PLAN.md) records the whole R1–R20 coverage ledger
+and a first wave of three specified WPs / six tasks, each with the owner's six
+required quality fields. Independent acceptance criticism added sixteen explicit
+oracles and completed two clean rounds; a separate reviewer approved preparation
+only. The first-wave structural ownership/conflict checks passed. Contract code,
+stubs, executable mapping and hosted red baselines still precede implementation
+dispatch. See [PLANNING-RECEIPT.md](PLANNING-RECEIPT.md); no runtime source or
+previous implementation evidence changed in this documentation follow-up.
+
 The manual disk-reading checkpoint is now implemented and validated: Cache, Temporary and Logs read the server's three declared Orchestra roots through authenticated cached/manual APIs. Hosted Core passed 10 tests on Linux and seven on Windows (three explicit platform skips); Server passed three HTTP tests; App passed 25 unit tests and three browser-condition store tests. Package typechecks, Client generation, formatting, spawn-import checks, guardrails and independent scoped reviews passed. Final receipts and exact snapshot boundaries appear below.
 
 Manual isolated inspection confirmed unread-before-request, a complete 17-byte reading, retention after a partial retry, filter-miss behavior and pt-BR/narrow layouts. This remains a read-only implementation stage: per-worktree disk measurement, external caches, the remaining collectors, durable action ledgers, use proofs, process controls and cleanup are still outstanding. Nothing was merged, released or installed into the owner's running app.
