@@ -34,6 +34,7 @@ type FixtureServer = {
   }
 }
 type FixtureSDK = {
+  modelExecutionEpoch: () => number
   scope: ServerScope
   directory: string
   api: ServerApi
@@ -293,7 +294,7 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
 }
 
 export function sdkFor(directory: string, server: FixtureServer): FixtureSDK {
-  return { scope: server.scope, directory, api: server.currentApi, url: "http://fixture.invalid" }
+  return { scope: server.scope, directory, api: server.currentApi, url: "http://fixture.invalid", modelExecutionEpoch: () => 0 }
 }
 
 function promoteRoute(directory: string, id: string) {
@@ -330,6 +331,8 @@ beforeAll(async () => {
   mock.module("@/context/local", () => ({
     useLocal: () => ({
       model: {
+        execution: { context: () => "controlled-submit-fixture-metadata",
+          input: () => ({ model: { providerID: "provider", id: state.modelID, variant: state.variant ?? undefined } }) },
         intent: () => ({ model: { providerID: "provider", modelID: state.modelID }, variant: state.variant }),
         current: () => ({ id: state.modelID, provider: { id: "provider" } }),
         variant: { current: () => state.variant },

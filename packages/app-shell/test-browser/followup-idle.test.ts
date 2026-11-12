@@ -20,7 +20,7 @@ beforeAll(() => {
       const source = createSourceFile(page, await Bun.file(page).text(), ScriptTarget.Latest, true, ScriptKind.TSX)
       const component = source.statements.find((node) => isFunctionDeclaration(node) && node.name?.text === "Page")
       if (!component || !isFunctionDeclaration(component) || !component.body) throw new Error("Page body missing")
-      const names = ["followupOwnership", "queuedItemOwner", "queuedFollowups", "followupMutation", "followupBusy", "sendFollowup"]
+      const names = ["followupBaseOwnership", "followupOwnership", "queuedItemOwner", "queuedFollowups", "followupMutation", "followupBusy", "sendFollowup"]
       const selected = component.body.statements.filter((statement) => isVariableStatement(statement) &&
         statement.declarationList.declarations.some((declaration) => isIdentifier(declaration.name) && names.includes(declaration.name.text)))
       if (selected.length !== names.length) throw new Error("Page followup declarations changed")
@@ -55,6 +55,7 @@ beforeAll(() => {
             platform, sendFollowupDraft, fail, resumeScroll, composer, busy, isChildSession } = input
           // Text-only port for Page refusal toasts; authority still comes from the actual query and owner code.
           const language = { t: (key) => FRONTEND_RECOVERY_COPY[key] }
+          const local = { model: { execution: { context: input.modelContext } } }
           const emptyFollowups = []
           ${[...selected, ...itemObserver, ...idle].map((statement) => statement.getFullText(source)).join("\n")}
           return { send: sendFollowup, mutation: followupMutation }
@@ -91,8 +92,9 @@ async function persistedQueue() {
 async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> } = {}) {
   const persisted = await persistedQueue()
   const module = await import(`${page}?followup-idle`)
-  const [status, setStatus] = createStore({ scope: options.foreign ? "foreign" as ServerScope : ServerScope.local, id: "session-1", busy: false, password: "none" })
+  const [status, setStatus] = createStore({ scope: options.foreign ? "foreign" as ServerScope : ServerScope.local, id: "session-1", busy: false, password: "none", reconnectEpoch: 0 })
   const counts = { automatic: 0, manual: 0, dispatch: 0 }
+  const [modelContext, setModelContext] = createStore({ value: "controlled-page-fixture-metadata" })
   const failure = new Error("real dispatch error")
   const errors: unknown[] = []
   const [policyGeneration, setPolicyGeneration] = createStore({ version: 0 })
@@ -100,7 +102,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
     get policyVersion() { return policyGeneration.version },
     set policyVersion(value: number) { setPolicyGeneration("version", value) },
   }
-  const control = { execution: async (input: ModelsExecutionInput, _options: { signal: AbortSignal }) => {
+  const control = { afterAdmission: async () => {}, execution: async (input: ModelsExecutionInput, _options: { signal: AbortSignal }) => {
     if (!input.model) throw new Error("Fake Page admission requires an exact model candidate")
     return { location: { directory: "/repo/main", project: { id: "project", directory: "/repo/main" } },
       data: { models: [], selection: { status: "ready" as const, ref: input.model, engine: "orchestra" as const } } }
@@ -112,11 +114,12 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
     options?.beforeAdmission?.()
     counts.dispatch++
     if (state.throwDispatch) throw failure
+    await control.afterAdmission()
   } } as unknown as FollowupSendInput["api"]
   registerSessionModelExecution(api, (input, options) => control.execution(input, options))
   const directorySync = { session: { get: () => undefined, optimistic: { add() {}, remove() {} } } } as unknown as FollowupSendInput["sync"]
   const serverState = { data: { project: [] }, session: { set() {} } } as unknown as FollowupSendInput["serverSync"]
-  const server = { server: { http: { url: "https://queue.invalid", get password() { return status.password } } }, ready: Promise.resolve(),
+  const server = { connectionEpoch: () => status.reconnectEpoch, server: { http: { url: "https://queue.invalid", get password() { return status.password } } }, ready: Promise.resolve(),
     sessionManagement: { waitSubagentModels: async () => {}, subagentModelsWriteVersion: () => state.policyVersion } }
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   const sdk = { get scope() { return status.scope }, directory: "/repo/main", api: { session: api } }
@@ -128,6 +131,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
         params: { get id() { return status.id } }, sdk: () => sdk, serverSDK: () => server,
         sync: () => directorySync, serverSync: () => serverState, sessionOwnership: ownership,
         followup: persisted.store[0], setFollowup: persisted.store[1], platform: persisted.platform,
+        modelContext: () => modelContext.value,
         sendFollowupDraft: async (input: FollowupSendInput) => {
           await options.prepare
           if (input.deliberate) counts.manual++
@@ -149,7 +153,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
     return { dispose }
   })
   if (!controls.current) throw new Error("Page followup controls did not mount")
-  return { ...persisted, controls: controls.current, counts, stopped, idle, setStatus, state, control, errors, failure,
+  return { ...persisted, controls: controls.current, counts, stopped, idle, setStatus, state, control, setModelContext, errors, failure,
     dispose: () => { root.dispose(); persisted.dispose(); client.clear() } }
 }
 

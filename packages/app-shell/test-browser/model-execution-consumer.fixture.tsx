@@ -177,7 +177,7 @@ const localModule: typeof import("../src/context/local") = await import(`${Bun.r
 
 // createLocal receives context-boundary values, but its selection, explicit state and fallback rules are production code.
 // The SDK uses the generated serializer above; no decision algorithm is reproduced in this fixture.
-export function selection(calls: ReturnType<typeof transport>, sessionID?: string) {
+export function selection(calls: ReturnType<typeof transport>, sessionID?: string, actual?: ReturnType<typeof liveSDK>) {
   const normalized = () => normalizeProviderList(
     [Provider.Info.empty(Provider.ID.make(ref.providerID))], [model, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }],
     { providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id) },
@@ -188,9 +188,10 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
   const models = { ...catalog, ready: Object.assign(() => true, { promise: Promise.resolve(true) }),
     find: (key: { providerID: string; modelID: string }) => catalog.list().find((item) => item.id === key.modelID && item.provider.id === key.providerID),
     recent: { list: () => [], push() {} }, setVisibility() {}, variant: { get: () => undefined, set() {} } }
-  const server = bind(calls)
-  const sdk = { ...sdkFor(calls.directory, server), api: server.api, orchestra: calls.orchestra, url: calls.url }
-  const sync = { data: { agent: mixedEngineAgents("orchestra"), config: {} } }
+  const server = actual?.server ?? bind(calls)
+  const sdk = actual?.directory ?? { ...sdkFor(calls.directory, server), api: server.api, orchestra: calls.orchestra, url: calls.url }
+  const [metadata, setMetadata] = createStore({ agent: mixedEngineAgents("orchestra"), config: {} })
+  const sync = { data: metadata }
   return createRoot((dispose) => {
     const local = localModule.createLocal({
       params: { get id() { return view.sessionID } },
@@ -201,7 +202,7 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
         default: () => view.catalog.default, defaultModel: () => view.catalog.defaultModel },
       models, saved, setSaved, savedReady: () => true,
     } as Parameters<typeof localModule.createLocal>[0])
-    return { local, dispose, setView, saved, setSaved, models, sdk, server, sync, calls,
+    return { local, dispose, setView, saved, setSaved, models, sdk, server, sync, setMetadata, calls,
       removeModel() {
         const provider = view.catalog.all.get(ref.providerID)
         if (!provider) throw new Error("Missing catalog provider control")
