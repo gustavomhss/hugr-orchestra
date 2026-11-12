@@ -1,122 +1,121 @@
-# Remaining tool qualification ledger
+# Q1 source-fact ledger
 
-Q1 covers the 83 named tools below. This ledger separates source-fact review from runtime integration. None of these rows adds a tool to a review lane. Versions and evidence for the first eleven reviewed rows are in the linked qualification notes. Other captured facts still need independent review; incomplete rows retain their research gaps.
+Q1 records pinned source facts for the 83 tools below. A card describes a bounded analysis invocation, its evidence, and its remaining limits. Independent review applies to the claims stated in that card; it does not fill unread fields or establish runtime safety.
 
-Status: **reviewed** = independent primary-source fact review complete; **captured** = researcher reports complete, cold review pending; **incomplete** = research gaps remain.
+No tool in this Q1 batch is added to a review lane. Runtime integrations from Q1: **0**. Invocation design, platform qualification, confinement, output binding, and redistribution clearance remain separate work. A source-build requirement, executable project config, network dependency, plugin, or mixed license is a design constraint, not a blanket exclusion or a demonstrated safe mode.
 
-- [JavaScript and Python reviewed facts](q1-js-python-qualification.md) (5 tools).
-- [Infrastructure reviewed facts](q1-infra-qualification.md) (6 tools).
+Artifact hashes identify the selected bytes or the explicitly named publisher digest. License-text hashes identify license text, not executable integrity. Cards distinguish publisher metadata, local byte checks, signatures not verified, and toolchain or notice gaps. Libraries, compiler components, plugins, and metapackages are kept in their actual form.
 
-## rust
+## Source cards
 
-| Tool | Fact review | Remaining work |
+### rust
+
+| Tool | Pinned version | Source facts |
 | --- | --- | --- |
-| cargo-geiger | incomplete | named network endpoints when --offline is absent |
-| cargo-machete | captured | Independent fact review, then invocation design. |
-| clippy | incomplete | tarball members; clippy_lints::explain return codes; lint diagnostic schema; cargo network when clippy runs |
-| clippy-sarif | incomplete | published checksum of the GitHub native binaries |
-| cargo-semver-checks | incomplete | default baseline network; rustdoc child argv; lint line schema; tarball members |
-| Miri | incomplete | component checksum; miri git pin; argv; exit; effects |
-| cargo-careful | incomplete | exit codes; stdout schema; aarch64 binary |
-| loom | captured | Independent fact review, then invocation design. |
-| shuttle | captured | Independent fact review, then invocation design. |
-| Kani | incomplete | tarball members; full argv; exit; network |
-| cargo-deny | incomplete | exit codes; output schema; network behavior; tarball members |
-| govulncheck | incomplete | binary asset; argv; exit; network to vuln.go.dev |
-| difftastic | captured | Independent fact review, then invocation design. |
-| SCIP | incomplete | release assets; whether a separate scip CLI was intended |
-| OpenGrep | incomplete | argv; exit; network; which asset is the runtime to invoke |
+| cargo-geiger | 0.14.0 | [Card](q1-rust-tools-facts.md) |
+| cargo-machete | 0.9.2 | [Card](q1-rust-tools-facts.md) |
+| clippy | rust 1.99.1 component clippy-preview | [Card](q1-rust-tools-facts.md) |
+| clippy-sarif | 0.8.0 | [Card](q1-rust-tools-facts.md) |
+| cargo-semver-checks | 0.51.0 | [Card](q1-rust-tools-facts.md) |
+| Miri | 0.1.0-nightly (channel 2026-11-12, rustc 3ef0c22cdb86ac42dc6b8f0f1ec36857daa6f2a1) | [Card](q1-rust-tools-facts.md) |
+| cargo-careful | 0.4.10 | [Card](q1-rust-tools-facts.md) |
+| loom | 0.7.3 | [Card](q1-rust-tools-facts.md) |
+| shuttle | 0.9.10 | [Card](q1-rust-analysis-facts.md) |
+| Kani | 0.68.0 | [Card](q1-rust-analysis-facts.md) |
+| cargo-deny | 0.20.2 | [Card](q1-rust-analysis-facts.md) |
+| govulncheck | 1.9.0 | [Card](q1-rust-analysis-facts.md) |
+| difftastic | 0.72.0 | [Card](q1-rust-analysis-facts.md) |
+| SCIP | 0.10.0 | [Card](q1-rust-analysis-facts.md) |
+| OpenGrep | 1.33.1 | [Card](q1-rust-analysis-facts.md) |
 
-## js-python
+### js-python
 
-| Tool | Fact review | Remaining work |
+| Tool | Pinned version | Source facts |
 | --- | --- | --- |
-| tsgo | incomplete | network and children outside the CLI entry files |
-| typescript-eslint | reviewed | Define and prove an invocation and runtime lane. |
-| api-extractor | reviewed | Define and prove an invocation and runtime lane. |
-| publint | reviewed | Define and prove an invocation and runtime lane. |
-| arethetypeswrong | reviewed | Define and prove an invocation and runtime lane. |
-| dependency-cruiser | incomplete | exitSemantics; network |
-| knip | incomplete | output schema; network; config execution; writes |
-| bandit | captured | Independent fact review, then invocation design. |
-| pip-audit | reviewed | Define and prove an invocation and runtime lane. |
-| diff-cover | captured | Independent fact review, then invocation design. |
-| pyright | captured | Independent fact review, then invocation design. |
-| mypy | captured | Independent fact review, then invocation design. |
-| pylint | captured | Independent fact review, then invocation design. |
-| Pysa | incomplete | 0.10.0 LICENSE; exit codes; watchman on 0.10.0; wheel is not a pure-python proof |
-| griffe | captured | Independent fact review, then invocation design. |
-| atheris | incomplete | 3.1.0 LICENSE; 3.1.0 argv/exit; native prerequisite versions |
-| Django check | incomplete | numeric exit code; network; writes |
+| tsgo | typescript/v7.0.2 | [Card](q1-js-python-1-facts.md) |
+| typescript-eslint | 8.72.2 | [Card](q1-js-python-qualification.md) |
+| api-extractor | 7.60.1 | [Card](q1-js-python-qualification.md) |
+| publint | 0.3.25 | [Card](q1-js-python-qualification.md) |
+| arethetypeswrong | 0.18.5 | [Card](q1-js-python-qualification.md) |
+| dependency-cruiser | 18.7.2 | [Card](q1-js-python-1-facts.md) |
+| knip | 6.45.1 | [Card](q1-js-python-1-facts.md) |
+| bandit | 1.9.4 | [Card](q1-js-python-1-facts.md) |
+| pip-audit | 2.10.1 | [Card](q1-js-python-qualification.md) |
+| diff-cover | 11.0.1 | [Card](q1-js-python-1-facts.md) |
+| pyright | 1.1.414 | [Card](q1-js-python-1-facts.md) |
+| mypy | 2.4.1 | [Card](q1-js-python-2-facts.md) |
+| pylint | 4.1.3 | [Card](q1-js-python-2-facts.md) |
+| Pysa | pyre-check 0.10.0 (PyPI); GitHub tags stop at v0.9.25 | [Card](q1-js-python-2-facts.md) |
+| griffe | 2.4.1 | [Card](q1-js-python-2-facts.md) |
+| atheris | 3.1.0 | [Card](q1-js-python-2-facts.md) |
+| Django check | Django 6.1.3 | [Card](q1-js-python-2-facts.md) |
 
-## jvm-mobile
+### jvm-mobile
 
-| Tool | Fact review | Remaining work |
+| Tool | Pinned version | Source facts |
 | --- | --- | --- |
-| Error Prone | incomplete | dataflow-errorprone-3.41.0-eisop1.jar sha256 and its license text; concrete javac argv (not in the tag; only an untagged website link); numeric host javac exit codes; patch file layout (PatchFileDestination.java not read) |
-| NullAway | incomplete | jar sha256; diagnostic sentence templates; severity passed to Error Prone; fix-serialization write path |
-| detekt | incomplete | official asset checksum (GitHub digest null; not hashed locally); network use |
-| SpotBugs | incomplete | TextUICommandLine reporter/option names; report-file write flags |
-| FindSecBugs | incomplete | zip checksum (API digest absent; not hashed); exact spotbugs plugin argv; whether the zip bundles a wrapper script |
-| Checkstyle | captured | Independent fact review, then invocation design. |
-| PMD | captured | Independent fact review, then invocation design. |
-| CPD | captured | Independent fact review, then invocation design. |
-| japicmp | captured | Independent fact review, then invocation design. |
-| OWASP Dependency-Check | captured | Independent fact review, then invocation design. |
-| Roslynator | captured | Independent fact review, then invocation design. |
-| dotnet list package | incomplete | SDK license text and sha256; installer checksum; verb-first compatibility on 10.0.404; vulnerability exit code |
-| Stryker.NET | incomplete | nupkg checksum; argv options; exit codes; report paths |
-| PublicApiAnalyzers | incomplete | license file sha256; diagnostic IDs; official Microsoft docs for the two txt files |
-| SwiftLint | incomplete | default reporter; numeric exit codes; child processes |
-| Periphery | incomplete | exit codes; report format flags; whether scan --setup writes a yaml file |
-| swift package diagnose-api-breaking-changes | incomplete | toolchain version; license text and sha256; argv; output; exit codes |
+| Error Prone | 2.52.0 | [Card](q1-jvm-mobile-1-facts.md) |
+| NullAway | 0.14.3 | [Card](q1-jvm-mobile-1-facts.md) |
+| detekt | 1.23.8 | [Card](q1-jvm-mobile-1-facts.md) |
+| SpotBugs | 4.10.5 | [Card](q1-jvm-mobile-1-facts.md) |
+| FindSecBugs | 1.14.0 | [Card](q1-jvm-mobile-1-facts.md) |
+| Checkstyle | 14.4.0 | [Card](q1-jvm-mobile-1-facts.md) |
+| PMD | 7.29.0 | [Card](q1-jvm-mobile-2-facts.md) |
+| CPD | 7.29.0 | [Card](q1-jvm-mobile-2-facts.md) |
+| japicmp | 0.27.0 | [Card](q1-jvm-mobile-2-facts.md) |
+| OWASP Dependency-Check | 13.0.0 | [Card](q1-jvm-mobile-2-facts.md) |
+| Roslynator | 5.0.1 | [Card](q1-jvm-mobile-2-facts.md) |
+| dotnet list package | SDK 10.0.404 (channel 10.0 latest-sdk; also active channel 11.0 latest-sdk 11.0.100) | [Card](q1-jvm-mobile-2-facts.md) |
+| Stryker.NET | 5.1.0 | [Card](q1-jvm-mobile-3-facts.md) |
+| PublicApiAnalyzers | 5.6.0 | [Card](q1-jvm-mobile-3-facts.md) |
+| SwiftLint | 0.65.1 | [Card](q1-jvm-mobile-3-facts.md) |
+| Periphery | 3.8.0 | [Card](q1-jvm-mobile-3-facts.md) |
+| swift package diagnose-api-breaking-changes | swift-6.4.2-RELEASE checkout scheme names swiftpm branch release/6.4.2; branch tip commit seen 8054c59f07a9c8cc8e67b3ec57870710c7154854. APIDiff.swift bytes identical at that tip and at last file commit 7f95f588ad40a748522e7be928daadc079a66c3c (sha256 bc432d7e199263b2e99085ce7dde8a5279c7367dab634d496423ea3309578a75). Exact tag gitlink not captured. | [Card](q1-jvm-mobile-3-facts.md) |
 
-## native-web
+### native-web
 
-| Tool | Fact review | Remaining work |
+| Tool | Pinned version | Source facts |
 | --- | --- | --- |
-| clang-tidy | incomplete | archive member path of the clang-tidy executable |
-| cppcheck | incomplete | --output-file flag not in the fetched help slice; network |
-| Infer | incomplete | bundled third-party license hashes; network |
-| CodeChecker | incomplete | parse.py sys.exit(2) condition not captured; pip package checksum; statistics collect network |
-| ASan | incomplete | numeric exit code; archive member name of the ASan runtime |
-| UBSan | incomplete | numeric exit code for -fno-sanitize-recover; archive member name of the runtime |
-| libFuzzer | incomplete | numeric code when DONE is printed; archive member name |
-| CBMC | incomplete | network; deb/msi third-party notices |
-| Frama-C | incomplete | license text sha256; argv; output; exitSemantics; archive bytes not hashed locally |
-| RuboCop | incomplete | network; exact cache file path |
-| bundler-audit | incomplete | explicit success exit 0 not written in cli.rb |
-| Sorbet | incomplete | argv; output; exitSemantics; sorbet-static asset checksum; effects |
-| Steep | incomplete | argv; output; exitSemantics; effects |
-| strong_migrations | incomplete | argv; output; exitSemantics; effects; whether any executable is shipped |
-| PHPStan | incomplete | argv; output; exitSemantics; default effects |
-| Psalm | incomplete | analysis success path does not contain an explicit exit(0); the 0 is the tagged doc plus falling off the end |
-| composer audit | incomplete | audit argv; output; exitSemantics; audit-specific effects |
-| Infection | incomplete | argv; output; exitSemantics; effects; phar third-party notices |
-| Roave | incomplete | exact published version; packagist dist checksum |
+| clang-tidy | llvmorg-23.1.5 | [Card](q1-native-web-1-facts.md) |
+| cppcheck | 2.22.0 | [Card](q1-native-web-1-facts.md) |
+| Infer | v1.3.0 | [Card](q1-native-web-1-facts.md) |
+| CodeChecker | v6.29.3 | [Card](q1-native-web-1-facts.md) |
+| ASan | llvmorg-23.1.5 compiler-rt runtime; no independent release | [Card](q1-native-web-1-facts.md) |
+| UBSan | llvmorg-23.1.5 compiler-rt runtime; no independent release | [Card](q1-native-web-1-facts.md) |
+| libFuzzer | llvmorg-23.1.5 compiler-rt/lib/fuzzer; no independent release | [Card](q1-native-web-1-facts.md) |
+| CBMC | cbmc-6.11.0 | [Card](q1-native-web-2-facts.md) |
+| Frama-C | 33.0 (Arsenic) | [Card](q1-native-web-2-facts.md) |
+| RuboCop | 1.92.2 | [Card](q1-native-web-2-facts.md) |
+| bundler-audit | 0.9.3 | [Card](q1-native-web-2-facts.md) |
+| Sorbet | 0.6.13672 | [Card](q1-native-web-2-facts.md) |
+| Steep | 2.1.0 | [Card](q1-native-web-2-facts.md) |
+| strong_migrations | 2.8.0 | [Card](q1-native-web-2-facts.md) |
+| PHPStan | 2.3.5 | [Card](q1-native-web-3-facts.md) |
+| Psalm | 7.3.1 | [Card](q1-native-web-3-facts.md) |
+| composer audit | Composer 2.11.2 | [Card](q1-native-web-3-facts.md) |
+| Infection | 0.35.10 | [Card](q1-native-web-3-facts.md) |
+| Roave | dev-latest@9fb1049dda127f1732cac541e68f8e490db77825 | [Card](q1-native-web-3-facts.md) |
 
-## infra
+### infra
 
-| Tool | Fact review | Remaining work |
+| Tool | Pinned version | Source facts |
 | --- | --- | --- |
-| shfmt | reviewed | Define and prove an invocation and runtime lane. |
-| sqlfluff | reviewed | Define and prove an invocation and runtime lane. |
-| Trivy | reviewed | Define and prove an invocation and runtime lane. |
-| Checkov | reviewed | Define and prove an invocation and runtime lane. |
-| tflint | reviewed | Define and prove an invocation and runtime lane. |
-| kube-linter | captured | Independent fact review, then invocation design. |
-| kubeconform | reviewed | Define and prove an invocation and runtime lane. |
-| OpenTofu | captured | Independent fact review, then invocation design. |
-| Slither | captured | Independent fact review, then invocation design. |
-| Echidna | captured | Independent fact review, then invocation design. |
-| Mythril | incomplete | wheel digest not printed in the first PyPI url; docker digest; sys.exit() numeric code |
-| Foundry | incomplete | forge fmt/test exit integers |
-| Conftest | captured | Independent fact review, then invocation design. |
-| ScanCode | incomplete | release-bundle SHA256; full third-party licence expression beyond PyPI truncation |
-| REUSE | captured | Independent fact review, then invocation design. |
+| shfmt | v3.14.1 | [Card](q1-infra-qualification.md) |
+| sqlfluff | 4.5.0 | [Card](q1-infra-qualification.md) |
+| Trivy | v0.76.2 | [Card](q1-infra-qualification.md) |
+| Checkov | 3.4.4 | [Card](q1-infra-qualification.md) |
+| tflint | v0.66.0 | [Card](q1-infra-qualification.md) |
+| kube-linter | v0.8.3 | [Card](q1-infra-1-facts.md) |
+| kubeconform | v0.8.0 | [Card](q1-infra-qualification.md) |
+| OpenTofu | v1.13.9 | [Card](q1-infra-1-facts.md) |
+| Slither | 0.11.6 | [Card](q1-infra-1-facts.md) |
+| Echidna | v2.4.0 | [Card](q1-infra-1-facts.md) |
+| Mythril | 0.24.8 | [Card](q1-infra-1-facts.md) |
+| Foundry | v1.9.0 | [Card](q1-infra-2-facts.md) |
+| Conftest | 0.71.1 | [Card](q1-infra-2-facts.md) |
+| ScanCode | 32.5.0 | [Card](q1-infra-2-facts.md) |
+| REUSE | 6.2.0 | [Card](q1-infra-2-facts.md) |
 
-## Checkpoint
+## Next gate
 
-Source facts: 11 reviewed, 22 captured, 50 incomplete. Runtime integrations from this Q1 batch: 0.
-
-A missing standalone binary, build prerequisite, executable project config, network dependency, plugin, or mixed license is an invocation-design constraint. It is not a blanket exclusion or a demonstrated safe mode.
+Choose one bounded invocation and platform at a time. Preserve the card's executable-config, network, child-process, write, and licensing constraints in that contract. Prove that invocation with change-scoped hosted tests and independent review before adding it to a runtime lane. This ledger grants no installation, packaging, or lane availability.
