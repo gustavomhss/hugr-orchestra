@@ -1,22 +1,11 @@
-import { afterAll, expect, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { Flag } from "@orchestra/core/flag/flag"
 import { Capability } from "@orchestra/schema/capability"
 import { ForbiddenError } from "@orchestra/protocol/errors"
 import { Deferred, Effect, Latch, Option, Schema, Stream } from "effect"
 import type { OrchestraEvent } from "../src"
-
-// Core resolves the database path once, when the first test imports ../src, so every host in this file shares one
-// database. A per-test path would be ignored after the first import, and removing it would break the later tests.
-const database = await mkdtemp(join(tmpdir(), "orchestra-embedded-db-"))
-const previousDatabase = Flag.ORCHESTRA_DB
-Flag.ORCHESTRA_DB = join(database, "orchestra.sqlite")
-afterAll(async () => {
-  Flag.ORCHESTRA_DB = previousDatabase
-  await rm(database, { recursive: true, force: true })
-})
 
 // The first host boots the whole Core graph, and the test itself waits up to 10 seconds for the prompted event.
 test("embedded client uses the real router and handlers", async () => {
@@ -27,7 +16,8 @@ test("embedded client uses the real router and handlers", async () => {
 
   try {
     const program = Effect.gen(function* () {
-      const orchestra = yield* Orchestra.create()
+      const orchestra = yield* Orchestra.create({ database: join(directory, "orchestra.sqlite") })
+      expect(yield* Effect.promise(() => Bun.file(join(directory, "orchestra.sqlite")).exists())).toBe(true)
       const operator = yield* orchestra.operator.inspect({ location: { directory } })
       const nextOperator = yield* orchestra.operator.inspect({ location: { directory } })
       expect(operator.origin).toBe("sdk")
@@ -134,7 +124,8 @@ test("Location-owned runner events reach the ready global client", async () => {
 
   try {
     const program = Effect.gen(function* () {
-      const orchestra = yield* Orchestra.create()
+      const orchestra = yield* Orchestra.create({ database: join(directory, "orchestra.sqlite") })
+      expect(yield* Effect.promise(() => Bun.file(join(directory, "orchestra.sqlite")).exists())).toBe(true)
       const connected = yield* Latch.make(false)
       const prompted = yield* Deferred.make<OrchestraEvent>()
       yield* orchestra.events.subscribe().pipe(
@@ -163,15 +154,17 @@ test("Location-owned runner events reach the ready global client", async () => {
   }
 }, 10_000)
 
-test("independent embedded hosts do not share live notifications", async () => {
+test("independent embedded file stores do not share live notifications", async () => {
   const directory = await mkdtemp(join(tmpdir(), "orchestra-embedded-hosts-"))
   const { AbsolutePath, Agent, Location, Orchestra, Session } = await import("../src")
   const sessionID = Session.ID.make(`ses_embedded_${crypto.randomUUID()}`)
 
   try {
     const program = Effect.gen(function* () {
-      const first = yield* Orchestra.create()
-      const second = yield* Orchestra.create()
+      const first = yield* Orchestra.create({ database: join(directory, "first.sqlite") })
+      const second = yield* Orchestra.create({ database: join(directory, "second.sqlite") })
+      expect(yield* Effect.promise(() => Bun.file(join(directory, "first.sqlite")).exists())).toBe(true)
+      expect(yield* Effect.promise(() => Bun.file(join(directory, "second.sqlite")).exists())).toBe(true)
       const firstReady = yield* Latch.make(false)
       const secondReady = yield* Latch.make(false)
       const firstEvent = yield* Latch.make(false)
