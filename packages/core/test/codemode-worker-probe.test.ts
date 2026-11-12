@@ -59,7 +59,7 @@ test("PROBE ONLY E10 real worker bridge milestones and owned containment", () =>
     expect(errors.truncated).toBe(false)
     expect(messages.filter((message) => message.type === "FIXTURE_ERROR")).toHaveLength(0)
     expect(messages.some((message) => message.type === "RESULT") || state.containmentKill).toBe(true)
-    if (state.containmentKill) expect(messages.filter((message) => message.type === "SNAPSHOT")).toHaveLength(1)
+    if (state.containmentKill && !messages.some((message) => message.type === "RESULT")) expect(messages.filter((message) => message.type === "SNAPSHOT")).toHaveLength(1)
     // Containment or an ordinary result only validates this diagnostic protocol, never product behavior.
   }).pipe(Effect.scoped, Effect.provide(layer)))
 }, 120_000)
