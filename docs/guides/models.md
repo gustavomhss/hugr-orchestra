@@ -23,7 +23,7 @@ Before approval, project provider declarations may change only provider/model na
 
 ## Native model variants
 
-The app and TUI check whether a model can run in the current Session before sending a prompt or known command. The check includes the selected agent, workspace and exact variant. A model can appear in the catalog while being unavailable in that context. Loading or a failed check keeps the draft unsent; shell commands keep their existing behavior.
+The app and TUI check whether a model can run in the current Session before sending a prompt or known command. The check includes the selected agent, workspace and exact variant. Provider connection and agent settings changes refresh the check. A model can appear in the catalog while being unavailable in that context. Loading or a failed check keeps the draft unsent; shell commands keep their existing behavior.
 
 An explicit choice stays selected when it becomes unavailable or disappears from the catalog. Choose another available model or retry the check. Leaving the variant unset inherits the configured variant; choosing the default explicitly does not inherit a prior override. Automatic model selection waits for a successful execution check.
 
