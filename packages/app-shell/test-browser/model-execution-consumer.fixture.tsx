@@ -52,11 +52,11 @@ export function composer(value = "canonical prompt", options: Partial<Parameters
 export const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "content-type": "application/json" },
 })
-export function transport(options: { native?: NativeServer; reply?: () => Response | Promise<Response> } = {}) {
+export function transport(options: { native?: NativeServer; reply?: (request: Request) => Response | Promise<Response> } = {}) {
   const streams: ReadableStreamDefaultController<Uint8Array>[] = []
   const calls: { path: string; method: string; authorization: string | null; body: unknown; url: URL; signal: AbortSignal }[] = []
   const control = {
-    reply: options.reply ?? (() => json({ location: { directory: options.native?.directory ?? "/repo/main" }, data: decision() })),
+    reply: options.reply ?? ((_request: Request) => json({ location: { directory: options.native?.directory ?? "/repo/main" }, data: decision() })),
     before: async (_path: string) => {},
     after: async (_path: string, _response: Response) => {},
   }
@@ -76,7 +76,7 @@ export function transport(options: { native?: NativeServer; reply?: () => Respon
         controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ id: `greeting-${streams.length}`, type: "server.connected", data: {} })}\n\n`))
       },
     }), { headers: { "content-type": "text/event-stream" } })
-    if (url.pathname === "/api/model/execution") return control.reply()
+    if (url.pathname === "/api/model/execution") return control.reply(request)
     const response = options.native ? await Bun.fetch(request) : url.pathname.endsWith("/agent") || url.pathname.endsWith("/model")
       ? new Response(null, { status: 204 }) : json({})
     await control.after(url.pathname, response)

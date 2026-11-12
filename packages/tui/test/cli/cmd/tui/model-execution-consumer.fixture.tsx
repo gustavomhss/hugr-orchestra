@@ -66,14 +66,14 @@ export async function wait(predicate: () => boolean, label: string, milliseconds
 
 // One injected transport preserves the actual generated SDK, catalog adapter, providers and Prompt.
 // This is contract-consumption evidence, not a substitute for the backend describe HTTP gate.
-export async function mount(options: { draft?: boolean; reply?: () => Response | Promise<Response> } = {}) {
+export async function mount(options: { draft?: boolean; reply?: (request: Request) => Response | Promise<Response> } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "orchestra-model-consumer-"))
   const state = path.join(root, "state")
   await mkdir(state)
   await Bun.write(path.join(state, "kv.json"), "{}")
   const [owner, setOwner] = createStore({ sessionID: options.draft ? undefined : "session-1", directory: root, url: "http://consumer.fixture", authorization: "Basic Zml4dHVyZTpub25l", generation: 1 })
   const calls: { path: string; method: string; body: unknown; authorization: string | null; url: URL; signal: AbortSignal }[] = []
-  const control = { reply: options.reply ?? (() => json({ location: { directory: owner.directory }, data: decision() })),
+  const control = { reply: options.reply ?? ((_request: Request) => json({ location: { directory: owner.directory }, data: decision() })),
     before: async (_path: string) => {} }
   const events = createEventSource()
   const fallback = createFetch()
@@ -83,7 +83,7 @@ export async function mount(options: { draft?: boolean; reply?: () => Response |
     calls.push({ path: url.pathname, method: request.method, body: request.method === "GET" ? undefined : await request.clone().json(),
       authorization: request.headers.get("authorization"), url, signal: request.signal })
     await control.before(url.pathname)
-    if (url.pathname === "/api/model/execution") return control.reply()
+    if (url.pathname === "/api/model/execution") return control.reply(request)
     const envelope = (data: unknown) => json({ location: { directory: root }, data })
     if (url.pathname === "/api/command") return envelope([Command.Info.make({ name: "known", template: "fixture command" })])
     if (url.pathname === "/api/provider") return envelope([Provider.Info.empty(Provider.ID.make(ref.providerID))])
@@ -172,4 +172,18 @@ export async function mount(options: { draft?: boolean; reply?: () => Response |
       },
     }
   } catch (error) { app.renderer.destroy(); await rm(root, { recursive: true, force: true }); throw error }
+}
+
+
+// Establish a real selected choice under a READY endpoint before a submit fault is installed.
+// Loading/bootstrap acceptance deliberately uses mount() instead of this prerequisite.
+export async function ready(options: { draft?: boolean } = {}) {
+  const fixture = await mount(options)
+  try {
+    await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "READY real model choice")
+    fixture.context.local.model.set({ providerID: ref.providerID, modelID: ref.id })
+    await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "explicit real selected model")
+    await Bun.sleep(0)
+    return fixture
+  } catch (error) { await fixture.dispose(); throw error }
 }

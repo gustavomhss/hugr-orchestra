@@ -162,6 +162,7 @@ test.each(["Session", "policy", "disposal", "directory ABA", "server ABA", "cred
   const source = { server, sdk: { ...sdkFor(calls.directory, server), orchestra: calls.orchestra } }
   setReactiveOwner("read", () => () => source)
   const owner = composer()
+  const checkpoint = calls.calls.length
   const pending = send(owner)
   try {
     await Promise.race([entered.promise, pending])
@@ -193,21 +194,52 @@ test.each(["Session", "policy", "disposal", "directory ABA", "server ABA", "cred
     if (change === "agent") state.agentID = "frontend"
     release.resolve()
     expect(await pending).toBe(false)
-    expect(calls.admissions()).toEqual([])
+    expect(calls.calls.slice(checkpoint).filter((call) => call.method === "POST" && /\/(agent|model|prompt)$/.test(call.path))).toEqual([])
   } finally { release.resolve(); await pending; owner.dispose() }
 })
 
-test.each(["shell", "command"])("CONTROL E6 App %s keeps its own semantics when canonical model selection is unavailable", async (kind) => {
-  const calls = transport({ reply: () => json({ location: { directory: "/repo/main" }, data: decision("unavailable") }) })
+test("CONTROL E6 App shell keeps its semantics without a fresh model preflight", async () => {
+  const calls = transport()
+  bind(calls)
+  const owner = composer("pwd", { mode: () => "shell" })
+  try {
+    // Its actual captured model is the ready harness choice, not a missing-model no-op.
+    expect(state.modelID).toBe(ref.id)
+    const before = calls.queries().length
+    calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: decision("unavailable") })
+    expect(await send(owner)).toBe(true)
+    expect(calls.queries()).toHaveLength(before)
+    expect(calls.calls.at(-1)?.path.endsWith("/shell")).toBe(true)
+    expect(sentShell).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test("CONTROL E6 App ready known command preserves actual adapter order", async () => {
+  const calls = transport()
   bind(calls)
   commands.push({ name: "known" })
-  const owner = composer(kind === "command" ? "/known value" : "pwd", { mode: () => kind === "shell" ? "shell" : "normal" })
+  const owner = composer("/known value")
   try {
     expect(await send(owner)).toBe(true)
-    expect(calls.queries()).toEqual([])
-    expect(calls.calls.at(-1)?.path.endsWith(kind === "shell" ? "/shell" : "/command")).toBe(true)
+    expect(calls.calls.filter((call) => call.path !== "/api/model/execution").map((call) => call.path.split("/").at(-1))).toEqual(["agent", "model", "command"])
     expect(sentCommands).toEqual([])
-    expect(sentShell).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test("E6 App unavailable known command requires a fresh canonical query before any command or selection RPC", async () => {
+  const calls = transport()
+  bind(calls)
+  commands.push({ name: "known" })
+  const owner = composer("/known value")
+  const queries = calls.queries().length
+  const checkpoint = calls.calls.length
+  calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: decision("unavailable") })
+  try {
+    expect(await send(owner)).toBe(false)
+    expect(calls.queries().length).toBeGreaterThan(queries)
+    expect(calls.queries().at(-1)?.body).toMatchObject({ context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: ref })
+    expect(calls.calls.slice(checkpoint).filter((call) => call.method === "POST" && /\/(agent|model|command|prompt)$/.test(call.path))).toEqual([])
+    expect(owner.prompt.current()).toEqual(text("/known value"))
   } finally { owner.dispose() }
 })
 
@@ -464,4 +496,61 @@ test("E6 App unknown slash remains a normal prompt and requires canonical fresh 
     expect(calls.calls.some((call) => call.path.endsWith("/command"))).toBe(false)
     expect(owner.prompt.current()).toEqual(text("/not-a-command value"))
   } finally { owner.dispose() }
+})
+
+test("E6 App rendered selector keeps NEW A after A to B to A and a late old A response", async () => {
+  const release = Promise.withResolvers<void>()
+  const entered = Promise.withResolvers<void>()
+  const returned = Promise.withResolvers<void>()
+  const both = { ...decision(), models: decision().models.map((entry) => ({ model: entry.model, engine: entry.engine, status: "ready" as const })) }
+  const newest = { ...decision(), models: both.models.filter((entry) => entry.model.id === ref.id) }
+  const calls = transport({ reply: () => json({ location: { directory: "/repo/main" }, data: both }) })
+  const contract = await calls.orchestra.models.execution({ context: { type: "session", sessionID: "bootstrap-session", agentID: "maestro" }, model: ref })
+  expect(contract.data.models.map((entry) => entry.model.id)).toEqual(["model", "blocked"])
+  const owner = selection(calls, "bootstrap-session")
+  owner.local.model.set({ providerID: ref.providerID, modelID: ref.id })
+  await wait(() => owner.local.model.current()?.id === ref.id, "real READY explicit selector choice")
+  owner.setSaved("session", "session-A", { model: { providerID: ref.providerID, modelID: ref.id } })
+  owner.setSaved("session", "session-B", { model: { providerID: ref.providerID, modelID: ref.id } })
+  const view = await selectorDOM(owner)
+  try {
+    expect(view.rows().some((row) => row.textContent?.includes("Consumer model"))).toBe(true)
+    const beforeA = calls.queries().length
+    calls.control.reply = async () => {
+      const captured = json({ location: { directory: "/repo/main" }, data: both })
+      entered.resolve()
+      await release.promise
+      returned.resolve()
+      return captured
+    }
+    owner.setView("sessionID", "session-A")
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    expect(calls.queries().length).toBeGreaterThan(beforeA)
+    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-A", agentID: "maestro" }, model: ref })
+    await entered.promise
+    const beforeB = calls.queries().length
+    calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: both })
+    owner.setView("sessionID", "session-B")
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    expect(calls.queries().length).toBeGreaterThan(beforeB)
+    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-B", agentID: "maestro" }, model: ref })
+    await wait(() => view.rows().some((row) => row.textContent?.includes("Blocked model")), "B snapshot actually rendered")
+    const beforeNewA = calls.queries().length
+    calls.control.reply = () => json({ location: { directory: "/repo/main" }, data: newest })
+    owner.setView("sessionID", "session-A")
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    expect(calls.queries().length).toBeGreaterThan(beforeNewA)
+    expect(calls.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-A", agentID: "maestro" }, model: ref })
+    await wait(() => view.rows().some((row) => row.textContent?.includes("Consumer model")) && !view.rows().some((row) => row.textContent?.includes("Blocked model")), "NEW A model list applied")
+    const a = view.rows().find((row) => row.textContent?.includes("Consumer model"))
+    expect(a?.getAttribute("aria-disabled")).not.toBe("true")
+    expect(a?.getAttribute("data-selected-model")).toBe("true")
+    release.resolve()
+    await returned.promise
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    expect(view.rows().some((row) => row.textContent?.includes("Blocked model"))).toBe(false)
+    expect(owner.local.model.current()?.id).toBe(ref.id)
+    expect(view.rows().find((row) => row.textContent?.includes("Consumer model"))?.getAttribute("aria-disabled")).not.toBe("true")
+    expect(owner.models.list().some((item) => item.id === "blocked"), "the catalog still contains B; only the canonical context changed").toBe(true)
+  } finally { release.resolve(); view.dispose(); owner.dispose() }
 })
