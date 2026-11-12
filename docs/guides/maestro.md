@@ -80,6 +80,11 @@ The screen itself, with its views, issue pages, inbox, money and decisions, is d
 For a published workflow Maestro records each step (admission, plan, your approval, review, validation, decision) so
 you can see what was agreed and what was checked. Large changes can use its repository and wave planning tools.
 
+An approved governed task must still match its recorded repository and context when it is reserved and before its
+first turn starts. If the tree or grounded source changes, or the bound evidence is missing or no longer matches,
+execution stops until the evidence is refreshed and you approve again. Replaying an already-consumed receipt after
+legitimate edits remains safe to retry; it does not grant another first turn.
+
 Reviews of plans and returned work go to the code review seat, `lucy`. See [Code review](review.md) for its card,
 verdicts and tiers.
 
