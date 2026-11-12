@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { Effect } from "effect"
 import { sql } from "drizzle-orm"
 import { basename, join } from "node:path"
@@ -30,13 +31,13 @@ export const namedLegacy = (filename: string, names: string[]) => run(filename, 
 
 
 // Filesystem oracle only: inspect referenced files and inode identities, never reproduce recovery decisions.
-export async function inspectBackupFootprint(filename: string, foreign: string[] = []) {
+export async function inspectBackupFootprint(filename: string, foreign: string[] = [], options: { allowPendingGarbage?: boolean } = {}) {
   const state = JSON.parse(await readFile(`${filename}.migration-backups.json`, "utf8")) as {
     legacyPins: { name: string; bytes: number }[]
     recentAttempts: { backup: { name: string; bytes: number } }[]
     currentBaselinePin: null | { name: string; bytes: number }
     active: null | { id: string; phase: "prepared" | "captured" | "ready"; tempName: string; finalName: string; backup: null | { name: string; bytes: number } }
-    garbage: { name: string; bytes: number }[]
+    garbage: { name: string; bytes: number; sha256: string }[]
   }
   assert.ok(state.recentAttempts.length <= 3, "recent attempt ring exceeded")
   const work = `${filename}.migration-work`
@@ -70,6 +71,23 @@ export async function inspectBackupFootprint(filename: string, foreign: string[]
   const namedBytes = bytes.reduce((sum, value) => sum + value, 0n)
   assert.ok(physicalBytes <= namedBytes)
   assert.ok(physical.size <= state.legacyPins.length + 3 + 1 + 1, "physical snapshot bound exceeded")
-  if (!state.active) assert.deepEqual(state.garbage, [], "normal finalize leaves pending garbage")
+  if (options.allowPendingGarbage) {
+    assert.equal(state.active, null, "unlink fault must precede retry allocation")
+    assert.ok(state.garbage.length > 0, "unlink fault retains deletion intents")
+    const protectedNames = new Set([...state.legacyPins, ...state.recentAttempts.map((entry) => entry.backup),
+      ...(state.currentBaselinePin ? [state.currentBaselinePin] : [])].map((entry) => entry.name))
+    await Promise.all(state.garbage.map(async (entry) => {
+      assert.equal(basename(entry.name), entry.name)
+      assert.equal(entry.name.includes("\\"), false)
+      assert.ok(entry.name.startsWith(`${basename(filename)}.backup-`))
+      assert.equal(protectedNames.has(entry.name), false)
+      assert.match(entry.sha256, /^[a-f0-9]{64}$/)
+      assert.ok(Number.isSafeInteger(entry.bytes) && entry.bytes > 0)
+      const bytes = await readFile(join(filename, "..", entry.name))
+      assert.equal(bytes.byteLength, entry.bytes)
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), entry.sha256)
+    }))
+  }
+  if (!state.active && !options.allowPendingGarbage) assert.deepEqual(state.garbage, [], "normal finalize leaves pending garbage")
   return { state, directories, backupNames, physicalCopies: physical.size, physicalBytes, namedBytes }
 }

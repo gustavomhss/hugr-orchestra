@@ -204,7 +204,7 @@ test("M5 failed garbage unlink blocks retry allocation instead of growing backup
     await run(file, (db) => DatabaseMigration.apply(db, inputs, options).pipe(Effect.exit))
     expect(seen.prepared).toBe(prepared)
     expect((await snapshots(file)).sort()).toEqual(files)
-    await inspectBackupFootprint(file)
+    await inspectBackupFootprint(file, [], { allowPendingGarbage: true })
   }
   expect(await ids(file)).toEqual(["000_base"])
 })
