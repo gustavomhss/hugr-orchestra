@@ -1,7 +1,7 @@
 import { afterAll, expect, test } from "bun:test"
 import { Effect } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
-import { access, mkdtemp, mkdir, writeFile, readFile, symlink, rm, realpath } from "node:fs/promises"
+import { access, mkdtemp, mkdir, writeFile, readFile, symlink, rm, realpath, lstat } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
@@ -12,7 +12,7 @@ process.env.XDG_DATA_HOME = path.join(home, "data")
 process.env.XDG_CACHE_HOME = path.join(home, "cache")
 process.env.XDG_CONFIG_HOME = path.join(home, "config")
 process.env.XDG_STATE_HOME = path.join(home, "state")
-const { installationMethod, uninstall, removeArchive } = await import("../src/commands/handlers/uninstall")
+const { installationMethod, uninstall, removeArchive, removeArchiveLink } = await import("../src/commands/handlers/uninstall")
 afterAll(() => rm(home, { recursive: true, force: true }))
 const exists = (file: string) => access(file).then(() => true, () => false)
 // A hard stop makes an accidental npm classification fail without ever executing npm.
@@ -92,7 +92,7 @@ test("standalone archives in arbitrary or .local/bin paths refuse npm and preser
 test("launcher belonging to another installation is never removed", async () => {
   const first = await archive()
   const second = await archive()
-  await rm(path.join(first.prefix, "bin", "orchestra"))
+  await removeArchiveLink(path.join(first.prefix, "bin", "orchestra"))
   await symlink(second.executable, path.join(first.prefix, "bin", "orchestra"), "file")
   await expect(run(uninstall(input, first.executable, first.paths))).rejects.toThrow("Cannot safely identify")
   expect(await exists(first.executable)).toBe(true)
@@ -104,7 +104,7 @@ test("ownership is checked again before removal; symlinked versions cannot claim
   const fixture = await archive()
   const detected = await installationMethod(fixture.executable)
   if (detected.method !== "archive") throw new Error("Expected archive")
-  await rm(path.join(fixture.prefix, "current"))
+  await removeArchiveLink(path.join(fixture.prefix, "current"))
   await symlink("versions/older", path.join(fixture.prefix, "current"), "dir")
   await expect(removeArchive(detected)).rejects.toThrow()
   expect(await exists(fixture.executable)).toBe(true)
@@ -173,4 +173,20 @@ test("global npm handler scopes its command to the verified owner, including a W
     expect(commands).toEqual([["npm", "uninstall", "-g", "--prefix", prefix, "@humanguardrail/cli"]])
     expect(await exists(executable)).toBe(true)
   }
+})
+
+
+test("archive link removal unlinks a Windows junction itself and refuses its physical target", async () => {
+  const root = await mkdtemp(path.join(home, "junction-"))
+  const target = path.join(root, "payload")
+  const link = path.join(root, "current")
+  await mkdir(target)
+  await writeFile(path.join(target, "mine"), "retained payload")
+  await symlink(target, link, process.platform === "win32" ? "junction" : "dir")
+  expect((await lstat(link)).isSymbolicLink()).toBe(true)
+  await removeArchiveLink(link)
+  expect(await lstat(link).catch(() => null)).toBeNull()
+  expect(await readFile(path.join(target, "mine"), "utf8")).toBe("retained payload")
+  await expect(removeArchiveLink(target)).rejects.toThrow("Refusing to unlink a non-link")
+  expect(await readFile(path.join(target, "mine"), "utf8")).toBe("retained payload")
 })

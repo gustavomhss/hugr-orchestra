@@ -1,6 +1,6 @@
 import { EOL } from "os"
 import path from "path"
-import { rm, access, realpath, lstat, readlink, mkdir, rmdir } from "node:fs/promises"
+import { rm, access, realpath, lstat, readlink, mkdir, rmdir, unlink } from "node:fs/promises"
 import { Effect } from "effect"
 import { Global } from "@orchestra/core/global"
 import { Commands } from "../commands"
@@ -170,12 +170,19 @@ export async function removeArchive(installation: Extract<Installation, { method
     const current = await installationMethod(installation.executable)
     if (current.method !== "archive" || current.prefix !== installation.prefix || current.payload !== installation.payload)
       throw new Error("Installation ownership changed; no archive files were removed")
-    await rm(path.join(installation.prefix, "bin", "orchestra"))
-    await rm(path.join(installation.prefix, "current"))
+    await removeArchiveLink(path.join(installation.prefix, "bin", "orchestra"))
+    await removeArchiveLink(path.join(installation.prefix, "current"))
     await rm(installation.payload, { recursive: true })
   } finally {
     await rmdir(lock)
   }
+}
+
+// unlink removes the link itself, including Windows directory junctions. Never
+// use recursive removal here: the selected payload is a separate verified target.
+export async function removeArchiveLink(link: string) {
+  if (!(await lstat(link)).isSymbolicLink()) throw new Error(`Refusing to unlink a non-link: ${link}`)
+  await unlink(link)
 }
 
 const readAnswer = Effect.promise(
