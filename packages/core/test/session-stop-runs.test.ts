@@ -247,7 +247,7 @@ describe("SessionV2 stops runs on archive and remove", () => {
     Effect.gen(function* () {
       let locations = 0
       const locationMap = Layer.effect(LocationServiceMap.Service, LayerMap.make((_ref: Location.Ref) =>
-        Layer.effectContext<LocationServices>(Effect.sync(() => { locations++ }).pipe(
+        Layer.effectContext<LocationServices, never, never>(Effect.sync(() => { locations++ }).pipe(
           Effect.andThen(Effect.die("A deleted Session must not acquire provider/tool services")),
         )),
       ))

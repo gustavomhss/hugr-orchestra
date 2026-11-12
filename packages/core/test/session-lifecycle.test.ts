@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { Deferred, Effect, Fiber, Layer } from "effect"
+import { Deferred, Effect, Fiber, Layer, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -8,6 +8,7 @@ import { Location } from "@orchestra/core/location"
 import { ProjectV2 } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { testEffect } from "./lib/effect"
@@ -100,7 +101,7 @@ testEffect(Layer.empty).live("Created listener can await sibling creation after 
       const target = SessionV2.ID.make("ses_listener_target")
       const sibling = SessionV2.ID.make("ses_listener_sibling")
       let observed = false
-      yield* events.listen((event) => event.type === "session.next.created" && event.data.sessionID === target
+      yield* events.listen((event) => Schema.is(SessionEvent.Created)(event) && event.data.sessionID === target
         ? Effect.gen(function* () {
             expect((yield* session.get(target)).parentID).toBe(parent.id)
             yield* session.create({ id: sibling, parentID: parent.id, location })
