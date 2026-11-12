@@ -150,6 +150,7 @@ function CommandPaletteView(props: {
       setSearchFailed(false)
       try {
         const next = await props.loadItems(text)
+        if (query() !== text) return held()
         setHeld(next)
         return next
       } catch (error) {
