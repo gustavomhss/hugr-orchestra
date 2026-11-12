@@ -71,6 +71,16 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const greetings: string[] = []
   let sync!: ReturnType<typeof createServerSyncContextInner>
+  const mounts = { count: 0 }
+  function Probe() {
+    mounts.count++
+    const sdk = createServerSdkContext({ type: "http", http: { url: server.url.origin } }, ServerScope.local)
+    sync = createServerSyncContextInner(sdk)
+    sdk.event.listen((event) => {
+      if (event.details.type === "server.connected") greetings.push(event.details.id)
+    })
+    return null
+  }
   const host = document.createElement("div")
   document.body.appendChild(host)
   const dispose = render(() => createComponent(PlatformProvider, {
@@ -82,12 +92,7 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
             return createComponent(QueryClientProvider, {
               client,
               get children() {
-                const sdk = createServerSdkContext({ type: "http", http: { url: server.url.origin } }, ServerScope.local)
-                sync = createServerSyncContextInner(sdk)
-                sdk.event.listen((event) => {
-                  if (event.details.type === "server.connected") greetings.push(event.details.id)
-                })
-                return null
+                return createComponent(Probe, {})
               },
             })
           },
@@ -97,9 +102,10 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
 
   try {
     expect(sync).toBeDefined()
+    expect(mounts.count).toBe(1)
     await until(() => greetings.length === 1 && activeReads.length === 1 && sync.ready).catch((error) => {
       console.error("initial browser resync fixture did not become ready", {
-        connections: connections.length, greetings, activeReads: activeReads.length, ready: sync?.ready, requests,
+        connections: connections.length, greetings, activeReads: activeReads.length, ready: sync?.ready, mounts: mounts.count, requests,
         queries: client.getQueryCache().getAll().map((query) => ({ key: query.queryKey, status: query.state.status, error: String(query.state.error) })),
       })
       throw error
@@ -124,6 +130,7 @@ test("a retained reconnect status snapshot cannot overwrite a newer live status"
     // A separate untouched status proves that the retained snapshot was actually reconciled.
     await until(() => sync.session.data.session_status.ses_stale?.type === "idle")
     expect(activeReads).toHaveLength(2)
+    expect(mounts.count).toBe(1)
     expect(unexpected).toEqual([])
     expect(serverState.active).toEqual({ ses_started: { type: "running" } })
     expect(sync.session.data.session_status.ses_started).toEqual({ type: "busy" })
