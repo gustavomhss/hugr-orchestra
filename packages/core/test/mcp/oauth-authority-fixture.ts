@@ -150,6 +150,12 @@ export function endpoints() {
     public: false,
     tokenFailureA: false,
     metadataIssuer: undefined as string | undefined,
+    tokenA: undefined as
+      | {
+          entered: ReturnType<typeof Promise.withResolvers<void>>
+          release: ReturnType<typeof Promise.withResolvers<void>>
+        }
+      | undefined,
     registrationA: undefined as
       | {
           entered: ReturnType<typeof Promise.withResolvers<void>>
@@ -185,6 +191,10 @@ export function endpoints() {
             { ...JSON.parse(body), client_id: `client_${name}`, client_secret: `CLIENT_SECRET_${name}` },
             { status: 201 },
           )
+        }
+        if (url.pathname === "/token" && name === "A" && state.tokenA) {
+          state.tokenA.entered.resolve()
+          await state.tokenA.release.promise
         }
         if (url.pathname === "/token" && name === "A" && state.tokenFailureA)
           return Response.json({ error: "temporarily_unavailable" }, { status: 503 })

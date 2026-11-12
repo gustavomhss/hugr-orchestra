@@ -151,3 +151,90 @@ it.live("positive control: oauth:false connects publicly without OAuth discovery
     expect(yield* Effect.promise(() => Bun.file(file.file).exists())).toBe(false)
   }),
 )
+
+for (const automatic of [false, true]) {
+  it.live(
+    `duplicate manual finish leaves its ${automatic ? "automatic callback" : "manual"} owner authoritative while token exchange is held`,
+    () =>
+      Effect.gen(function* () {
+        const file = yield* storage
+        const servers = yield* network
+        const redirectUri = yield* Effect.promise(callbackAddress)
+        yield* Effect.addFinalizer(() => Effect.promise(() => McpOAuthCallback.stop()))
+        const entered = Promise.withResolvers<void>()
+        const release = Promise.withResolvers<void>()
+        const committed = Promise.withResolvers<void>()
+        const calls = { consumed: 0, committed: 0 }
+        const observed = {
+          ...file.first,
+          consumeState: (...args: Parameters<typeof file.first.consumeState>) =>
+            file.first.consumeState(...args).pipe(
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  calls.consumed++
+                }),
+              ),
+            ),
+          commitBinding: (...args: Parameters<typeof file.first.commitBinding>) =>
+            file.first.commitBinding(...args).pipe(
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  calls.committed++
+                  committed.resolve()
+                }),
+              ),
+            ),
+        }
+        const current = yield* manager({ auth: observed, directory: file.directory, url: servers.url, redirectUri })
+        yield* current.ready()
+        const started = yield* current.startAuth("remote")
+        servers.state.tokenA = { entered, release }
+        yield* Effect.promise(async () => {
+          const owner = automatic
+            ? undefined
+            : Effect.runPromise(current.finishAuth("remote", "OWNER_CODE").pipe(Effect.result))
+          if (automatic)
+            expect(
+              (await fetch(`${redirectUri}?state=${encodeURIComponent(started.oauthState)}&code=OWNER_CODE`)).status,
+            ).toBe(200)
+          await entered.promise
+          const before = await Effect.runPromise(file.second.get("remote"))
+          const status = (await Effect.runPromise(current.list())).find((entry) => entry.name === "remote")?.status
+          expect(status).toEqual({ status: "needs_auth" })
+          for (const code of ["DUPLICATE_CODE", "ANOTHER_DUPLICATE"]) {
+            const contender = await Effect.runPromise(current.finishAuth("remote", code).pipe(Effect.result))
+            expect(contender._tag).toBe("Failure")
+            if (contender._tag === "Failure") {
+              expect(contender.failure).toBeInstanceOf(Mcp.AuthError)
+              // The repeated contender must still find the claimed flow, rather than an erased pending entry.
+              expect(contender.failure.message).toBe("MCP authentication must be renewed")
+            }
+            expect(await Effect.runPromise(file.second.get("remote"))).toEqual(before)
+            expect((await Effect.runPromise(current.list())).find((entry) => entry.name === "remote")?.status).toEqual(
+              status,
+            )
+            expect(calls).toEqual({ consumed: 1, committed: 0 })
+            expect(servers.calls.filter((call) => call.path === "/token")).toHaveLength(1)
+            expect(servers.calls.filter((call) => call.path === "/token")[0].body).toContain("OWNER_CODE")
+          }
+          release.resolve()
+          if (owner) {
+            const result = await owner
+            expect(result).toEqual({ _tag: "Success", success: { status: "connected" } })
+          }
+          await committed.promise
+          expect(calls).toEqual({ consumed: 1, committed: 1 })
+          expect(servers.calls.filter((call) => call.path === "/token")).toHaveLength(1)
+          expect((await Effect.runPromise(file.second.get("remote")))?.tokens?.accessToken).toBe("ACCESS_A")
+          expect((await Effect.runPromise(file.second.get("remote")))?.oauthState).toBeUndefined()
+        }).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              release.resolve()
+            }),
+          ),
+        )
+      }),
+    30_000,
+  )
+}
