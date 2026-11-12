@@ -237,7 +237,7 @@ impl Tree {
             .sup
             .ask(Want::List, id, Class::Normal, |req| Msg::List { req, id })
             .await;
-        // A future may be polled again after a fork: refuse before any state lock or test observation.
+        // Recheck home before subsequent state inspection.
         self.sup.home().map_err(InventoryFailure::Terminal)?;
         let answer = answer.map_err(|error| {
             // For this fixed-size List, a live generation's error was refused before send (normal admission).
