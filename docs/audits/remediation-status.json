@@ -254,9 +254,19 @@
         {
           "kind": "claude_host_green",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160277386"
+        },
+        {
+          "kind": "http_factory_baseline_controls",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43203850056",
+          "result": "Six real HTTP/Node fallback controls pass; future Bun factory absent at this baseline."
+        },
+        {
+          "kind": "completed_body_disconnect_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43204148939",
+          "result": "Plain real HttpRouter plus production bridge fails strict5s server interruption after completed JSON body and actual peer disconnect."
         }
       ],
-      "remaining": "Wire acceptance/HTTP fixtures and app/TUI consumption remain. Relocated tests require final hosted proof; Engine typecheck0. Core ready is structural/advisory, not lowering/network success."
+      "remaining": "Wire API/schema/client scoped proof exists but strict HTTP interruption remains open; Bun public factory implementation authorized after6 controls and1 behavioral RED. App/TUI consumption also remains. No final wire green claimed."
     },
     {
       "id": "E7",
@@ -858,10 +868,27 @@
       "id": "H4",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "status": "implemented_ancestor_final_gates_pending",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "actual_permission_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197836127",
+          "result": "Seven alias/external cases reproduce actual authorization mismatch."
+        },
+        {
+          "kind": "source_partial_green_ancestor_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43202147748",
+          "result": "41 pass,1 missing directory-ancestor failure per OS; source corrected afterward."
+        },
+        {
+          "kind": "unsupported_diagnostic_witness",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43204592393",
+          "result": "Actual pinned FileSystem realPath normalizes raw link/../secret to inside path; expected outside witness failed before resolver comparison. Not product RED and no raw-path rewrite."
+        }
+      ],
+      "remaining": "Physical Location authorization source and missing directory-ancestor fix cold reviewed; final Core/Engine types and both-OS gates pending. Raw symlink-parent hypothesis had unsupported witness and was not implemented."
     },
     {
       "id": "H5",
@@ -1276,17 +1303,42 @@
       "id": "L1",
       "severity": "P1",
       "owner": "lead",
-      "status": "original_scenario_fixed_residual_planned",
-      "runtime_reproduced": false,
-      "commits": [],
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "767a65691b",
+        "d04657434a",
+        "f36c1dc682"
+      ],
       "evidence": [
         {
           "kind": "revalidation",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114062388",
           "snapshot_sha": "184d086ff93f7f4f31b05cb57fe306a5ef16785a",
           "result": "6 pass, 0 fail, real coordinator; dev already stops held descendants and discards wakes; creation after enumeration remains separate unverified residual"
+        },
+        {
+          "kind": "residual_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43192631788",
+          "result": "Two corrected cancellation/cleanup races fail actual assertions, no fixture timeout."
+        },
+        {
+          "kind": "source_compositional_green_pending_one_fixture",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197884622",
+          "result": "63 pass,1 duplicate-projector fixture failure per OS; not full green."
+        },
+        {
+          "kind": "corrected_missing_row_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205258696",
+          "result": "Old source returns success/undefined instead of typed Session.NotFoundError after row vanishes;3 assertions reached. Earlier43202125865 was import/setup failure, not behavioral RED."
+        },
+        {
+          "kind": "corrected_case_and_cold_task_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205394985",
+          "result": "2 pass,17 assertions per OS. Linux1.90s/Windows1.84s. Omni control Windows pass1spawn; Linux declared-focused not applicable, no spawn. This gate is not Linux process-spawn proof."
         }
-      ]
+      ],
+      "remaining": "Closed with compositional proof:63 unchanged cases per OS plus corrected missing-row case and cold Task acquisition control. No distributed execution or provider crash-recovery claim."
     },
     {
       "id": "L2",
@@ -2656,12 +2708,12 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 42,
+    "new_fixes_verified": 47,
     "already_fixed_verified": 1,
-    "remaining": 22,
+    "remaining": 17,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "1691632a77",
+  "integration_checkpoint": "c0252fc037",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
@@ -2703,7 +2755,7 @@
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
-    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   },
   "integrated_checks": {
     "guards": {
