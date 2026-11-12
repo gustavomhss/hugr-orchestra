@@ -265,3 +265,54 @@ test.each(["edit ABA", "remove and reinsert", "credentials ABA", "policy write"]
     expect(queue.errors).toEqual([])
   } finally { release.resolve(); await Promise.allSettled(tasks); queue.dispose() }
 })
+
+test.each(["edit ABA", "remove and reinsert", "credentials ABA", "reconnect", "policy refresh", "model context refresh"] as const)("E6 actual Page completed admission ACK respects captured item and base binding after %s", async (change) => {
+  const queue = await mountQueue()
+  const entered = Promise.withResolvers<void>()
+  const release = Promise.withResolvers<void>()
+  const tasks: Promise<unknown>[] = []
+  try {
+    expect(await queue.stopped.promise).toBe("failed")
+    await queue.idle.promise
+    // Keep the Session busy: a replacement's later ordinary idle drain is legitimate, not this ACK's effect.
+    queue.setStatus("busy", true)
+    const witness = { posted: false }
+    queue.control.afterAdmission = async () => {
+      witness.posted = true
+      entered.resolve()
+      await release.promise
+    }
+    const pending = queue.controls.send("session-1", "queued-item", { manual: true })
+    tasks.push(pending)
+    await Promise.race([entered.promise, pending])
+    expect(witness.posted).toBe(true)
+    expect(queue.counts.dispatch).toBe(1)
+    const item = structuredClone(unwrap(queue.store[0].items["session-1"]![0]!))
+    if (change === "edit ABA") {
+      queue.store[1]("items", "session-1", 0, "prompt", [{ type: "text", content: "replacement", start: 0, end: 11 }])
+      await Promise.resolve()
+      queue.store[1]("items", "session-1", 0, "prompt", item.prompt)
+    }
+    if (change === "remove and reinsert") {
+      queue.store[1]("items", "session-1", [])
+      await Promise.resolve()
+      queue.store[1]("items", "session-1", [item])
+    }
+    if (change === "credentials ABA") {
+      queue.setStatus("password", "changed")
+      await Promise.resolve()
+      queue.setStatus("password", "none")
+    }
+    if (change === "reconnect") queue.setStatus("reconnectEpoch", 1)
+    if (change === "policy refresh") queue.state.policyVersion++
+    if (change === "model context refresh") queue.setModelContext("value", "changed-model-context")
+    release.resolve()
+    await pending
+    expect(queue.controls.mutation.isSuccess).toBe(true)
+    expect(queue.counts.dispatch).toBe(1)
+    expect(queue.store[0].items["session-1"]).toEqual(
+      change === "edit ABA" || change === "remove and reinsert" || change === "credentials ABA" ? [item] : [],
+    )
+    expect(queue.errors).toEqual([])
+  } finally { release.resolve(); await Promise.allSettled(tasks); queue.dispose() }
+})
