@@ -58,7 +58,9 @@ type Copy = typeof Backup.Type
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/
 const sha = /^[a-f0-9]{64}$/
 const makeDb = EffectDrizzleSqlite.makeWithDefaults()
-const io = <A>(run: () => Promise<A>) => Effect.tryPromise({ try: run, catch: (cause) => cause })
+// Node filesystem promises cannot cancel synchronously; hold the SQLite fence until each started IO settles.
+const io = <A>(run: () => Promise<A>) =>
+  Effect.tryPromise({ try: run, catch: (cause) => cause }).pipe(Effect.uninterruptible)
 const hash = (input: string | Uint8Array) => createHash("sha256").update(input).digest("hex")
 const idsHash = (ids: readonly string[]) => hash(JSON.stringify(ids))
 const missing = (error: unknown) =>
