@@ -45,7 +45,8 @@ export function openLiveOutbox(userData: string): LiveOutbox {
     let closed = false
 
     function usage() {
-      const row = db.prepare("SELECT (SELECT COALESCE(sum(body_bytes),0) FROM outbox_record)+(SELECT COALESCE(sum(body_bytes),0) FROM outbox_segment)+(SELECT COALESCE(sum(body_bytes),0) FROM outbox_receipt) AS used,(SELECT count(*) FROM outbox_record) AS records,(SELECT count(*) FROM outbox_receipt) AS ids").get()
+      const row = db.prepare("SELECT (SELECT COALESCE(sum(body_bytes),0) FROM outbox_record)+(SELECT COALESCE(sum(body_bytes),0) FROM outbox_segment)+(SELECT COALESCE(sum(body_bytes),0) FROM outbox_receipt) AS used,(SELECT count(*) FROM outbox_record) AS records,(SELECT count(*) FROM outbox_receipt) AS ids,EXISTS(SELECT 1 FROM outbox_record WHERE body_bytes!=length(CAST(body AS BLOB))) OR EXISTS(SELECT 1 FROM outbox_segment WHERE body_bytes!=length(CAST(body AS BLOB))) OR EXISTS(SELECT 1 FROM outbox_receipt WHERE body_bytes!=length(CAST(json_object('recordID',record_id,'segmentID',id,'sha256',sha256) AS BLOB))) AS inconsistent").get()
+      if (row?.inconsistent !== 0) throw new OutboxError("storage")
       return { used: integer(row?.used), records: integer(row?.records), ids: integer(row?.ids) }
     }
 
@@ -54,6 +55,7 @@ export function openLiveOutbox(userData: string): LiveOutbox {
       try {
         db.exec(write ? "BEGIN IMMEDIATE" : "BEGIN")
         try {
+          usage()
           const result = body()
           if (write) {
             const current = usage()

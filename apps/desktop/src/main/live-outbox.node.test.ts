@@ -332,6 +332,30 @@ test("external IMMEDIATE writer causes typed refusal without losing admission, a
   assert.deepEqual(f.usage(), before); assert.equal(f.store.append(f.record.id, segment(1)), "accepted")
 })
 
+test("undercounted segment bytes globally refuse another record's new ID and reopen without rewriting evidence", (t) => {
+  const f = fixture(t), item = segment(1), other = f.store.create(f.input(1))
+  f.store.append(f.record.id, item)
+  f.sql.prepare("UPDATE outbox_segment SET body_bytes=body_bytes-1 WHERE id=?").run(item.id)
+  const snapshot = () => ({ records: f.sql.prepare("SELECT * FROM outbox_record ORDER BY id").all(), receipts: f.sql.prepare("SELECT * FROM outbox_receipt ORDER BY id").all(), pending: f.sql.prepare("SELECT * FROM outbox_segment ORDER BY seq").all() })
+  const before = snapshot(), usage = f.usage()
+  refused(() => f.store.append(other.id, segment(2)), "storage")
+  assert.deepEqual(snapshot(), before); assert.deepEqual(f.usage(), usage)
+  f.store.close(); refused(() => f.open(), "storage")
+  assert.deepEqual(snapshot(), before); assert.deepEqual(f.usage(), usage)
+})
+
+test("undercounted retained receipt bytes globally refuse another record's new ID and reopen without rewriting evidence", (t) => {
+  const f = fixture(t), item = segment(1), other = f.store.create(f.input(1))
+  f.store.append(f.record.id, item); f.store.acknowledge(f.record.id, [item.id])
+  f.sql.prepare("UPDATE outbox_receipt SET body_bytes=body_bytes-1 WHERE id=?").run(item.id)
+  const snapshot = () => ({ records: f.sql.prepare("SELECT * FROM outbox_record ORDER BY id").all(), receipts: f.sql.prepare("SELECT * FROM outbox_receipt ORDER BY id").all(), pending: f.sql.prepare("SELECT * FROM outbox_segment ORDER BY seq").all() })
+  const before = snapshot(), usage = f.usage()
+  refused(() => f.store.append(other.id, segment(2)), "storage")
+  assert.deepEqual(snapshot(), before); assert.deepEqual(f.usage(), usage)
+  f.store.close(); refused(() => f.open(), "storage")
+  assert.deepEqual(snapshot(), before); assert.deepEqual(f.usage(), usage)
+})
+
 for (const damage of ["body", "bytes", "digest", "orphan"] as const) {
   test(`pending ${damage} inconsistency refuses batch/export without inventing or deleting evidence`, (t) => {
     const f = fixture(t), item = segment(1)
