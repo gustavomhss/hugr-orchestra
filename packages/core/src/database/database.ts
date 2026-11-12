@@ -64,4 +64,6 @@ export function releasePath() {
   return join(Global.Path.data, "orchestra.db")
 }
 
-export const node = makeGlobalNode({ service: Service, layer: layerFromPath(path()), deps: [] })
+export const defaultFilename = path()
+
+export const node = makeGlobalNode({ service: Service, layer: layerFromPath(defaultFilename), deps: [] })
