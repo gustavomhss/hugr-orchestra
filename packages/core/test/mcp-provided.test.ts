@@ -6,13 +6,17 @@ import { describe, expect, test } from "bun:test"
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
-import { Effect, Layer } from "effect"
+import { Deferred, Effect, Fiber, Layer } from "effect"
+import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { Mcp } from "@orchestra/core/mcp"
+import { AgentV2 } from "@orchestra/core/agent"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { SessionMessage } from "@orchestra/core/session/message"
 import { McpProvided } from "@orchestra/core/mcp/provided"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
@@ -24,9 +28,25 @@ import { Database } from "../src/database/database"
 import { EventV2 } from "../src/event"
 import { ApplicationTools } from "../src/tool/application-tools"
 import { ToolRegistry } from "../src/tool/registry"
+import { Tools } from "../src/tool/tools"
 
 const listed: McpProvided.Server[] = []
 const connects: string[] = []
+const calls: string[] = []
+const permissions: PermissionV2.AssertInput[] = []
+const active = new Map<string, Server>()
+const advertised = new Map<string, string[]>()
+let pause: { entered: Deferred.Deferred<void>; release: Deferred.Deferred<void> } | undefined
+const registrationLayer = Layer.effect(Tools.Service, Effect.gen(function* () {
+  const registry = yield* ToolRegistry.Service
+  return Tools.Service.of({ register: (tools) => Effect.gen(function* () {
+    yield* registry.register(tools)
+    if (pause && "cancel_b_c" in tools) {
+      yield* Deferred.succeed(pause.entered, undefined)
+      yield* Deferred.await(pause.release)
+    }
+  }) })
+}))
 
 function provided(name: string, key: string, tool: string): McpProvided.Server {
   return {
@@ -37,9 +57,13 @@ function provided(name: string, key: string, tool: string): McpProvided.Server {
       const [client, side] = InMemoryTransport.createLinkedPair()
       const server = new Server({ name, version: "1.0.0" }, { capabilities: { tools: {} } })
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
-        tools: [{ name: tool, description: "Answers pong", inputSchema: { type: "object", properties: {} } }],
+        tools: (advertised.get(name) ?? [tool]).map((name) => ({ name, inputSchema: { type: "object" as const, properties: {} } })),
       }))
-      server.setRequestHandler(CallToolRequestSchema, async () => ({ content: [{ type: "text", text: "pong" }] }))
+      server.setRequestHandler(CallToolRequestSchema, async (request) => {
+        calls.push(`${name}/${request.params.name}`)
+        return { content: [{ type: "text", text: "pong" }] }
+      })
+      active.set(name, server)
       void server.connect(side)
       return client
     },
@@ -60,6 +84,8 @@ const it = testEffect(
     [
       [SessionExecution.node, SessionExecutionLocal.node],
       [Global.node, Global.layerWith({ config })],
+      [ToolRegistry.toolsNode, makeLocationNode({ service: Tools.Service, layer: registrationLayer, deps: [ToolRegistry.node] })],
+      [PermissionV2.node, Layer.mock(PermissionV2.Service, { assert: (input) => Effect.sync(() => { permissions.push(input) }) })],
       [McpProvided.node, Layer.succeed(McpProvided.Service, McpProvided.Service.of({ servers: () => Effect.sync(() => [...listed]) }))],
     ],
   ),
@@ -103,6 +129,117 @@ describe("McpProvided", () => {
     30_000,
   )
 })
+
+for (const [first, second] of [
+  [["a_b", "c"], ["a", "b_c"]],
+  [["punct.one", "read"], ["punct_one", "read"]],
+  [["single", "read.item"], ["single", "read_item"]],
+] as const) {
+  it.live(`refuses ambiguous MCP identity ${first.join("/")} and ${second.join("/")}`, () =>
+    Effect.acquireRelease(Effect.promise(() => tmpdir()), (dir) => Effect.promise(() => dir[Symbol.asyncDispose]())).pipe(
+      Effect.flatMap((dir) => Effect.gen(function* () {
+        calls.length = 0
+        permissions.length = 0
+        advertised.clear()
+        const mcp = yield* Mcp.Service
+        const registry = yield* ToolRegistry.Service
+        const canonical = `${first[0]}_${first[1]}`.replace(/[^a-zA-Z0-9_-]/g, "_")
+        const call = (name: string): ToolRegistry.ExecuteInput => ({
+          sessionID: SessionV2.ID.make("ses_mcp_collision"), agent: AgentV2.ID.make("maestro"),
+          assistantMessageID: SessionMessage.ID.make("msg_mcp_collision"),
+          call: { type: "tool-call", id: `call-${calls.length}-${name}`, name, input: {} },
+        })
+        listed.splice(0, listed.length, provided(first[0], "one", first[1]), provided("unrelated", "one", "ping"))
+        yield* mcp.ready()
+        const frozen = yield* registry.materialize()
+        expect((yield* frozen.settle(call(canonical))).result.type).toBe("text")
+        expect(calls).toEqual([first.join("/")])
+        expect(permissions[0]).toMatchObject({ action: canonical, metadata: { server: first[0], tool: first[1] } })
+        if (first[0] === second[0]) {
+          advertised.set(first[0], [first[1], second[1]])
+          listed[0] = provided(first[0], "two", first[1])
+        } else listed.push(provided(second[0], "one", second[1]))
+        yield* mcp.ready()
+        const refuse = Effect.fn(function* () {
+          const materialized = yield* registry.materialize()
+          const result = (yield* materialized.settle(call(canonical))).result
+          expect(result.type).toBe("error")
+          expect(String(result.value)).toContain("Ambiguous MCP tool identity")
+          expect(String(result.value)).toContain(JSON.stringify(first))
+          expect(String(result.value)).toContain(JSON.stringify(second))
+          expect(calls).toEqual([first.join("/")])
+          expect(permissions).toHaveLength(1)
+        })
+        yield* refuse()
+        // A definition captured before the collision cannot execute either owner.
+        expect((yield* frozen.settle(call(canonical))).result.type).toBe("error")
+        expect(calls).toEqual([first.join("/")])
+        yield* mcp.connect(first[0])
+        yield* refuse()
+        if (first[0] !== second[0]) {
+          yield* mcp.connect(second[0])
+          yield* refuse()
+          yield* mcp.disconnect(second[0])
+        } else {
+          advertised.set(first[0], [first[1]])
+          yield* mcp.connect(first[0])
+        }
+        const restored = yield* registry.materialize()
+        expect((yield* restored.settle(call(canonical))).result.type).toBe("text")
+        expect((yield* restored.settle(call("unrelated_ping"))).result.type).toBe("text")
+        expect(calls).toEqual([first.join("/"), first.join("/"), "unrelated/ping"])
+        // List-changed installs a new scope before closing the old scope for this same pair.
+        const identity = restored.registrationIdentity(canonical)
+        yield* Effect.promise(() => active.get(first[0])!.sendToolListChanged())
+        for (let attempt = 0; attempt < 100; attempt++) {
+          if ((yield* registry.materialize()).registrationIdentity(canonical) !== identity) break
+          yield* Effect.sleep("10 millis")
+        }
+        const refreshed = yield* registry.materialize()
+        expect(refreshed.registrationIdentity(canonical)).not.toBe(identity)
+        expect((yield* refreshed.settle(call(canonical))).result.type).toBe("text")
+        listed.splice(0, listed.length)
+        yield* mcp.ready()
+        expect((yield* registry.materialize()).definition(canonical)).toBeUndefined()
+      }).pipe(Effect.scoped, Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))))),
+    ), 30_000,
+  )
+}
+
+it.live("cancelled public connect releases private identity claims and registrations", () =>
+  Effect.acquireRelease(Effect.promise(() => tmpdir()), (dir) => Effect.promise(() => dir[Symbol.asyncDispose]())).pipe(
+    Effect.flatMap((dir) => Effect.gen(function* () {
+      calls.length = 0
+      advertised.clear()
+      listed.splice(0, listed.length, provided("cancel_b", "one", "c"), provided("cancel", "one", "b_c"))
+      const mcp = yield* Mcp.Service
+      const registry = yield* ToolRegistry.Service
+      yield* mcp.ready()
+      yield* mcp.disconnect("cancel")
+      const materialized = yield* registry.materialize()
+      const identity = materialized.registrationIdentity("cancel_b_c")
+      pause = { entered: yield* Deferred.make<void>(), release: yield* Deferred.make<void>() }
+      const connecting = yield* mcp.connect("cancel").pipe(Effect.forkChild)
+      yield* Deferred.await(pause.entered)
+      expect((yield* registry.materialize()).registrationIdentity("cancel_b_c")).not.toBe(identity)
+      yield* Fiber.interrupt(connecting)
+      pause = undefined
+      yield* mcp.disconnect("cancel")
+      const restored = yield* registry.materialize()
+      expect(restored.registrationIdentity("cancel_b_c")).toBe(identity)
+      const result = yield* restored.settle({
+        sessionID: SessionV2.ID.make("ses_mcp_cancel"), agent: AgentV2.ID.make("maestro"),
+        assistantMessageID: SessionMessage.ID.make("msg_mcp_cancel"),
+        call: { type: "tool-call", id: "cancel-recovered", name: "cancel_b_c", input: {} },
+      })
+      expect(result.result.type).toBe("text")
+      expect(calls).toEqual(["cancel_b/c"])
+      listed.splice(0, listed.length)
+      yield* mcp.ready()
+    }).pipe(Effect.ensuring(Effect.sync(() => { pause = undefined })), Effect.scoped,
+      Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))))),
+  ), 30_000,
+)
 
 test("the default service provides no servers", async () => {
   const servers = await Effect.runPromise(

@@ -149,6 +149,19 @@ const layer = Layer.effect(
     const auth = yield* McpAuth.Service
     const layerScope = yield* Scope.Scope
     const entries = new Map<string, Entry>()
+    // Multiple scopes may claim the same actual pair during list-changed refresh. Distinct pairs must never
+    // share execution or authorization, including tools captured before another server connected.
+    const claims = new Map<string, Map<string, Set<object>>>()
+    const identityError = (server: string, tool: string) => {
+      const name = McpCatalog.toolName(server, tool)
+      const owners = claims.get(name)
+      if (!owners?.has(JSON.stringify([server, tool]))) return new Error(`Inactive MCP tool identity: ${name}`)
+      if (owners.size === 1) return
+      return new Error(
+        `Ambiguous MCP tool identity ${name}: ${Array.from(owners.keys()).sort().join(", ")}. ` +
+        "Rename the server or tool to remove the collision, then reconnect.",
+      )
+    }
     // Sign-ins waiting for their authorization code, by server.
     const pending = new Map<string, { transport: StreamableHTTPClientTransport; provider: McpOAuthPendingProvider }>()
     // Project config documents are read once per Location open; servers added or removed here overlay them.
@@ -214,22 +227,51 @@ const layer = Layer.effect(
     }
 
     const register = Effect.fnUntraced(function* (
+      current: Entry,
       name: string,
       client: Client,
       defs: ListToolsResult["tools"],
       timeout: number,
     ) {
-      const scope = yield* Scope.make()
-      // One registration per tool, so a tool whose name the registry refuses leaves the others available.
-      yield* Effect.forEach(
-        defs,
-        (def) =>
-          tools
-            .register({ [McpCatalog.toolName(name, def.name)]: mcpTool(name, client, def, timeout) })
-            .pipe(Effect.ignore),
-        { discard: true },
-      ).pipe(Scope.provide(scope))
-      return scope
+      return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+        const scope = yield* Scope.make()
+        const token = {}
+        for (const def of defs) {
+          const canonical = McpCatalog.toolName(name, def.name)
+          const pair = JSON.stringify([name, def.name])
+          const owners = claims.get(canonical) ?? new Map<string, Set<object>>()
+          const tokens = owners.get(pair) ?? new Set<object>()
+          tokens.add(token)
+          owners.set(pair, tokens)
+          claims.set(canonical, owners)
+        }
+        yield* Scope.addFinalizer(scope, Effect.sync(() => {
+          for (const def of defs) {
+            const canonical = McpCatalog.toolName(name, def.name)
+            const pair = JSON.stringify([name, def.name])
+            const owners = claims.get(canonical)
+            const tokens = owners?.get(pair)
+            tokens?.delete(token)
+            if (tokens?.size === 0) owners?.delete(pair)
+            if (owners?.size === 0) claims.delete(canonical)
+          }
+        }))
+        // One registration per tool, so a tool whose name the registry refuses leaves the others available.
+        yield* restore(Effect.forEach(
+          defs,
+          (def) =>
+            tools
+              .register({ [McpCatalog.toolName(name, def.name)]: mcpTool(name, client, def, timeout) })
+              .pipe(Effect.ignore),
+          { discard: true },
+        ).pipe(Scope.provide(scope))).pipe(
+          Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void),
+        )
+        // Transfer ownership before restoring interruption; no private claims may escape a cancelled connect.
+        const previous = current.tools
+        current.tools = scope
+        if (previous) yield* Scope.close(previous, Exit.void)
+      }))
     })
 
     const mcpTool = (server: string, client: Client, def: ListToolsResult["tools"][number], timeout: number) =>
@@ -238,6 +280,8 @@ const layer = Layer.effect(
         inputSchema: { ...def.inputSchema, type: "object", properties: def.inputSchema.properties ?? {} },
         execute: (input, context) =>
           Effect.gen(function* () {
+            const error = identityError(server, def.name)
+            if (error) return yield* Effect.fail(error)
             yield* permission.assert({
               action: McpCatalog.toolName(server, def.name),
               resources: ["*"],
@@ -247,14 +291,21 @@ const layer = Layer.effect(
               agent: context.agent,
               source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
             })
-            const result = yield* Effect.tryPromise((signal) =>
-              client.callTool(
-                { name: def.name, arguments: isObject(input) ? input : {} },
-                CallToolResultSchema,
-                // The MCP SDK only sends a progress token when `onprogress` is set, which enables timeout resets.
-                { signal, timeout, resetTimeoutOnProgress: true, onprogress: () => {} },
-              ),
-            )
+            const result = yield* Effect.tryPromise({
+              try: (signal) => {
+                // Permission may wait while another server connects. Check in the same synchronous step as
+                // callTool so a newly ambiguous identity cannot send a request between checking and calling.
+                const error = identityError(server, def.name)
+                if (error) throw error
+                return client.callTool(
+                  { name: def.name, arguments: isObject(input) ? input : {} },
+                  CallToolResultSchema,
+                  // The MCP SDK only sends a progress token when `onprogress` is set, which enables timeout resets.
+                  { signal, timeout, resetTimeoutOnProgress: true, onprogress: () => {} },
+                )
+              },
+              catch: (error) => error instanceof Error ? error : new Error(String(error)),
+            })
             if ("toolResult" in result) return yield* Effect.fail(new Error("MCP tool returned no content"))
             if (result.isError) return yield* Effect.fail(new Error(McpCatalog.resultText(result) || "MCP tool returned an error"))
             return { structured: result.structuredContent ?? {}, content: McpCatalog.resultContent(result) }
@@ -307,7 +358,7 @@ const layer = Layer.effect(
       const defs = listed?.success ?? []
       // Connected is reported only once the server's tools are in the registry.
       current.client = client
-      current.tools = yield* register(name, client, defs, request)
+      yield* register(current, name, client, defs, request)
       current.toolNames = defs.map((def) => def.name)
       current.status = opened.status
       client.onclose = () => {
@@ -326,10 +377,8 @@ const layer = Layer.effect(
             if (current.client !== client) return
             const defs = yield* McpCatalog.defs(client, request)
             if (!defs || current.client !== client) return
-            const previous = current.tools
-            current.tools = yield* register(name, client, defs, request)
+            yield* register(current, name, client, defs, request)
             current.toolNames = defs.map((def) => def.name)
-            if (previous) yield* Scope.close(previous, Exit.void)
           }),
         ),
       )

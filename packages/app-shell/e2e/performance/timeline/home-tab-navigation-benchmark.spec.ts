@@ -3,6 +3,7 @@ import { expectSessionTitle } from "../../utils/waits"
 import { measureNavigationMilestones } from "./navigation-milestones"
 import { fixture } from "./session-timeline-stress.fixture"
 import {
+  createReviewDiffs,
   installStressSessionTabs,
   installTimelineSettings,
   mockStressTimeline,
@@ -12,6 +13,12 @@ import { waitForStableTimeline } from "./session-tab-switch-probe"
 
 const homeRow = '[data-component="home-impact-row"]'
 const homeShell = '[data-component="orchestra-kpis"]'
+const reviewBody =
+  '#review-panel :is([data-component="session-review"], [data-component="session-review-v2"]) [data-component="file"][data-mode="diff"]'
+
+function messageSelector(id: string) {
+  return `[data-message-id="${id}"]`
+}
 
 benchmark.describe("performance: home and tab navigation", () => {
   benchmark("opens a home session and paints its titlebar tab", async ({ page, report }) => {
@@ -38,18 +45,18 @@ benchmark.describe("performance: home and tab navigation", () => {
   })
 
   benchmark("stages the review body after cold session content", async ({ page, report }) => {
-    await setup(page, [])
+    await setup(page, [], true)
     await page.goto("/")
     const row = page.locator(homeRow).filter({ hasText: fixture.expected.targetTitle }).first()
     await expect(row).toBeVisible()
     const result = await page.evaluate(
-      ({ rowSelector, title, contentSelector }) =>
+      ({ rowSelector, title, contentSelector, reviewSelector }) =>
         new Promise<{ contentBeforeReview: boolean; samples: number }>((resolve) => {
           let samples = 0
           const sample = () => {
             samples++
             const content = !!document.querySelector(contentSelector)
-            const review = !!document.querySelector('[data-component="session-review"]')
+            const review = !!document.querySelector(reviewSelector)
             if (content && !review) {
               resolve({ contentBeforeReview: true, samples })
               return
@@ -71,11 +78,13 @@ benchmark.describe("performance: home and tab navigation", () => {
         rowSelector: homeRow,
         title: fixture.expected.targetTitle,
         contentSelector: messageSelector(fixture.expected.targetMessageIDs.at(-1)!),
+        reviewSelector: reviewBody,
       },
     )
     report(result)
     expect(result.contentBeforeReview).toBe(true)
-    await expect(page.locator('[data-component="session-review"]')).toBeVisible()
+    await expect(page.locator("#review-panel")).toBeVisible()
+    await expect.poll(() => page.locator(reviewBody).locator("diffs-container [data-line]").count()).toBeGreaterThan(0)
   })
 
   benchmark("closes the only session tab and paints home", async ({ page, report }) => {
@@ -103,22 +112,25 @@ benchmark.describe("performance: home and tab navigation", () => {
   })
 })
 
-async function setup(page: Parameters<typeof mockStressTimeline>[0], sessionIDs: string[]) {
-  await mockStressTimeline(page)
+async function setup(page: Parameters<typeof mockStressTimeline>[0], sessionIDs: string[], reviewOpened = false) {
+  await mockStressTimeline(page, reviewOpened ? { vcsDiff: createReviewDiffs() } : undefined)
   await installTimelineSettings(page)
   await installStressSessionTabs(page, { sessionIDs })
-  await installHomeActivity(page)
+  await installHomeActivity(page, reviewOpened)
 }
 
 // Home ranks the selected profile's sessions; the mock server gives each root session one message today.
-async function installHomeActivity(page: Parameters<typeof mockStressTimeline>[0]) {
+async function installHomeActivity(page: Parameters<typeof mockStressTimeline>[0], reviewOpened: boolean) {
   const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
   await page.addInitScript(
-    ({ server, directory }) =>
+    ({ server, directory, reviewOpened }) =>
       localStorage.setItem(
         "orchestra.global.dat:layout",
-        JSON.stringify({ home: { selection: { server, directory } } }),
+        JSON.stringify({
+          home: { selection: { server, directory } },
+          ...(reviewOpened ? { review: { panelOpened: true } } : {}),
+        }),
       ),
-    { server, directory: fixture.directory },
+    { server, directory: fixture.directory, reviewOpened },
   )
 }

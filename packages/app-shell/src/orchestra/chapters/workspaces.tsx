@@ -18,7 +18,6 @@ import {
   defaultCopyParent,
   forceRequired,
   homeRelative,
-  repositoryProject,
   repositoryWorkspaces,
   workspaceFailure,
   WORKTREE_STRATEGY,
@@ -88,7 +87,12 @@ export default function Workspaces(props: ChapterPageProps) {
     await preferenceReady.promise
     const result = await serverSDK()
       .ready.then(async () => {
-        const project = repositoryProject(await serverSDK().api.project.list(), props.directory)
+        // V2 copies belong to the Location's project even when legacy `sandboxes` is empty.
+        const [location, projects] = await Promise.all([
+          serverSDK().api.project.current({ location: { directory: props.directory } }),
+          serverSDK().api.project.list(),
+        ])
+        const project = projects.find((project) => project.id === location.id)
         if (!project) return { project, directories: [] }
         const directories = await serverSDK().api.project.directories({
           projectID: project.id,

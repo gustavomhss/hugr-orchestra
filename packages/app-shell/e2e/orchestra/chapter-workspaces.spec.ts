@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
+import { currentSession } from "../utils/mock-server"
 import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
@@ -20,6 +21,67 @@ const project = (name: string, sandboxes: string[]) => ({
 })
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
+
+const releaseChannel = process.env.ORCHESTRA_CHANNEL === "prod"
+test.beforeEach(({}, info) => {
+  test.skip(
+    releaseChannel && !info.title.startsWith("placement:"),
+    "The other journeys drive the development workspace picker",
+  )
+})
+
+for (const placement of ["active", "stale", "unknown", "direct", "removed-before-submit"] as const) {
+  test(`placement: production ${placement} draft creates the session at the resolved workspace`, async ({ page }) => {
+    test.skip(!releaseChannel, "Requires the release channel to prove the hidden workspace picker")
+    const direct = placement === "direct"
+    const mock = await setup(page, { profile: direct ? sandboxes[1] : root })
+    await openChapter(page)
+    if (!direct) await card(page, sandboxes[0]).getByRole("button", { name: "Use workspace", exact: true }).click()
+    if (placement === "stale") {
+      mock.state.sandboxes[serverA].splice(0, 1)
+      await openChapter(page, false)
+      await expect(card(page, root).locator(".mx-badge.good")).toHaveText("Active")
+    }
+    if (placement === "unknown") {
+      await page.evaluate(({ root }) => {
+        const key = "orchestra.global.dat:orchestra.workspaces"
+        const value = JSON.parse(localStorage.getItem(key) ?? "{}")
+        localStorage.setItem(key, JSON.stringify({ ...value, active: { [root]: "/unknown/workspace" } }))
+      }, { root })
+      await page.reload()
+    }
+    await openHomeDraft(page)
+    const expected = direct ? sandboxes[1] : ["active", "removed-before-submit"].includes(placement) ? sandboxes[0] : root
+    await expect(workspaceTrigger(page, expected === root ? "Local" : expected.split("/").at(-1)!)).toHaveCount(0)
+    await expect(page.locator('[data-component="session-new-design"]')).toContainText(/dev|branch-one|branch-two/)
+    const branch = await page.locator('[data-component="session-new-design"]').innerText()
+    const prompt = page.getByRole("textbox", { name: "Prompt", exact: true })
+    if (placement === "removed-before-submit") mock.state.sandboxes[serverA].splice(0, 1)
+    await prompt.fill("Verify workspace placement")
+    await prompt.press("Enter")
+    if (placement === "removed-before-submit") {
+      await expect(page.getByText("Failed to create session", { exact: true })).toBeVisible()
+      expect(mock.created).toEqual([])
+      expect(mock.requests.filter((request) => request.path === "/api/session" && request.method === "POST")).toEqual([])
+      await expect(prompt).toHaveText("Verify workspace placement")
+      return
+    }
+    await expect.poll(() => mock.created.map((session) => session.location.directory)).toEqual([expected])
+    expect(branch).toContain(expected === root ? "dev" : `branch-${expected.split("/").at(-1)}`)
+    expect(mock.requests.find((request) => request.path === "/api/session" && request.method === "POST")?.body)
+      .toMatchObject({ location: { directory: expected } })
+  })
+}
+
+test("placement: direct V2 copy profile resolves its owning repository", async ({ page }) => {
+  const mock = await setup(page, { profile: sandboxes[0] })
+  await openChapter(page)
+  await expect(page.locator(".orchestra-workspaces .mx-card code")).toHaveText([root, ...sandboxes])
+  expect(mock.requests.some((request) => request.path === "/api/location" && request.directory === sandboxes[0])).toBe(true)
+  expect(mock.requests.filter((request) => request.path.endsWith("/directories"))).toEqual([
+    expect.objectContaining({ path: "/api/project/project-Server A repository/directories" }),
+  ])
+})
 
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: renders the mock page and selecting a workspace steers new sessions`, async ({ page }) => {
@@ -461,7 +523,7 @@ async function drafts(page: Page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]"))
 }
 
-async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
+async function setup(page: Page, options: { scheme?: "dark" | "light"; profile?: string } = {}) {
   const state = {
     status: 200,
     empty: false,
@@ -477,10 +539,11 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
     // Directories the server created with a copy strategy and can therefore remove.
     managed: new Set([sandboxes[0]]),
   }
+  const created: ReturnType<typeof currentSession>[] = []
   const requests: Request[] = []
   const pending: (() => Promise<void>)[] = []
   await page.addInitScript(
-    ({ serverA, serverB, root, scheme }) => {
+    ({ serverA, serverB, root, scheme, profile }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)
@@ -492,16 +555,16 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
         "orchestra.global.dat:server",
         JSON.stringify({
           list: [serverB],
-          projects: { local: [{ worktree: root, expanded: true }], [serverB]: [{ worktree: root, expanded: true }] },
-          lastProject: { local: root, [serverB]: root },
+          projects: { local: [{ worktree: profile, expanded: true }], [serverB]: [{ worktree: root, expanded: true }] },
+          lastProject: { local: profile, [serverB]: root },
         }),
       )
       localStorage.setItem(
         "orchestra.global.dat:layout",
-        JSON.stringify({ home: { selection: { server: serverA, directory: root } } }),
+        JSON.stringify({ home: { selection: { server: serverA, directory: profile } } }),
       )
     },
-    { serverA, serverB, root, scheme: options.scheme ?? "dark" },
+    { serverA, serverB, root, profile: options.profile ?? root, scheme: options.scheme ?? "dark" },
   )
   await page.route("**/*", async (route) => {
     const request = route.request()
@@ -557,14 +620,14 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
       return json(route, { state: root, config: root, worktree: root, directory, home: "/home/test" })
     if (url.pathname === "/provider")
       return json(route, { all: [], connected: [], default: { providerID: "", modelID: "" } })
-    if (url.pathname === "/agent") return json(route, [{ name: "build", mode: "primary" }])
+    if (url.pathname === "/agent") return json(route, [{ name: "maestro", mode: "primary" }])
     if (url.pathname === "/api/agent")
       return json(route, {
-        location: { directory },
+        location: { directory, project: { id: current.id, directory: root } },
         data: [
           {
-            id: "build",
-            name: "Build",
+            id: "maestro",
+            name: "Maestro",
             mode: "primary",
             hidden: false,
             request: { settings: {}, headers: {}, body: {} },
@@ -572,7 +635,45 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
           },
         ],
       })
-    if (url.pathname === "/api/model/default") return json(route, { location: { directory }, data: null })
+    if (url.pathname === "/api/mcp/resource")
+      return json(route, { location: { directory, project: { id: current.id, directory: root } }, data: { resources: [], templates: [] } })
+    if (url.pathname === "/api/config") return json(route, { data: {} })
+    if (["/api/provider", "/api/model", "/api/model/default"].includes(url.pathname)) {
+      const model = {
+        id: "mock-model",
+        modelID: "mock-model",
+        providerID: "mock-provider",
+        name: "Mock model",
+        capabilities: { input: ["text"], output: ["text"], tools: true },
+        variants: [],
+        time: { released: 1 },
+        cost: [],
+        status: "active",
+        enabled: true,
+        limit: { context: 200000, output: 8192 },
+      }
+      return json(route, {
+        location: { directory, project: { id: current.id, directory: root } },
+        data: url.pathname === "/api/provider"
+          ? [{ id: "mock-provider", name: "Mock provider", settings: {} }]
+          : url.pathname === "/api/model" ? [model] : model,
+      })
+    }
+    if (url.pathname === "/api/vcs") return json(route, {
+      location: { directory, project: { id: current.id, directory: root } },
+      data: releaseChannel ? { branch: directory === root ? "dev" : `branch-${directory.split("/").at(-1)}` } : {},
+    })
+    if (url.pathname === "/api/session" && request.method() === "POST") {
+      const body = request.postDataJSON()
+      const session = currentSession({
+        id: `ses_workspace_${created.length}`,
+        ...body,
+        directory: body.location.directory,
+        projectID: current.id,
+      })
+      created.push(session)
+      return json(route, { data: session })
+    }
     if (url.pathname === "/api/session") return json(route, { data: [], cursor: {} })
     if (url.pathname === "/api/session/active") return json(route, { data: {} })
     if (
@@ -581,7 +682,7 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
       )
     )
       return json(route, [])
-    if (url.pathname.startsWith("/api/")) return json(route, { location: { directory }, data: [] })
+    if (url.pathname.startsWith("/api/")) return json(route, { location: { directory, project: { id: current.id, directory: root } }, data: [] })
     return json(route, {})
   })
 
@@ -610,6 +711,7 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
 
   return {
     state,
+    created,
     requests,
     pending,
     release: async () => {
