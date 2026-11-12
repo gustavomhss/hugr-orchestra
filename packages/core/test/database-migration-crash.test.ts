@@ -1,15 +1,16 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { readFile, readdir, writeFile, symlink, mkdir, unlink, lstat } from "node:fs/promises"
+import { readFile, readdir, writeFile, symlink, mkdir, unlink, lstat, link } from "node:fs/promises"
 import { join, resolve } from "node:path"
-import { Effect, Exit } from "effect"
+import { Effect, Exit, Fiber, Option } from "effect"
+import { layer } from "#sqlite"
 import { sql } from "drizzle-orm"
 import { Omni } from "../src/omni"
 import { expectSpawn } from "./fixture/omni-expect"
 import { DatabaseMigration } from "../src/database/migration"
 import sessionMetadataMigration from "../src/database/migration/20260511173437_session-metadata"
 import { tmpdir } from "./fixture/tmpdir"
-import { run, migration, seed, ids, notes, snapshots, namedLegacy, inspectBackupFootprint } from "./fixture/migration-safety"
+import { run, migration, seed, ids, notes, snapshots, namedLegacy, inspectBackupFootprint, makeDb } from "./fixture/migration-safety"
 
 type Manifest = {
   version: number; legacyPins: { name: string }[]; recentAttempts: unknown[]
@@ -381,4 +382,59 @@ test("M5 corrupted captured garbage cannot remove a foreign EEXIST destination o
   expect(observed).toEqual([])
   expect((await snapshots(file)).sort()).toEqual(files)
   expect((await readdir(`${file}.migration-work`, { recursive: true })).sort()).toEqual(entries)
+})
+
+
+test("M5 interruption keeps the filesystem fence until an already-started real link settles", async () => {
+  await using tmp = await tmpdir()
+  const file = join(tmp.path, "source.db")
+  await seed(file, ["000_base"])
+  const targets = [migration("000_base"), migration("001_A", "applied-once")]
+  const started = Promise.withResolvers<void>()
+  const release = Promise.withResolvers<void>()
+  const settled = Promise.withResolvers<void>()
+  const state = { entered: false }
+  await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const first = yield* Effect.gen(function* () {
+      const db = yield* makeDb
+      yield* DatabaseMigration.apply(db, targets, { backup: {
+        link: async (source, target) => {
+          state.entered = true
+          started.resolve()
+          try {
+            await release.promise
+            await link(source, target)
+          } finally {
+            settled.resolve()
+          }
+        },
+      } })
+    }).pipe(Effect.provide(layer({ filename: file })), Effect.scoped, Effect.forkScoped)
+    yield* Effect.gen(function* () {
+      yield* Effect.raceFirst(
+        Effect.promise(() => started.promise),
+        Fiber.await(first).pipe(Effect.andThen(() => Effect.fail(new Error("migration ended before the real link gate")))),
+      ).pipe(Effect.timeout("5 seconds"))
+      const interrupt = yield* Fiber.interrupt(first).pipe(Effect.forkScoped)
+      // A negative bounded wait is the assertion: interruption must retain ownership while actual IO is gated.
+      const early = yield* Fiber.join(interrupt).pipe(Effect.timeoutOption("100 millis"))
+      expect(Option.isNone(early)).toBe(true)
+      release.resolve()
+      yield* Effect.promise(() => settled.promise)
+      yield* Fiber.join(interrupt)
+      expect(Exit.hasInterrupts(yield* Fiber.await(first))).toBe(true)
+    }).pipe(Effect.ensuring(Effect.gen(function* () {
+      release.resolve()
+      // Join the syscall even on RED, before the scope or tmpdir can close and remove its paths.
+      if (state.entered) yield* Effect.promise(() => settled.promise)
+      yield* Fiber.interrupt(first)
+    })))
+  })))
+  expect((await manifest(file)).active?.phase).toBe("captured")
+  expect(await ids(file)).toEqual(["000_base"])
+  expect(await notes(file)).toEqual(["precious"])
+  await run(file, (db) => DatabaseMigration.apply(db, targets))
+  expect(await ids(file)).toEqual(["000_base", "001_A"])
+  expect(await notes(file)).toEqual(["precious", "applied-once"])
+  expect((await inspectBackupFootprint(file)).directories).toEqual([])
 })
