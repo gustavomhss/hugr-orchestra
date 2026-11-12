@@ -172,11 +172,13 @@
       "id": "E7",
       "severity": "P2",
       "owner": "clients",
-      "status": "source_verified_wire_pending",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
       "commits": [
         "08aeb55758",
-        "73c4bd4852"
+        "73c4bd4852",
+        "16a7eccb889a37bed2f33d454aa9a16c55020e46",
+        "a3fe129981f576eeb6e35f1f6dde1ceb105a7dc8"
       ],
       "evidence": [
         {
@@ -229,8 +231,26 @@
           ]
         },
         {
-          "kind": "remaining_gate",
-          "result": "Official Client generation on combined L2/E7 baseline, idempotence and Client gates pending"
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43139464094",
+          "result": "31 Client pass, 6files,108assertions; actual HTTP Promise/Effect model variant roundtrip and typed409 retained"
+        },
+        {
+          "kind": "official_generation",
+          "base": "73c4bd4852d5dc44992c8cd34793305800173b0d",
+          "result": "Combined L2/E7 baseline, two official generations exit0, diff and all56 file hashes identical; only types.ts22added lines",
+          "blob": "b1d36735a6c239b7522f5773cc02bbcb8f6e8cce",
+          "receipt": "/tmp/audit-variant-wire-state.json"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Client exit0; root read receipt",
+          "receipt": "/tmp/audit-variant-wire-type-client.exit"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "lead",
+          "verdict": "Read generated-only diff and both actual HTTP consumer tests; source previously approved independently by elon_musk"
         }
       ]
     },
@@ -2010,12 +2030,12 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 33,
+    "new_fixes_verified": 34,
     "already_fixed_verified": 1,
-    "remaining": 31,
+    "remaining": 30,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "73c4bd4852",
+  "integration_checkpoint": "a3fe129981f576eeb6e35f1f6dde1ceb105a7dc8",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
