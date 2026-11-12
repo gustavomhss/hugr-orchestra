@@ -43,7 +43,7 @@ beforeAll(() => {
       if (itemObserver.length !== 1) throw new Error("Page queued-item generation observer missing")
       // Compile actual Page mutation, send handler and idle effect. The test supplies IO ports only.
       return { loader: "ts", contents: `
-        import { createComputed, createEffect, createMemo } from "solid-js"
+        import { createComputed, createEffect, createMemo, onCleanup } from "solid-js"
         import { unwrap } from "solid-js/store"
         import { createSubmissionOwner } from "@/components/prompt-input/submission-policy"
         import { useMutation } from "@tanstack/solid-query"
