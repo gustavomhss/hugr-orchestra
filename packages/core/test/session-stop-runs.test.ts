@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Effect, Fiber, Layer, Queue, Schema } from "effect"
+import { Effect, Fiber, Layer, LayerMap, Option, Queue, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -9,6 +9,9 @@ import { ProjectV2 } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
+import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import type { LocationServices } from "@orchestra/core/location-services"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionRunCoordinator } from "@orchestra/core/session/run-coordinator"
 import { testEffect } from "./lib/effect"
@@ -240,33 +243,46 @@ describe("SessionV2 stops runs on archive and remove", () => {
     }),
   )
 
-  it.live("removing a parent discards wakes delivered during Deleted for both child and parent holds", () =>
+  it.live("Deleted callback wakes settle without reaching a runner or resurrecting parent and child", () =>
     Effect.gen(function* () {
-      const log: string[] = []
-      const execution = yield* gated(log, { wakeAfterInterrupt: false })
+      let locations = 0
+      const locationMap = Layer.effect(LocationServiceMap.Service, LayerMap.make((_ref: Location.Ref) =>
+        Layer.effectContext<LocationServices, never, never>(Effect.sync(() => { locations++ }).pipe(
+          Effect.andThen(Effect.die("A deleted Session must not acquire provider/tool services")),
+        )),
+      ))
       yield* Effect.gen(function* () {
         const session = yield* SessionV2.Service
         const runs = yield* SessionExecution.Service
         const events = yield* EventV2.Service
         const parent = yield* session.create({ location })
         const child = yield* session.create({ location, parentID: parent.id })
-        const ownership: ReadonlySet<SessionV2.ID>[] = []
-        const unsubscribe = yield* events.listen((event) =>
-          Effect.gen(function* () {
-            if (!Schema.is(SessionEvent.Deleted)(event)) return
-            ownership.push(yield* runs.active)
-            log.push(`deleted ${event.data.sessionID}`)
-            yield* runs.wake(event.data.sessionID)
-          }),
-        )
+        const callbacks: SessionV2.ID[] = []
+        const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
+          if (!Schema.is(SessionEvent.Deleted)(event)) return
+          if (event.data.sessionID !== parent.id && event.data.sessionID !== child.id) return
+          // Observer callbacks run after execution/tree guards release. A callback can acquire ownership, and a
+          // fresh wake for the now-missing row must settle before any Location runner or provider/tool is acquired.
+          expect(Option.isSome(yield* runs.exclusive(event.data.sessionID, Effect.void))).toBe(true)
+          yield* runs.wake(event.data.sessionID)
+          yield* runs.exclusive(event.data.sessionID, Effect.void, { wait: true })
+          callbacks.push(event.data.sessionID)
+        }))
         yield* Effect.addFinalizer(() => unsubscribe)
         yield* session.remove(parent.id)
-        expect(ownership).toEqual([new Set([parent.id, child.id]), new Set([parent.id, child.id])])
+        expect(new Set(callbacks)).toEqual(new Set([child.id, parent.id]))
+        expect(locations).toBe(0)
         expect((yield* session.get(child.id).pipe(Effect.flip))._tag).toBe("Session.NotFoundError")
         expect((yield* session.get(parent.id).pipe(Effect.flip))._tag).toBe("Session.NotFoundError")
         expect(yield* session.active).toEqual(new Set())
-        expect(log).toEqual([`deleted ${child.id}`, `deleted ${parent.id}`])
-      }).pipe(provide(execution.layer))
-    }),
+        // Positive control: an extant Session does reach the instrumented runner-acquisition boundary.
+        const other = yield* session.create({ location })
+        expect((yield* runs.resume(other.id).pipe(Effect.exit))._tag).toBe("Failure")
+        expect(locations).toBe(1)
+      }).pipe(Effect.provide(Layer.fresh(AppNodeBuilder.build(nodes, [
+        [ProjectV2.node, projects], [SessionExecution.node, SessionExecutionLocal.node],
+        [LocationServiceMap.node, locationMap],
+      ]))))
+    }).pipe(Effect.timeout("10 seconds")),
   )
 })
