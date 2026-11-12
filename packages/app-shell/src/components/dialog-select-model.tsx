@@ -173,6 +173,8 @@ export function ModelSelectorPopoverV2(props: {
       groups={controller.groups}
       current={controller.current}
       select={controller.select}
+      available={controller.available}
+      missingLabel={controller.missingLabel}
       onConnect={() => {
         void import("./dialog-connect-provider").then((module) => {
           void dialog.show(() => <module.DialogConnectProvider directory={() => decode64(local.slug())} />)
@@ -221,9 +223,12 @@ function createModelSelectorController(input: {
       return value ? modelKey(value) : undefined
     },
     select: (item: ModelItem) => {
+      if (!model.execution.allows({ modelID: item.id, providerID: item.provider.id })) return
       model.set({ modelID: item.id, providerID: item.provider.id }, { recent: true })
       input.onSelect()
     },
+    available: (item: ModelItem) => model.execution.allows({ modelID: item.id, providerID: item.provider.id }),
+    missingLabel: () => !model.current() ? model.intent().model?.modelID : undefined,
   }
 }
 
@@ -233,6 +238,8 @@ function ModelSelectorPopoverV2View(props: {
   groups: (models: ModelItem[]) => { category: string; items: ModelItem[] }[]
   current: () => string | undefined
   select: (item: ModelItem) => void
+  available: (item: ModelItem) => boolean
+  missingLabel: () => string | undefined
   onConnect: () => void
   onManage: () => void
   onClose: () => void
@@ -268,6 +275,7 @@ function ModelSelectorPopoverV2View(props: {
     setStore({ open: false, search: "", active: "" })
   }
   const selectModel = (item: ModelItem) => {
+    if (!props.available(item)) return
     dismiss.preventTriggerRestore()
     setOpen(false)
     dismiss.afterClose(() => props.select(item))
@@ -322,6 +330,9 @@ function ModelSelectorPopoverV2View(props: {
           onFocusOutside={dismiss.preventTriggerRestore}
           onCloseAutoFocus={dismiss.onCloseAutoFocus}
         >
+          <Show when={props.missingLabel()}>{(label) =>
+            <div class="px-3 py-2 text-v2-text-text-faint" title={language.t("model.execution.unavailable")}>{label()}</div>
+          }</Show>
           <div class="flex flex-col p-0.5">
             <div class="flex h-7 items-center gap-2 rounded-sm pl-3 pr-2.5 text-v2-icon-icon-muted">
               <Icon name="magnifying-glass" size="small" class="shrink-0" />
@@ -396,6 +407,7 @@ function ModelSelectorPopoverV2View(props: {
                     setTimeout(() => searchRef?.focus())
                   }}
                   onSelect={selectModel}
+                  available={props.available}
                 />
               </Show>
             </div>
@@ -441,6 +453,7 @@ function ModelSelectorRowsV2(props: {
   ref: (scrollTo: (key: string) => void) => void
   onActive: (key: string) => void
   onSelect: (item: ModelItem) => void
+  available: (item: ModelItem) => boolean
 }) {
   const language = useLanguage()
   const [root, setRoot] = createSignal<HTMLDivElement>()
@@ -492,6 +505,8 @@ function ModelSelectorRowsV2(props: {
                               }
                             >
                               <MenuV2.RadioItem
+                                disabled={!props.available(item())}
+                                title={!props.available(item()) ? language.t("model.execution.unavailable") : undefined}
                                 value={key}
                                 data-option-key={key}
                                 data-selected-model={props.current === key ? true : undefined}

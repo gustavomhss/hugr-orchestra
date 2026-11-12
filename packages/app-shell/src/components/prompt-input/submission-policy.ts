@@ -11,6 +11,8 @@ import type { ImageAttachmentPart } from "@/context/prompt"
 import { Identifier } from "@/utils/id"
 import { blobDataUrl } from "@/utils/draft-store"
 import { buildRequestParts } from "./build-request-parts"
+import { makeModelExecutionQuery } from "@orchestra/client"
+import { modelExecutionForSession } from "@/utils/session-model-execution"
 import type { AdmissionRequest, FollowupSendInput } from "./submission-types"
 
 export type FailedPolicyWrite = { cause: unknown; version?: number }
@@ -24,19 +26,27 @@ export function createSubmissionOwner<T extends Record<string, unknown>>(read: (
   const identity = createMemo(read, undefined, {
     equals: (left, right) => !!left && Object.keys(right).every((key) => left[key] === right[key]),
   })
-  const state = { generation: 0, disposed: false, handoff: undefined as ((next: T) => boolean) | undefined }
+  const state = { generation: 0, disposed: false, abort: new AbortController(), handoff: undefined as ((next: T) => boolean) | undefined }
   createComputed(() => {
     const next = identity()
-    if (!state.handoff?.(next)) state.generation++
+    if (!state.handoff?.(next)) {
+      const previous = state.abort
+      state.generation++
+      state.abort = new AbortController()
+      previous.abort()
+    }
     state.handoff = undefined
   })
-  onCleanup(() => { state.disposed = true; state.generation++; state.handoff = undefined })
+  onCleanup(() => { state.disposed = true; state.generation++; state.handoff = undefined; state.abort.abort() })
   return {
     capture() {
       const generation = state.generation
       return {
+        signal: state.abort.signal,
         current: () => !state.disposed && state.generation === generation,
-        handoff: (accept?: (next: T) => boolean) => { state.handoff = accept },
+        handoff: (accept?: (next: T) => boolean) => {
+          if (!state.disposed && state.generation === generation) state.handoff = accept
+        },
       }
     },
     disposed: () => state.disposed,
@@ -185,7 +195,7 @@ export async function waitForSubmissionWorktree(input: {
 
 /** Prepare attachments between two policy barriers; a successful HTTP admission remains successful after departure. */
 export async function sendFollowupRequest(input: FollowupSendInput) {
-  const current = () => !input.signal?.aborted && input.runtime?.current() !== false
+  const current = () => !input.signal?.aborted && input.runtime?.current() !== false && input.currentSource?.current() !== false
   if (!current()) return false
   if (input.request?.admitted) return true
   const text = input.draft.prompt.map((part) => ("content" in part ? part.content : "")).join("")
@@ -207,6 +217,11 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     const ready = await input.runtime?.before(input.signal)
     return ready !== false && current()
   }
+  if (!(await wait())) return false
+  if (!(input.request?.kind === "prompt" && input.request.admissionAttempted) && !(input.preflight ? input.preflight() : await assessModelExecution({
+    api: input.api, directory: input.draft.sessionDirectory, sessionID: input.draft.sessionID,
+    agent: input.draft.agent, model: input.draft.model, variant: input.draft.variant, current, signal: input.signal,
+  }))) return false
 
   const [head, ...tail] = text.split(" ")
   const cmd = head?.startsWith("/") ? head.slice(1) : undefined
@@ -241,7 +256,10 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         if (request) request.command = command
         if (request && request.kind !== "command") setBusy()
         if (!ready()) return Promise.resolve(false)
-        return input.api.command(command, { signal: input.signal })
+        return input.api.command(command, { signal: input.signalForAdmission?.() ?? input.signal, beforeAdmission: () => {
+          if (!ready() || !current()) throw new DOMException("", "AbortError")
+          if (request) request.admissionAttempted = true
+        } })
       }
       if (input.dispatch) {
         const sent = await input.dispatch(send)
@@ -375,7 +393,10 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
               ]
             : [],
         ),
-      }, { signal: input.signal })
+      }, { signal: input.signalForAdmission?.() ?? input.signal, beforeAdmission: () => {
+        if (!ready() || !current()) throw new DOMException("", "AbortError")
+        if (request) request.admissionAttempted = true
+      } })
     }
     if (input.dispatch) {
       const sent = await input.dispatch(send)
@@ -391,4 +412,34 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     })
     throw err
   }
+}
+
+/** Each admission owns an independent fresh query, bound to the adapter's captured transport. */
+export async function assessModelExecution(input: {
+  api: object
+  directory: string
+  sessionID?: string
+  agent: string
+  model: { providerID: string; modelID: string }
+  variant?: string
+  signal?: AbortSignal
+  current: () => boolean
+}) {
+  const execute = modelExecutionForSession(input.api)
+  if (!execute || !input.current() || input.signal?.aborted) return false
+  const query = makeModelExecutionQuery({ execute: (value, options) => execute(value, {
+    signal: input.signal ? AbortSignal.any([input.signal, options.signal]) : options.signal,
+  }) })
+  try {
+    const response = await query.load(input, {
+      location: { directory: input.directory },
+      context: input.sessionID ? { type: "session", sessionID: input.sessionID, agentID: input.agent }
+        : { type: "draft", agentID: input.agent },
+      model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.variant },
+    })
+    const selected = response?.data.selection
+    return input.current() && !input.signal?.aborted && selected?.status === "ready" &&
+      selected.ref.providerID === input.model.providerID && selected.ref.id === input.model.modelID &&
+      selected.ref.variant === input.variant
+  } finally { query.dispose() }
 }

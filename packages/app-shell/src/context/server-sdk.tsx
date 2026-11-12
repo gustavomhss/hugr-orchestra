@@ -170,6 +170,8 @@ type ServerSDKBase = {
   /** Settles once the server health endpoint reports ready; a rejected link is retried by the next consumer. */
   ready: Promise<void>
   isReady: Accessor<boolean>
+  connectionEpoch?: Accessor<number>
+  transportCurrent?: Accessor<boolean>
   url: string
   api: CompatibleApi
   currentApi: ServerApi
@@ -249,6 +251,8 @@ function createServerSdkContextBase(
 ): ServerSDKBase {
   const abort = new AbortController()
   const http = { ...server.http }
+  const transportKey = JSON.stringify(http)
+  const transportCurrent = () => JSON.stringify(server.http) === transportKey
   const scopedFetch = (fetcher = platform.fetch ?? globalThis.fetch): typeof fetch =>
     createScopedFetch(fetcher, abort.signal)
 
@@ -268,6 +272,7 @@ function createServerSdkContextBase(
     fetch: scopedFetch(tapStreamActivity(eventFetch ?? globalThis.fetch, server.http.url)),
   })
   const [isReady, setReady] = createSignal(false)
+  const [connectionEpoch, setConnectionEpoch] = createSignal(0)
   const ready = createServerReadyPromise(http, scopedFetch(), { signal: abort.signal }, () => setReady(true))
   const emitter = createGlobalEmitter<{
     [key: string]: ServerEvent
@@ -351,6 +356,7 @@ function createServerSdkContextBase(
             const directory = event.location?.directory ?? "global"
             const payload = readEvent(event)
             if (!payload) continue
+            if (payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
             queue.push({ directory, payload })
             schedule()
 
@@ -435,6 +441,8 @@ function createServerSdkContextBase(
     scope,
     ready,
     isReady,
+    connectionEpoch,
+    transportCurrent,
     url: server.http.url,
     api,
     currentApi,
@@ -514,6 +522,8 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
     ready: serverSDK.ready,
     directory,
     orchestra: serverSDK.orchestra,
+    connectionEpoch: serverSDK.connectionEpoch,
+    transportCurrent: serverSDK.transportCurrent,
     api: createCompatibleApi({
       current: serverSDK.currentApi,
       directory,

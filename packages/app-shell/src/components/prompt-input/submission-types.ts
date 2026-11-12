@@ -12,6 +12,8 @@ export type AdmissionRequest = {
   key: string
   id: string
   admitted: boolean
+  admissionAttempted?: boolean
+  intentKey?: string
   kind?: "prompt" | "command"
   selection?: Pick<FollowupDraft, "agent" | "model" | "variant" | "delivery"> & { policyVersion: number }
   revision?: number
@@ -48,6 +50,8 @@ export type FollowupSendInput = {
   deliberate?: boolean
   request?: AdmissionRequest
   dispatch?: PromptDispatch
+  preflight?: () => boolean
+  signalForAdmission?: () => AbortSignal
   currentSource?: {
     serverScopeKey: ServerScope
     directory: string

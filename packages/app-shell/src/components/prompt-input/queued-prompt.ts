@@ -15,6 +15,7 @@ export type QueuedPromptRuntime = QueuedPromptIdentity & {
   sync: DirectorySync
   current: () => boolean
   before: (signal?: AbortSignal) => Promise<boolean>
+  readPolicyVersion?: () => number
 }
 export type QueuedPrompt = FollowupDraft & { id: string }
 
