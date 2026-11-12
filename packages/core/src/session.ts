@@ -1,7 +1,7 @@
 export * as SessionV2 from "./session"
 export * from "./session/schema"
 
-import { Cause, DateTime, Effect, Layer, Option, Schema, Context, Stream } from "effect"
+import { Cause, DateTime, Effect, Layer, Option, Schema, Context, Semaphore, Stream } from "effect"
 import { ListAnchor } from "@orchestra/schema/session"
 import { and, asc, desc, eq, gt, lt } from "drizzle-orm"
 import { ProjectV2 } from "./project"
@@ -191,7 +191,10 @@ export interface Interface {
     model: ModelV2.Ref
   }) => Effect.Effect<void, NotFoundError>
   readonly getPermission: (sessionID: SessionSchema.ID) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
-  readonly setPermission: (input: { sessionID: SessionSchema.ID; permission: Permission.SessionRuleset }) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
+  readonly setPermission: (input: {
+    sessionID: SessionSchema.ID
+    permission: Permission.SessionRuleset
+  }) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
   readonly prompt: (input: {
     id?: SessionMessage.ID
     sessionID: SessionSchema.ID
@@ -270,6 +273,9 @@ const layer = Layer.effect(
     const events = yield* EventV2.Service
     const projects = yield* ProjectV2.Service
     const execution = yield* SessionExecution.Service
+    // Topology admission is separate from execution ownership: a running parent may create a Task child.
+    const topology = Semaphore.makeUnsafe(1)
+    const closing = new Map<SessionSchema.ID, object>()
     const store = yield* SessionStore.Service
     const locations = yield* LocationServiceMap.Service
     const global = yield* Global.Service
@@ -317,8 +323,14 @@ const layer = Layer.effect(
           return Effect.fail(
             new PromptBlockedError({
               sessionID: session.id,
-              reason: err._tag === "ToolSafety.Denied" ? (err.reason ?? "relay-hook-location-acquisition") : "relay-hook-location-acquisition",
-              detail: err._tag === "ToolSafety.Denied" ? (err.message ?? "Prompt hooks could not be evaluated.") : "Prompt hooks could not be evaluated.",
+              reason:
+                err._tag === "ToolSafety.Denied"
+                  ? (err.reason ?? "relay-hook-location-acquisition")
+                  : "relay-hook-location-acquisition",
+              detail:
+                err._tag === "ToolSafety.Denied"
+                  ? (err.message ?? "Prompt hooks could not be evaluated.")
+                  : "Prompt hooks could not be evaluated.",
             }),
           )
         }),
@@ -331,16 +343,14 @@ const layer = Layer.effect(
 
     // Session operations hold the Session as a drain would, so none interleaves with a running turn.
     const exclusive = <A, E>(session: SessionSchema.Info, effect: Effect.Effect<A, E>) =>
-      execution
-        .exclusive(session.id, effect)
-        .pipe(
-          Effect.flatMap(
-            Option.match({
-              onNone: () => Effect.fail(new BusyError({ sessionID: session.id })),
-              onSome: Effect.succeed,
-            }),
-          ),
-        )
+      execution.exclusive(session.id, effect).pipe(
+        Effect.flatMap(
+          Option.match({
+            onNone: () => Effect.fail(new BusyError({ sessionID: session.id })),
+            onSome: Effect.succeed,
+          }),
+        ),
+      )
 
     // Revert owns the Session before reading its state. Cancelling its caller only detaches the waiter.
     const exclusiveRevert = <A, E>(
@@ -385,55 +395,79 @@ const layer = Layer.effect(
     const result = Service.of({
       create: Effect.fn("V2Session.create")(function* (input) {
         const sessionID = input.id ?? SessionSchema.ID.create()
-        const recorded = yield* store.get(sessionID)
+        const recorded = yield* topology.withPermit(
+          Effect.gen(function* () {
+            if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
+            const recorded = yield* store.get(sessionID)
+            if (recorded) return recorded
+            if (input.parentID) {
+              if (closing.has(input.parentID)) return yield* new NotFoundError({ sessionID: input.parentID })
+              yield* result.get(input.parentID)
+            }
+          }),
+        )
         if (recorded) return recorded
-        if (input.parentID) yield* result.get(input.parentID)
         const project = yield* projects.resolve(input.location.directory)
         yield* ProjectV2.record(db, events, project)
         const timestamp = yield* DateTime.now
-        const projected = yield* events
-          .publish(
-            SessionEvent.Created,
-            {
-              sessionID,
-              timestamp,
-              projectID: project.id,
-              location: input.location,
-              subdirectory: RelativePath.make(
-                path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
-              ),
-              title: `New session - ${DateTime.formatIso(timestamp)}`,
-              // Optional event keys must be absent, not undefined, to encode.
-              ...(input.parentID ? { parentID: input.parentID } : {}),
-              ...(input.agent ? { agent: input.agent } : {}),
-              ...(input.model
-                ? {
-                    model: {
-                      id: ModelV2.ID.make(input.model.id),
-                      providerID: input.model.providerID,
-                      ...(input.model.variant ? { variant: input.model.variant } : {}),
+        const projected = yield* topology.withPermit(
+          EventV2.deferNotifications(
+            Effect.uninterruptible(
+              Effect.gen(function* () {
+                if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
+                const recorded = yield* store.get(sessionID)
+                if (recorded) return { type: "existing", session: recorded } as const
+                if (input.parentID) {
+                  if (closing.has(input.parentID)) return yield* new NotFoundError({ sessionID: input.parentID })
+                  yield* result.get(input.parentID)
+                }
+                return yield* events
+                  .publish(
+                    SessionEvent.Created,
+                    {
+                      sessionID,
+                      timestamp,
+                      projectID: project.id,
+                      location: input.location,
+                      subdirectory: RelativePath.make(
+                        path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
+                      ),
+                      title: `New session - ${DateTime.formatIso(timestamp)}`,
+                      // Optional event keys must be absent, not undefined, to encode.
+                      ...(input.parentID ? { parentID: input.parentID } : {}),
+                      ...(input.agent ? { agent: input.agent } : {}),
+                      ...(input.model
+                        ? {
+                            model: {
+                              id: ModelV2.ID.make(input.model.id),
+                              providerID: input.model.providerID,
+                              ...(input.model.variant ? { variant: input.model.variant } : {}),
+                            },
+                          }
+                        : {}),
                     },
-                  }
-                : {}),
-            },
-            { location: input.location },
-          )
-          .pipe(
-            Effect.as({ type: "created" } as const),
-            Effect.catchDefect((defect) => {
-              if (!(defect instanceof SessionProjector.SessionAlreadyProjected)) {
-                return Effect.die(defect)
-              }
-              // Concurrent creation lost the projection race. The existing Session identity wins.
-              return store
-                .get(sessionID)
-                .pipe(
-                  Effect.flatMap((session) =>
-                    session ? Effect.succeed({ type: "existing", session } as const) : Effect.die(defect),
-                  ),
-                )
-            }),
-          )
+                    { location: input.location },
+                  )
+                  .pipe(
+                    Effect.as({ type: "created" } as const),
+                    Effect.catchDefect((defect) => {
+                      if (!(defect instanceof SessionProjector.SessionAlreadyProjected)) {
+                        return Effect.die(defect)
+                      }
+                      // Concurrent creation lost the projection race. The existing Session identity wins.
+                      return store
+                        .get(sessionID)
+                        .pipe(
+                          Effect.flatMap((session) =>
+                            session ? Effect.succeed({ type: "existing", session } as const) : Effect.die(defect),
+                          ),
+                        )
+                    }),
+                  )
+              }),
+            ),
+          ),
+        )
         if (projected.type === "existing") return projected.session
         // TODO: Restore recorded sessions onto replacement synchronized workspaces in a future API slice.
         const created = yield* result.get(sessionID).pipe(Effect.orDie)
@@ -462,11 +496,33 @@ const layer = Layer.effect(
           return yield* new NotFoundError({ sessionID: input.sessionID })
       }),
       remove: Effect.fn("V2Session.remove")(function* (sessionID) {
-        yield* result.get(sessionID)
-        const ids = [sessionID, ...(yield* SessionLifecycle.descendants(db, sessionID))]
-        // A wake admitted during the interrupt must not start a drain for a Session that is about to be gone.
-        if (!(yield* stopped(ids, SessionLifecycle.remove(db, events, sessionID), { discardPending: true })))
-          return yield* new NotFoundError({ sessionID })
+        const token = {}
+        // Cancellation cannot release admission while the independently owned destructive operation is still active.
+        yield* Effect.uninterruptible(
+          Effect.acquireUseRelease(
+            topology.withPermit(
+              Effect.gen(function* () {
+                yield* result.get(sessionID)
+                const ids = [sessionID, ...(yield* SessionLifecycle.descendants(db, sessionID))]
+                if (ids.some((id) => closing.has(id))) return yield* new NotFoundError({ sessionID })
+                ids.forEach((id) => closing.set(id, token))
+                return ids
+              }),
+            ),
+            (ids) =>
+              stopped(ids, SessionLifecycle.remove(db, events, sessionID), { discardPending: true }).pipe(
+                Effect.flatMap((removed) => (removed ? Effect.void : new NotFoundError({ sessionID }))),
+              ),
+            (ids) =>
+              topology.withPermit(
+                Effect.sync(() => {
+                  ids.forEach((id) => {
+                    if (closing.get(id) === token) closing.delete(id)
+                  })
+                }),
+              ),
+          ),
+        )
       }),
       list: (input) => SessionArchive.list(db, input),
       messages: Effect.fn("V2Session.messages")(function* (input) {
@@ -533,17 +589,25 @@ const layer = Layer.effect(
             const prompt = resolvePrompt(input.prompt)
             const delivery = input.delivery ?? "steer"
             const expected = { sessionID: input.sessionID, messageID, prompt, delivery }
-            const admitted = yield* SessionInput.admit(db, events, {
-              id: messageID,
-              sessionID: input.sessionID,
-              prompt,
-              ...(notes.length === 0 ? {} : { promptContext: { reminders: [...notes] } }),
-              delivery,
-            }).pipe(
-              Effect.catchDefect((defect) =>
-                defect instanceof SessionInput.LifecycleConflict
-                  ? new PromptConflictError({ sessionID: input.sessionID, messageID })
-                  : Effect.die(defect),
+            const admitted = yield* topology.withPermit(
+              EventV2.deferNotifications(
+                Effect.gen(function* () {
+                  if (closing.has(input.sessionID)) return yield* new NotFoundError({ sessionID: input.sessionID })
+                  yield* result.get(input.sessionID)
+                  return yield* SessionInput.admit(db, events, {
+                    id: messageID,
+                    sessionID: input.sessionID,
+                    prompt,
+                    ...(notes.length === 0 ? {} : { promptContext: { reminders: [...notes] } }),
+                    delivery,
+                  }).pipe(
+                    Effect.catchDefect((defect) =>
+                      defect instanceof SessionInput.LifecycleConflict
+                        ? new PromptConflictError({ sessionID: input.sessionID, messageID })
+                        : Effect.die(defect),
+                    ),
+                  )
+                }),
               ),
             )
             if (!SessionInput.equivalent(admitted, expected))
@@ -716,8 +780,15 @@ const layer = Layer.effect(
       }),
       active: execution.active,
       resume: Effect.fn("V2Session.resume")(function* (sessionID) {
-        yield* result.get(sessionID)
-        yield* execution.resume(sessionID)
+        yield* topology.withPermit(
+          Effect.gen(function* () {
+            if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
+            yield* result.get(sessionID)
+          }),
+        )
+        yield* execution
+          .resume(sessionID)
+          .pipe(Effect.catchTag("SessionExecution.MissingSessionError", () => new NotFoundError({ sessionID })))
       }),
       interrupt: Effect.fn("V2Session.interrupt")((sessionID) =>
         Effect.uninterruptible(execution.interrupt(sessionID)),

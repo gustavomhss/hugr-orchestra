@@ -92,7 +92,7 @@ for (const boundary of ["Created", "PromptAdmitted"] as const) {
               ? (yield* sessions.create({ location: f.location, parentID: other.id })).parentID === other.id
               : (yield* sessions.prompt({ sessionID: other.id, prompt: { text: "nested listener admission" }, resume: false })).sessionID === other.id
             yield* Queue.offer(observed, { durable: rows.length === 1, nested })
-          }).pipe(Effect.raceFirst(Deferred.await(stop)), Effect.interruptible)
+          }).pipe(Effect.orDie, Effect.raceFirst(Deferred.await(stop)), Effect.interruptible)
         })
         yield* Effect.gen(function* () {
           const publishing = yield* (boundary === "Created"

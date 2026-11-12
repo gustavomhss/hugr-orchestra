@@ -124,6 +124,9 @@ export class SubscriberOverflowError extends Schema.TaggedErrorClass<SubscriberO
   { capacity: Schema.Int },
 ) {}
 
+/** Commit durable events and register ordered delivery without awaiting listeners in this scope. */
+export const deferNotifications = EventOrder.deferNotifications
+
 export const define = Event.define
 export const versionedType = Event.versionedType
 

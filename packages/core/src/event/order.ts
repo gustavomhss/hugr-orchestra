@@ -23,6 +23,14 @@ const Delivering = Context.Reference<ReadonlySet<string>>("@orchestra/Event/Deli
   defaultValue: () => new Set(),
 })
 
+const DeferNotifications = Context.Reference<boolean>("@orchestra/Event/DeferNotifications", {
+  defaultValue: () => false,
+})
+
+/** Commit durable events and register their ordered delivery without waiting for arbitrary listeners. */
+export const deferNotifications = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  Effect.provideService(effect, DeferNotifications, true)
+
 /** Per-aggregate notify order for one event service. Different aggregates never wait on each other. */
 export function make(scope: Scope.Scope) {
   const tails = new Map<string, Entry>()
@@ -57,7 +65,7 @@ export function make(scope: Scope.Scope) {
     })
 
   // Waits for the actual predecessor and releases on every exit. Only the wait and notification
-  // are interruptible. Reentrant delivery is handed to the event service's scope.
+  // are interruptible. Explicitly deferred and reentrant delivery belongs to the event service's scope.
   const deliver = (ticket: Ticket | undefined, notifying: Effect.Effect<void>, restore: Restore) =>
     Effect.gen(function* () {
       const run = restore(
@@ -70,9 +78,10 @@ export function make(scope: Scope.Scope) {
         }),
       ).pipe(Effect.ensuring(release(ticket)))
 
-      if (ticket && (yield* Delivering).has(ticket.aggregateID)) {
+      if (ticket && ((yield* Delivering).has(ticket.aggregateID) || (yield* DeferNotifications))) {
         yield* run.pipe(
           Effect.provideService(Delivering, new Set<string>()),
+          Effect.provideService(DeferNotifications, false),
           Effect.forkIn(scope, { startImmediately: true }),
         )
         return
@@ -81,7 +90,7 @@ export function make(scope: Scope.Scope) {
     })
 
   // Keep commit and worker registration masked; only the wait and notification restore interruption.
-  // Reentrant calls acknowledge commit and scheduling; ordinary calls await their own notification.
+  // Deferred and reentrant calls acknowledge commit and scheduling; ordinary calls await their own notification.
   const commit = <C extends { readonly ticket: Ticket | undefined }, A>(
     committing: Effect.Effect<C | undefined>,
     prepare: (committed: C) => {
