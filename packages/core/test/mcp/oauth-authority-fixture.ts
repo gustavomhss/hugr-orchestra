@@ -293,11 +293,11 @@ export const manager = Effect.fn(function* (input: {
                       },
                     }),
                   }),
-                ]).pipe(Layer.fresh),
+                ]),
             }),
           ),
         ],
-      ]),
+      ]).pipe(Layer.fresh),
     ),
     Mcp.Service,
   )
