@@ -6,21 +6,11 @@ import {
   copyOut,
   isBlockedMember,
   ToolReference,
-  ToolRuntime,
   ToolRuntimeError,
-  type HostTools,
   type SafeObject,
-  type Services,
 } from "../tool-runtime.js"
 import { ToolError } from "../tool-error.js"
-import type {
-  DataValue,
-  Diagnostic,
-  DiagnosticKind,
-  ExecuteOptions,
-  ResolvedExecutionLimits,
-  Result,
-} from "../codemode.js"
+import type { Diagnostic, DiagnosticKind } from "../codemode.js"
 import {
   type AstNode,
   asNode,
@@ -112,7 +102,7 @@ import {
   SandboxURLSearchParams,
 } from "../values.js"
 
-const parseProgram = (code: string): ProgramNode => {
+export const parseProgram = (code: string): ProgramNode => {
   const transpiled = transpileModule(`async function __codemode__() {\n${code}\n}`, {
     reportDiagnostics: true,
     compilerOptions: {
@@ -151,7 +141,7 @@ const parseProgram = (code: string): ProgramNode => {
 const publicErrorMessage = (message: string): string =>
   message.replace(/\/(?:Users|home|private|tmp|var\/folders)\/[^\s"'`]+/g, "<redacted-path>")
 
-const normalizeError = (error: unknown): Diagnostic => {
+export const normalizeError = (error: unknown): Diagnostic => {
   if (error instanceof InterpreterRuntimeError) {
     return {
       kind: error.kind,
@@ -599,7 +589,7 @@ const collectPatternNames = (pattern: AstNode, out: Array<string> = []): Array<s
   return out
 }
 
-class Interpreter<R> {
+export class Interpreter<R> {
   private scopes: Array<Map<string, Binding>>
   private readonly invokeTool: (path: ReadonlyArray<string>, args: Array<unknown>) => Effect.Effect<unknown, unknown, R>
   // Enumerable namespace/tool names at a node of the host tool tree, threaded from
@@ -618,6 +608,7 @@ class Interpreter<R> {
     invokeTool: (path: ReadonlyArray<string>, args: Array<unknown>) => Effect.Effect<unknown, unknown, R>,
     toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>,
     logs: Array<string> = [],
+    private readonly onLog?: (line: string) => void,
   ) {
     const globalScope = new Map<string, Binding>()
     this.scopes = [globalScope]
@@ -1957,7 +1948,9 @@ class Interpreter<R> {
   private invokeConsole(name: string, args: Array<unknown>, node: AstNode): undefined {
     if (!consoleMethods.has(name))
       throw new InterpreterRuntimeError(`console.${name} is not available in CodeMode.`, node)
-    this.logs.push(publicErrorMessage(this.formatConsoleMessage(name, args, node)))
+    const line = publicErrorMessage(this.formatConsoleMessage(name, args, node))
+    this.logs.push(line)
+    this.onLog?.(line)
     return undefined
   }
 
@@ -3324,143 +3317,4 @@ class Interpreter<R> {
   private popScope(): void {
     this.scopes.pop()
   }
-}
-
-/**
- * Executes one Effect-native CodeMode program without constructing a reusable runtime.
- *
- * @example
- * ```ts
- * const result = yield* CodeMode.execute({
- *   tools: { lookup },
- *   code: `return await tools.lookup({ id: "order_42" })`,
- * })
- * ```
- */
-export const executeWithLimits = <const Tools extends Record<string, unknown>>(
-  options: ExecuteOptions<Tools>,
-  limits: ResolvedExecutionLimits,
-  searchIndex: ToolRuntime.DiscoveryPlan["searchIndex"],
-): Effect.Effect<Result, never, Services<Tools>> =>
-  Effect.suspend((): Effect.Effect<Result, never, Services<Tools>> => {
-    const hooks = {
-      ...(options.onToolCallStart === undefined ? {} : { onToolCallStart: options.onToolCallStart }),
-      ...(options.onToolCallEnd === undefined ? {} : { onToolCallEnd: options.onToolCallEnd }),
-    }
-    const tools = ToolRuntime.make(
-      (options.tools ?? {}) as HostTools<Services<Tools>>,
-      limits.maxToolCalls,
-      searchIndex,
-      hooks,
-    )
-    const logs: Array<string> = []
-    const logged = () => (logs.length > 0 ? { logs: [...logs] } : {})
-
-    if (options.code.trim().length === 0) {
-      return Effect.succeed({
-        ok: false,
-        error: { kind: "ParseError", message: "Code cannot be empty." },
-        toolCalls: [...tools.calls],
-      })
-    }
-
-    const operation = Effect.gen(function* () {
-      const program = parseProgram(options.code)
-      const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs)
-      const value = yield* interpreter.run(program)
-      const result = copyOut(copyIn(value, "Execution result"), true) as DataValue
-      return {
-        ok: true,
-        value: result,
-        ...logged(),
-        toolCalls: [...tools.calls],
-      } satisfies Result
-    }).pipe((program) => {
-      const timeoutMs = limits.timeoutMs
-      if (timeoutMs === undefined) return program
-      return program.pipe(
-        Effect.timeoutOrElse({
-          duration: timeoutMs,
-          orElse: () =>
-            Effect.succeed({
-              ok: false,
-              error: { kind: "TimeoutExceeded", message: `Execution timed out after ${timeoutMs}ms.` },
-              ...logged(),
-              toolCalls: [...tools.calls],
-            } satisfies Result),
-        }),
-      )
-    })
-
-    return operation.pipe(
-      Effect.catchCause((cause) =>
-        Cause.hasInterruptsOnly(cause)
-          ? Effect.interrupt
-          : Effect.succeed({
-              ok: false,
-              error: normalizeError(Cause.squash(cause)),
-              ...logged(),
-              toolCalls: [...tools.calls],
-            } satisfies Result),
-      ),
-      Effect.map((result) => (limits.maxOutputBytes === undefined ? result : boundOutput(result, limits.maxOutputBytes))),
-    )
-  })
-
-const utf8ByteLength = (value: string): number => new TextEncoder().encode(value).byteLength
-
-// Truncates to a UTF-8 byte budget without splitting a code point (a split multi-byte
-// sequence decodes to a replacement character, which is dropped).
-const utf8Truncate = (value: string, maxBytes: number): string => {
-  const bytes = new TextEncoder().encode(value)
-  if (bytes.byteLength <= maxBytes) return value
-  const text = new TextDecoder("utf-8").decode(bytes.slice(0, Math.max(0, maxBytes)))
-  return text.endsWith("\uFFFD") ? text.slice(0, -1) : text
-}
-
-/**
- * Bounds the model-facing output (serialized result value plus logs) to `maxOutputBytes`.
- * Oversized values are replaced by their truncated serialized text with an explanatory marker,
- * and logs are kept from the start until the remaining budget is exhausted. Truncation never
- * fails the execution; `truncated: true` marks affected results. Only runs when the host set
- * `maxOutputBytes` - with the limit absent, output passes through unbounded.
- */
-const boundOutput = (result: Result, maxOutputBytes: number): Result => {
-  let truncated = false
-
-  let value: DataValue = null
-  let valueBytes = 0
-  if (result.ok) {
-    const serialized = JSON.stringify(result.value) ?? "null"
-    const bytes = utf8ByteLength(serialized)
-    if (bytes > maxOutputBytes) {
-      truncated = true
-      value = `${utf8Truncate(serialized, maxOutputBytes)} [result truncated: ${bytes} bytes exceeds the ${maxOutputBytes}-byte output limit; return a smaller value]`
-      valueBytes = maxOutputBytes
-    } else {
-      value = result.value
-      valueBytes = bytes
-    }
-  }
-
-  const logs = result.logs ?? []
-  const kept: Array<string> = []
-  const logBudget = Math.max(0, maxOutputBytes - valueBytes)
-  let logBytes = 0
-  for (const line of logs) {
-    const lineBytes = utf8ByteLength(line) + 1
-    if (logBytes + lineBytes > logBudget) break
-    logBytes += lineBytes
-    kept.push(line)
-  }
-  if (kept.length < logs.length) {
-    truncated = true
-    kept.push(`[logs truncated: showing ${kept.length} of ${logs.length} lines]`)
-  }
-
-  if (!truncated) return result
-  const logsPart = kept.length > 0 ? { logs: kept } : {}
-  return result.ok
-    ? { ok: true, value, ...logsPart, truncated: true, toolCalls: result.toolCalls }
-    : { ok: false, error: result.error, ...logsPart, truncated: true, toolCalls: result.toolCalls }
 }
