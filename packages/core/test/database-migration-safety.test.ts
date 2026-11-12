@@ -224,3 +224,14 @@ test("M7 the historical alias is refused when full apply has no canonical migrat
   expect(await notes(file)).toEqual(["precious"])
   expect(await snapshots(file)).toEqual([])
 })
+
+test("M7 unnamed historical alias timestamp imports its exact approved identity without incremental targets", async () => {
+  await using tmp = await tmpdir()
+  const file = join(tmp.path, "source.db")
+  await seed(file)
+  await namedLegacy(file, [])
+  await run(file, (db) => db.run(sql`INSERT INTO __drizzle_migrations(name,created_at) VALUES (NULL,${Date.UTC(2026, 4, 30, 23, 27, 9)})`))
+  await run(file, (db) => DatabaseMigration.applyOnly(db, []))
+  expect(await ids(file)).toEqual(["20260530232709_lovely_romulus"])
+  expect(await notes(file)).toEqual(["precious"])
+})

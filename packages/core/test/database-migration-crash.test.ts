@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import { readFile, readdir, writeFile, symlink, mkdir, unlink } from "node:fs/promises"
+import { createHash } from "node:crypto"
+import { readFile, readdir, writeFile, symlink, mkdir, unlink, lstat } from "node:fs/promises"
 import { join, resolve } from "node:path"
 import { Effect, Exit } from "effect"
 import { sql } from "drizzle-orm"
@@ -340,3 +341,44 @@ test("M5 four repeated captured-slot process crashes leave only the active UUID 
   expect(final.state.recentAttempts.length).toBeLessThanOrEqual(3)
   expect(await notes(file)).toEqual(["precious", "applied-once"])
 }, 60_000)
+
+
+test("M5 corrupted captured garbage cannot remove a foreign EEXIST destination or allocate a retry", async () => {
+  await using tmp = await tmpdir()
+  const file = join(tmp.path, "source.db")
+  await seed(file, ["000_base"])
+  const inputs = [migration("000_base"), migration("001_A")]
+  const first = await run(file, (db) => DatabaseMigration.apply(db, inputs, { backup: {
+    observe: (event) => event.kind !== "captured" ? Effect.void : Effect.promise(async () => {
+      const state = await manifest(file)
+      // Same bytes, different inode: this file is foreign even though content hashes happen to match.
+      const scratch = join(`${file}.migration-work`, state.active!.id, "snapshot.sqlite")
+      await writeFile(join(tmp.path, state.active!.finalName), await readFile(scratch), { flag: "wx" })
+    }),
+  } }).pipe(Effect.exit))
+  expect(Exit.isFailure(first)).toBe(true)
+  const state = await manifest(file)
+  expect(state.active?.phase).toBe("captured")
+  const destination = join(tmp.path, state.active!.finalName)
+  const bytes = await readFile(destination)
+  const identity = await lstat(destination, { bigint: true })
+  expect(createHash("sha256").update(bytes).digest("hex")).toBe(state.active!.backup!.sha256)
+  const corrupted = JSON.stringify({ ...state, garbage: [state.active!.backup] })
+  await writeFile(`${file}.migration-backups.json`, corrupted)
+  const files = (await snapshots(file)).sort()
+  const entries = (await readdir(`${file}.migration-work`, { recursive: true })).sort()
+  const observed: string[] = []
+  const retried = await run(file, (db) => DatabaseMigration.apply(db, inputs, { backup: {
+    observe: (event) => Effect.sync(() => { observed.push(event.kind) }),
+  } }).pipe(Effect.exit))
+  expect(Exit.isFailure(retried)).toBe(true)
+  expect(await ids(file)).toEqual(["000_base"])
+  expect(await notes(file)).toEqual(["precious"])
+  expect(await readFile(destination)).toEqual(bytes)
+  const after = await lstat(destination, { bigint: true })
+  expect([after.dev, after.ino]).toEqual([identity.dev, identity.ino])
+  expect(await readFile(`${file}.migration-backups.json`, "utf8")).toBe(corrupted)
+  expect(observed).toEqual([])
+  expect((await snapshots(file)).sort()).toEqual(files)
+  expect((await readdir(`${file}.migration-work`, { recursive: true })).sort()).toEqual(entries)
+})
