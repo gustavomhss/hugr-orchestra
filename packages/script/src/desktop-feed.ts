@@ -57,7 +57,7 @@ export function withDesktopFeedFloor(body: string, floor: FeedFloor): string {
       (current.version === floor.version && current.receiptSha256 !== floor.receiptSha256))
   )
     throw new Error("RELEASE_FEED_FLOOR_CONFLICT")
-  const encoded = `${marker}${JSON.stringify(floor)} -->`
+  const encoded = `${marker}${JSON.stringify({ version: floor.version, receiptSha256: floor.receiptSha256 })} -->`
   if (!current) return `${body}${body.endsWith("\n") || !body ? "" : "\n"}${encoded}`
   const start = body.indexOf(marker)
   const end = body.indexOf(" -->", start) + 4
