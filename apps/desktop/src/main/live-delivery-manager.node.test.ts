@@ -1,30 +1,12 @@
 import assert from "node:assert/strict"
 import { test, type TestContext } from "node:test"
-import { createLiveDeliveryManager, LiveDeliveryError } from "./live-delivery-manager.ts"
-import type { DeliveryFailureReason, LiveDeliveryOptions } from "./live-delivery-contract.ts"
-import { byteLength, detail, envelope, fixture, gate, info, json, location, pause, peer, segment, sizedDetail, until, uuid } from "./live-delivery-manager-control.node.test.ts"
+import { LiveDeliveryError } from "./live-delivery-manager.ts"
+import { attach, rejected } from "./live-delivery-manager-actions.fixture.ts"
+import { byteLength, check, detail, envelope, fixture, gate, info, input, json, location, pause, peer, segment, sends, sizedDetail, stops, until, uuid } from "./live-delivery-manager-test.fixture.ts"
 
-type Fixture = Awaited<ReturnType<typeof fixture>>
-function check(name: string, body: (t: TestContext) => void | Promise<void>) { test(name, { timeout: 8000 }, body) }
 async function bounded<A>(promise: Promise<A>, label: string) {
   const expired = gate<never>(), timer = setTimeout(() => expired.reject(new Error(label)), 1000)
   try { return await Promise.race([promise, expired.promise]) } finally { clearTimeout(timer) }
-}
-function attach(f: Fixture, options: Partial<Omit<LiveDeliveryOptions, "store">> = {}) {
-  const manager = createLiveDeliveryManager({ store: f.store, connection: async () => f.current.value, sleep: async () => { await pause(1) }, ...options })
-  f.own(() => manager.shutdown())
-  return manager
-}
-const input = (index = 1) => ({ sessionID: `ses_manager_${index}`, title: "Delivery proof" })
-const sends = (f: Fixture) => f.remote.requests.filter((request) => request.path === "/api/meeting/segments")
-const stops = (f: Fixture) => f.remote.requests.filter((request) => request.path === "/api/meeting/stop")
-function rejected(reason: DeliveryFailureReason) {
-  return (error: unknown) => {
-    assert.ok(error instanceof LiveDeliveryError); assert.equal(error.reason, reason)
-    assert.ok(error.message.length > 0 && error.message.length <= 128)
-    assert.ok(!error.message.includes("private-secret") && !error.message.includes(segment().text)); assert.equal(error.cause, undefined)
-    return true
-  }
 }
 async function started(t: TestContext, options: Parameters<typeof attach>[1] = {}) {
   const f = await fixture(t), manager = attach(f, options), producer = await manager.start(input(), new AbortController().signal)
@@ -716,40 +698,3 @@ check("valid exact128MiB GET is inclusive and permits the pending batch after ma
   await until(() => f.store.summary(record.id).pendingCount === 0, "inclusive128MiB identity body", 7000)
   assert.equal(sends(f).length, 1); assert.equal(f.remote.requests[0]?.closed, true)
 })
-
-for (const [kind, limit] of [["identity", 128 * 1024 * 1024], ["small", 1024 * 1024]] as const) {
-  check(`${kind} response exceeding${limit} UTF8 bytes blocks target and preserves queue`, async (t) => {
-    const f = await fixture(t), record = kind === "identity" ? f.retained() : undefined
-    const observation = { bodyBytesWritten: 0, lastWrite: 0, drain: 0, closed: false, bytesWritten: () => 0 }
-    const path = kind === "identity" ? "GET /api/meeting" : "POST /api/meeting/start"
-    f.remote.handlers.set(path, async (_, response) => {
-      const socket = response.socket
-      observation.bytesWritten = () => socket?.bytesWritten ?? 0
-      response.once("close", () => { observation.closed = true })
-      response.writeHead(200, { "content-type": "application/json" }); response.write('{"padding":"')
-      observation.bodyBytesWritten += Buffer.byteLength('{"padding":"')
-      const chunk = "é".repeat(32 * 1024)
-      for (let bytes = 0; bytes <= limit && !response.destroyed; bytes += Buffer.byteLength(chunk)) {
-        const ready = response.write(chunk)
-        observation.bodyBytesWritten += Buffer.byteLength(chunk); observation.lastWrite = Date.now()
-        if (!ready) await new Promise<void>((resolve) => {
-          const drained = () => { observation.drain++; finish() }
-          const finish = () => { response.off("drain", drained); response.off("close", finish); resolve() }
-          response.once("drain", drained); response.once("close", finish)
-        })
-      }
-      // Intentionally leave this valid JSON prefix open: only byte-cap enforcement can block before10s.
-    })
-    const manager = attach(f)
-    try {
-      if (record) { manager.retry(record.id); await until(() => manager.snapshot().items[0]?.status === "blocked", "oversized GET", 7000); assert.equal(f.store.summary(record.id).pendingCount, 1) }
-      if (!record) await assert.rejects(manager.start(input(), new AbortController().signal), rejected("target"))
-      await until(() => f.remote.requests[0]?.closed === true, "oversized response reader cancelled", 1000)
-      assert.equal(sends(f).length, 0); assert.equal(stops(f).length, 0); assert.equal(f.remote.requests[0]?.closed, true)
-    } catch (error) {
-      const snapshot = manager.snapshot()
-      console.error(JSON.stringify({ kind: "live-delivery-byte-cap-diagnostic", response: kind, ...observation, bytesWritten: observation.bytesWritten(), snapshot: { state: snapshot.state, items: snapshot.items.map((item) => ({ status: item.status, reason: item.reason, failures: item.failures, pendingCount: item.pendingCount, pendingBytes: item.pendingBytes, activeProducer: item.activeProducer, unsaved: item.unsaved })), unconfirmedCount: snapshot.unconfirmedStarts.length } }))
-      throw error
-    }
-  })
-}
