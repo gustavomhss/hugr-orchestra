@@ -318,7 +318,7 @@ export const {
       ;(hydratingSessions.get(sessionID) ?? pendingHistoryChanges.get(sessionID))?.add(
         ("assistantMessageID" in event.data ? event.data.assistantMessageID : undefined) ?? messages[0].id,
       )
-      if (!fullSyncedSessions.has(sessionID) && hydratingSessions.has(sessionID)) return
+      if (store.message[sessionID] === undefined && hydratingSessions.has(sessionID)) return
       projectHistory(sessionID)
       if (event.type === "session.next.step.ended") void refreshDiff(sessionID)
     }
