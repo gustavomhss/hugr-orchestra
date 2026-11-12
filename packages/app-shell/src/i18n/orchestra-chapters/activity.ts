@@ -10,7 +10,7 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.walkComplete": "walk complete",
   "orchestra.monitor.walkPartial": "walk partial",
   "orchestra.monitor.walkDetails":
-    "Latest attempt: {{bytes}} B observed across {{entries}} entries · Age {{age}} · Gaps {{issues}}. Partial observations do not replace the last complete logical reading.",
+    "Latest attempt · Observed bytes {{bytes}} B · Entries {{entries}} · Age {{age}} · Gaps {{issues}}. Partial observations do not replace the last complete logical reading.",
   "orchestra.monitor.gapsLimit":
     "Unread scopes (first 32 shown). A limit at the root includes all remaining descendants.",
   "orchestra.monitor.diskIssue.unavailable": "unavailable",
@@ -100,7 +100,7 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.walkComplete": "caminhada completa",
   "orchestra.monitor.walkPartial": "caminhada parcial",
   "orchestra.monitor.walkDetails":
-    "Última tentativa: {{bytes}} B observados em {{entries}} entradas · Idade {{age}} · Lacunas {{issues}}. Observações parciais não substituem a última leitura lógica completa.",
+    "Última tentativa · Bytes observados {{bytes}} B · Entradas {{entries}} · Idade {{age}} · Lacunas {{issues}}. Observações parciais não substituem a última leitura lógica completa.",
   "orchestra.monitor.gapsLimit":
     "Escopos não lidos (primeiros 32). Um limite na raiz inclui todos os descendentes restantes.",
   "orchestra.monitor.diskIssue.unavailable": "indisponível",
