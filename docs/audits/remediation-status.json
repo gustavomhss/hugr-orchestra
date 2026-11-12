@@ -637,10 +637,21 @@
       "id": "H5",
       "severity": "P1",
       "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "status": "regression_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43133837700",
+          "result": "Incoming join and partial graph setup reproduced. Two conditional-shape cases had a deepcopy runnable-identity fixture flaw; corrected baseline run pending."
+        },
+        {
+          "kind": "green_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134679240",
+          "result": "17 pass, 2 fixture comparison failures; not green. Corrected shape preserves callable identity and snapshots mutable branch fields; final focused gate pending."
+        }
+      ]
     },
     {
       "id": "H6",
@@ -1777,5 +1788,23 @@
     "mechanical_plan_check": "9 unique acceptance IDs, exact coverage; 6 pairwise conflict-free profiles",
     "generated_writer": "ownership only after generator fix integrated",
     "typechecks": "globally serial, GOMAXPROCS=2; hosted tests only"
+  },
+  "benchmark_after": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43132687463",
+    "tests_passed": 6,
+    "integration_commit": "e46ab2cbc9",
+    "comparison": "before_current_dev; descriptive measurements in remediation-benchmark.json, no causal speed claim"
+  },
+  "dev_sync": {
+    "commit": "015d034153",
+    "dev": "7c8b9d4f66899cdff5f335aed8dd99892b21d0aa",
+    "result": "merged without conflicts",
+    "boundary_findings": "Two inherited R5 imports were already corrected by this upstream; owned-serve test import corrected through existing package export."
+  },
+  "migration_viability": {
+    "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
+    "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
+    "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
+    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   }
 }

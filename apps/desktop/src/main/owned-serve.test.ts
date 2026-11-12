@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { sidecarMode, startOwnedServe } from "./owned-serve"
 
 test("the desktop runs its owned serve child unless the shared daemon is asked for", () => {
