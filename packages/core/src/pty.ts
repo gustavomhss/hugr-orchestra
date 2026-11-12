@@ -19,6 +19,8 @@ import { PtyID } from "./pty/schema"
 import { Shell } from "./shell"
 import { lazy } from "./util/lazy"
 
+export { PtyProtocol }
+
 const BUFFER_LIMIT = 1024 * 1024 * 2
 // Exited sessions stay observable (status, exit code, retained output) until removed explicitly.
 // Cap retention so abandoned terminals do not accumulate unbounded buffers.
