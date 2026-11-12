@@ -1029,11 +1029,47 @@
     {
       "id": "H10",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "0769224dea",
+        "fc84e0ca8d",
+        "e690863175",
+        "5b6b9bb290"
+      ],
+      "evidence": [
+        {
+          "kind": "controls_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43182872196",
+          "result": "17pass per OS"
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43186656369",
+          "result": "Linux43fail/17pass; Windows42fail/18pass; no skips/setup errors; five original regressions each OS"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43189160340",
+          "snapshot_sha": "0e32a0be18ea79561a25c0742c9ad053eb813930",
+          "result": "60pass each OS, zero skips/failures"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root also read complete source/guide diff"
+        },
+        {
+          "kind": "integrated_hashes",
+          "result": "five files byte-identical to source122a68eb940ddcfe74e0e0a8782a221a83edf1e8"
+        },
+        {
+          "kind": "integrated_guards",
+          "exit": 0,
+          "receipt": "/tmp/orchestra-h10-integrated-guards.exit"
+        }
+      ]
     },
     {
       "id": "H11",
@@ -2572,10 +2608,10 @@
     "guards": {
       "exit": 0,
       "rules": 78,
-      "changed_paths": 251,
+      "changed_paths": 255,
       "gate": 0,
       "warn": 1,
-      "receipt": "/tmp/orchestra-h6-integrated-guards.exit",
+      "receipt": "/tmp/orchestra-h10-integrated-guards.exit",
       "warning_resolution": "dep-new-added: existing repo catalog drizzle-orm is required as Engine devDependency by relocated SQL integration tests; same version, one workspace lock entry; PR explains need, no ignore or approval label."
     },
     "boundaries": {
@@ -2619,8 +2655,9 @@
     "M9_M10": "Integrated e8ab184d15, all four scoped gates green, source hashes16 equal, closed.",
     "L1": "Residual topology design cold GO after lifecycle resolutions; root tests-first next, no production GO.",
     "M11_M13": "M11 trusted permission/WS seams explicitly planned; implementation sequenced after M13 delivery/close-intent contract. No production GO.",
-    "E2": "Three original behavioral REDs valid; expanded boundary suite cold FIX-FIRST two additional interleavings, tests-only corrections pending.",
-    "T2": "Legitimate800KiB admitted-event acceptance cold GO; no size/transport policy selected."
+    "E2": "Boundary cold APPROVE2e5 and browser witness2ba; RED classified with unreached assertions explicit. Source GO granted final frozen contract; before benchmark43179487933 retained.",
+    "T2": "Legitimate800KiB admitted-event acceptance cold GO; no size/transport policy selected.",
+    "H10": "Integrated5b6b9bb290; 60pass perOS, exact hashes5, independent source approval, guards0. Closed."
   },
   "wave4": {
     "agents": {
