@@ -420,8 +420,21 @@ jobs:
               mkdir -p "$RUNNER_TEMP/junit"
               report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
             fi
+            # Alone files share this step's clock. Starting them after the shard left dependency-shadow
+            # still running when the step died, 5m43s into that process (run 43319710781). Start them
+            # with the shard so a slow file gets the same 8 minutes.
+            alone_pids=()
+            if [ -n "${alone[0]:-}" ]; then
+              for alone_file in "${alone[@]}"; do
+                echo "shard $PART runs $alone_file in its own process" >&2
+                # declared: a file that does not spawn (tool-write) must not fail the suite-wide omni control
+                # (run 43242689800). A file that declares a spawn still has to make one.
+                (cd packages/core && GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 --only-failures --preload ./test/file-start.ts "$alone_file") &
+                alone_pids+=($!)
+              done
+            fi
             # Through turbo, so each shard keeps its own cache entry: the file list is part of the task hash.
-            # Not exec: the watcher file, when this shard has it, runs in a second process below.
+            # Not exec: the watcher file, when this shard has it, runs in its own process above.
             if [ -n "${files[0]:-}" ]; then
               # --only: core imports plugin and http-recorder from source. ^build would run plugin tsc, and that
               # compile does not finish inside this step on Windows (run 43110315940).
@@ -431,15 +444,9 @@ jobs:
               GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- --preload ./test/file-start.ts "${files[@]}" "${report[@]}"
             fi
             # One file per process. A second turbo exited 1 after a green watcher run (run 43150681461).
-            # bun test is the same preload, without that wrapper. A hang in one file must not take the other.
-            if [ -n "${alone[0]:-}" ]; then
-              for alone_file in "${alone[@]}"; do
-                echo "shard $PART runs $alone_file in its own process" >&2
-                # declared: a file that does not spawn (tool-write) must not fail the suite-wide omni control
-              # (run 43242689800). A file that declares a spawn still has to make one.
-              (cd packages/core && GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 --only-failures "$alone_file")
-              done
-            fi
+            for pid in "${alone_pids[@]:-}"; do
+              wait "$pid"
+            done
             exit 0
           fi
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines

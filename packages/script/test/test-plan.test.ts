@@ -41,7 +41,8 @@ describe("test shard planner", () => {
       "bun turbo test --filter=@orchestra/core --only --log-order=stream -- --preload ./test/file-start.ts \"${files[@]}\" \"${report[@]}\"",
     ])
     expect(code).toContain('cd packages/core && GITHUB_ACTIONS=false ')
-    expect(code).toContain('=declared bun test --timeout 30000 --only-failures "$alone_file"')
+    expect(code).toContain('=declared bun test --timeout 30000 --only-failures --preload ./test/file-start.ts "$alone_file") &')
+    expect(code).toContain('wait "$pid"')
     expect(code).not.toContain('bun test --timeout 30000 --only-failures "${alone[@]}"')
     const own = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ] || [ "$file" = "test/review-toolkit/dependency-shadow.test.ts" ]; then')[1]?.split("else")[0] ?? ""
     expect(own).toContain('alone+=("$file")')
