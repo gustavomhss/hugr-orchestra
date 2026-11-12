@@ -285,7 +285,7 @@ export function withApproval<A, E>(use: (fixture: CurrencyFixture) => Effect.Eff
       (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
     )
     const directory = path.join(base, "repository")
-    yield* Effect.promise(() => mkdir(directory))
+    yield* Effect.promise(() => Promise.all([mkdir(directory), mkdir(path.join(base, "state"))]))
     return yield* approval(directory).pipe(Effect.flatMap(use), Effect.provide(layer(directory, path.join(base, "state"))))
   })))
 }
