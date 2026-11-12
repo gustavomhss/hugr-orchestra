@@ -1,17 +1,11 @@
 # S2 archive publication — incremental preservation
 
-This directory records the owner-authorized publication of the recovered S2 archive. This is byte preservation, not a new semantic acceptance, runtime operation, or campaign completion.
+Owner-authorized preservation of the recovered S2 archive. This operation is not a new semantic acceptance, runtime operation, or Genesis completion.
 
-Source archive: `genesis-s2-resumed-review-package.zip`.
-SHA-256: `7cd39199afb286e16b191bf28030bda2964ec32a7b0476ee81de0597d12abab2`.
-Original archive: 1,109 files, 40,936,957 archive bytes.
+Source: `genesis-s2-resumed-review-package.zip`, 40,936,957 bytes, SHA-256 `7cd39199afb286e16b191bf28030bda2964ec32a7b0476ee81de0597d12abab2`.
 
-## Published content
+The archive contains 1,109 original files. Consult `state.json` for the current verified publication count. Original relative paths and bytes are retained. This checkpoint also restores matching source captures, historical producer bodies and original empty command/transport outputs using existing Git objects. An empty output is preservation of an empty output, not evidence that an operation succeeded.
 
-The 13 original accepted L1–L4 bodies, four accepted-layer manifests, four final L1 review files and two L2 review files are preserved at their original relative paths. Their exact Git blob identities were calculated from the archive. Historical decisions remain bound to their original versions and scopes; storing them is not issuing new decisions.
+**Publication remains partial.** Referenced request/source bundles, package metadata and nested archives may still be absent. Do not treat this tree as a complete native package, import it into Atlas, or infer DELIVERY_COMPLETE.
 
-The latest batch adds `judgments/l2-r1/j1.json` and `judgments/l2-r1/j2.json`, retaining their original bytes, scoped PASS decisions and open operational gates.
-
-**The archive publication is incomplete: 23 of 1,109 original files are published.** Other source captures, requests, decisions, runtime evidence, historical files and nested ZIP archives remain unconfirmed in this publication. Do not treat this subset as the complete native package, and do not infer that its referenced files are already present.
-
-The initial `work.md` remains historical until the original recovered work record is preserved. Further batches must update `state.json`, preserve existing bytes, and use a checked branch HEAD. No force push, dev/main merge, product-code change or Atlas activation is part of this operation.
+The initial `work.md` is historical until its recovered replacement is published. All later batches must preserve previous files, compare the current branch HEAD, and reconcile concurrent changes rather than force-push. No dev/main merge, product-code change, workflow modification, external sharing, product test or Atlas activation is part of this preservation operation.
