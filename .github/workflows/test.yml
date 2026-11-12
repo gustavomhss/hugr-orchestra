@@ -440,7 +440,13 @@ jobs:
           # Turbo stops scheduling at the first failed task by default, so one red package hid every package after it
           # (run 38157434225: core failed and the CLI suite never started). Each package runs once its dependencies
           # pass; any failure still fails the step.
-          GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" --continue=dependencies-successful "${filters[@]}"
+          # App tests import @orchestra/ui from source. ^build runs its tsc, which does not finish inside this
+          # step on Windows (run 43225486925). Other lanes still build their dependencies.
+          only=()
+          if printf '%s\n' "${filters[@]}" | grep -qx -- '--filter=@orchestra/app'; then
+            only=(--only)
+          fi
+          GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" --continue=dependencies-successful "${only[@]}" "${filters[@]}"
         env:
           FILTERS: ${{ matrix.filters }}
           PART: ${{ matrix.part }}

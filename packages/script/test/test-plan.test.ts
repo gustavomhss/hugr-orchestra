@@ -49,6 +49,10 @@ describe("test shard planner", () => {
     expect(workflow).not.toContain("Build Windows test dependencies")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget || 10 }}")
+    const app = code.split("if printf '%s\\n' \"${filters[@]}\" | grep -qx -- '--filter=@orchestra/app'; then")[1]?.split("fi")[0] ?? ""
+    expect(app).toContain("only=(--only)")
+    expect(app).not.toContain("filters")
+    expect(code).toContain('bun turbo test --concurrency="$concurrency" --continue=dependencies-successful "${only[@]}" "${filters[@]}"')
   })
 
   test("shard count follows the measured time and the target", () => {
