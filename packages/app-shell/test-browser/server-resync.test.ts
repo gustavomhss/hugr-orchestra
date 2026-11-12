@@ -175,7 +175,62 @@ test("a pre-gap bootstrap active snapshot cannot resurrect busy after newer reco
   }
 }, 15_000)
 
-function statusBootstrap(active: (read: number) => Response | Promise<Response>) {
+test("deletion during an active snapshot cannot force a still-pinned replacement owner", async () => {
+  const oldActive = Promise.withResolvers<Response>()
+  const oldHistory = Promise.withResolvers<Response>()
+  const replacement = Promise.withResolvers<Response>()
+  const state = { historyReads: 0 }
+  const page = (id: string) => Response.json({ data: [{ id, type: "user", text: id, time: { created: 1 } }], cursor: {} })
+  const harness = statusBootstrap(
+    (read) => read === 1 ? Response.json({ data: {} }) : oldActive.promise,
+    () => ++state.historyReads === 1 ? oldHistory.promise
+      : state.historyReads === 2 ? replacement.promise : page("msg_unwanted_refresh"),
+  )
+  const tasks: Promise<void>[] = []
+  try {
+    await until(() => harness.reads.length === 1 && harness.greetings.length === 1 && harness.sync.ready)
+    harness.sync.session.pin("ses_bootstrap")
+    const first = harness.sync.session.sync("ses_bootstrap")
+    tasks.push(first)
+    await until(() => state.historyReads === 1 && harness.sync.session.get("ses_bootstrap") !== undefined)
+    harness.sync.session.set("session_status", "ses_recovery_witness", { type: "busy" })
+    harness.connections[0].close()
+    await until(() => harness.reads.length === 2 && harness.connections.length === 2 && harness.greetings.length === 2)
+    expect(state.historyReads).toBe(1)
+    harness.connections[1].enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+      id: "evt_deleted_during_active", type: "session.next.deleted", data: { timestamp: 5, sessionID: "ses_bootstrap" },
+    })}\n\n`))
+    await until(() => harness.sync.session.get("ses_bootstrap") === undefined)
+    expect(harness.sync.session.open()).toContain("ses_bootstrap")
+    const next = harness.sync.session.sync("ses_bootstrap")
+    tasks.push(next)
+    await until(() => state.historyReads === 2)
+    oldHistory.resolve(page("msg_deleted_owner"))
+    await first
+    expect(harness.sync.session.data.message.ses_bootstrap?.map((message) => message.id) ?? []).not.toContain("msg_deleted_owner")
+    oldActive.resolve(Response.json({ data: { ses_bootstrap: { type: "running" } } }))
+    // A different untouched status proves that the held active response has actually been applied.
+    await until(() => harness.sync.session.data.session_status.ses_recovery_witness?.type === "idle")
+    expect(state.historyReads).toBe(2)
+    replacement.resolve(page("msg_replacement_owner"))
+    await next
+    await until(() => !harness.sync.session.history.loading("ses_bootstrap"))
+    expect(state.historyReads).toBe(2)
+    expect(harness.sync.session.data.message.ses_bootstrap?.map((message) => message.id)).toEqual(["msg_replacement_owner"])
+    expect(harness.sync.session.data.session_status.ses_bootstrap?.type ?? "idle").toBe("idle")
+    expect(harness.mounts.count).toBe(1)
+    expect(harness.unexpected).toEqual([])
+  } finally {
+    oldActive.resolve(Response.json({ data: {} }))
+    oldHistory.resolve(page("msg_cleanup_old"))
+    replacement.resolve(page("msg_cleanup_replacement"))
+    await Promise.allSettled(tasks)
+    harness.sync.session.unpin("ses_bootstrap")
+    harness.dispose()
+  }
+}, 15_000)
+
+function statusBootstrap(active: (read: number) => Response | Promise<Response>, messages?: () => Response | Promise<Response>) {
   const connections: ReadableStreamDefaultController<Uint8Array>[] = []
   const reads: string[] = []
   const greetings: string[] = []
@@ -205,6 +260,8 @@ function statusBootstrap(active: (read: number) => Response | Promise<Response>)
         reads.push(pathname)
         return active(reads.length)
       }
+      if (messages && pathname === "/api/session/ses_bootstrap/message") return messages()
+      if (messages && pathname === "/api/session/ses_bootstrap/todo") return Response.json({ data: [] })
       if (pathname === "/api/health") return Response.json({ pid: 123 })
       if (pathname === "/api/config") return Response.json({ disabledProviders: [] })
       if (pathname === "/api/location/paths")
