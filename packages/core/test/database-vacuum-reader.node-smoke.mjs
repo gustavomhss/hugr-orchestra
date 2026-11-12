@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { test } from "node:test"
 import { Omni } from "../src/omni.ts"
 
-test("real sqlite.node readonly capture under IMMEDIATE commits and rolls back in WAL and DELETE", { timeout: 90_000 }, async () => {
+test("real sqlite.node readonly capture under IMMEDIATE commits and rolls back in WAL and DELETE", { timeout: 60_000 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), "node-vacuum-build-"))
   try {
     const omni = await Omni.load()
