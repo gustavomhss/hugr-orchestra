@@ -2,27 +2,27 @@
   "campaign": "20261111-v1",
   "protocol_epoch": "parallel-v3-fresh",
   "results_epoch": "20261111-v3-fresh",
-  "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
-  "execution_label": "root-takeover-20261112T034839Z",
+  "execution_id": "aa85d928-5ef9-4cb5-b774-e8fce94f9901",
+  "execution_label": "root-resume-20261112T045142Z",
   "host_agent_id": "/root",
   "execution_id_kind": "locally-generated UUID, not host conversation ID",
-  "recorded_at": "2026-11-12T03:53:50.551567+00:00",
+  "recorded_at": "2026-11-12T04:53:23.744148+00:00",
   "authority": "Explicit owner transfer in takeover-request.txt; ROOT references now point to this conversation; historical records unchanged.",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
   "prompt_revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
   "observed_refs": {
-    "genesis-fresh-final": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+    "genesis-fresh-final": "317c7ed337549036c5d3f773cfb65d0a755e75dd",
     "genesis-fresh-s1": "e037a9105d4b54d1c81565d5a4514353ac970817",
     "genesis-fresh-s2": "ac972ff8dc1126b02f8a16f3942a142e417039ed",
     "genesis-fresh-s3": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
-    "genesis-fresh-s4": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "genesis-fresh-s4": "22815b6821dce26562624b4711c705c7cd786268",
     "genesis-fresh-s5": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
     "genesis-fresh-s5-runtime-probe": "cd4bf8bc7c29e02e9ae1b60e6aac3dcb4365dea8",
     "recovery-integration": "685c8f91cb20ed1fc962bdc75602942bb57eca22"
   },
-  "snapshot_delta": "All eight refs match the owner-provided comparison snapshot.",
-  "source_copy_kind": "connector materialization, not Git checkout",
+  "snapshot_delta": "Resume preserves previous ROOT coordination commit and S4 R4 payload/seal. Other slice HEADs unchanged at independent connector audit.",
+  "source_copy_kind": "verified prior connector materialization reused read-only; all new writes isolated in current execution",
   "remote_writer": "ROOT only for resumed slices and integration",
   "publication_policy": {
     "expected_sha_required": true,
@@ -46,14 +46,39 @@
   },
   "capabilities": {
     "github_read": "OBSERVED refs/files/trees/commits",
-    "github_write": "create_tree/create_commit/update_ref exposed with expected_sha and force:false; first publication pending",
-    "isolated_execution": "OBSERVED Python/Node/Git; Bun absent from PATH",
-    "real_subagents": "OBSERVED three recoverer handles",
+    "github_write": "create_tree/create_commit/update_ref(expected_sha,force:false) exposed; prior ROOT receipts preserved; current publication below",
+    "isolated_execution": "Python/Node present; Bun binary discovered in previous ROOT tools, exact bytes to be checked before isolated use",
+    "real_subagents": "OBSERVED /root/recovery_audit, /root/runtime_resume, /root/s2_resume",
     "workflow_dispatch": "NOT_EXPOSED; GET is read-only",
     "workflow_push_route": "Existing atlas-pilot.yml pinned to S4 HEAD permits genesis-fresh-s4 runtime-path pushes; no new run claimed",
     "actions_jobs_logs_artifacts": "Dedicated read and artifact download schemas exposed; no new result claimed",
     "environment_status": "NOT_EXPOSED; startup network policy file absent"
   },
   "historical_accounting": "GLOBAL_UNRECONCILED; tokens, physical attempts and billing remain UNKNOWN",
-  "completion_state": "IN_PROGRESS"
+  "completion_state": "IN_PROGRESS",
+  "previous_observation": {
+    "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+    "recorded_at": "2026-11-12T03:53:50.551567+00:00",
+    "observed_refs": {
+      "genesis-fresh-final": "317c7ed337549036c5d3f773cfb65d0a755e75dd",
+      "genesis-fresh-s1": "e037a9105d4b54d1c81565d5a4514353ac970817",
+      "genesis-fresh-s2": "ac972ff8dc1126b02f8a16f3942a142e417039ed",
+      "genesis-fresh-s3": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "genesis-fresh-s4": "22815b6821dce26562624b4711c705c7cd786268",
+      "genesis-fresh-s5": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
+      "genesis-fresh-s5-runtime-probe": "cd4bf8bc7c29e02e9ae1b60e6aac3dcb4365dea8",
+      "recovery-integration": "685c8f91cb20ed1fc962bdc75602942bb57eca22"
+    },
+    "snapshot_delta": "All eight refs match the owner-provided comparison snapshot."
+  },
+  "supersedes_execution": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "r4_source_checkpoint": {
+    "payload": "9b1e129feed74236fb2ba473dac093aecacea515",
+    "seal": "22815b6821dce26562624b4711c705c7cd786268",
+    "actions_run": 43154719978,
+    "actions_status": "completed",
+    "actions_conclusion": "success",
+    "actions_head": "22815b6821dce26562624b4711c705c7cd786268",
+    "release_state": "r3 remains published; r4 review/release pending"
+  }
 }
