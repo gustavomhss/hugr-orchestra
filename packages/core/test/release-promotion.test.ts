@@ -265,18 +265,36 @@ linux("M9/M10 actual published release retry verifies without uploading versione
   expect(after.releases["desktop-v0.3.6"].assets).toEqual(before.releases["desktop-v0.3.6"].assets)
 })
 
-linux(
-  "M9/M10 actual published release with a missing or different asset refuses without repairing immutable bytes",
-  async () => {
+for (const conflict of ["missing", "different", "extra"] as const) {
+  linux(`M9/M10 actual published release independently refuses ${conflict} asset without overwrite`, async () => {
     expectSpawn(import.meta.path)
     await using tmp = await tmpdir()
-    const fixture = await releaseFixture(join(tmp.path, "divergent"))
+    const fixture = await releaseFixture(join(tmp.path, `published-${conflict}`))
     const first = await fixture.promote()
     expect(first.exitCode, first.stderr.toString()).toBe(0)
     const state = await fixture.read()
-    state.releases["v0.3.6"].assets["install.sh"] = asset("install.sh", "different already-published bytes")
-    delete state.releases["v0.3.6"].assets["SHA256SUMS"]
-    state.releases["v0.3.6"].assets["foreign.txt"] = asset("foreign.txt", "foreign extra")
+    const original = structuredClone(state.releases["v0.3.6"].assets)
+    if (conflict === "missing") delete state.releases["v0.3.6"].assets["SHA256SUMS"]
+    if (conflict === "different") {
+      const bytes = Buffer.from(original["install.sh"].bytes, "base64")
+      bytes[0] ^= 1
+      const changed = asset("install.sh", bytes)
+      expect(changed.size).toBe(original["install.sh"].size)
+      // Keep name, size and ID fixed: only the original payload bytes/digest differ.
+      state.releases["v0.3.6"].assets["install.sh"] = {
+        ...original["install.sh"],
+        bytes: changed.bytes,
+        digest: changed.digest,
+      }
+    }
+    if (conflict === "extra") state.releases["v0.3.6"].assets["foreign.txt"] = asset("foreign.txt", "foreign extra")
+    const current = state.releases["v0.3.6"].assets
+    const changedNames = [...new Set([...Object.keys(original), ...Object.keys(current)])].filter(
+      (name) => JSON.stringify(original[name]) !== JSON.stringify(current[name]),
+    )
+    expect(changedNames).toEqual([
+      conflict === "missing" ? "SHA256SUMS" : conflict === "different" ? "install.sh" : "foreign.txt",
+    ])
     const before = structuredClone(state.releases["v0.3.6"])
     const count = state.log.length
     await fixture.save(state)
@@ -284,8 +302,8 @@ linux(
     const after = await fixture.read()
     expect(after.releases["v0.3.6"]).toEqual(before)
     expect(after.log.slice(count).filter((entry) => entry.operation.startsWith("asset.upload:v0.3.6/"))).toEqual([])
-  },
-)
+  })
+}
 
 linux(
   "M10 actual same-receipt retry repairs confirmed missing metadata with a floor while retaining legacy payloads",
