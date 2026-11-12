@@ -16,16 +16,21 @@ export function makeModelExecutionQuery(options: {
     async load(owner: object, input: ModelsExecutionInput) {
       if (lifetime.disposed) return
       const generation = ++lifetime.generation
-      lifetime.abort?.abort()
+      const previous = lifetime.abort
       const abort = new AbortController()
       lifetime.abort = abort
       lifetime.owner = owner
+      state = { status: "loading" }
       const current = () => !lifetime.disposed && lifetime.generation === generation && lifetime.owner === owner
+      previous?.abort()
+      if (!current()) return
       publish({ status: "loading" })
+      if (!current()) return
       try {
         const response = await options.execute(input, { signal: abort.signal })
         if (!current()) return
         publish({ status: "ready", response })
+        if (!current()) return
         return response
       } catch {
         if (current()) publish({ status: "error" })
@@ -34,20 +39,22 @@ export function makeModelExecutionQuery(options: {
     invalidate() {
       if (lifetime.disposed) return
       lifetime.generation++
-      lifetime.abort?.abort()
+      const previous = lifetime.abort
       lifetime.abort = undefined
       lifetime.owner = undefined
       publish({ status: "idle" })
+      previous?.abort()
     },
     read: () => state,
     dispose() {
       if (lifetime.disposed) return
       lifetime.disposed = true
       lifetime.generation++
-      lifetime.abort?.abort()
+      const previous = lifetime.abort
       lifetime.abort = undefined
       lifetime.owner = undefined
       state = { status: "idle" }
+      previous?.abort()
     },
   }
 }
