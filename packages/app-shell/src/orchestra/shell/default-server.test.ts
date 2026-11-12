@@ -99,4 +99,84 @@ describe("moveDefaultWithReplacedEntry", () => {
 
     expect(written).toBe(false)
   })
+
+  test("a failed default read is reported and does not write", async () => {
+    console.error = (...args) => {
+      logged.push(args[0])
+    }
+    const error = new Error("read failed")
+    const written: Array<ServerConnection.Key | null> = []
+    const reported: unknown[] = []
+
+    await moveDefaultWithReplacedEntry({
+      previous: key("old"),
+      next: key("new"),
+      remove: () => undefined,
+      getDefault: async () => {
+        throw error
+      },
+      setDefault: async (id) => {
+        written.push(id)
+      },
+      report: (failure) => reported.push(failure),
+    })
+
+    expect(written).toEqual([])
+    expect(reported).toEqual([error])
+    expect(logged).toEqual([error])
+  })
+
+  test("a missing default read is not a failure", async () => {
+    let written = false
+
+    await moveDefaultWithReplacedEntry({
+      previous: key("old"),
+      next: key("new"),
+      remove: () => undefined,
+      setDefault: async () => {
+        written = true
+      },
+      report: () => {
+        throw new Error("must not report")
+      },
+    })
+
+    expect(written).toBe(false)
+  })
+
+  test("a stale default read is not this request", async () => {
+    const error = new Error("stale")
+    let written = false
+
+    await moveDefaultWithReplacedEntry({
+      previous: key("old"),
+      next: key("new"),
+      remove: () => undefined,
+      getDefault: async () => {
+        throw error
+      },
+      setDefault: async () => {
+        written = true
+      },
+      current: () => false,
+      report: () => {
+        throw new Error("must not report")
+      },
+    })
+    await moveDefaultWithReplacedEntry({
+      previous: key("old"),
+      next: key("new"),
+      remove: () => undefined,
+      getDefault: async () => key("old"),
+      setDefault: async () => {
+        written = true
+      },
+      current: () => false,
+      report: () => {
+        throw new Error("must not report")
+      },
+    })
+
+    expect(written).toBe(false)
+  })
 })
