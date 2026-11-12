@@ -31,7 +31,8 @@ export const model = Model.Info.make({
   variants: [{ id: Model.VariantID.make("high"), headers: {}, body: {} }],
 })
 export function decision(status: "ready" | "unsupported" | "unavailable" = "ready", variant?: string): ModelExecution.Response {
-  const selection = { ref: { ...ref, variant: variant === undefined ? undefined : Model.VariantID.make(variant) }, engine: "orchestra" }
+  const selection = { ref: Model.Ref.make({ providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id),
+    variant: variant === undefined ? undefined : Model.VariantID.make(variant) }), engine: "orchestra" }
   return ModelExecution.Response.make({
     models: [{ model, engine: "orchestra", status: "ready" }, {
       model: { ...model, id: Model.ID.make("blocked") }, engine: "orchestra", status: "unsupported", reason: "model-denied",

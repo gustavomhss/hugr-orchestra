@@ -170,7 +170,7 @@ test.each(["Session ABA", "raw model", "variant", "reconnect", "disposal", "dire
     if (change === "raw model") fixture.context.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
     if (change === "variant") fixture.context.local.model.variant.set("high")
     if (change === "agent") fixture.context.local.agent.set("backend")
-    if (change === "reconnect") fixture.events.emit({ directory: fixture.root, workspace: undefined, payload: { type: "server.connected", properties: {} } })
+    if (change === "reconnect") fixture.events.emit({ directory: fixture.root, workspace: undefined, payload: { id: "e6-reconnect", type: "server.connected", data: {} } })
     if (change === "disposal") await fixture.dispose()
     if (change.endsWith(" ABA") && change !== "Session ABA") {
       const key = change === "directory ABA" ? "directory" : change === "server ABA" ? "url" : "authorization"

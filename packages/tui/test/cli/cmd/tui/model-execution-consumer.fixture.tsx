@@ -48,7 +48,8 @@ export const model = Model.Info.make({
   variants: [{ id: Model.VariantID.make("high"), headers: {}, body: {} }],
 })
 export function decision(status: "ready" | "unsupported" | "unavailable" = "ready", variant?: string): ModelExecution.Response {
-  const selection = { ref: { ...ref, variant: variant === undefined ? undefined : Model.VariantID.make(variant) }, engine: "orchestra" }
+  const selection = { ref: Model.Ref.make({ providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id),
+    variant: variant === undefined ? undefined : Model.VariantID.make(variant) }), engine: "orchestra" }
   return ModelExecution.Response.make({
     models: [{ model, engine: "orchestra", status: "ready" }, {
       model: { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }, engine: "orchestra", status: "unsupported", reason: "model-denied",
@@ -129,7 +130,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
         <OrchestraKeymapProvider keymap={keymap}><ArgsProvider><KVProvider><ToastProvider>
           <RouteProvider initialRoute={options.draft ? { type: "home" } : { type: "session", sessionID: "session-1" }}>
             <TuiConfigProvider config={config}><PluginRuntimeProvider value={createPluginRuntime()}>
-              <Show when={owner.generation} keyed>{() => <SDKProvider url={owner.url} directory={owner.directory} fetch={fetch} headers={{ authorization: owner.authorization }} events={events.source}>
+              <Show when={owner.generation} keyed>{(_generation) => <SDKProvider url={owner.url} directory={owner.directory} fetch={fetch} headers={{ authorization: owner.authorization }} events={events.source}>
                 <GreetingGate><PermissionProvider><ProjectProvider><SyncProvider><DataProvider>
                   <ThemeProvider mode="dark" source={{ discover: async () => ({}), subscribeRefresh: () => () => {} }}>
                     <LocalProvider><PromptStashProvider><DialogProvider><FrecencyProvider><PromptHistoryProvider>
@@ -148,7 +149,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
   const app = await testRender(() => <Harness />, { width: 120, height: 40, kittyKeyboard: true })
   try {
     await gateReady.promise
-    events.emit({ directory: root, workspace: undefined, payload: { type: "server.connected", properties: {} } })
+    events.emit({ directory: root, workspace: undefined, payload: { id: `e6-greeting-${owner.generation}`, type: "server.connected", data: {} } })
     await sdkReady.promise
     await wait(() => context.sync.status === "complete" && prompt !== undefined, "real Sync bootstrap and Prompt ref")
     return { app, calls, control, get context() { return context }, owner, setOwner, events, root,
@@ -167,7 +168,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
         const previous = greetingSDK
         setOwner("generation", (value) => value + 1)
         await wait(() => greetingSDK !== previous, "new SDK owner mounted")
-        events.emit({ directory: owner.directory, workspace: undefined, payload: { type: "server.connected", properties: {} } })
+        events.emit({ directory: owner.directory, workspace: undefined, payload: { id: `e6-greeting-${owner.generation}`, type: "server.connected", data: {} } })
         await wait(() => context.sdk === greetingSDK && prompt !== undefined, "consumer remounted after initial greeting")
       },
     }
