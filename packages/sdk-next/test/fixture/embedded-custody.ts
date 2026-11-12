@@ -33,7 +33,7 @@ export function resource(options: {
             const database = yield* Database.Service
             const main = yield* database.db.all<{ file: string }>(
               "SELECT file FROM pragma_database_list WHERE name = 'main'",
-            )
+            ).pipe(Effect.orDie)
             options.state.builds++
             options.state.files.push(main[0]?.file ?? "")
             if (options.state.fail) return yield* Effect.die(new Error("controlled contributed construction failure"))

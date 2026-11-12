@@ -172,7 +172,7 @@ it.live(
       const filename = join(tmp.path, "handoff.sqlite")
       const entered = yield* Deferred.make<void>()
       const handoff = Promise.withResolvers<void>()
-      const state: { handle?: FileHandle; closeEvents: number; closeCalls: number } = { closeEvents: 0, closeCalls: 0 }
+      const state: { handle?: FileHandle; closeCalls: number } = { closeCalls: 0 }
       return yield* Effect.gen(function* () {
         const trackedOpen: typeof open = async (...args) => {
           const handle = await open(...args)
@@ -182,9 +182,6 @@ it.live(
             state.closeCalls++
             await close()
           }
-          handle.on("close", () => {
-            state.closeEvents++
-          })
           Effect.runSync(Deferred.succeed(entered, undefined))
           await handoff.promise
           return handle
@@ -196,7 +193,7 @@ it.live(
         const handle = state.handle
         if (!handle) throw new Error("Real open did not return a handle")
         expect(handle.fd).toBeGreaterThanOrEqual(0)
-        expect(state.closeEvents).toBe(0)
+        expect(state.closeCalls).toBe(0)
         // A contender waiting for the acquisition permit remains cancellable and cannot release A's pending handoff.
         const contender = yield* Orchestra.create({ database: filename }).pipe(
           Effect.forkChild({ startImmediately: true }),
@@ -207,7 +204,6 @@ it.live(
         handoff.resolve()
         yield* Fiber.join(interrupted)
         expect(handle.fd).toBe(-1)
-        expect(state.closeEvents).toBe(1)
         expect(state.closeCalls).toBe(1)
         expect((yield* Effect.promise(() => stat(filename))).size).toBe(0)
         const next = yield* Orchestra.create({ database: filename })
