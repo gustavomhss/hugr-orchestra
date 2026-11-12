@@ -2,7 +2,7 @@ export * as ClaudeCodeContext from "./context"
 
 import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
-import type { ToolResultValue } from "@orchestra/llm"
+import type { ToolContent, ToolResultValue } from "@orchestra/llm"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
 
 type Block = Exclude<SDKUserMessage["message"]["content"], string>[number]
@@ -61,7 +61,7 @@ export function prompt(blocks: Block[]): SDKUserMessage["message"]["content"] {
 /** Typed MCP lowering: unsupported media fails the entire tool reply, never an empty successful result. */
 export function output(result: ToolResultValue): CallToolResult["content"] {
   if (result.type !== "content") return [{ type: "text", text: typeof result.value === "string" ? result.value : JSON.stringify(result.value) }]
-  return result.value.map((part): CallToolResult["content"][number] => {
+  return result.value.map((part: ToolContent): CallToolResult["content"][number] => {
     if (part.type === "text") return { type: "text", text: part.text }
     const data = inline(part)
     const limit = image(part.mime) ? 5 * 1024 * 1024 : 20 * 1024 * 1024

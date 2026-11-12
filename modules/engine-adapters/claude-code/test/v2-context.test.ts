@@ -8,7 +8,7 @@ import { PermissionV2 } from "@orchestra/core/permission"
 import { SessionSchema } from "@orchestra/core/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
-import { Effect, Layer, Stream } from "effect"
+import { Effect, Layer, Schema, Stream } from "effect"
 import { QuestionV2 } from "@orchestra/core/question"
 import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
@@ -173,10 +173,13 @@ test("MCP bridge preserves mixed document/text and errors, and refuses unsupport
   }
   script = [done]
   await collect(turnOf({ tools: [new ToolDefinition({ name: "probe", description: "probe", inputSchema: { type: "object" } })],
-    execute: (call) => Effect.succeed({ result: call.input.mode === "error" ? { type: "error", value: "failed" } : { type: "content", value: [
-      { type: "text", text: "caption" },
-      { type: "file", mime: call.input.mode === "unsupported" ? "video/mp4" : "application/pdf", uri: call.input.mode === "unresolved" ? "file:///document" : "data:application/pdf;base64,JVBERg==" },
-    ] } }),
+    execute: (call) => {
+      const input = Schema.decodeUnknownSync(Schema.Struct({ mode: Schema.String }))(call.input)
+      return Effect.succeed({ result: input.mode === "error" ? { type: "error", value: "failed" } : { type: "content", value: [
+        { type: "text", text: "caption" },
+        { type: "file", mime: input.mode === "unsupported" ? "video/mp4" : "application/pdf", uri: input.mode === "unresolved" ? "file:///document" : "data:application/pdf;base64,JVBERg==" },
+      ] } })
+    },
   }))
   expect(replies[0]).toMatchObject({ content: [{ type: "text", text: "caption" }, { type: "resource", resource: { mimeType: "application/pdf", blob: "JVBERg==" } }] })
   expect(replies[1]).toMatchObject({ isError: true })
