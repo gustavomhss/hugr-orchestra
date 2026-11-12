@@ -9,7 +9,9 @@ export default defineConfig({
   ...config,
   testDir: ".",
   // The DebugBar these specs drive exists only in the dev server.
-  grepInvert: /@development-only/,
+  grepInvert: process.env.ORCHESTRA_CHANNEL === "prod"
+    ? /@development-only|@development-channel/
+    : /@development-only|@production-channel/,
   // Specs read this to prove dev-only marks and controls are absent from the built bundle.
   metadata: { ...config.metadata, bundle: "production" },
   outputDir: "./test-results",
