@@ -148,9 +148,7 @@ diff --git a/dist/unstable/socket/Socket.js b/dist/unstable/socket/Socket.js
 diff --git a/src/unstable/cli/internal/parser.ts b/src/unstable/cli/internal/parser.ts
 --- a/src/unstable/cli/internal/parser.ts
 +++ b/src/unstable/cli/internal/parser.ts
-@@ -497,8 +497,13 @@
-   }
- 
+@@ -499,6 +499,11 @@
    return {
 -    _tag: "Value",
 -    value: undefined,
