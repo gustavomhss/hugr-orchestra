@@ -25,6 +25,7 @@ import { SessionMessage } from "@orchestra/schema/session-message"
 import { createPromptState, type ImageAttachmentPart } from "@/context/prompt-state"
 import { createApiForServer } from "@/utils/server"
 import { createSessionManagementForServer } from "@/utils/session-management"
+import { registerSessionModelExecution } from "@/utils/session-model-execution"
 import { createPromptSubmit, sdkFor, serverFor, state, submitInput } from "@/components/prompt-input/submit-harness"
 
 // CONTRACT CONSUMPTION fixture: only the generated SDK serializes canonical replies.
@@ -325,10 +326,15 @@ export function draftSelection(calls: ReturnType<typeof transport>) {
 }
 
 const sdkModule: typeof import("../src/context/server-sdk") = await loadRows(Bun.resolveSync("../src/context/server-sdk.tsx", import.meta.dir))
+const sdkRegistry: typeof import("../src/utils/session-model-execution") = await loadRows(Bun.resolveSync("../src/utils/session-model-execution.ts", import.meta.dir))
 export function liveSDK(calls: ReturnType<typeof transport>) {
   return createRoot((dispose) => {
     const sdk = sdkModule.createServerSdkContext({ type: "http", http: { url: calls.url, username: "fixture", password: "none" } }, serverFor().scope,
       { platform: "web", fetch: calls.fetch, openExternal() {}, restart: async () => {}, notify: async () => {} })
+    // Transfer the actual captured execute capability across this test's isolated/normal module graphs.
+    const execute = sdkRegistry.modelExecutionForSession(sdk.currentApi.session)
+    if (!execute) throw new Error("Isolated actual SDK adapter lacks its captured execution client")
+    registerSessionModelExecution(sdk.currentApi.session, execute)
     const greetings: string[] = []
     sdk.event.listen((event) => { if (event.details.type === "server.connected") greetings.push(event.details.id) })
     const source = sdk.ensureDirSdkContext(calls.directory)
