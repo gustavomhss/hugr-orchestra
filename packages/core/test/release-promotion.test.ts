@@ -1,15 +1,87 @@
 import { expect, test } from "bun:test"
-import { join } from "node:path"
-import { readFile } from "node:fs/promises"
+import { dirname, join } from "node:path"
+import { cp, mkdir, readFile, writeFile } from "node:fs/promises"
+import { Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { AppProcess } from "../src/process"
+import { LayerNode } from "../src/effect/layer-node"
 import { expectSpawn } from "./fixture/omni-expect"
 import { tmpdir } from "./fixture/tmpdir"
-import { asset, canonicalFeeds, desktopNames, feed, floor, releaseFixture, workflow } from "./fixture/release-promotion"
+import {
+  asset,
+  canonicalFeeds,
+  desktopNames,
+  feed,
+  floor,
+  releaseFixture,
+  repositoryRoot,
+  workflow,
+} from "./fixture/release-promotion"
 
 const linux = process.platform === "linux" ? test : test.skip
 const mutations = (state: Awaited<ReturnType<Awaited<ReturnType<typeof releaseFixture>>["read"]>>) =>
   state.log.filter((entry) => entry.mutation)
 const npmWrites = (state: Parameters<typeof mutations>[0]) =>
   mutations(state).filter((entry) => entry.operation.startsWith("npm.publish:"))
+
+linux("M9/M10 isolated preflight runs without installed dependencies or auto-install", async () => {
+  expectSpawn(import.meta.path)
+  await using tmp = await tmpdir()
+  const fixture = await releaseFixture(join(tmp.path, "fixture"))
+  const isolated = join(tmp.path, "isolated-runner")
+  expect(isolated.startsWith(repositoryRoot)).toBe(false)
+  for (const name of [
+    "script/release-artifact-identity.ts",
+    "packages/script/src/release-artifact-identity.ts",
+    "packages/script/src/desktop-feed.ts",
+  ]) {
+    await mkdir(dirname(join(isolated, name)), { recursive: true })
+    await cp(join(repositoryRoot, name), join(isolated, name))
+  }
+  await cp(fixture.source, join(isolated, "artifacts"), { recursive: true })
+  await writeFile(join(isolated, "VALIDATION.json"), JSON.stringify(fixture.receipt))
+  const run = () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const appProcess = yield* AppProcess.Service
+        return yield* appProcess.run(
+          ChildProcess.make(
+            process.execPath,
+            ["--no-install", "script/release-artifact-identity.ts", "artifacts", "VALIDATION.json"],
+            {
+              cwd: isolated,
+              env: {
+                HOME: isolated,
+                TMPDIR: isolated,
+                BUN_INSTALL: join(isolated, "bun"),
+                BUN_INSTALL_CACHE_DIR: join(isolated, "cache"),
+                NODE_PATH: "",
+                VERSION: fixture.version,
+                GITHUB_REPOSITORY: "fixture/release",
+                GITHUB_SHA: fixture.receipt.sourceSha,
+                CLI_RUN_ID: "11",
+                DESKTOP_RUN_ID: "22",
+                QUALIFICATION_RUN_ID: "33",
+              },
+              extendEnv: false,
+              stdin: "ignore",
+              stdout: "pipe",
+              stderr: "pipe",
+            },
+          ),
+          { timeout: 10_000, maxOutputBytes: 1024 * 1024, maxErrorBytes: 1024 * 1024 },
+        )
+      }).pipe(Effect.provide(LayerNode.compile(AppProcess.node)), Effect.scoped),
+    )
+  const valid = await run()
+  expect(valid.exitCode, valid.stderr.toString()).toBe(0)
+  expect(valid.stdout.toString()).toContain("Release artifact identity verified")
+  await writeFile(join(isolated, "artifacts/cli/install.sh"), "different unapproved installer")
+  const mismatch = await run()
+  expect(mismatch.exitCode).not.toBe(0)
+  expect(mismatch.stderr.toString()).toContain("Artifact mismatch: cli/install.sh")
+  expect((await fixture.read()).log).toEqual([])
+})
 
 for (const name of ["release-cli", "release-desktop"]) {
   linux(
