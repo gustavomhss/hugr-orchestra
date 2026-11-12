@@ -1,3 +1,5 @@
+import { settlePickerSearch } from "./picker-search"
+
 export function treeEntries(parent: string, nodes: ReadonlyArray<{ name: string; type: "file" | "directory" }>) {
   const prefix = parent.replace(/^\/+|\/+$/g, "")
   return nodes.map((node) => {
@@ -328,9 +330,15 @@ export function displayPickerPath(path: string, input: string, home: string) {
   return pickerTilde(value, home) || value
 }
 
-export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string | undefined; home: () => string }) {
+export function createDirectorySearch(args: {
+  sdk: ServerSDK
+  base: () => string | undefined
+  home: () => string
+  report?: (error: unknown) => void
+}) {
   const cache = new Map<string, Promise<Array<{ name: string; absolute: string }>>>()
   let current = 0
+  let tell: (error: unknown) => void = () => {}
 
   const scoped = (value: string) => {
     const raw = normalizePickerDrive(value)
@@ -359,9 +367,10 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
             return { name: getFilename(relative), absolute: joinPickerPath(key, relative) }
           }),
       )
-      // A failed listing reads as empty for this call but is not cached, so the next keystroke retries it.
-      .catch(() => {
+      // A failed listing is not cached, so the next keystroke retries it. It is not "no folders".
+      .catch((error: unknown) => {
         cache.delete(key)
+        tell(error)
         return []
       })
     cache.set(key, request)
@@ -377,6 +386,12 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
   return async (filter: string) => {
     const token = ++current
     const active = () => token === current
+    let told = false
+    tell = (error) => {
+      if (!active() || told) return
+      told = true
+      args.report?.(error)
+    }
     const value = cleanPickerInput(filter)
     const input = scoped(value)
     if (!input) return [] as string[]
@@ -384,12 +399,19 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
     const pathInput = raw.startsWith("~") || !!pickerRoot(raw) || raw.includes("/")
     const query = normalizePickerDrive(input.path)
     if (!pathInput) {
-      const results = await args.sdk.api.file
-        .find({ location: { directory: input.directory }, query, type: "directory", limit: 50 })
-        .then((result) => result.data.map((entry) => entry.path))
-        .catch(() => [])
+      let results: string[] = []
+      const found = await settlePickerSearch({
+        read: args.sdk.api.file
+          .find({ location: { directory: input.directory }, query, type: "directory", limit: 50 })
+          .then((result) => result.data.map((entry) => entry.path)),
+        current: active,
+        apply: (value) => {
+          results = value
+        },
+        report: tell,
+      })
       if (!active()) return []
-      if (results.length) {
+      if (found && results.length) {
         return results.map((path) => joinPickerPath(input.directory, path)).slice(0, 50)
       }
       const fallback = query

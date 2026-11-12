@@ -9,6 +9,7 @@ import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { showToast } from "@/utils/toast"
+import { settlePickerSearch } from "./picker-search"
 
 import {
   absoluteTreePath,
@@ -72,8 +73,24 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
   const start = createMemo(
     () => props.start || sync.data.path.home || sync.data.path.directory || "",
   )
-  const search = createDirectorySearch({ sdk, home, base: () => root() || start() })
+  const [searchFailed, setSearchFailed] = createSignal(false)
+  let told = false
+  const reportSearch = (error: unknown) => {
+    console.error(error)
+    if (told) return
+    told = true
+    setSearchFailed(true)
+    showToast({ variant: "error", title: language.t("common.requestFailed") })
+  }
+  const search = createDirectorySearch({
+    sdk,
+    home,
+    base: () => root() || start(),
+    report: reportSearch,
+  })
   const [suggestions] = createResource(input, async (value) => {
+    told = false
+    setSearchFailed(false)
     const cleaned = cleanPickerInput(value)
     const typed = cleaned.replace(/\/+$/, "")
     const current = displayPickerPath(root(), value, home()).replace(/\/+$/, "")
@@ -82,15 +99,22 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     if (!policy.includeFiles) return { query: value, items: directories.slice(0, 5) }
     const base = pickerRoot(cleaned) || root() || start()
     if (!base) return { query: value, items: directories.slice(0, 5) }
-    const files = await sdk.api.file
-      .find({
-        location: { directory: base },
-        query: pickerFileSearchQuery(base, value, home()),
-        type: "file",
-        limit: 20,
-      })
-      .then((result) => result.data)
-      .catch(() => [])
+    let files: Array<{ path: string }> = []
+    await settlePickerSearch({
+      read: sdk.api.file
+        .find({
+          location: { directory: base },
+          query: pickerFileSearchQuery(base, value, home()),
+          type: "file",
+          limit: 20,
+        })
+        .then((result) => result.data),
+      current: () => input() === value,
+      apply: (data) => {
+        files = data
+      },
+      report: reportSearch,
+    })
     const results = [
       ...directories,
       ...files.map((entry) => ({ absolute: absoluteTreePath(base, entry.path), type: "file" as const })),
@@ -310,6 +334,9 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
               {language.t("dialog.directory.parent")}
             </ButtonV2>
           </div>
+          <Show when={searchFailed()}>
+            <p role="alert">{language.t("common.requestFailed")}</p>
+          </Show>
           <Show when={suggestionsOpen() && currentSuggestions().length > 0}>
             <div id="directory-picker-v2-suggestions" role="listbox" class="directory-picker-v2-suggestions">
               <For each={currentSuggestions()}>
