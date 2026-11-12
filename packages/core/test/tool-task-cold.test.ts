@@ -39,12 +39,15 @@ function fixture(source: "native" | "legacy" | "markdown", engine?: "orchestra" 
     (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
   ).pipe(Effect.tap((tmp) => Effect.promise(async () => {
     await fs.mkdir(path.join(tmp.path, ".orchestra", "agents"), { recursive: true })
+    await fs.mkdir(path.join(tmp.path, ".global"), { recursive: true })
+    // Runtime declarations in this fixture's project are authorized by its isolated user's config.
+    await Bun.write(path.join(tmp.path, ".global", "orchestra.json"), JSON.stringify({ trusted_projects: [tmp.path] }))
     await Bun.write(path.join(tmp.path, ".orchestra", "orchestra.json"), JSON.stringify({
       snapshots: false,
       providers: {
         "cold-task": {
           api: { type: "aisdk", package: "@ai-sdk/openai", settings: { apiKey: "test" } },
-          models: { chat: { api: { type: "aisdk", package: "@ai-sdk/openai", settings: {} }, disabled: false, capabilities: { tools: true, input: ["text"], output: ["text"] }, limit: { context: 100_000, output: 1_000 } } },
+          models: { chat: { disabled: false, capabilities: { tools: true, input: ["text"], output: ["text"] }, limit: { context: 100_000, output: 1_000 } } },
         },
       },
     }))
