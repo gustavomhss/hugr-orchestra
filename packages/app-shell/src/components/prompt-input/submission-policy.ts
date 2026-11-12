@@ -14,6 +14,7 @@ import { buildRequestParts } from "./build-request-parts"
 import { makeModelExecutionQuery } from "@orchestra/client"
 import { modelExecutionForSession } from "@/utils/session-model-execution"
 import type { AdmissionRequest, FollowupSendInput } from "./submission-types"
+import type { ModelExecution } from "@orchestra/schema/model-execution"
 
 export type FailedPolicyWrite = { cause: unknown; version?: number }
 type SubmissionManagement = Pick<SessionManagement, "setSubagentModels" | "readSubagentModels"> & {
@@ -221,6 +222,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
   if (!(input.request?.kind === "prompt" && input.request.admissionAttempted) && !(input.preflight ? input.preflight() : await assessModelExecution({
     api: input.api, directory: input.draft.sessionDirectory, sessionID: input.draft.sessionID,
     agent: input.draft.agent, model: input.draft.model, variant: input.draft.variant, current, signal: input.signal,
+    onUnavailable: input.onUnavailable,
   }))) return false
 
   const [head, ...tail] = text.split(" ")
@@ -424,9 +426,11 @@ export async function assessModelExecution(input: {
   variant?: string
   signal?: AbortSignal
   current: () => boolean
+  onUnavailable?: (reason?: ModelExecution.Reason) => void
 }) {
   const execute = modelExecutionForSession(input.api)
-  if (!execute || !input.current() || input.signal?.aborted) return false
+  if (!input.current() || input.signal?.aborted) return false
+  if (!execute) { input.onUnavailable?.(); return false }
   const query = makeModelExecutionQuery({ execute: (value, options) => execute(value, {
     signal: input.signal ? AbortSignal.any([input.signal, options.signal]) : options.signal,
   }) })
@@ -438,8 +442,15 @@ export async function assessModelExecution(input: {
       model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.variant },
     })
     const selected = response?.data.selection
-    return input.current() && !input.signal?.aborted && selected?.status === "ready" &&
-      selected.ref.providerID === input.model.providerID && selected.ref.id === input.model.modelID &&
+    const current = input.current() && !input.signal?.aborted
+    const exact = selected?.ref.providerID === input.model.providerID && selected.ref.id === input.model.modelID &&
       selected.ref.variant === input.variant
+    const ready = current && selected?.status === "ready" && exact
+    if (current && !ready) {
+      const entry = response?.data.models.find((item) => item.model.providerID === input.model.providerID && item.model.id === input.model.modelID)
+      input.onUnavailable?.(exact && selected?.status !== "ready" ? selected?.reason
+        : entry && entry.status !== "ready" ? entry.reason : undefined)
+    }
+    return ready
   } finally { query.dispose() }
 }

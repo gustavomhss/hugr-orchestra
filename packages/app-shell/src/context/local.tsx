@@ -443,6 +443,17 @@ export function createModelExecutionView(input: {
   return {
     read: () => lifetime.disposed ? query.read() : view.value,
     input: () => owner().request,
+    reason(key: ModelKey) {
+      const value = view.value
+      if (lifetime.disposed || input.ready?.() === false || value.status !== "ready" || readyOwner !== owner() || readyOwner?.version !== version()) return
+      const requested = owner().request.model
+      const selected = value.response.data.selection
+      if (requested?.providerID === key.providerID && requested.id === key.modelID &&
+        selected?.ref.providerID === key.providerID && selected.ref.id === key.modelID &&
+        selected.ref.variant === requested.variant && selected.status !== "ready") return selected.reason
+      const entry = value.response.data.models.find((item) => item.model.providerID === key.providerID && item.model.id === key.modelID)
+      return entry && entry.status !== "ready" ? entry.reason : undefined
+    },
     ready() {
       const value = view.value
       if (lifetime.disposed || input.ready?.() === false || value.status !== "ready" || readyOwner !== owner() || readyOwner?.version !== version()) return false

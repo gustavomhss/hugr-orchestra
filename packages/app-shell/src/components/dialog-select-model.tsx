@@ -23,6 +23,7 @@ import { createModelSelectorNavigation, matchesModelSearch } from "./dialog-sele
 import { isFree, ModelList, modelKey } from "./dialog-select-model-list"
 import { createGroupedVirtualizer } from "./grouped-virtualizer"
 import { virtualScrollElement } from "./virtual-scroll-element"
+import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
 type ModelItem = ReturnType<ModelState["list"]>[number]
@@ -174,6 +175,7 @@ export function ModelSelectorPopoverV2(props: {
       current={controller.current}
       select={controller.select}
       available={controller.available}
+      unavailable={controller.unavailable}
       missingLabel={controller.missingLabel}
       onConnect={() => {
         void import("./dialog-connect-provider").then((module) => {
@@ -228,6 +230,7 @@ function createModelSelectorController(input: {
       input.onSelect()
     },
     available: (item: ModelItem) => model.execution.allows({ modelID: item.id, providerID: item.provider.id }),
+    unavailable: (item: ModelItem) => modelExecutionReasonKey(model.execution.reason({ modelID: item.id, providerID: item.provider.id })),
     missingLabel: () => !model.current() ? model.intent().model?.modelID : undefined,
   }
 }
@@ -239,6 +242,7 @@ function ModelSelectorPopoverV2View(props: {
   current: () => string | undefined
   select: (item: ModelItem) => void
   available: (item: ModelItem) => boolean
+  unavailable: (item: ModelItem) => ReturnType<typeof modelExecutionReasonKey>
   missingLabel: () => string | undefined
   onConnect: () => void
   onManage: () => void
@@ -408,6 +412,7 @@ function ModelSelectorPopoverV2View(props: {
                   }}
                   onSelect={selectModel}
                   available={props.available}
+                  unavailable={props.unavailable}
                 />
               </Show>
             </div>
@@ -454,6 +459,7 @@ function ModelSelectorRowsV2(props: {
   onActive: (key: string) => void
   onSelect: (item: ModelItem) => void
   available: (item: ModelItem) => boolean
+  unavailable: (item: ModelItem) => ReturnType<typeof modelExecutionReasonKey>
 }) {
   const language = useLanguage()
   const [root, setRoot] = createSignal<HTMLDivElement>()
@@ -506,7 +512,7 @@ function ModelSelectorRowsV2(props: {
                             >
                               <MenuV2.RadioItem
                                 disabled={!props.available(item())}
-                                title={!props.available(item()) ? language.t("model.execution.unavailable") : undefined}
+                                title={!props.available(item()) ? language.t(props.unavailable(item())) : undefined}
                                 value={key}
                                 data-option-key={key}
                                 data-selected-model={props.current === key ? true : undefined}

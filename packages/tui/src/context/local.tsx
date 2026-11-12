@@ -15,6 +15,24 @@ import { useToast } from "../ui/toast"
 import { useRoute } from "./route"
 import { usePermission } from "./permission"
 import { agentKey } from "../util/agent"
+import type { ModelExecution } from "@orchestra/schema/model-execution"
+
+export function modelExecutionReason(reason?: ModelExecution.Reason) {
+  if (!reason) return "This model is unavailable for this session. Choose an available model or try again."
+  return {
+    "model-missing": "Model is no longer available",
+    "model-disabled": "Model is disabled",
+    "connection-unavailable": "Connect this provider to use the model",
+    "model-denied": "Model is not allowed for this session",
+    "unsupported-api": "Model is not supported by this engine",
+    "invalid-options": "Model settings are invalid",
+    "variant-unavailable": "Selected variant is unavailable",
+    "host-unregistered": "Selected engine is not installed",
+    "host-unavailable": "Selected engine is unavailable",
+    "host-model-unsupported": "Model is not supported by this engine",
+    "host-options-unsupported": "Selected settings are not supported by this engine",
+  }[reason]
+}
 
 export type LocalTheme = {
   secondary: RGBA

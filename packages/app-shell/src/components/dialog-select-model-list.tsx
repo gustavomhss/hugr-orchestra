@@ -12,6 +12,7 @@ import { useLocal } from "@/context/local"
 import { popularProviders } from "@/hooks/use-providers"
 import { createGroupedVirtualizer } from "./grouped-virtualizer"
 import { ModelTooltip } from "./model-tooltip"
+import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
 type ModelItem = ReturnType<ModelState["list"]>[number]
@@ -227,7 +228,7 @@ export function ModelList(props: {
                                   >
                                     <button
                                       disabled={!model.execution.allows({ modelID: item().id, providerID: item().provider.id })}
-                                      title={!model.execution.allows({ modelID: item().id, providerID: item().provider.id }) ? language.t("model.execution.unavailable") : undefined}
+                                      title={!model.execution.allows({ modelID: item().id, providerID: item().provider.id }) ? language.t(modelExecutionReasonKey(model.execution.reason({ modelID: item().id, providerID: item().provider.id }))) : undefined}
                                       data-slot="list-item"
                                       data-key={key}
                                       data-active={key === list.active()}

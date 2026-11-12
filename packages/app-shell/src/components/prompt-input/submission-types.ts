@@ -6,6 +6,7 @@ import type { ServerScope } from "@/utils/server-scope"
 import type { buildRequestParts } from "./build-request-parts"
 import type { QueuedPromptSource, QueuedPromptRuntime } from "./queued-prompt"
 import type { createSubmissionPolicy } from "./submission-policy"
+import type { ModelExecution } from "@orchestra/schema/model-execution"
 
 /** One durable action retains its exact prepared payload across an ambiguous HTTP retry. */
 export type AdmissionRequest = {
@@ -51,6 +52,7 @@ export type FollowupSendInput = {
   request?: AdmissionRequest
   dispatch?: PromptDispatch
   preflight?: () => boolean
+  onUnavailable?: (reason?: ModelExecution.Reason) => void
   signalForAdmission?: () => AbortSignal
   currentSource?: {
     serverScopeKey: ServerScope

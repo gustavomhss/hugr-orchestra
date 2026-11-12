@@ -20,6 +20,7 @@ import { ServerConnection } from "@/context/server"
 import { clearPending, pendingSnapshot } from "@/components/draft-subagent-models"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
+import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
@@ -447,8 +448,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         agent: agentKey(currentAgent), model: { providerID: currentModel.provider.id, modelID: currentModel.id }, variant,
         signal: draftPhase ? AbortSignal.any([signal, draftPhase.signal]) : signal,
         current: () => ownsSource() && draftPhase?.current() !== false && captured.policyVersion === captured.readPolicyVersion(),
+        onUnavailable: (reason) => showToast({ title: language.t(modelExecutionReasonKey(reason)) }),
       }).finally(() => draftPhase?.dispose())
-      if (!ready || (draftPhase && pendingSnapshot(rulesKey).revision !== draftRevision)) {
+      if (!ready) return false
+      if (draftPhase && pendingSnapshot(rulesKey).revision !== draftRevision) {
         if (ownsSource()) showToast({ title: language.t("model.execution.unavailable") })
         return false
       }
@@ -606,11 +609,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       const ready = await assessModelExecution({ api, directory: sessionDirectory, sessionID: session.id,
         agent, model, variant, signal: AbortSignal.any([signal, capturedPhase.signal]),
         current: () => ownsSource() && capturedPhase.current() && pendingSnapshot(rulesKey).revision === receipt.revision,
+        onUnavailable: (reason) => showToast({ title: language.t(modelExecutionReasonKey(reason)) }),
       })
       if (!capturedPhase.current() || !ownsSource()) return false
       capturedPhase.ready = ready
-      if (!ready && pendingSnapshot(rulesKey).revision === receipt.revision)
-        showToast({ title: language.t("model.execution.unavailable") })
       return ready
     }
     const waitPolicy = async (): Promise<boolean> => {

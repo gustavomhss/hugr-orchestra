@@ -97,6 +97,7 @@ import { Identifier } from "@/utils/id"
 import { diffs as list } from "@/utils/diffs"
 import { extractPromptFromParts } from "@/utils/prompt"
 import { formatServerError } from "@/utils/server-errors"
+import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
@@ -1631,6 +1632,7 @@ export default function Page() {
         serverSync: state,
         draft,
         signal: AbortSignal.any([binding.signal, itemOwner.signal]),
+        onUnavailable: (reason) => showToast({ title: language.t(modelExecutionReasonKey(reason)) }),
         optimisticBusy: item.sessionDirectory === directorySDK.directory,
         deliberate: input.manual === true,
         currentSource: {

@@ -1,5 +1,5 @@
 import { createMemo, createSignal } from "solid-js"
-import { useLocal } from "../context/local"
+import { modelExecutionReason, useLocal } from "../context/local"
 import { map, pipe, flatMap, entries, filter, sortBy, take } from "remeda"
 import { DialogSelect } from "../ui/dialog-select"
 import { useDialog } from "../ui/dialog"
@@ -32,20 +32,7 @@ export function DialogModel(props: { providerID?: string }) {
       const entry = canonical.response.data.models.find((item) => item.model.providerID === providerID && item.model.id === modelID)
       const reason = selection?.ref.providerID === providerID && selection.ref.id === modelID && selection.status !== "ready"
         ? selection.reason : entry && entry.status !== "ready" ? entry.reason : undefined
-      if (!reason) return "Model is unavailable for this session"
-      return {
-        "model-missing": "Model is no longer available",
-        "model-disabled": "Model is disabled",
-        "connection-unavailable": "Connect this provider to use the model",
-        "model-denied": "Model is not allowed for this session",
-        "unsupported-api": "Model is not supported by this engine",
-        "invalid-options": "Model settings are invalid",
-        "variant-unavailable": "Selected variant is unavailable",
-        "host-unregistered": "Selected engine is not installed",
-        "host-unavailable": "Selected engine is unavailable",
-        "host-model-unsupported": "Model is not supported by this engine",
-        "host-options-unsupported": "Selected settings are not supported by this engine",
-      }[reason]
+      return modelExecutionReason(reason)
     }
     const needle = query().trim()
     const showSections = showExtra() && needle.length === 0
@@ -137,7 +124,7 @@ export function DialogModel(props: { providerID?: string }) {
     const selected = local.model.intent().model
     if (selected && !sync.data.provider.some((provider) => provider.id === selected.providerID && provider.models[selected.modelID])) {
       const known = local.model.known(selected)
-      providerOptions.push({ value: selected, title: known?.title ?? selected.modelID, releaseDate: undefined,
+      providerOptions.push({ value: selected, title: known?.title ?? selected.modelID, releaseDate: "",
         description: undefined, category: known?.provider ?? selected.providerID, disabled: true,
         footer: unavailable(selected.providerID, selected.modelID), onSelect() {} })
     }

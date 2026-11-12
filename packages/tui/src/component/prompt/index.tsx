@@ -13,7 +13,7 @@ import { createComputed, createEffect, createMemo, onMount, createSignal, onClea
 import { registerOrchestraSpinner } from "../register-spinner"
 import path from "path"
 import { fileURLToPath } from "url"
-import { useLocal } from "../../context/local"
+import { modelExecutionReason, useLocal } from "../../context/local"
 import { tint, useTheme } from "../../context/theme"
 import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
@@ -1018,7 +1018,11 @@ export function Prompt(props: PromptProps) {
       if (!current()) return false
       if (selection?.status !== "ready" || selection.ref.providerID !== selectedModel.providerID ||
         selection.ref.id !== selectedModel.modelID || selection.ref.variant !== variant) {
-        toast.show({ message: "This model is unavailable for this session. Choose an available model or try again.", variant: "warning" })
+        const entry = response?.data.models.find((item) => item.model.providerID === selectedModel.providerID && item.model.id === selectedModel.modelID)
+        const reason = selection?.ref.providerID === selectedModel.providerID && selection.ref.id === selectedModel.modelID &&
+          selection.ref.variant === variant && selection.status !== "ready" ? selection.reason
+          : entry && entry.status !== "ready" ? entry.reason : undefined
+        toast.show({ message: modelExecutionReason(reason), variant: "warning" })
         return false
       }
     }
