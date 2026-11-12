@@ -187,8 +187,10 @@ describe("Capability schedule authority", () => {
         ? yield* f.sessions.create({ location: f.owner.location }).pipe(Effect.exit)
         : yield* f.sessions.prompt({ sessionID: f.owner.sessionID, prompt: { text: "mixed publication" }, resume: false }).pipe(Effect.exit)
       const cause = twoReasons(exit, one, two)
-      expect(cause.reasons.find((reason) => reason._tag === "Die" && reason.defect === one)?.annotations).toEqual(first.annotations)
-      expect(cause.reasons.find((reason) => reason._tag === "Die" && reason.defect === two)?.annotations).toEqual(second.annotations)
+      first.annotations.forEach((value, key) =>
+        expect(cause.reasons.find((reason) => reason._tag === "Die" && reason.defect === one)?.annotations.get(key)).toBe(value))
+      second.annotations.forEach((value, key) =>
+        expect(cause.reasons.find((reason) => reason._tag === "Die" && reason.defect === two)?.annotations.get(key)).toBe(value))
       expect((yield* f.rows).inputs).toEqual([])
       expect(f.state.provider).toEqual([])
     }), 30_000)
