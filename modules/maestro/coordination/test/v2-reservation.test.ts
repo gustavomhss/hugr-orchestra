@@ -227,7 +227,7 @@ test("a governed Task comes only from Maestro and only for its own approved requ
     }),
   ))
 
-test("a governed child consumes its approval once, before its first provider turn", () =>
+test("historical governed receipts replay, while missing evidence cannot authorize a new first turn", () =>
   run((directory) =>
     Effect.gen(function* () {
       const governance = yield* TaskGovernance.Service
@@ -247,18 +247,23 @@ test("a governed child consumes its approval once, before its first provider tur
         agent: "general",
         permission: [],
       })
-      yield* governance.beforeTurn(child)
-      // A repeated first turn (a retried drain) finds the same receipt and passes.
-      yield* governance.beforeTurn(child)
       const database = yield* Database.Service
-      const receipt = yield* GovernanceRecordsV2.row(database.db, `evt_maestro_approval_consumed_${suffix}`)
-      expect(receipt?.data).toEqual({
+      const receiptID = `evt_maestro_approval_consumed_${suffix}`
+      // The legacy fake bindings have no context evidence: they cannot grant new execution authority.
+      expect(yield* refusal(governance.beforeTurn(child))).toBe("Governed Task denied: approval-evidence-missing")
+      expect(yield* GovernanceRecordsV2.row(database.db, receiptID)).toBeUndefined()
+      const historical = {
         sessionID: parentID,
         presentationID: "evt_presentation",
         approvalMessageID: "m",
         taskHash: "h",
         callID: "call_governed",
         childSessionID: childID,
-      })
+      }
+      // Compatibility only: an already-consumed historical receipt is replayed without admitting another first turn.
+      yield* event(receiptID, parentID, EventV2.versionedType(MaestroEvent.Approval.ConsumedV2.type, 2), historical)
+      yield* governance.beforeTurn(child)
+      yield* governance.beforeTurn(child)
+      expect((yield* GovernanceRecordsV2.row(database.db, receiptID))?.data).toEqual(historical)
     }),
   ))
