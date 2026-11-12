@@ -369,7 +369,7 @@ const layer = Layer.effect(
         const project = yield* projects.resolve(input.location.directory)
         yield* ProjectV2.record(db, events, project)
         const timestamp = yield* DateTime.now
-        const projected = yield* events
+        const publish = events
           .publish(
             SessionEvent.Created,
             {
@@ -412,6 +412,14 @@ const layer = Layer.effect(
                 )
             }),
           )
+        const projected = yield* (input.parentID
+          ? SessionLifecycle.withParent(input.parentID, Effect.gen(function* () {
+              // Project resolution can suspend. Parent deletion must win before this Created publication or wait
+              // until it can discover the child, so the preflight parent read is not sufficient.
+              yield* result.get(input.parentID!)
+              return yield* publish
+            }))
+          : publish)
         if (projected.type === "existing") return projected.session
         // TODO: Restore recorded sessions onto replacement synchronized workspaces in a future API slice.
         const created = yield* result.get(sessionID).pipe(Effect.orDie)
@@ -441,10 +449,18 @@ const layer = Layer.effect(
       }),
       remove: Effect.fn("V2Session.remove")(function* (sessionID) {
         yield* result.get(sessionID)
-        const ids = [sessionID, ...(yield* SessionLifecycle.descendants(db, sessionID))]
-        // A wake admitted during the interrupt must not start a drain for a Session that is about to be gone.
-        if (!(yield* stopped(ids, SessionLifecycle.remove(db, events, sessionID), { discardPending: true })))
-          return yield* new NotFoundError({ sessionID })
+        const remove = (ids: ReadonlyArray<SessionSchema.ID>): Effect.Effect<void, NotFoundError> =>
+          stopped(ids, SessionLifecycle.withTree(db, sessionID, (current) => Effect.gen(function* () {
+            // A child admitted while execution was stopping was absent from the initial snapshot. Release all
+            // lifecycle guards before stopping that child, then freeze and verify the tree again.
+            if (current.some((id) => !ids.includes(id))) return { retry: current }
+            if (!(yield* SessionLifecycle.remove(db, events, sessionID)))
+              return yield* new NotFoundError({ sessionID })
+            return { retry: undefined }
+          })), { discardPending: true }).pipe(
+            Effect.flatMap((outcome) => outcome.retry ? remove(outcome.retry) : Effect.void),
+          )
+        yield* remove([sessionID, ...(yield* SessionLifecycle.descendants(db, sessionID))])
       }),
       list: (input) => SessionArchive.list(db, input),
       messages: Effect.fn("V2Session.messages")(function* (input) {
