@@ -128,7 +128,7 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs'
           const keys = ['GITHUB_SHA', 'RUNNER_OS', 'RUNNER_ARCH', 'ImageOS', 'ImageVersion', 'CI', 'FORCE_JAVASCRIPT_ACTIONS_TO_NODE24', 'ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD', 'HUGR_OMNI_ADDON', 'HUGR_OMNI_SUPERVISOR', 'ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER', 'PSModuleAnalysisCachePath']
-          fs.writeFileSync(`${process.env.RUNNER_TEMP}/junit/replay-context.json`, JSON.stringify({ source: process.env.GITHUB_SHA, historical: '2c0f005490dde198f1e4777b5da8dacb98f57ba2', diagnostic: 'b53e5a727f3b4f4ad01c3f92de56f12482e3437a', files: 199, manifestSHA256: process.env.FILES_SHA256, jobMinutes: 15, stepMinutes: 12, launcher: 'Turbo + unchanged core package test script', control: 'suite default, no nonce, default native spawner', env: Object.fromEntries(keys.map(key => [key, process.env[key] ?? null])) }, null, 2) + '\n')
+          fs.writeFileSync(`${process.env.RUNNER_TEMP}/junit/replay-context.json`, JSON.stringify({ source: process.env.GITHUB_SHA, historical: '2c0f005490dde198f1e4777b5da8dacb98f57ba2', publishedSource: '197dc302f77ea8d4da27425e0774e1298568fecb', replayHarnessSource: 'fec9a3b58c1c75091d6174cb0619cb3dc46a2cd3', files: 199, manifestSHA256: process.env.FILES_SHA256, jobMinutes: 15, stepMinutes: 12, launcher: 'Turbo + unchanged core package test script', control: 'suite default, no nonce, default native spawner', env: Object.fromEntries(keys.map(key => [key, process.env[key] ?? null])) }, null, 2) + '\n')
           NODE
           bun --version
           node --version
