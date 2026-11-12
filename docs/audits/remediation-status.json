@@ -1306,7 +1306,7 @@
       "id": "H8",
       "severity": "P2",
       "owner": "lead",
-      "status": "integrated_focused_verified_regression_pending",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
       "commits": [
         "d75ef4b541",
@@ -1350,9 +1350,26 @@
           "source": "33a65714297d414b12d59c773d7204c6954da461",
           "snapshot": "1819c574bbc6d34ccc1ff46eded4e5174bfb655c",
           "result": "50pass/0fail/303assertions per OS; all original13 tails reached. Root14 reviewed blobs equal actual hosted snapshot. Two earlier source gates38P12F and44P6F retained; pinned runtime Context annotation and explicitly composed finalizer fixture repairs independently reviewed. Core type0; integrated Server type and scoped aggregate regressions pending."
+        },
+        {
+          "kind": "aggregate_core_regression_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43306653200",
+          "snapshot": "705f8b946981d69f6e6efeda2c40edd381fda37c",
+          "result": "70pass/0fail/236assertions per OS across actual Sessioncreate/prompt/Eventpersist/scheduledtaskcapability/operator suites. Cleanup and officialwrapper0. Focused Omni control notapplicable; no broadspawnerclaim."
+        },
+        {
+          "kind": "aggregate_server_http_regression_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43306658757",
+          "snapshot": "f7e6ef7895102beaa1eae94949eec078ead38aec",
+          "result": "5pass/0fail/87assertions per OS; actual HTTP list/pause/resume/run/keyretry/delete/foreign/denied behavior. Cleanup and officialwrapper0."
+        },
+        {
+          "kind": "integrated_root_types_guards",
+          "source": "9630aebc2c",
+          "result": "Root Server bun typecheck0;78guards/373changedpaths/0gates/0errors/1inheriteddependencyadvisory. Boundaries5635files/5297edges/92existing/0new/0stale;spawn4020files/66allowlisted. No Schema/Protocol/HttpApi/dependency/generated change."
         }
       ],
-      "remaining": "Focused implementation integrated and verified; Root Server typecheck and aggregate existing Session/Event/schedule + Server HTTP regression gates pending. Checkpoint/empty-Session/hook limits documented."
+      "remaining": "Closed: focused50 and aggregate Core70 + ServerHTTP5 pass EACH Linux/Windows; integrated Server type0,14 actual snapshot blobs match, global guards/boundaries/spawn0. Checkpoint/empty-Session/hook limits are documented; no revocation linearizability after last checkpoint or commercial SDK claim."
     },
     {
       "id": "H9",
@@ -3331,9 +3348,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 54,
+    "new_fixes_verified": 55,
     "already_fixed_verified": 1,
-    "remaining": 10,
+    "remaining": 9,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "90420b0721",
