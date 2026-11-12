@@ -43,65 +43,81 @@ const browser = {
     type: "oauth",
     label: "ChatGPT Pro/Plus (browser)",
   },
-  authorize: () =>
-    Effect.gen(function* () {
-      const pkce = yield* Effect.promise(generatePKCE)
-      const state = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)).buffer)
-      const code = yield* Deferred.make<string, Error>()
-      const redirect = `http://localhost:${callbackPort}/auth/callback`
-      const server = createServer((request, response) => {
-        const url = new URL(request.url ?? "/", `http://localhost:${callbackPort}`)
-        if (url.pathname !== "/auth/callback") {
-          response.writeHead(404).end("Not found")
-          return
-        }
-        const error = url.searchParams.get("error_description") ?? url.searchParams.get("error")
-        const value = url.searchParams.get("code")
-        if (error) {
-          Effect.runFork(Deferred.fail(code, new Error(error)))
-          response
-            .writeHead(400, { "Content-Type": "text/html" })
-            .end(OauthCallbackPage.error(error, { provider: "ChatGPT" }))
-          return
-        }
-        if (!value || url.searchParams.get("state") !== state) {
-          const message = value ? "Invalid OAuth state" : "Missing authorization code"
-          Effect.runFork(Deferred.fail(code, new Error(message)))
-          response
-            .writeHead(400, { "Content-Type": "text/html" })
-            .end(OauthCallbackPage.error(message, { provider: "ChatGPT" }))
-          return
-        }
-        Effect.runFork(Deferred.succeed(code, value))
-        response.writeHead(200, { "Content-Type": "text/html" }).end(OauthCallbackPage.success({ provider: "ChatGPT" }))
-      })
-      yield* Effect.callback<void, Error>((resume) => {
-        server.once("error", (error: NodeJS.ErrnoException) =>
-          resume(
-            Effect.fail(
-              error.code === "EADDRINUSE"
-                ? new Error(
-                    `Port ${callbackPort} is already in use, likely by another ChatGPT or Codex sign-in. Finish or close it, then try again.`,
-                  )
-                : error,
-            ),
-          ),
-        )
-        server.listen(callbackPort, "localhost", () => resume(Effect.void))
-      })
-      yield* Effect.addFinalizer(() => Effect.sync(() => server.close()))
-      return {
-        mode: "auto" as const,
-        url: authorizeURL(redirect, pkce, state),
-        instructions: "Complete authorization in your browser. This window will close automatically.",
-        callback: Deferred.await(code).pipe(
-          Effect.flatMap((value) => exchange(value, redirect, pkce)),
-          Effect.map((tokens) => credential(browserMethodID, tokens)),
-        ),
-      }
-    }),
+  authorize: () => authorizeBrowser(),
   refresh: (value) => refresh(browserMethodID, value),
 } satisfies IntegrationOAuthMethodRegistration
+
+// Internal port injection keeps isolated callback tests off the browser sign-in port.
+export function authorizeBrowser(port = callbackPort) {
+  return Effect.gen(function* () {
+    const pkce = yield* Effect.promise(generatePKCE)
+    const state = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)).buffer)
+    const code = yield* Deferred.make<string, Error>()
+    const server = createServer((request, response) => {
+      const url = new URL(request.url ?? "/", `http://localhost:${port}`)
+      if (url.pathname !== "/auth/callback") {
+        response.writeHead(404).end("Not found")
+        return
+      }
+      // Ignore unsolicited callbacks without consuming the pending authorization.
+      if (url.searchParams.get("state") !== state) {
+        response
+          .writeHead(400, { "Content-Type": "text/html" })
+          .end(OauthCallbackPage.error("Invalid OAuth state", { provider: "ChatGPT" }))
+        return
+      }
+      const error = url.searchParams.get("error_description") ?? url.searchParams.get("error")
+      const value = url.searchParams.get("code")
+      if (error) {
+        Effect.runFork(Deferred.fail(code, new Error(error)))
+        response
+          .writeHead(400, { "Content-Type": "text/html" })
+          .end(OauthCallbackPage.error(error, { provider: "ChatGPT" }))
+        return
+      }
+      if (!value) {
+        response
+          .writeHead(400, { "Content-Type": "text/html" })
+          .end(OauthCallbackPage.error("Missing authorization code", { provider: "ChatGPT" }))
+        return
+      }
+      Effect.runFork(Deferred.succeed(code, value))
+      response.writeHead(200, { "Content-Type": "text/html" }).end(OauthCallbackPage.success({ provider: "ChatGPT" }))
+    })
+    const close = Effect.promise(() => new Promise<void>((resolve) => server.close(() => resolve())))
+    yield* Effect.addFinalizer(() => close)
+    yield* Effect.callback<void, Error>((resume) => {
+      server.once("error", (error: NodeJS.ErrnoException) =>
+        resume(
+          Effect.fail(
+            error.code === "EADDRINUSE"
+              ? new Error(
+                  `Port ${port} is already in use, likely by another ChatGPT or Codex sign-in. Finish or close it, then try again.`,
+                )
+              : error,
+          ),
+        ),
+      )
+      server.listen(port, "localhost", () => resume(Effect.void))
+    })
+    const address = server.address()
+    if (!address || typeof address === "string") return yield* Effect.die("Missing OAuth listener address")
+    const redirect = `http://localhost:${address.port}/auth/callback`
+    const callback = yield* Effect.cached(
+      Deferred.await(code).pipe(
+        Effect.flatMap((value) => exchange(value, redirect, pkce)),
+        Effect.map((tokens) => credential(browserMethodID, tokens)),
+        Effect.ensuring(close),
+      ),
+    )
+    return {
+      mode: "auto" as const,
+      url: authorizeURL(redirect, pkce, state),
+      instructions: "Complete authorization in your browser. This window will close automatically.",
+      callback,
+    }
+  })
+}
 
 const headless = {
   integrationID: Integration.ID.make("openai"),
