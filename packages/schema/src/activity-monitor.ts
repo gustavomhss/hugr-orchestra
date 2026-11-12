@@ -49,3 +49,40 @@ export const Snapshot = Schema.Struct({
   records: Schema.Array(Record),
 }).annotate({ identifier: "ActivityMonitor.Snapshot" })
 export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
+
+export const DiskRootID = Schema.Literals(["cache", "logs", "temporary"])
+export type DiskRootID = typeof DiskRootID.Type
+
+export const DiskIssue = Schema.Struct({
+  path: Schema.String,
+  reason: Schema.Literals(["unavailable", "symlink", "unsupported", "changed", "limit", "overflow"]),
+}).annotate({ identifier: "ActivityMonitor.DiskIssue" })
+export interface DiskIssue extends Schema.Schema.Type<typeof DiskIssue> {}
+
+export const DiskAttempt = Schema.Struct({
+  startedAt: NonNegativeInt,
+  sampledAt: NonNegativeInt,
+  state: Schema.Literals(["complete", "partial"]),
+  observedBytes: NonNegativeInt,
+  entries: NonNegativeInt,
+  issueCount: NonNegativeInt,
+  issues: Schema.Array(DiskIssue),
+}).annotate({ identifier: "ActivityMonitor.DiskAttempt" })
+export interface DiskAttempt extends Schema.Schema.Type<typeof DiskAttempt> {}
+
+export const DiskRoot = Schema.Struct({
+  id: DiskRootID,
+  path: Schema.String,
+  attempt: optional(DiskAttempt),
+  // Only a closed walk replaces this reading; partial retries retain its original timestamp.
+  logical: optional(Schema.Struct({ bytes: NonNegativeInt, sampledAt: NonNegativeInt })),
+}).annotate({ identifier: "ActivityMonitor.DiskRoot" })
+export interface DiskRoot extends Schema.Schema.Type<typeof DiskRoot> {}
+
+export const DiskSnapshot = Schema.Struct({
+  instanceID: Schema.NonEmptyString,
+  readAt: NonNegativeInt,
+  source: Schema.Literal("node.fs.lstat"),
+  roots: Schema.Array(DiskRoot),
+}).annotate({ identifier: "ActivityMonitor.DiskSnapshot" })
+export interface DiskSnapshot extends Schema.Schema.Type<typeof DiskSnapshot> {}
