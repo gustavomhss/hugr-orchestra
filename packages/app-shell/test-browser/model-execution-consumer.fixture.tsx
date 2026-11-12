@@ -199,7 +199,7 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
         default: () => view.catalog.default, defaultModel: () => view.catalog.defaultModel },
       models, saved, setSaved, savedReady: () => true,
     } as Parameters<typeof localModule.createLocal>[0])
-    return { local, dispose, setView, saved, setSaved, models, sdk, server, sync,
+    return { local, dispose, setView, saved, setSaved, models, sdk, server, sync, calls,
       removeModel() {
         const provider = view.catalog.all.get(ref.providerID)
         if (!provider) throw new Error("Missing catalog provider control")
@@ -234,6 +234,35 @@ export async function selectorDOM(owner: ReturnType<typeof selection>) {
   button.focus()
   button.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
   await wait(() => document.querySelectorAll('[role="menuitemradio"]').length > 0, "actual model popover rows after Enter").catch((error: unknown) => {
+    const menu = document.querySelector<HTMLElement>('[role="menu"]')
+    const viewport = menu?.querySelector<HTMLElement>(".scroll-view__viewport")
+    const rect = viewport?.getBoundingClientRect()
+    // Synthetic fixture DOM only: fixed primitive fields, bounded output, no user/config/credential data.
+    console.error("E6 popover fixture diagnostic " + JSON.stringify({
+      trigger: {
+        expanded: button.getAttribute("aria-expanded")?.slice(0, 128) ?? null,
+        controls: button.getAttribute("aria-controls")?.slice(0, 128) ?? null,
+        state: button.getAttribute("data-state")?.slice(0, 128) ?? null,
+        connected: button.isConnected, focused: document.activeElement === button,
+      },
+      menuPresent: menu !== null, menuCount: document.querySelectorAll('[role="menu"]').length,
+      radioCount: document.querySelectorAll('[role="menuitemradio"]').length,
+      localListCount: owner.local.model.list().length, catalogCount: owner.models.list().length,
+      canonicalHttpQueries: owner.calls.queries().length, currentModel: owner.local.model.current()?.id ?? null,
+      viewport: viewport ? {
+        offsetWidth: viewport.offsetWidth, offsetHeight: viewport.offsetHeight,
+        clientWidth: viewport.clientWidth, clientHeight: viewport.clientHeight,
+        rectWidth: rect?.width ?? null, rectHeight: rect?.height ?? null,
+      } : null,
+      placement: {
+        hostConnected: root.isConnected, bodyContainsHost: document.body.contains(root),
+        bodyContainsMenu: menu ? document.body.contains(menu) : false,
+        hostContainsMenu: menu ? root.contains(menu) : false,
+        sameDocument: menu ? menu.ownerDocument === document : null,
+        menuParentTag: menu?.parentElement?.tagName ?? null, bodyChildren: document.body.childElementCount,
+        modelTextPresent: document.body.textContent?.includes("Consumer model") ?? false,
+      },
+    }).slice(0, 4096))
     dispose(); root.remove(); currentRows.local = undefined
     throw error
   })
