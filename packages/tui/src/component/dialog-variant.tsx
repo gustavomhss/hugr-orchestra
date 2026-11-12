@@ -10,15 +10,15 @@ export function DialogVariant() {
   const options = createMemo(() => {
     return [
       {
-        value: "default",
-        title: "Default",
+        value: JSON.stringify(["model-default"]),
+        title: "Model default",
         onSelect: () => {
           dialog.clear()
           local.model.variant.set(undefined)
         },
       },
       ...local.model.variant.list().map((variant) => ({
-        value: variant,
+        value: JSON.stringify(["variant", variant]),
         title: variant,
         onSelect: () => {
           dialog.clear()
@@ -32,7 +32,11 @@ export function DialogVariant() {
     <DialogSelect<string>
       options={options()}
       title={"Select variant"}
-      current={local.model.variant.selected()}
+      current={typeof local.model.variant.selected() === "string"
+        ? JSON.stringify(["variant", local.model.variant.selected()])
+        : local.model.variant.selected() === null ? JSON.stringify(["model-default"])
+          : typeof local.model.variant.current() === "string" ? JSON.stringify(["variant", local.model.variant.current()])
+            : JSON.stringify(["model-default"])}
       flat={true}
     />
   )

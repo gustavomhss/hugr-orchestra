@@ -20,6 +20,8 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     events?: EventSource
   }) => {
     const abort = new AbortController()
+    const transportBinding = { url: props.url, directory: props.directory, fetch: props.fetch,
+      headers: JSON.stringify([...new Headers(props.headers).entries()]) }
     let sse: AbortController | undefined
 
     // The V2 client serves session actions, the catalog the store bootstraps from, and the event stream.
@@ -189,6 +191,9 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       catalog,
       offline,
       connectionEpoch,
+      binding: () => ({ url: props.url, directory: props.directory, headers: props.headers, fetch: props.fetch,
+        active: props.url === transportBinding.url && props.directory === transportBinding.directory &&
+          props.fetch === transportBinding.fetch && JSON.stringify([...new Headers(props.headers).entries()]) === transportBinding.headers }),
       directory: props.directory,
       event: emitter,
       fetch: props.fetch ?? fetch,
