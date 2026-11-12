@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { mkdir, mkdtemp, rename, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { verifyReleaseArtifacts } from "../../../script/release-artifact-identity"
+import { verifyReleaseArtifacts } from "../src/release-artifact-identity"
 
 const version = "0.3.6"
 const expected = { version, sourceSha: "a".repeat(40), cliRunId: 1, desktopRunId: 2, qualificationRunId: 3 }

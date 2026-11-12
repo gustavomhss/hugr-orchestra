@@ -125,7 +125,11 @@ export function provenCi(raw: unknown, login: string, evidence: CiEvidence) {
 }
 
 
-export const pull = Effect.fn("InboxRemote.pull")(function* (credentials: Credential.Interface, owner: string) {
+export const pull = Effect.fn("InboxRemote.pull")(function* (
+  credentials: Credential.Interface,
+  owner: string,
+  options: Options = transport,
+) {
   // Work snapshots have their own explicit sync with a durable success/failure receipt.
   const saved = yield* Effect.forEach(
     accountSources.filter((source) => source === "jira"),
@@ -133,7 +137,7 @@ export const pull = Effect.fn("InboxRemote.pull")(function* (credentials: Creden
   )
   const pages = yield* Effect.forEach(
     saved.flatMap((item) => (item ? [item] : [])),
-    (item) => read(item),
+    (item) => read(item, options),
   )
   return pages.flat()
 })
@@ -498,11 +502,12 @@ export const release = Effect.fn("InboxRemote.release")(function* (
   threadId: string,
   actor: string,
   text: string,
+  options: Options = transport,
 ) {
   if (!accountSources.includes(source as AccountSource)) return yield* Effect.fail("unavailable" as const)
   const saved = yield* credential(credentials, source as AccountSource, owner)
   if (!saved) return yield* Effect.fail("unavailable" as const)
-  yield* send(saved, threadId, actor, text)
+  yield* send(saved, threadId, actor, text, options)
 })
 
 export const originDraft = Effect.fn("InboxRemote.originDraft")(function* (
@@ -672,7 +677,7 @@ function read(
     const site = httpsOrigin(saved.site ?? "")
     if (!site || !saved.email) return yield* new Failure({ reason: "invalid_response" })
     const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
-    return workItems("jira", yield* search((input) => request(site.origin, `Basic ${basic}`, input, transport)))
+    return workItems("jira", yield* search((input) => request(site.origin, `Basic ${basic}`, input, options)))
   })
 }
 
@@ -681,8 +686,9 @@ function send(
   threadId: string,
   actor: string,
   text: string,
+  options: Options = transport,
 ) {
-  return postFor(saved, threadId, actor, text).pipe(
+  return postFor(saved, threadId, actor, text, options).pipe(
     Effect.asVoid,
     Effect.mapError(() => "unavailable" as const),
   )
@@ -703,6 +709,7 @@ function postFor(
   threadId: string,
   actor: string,
   text: string,
+  options: Options = transport,
 ) {
   if (saved.source === "github") {
     const match = threadId.match(/repos\/([^/]+)\/([^/]+)\/(?:issues|pulls)\/(\d+)/)
@@ -762,7 +769,7 @@ function postFor(
       path: `/rest/api/3/issue/${threadId}/comment`,
       body: { body: jiraDocument(text) },
     },
-    transport,
+    options,
   )
 }
 
