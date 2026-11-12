@@ -1388,11 +1388,45 @@
     {
       "id": "H14",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "916a6fe200",
+        "b28daf99d0",
+        "70329694cf",
+        "214a880644",
+        "042909f8d7",
+        "4055d1571a",
+        "41792857d7"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_controls_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43242437066",
+          "result": "5pass/26assertions perOS after separately documented zero-match-filter and Scope setup corrections; real HTTP/cache/refresh/matching/exact limits."
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43244686169",
+          "result": "15semantic failures/36assertions perOS. Pending get13s/pull65s, concurrent cache39,846,068B Linux/58,720,496B Windows and admitted cached companions67,109,104B exceed33,554,432B. No loader/Scope/Bun-timeout classification."
+        },
+        {
+          "kind": "version_write_counterexample_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43250488480",
+          "result": "Source8d: exact4096 control passes; ASCII4097 and UTF84098 invalid versions still return roots,2semantic failures perOS/14assertions. Physical preservation/no-HTTP tails not reached in RED."
+        },
+        {
+          "kind": "full_final_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43252419320",
+          "result": "66pass/277assertions perOS across5files,23target+43compatibility, all17previousRED and final cancellation/cleanup/no-fileHTTP/sentinel checks reached. Snapshot235e53e82e10aa55206fd78b02e3b1be40d93ad9."
+        },
+        {
+          "kind": "integration_source_types_cold",
+          "result": "Root+House SOURCE APPROVE8d plus6375 version guard. Seven owncommits integrated through41792857d7, all9hashes exact. Core final type0; integrated guards78rules354paths0gates0errors/one inherited advisory, boundaries0new0stale/spawn0. No dependencies, Config, Protocol or generated code changes."
+        }
+      ],
+      "remaining": "Closed for remote URL acquisitions: strict admitted-content and metadata/cardinality bounds, cache snapshots and deadlines. No physical TCP-prefetch/heap32MiB, rigid cleanup/syscall wallclock, crash-atomic unversioned publication, local/embedded acquisition or LLM-memory guarantee."
     },
     {
       "id": "L1",
@@ -2923,9 +2957,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 53,
+    "new_fixes_verified": 54,
     "already_fixed_verified": 1,
-    "remaining": 11,
+    "remaining": 10,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "90420b0721",
