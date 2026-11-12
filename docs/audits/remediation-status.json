@@ -31,28 +31,133 @@
       "id": "E3",
       "severity": "P2",
       "owner": "clients",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E4",
       "severity": "P2",
       "owner": "clients",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E5",
       "severity": "P2",
       "owner": "clients",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E6",
@@ -75,20 +180,118 @@
     {
       "id": "E8",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "edf0acee6d23625a8e1ef287feda1c4d92452bc6"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121722733"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121723099"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43122491916",
+          "result": "concurrent materializations"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125564276",
+          "result": "11 LLM/WebSocket pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126317958",
+          "result": "4 Core persistence/replay pass"
+        },
+        {
+          "kind": "compat_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125563407",
+          "result": "155 pass, 1 obsolete expected-success assertion failed; this workflow was NOT green"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126320570",
+          "result": "Corrected EOF assertion passes; incomplete tool call still absent"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-stream-llm-type.exit",
+            "/tmp/audit-stream-core-type.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E9",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "edf0acee6d23625a8e1ef287feda1c4d92452bc6"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121722733"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121723099"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43122491916",
+          "result": "concurrent materializations"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125564276",
+          "result": "11 LLM/WebSocket pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126317958",
+          "result": "4 Core persistence/replay pass"
+        },
+        {
+          "kind": "compat_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125563407",
+          "result": "155 pass, 1 obsolete expected-success assertion failed; this workflow was NOT green"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126320570",
+          "result": "Corrected EOF assertion passes; incomplete tool call still absent"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-stream-llm-type.exit",
+            "/tmp/audit-stream-core-type.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E10",
@@ -137,46 +340,186 @@
       "id": "E12",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "9c5be3414584bf5deace379b0615eb2790c09ac7"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112550030"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43116667193",
+          "result": "123 pass in scoped app suite; exact source blobs verified"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-app-typecheck-jsx-fix.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E13",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "9c5be3414584bf5deace379b0615eb2790c09ac7"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112550030"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43116667193",
+          "result": "123 pass in scoped app suite; exact source blobs verified"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-app-typecheck-jsx-fix.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E14",
       "severity": "P2",
       "owner": "clients",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "E15",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "commits": [
+        "23bf00b8800199e5fc66443d8613b95cb7cc9549",
+        "7b605e13f32d4dd0790e2f3664c15617b09d21e9"
+      ],
+      "evidence": [
+        {
+          "kind": "compile_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112859187",
+          "result": "Missing new seam; not a baseline runtime reproduction"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119837673",
+          "result": "15 pass; persisted per-tab worktree, readiness and stale snapshot checks"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-app-typecheck-jsx-fix.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "G1",
       "severity": "P2",
       "owner": "clients",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "e2e250b7e3efc5c16a2994b03e1444536162b668"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112615865"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113793857",
+          "result": "14 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117450334",
+          "result": "2 imported consumer tests pass; official regeneration idempotent"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-client-type-final.exit",
+            "/tmp/audit-clients-generate-verified.exit",
+            "/tmp/audit-clients-generate-idempotence.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "G2",
@@ -191,10 +534,37 @@
       "id": "H1",
       "severity": "P1",
       "owner": "security",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
-      "evidence": []
+      "commits": [
+        "cc3ffb47d7e3a1736606e72e5115a0ae01cd7fc8",
+        "4f3f912cdcf2fa745f04246bb527e3bb969a06f6",
+        "bd7f91846be76017ef82c50fb730bb73b13d45ac"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43118297966",
+          "result": "1 pass, 7 fail after fixture correction"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119879419",
+          "result": "34 pass per OS across authorization/trust"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-authorization-core-recheck.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "H2",
@@ -392,10 +762,37 @@
       "id": "H12",
       "severity": "P1",
       "owner": "security",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
-      "evidence": []
+      "commits": [
+        "cc3ffb47d7e3a1736606e72e5115a0ae01cd7fc8",
+        "f68cf3cc077822281a3b97dba733f33c099f64ff",
+        "bd7f91846be76017ef82c50fb730bb73b13d45ac"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117938181",
+          "result": "unauthorized localhost receives secret/request"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119879419",
+          "result": "34 pass per OS across authorization/trust"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-authorization-core-recheck.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "H13",
@@ -466,11 +863,21 @@
     {
       "id": "L2",
       "severity": "P1",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026869",
+          "result": "HTTP stage/clear/commit responses captured; stage 200 instead of 409"
+        }
+      ]
     },
     {
       "id": "L3",
@@ -538,11 +945,21 @@
     {
       "id": "L10",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026869",
+          "result": "HTTP stage/clear/commit responses captured; stage 200 instead of 409"
+        }
+      ]
     },
     {
       "id": "L11",
@@ -593,19 +1010,87 @@
       "id": "M2",
       "severity": "P2",
       "owner": "desktop",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
-      "evidence": []
+      "commits": [
+        "3bfb15cdfd7e6ff000104131752e6f58f5743861",
+        "1a07cf9ac2e5b013b8fb8e0f2a0d732edbc8732c",
+        "0cc27e0a71fa45fb7b0705018c097cf1560e214c",
+        "43b157e7d770b8cdbcd6cf5559255922484386b5",
+        "c4166f5a92c605c6693acdad5f7d3d1e4082cb72",
+        "9d48126477385e27f4d5dcc485dd7ed20e97dfa9"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115786939"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119306530",
+          "result": "late pump/stop/iterator failures"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119723416",
+          "result": "30 pass per OS, 36 real child spawns per OS, positive control"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-processes-final-typecheck.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "M3",
       "severity": "P2",
       "owner": "desktop",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
-      "evidence": []
+      "commits": [
+        "3bfb15cdfd7e6ff000104131752e6f58f5743861",
+        "1a07cf9ac2e5b013b8fb8e0f2a0d732edbc8732c",
+        "0cc27e0a71fa45fb7b0705018c097cf1560e214c",
+        "43b157e7d770b8cdbcd6cf5559255922484386b5",
+        "c4166f5a92c605c6693acdad5f7d3d1e4082cb72",
+        "9d48126477385e27f4d5dcc485dd7ed20e97dfa9"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115786939"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119306530",
+          "result": "late pump/stop/iterator failures"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119723416",
+          "result": "30 pass per OS, 36 real child spawns per OS, positive control"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-processes-final-typecheck.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "M4",
@@ -872,10 +1357,36 @@
       "id": "T1",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "51b4c6ab8435955b57a4c789d4b9121f1b948366",
+        "0e54911f788b4d8b9cd52b51bd452a704cc2afbc",
+        "f0a4137123b0f2b0d19c3639681953b4e30a8473"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112713356"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121477546",
+          "result": "15 pass; final TUI types and behavior"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-tui-typecheck-types-fix.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "T2",
@@ -890,37 +1401,134 @@
       "id": "T3",
       "severity": "P2",
       "owner": "clients",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "X1",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "51b4c6ab8435955b57a4c789d4b9121f1b948366",
+        "0e54911f788b4d8b9cd52b51bd452a704cc2afbc",
+        "f0a4137123b0f2b0d19c3639681953b4e30a8473"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112713356"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121477546",
+          "result": "15 pass; final TUI types and behavior"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-tui-typecheck-types-fix.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "X2",
       "severity": "P2",
       "owner": "ui",
-      "status": "regression_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "51b4c6ab8435955b57a4c789d4b9121f1b948366",
+        "0e54911f788b4d8b9cd52b51bd452a704cc2afbc",
+        "f0a4137123b0f2b0d19c3639681953b4e30a8473"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112713356"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121477546",
+          "result": "15 pass; final TUI types and behavior"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-tui-typecheck-types-fix.exit"
+          ]
+        }
+      ]
     },
     {
       "id": "X3",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "owner": "ui",
+      "status": "regression_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026869",
+          "result": "HTTP stage/clear/commit responses captured; stage 200 instead of 409"
+        }
+      ]
     }
   ],
   "verified_workflow_runs": [
@@ -1136,5 +1744,38 @@
       },
       "disposition": "Recorded separately from original 65; no silent G1 scope expansion."
     }
-  ]
+  ],
+  "summary": {
+    "original_findings": 65,
+    "new_fixes_verified": 29,
+    "already_fixed_verified": 1,
+    "remaining": 35,
+    "scope": "Original 65 only; supplemental candidates tracked separately"
+  },
+  "integration_checkpoint": "e46ab2cbc9",
+  "complex_wave_2": {
+    "base": "78b8e1a46b",
+    "units": {
+      "authorization": [
+        "H1",
+        "H12"
+      ],
+      "processes": [
+        "M2",
+        "M3"
+      ],
+      "streams": [
+        "E8",
+        "E9"
+      ],
+      "ownership": [
+        "L2",
+        "L10",
+        "X3"
+      ]
+    },
+    "mechanical_plan_check": "9 unique acceptance IDs, exact coverage; 6 pairwise conflict-free profiles",
+    "generated_writer": "ownership only after generator fix integrated",
+    "typechecks": "globally serial, GOMAXPROCS=2; hosted tests only"
+  }
 }
