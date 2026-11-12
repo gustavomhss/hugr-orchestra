@@ -341,7 +341,7 @@ export function remote(names: readonly string[], value: string, options: { oauth
         })
         const connection = known ?? (!id && isInitializeRequest(message) ? await openSession() : undefined)
         if (!connection) return new Response("Unknown MCP session", { status: 404 })
-        return connection.transport.handleRequest(request, { parsedBody: message })
+        return connection.transport.handleRequest(request)
       }
       if (!known) return new Response("Unknown MCP session", { status: 404 })
       const response = await known.transport.handleRequest(request)
