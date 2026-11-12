@@ -106,9 +106,8 @@ export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("Ses
 }) {}
 
 /** The Session is running; the operation would interleave with its drain. */
-export class BusyError extends Schema.TaggedErrorClass<BusyError>()("Session.BusyError", {
-  sessionID: SessionSchema.ID,
-}) {}
+export const BusyError = SessionRunner.BusyError
+export type BusyError = SessionRunner.BusyError
 
 export class SkillNotFoundError extends Schema.TaggedErrorClass<SkillNotFoundError>()("Session.SkillNotFoundError", {
   sessionID: SessionSchema.ID,
@@ -198,7 +197,7 @@ export interface Interface {
     prompt: PromptInput.Prompt
     delivery?: SessionInput.Delivery
     resume?: boolean
-  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError | PromptBlockedError>
+  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | BusyError | PromptConflictError | PromptBlockedError>
   /** Copies the history before `messageID` (and before a staged revert) into a new Session. */
   readonly fork: (input: {
     sessionID: SessionSchema.ID
@@ -254,9 +253,9 @@ export interface Interface {
       sessionID: SessionSchema.ID
       messageID: SessionMessage.ID
       files?: boolean
-    }) => Effect.Effect<Revert.State, NotFoundError | MessageNotFoundError | Snapshot.Error>
-    readonly clear: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | Snapshot.Error>
-    readonly commit: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError>
+    }) => Effect.Effect<Revert.State, NotFoundError | BusyError | MessageNotFoundError | Snapshot.Error>
+    readonly clear: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | BusyError | Snapshot.Error>
+    readonly commit: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | BusyError>
   }
 }
 
@@ -330,7 +329,7 @@ const layer = Layer.effect(
       execution.withRunner(session.id, use)
 
     // Session operations hold the Session as a drain would, so none interleaves with a running turn.
-    const exclusive = <A, E>(session: SessionSchema.Info, effect: Effect.Effect<A, E>) =>
+    const exclusive = <A, E>(session: Pick<SessionSchema.Info, "id">, effect: Effect.Effect<A, E>) =>
       execution
         .exclusive(session.id, effect)
         .pipe(
@@ -532,7 +531,7 @@ const layer = Layer.effect(
             const prompt = resolvePrompt(input.prompt)
             const delivery = input.delivery ?? "steer"
             const expected = { sessionID: input.sessionID, messageID, prompt, delivery }
-            const admitted = yield* SessionInput.admit(db, events, {
+            const admit = SessionInput.admit(db, events, {
               id: messageID,
               sessionID: input.sessionID,
               prompt,
@@ -545,6 +544,25 @@ const layer = Layer.effect(
                   : Effect.die(defect),
               ),
             )
+            const ownership = { exclusive: false }
+            const admitted = yield* events.transact(Effect.gen(function* () {
+              // The global message ID check, inclusive undo commit and admission share one immediate SQL
+              // transaction. A competing Session can neither claim the ID between them nor leave a rejected undo.
+              if ((yield* SessionInput.find(db, messageID)) || (yield* store.message(messageID))) return yield* admit
+              const session = yield* result.get(input.sessionID)
+              if (session.revert) {
+                // Stage may have won after the boundary preflight. Roll back rather than commit without ownership.
+                if (!ownership.exclusive) return yield* new BusyError({ sessionID: input.sessionID })
+                yield* SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events))
+              }
+              return yield* admit
+            }), (transaction) => Effect.gen(function* () {
+              if ((yield* SessionInput.find(db, messageID)) || (yield* store.message(messageID))) return yield* transaction
+              if (!(yield* result.get(input.sessionID)).revert) return yield* transaction
+              return yield* exclusive({ id: input.sessionID }, Effect.sync(() => { ownership.exclusive = true }).pipe(
+                Effect.andThen(transaction),
+              ))
+            }))
             if (!SessionInput.equivalent(admitted, expected))
               return yield* new PromptConflictError({ sessionID: input.sessionID, messageID })
             if (input.resume !== false) yield* execution.wake(admitted.sessionID)
@@ -730,27 +748,38 @@ const layer = Layer.effect(
         )
       }),
       revert: {
-        stage: Effect.fn("V2Session.revert.stage")(function* (input) {
-          const session = yield* result.get(input.sessionID)
-          return yield* SessionRevert.stage({ session, messageID: input.messageID, files: input.files }).pipe(
-            Effect.provideService(Database.Service, database),
-            Effect.provideService(EventV2.Service, events),
-            Effect.provide(locations.get(session.location)),
-            Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
-          )
-        }),
-        clear: Effect.fn("V2Session.revert.clear")(function* (sessionID) {
-          const session = yield* result.get(sessionID)
-          yield* SessionRevert.clear(session).pipe(
-            Effect.provideService(EventV2.Service, events),
-            Effect.provide(locations.get(session.location)),
-            Effect.mapError((error) => error as NotFoundError | Snapshot.Error),
-          )
-        }),
-        commit: Effect.fn("V2Session.revert.commit")(function* (sessionID) {
-          const session = yield* result.get(sessionID)
-          yield* SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events))
-        }),
+        stage: Effect.fn("V2Session.revert.stage")((input) => exclusive(
+          { id: input.sessionID },
+          Effect.gen(function* () {
+            const session = yield* result.get(input.sessionID)
+            return yield* SessionRevert.stage({ session, messageID: input.messageID, files: input.files }).pipe(
+              Effect.provideService(Database.Service, database),
+              Effect.provideService(EventV2.Service, events),
+              Effect.provide(locations.get(session.location)),
+              Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
+            )
+          }),
+        )),
+        clear: Effect.fn("V2Session.revert.clear")((sessionID) => exclusive(
+          { id: sessionID },
+          Effect.gen(function* () {
+            const session = yield* result.get(sessionID)
+            // Avoid opening a Location when there is no filesystem redo to perform.
+            if (!session.revert) return
+            yield* SessionRevert.clear(session).pipe(
+              Effect.provideService(EventV2.Service, events),
+              Effect.provide(locations.get(session.location)),
+              Effect.mapError((error) => error as NotFoundError | Snapshot.Error),
+            )
+          }),
+        )),
+        commit: Effect.fn("V2Session.revert.commit")((sessionID) => exclusive(
+          { id: sessionID },
+          Effect.gen(function* () {
+            const session = yield* result.get(sessionID)
+            yield* SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events))
+          }),
+        )),
       },
     })
 
