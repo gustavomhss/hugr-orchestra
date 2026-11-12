@@ -37,6 +37,7 @@ test("a background Task returns at once and delivers the child's reply to its pa
         const prompts = yield* Ref.make(0)
         const reply = yield* Ref.make<ReadonlyArray<SessionMessage.Message>>([])
         const sessions = Layer.mock(SessionV2.Service, {
+          message: () => Effect.succeed(undefined),
           wait: () => Effect.void,
           messages: () => Ref.get(reply).pipe(Effect.map((messages) => [...messages])),
           // Delivery ignores the admitted record, so the capture parks the call once it has seen the input; a failed
@@ -96,6 +97,7 @@ test("a background child that ends without a completed reply returns a failure t
         const directory = yield* worktree
         const delivered = yield* Deferred.make<string>()
         const sessions = Layer.mock(SessionV2.Service, {
+          message: () => Effect.succeed(undefined),
           wait: () => Effect.void,
           messages: () => Effect.succeed([]),
           prompt: (input) => Deferred.succeed(delivered, input.prompt.text).pipe(Effect.andThen(Effect.die("captured"))),
@@ -124,11 +126,11 @@ test("a background return that keeps failing is retried, then held as a durable 
         const prompts = yield* Ref.make(0)
         const parent = yield* Deferred.make<SessionSchema.Info>()
         const sessions = Layer.mock(SessionV2.Service, {
+          message: () => Effect.succeed(undefined),
           wait: () => Effect.void,
           messages: () => Effect.succeed([]),
           prompt: () => Ref.update(prompts, (count) => count + 1).pipe(Effect.andThen(Effect.die("parent inbox unavailable"))),
           get: () => Deferred.await(parent),
-          message: () => Effect.succeed(undefined),
           revert: { stage: unused, clear: unused, commit: unused },
         })
         yield* Effect.gen(function* () {
@@ -169,6 +171,7 @@ test("audit: each distinct background prompt on a resumed child returns to its p
     const second = yield* Deferred.make<void>()
     const received: string[] = []
     const sessions = {
+      message: () => Effect.succeed(undefined),
       wait: () => Effect.void,
       messages: () => Effect.succeed([]),
       prompt: (input: Parameters<SessionV2.Interface["prompt"]>[0]) => Effect.gen(function* () {
@@ -181,14 +184,14 @@ test("audit: each distinct background prompt on a resumed child returns to its p
     const parentID = SessionSchema.ID.make("ses_audit_parent")
     const childID = SessionSchema.ID.make("ses_audit_child")
     const initial = GovernanceBackgroundV2.watch({ parentID, childID, description: "first", context: context(parentID) })
-    background.register(initial)
+    yield* background.register(initial, sessions)
     yield* background.start(sessions, childID)
     yield* Deferred.await(first).pipe(Effect.timeout("2 seconds"))
     const resumed = GovernanceBackgroundV2.watch({ parentID, childID, description: "second", context: {
       ...context(parentID), toolCallID: "call_audit_resumed",
     } })
     expect(resumed.promptID).not.toBe(initial.promptID)
-    background.register(resumed)
+    yield* background.register(resumed, sessions)
     yield* background.start(sessions, childID)
     yield* Deferred.await(second).pipe(Effect.timeout("2 seconds"))
     expect(received).toEqual([GovernanceBackgroundV2.returnID(initial), GovernanceBackgroundV2.returnID(resumed)])
@@ -202,6 +205,7 @@ test("pending background prompts survive another registration and repeated start
     const delivered = yield* Deferred.make<void>()
     const received: string[] = []
     const sessions = {
+      message: () => Effect.succeed(undefined),
       wait: () => Deferred.await(idle),
       messages: () => Effect.succeed([]),
       prompt: (input: Parameters<SessionV2.Interface["prompt"]>[0]) => Effect.gen(function* () {
@@ -218,12 +222,12 @@ test("pending background prompts survive another registration and repeated start
     const second = GovernanceBackgroundV2.watch({ parentID, childID, description: "second", context: {
       ...context(parentID), toolCallID: "call_pending_resumed",
     } })
-    background.register(first)
-    background.register(second)
-    background.register(first)
+    yield* background.register(first, sessions)
+    yield* background.register(second, sessions)
+    yield* background.register(first, sessions)
     yield* background.start(sessions, childID)
     yield* background.start(sessions, childID)
-    background.register(second)
+    yield* background.register(second, sessions)
     yield* Deferred.succeed(idle, undefined)
     yield* Deferred.await(delivered).pipe(Effect.timeout("2 seconds"))
     yield* background.start(sessions, childID)
@@ -249,7 +253,7 @@ test("completed watches retire and a later exact retry reconciles one durable pa
         Effect.repeat({ until: (pending) => !pending, schedule: Schedule.spaced("5 millis") }),
         Effect.timeout("2 seconds"),
       )
-      background.register(input)
+      yield* background.register(input, sessions)
       yield* background.start(sessions, childID)
       yield* settled
       const original = yield* database.db.select().from(SessionInputTable).all().pipe(Effect.orDie)
@@ -258,7 +262,7 @@ test("completed watches retire and a later exact retry reconciles one durable pa
       // The first return is still pending in the real inbox, without a projected user message.
       expect(yield* sessions.message({ sessionID: parentID, messageID: GovernanceBackgroundV2.returnID(input) }))
         .toBeUndefined()
-      background.register(input)
+      yield* background.register(input, sessions)
       yield* background.start(sessions, childID)
       yield* settled
       expect(yield* database.db.select().from(SessionInputTable).all().pipe(Effect.orDie)).toEqual(original)
@@ -275,6 +279,7 @@ test("a removed parent exhausts bounded delivery and retires its failed HOLD wat
     const attempts = yield* Ref.make(0)
     const holds = yield* Ref.make(0)
     const sessions = {
+      message: () => Effect.succeed(undefined),
       wait: () => Effect.void,
       messages: () => Effect.succeed([]),
       prompt: () => Ref.update(attempts, (count) => count + 1).pipe(Effect.andThen(Effect.die("parent removed"))),
@@ -283,7 +288,7 @@ test("a removed parent exhausts bounded delivery and retires its failed HOLD wat
     const background = yield* GovernanceBackgroundV2.make({} as EventV2.Interface)
     const parentID = SessionSchema.ID.make("ses_removed_parent")
     const childID = SessionSchema.ID.make("ses_removed_child")
-    background.register(GovernanceBackgroundV2.watch({ parentID, childID, description: "removed", context: context(parentID) }))
+    yield* background.register(GovernanceBackgroundV2.watch({ parentID, childID, description: "removed", context: context(parentID) }), sessions)
     yield* background.start(sessions, childID)
     yield* Effect.sync(() => background.has(childID)).pipe(
       Effect.repeat({ until: (pending) => !pending, schedule: Schedule.spaced("10 millis") }),
@@ -304,13 +309,14 @@ test("closing the scope interrupts active watches and releases unstarted registr
     const childID = SessionSchema.ID.make("ses_scope_child")
     const queuedID = SessionSchema.ID.make("ses_scope_queued")
     const sessions = {
+      message: () => Effect.succeed(undefined),
       wait: () => Deferred.succeed(entered, undefined).pipe(
         Effect.andThen(Effect.never),
         Effect.ensuring(Deferred.succeed(interrupted, undefined)),
       ),
     } as unknown as SessionV2.Interface
-    background.register(GovernanceBackgroundV2.watch({ parentID, childID, description: "active", context: context(parentID) }))
-    background.register(GovernanceBackgroundV2.watch({ parentID, childID: queuedID, description: "queued", context: context(parentID) }))
+    yield* background.register(GovernanceBackgroundV2.watch({ parentID, childID, description: "active", context: context(parentID) }), sessions)
+    yield* background.register(GovernanceBackgroundV2.watch({ parentID, childID: queuedID, description: "queued", context: context(parentID) }), sessions)
     yield* background.start(sessions, childID)
     yield* Deferred.await(entered).pipe(Effect.timeout("2 seconds"))
     yield* Scope.close(scope, Exit.void)
