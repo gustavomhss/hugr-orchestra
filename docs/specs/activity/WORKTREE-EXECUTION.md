@@ -154,3 +154,20 @@ verdicts. Core bun typecheck passed (exit 0), and unchanged Schema retains its
 previous passing exact-source typecheck. Completion guards passed with 0 gates
 and the same reviewed R0 migration-ignore warning. The original four-file
 acceptance suite is unchanged. Hosted green is the remaining W1 runtime gate.
+
+## Pending implementation validation
+
+Implementation commits: 0dfeb290f7 (pure state) and bcfbc3dbd9 (reader queue),
+pushed with receipts at 5157d2ea3e. The unchanged four-file Linux/Windows
+acceptance pack is active in test:ci. It uploaded only 14 changed files after
+refreshing the correct fork/activity-monitor tracking reference; it is now
+waiting for runner capacity (17 queued runs observed). Do not start a duplicate.
+Log: /tmp/activity-worktree-green-ci.log; exit: /tmp/activity-worktree-green-ci.exit.
+Requested Core tree: 896ecacedc92ec83d74aa7ec82046ac0c24571cf.
+Requested Schema tree: ef7da65d3a27715ef5b365733f513aba7562b843.
+The four tests and shared fixture match the fetched red snapshot byte-for-byte.
+Expected successful totals are 14 passes on Linux and 11 passes/3 explicit skips
+on Windows. Inspect named outcomes, focused Omni control and exact tested trees
+before closing W1. Until then, neither a hosted green nor W1 completion is claimed.
+The user-facing Worktrees table still has no manual reading API/button; W2/W3
+own those integrations. No owner app/database/runtime was restarted or migrated.

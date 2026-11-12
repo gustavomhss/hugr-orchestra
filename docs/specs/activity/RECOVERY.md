@@ -9,7 +9,10 @@ W01–W04 unavailable-constructor failures on both OS; existing disk tests passe
 10 on Linux and 7 on Windows with 3 explicit skips. Fetched snapshot Core/Schema
 trees match the request. State and reader implementations now replace the
 unavailable anchors against the unchanged suite. State cold review approved;
-reader review and Core typecheck also passed; hosted green remains pending. WP-W1 is not
+reader review and Core typecheck also passed. The unchanged four-file green
+request uploaded its snapshot and is waiting for runner capacity (17 queued
+runs observed); /tmp/activity-worktree-green-ci.log records its progress.
+Hosted green remains pending. WP-W1 is not
 complete and no Worktrees manual-read UI/API is available yet. The W2 HTTP
 preparation draft separately passed independent review and is committed.
 See [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md) and worktree-baseline.json.
