@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { DateTime, Effect, Exit, Layer, Option, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
@@ -176,6 +176,68 @@ for (const legacy of [false, true]) {
       }), 10000)
   }
 }
+
+for (const unavailable of [false, true]) {
+  it.live(`legacy repair stops at the committed boundary and retains a later delta with source ${unavailable ? "unavailable" : "unchanged"}`, () =>
+    Effect.gen(function* () {
+      yield* setup
+      const boundary = yield* turn("first user")
+      state.value = "CTX-B"
+      yield* turn("removed user")
+      const original = yield* epoch
+      yield* revert(boundary)
+      state.value = "CTX-C"
+      yield* turn("retained later user")
+      const current = yield* epoch
+      const database = yield* Database.Service
+      const committed = yield* database.db.select().from(EventTable).where(and(
+        eq(EventTable.aggregate_id, Harness.sessionID), eq(EventTable.type, "session.next.revert.committed.1"),
+      )).get().pipe(Effect.orDie)
+      if (!committed) throw new Error("Expected durable commit boundary")
+      // Preserve real B -> commit -> C events, C projection and snapshot; restore only the legacy comparison cursor.
+      yield* database.db.update(SessionContextEpochTable).set({
+        baseline: original.baseline, baseline_seq: original.baseline_seq, snapshot: current.snapshot,
+      }).where(eq(SessionContextEpochTable.session_id, Harness.sessionID)).run().pipe(Effect.orDie)
+      state.unavailable = unavailable
+      const session = yield* SessionV2.Service
+      for (const pass of [1, 2]) {
+        yield* turn(`repair preparation ${pass}`)
+        const repaired = yield* epoch
+        expect(repaired.baseline).toContain("CTX-B")
+        expect(repaired.baseline).not.toContain("CTX-C")
+        expect(repaired.baseline_seq).toBe(committed.seq)
+        expect(repaired.snapshot).toEqual(current.snapshot)
+        expect((yield* session.messages({ sessionID: Harness.sessionID })).filter((message) =>
+          message.type === "system" && message.text === "CTX-C")).toHaveLength(1)
+        expect(latestRequest().match(/CTX-B/g)).toHaveLength(1)
+        expect(latestRequest().match(/CTX-C/g)).toHaveLength(1)
+      }
+    }), 10000)
+}
+
+it.live("malformed durable context cannot advance the epoch or erase projections during revert", () =>
+  Effect.gen(function* () {
+    yield* setup
+    const boundary = yield* turn("retained user")
+    state.value = "CTX-B"
+    yield* turn("removed user")
+    yield* stage(boundary)
+    const stored = yield* epoch
+    const database = yield* Database.Service
+    const updated = yield* database.db.select().from(EventTable).where(and(
+      eq(EventTable.aggregate_id, Harness.sessionID), eq(EventTable.type, "session.next.context.updated.1"),
+    )).get().pipe(Effect.orDie)
+    if (!updated) throw new Error("Expected a durable context update")
+    yield* database.db.update(EventTable).set({ data: {
+      sessionID: Harness.sessionID, messageID: SessionMessage.ID.create(), timestamp: 0, text: 47,
+    } }).where(eq(EventTable.id, updated.id)).run().pipe(Effect.orDie)
+    const session = yield* SessionV2.Service
+    const messages = yield* session.messages({ sessionID: Harness.sessionID })
+    expect(Exit.isFailure(yield* session.revert.commit(Harness.sessionID).pipe(Effect.exit))).toBe(true)
+    expect(yield* epoch).toEqual(stored)
+    expect(yield* session.messages({ sessionID: Harness.sessionID })).toEqual(messages)
+    expect((yield* session.get(Harness.sessionID)).revert?.messageID).toBe(boundary)
+  }), 10000)
 
 it.live("folds retained and removed source deltas once while retaining earlier user and assistant messages", () =>
   Effect.gen(function* () {
