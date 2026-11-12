@@ -236,7 +236,18 @@ it.live("caller cancellation retains closing admission until the destructive own
               ),
             )
       const removing = yield* sessions.remove(parent.id).pipe(Effect.forkChild)
-      yield* Deferred.await(entered)
+      const boundary = yield* Deferred.await(entered).pipe(
+        Effect.as("entered"),
+        Effect.raceFirst(
+          Fiber.await(removing).pipe(
+            Effect.map((exit) =>
+              exit._tag === "Failure" ? Cause.pretty(exit.cause) : "remove returned before Deleted",
+            ),
+          ),
+        ),
+        Effect.timeoutOption("2 seconds"),
+      )
+      expect(boundary).toEqual(Option.some("entered"))
       expect((yield* sessions.active).has(parent.id)).toBe(true)
       const cancelling = yield* Deferred.succeed(cancelRequested, undefined).pipe(
         Effect.andThen(Fiber.interrupt(removing)),
@@ -309,7 +320,18 @@ it.live("a failed removal cleans only its own tokens while another destructive o
         return Effect.void
       }
       const removing = yield* sessions.remove(held.id).pipe(Effect.exit, Effect.forkChild)
-      yield* Deferred.await(entered)
+      const boundary = yield* Deferred.await(entered).pipe(
+        Effect.as("entered"),
+        Effect.raceFirst(
+          Fiber.join(removing).pipe(
+            Effect.map((exit) =>
+              exit._tag === "Failure" ? Cause.pretty(exit.cause) : "remove returned before Deleted",
+            ),
+          ),
+        ),
+        Effect.timeoutOption("2 seconds"),
+      )
+      expect(boundary).toEqual(Option.some("entered"))
       const failed = yield* sessions.remove(failing.id).pipe(Effect.exit)
       const adopted = yield* sessions.create({ id: failing.id, location: f.location })
       const newChild = yield* sessions.create({ location: f.location, parentID: failing.id })
@@ -439,7 +461,7 @@ function fixture() {
         publish: (definition, data, options) =>
           Effect.gen(function* () {
             if (definition.type === SessionEvent.Deleted.type && state.beforeDelete) {
-              const deleted = Schema.decodeUnknownSync(SessionEvent.Deleted.data)(data)
+              const deleted = Schema.decodeUnknownSync(Schema.toType(SessionEvent.Deleted.data))(data)
               yield* state.beforeDelete(deleted.sessionID)
             }
             return yield* events.publish(definition, data, options)
