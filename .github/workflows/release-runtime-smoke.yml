@@ -1,0 +1,145 @@
+name: release-runtime-smoke
+on:
+  push:
+    branches: [artifact-audit-cut]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  installed-app:
+    runs-on: macos-15-intel
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_SHA: 197dc302f77ea8d4da27425e0774e1298568fecb
+    steps:
+      - name: Set private validation directory
+        run: echo "VALIDATION_DIR=$RUNNER_TEMP/validation" >> "$GITHUB_ENV"
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Fetch the frozen installer commit
+        run: git -c credential.helper= -c 'credential.helper=!gh auth git-credential' fetch --no-tags --depth=1 origin "$SOURCE_SHA"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+      - name: Require the exact reviewed producers and successful qualification
+        run: |
+          set -euo pipefail
+          while read -r id path; do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" | jq -e \
+              --arg sha "$SOURCE_SHA" --arg repo "$GITHUB_REPOSITORY" --arg path ".github/workflows/$path" \
+              '.head_sha == $sha and .head_repository.full_name == $repo and .head_branch == "release-0.3.7" and
+               .path == $path and .event == "workflow_dispatch" and .status == "completed" and .conclusion == "success"'
+          done <<EOF_IDS
+          43183246838 release-cli.yml
+          43183254745 release-desktop.yml
+          43183262539 distribution-bundle.yml
+          43183277657 test.yml
+          EOF_IDS
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: "43183246838"
+          name: release-assembled
+          path: ${{ env.VALIDATION_DIR }}/cli
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: "43183254745"
+          pattern: desktop-*
+          merge-multiple: true
+          path: ${{ env.VALIDATION_DIR }}/desktop
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: "43183254745"
+          name: release-desktop-feed
+          path: ${{ env.VALIDATION_DIR }}/feed
+      - name: Hash existing artifacts, extract ZIP and mount DMG
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          uptime
+          python3 script/release-runtime/catalog.py
+          git -C "$VALIDATION_DIR/native-fixture" init -q
+          mkdir -p "$VALIDATION_DIR/zip" "$VALIDATION_DIR/mount"
+          ditto -x -k "$VALIDATION_DIR/desktop/orchestra-desktop-mac-x64.zip" "$VALIDATION_DIR/zip"
+          hdiutil attach -readonly -nobrowse -mountpoint "$VALIDATION_DIR/mount" "$VALIDATION_DIR/desktop/orchestra-desktop-mac-x64.dmg"
+      - name: Require identical installer app trees and retained runtime resources
+        run: |
+          set -euo pipefail
+          python3 script/release-runtime/verify-app-trees.py "$VALIDATION_DIR/zip/HuGR Orchestra.app" "$VALIDATION_DIR/mount/HuGR Orchestra.app"
+          python3 script/release-runtime/inspect-asar.py "$VALIDATION_DIR/zip/HuGR Orchestra.app"
+      - name: Qualify the actual archive installer and compiled uninstaller
+        timeout-minutes: 8
+        run: |
+          python3 - <<'PY_UNINSTALL'
+          import json,os,subprocess,sys
+          from pathlib import Path
+          root=Path(os.environ['VALIDATION_DIR'])
+          name='cli/orchestra-0.3.7-darwin-x64-baseline.tar.gz'
+          catalog=json.loads((root/'CATALOG.json').read_text())
+          digest=next(item['sha256'] for item in catalog['files'] if item['path']==name)
+          subprocess.run([sys.executable,'script/release-runtime/qualify-uninstall.py','--archive',str(root/name),'--installer',str(Path.cwd()/'apps/cli/distribution/install.sh'),'--frozen-sha',os.environ['SOURCE_SHA'],'--sha256',digest,'--evidence-output',str(root/'archive-uninstall-validation.json')],check=True)
+          PY_UNINSTALL
+      - name: Exercise actual CLI provider, tool, undo and persistence boundaries
+        timeout-minutes: 8
+        run: |
+          python3 - <<'PY_SESSION'
+          import json,os,subprocess,sys
+          from pathlib import Path
+          root=Path(os.environ['VALIDATION_DIR'])
+          uninstall=json.loads((root/'archive-uninstall-validation.json').read_text())
+          assert uninstall['status']=='PASS'
+          payload=Path(uninstall['sandbox'])/'standalone'
+          descriptor=json.loads((payload/'distribution.json').read_text())
+          assert descriptor['version']=='0.3.7' and descriptor['target']=='darwin-x64-baseline'
+          digest=next(item['sha256'] for item in descriptor['files'] if item['path']=='bin/orchestra')
+          subprocess.run([sys.executable,'script/release-runtime/validate-runtime-session.py','--binary',str(payload/'bin/orchestra'),'--version','0.3.7','--source',os.environ['SOURCE_SHA'],'--expected-sha256',digest,'--evidence',str(root/'packaged-runtime-session.json')],check=True)
+          PY_SESSION
+      - name: Launch and exercise the already-built production app
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 script/release-runtime/launch-app.py "$VALIDATION_DIR/zip/HuGR Orchestra.app"
+          for attempt in {1..120}; do
+            if curl --max-time 1 -fsS http://127.0.0.1:9236/json/list >/dev/null 2>&1; then break; fi
+            [ "$attempt" -lt 120 ] || { echo "Packaged renderer did not open CDP" >&2; exit 1; }
+            sleep 1
+          done
+          node script/release-runtime/artifact-smoke.mjs
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: package.json
+      - name: Bind actual runtime proof to the complete exact-byte inventory
+        run: |
+          set -euo pipefail
+          python3 script/release-runtime/receipt.py
+          bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.VALIDATION_DIR; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:"0.3.7",sourceSha:process.env.SOURCE_SHA,cliRunId:43183246838,desktopRunId:43183254745,qualificationRunId:43183262539});'
+      - name: Close only the isolated app and mounted image
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os,signal
+          from pathlib import Path
+          root=Path(os.environ['VALIDATION_DIR']);record=root/'app-launch.json'
+          if record.exists():
+            try:os.kill(json.loads(record.read_text())['pid'],signal.SIGTERM)
+            except ProcessLookupError:pass
+          PY
+          hdiutil detach "$VALIDATION_DIR/mount" || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: release-runtime-proof
+          path: |
+            ${{ env.VALIDATION_DIR }}/*.json
+            ${{ env.VALIDATION_DIR }}/*.png
+            ${{ env.VALIDATION_DIR }}/archive-uninstall-validation-logs/**
+            ${{ env.VALIDATION_DIR }}/runtime-session-*/provider-requests.json
+            ${{ env.VALIDATION_DIR }}/runtime-session-*/serve-*.log
+            ${{ env.VALIDATION_DIR }}/runtime-desktop/app.log
+            ${{ env.VALIDATION_DIR }}/runtime-desktop/tmp/**/desktop/logs/**/*.log
+          if-no-files-found: error
