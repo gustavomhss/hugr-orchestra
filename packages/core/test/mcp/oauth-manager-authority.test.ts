@@ -84,12 +84,16 @@ it.live(
       servers.state.registrationA = { entered, release }
       yield* Effect.promise(async () => {
         const pendingA = Effect.runPromise(first.startAuth("remote").pipe(Effect.result))
+        console.info("H7 manager phase: awaiting A registration")
         await entered.promise
+        console.info("H7 manager phase: A registration held")
         servers.state.issuer = servers.b.url.origin
         const b = await Effect.runPromise(second.startAuth("remote"))
+        console.info("H7 manager phase: B started")
         const beforeA = await Effect.runPromise(file.second.get("remote"))
         release.resolve()
         const outcomeA = await pendingA
+        console.info("H7 manager phase: A settled", outcomeA._tag)
         expect(new URL(b.authorizationUrl).searchParams.get("state")).toBe(b.oauthState)
         if (outcomeA._tag === "Failure") {
           expect(outcomeA.failure).toBeInstanceOf(Mcp.AuthError)
@@ -103,6 +107,7 @@ it.live(
           if (answer.status === 400) aFinishedState.resolve()
         }
         await aFinishedState.promise
+        console.info("H7 manager phase: A authority observed")
         const afterA = await Effect.runPromise(file.second.get("remote"))
         expect(afterA).toEqual(beforeA)
         expect(servers.calls.filter((call) => call.path === "/token" && call.body.includes("CODE_A"))).toEqual([])
@@ -116,7 +121,9 @@ it.live(
           "needs_auth",
         )
         expect((await fetch(`${redirectUri}?state=${encodeURIComponent(b.oauthState)}&code=CODE_B`)).status).toBe(200)
+        console.info("H7 manager phase: B callback delivered")
         await bCommitted.promise
+        console.info("H7 manager phase: B committed")
         expect((await Effect.runPromise(file.second.get("remote")))?.tokens?.accessToken).toBe("ACCESS_B")
         expect(servers.calls.filter((call) => call.path === "/token" && call.body.includes("CODE_B"))).toHaveLength(1)
       }).pipe(

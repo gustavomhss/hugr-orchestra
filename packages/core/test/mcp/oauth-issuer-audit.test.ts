@@ -211,3 +211,87 @@ it.live("invalid stamp types are isolated to one sealed entry without rewriting 
     }
   }),
 )
+
+it.live(
+  "failed first static exchange pins A before commit and cannot expose the configured secret to a new issuer or ID",
+  () =>
+    Effect.gen(function* () {
+      const file = yield* storage
+      const servers = yield* network
+      const config = { clientId: "static_A", clientSecret: "STATIC_CONFIG_SECRET" }
+      const first = yield* file.first.begin("remote", servers.url)
+      const redirect: { url?: URL } = {}
+      const pending = new McpOAuthPendingProvider(
+        "remote",
+        servers.url,
+        config,
+        {
+          onRedirect: (url) => {
+            redirect.url = url
+          },
+        },
+        file.first,
+        first.binding,
+      )
+      expect(
+        yield* Effect.promise(() => auth(pending, { serverUrl: servers.url, resourceMetadataUrl: servers.metadata })),
+      ).toBe("REDIRECT")
+      const beforeCommit = yield* file.second.readBinding(first.binding)
+      const state = redirect.url?.searchParams.get("state")
+      expect(state).toBeString()
+      yield* file.first.consumeState(first.binding, state!)
+      servers.state.tokenFailureA = true
+      const failed = yield* Effect.promise(() =>
+        auth(pending, {
+          serverUrl: servers.url,
+          resourceMetadataUrl: servers.metadata,
+          authorizationCode: "FAILED_CODE_A",
+        }).then(
+          (value) => value,
+          (error: unknown) => error,
+        ),
+      )
+      expect(failed).toBeInstanceOf(Error)
+      expect(
+        servers.calls.filter(
+          (call) => call.server === "A" && call.path === "/token" && call.body.includes(config.clientSecret),
+        ),
+      ).toHaveLength(1)
+      // Capture the first disclosure boundary, before exchange or commit could authorize this authority.
+      expect(beforeCommit.staticClientBinding).toMatchObject({ clientId: config.clientId, issuer: servers.a.url.href })
+      yield* file.first.invalidateBinding(first.binding, "all")
+      for (const attempt of [
+        { issuer: servers.b.url.origin, config },
+        { issuer: servers.a.url.origin, config: { ...config, clientId: "changed_without_logout" } },
+      ]) {
+        servers.state.issuer = attempt.issuer
+        const replacement = yield* file.second.begin("remote", servers.url)
+        expect(replacement.staticClientBinding).toMatchObject({ clientId: config.clientId, issuer: servers.a.url.href })
+        const next = new McpOAuthPendingProvider(
+          "remote",
+          servers.url,
+          attempt.config,
+          { onRedirect: () => {} },
+          file.second,
+          replacement.binding,
+        )
+        expect(
+          yield* Effect.promise(() =>
+            auth(next, { serverUrl: servers.url, resourceMetadataUrl: servers.metadata }).then(
+              (value) => value,
+              (error: unknown) => error,
+            ),
+          ),
+        ).toBeInstanceOf(Error)
+      }
+      expect(
+        servers.calls.filter(
+          (call) => call.server === "B" && `${call.body} ${call.authorization}`.includes(config.clientSecret),
+        ),
+      ).toEqual([])
+      expect(JSON.stringify(yield* file.first.all())).not.toContain(config.clientSecret)
+      yield* file.first.remove("remote")
+      servers.state.issuer = servers.b.url.origin
+      yield* Effect.promise(() => signIn({ auth: file.second, url: servers.url, metadata: servers.metadata, config }))
+    }),
+)

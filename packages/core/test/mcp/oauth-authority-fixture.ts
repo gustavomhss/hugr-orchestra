@@ -148,6 +148,7 @@ export function endpoints() {
   const state = {
     issuer: "",
     public: false,
+    tokenFailureA: false,
     metadataIssuer: undefined as string | undefined,
     registrationA: undefined as
       | {
@@ -185,6 +186,8 @@ export function endpoints() {
             { status: 201 },
           )
         }
+        if (url.pathname === "/token" && name === "A" && state.tokenFailureA)
+          return Response.json({ error: "temporarily_unavailable" }, { status: 503 })
         if (url.pathname === "/token")
           return Response.json({
             access_token: `ACCESS_${name}`,

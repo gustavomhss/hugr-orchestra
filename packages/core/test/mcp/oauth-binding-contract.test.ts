@@ -34,12 +34,11 @@ it.live(
       })
       const beginB = yield* file.second.begin("remote", `${servers.resource.url.origin}/mcp-b`)
       expect(beginB.previousState).toBe("STATE_A")
-      expect(yield* file.second.get("remote")).toMatchObject({
-        tokens: undefined,
-        clientInfo: undefined,
-        codeVerifier: undefined,
-        oauthState: undefined,
-      })
+      const cleared = yield* file.second.get("remote")
+      expect(cleared?.tokens).toBeUndefined()
+      expect(cleared?.clientInfo).toBeUndefined()
+      expect(cleared?.codeVerifier).toBeUndefined()
+      expect(cleared?.oauthState).toBeUndefined()
       yield* file.second.updateBinding(beginB.binding, {
         ...entry(servers.b.url.origin, "B"),
         codeVerifier: "PKCE_B",
@@ -66,9 +65,9 @@ it.live(
       expect(expected).toMatchObject({
         serverUrl: `${servers.resource.url.origin}/mcp-b`,
         tokens: { accessToken: "ACCESS_B" },
-        codeVerifier: undefined,
-        oauthState: undefined,
       })
+      expect(expected?.codeVerifier).toBeUndefined()
+      expect(expected?.oauthState).toBeUndefined()
     }),
 )
 
@@ -88,10 +87,9 @@ it.live(
       expect(yield* file.first.readBinding(first.binding)).toMatchObject({ oauthState: "VALID", codeVerifier: "PKCE" })
       yield* file.second.consumeState(first.binding, "VALID")
       expect((yield* file.first.consumeState(first.binding, "VALID").pipe(Effect.exit))._tag).toBe("Failure")
-      expect(yield* file.first.readBinding(first.binding)).toMatchObject({
-        oauthState: undefined,
-        codeVerifier: "PKCE",
-      })
+      const consumed = yield* file.first.readBinding(first.binding)
+      expect(consumed.oauthState).toBeUndefined()
+      expect(consumed.codeVerifier).toBe("PKCE")
       yield* file.first.updateBinding(first.binding, { oauthState: "OWNER_STATE" })
       expect(yield* file.second.remove("remote")).toMatchObject({ previousState: "OWNER_STATE" })
       expect((yield* file.first.checkout("remote", servers.url).pipe(Effect.exit))._tag).toBe("Failure")
@@ -305,8 +303,8 @@ it.live(
         expect(beforeLateA).toMatchObject({
           serverUrl: `${servers.resource.url.origin}/new-resource`,
           tokens: { accessToken: "ACCESS_B" },
-          codeVerifier: undefined,
         })
+        expect(beforeLateA?.codeVerifier).toBeUndefined()
       }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)))
     }),
   30_000,
