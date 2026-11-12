@@ -13954,6 +13954,54 @@ export type ServerInboxDoorOutput = {
   readonly data: { readonly href: string } | { readonly openApp: true }
 }
 
+export type ActivityDiskOutput = {
+  readonly instanceID: string
+  readonly readAt: number
+  readonly source: "node.fs.lstat"
+  readonly roots: ReadonlyArray<{
+    readonly id: "cache" | "logs" | "temporary"
+    readonly path: string
+    readonly attempt?: {
+      readonly startedAt: number
+      readonly sampledAt: number
+      readonly state: "complete" | "partial"
+      readonly observedBytes: number
+      readonly entries: number
+      readonly issueCount: number
+      readonly issues: ReadonlyArray<{
+        readonly path: string
+        readonly reason: "unavailable" | "symlink" | "unsupported" | "changed" | "limit" | "overflow"
+      }>
+    }
+    readonly logical?: { readonly bytes: number; readonly sampledAt: number }
+  }>
+}
+
+export type ActivityReadDiskInput = { readonly rootID: { readonly rootID: "cache" | "logs" | "temporary" }["rootID"] }
+
+export type ActivityReadDiskOutput = {
+  readonly instanceID: string
+  readonly readAt: number
+  readonly source: "node.fs.lstat"
+  readonly roots: ReadonlyArray<{
+    readonly id: "cache" | "logs" | "temporary"
+    readonly path: string
+    readonly attempt?: {
+      readonly startedAt: number
+      readonly sampledAt: number
+      readonly state: "complete" | "partial"
+      readonly observedBytes: number
+      readonly entries: number
+      readonly issueCount: number
+      readonly issues: ReadonlyArray<{
+        readonly path: string
+        readonly reason: "unavailable" | "symlink" | "unsupported" | "changed" | "limit" | "overflow"
+      }>
+    }
+    readonly logical?: { readonly bytes: number; readonly sampledAt: number }
+  }>
+}
+
 export type ActivitySnapshotOutput = {
   readonly instanceID: string
   readonly readAt: number

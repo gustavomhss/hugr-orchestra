@@ -1,6 +1,9 @@
 import { expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
+import { Global } from "@orchestra/core/global"
+import fs from "node:fs/promises"
+import path from "node:path"
 import { observe } from "@orchestra/core/activity-monitor"
 import { Omni } from "@orchestra/core/omni"
 import { Flag } from "@orchestra/core/flag/flag"
@@ -31,6 +34,43 @@ const it = testEffect(
     Layer.provideMerge(NodeHttpServer.layerTest),
     Layer.provideMerge(NodeServices.layer),
   ),
+)
+
+it.live("disk reads require authentication and accept only declared root ids", () =>
+  Effect.gen(function* () {
+    const denied = yield* HttpClient.execute(HttpClientRequest.post("/api/activity/disk/temporary/read"))
+    expect(denied.status).toBe(401)
+    const deniedSnapshot = yield* HttpClient.execute(HttpClientRequest.get("/api/activity/disk"))
+    expect(deniedSnapshot.status).toBe(401)
+    const snapshot = yield* HttpClientRequest.get("/api/activity/disk").pipe(
+      HttpClientRequest.setHeader("Authorization", `Basic ${btoa("orchestra:activity-test")}`),
+      HttpClient.execute,
+    )
+    const unread = Schema.decodeUnknownSync(ActivityMonitor.DiskSnapshot)(yield* snapshot.json)
+    expect(unread.roots.map((root) => root.path)).toEqual([Global.Path.cache, Global.Path.log, Global.Path.tmp])
+    expect(unread.roots.every((root) => root.attempt === undefined)).toBe(true)
+    const invalid = yield* HttpClientRequest.post("/api/activity/disk/arbitrary/read").pipe(
+      HttpClientRequest.setHeader("Authorization", `Basic ${btoa("orchestra:activity-test")}`),
+      HttpClient.execute,
+    )
+    expect(invalid.status).toBe(400)
+    const file = path.join(Global.Path.tmp, `activity-http-${crypto.randomUUID()}`)
+    yield* Effect.acquireRelease(
+      Effect.promise(() => Bun.write(file, "12345")),
+      () => Effect.promise(() => fs.rm(file, { force: true })),
+    )
+    const response = yield* HttpClientRequest.post("/api/activity/disk/temporary/read").pipe(
+      HttpClientRequest.setHeader("Authorization", `Basic ${btoa("orchestra:activity-test")}`),
+      HttpClient.execute,
+    )
+    expect(response.status).toBe(200)
+    const measured = Schema.decodeUnknownSync(ActivityMonitor.DiskSnapshot)(yield* response.json)
+    const temporary = measured.roots.find((root) => root.id === "temporary")
+    expect(temporary?.attempt).toBeDefined()
+    expect(temporary?.attempt?.observedBytes).toBeGreaterThanOrEqual(5)
+    expect(measured.roots.find((root) => root.id === "cache")?.attempt).toBeUndefined()
+    expect(yield* Effect.promise(() => Bun.file(file).text())).toBe("12345")
+  }),
 )
 
 it.live("activity snapshot is authenticated and independent of a project Location", () =>

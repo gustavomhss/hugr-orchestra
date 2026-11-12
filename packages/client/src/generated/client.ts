@@ -598,6 +598,9 @@ import type {
   ServerInboxSlackSyncOutput,
   ServerInboxDoorInput,
   ServerInboxDoorOutput,
+  ActivityDiskOutput,
+  ActivityReadDiskInput,
+  ActivityReadDiskOutput,
   ActivitySnapshotOutput,
   ActivityInspectInput,
   ActivityInspectOutput,
@@ -4695,6 +4698,22 @@ export function make(options: ClientOptions) {
         ),
     },
     activity: {
+      disk: (requestOptions?: RequestOptions) =>
+        request<ActivityDiskOutput>(
+          { method: "GET", path: `/api/activity/disk`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+      readDisk: (input: ActivityReadDiskInput, requestOptions?: RequestOptions) =>
+        request<ActivityReadDiskOutput>(
+          {
+            method: "POST",
+            path: `/api/activity/disk/${encodeURIComponent(input.rootID)}/read`,
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
       snapshot: (requestOptions?: RequestOptions) =>
         request<ActivitySnapshotOutput>(
           { method: "GET", path: `/api/activity`, successStatus: 200, declaredStatuses: [401, 400], empty: false },

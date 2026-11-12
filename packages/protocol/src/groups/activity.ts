@@ -5,6 +5,23 @@ import { InvalidRequestError } from "../errors"
 
 export const ActivityGroup = HttpApiGroup.make("server.activity")
   .add(
+    HttpApiEndpoint.get("activity.disk", "/api/activity/disk", {
+      success: ActivityMonitor.DiskSnapshot,
+    }),
+  )
+  .add(
+    HttpApiEndpoint.post("activity.readDisk", "/api/activity/disk/:rootID/read", {
+      params: { rootID: ActivityMonitor.DiskRootID },
+      success: ActivityMonitor.DiskSnapshot,
+    }).annotateMerge(
+      OpenApi.annotations({
+        summary: "Measure a declared Orchestra disk root",
+        description:
+          "Explicit bounded metadata walk of cache, logs or temporary files. No arbitrary path, mutation, use proof or unique-byte total is exposed. Snapshot reads never start a walk.",
+      }),
+    ),
+  )
+  .add(
     HttpApiEndpoint.get("activity.snapshot", "/api/activity", {
       success: ActivityMonitor.Snapshot,
     }).annotateMerge(

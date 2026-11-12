@@ -3873,16 +3873,26 @@ const adaptGroup53 = (raw: RawClient["server.inbox"]) => ({
 })
 
 const Endpoint54_0 = (raw: RawClient["server.activity"]) => () =>
+  raw["activity.disk"]({}).pipe(Effect.mapError(mapClientError))
+
+type Endpoint54_1Request = Parameters<RawClient["server.activity"]["activity.readDisk"]>[0]
+type Endpoint54_1Input = { readonly rootID: Endpoint54_1Request["params"]["rootID"] }
+const Endpoint54_1 = (raw: RawClient["server.activity"]) => (input: Endpoint54_1Input) =>
+  raw["activity.readDisk"]({ params: { rootID: input["rootID"] } }).pipe(Effect.mapError(mapClientError))
+
+const Endpoint54_2 = (raw: RawClient["server.activity"]) => () =>
   raw["activity.snapshot"]({}).pipe(Effect.mapError(mapClientError))
 
-type Endpoint54_1Request = Parameters<RawClient["server.activity"]["activity.inspect"]>[0]
-type Endpoint54_1Input = { readonly recordID: Endpoint54_1Request["params"]["recordID"] }
-const Endpoint54_1 = (raw: RawClient["server.activity"]) => (input: Endpoint54_1Input) =>
+type Endpoint54_3Request = Parameters<RawClient["server.activity"]["activity.inspect"]>[0]
+type Endpoint54_3Input = { readonly recordID: Endpoint54_3Request["params"]["recordID"] }
+const Endpoint54_3 = (raw: RawClient["server.activity"]) => (input: Endpoint54_3Input) =>
   raw["activity.inspect"]({ params: { recordID: input["recordID"] } }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup54 = (raw: RawClient["server.activity"]) => ({
-  snapshot: Endpoint54_0(raw),
-  inspect: Endpoint54_1(raw),
+  disk: Endpoint54_0(raw),
+  readDisk: Endpoint54_1(raw),
+  snapshot: Endpoint54_2(raw),
+  inspect: Endpoint54_3(raw),
 })
 
 const adaptClient = (raw: RawClient) => ({
