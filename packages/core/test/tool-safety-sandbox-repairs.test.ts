@@ -321,10 +321,10 @@ function replacementObservation(entry: string | undefined,
 function replacementSetup(fs: FSUtil.Interface, directory: string, state: ReturnType<typeof replacementState>) {
   return Effect.gen(function* () {
     state.stage = "rename"
-    yield* fs.rename(path.join(directory, "owned"), path.join(directory, "moved"))
+    yield* fs.rename(path.join(directory, "owned"), path.join(directory, "moved")).pipe(Effect.orDie)
     state.renameCompleted = true
     state.stage = "replacement-mkdir"
-    yield* fs.makeDirectory(path.join(directory, "owned"))
+    yield* fs.makeDirectory(path.join(directory, "owned")).pipe(Effect.orDie)
     state.replacementCompleted = true
     // Observe only after the rename/mkdir gap; these lookups still perturb timing.
     state.original = replacementObservation(path.join(directory, "moved"))
@@ -338,10 +338,10 @@ function replacementSetup(fs: FSUtil.Interface, directory: string, state: Return
 function verifyReplacementDirectories(fs: FSUtil.Interface, target: string, moved: string, state: ReturnType<typeof replacementState>) {
   return Effect.gen(function* () {
     state.verification = "owned-stat"
-    state.ownedIsDir = yield* fs.isDir(target)
+    state.ownedIsDir = (yield* fs.stat(target)).type === "Directory"
     expect(state.ownedIsDir).toBe(true)
     state.verification = "moved-stat"
-    expect(yield* fs.isDir(moved)).toBe(true)
+    expect((yield* fs.stat(moved)).type).toBe("Directory")
     state.verification = "complete"
   })
 }
