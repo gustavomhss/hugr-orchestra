@@ -363,23 +363,39 @@ test("E6 App actual-POST ambiguity uses raw intent; changed text/model/variant a
       calls.control.reply = () => { throw new TypeError("catalog removed and metadata unavailable") }
       owner.prompt.set(text("changed text"))
       expect(await send(owner)).toBe(false)
+      expect(calls.queries()).toHaveLength(before + 1)
       expect(posts).toHaveLength(1)
       owner.prompt.set(text("original intent"))
+      const modelVisualBefore = calls.queries().length
       selected.setSaved("session", host.sessionID, { model: { providerID: ref.providerID, modelID: "blocked" } })
+      await wait(() => calls.queries().length > modelVisualBefore && selected.local.model.execution.read().status === "error", "NEW raw-model visual query failed")
+      const modelSendBefore = calls.queries().length
       expect(await send(owner)).toBe(false)
+      expect(calls.queries()).toHaveLength(modelSendBefore + 1)
       expect(posts).toHaveLength(1)
+      const highVisualBefore = calls.queries().length
       selected.setSaved("session", host.sessionID, { model: { providerID: ref.providerID, modelID: ref.id }, variant: "high" })
+      await wait(() => calls.queries().length > highVisualBefore && selected.local.model.execution.read().status === "error", "NEW raw-variant visual query failed")
+      const highSendBefore = calls.queries().length
       expect(await send(owner)).toBe(false)
+      expect(calls.queries()).toHaveLength(highSendBefore + 1)
       expect(posts).toHaveLength(1)
+      const defaultVisualBefore = calls.queries().length
       selected.setSaved("session", host.sessionID, { model: { providerID: ref.providerID, modelID: ref.id }, variant: null })
       expect(selected.local.model.variant.selected()).toBeNull()
+      await wait(() => calls.queries().length > defaultVisualBefore && selected.local.model.execution.read().status === "error", "NEW explicit-default visual query failed")
+      const defaultSendBefore = calls.queries().length
       expect(await send(owner)).toBe(false)
+      expect(calls.queries()).toHaveLength(defaultSendBefore + 1)
       expect(posts).toHaveLength(1)
-      expect(calls.queries().length).toBe(before + 4)
+      const retryVisualBefore = calls.queries().length
       selected.setSaved("session", host.sessionID, { model: { providerID: ref.providerID, modelID: ref.id }, variant: undefined })
       expect(selected.local.model.variant.selected()).toBeUndefined()
       selected.removeModel()
+      await wait(() => calls.queries().length > retryVisualBefore && selected.local.model.execution.read().status === "error", "NEW restored raw-intent visual query failed")
+      const retrySendBefore = calls.queries().length
       expect(await send(owner)).toBe(true)
+      expect(calls.queries()).toHaveLength(retrySendBefore)
       expect(posts).toHaveLength(2)
       expect(posts[1]).toEqual(posts[0])
       expect(optimistic.at(-1)?.parts).toEqual(parts)
