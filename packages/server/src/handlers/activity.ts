@@ -1,7 +1,7 @@
 import { ActivityMonitor } from "@orchestra/core/activity-monitor"
 import { ActivityDisk } from "@orchestra/core/activity-disk"
 import { Global } from "@orchestra/core/global"
-import { InvalidRequestError } from "@orchestra/protocol/errors"
+import { InvalidRequestError, ServiceUnavailableError } from "@orchestra/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
@@ -14,6 +14,23 @@ const disk = ActivityDisk.make([
 
 export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (handlers) =>
   handlers
+    // Unavailable contract anchors: W2's hosted failing acceptance precedes implementation.
+    .handle("activity.worktrees", () =>
+      Effect.fail(
+        new ServiceUnavailableError({
+          message: "Worktree readings are not implemented",
+          service: "activity.worktrees",
+        }),
+      ),
+    )
+    .handle("activity.readWorktree", () =>
+      Effect.fail(
+        new ServiceUnavailableError({
+          message: "Worktree readings are not implemented",
+          service: "activity.worktrees",
+        }),
+      ),
+    )
     .handle("activity.disk", () => Effect.sync(() => disk.snapshot()))
     .handle("activity.readDisk", (ctx) =>
       Effect.promise(() => disk.read(ctx.params.rootID)).pipe(Effect.map(() => disk.snapshot())),
