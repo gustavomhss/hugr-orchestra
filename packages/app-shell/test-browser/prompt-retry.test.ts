@@ -18,7 +18,7 @@ import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
 import {
   commands, createPromptSubmit, createdSessions, optimistic, optimisticRemovals, policyFixture, promptInputs,
-  sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, submitInput,
+  sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, submitInput, toasts,
 } from "@/components/prompt-input/submit-harness"
 
 // These tests exercise the existing composer API. The shared harness stubs UI services, not admission semantics.
@@ -574,17 +574,21 @@ test("CONTROL E1 native HTTP admission and same text after ACK create two distin
   expectSpawn(import.meta.path)
   await nativeServer(async (host) => {
     const calls: string[] = []
+    const responses: Array<{ stage: string; status: number; body: string }> = []
     const transport: typeof fetch = Object.assign(async (...args: Parameters<typeof fetch>) => {
       const request = new Request(...args)
-      calls.push(new URL(request.url).pathname.split("/").at(-1) ?? "")
+      const stage = new URL(request.url).pathname.split("/").at(-1) ?? ""
+      calls.push(stage)
       const response = await Bun.fetch(request)
+      // Only this private fixture's synthetic HTTP data; cap diagnostic output and never log headers/env/settings.
+      responses.push({ stage, status: response.status, body: (await response.clone().text()).slice(0, 512) })
       expect(response.status).toBe(200)
       return response
     }, { preconnect: Bun.fetch.preconnect })
     const owner = bindNative(host, transport)
     try {
       expect((await host.inspect()).inputs).toEqual([])
-      expect(await send(owner.submit)).toBe(true)
+      expect(await send(owner.submit), JSON.stringify({ calls, responses, toasts })).toBe(true)
       const first = await host.inspect()
       expect(first.session.id).toBe(host.sessionID)
       expect(first.inputs).toHaveLength(1)
