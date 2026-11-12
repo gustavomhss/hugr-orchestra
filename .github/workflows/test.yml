@@ -397,11 +397,13 @@ jobs:
             # The same file passes alone (test-ci 43109694032). Keep it out of that process.
             # tool-write.test.ts is measured at 0.4s and still held this step until the 8-minute timeout, twice
             # (runs 43156203910 and 43217078756). Same split: own process, same step, no longer timeout.
+            # tool-safety-loopback.test.ts prints its Windows proof and then does not return (runs 43232120353
+            # and 43237306628). It exits itself. Leaving it in the shard would skip every file after that exit.
             alone=()
             if [ "$RUNNER_OS" = "Windows" ]; then
               kept=()
               for file in "${files[@]}"; do
-                if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ]; then
+                if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ]; then
                   alone+=("$file")
                 else
                   kept+=("$file")

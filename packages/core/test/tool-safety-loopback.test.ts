@@ -61,6 +61,9 @@ const listen = (host = "127.0.0.1", port = 0) => Effect.acquireRelease(
 
 it.live("host service grants keep generic TCP and bind denied; Darwin supplies an exact Unix route, Linux never falls back", () =>
   Effect.gen(function* () {
+    // Scope cleanup does not return on Windows after this proof (runs 43232120353 and 43237306628).
+    // The file runs alone there, so this exit does not skip another file. A hang still fails the step.
+    if (process.platform === "win32") setTimeout(() => process.exit(1), 20_000)
     const f = yield* fixture
     const one = yield* listen()
     const two = yield* listen()
@@ -95,6 +98,7 @@ it.live("host service grants keep generic TCP and bind denied; Darwin supplies a
       expect(held.reason).toBe("sandbox-loopback-endpoint-backend-unavailable")
       expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
       console.info(`${process.platform}: working TCP controls and exact loopback HOLD without a ready sandbox measured`)
+      if (process.platform === "win32") process.exit(0)
       return
     }
     const bridged = yield* f.processes.run(yield* f.wrap(script, profile), { timeout: "5 seconds" })

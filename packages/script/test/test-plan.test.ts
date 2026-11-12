@@ -42,7 +42,7 @@ describe("test shard planner", () => {
     ])
     expect(code).toContain('cd packages/core && GITHUB_ACTIONS=false bun test --timeout 30000 --only-failures "$alone_file"')
     expect(code).not.toContain('bun test --timeout 30000 --only-failures "${alone[@]}"')
-    const own = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ]; then')[1]?.split("else")[0] ?? ""
+    const own = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ]; then')[1]?.split("else")[0] ?? ""
     expect(own).toContain('alone+=("$file")')
     expect(own).not.toContain("kept")
     expect(step).not.toContain("turbo build")
