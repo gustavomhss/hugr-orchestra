@@ -8,17 +8,31 @@ export async function moveDefaultWithReplacedEntry(input: {
   getDefault?: () => Promise<ServerConnection.Key | null>
   setDefault?: (key: ServerConnection.Key | null) => Promise<void> | void
   report: (error: unknown) => void
+  current?: () => boolean
 }) {
   input.remove(input.previous)
-  // A failed read does not say this entry was the default, so the write is not attempted.
-  const current = await Promise.resolve(input.getDefault?.()).catch(() => null)
-  if (current !== input.previous || !input.setDefault) return
+  const current = () => input.current?.() ?? true
+  const read = input.getDefault?.()
+  // A missing read is not a failure. A failed read does not say this entry was the default.
+  if (!read) return
+  let value: ServerConnection.Key | null
+  try {
+    value = await read
+  } catch (error) {
+    if (!current()) return
+    console.error(error)
+    input.report(error)
+    return
+  }
+  if (!current() || value !== input.previous || !input.setDefault) return
   try {
     await input.setDefault(input.next)
   } catch (error) {
+    if (!current()) return
     console.error(error)
     // The old entry is already gone. Leaving its URL stored opens a server the list no longer has.
     await clearRemovedDefault(input.setDefault)
+    if (!current()) return
     input.report(error)
   }
 }
