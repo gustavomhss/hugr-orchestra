@@ -649,6 +649,22 @@ check("shutdown is memoized, aborts actual body reader, closes store, and no req
   assert.throws(() => f.store.list()); const count = f.remote.requests.length; await pause(60); assert.equal(f.remote.requests.length, count)
 })
 
+check("producer abort reentering shutdown observes the same Promise and joined actual HTTP/store cleanup", async (t) => {
+  const f = await started(t), entered = gate(), reentrant: { promise?: Promise<void> } = {}
+  f.remote.handlers.set("POST /api/meeting/segments", (_, response) => { response.writeHead(200); response.write("{"); entered.resolve() })
+  assert.equal(f.producer.append(segment()), "accepted")
+  await entered.promise
+  const request = sends(f)[0]
+  assert.ok(request); assert.equal(request.closed, false)
+  f.producer.signal.addEventListener("abort", () => { reentrant.promise = f.manager.shutdown() }, { once: true })
+  const outer = f.manager.shutdown()
+  assert.equal(reentrant.promise, outer)
+  await Promise.all([outer, reentrant.promise])
+  assert.equal(f.manager.shutdown(), outer); assert.equal(f.manager.snapshot().state, "closed")
+  await until(() => request.closed, "reentrant shutdown joined the actual response reader")
+  assert.throws(() => f.store.list())
+})
+
 test("REAL10s deadline includes streamed body after received headers; injected backoff cannot shorten it", { timeout: 14000 }, async (t) => {
   const f = await fixture(t), record = f.retained(), never = gate(), entered = gate<number>()
   f.remote.handlers.set("GET /api/meeting", (_, response) => { response.writeHead(200); response.write("{"); entered.resolve(Date.now()) })
