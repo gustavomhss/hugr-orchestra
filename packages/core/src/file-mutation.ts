@@ -70,6 +70,9 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/FileMutation") {}
 
+// Current backends are local: share only ownership of each physical target across Locations.
+const locks = KeyedMutex.makeUnsafe<string>()
+
 /**
  * Writes go to the resolved canonical target and refuse a symlink swapped in after resolution instead of following
  * it, so a check made at resolve time still holds at write time.
@@ -86,7 +89,6 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
     const format = yield* Format.Service
-    const locks = KeyedMutex.makeUnsafe<string>()
     const withTargetLock =
       (target: Target) =>
       <A, E, R>(effect: Effect.Effect<A, E, R>) =>
