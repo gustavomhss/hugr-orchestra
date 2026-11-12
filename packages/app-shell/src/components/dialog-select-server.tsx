@@ -81,7 +81,10 @@ function useDefaultServer(
   }
 
   return {
-    defaultKey: () => (defaultKey.error ? undefined : defaultKey()),
+    defaultKey: () => {
+      if (defaultKey.state !== "ready" && defaultKey.state !== "refreshing") return undefined
+      return defaultKey()
+    },
     defaultKnown: () => defaultKey.state === "ready" || defaultKey.state === "refreshing",
     defaultFailed: () => defaultKey.state === "errored",
     canDefault,

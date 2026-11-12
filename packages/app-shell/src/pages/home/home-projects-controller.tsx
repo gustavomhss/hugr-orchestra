@@ -46,6 +46,7 @@ export function createHomeProjectsController(home: HomeController) {
         setState("collapsed", key, !state().collapsed[key])
       },
       canDefault: () => serverManagement.canDefault() && serverManagement.defaultKnown(),
+      defaultKnown: serverManagement.defaultKnown,
       defaultKey: serverManagement.defaultKey,
       setDefault: (conn: ServerConnection.Any | undefined) =>
         serverManagement.setDefault(conn ? ServerConnection.key(conn) : null),
