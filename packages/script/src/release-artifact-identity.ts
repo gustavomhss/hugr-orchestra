@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto"
+import { createReadStream } from "node:fs"
+import { parseDesktopFeed, validateDesktopFeedTargets, type DesktopFeed } from "./desktop-feed"
 import { lstat, readFile, readdir } from "node:fs/promises"
 import { join } from "node:path"
 
@@ -30,7 +32,7 @@ function object(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
-function identity(value: unknown) {
+function identity(value: unknown): Record<string, unknown> & { version: string; sourceSha: string } {
   const result = object(value)
   if (typeof result.version !== "string" || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(result.version))
     throw new Error("Invalid stable version")
@@ -40,7 +42,7 @@ function identity(value: unknown) {
     if (typeof result[key] !== "number" || !Number.isSafeInteger(result[key]) || result[key] <= 0)
       throw new Error(`Invalid ${key}`)
   }
-  return result
+  return { ...result, version: result.version, sourceSha: result.sourceSha }
 }
 
 export async function verifyReleaseArtifacts(root: string, receipt: unknown, expected: unknown): Promise<void> {
@@ -82,6 +84,8 @@ export async function verifyReleaseArtifacts(root: string, receipt: unknown, exp
   const rootStat = await lstat(root)
   if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) throw new Error("Invalid artifact root")
   const seen = new Set<string>()
+  const payloads = new Map<string, { size: number; sha512: string; blockmap?: boolean }>()
+  const feeds: DesktopFeed[] = []
   const directories = new Set(["cli", "cli/npm-packs", "desktop", "feed"])
   async function inspect(path: string): Promise<void> {
     const stat = await lstat(join(root, path))
@@ -93,15 +97,19 @@ export async function verifyReleaseArtifacts(root: string, receipt: unknown, exp
     }
     const file = files.get(path)
     if (!stat.isFile() || !file) throw new Error(`Unexpected artifact: ${path}`)
-    const bytes = await readFile(join(root, path))
-    if (bytes.length !== file.size || createHash("sha256").update(bytes).digest("hex") !== file.sha256)
-      throw new Error(`Artifact mismatch: ${path}`)
-    if (path.startsWith("feed/") && path.endsWith(".yml")) {
-      const versions = [...bytes.toString("utf8").matchAll(/^(?:version|"version"|'version')[ \t]*:([^\r\n]*)/gm)]
-      const scalar = versions[0]?.[1]?.trim()
-      if (versions.length !== 1 || ![version, `"${version}"`, `'${version}'`].includes(scalar))
-        throw new Error(`Feed version mismatch: ${path}`)
+    const sha256 = createHash("sha256")
+    const sha512 = createHash("sha512")
+    let size = 0
+    for await (const chunk of createReadStream(join(root, path), { highWaterMark: 64 * 1024 })) {
+      sha256.update(chunk)
+      sha512.update(chunk)
+      size += chunk.byteLength
     }
+    if (size !== file.size || sha256.digest("hex") !== file.sha256) throw new Error(`Artifact mismatch: ${path}`)
+    if (path.startsWith("desktop/") && !path.endsWith(".blockmap"))
+      payloads.set(path.slice("desktop/".length), { size, sha512: sha512.digest("base64") })
+    if (path.startsWith("feed/") && path.endsWith(".yml"))
+      feeds.push(parseDesktopFeed(await readFile(join(root, path), "utf8")))
     seen.add(path)
   }
   for (const path of ["cli", "desktop", "feed"]) {
@@ -110,5 +118,8 @@ export async function verifyReleaseArtifacts(root: string, receipt: unknown, exp
     await inspect(path)
   }
   for (const path of files.keys()) if (!seen.has(path)) throw new Error(`Missing artifact: ${path}`)
+  for (const [name, payload] of payloads) payload.blockmap = seen.has(`desktop/${name}.blockmap`)
+  const repository = wanted.repository === undefined ? "gustavomhss/hugr-orchestra" : wanted.repository
+  if (typeof repository !== "string") throw new Error("RELEASE_FEED_TARGET_INVALID")
+  for (const feed of feeds) validateDesktopFeedTargets(feed, { version, repository, payloads })
 }
-
