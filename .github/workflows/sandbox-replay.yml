@@ -121,7 +121,8 @@ jobs:
           [ "${#files[@]}" -eq 199 ] || { echo "::error::expected original 199 files"; exit 1; }
           mkdir -p "$RUNNER_TEMP/junit"
           printf '%s\n' "${files[@]}" > "$RUNNER_TEMP/junit/core3-files.txt"
-          actual=$(sha256sum "$RUNNER_TEMP/junit/core3-files.txt" | cut -d ' ' -f 1)
+          # Hash stdin so filename escaping cannot prefix the checksum with a backslash.
+          actual=$(sha256sum < "$RUNNER_TEMP/junit/core3-files.txt" | cut -d ' ' -f 1)
           [ "$actual" = "$FILES_SHA256" ] || { echo "::error::original file order/hash differs"; exit 1; }
           [ -z "${ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER+x}" ]
           node --input-type=module <<'NODE'
