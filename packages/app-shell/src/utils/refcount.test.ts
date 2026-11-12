@@ -88,7 +88,7 @@ describe("reference acquisition lifecycle", () => {
     expect(state.reacquired?.value).not.toBe(first.value)
     expect(state.reacquired?.value.generation).toBe(2)
     const joined = createRoot((dispose) => ({ value: map("/project"), dispose }))
-    expect(joined.value).toBe(state.reacquired?.value)
+    expect(joined.value).toBe(state.reacquired!.value)
     expect(state.count).toBe(2)
     joined.dispose()
     expect(removed).toEqual(["/project"])

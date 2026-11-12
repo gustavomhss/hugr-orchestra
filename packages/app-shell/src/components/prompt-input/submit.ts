@@ -643,8 +643,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       current: () => shouldQueue ? ownsBinding() : ownsSource() && captured.policyVersion === captured.readPolicyVersion() &&
         (!isNewSession || mode === "shell" || phase.value?.current() === true),
       readPolicyVersion: () => server.sessionManagement.subagentModelsWriteVersion?.(session.id) ?? 0,
-      before: (active = signal) => shouldQueue ? waitForSubagentPolicy({ serverScopeKey: directorySDK.scope,
-        directory: sessionDirectory, sessionID: session.id, management: server.sessionManagement, current: ownsBinding, signal: active })
+      before: (active = signal) => shouldQueue ? waitForSubagentPolicy({
+        sessionID: session.id, management: server.sessionManagement, current: ownsBinding, signal: active })
         : isNewSession || admission.request?.kind === "prompt" ? waitPolicy() : policy.wait(active),
     }
     if (isNewSession && admission.session) seed(serverState, sessionDirectory, admission.session)
