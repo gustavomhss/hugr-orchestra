@@ -60,6 +60,7 @@ export function make() {
     const directory = AbsolutePath.make(join(tmp.path, "work"))
     const data = join(tmp.path, "data")
     yield* Effect.promise(() => mkdir(directory))
+    yield* Effect.promise(() => mkdir(data, { recursive: true }))
     const ref = Location.Ref.make({ directory })
     const entered = yield* Deferred.make<Phase>()
     const release = yield* Deferred.make<void>()
