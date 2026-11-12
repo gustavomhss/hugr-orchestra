@@ -171,3 +171,21 @@ on Windows. Inspect named outcomes, focused Omni control and exact tested trees
 before closing W1. Until then, neither a hosted green nor W1 completion is claimed.
 The user-facing Worktrees table still has no manual reading API/button; W2/W3
 own those integrations. No owner app/database/runtime was restarted or migrated.
+
+## First implementation result and metadata correction
+
+Run [43273027453](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43273027453)
+ran the exact requested trees: Linux 13 pass/1 fail, Windows 10 pass/3 skip/1
+fail. W02–W04 passed, retaining all previous disk outcomes. W01 reached its
+schema assertion and failed: WorktreeRevision.ast.annotations.identifier was
+undefined. No hosted green or W1 completion is claimed. Full named outcomes
+are in worktree-first-validation.json.
+
+Correction task (within W1-B-state):
+
+- **Axioms:** the reusable decimal revision needs its domain-qualified scalar identifier; the test remains unchanged.
+- **DoD:** move the identifier annotation before the pattern check, obtain independent source review, run Schema/Core typechecks and the unchanged hosted pack, then inspect named outcomes and tested trees.
+- **Completeness criteria:** preserve the exact canonical decimal regex and wire type; the new request must execute W01's remaining validation assertions as well as W02–W04 and all disk regressions.
+- **Invariants:** no oracle weakening, suppression, new skip, fabricated result or API/UI change; no local product tests.
+- **Success criteria:** W01 passes its metadata and invalid/large revision assertions while previous passes stay green; W1 remains open until that proof exists.
+- **Quality standards:** the installed Effect SchemaAST.annotate source confirms annotations after checks attach to the final check; placing it first preserves scalar metadata. Independent cold review approved this exact correction. Schema typecheck passed; Core typecheck is running; hosted rerun remains pending.

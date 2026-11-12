@@ -4,18 +4,15 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
-WP-W1 acceptance has verified hosted red: run 43247422816 produced exactly
-W01–W04 unavailable-constructor failures on both OS; existing disk tests passed
-10 on Linux and 7 on Windows with 3 explicit skips. Fetched snapshot Core/Schema
-trees match the request. State and reader implementations now replace the
-unavailable anchors against the unchanged suite. State cold review approved;
-reader review and Core typecheck also passed. The unchanged four-file green
-request uploaded its snapshot and is waiting for runner capacity (17 queued
-runs observed); /tmp/activity-worktree-green-ci.log records its progress.
-Hosted green remains pending. WP-W1 is not
-complete and no Worktrees manual-read UI/API is available yet. The W2 HTTP
-preparation draft separately passed independent review and is committed.
-See [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md) and worktree-baseline.json.
+WP-W1's first implementation run 43273027453 passed W02–W04 and all prior disk
+cases, but W01 failed on the scalar revision identifier on both OS (13 pass/1
+fail Linux; 10 pass/3 skip/1 fail Windows). Exact source trees were fetched and
+verified. The metadata correction moves annotate before check, preserving the
+regex and unchanged acceptance suite; independent review approved it. Schema
+typecheck passed, Core typecheck and hosted rerun remain pending. W1 remains
+open. No Worktrees manual-read API/button is exposed yet. See
+[WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
+worktree-first-validation.json for actual named outcomes.
 
 WP-R0 is complete on activity-monitor: persisted registrationID producer,
 internal reads and data-preserving migration have hosted red-to-green proof.

@@ -89,9 +89,9 @@ export const DiskSnapshot = Schema.Struct({
 }).annotate({ identifier: "ActivityMonitor.DiskSnapshot" })
 export interface DiskSnapshot extends Schema.Schema.Type<typeof DiskSnapshot> {}
 
-export const WorktreeRevision = Schema.String.check(Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/)).annotate({
-  identifier: "ActivityMonitor.WorktreeRevision",
-})
+export const WorktreeRevision = Schema.String.annotate({ identifier: "ActivityMonitor.WorktreeRevision" }).check(
+  Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/),
+)
 export type WorktreeRevision = typeof WorktreeRevision.Type
 
 export const WorktreeRecord = Schema.Struct({
