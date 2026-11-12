@@ -81,7 +81,7 @@ test("CONTROL parser: original invalid regex reports actual source offset and li
   const input = "const ok = 1;\nconst bad = /(/;"
   const error = syntaxFailure(() => Parser.parse(input, options))
   expect(error.pos).toBe(input.indexOf("/") + 1)
-  expect(error.loc).toEqual({ line: 2, column: 12 })
+  expect(error.loc).toEqual({ line: 2, column: 13 })
   expect(error.message).toContain("Invalid regular expression")
 })
 
