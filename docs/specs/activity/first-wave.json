@@ -30,19 +30,23 @@
     },
     {
       "id": "W01",
-      "test": "packages/core/test/activity-worktree.test.ts :: W01 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-worktree.test.ts :: W01 cached snapshots and registry inventory never measure disk or invent readings",
+      "executionStatus": "authored-awaiting-review-and-hosted-red"
     },
     {
       "id": "W02",
-      "test": "packages/core/test/activity-worktree.test.ts :: W02 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-worktree.test.ts :: W02 real logical readings retain complete values through partial attempts and registry failures",
+      "executionStatus": "authored-awaiting-review-and-hosted-red"
     },
     {
       "id": "W03",
-      "test": "packages/core/test/activity-worktree.test.ts :: W03 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-worktree-identity.test.ts :: W03 persisted incarnation controls retention across projects, unobserved recreation and strategy ABA",
+      "executionStatus": "authored-awaiting-review-and-hosted-red"
     },
     {
       "id": "W04",
-      "test": "packages/core/test/activity-worktree.test.ts :: W04 (proposed; not executable yet)"
+      "test": "packages/core/test/activity-worktree-concurrency.test.ts :: W04 bounded singleflight reads revalidate real walks and recover validation capacity",
+      "executionStatus": "authored-awaiting-review-and-hosted-red"
     },
     {
       "id": "W05",
@@ -101,11 +105,17 @@
       "covers": ["W01", "W02", "W03", "W04"],
       "writes": [
         "packages/core/src/activity-worktree.ts",
+        "packages/core/src/activity-worktree-state.ts",
+        "packages/core/test/activity-worktree-concurrency.test.ts",
+        "packages/core/test/activity-worktree-identity.test.ts",
         "packages/core/test/activity-worktree.test.ts",
+        "packages/core/test/fixture/activity-worktree.ts",
         "packages/core/package.json",
         "packages/schema/src/activity-monitor.ts"
       ],
-      "reads": ["packages/core/src/activity-disk.ts", "packages/core/src/project/directories.ts"]
+      "reads": ["packages/core/src/activity-disk.ts", "packages/core/src/project/directories.ts"],
+      "executionAnchor": "docs/specs/activity/WORKTREE-EXECUTION.md",
+      "executionStatus": "acceptance-under-review"
     },
     {
       "id": "WP-W2",

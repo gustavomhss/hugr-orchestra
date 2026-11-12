@@ -138,8 +138,10 @@ project SQL/service, new migration and generator outputs owned only by this WP.
 Status: specified; not dispatched. Owner: lead until an exact packet is frozen.
 Dependency: WP-R0 internal incarnation-aware reads, existing ActivityDisk.measure
 and DiskAttempt semantics; normative FIRST-WAVE-CONTRACT.md.
-Writes: proposed `packages/core/src/activity-worktree.ts`, its focused Core
-test, package export, and lead-owned additions to Schema's activity-monitor.
+Writes: Core activity-worktree and activity-worktree-state modules, the focused
+state/identity/concurrency test files and fixture, package export, and lead-owned
+additions to Schema's activity-monitor. Each bounded review unit stays under 400
+changed lines; the cohesive WP is integrated only after its whole suite passes.
 No writes to project registration, spawn, Session/timeline or existing UI.
 Acceptance owner: W01–W04. No cleanup, ownership inference or use proof.
 
@@ -152,28 +154,46 @@ Acceptance owner: W01–W04. No cleanup, ownership inference or use proof.
 
 ### Task W1-A — acceptance and red evidence
 
-Owner: lead; state: pending; writes: proposed `packages/core/test/activity-worktree.test.ts`.
+Owner: lead; state: acceptance under review; writes: the three focused
+activity-worktree\*.test.ts files and test/fixture/activity-worktree.ts in Core.
 Depends on exact exported signatures being frozen. Owns W01–W04 test authoring;
-W1-B owns making those implementation checks pass. This is not duplicate product ownership.
+W1-B-state and W1-B-read own making those implementation checks pass. This is not duplicate product ownership.
 
 - **Axioms:** metadata reads require actual filesystem fixtures; pre-existing disk unit passes cannot prove a new registry cache (R1/R20).
-- **DoD:** author named W01–W04 cases before implementation; cold critic approves coverage twice; run hosted `bun run test:ci core test/activity-worktree.test.ts --os both` and retain the expected failing snapshot/result.
+- **DoD:** author named W01–W04 cases before implementation; cold critic approves coverage twice; run the hosted three-file Worktree pack plus test/activity-disk.test.ts on both OS and retain the expected failing snapshot/result.
 - **Completeness criteria:** exercise all W01–W04 transitions, including remove/reinsert entirely between registry observations while an old read is in flight, strategy ABA and equal timestamps; assert the replacement stays unread with a distinct identity. Use no local test suite or globalThis mock.
 - **Invariants:** tests assert public behavior, never duplicate the production walker; fixture cleanup touches only owned paths; unsupported platform cases remain explicit.
 - **Success criteria:** baseline fails for the missing target behavior, not an unrelated environment/configuration fault; logs name the test/snapshot and final rerun will use the same oracles.
 - **Quality standards:** real temporary fixtures, deterministic barriers where needed, exact optional-key assertions, no arbitrary sleeps, and tests scoped to this package. Baseline failing state is evidence, not a failing gate to bypass.
 
-### Task W1-B — collector and contract implementation
+### Task W1-B-state — immutable reading state and wire contract
 
 Owner: unassigned implementation seat; state: awaits W1-A and frozen anchor.
-Writes: proposed Core module/export; Schema additions integrated only by lead.
+Writes: activity-worktree-state.ts; Schema additions integrated only by lead.
+Acceptance implementation owner: W01–W03 state transitions; W1-B-read supplies
+the shared facade used by acceptance tests. Neither task closes before the
+integrated parent gate passes.
 
 - **Axioms:** measurement identity addresses a read-only registry row; it does not grant action authority (R3/R12). No recorded owner means empty owner (R2).
 - **DoD:** implement only the agreed collector/state contract, make W01–W04 pass on hosted Linux/Windows, run `bun typecheck` inside Core and Schema, obtain cold review, update guide/receipts, and pass completion guardrails.
-- **Completeness criteria:** all W01–W04 pass; unchanged incarnations retain data, changed/removed ones cannot borrow or overwrite it; publish immutable full snapshots with exact monotonic snapshotRevision; memory retention is bounded by active registrations plus in-flight state.
+- **Completeness criteria:** W01–W03 transitions pass through the integrated facade; unchanged incarnations retain data, changed/removed ones cannot borrow or overwrite it; immutable full snapshots, canonical revisions, source rejection and successful empty inventory are covered.
 - **Invariants:** no FS work from cached snapshot; no process query, registry write, symlink traversal policy expansion or stale-result resurrection; partial never overwrites complete logical reading.
 - **Success criteria:** final hosted results plus tested-scope diff establish the implemented transition behavior; all outstanding limitations remain explicit in the contract and UI-facing data.
 - **Quality standards:** existing Core patterns, stable domain-qualified schema IDs, self-export module style, no any/import aliases, proper package export, formatting and `bun run check:guards --base origin/dev`.
+
+### Task W1-B-read — serialized validation and bounded manual readers
+
+Owner: unassigned reader implementation seat; state: awaits W1-A hosted red and
+the compiled state anchor. Writes: activity-worktree.ts and its package export;
+no state-module/Schema/registration/test writes. Acceptance owner: W04 plus its
+validation seam; parent closure still requires W01–W04.
+
+- **Axioms:** a persisted registration tuple is a read target, never action authority; a real walk's result needs a fresh postcheck before publication (R10/R12/R20).
+- **DoD:** implement the frozen Monitor/Source/state seam, pass the same hosted state/identity/concurrency/walker pack on both OS, run Core typecheck, obtain cold review and guardrails, and attach exact source evidence.
+- **Completeness criteria:** singleflight, four global slots through precheck/walk/postcheck, independent walks, serialized source queries, no older-inventory reuse, recreate/ABA rejection and full slot recovery after query failures pass W04; W01–W03 integration remains green.
+- **Invariants:** use state.snapshot/reconcile/get/publish exclusively for canonical state; source failures propagate and do not poison the queue; only known row IDs can start walks; rejected or retired operations always release their slots.
+- **Success criteria:** all named parent cases turn red-to-green without regressions; bounded barriers prove real I/O overlaps while source queries remain serial and stale results cannot populate new incarnations.
+- **Quality standards:** use the default ActivityDisk.measure budgets, retain the exported capacity error, no raw FS/database calls outside injected boundaries, no global mocks/any/import aliases, no local tests, and an implementation diff under 400 lines.
 
 ## WP-W2 — authenticated registered-root API
 

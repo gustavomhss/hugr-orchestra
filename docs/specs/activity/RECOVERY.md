@@ -4,6 +4,15 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
+WP-W1 acceptance passed two consecutive independent coverage reviews and
+bounded cold quality review.
+Four executable cases now cover cached state, real partial readings, persisted
+incarnations and concurrent pre/post validation. Core and Schema acceptance
+typechecks passed before the latest suite split; final Core and Schema passed,
+and hosted red evidence remains pending. Public and private anchors compile but both factories
+still throw explicitly; no W1 runtime implementation or API/UI change is claimed.
+See [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md).
+
 WP-R0 is complete on activity-monitor: persisted registrationID producer,
 internal reads and data-preserving migration have hosted red-to-green proof.
 The corrected three-file pack passed 22/22 tests on each of Linux and Windows,
@@ -19,7 +28,7 @@ oracle strengthening, exact snapshot boundary and passing green receipt
 are in [REGISTRATION-EXECUTION.md](REGISTRATION-EXECUTION.md).
 
 Planning follow-up: [PLAN.md](PLAN.md) records the whole R1–R20 coverage ledger
-and a corrected first wave of four specified WPs / eight tasks, each with the
+and a corrected first wave of four specified WPs / nine tasks, each with the
 owner's six required quality fields. The adversarial findings required a new
 persisted-registration producer WP and exact monotonic snapshot ordering;
 the TSV reference was also corrected. Two fresh independent adversarial reviews
@@ -82,7 +91,6 @@ The recovered acceptance document is prose, not an executable acceptance suite. 
 - Hosted request: `bun run test:ci app src/orchestra/chapters/activity/inventory.test.ts src/orchestra/chapters/activity/reading.test.ts src/orchestra/navigation.test.ts src/orchestra/tab-keys.test.ts`. The upload completed; the command is waiting for runner capacity before creating its temporary CI branch. There is no CI pass or workflow URL yet.
 - Visual validation in a running app has not been performed. Existing app/server processes were not restarted.
 
-
 ## Process observations — follow-up
 
 Added Schema’s `ActivityMonitor` wire contract, Core’s process-global observer, a provenance reference bound by ToolRegistry, authenticated `GET /api/activity`, generated Client methods, and the Trees table. ToolRegistry captures the stored session title through its captured SessionStore dependency before tool execution; the pipe spawner records it with the invocation metadata. Empty provenance stays empty.
@@ -93,9 +101,7 @@ Coverage is explicitly server pipe spawns through OmniSpawner, since this proces
 
 Focused tests cover real supervisor membership, output independence, immutable recorded provenance, snapshot isolation, actual spawner instrumentation, surviving descendants after root exit, invocation scoping and authenticated project-independent HTTP reads. Hosted proof is still pending; no local tests were run.
 
-
 Follow-up validation: package typechecks passed for Core, Server, App Shell, Schema, Protocol and Client. Spawn-imports passed (3,857 files, 66 allowlisted sites); Guardrail passed (78 rules, zero findings); formatting and diff checks passed. Hosted Core (Linux and Windows), Server (Linux) and the earlier App request are pending runner capacity. None is reported as a CI pass. The source changes have not been integrated into the running desktop app.
-
 
 ## Native identity and first resource reading
 
@@ -104,7 +110,6 @@ Added the generation-qualified native `treeId` forwarding chain and channel test
 Added a host CPU reading derived from `node.os.cpus` cumulative time deltas: named source, actual window, timestamp and minimum sample window. No first-sample zero, no rate without a window, no unmeasured memory pressure or attribution to sessions. Pure acceptance cases cover idle/busy extremes, weighted aggregate time, counter resets, missing CPUs, topology changes and invalid values. Client reading age now combines server-relative timestamps with elapsed client monotonic time, so remote clock offsets cancel.
 
 Earlier App snapshot proof: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43106296609 — 22 passed, 0 failed, Linux, snapshot a75912c654771b69781ab9e492671c41b797240f. It predates this native identity/CPU change and is not proof of the new changes. Original Core/Server requests remain separate pending runs. New native, Core, API and client validation will be recorded with their own exact snapshots.
-
 
 ### R20 correction: ledger refresh versus explicit membership inspection
 
