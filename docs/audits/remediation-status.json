@@ -1575,10 +1575,21 @@
       "id": "L7",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "status": "behavioral_red_source_authorized",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "actual_chain_controls_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43229482293",
+          "result": "6pass/33assertions and1020Omni spawns per OS; current evidence, real approval, collision and receipt controls."
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43230769654",
+          "result": "21fail/52assertions and3623Omni spawns per OS; every refusal assertion instead receives actual success after real stale/binding/missing preconditions. No later SQL-zero/provider-zero assertion is claimed from RED."
+        }
+      ]
     },
     {
       "id": "L8",
