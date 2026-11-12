@@ -2230,6 +2230,17 @@ export type ModelsListOutput = {
       readonly id: string
       readonly headers: { readonly [x: string]: string }
       readonly body: { readonly [x: string]: JsonValue }
+      readonly generation?: {
+        readonly maxTokens?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly temperature?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly topP?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly topK?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly frequencyPenalty?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly presencePenalty?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly seed?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly stop?: ReadonlyArray<string> | null
+      }
+      readonly providerOptions?: { readonly [x: string]: { readonly [x: string]: JsonValue } }
     }>
     readonly time: { readonly released: number }
     readonly cost: ReadonlyArray<{
@@ -2289,6 +2300,17 @@ export type ModelsDefaultOutput = {
       readonly id: string
       readonly headers: { readonly [x: string]: string }
       readonly body: { readonly [x: string]: JsonValue }
+      readonly generation?: {
+        readonly maxTokens?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly temperature?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly topP?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly topK?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly frequencyPenalty?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly presencePenalty?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly seed?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly stop?: ReadonlyArray<string> | null
+      }
+      readonly providerOptions?: { readonly [x: string]: { readonly [x: string]: JsonValue } }
     }>
     readonly time: { readonly released: number }
     readonly cost: ReadonlyArray<{
