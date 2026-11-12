@@ -1,4 +1,4 @@
-import { expect } from "bun:test"
+import { aroundEach, expect } from "bun:test"
 import path from "node:path"
 import { createServer } from "node:net"
 import { pathToFileURL } from "node:url"
@@ -14,6 +14,17 @@ import { testEffect } from "./lib/effect"
 import { jail, sandboxHost } from "./lib/sandbox-host"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
+// The last test exits the process on Windows so a stuck scope release cannot hold the step.
+// An earlier failure must still fail that process: Bun would report it only when the runner finishes.
+let failed = false
+if (process.platform === "win32") {
+  aroundEach(async (runTest, context) => {
+    await runTest().catch(() => {
+      failed = true
+    })
+    if (context.task.result.state === "fail") failed = true
+  })
+}
 // Unsupported/unavailable hosts measure HOLD separately, never count it as confinement conformance.
 // These probes run node, which Windows' AppContainer jail does not take (pwsh and cmd only, tool-safety-appcontainer.test.ts).
 const confined = sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer" ? it.live : it.live.skip
@@ -471,7 +482,7 @@ it.live("exact Unix socket grant uses native placement; unsupported enforcement 
       const held = yield* Effect.flip(f.wrap("", profile))
       expect(held.reason).toBe("sandbox-unix-socket-platform-unsupported")
       console.info("Windows: exact Unix socket enforcement unsupported; HOLD measured, no conformance claim")
-      process.exit(0)
+      process.exit(failed ? 1 : 0)
     }
     yield* listen(one)
     yield* listen(two)

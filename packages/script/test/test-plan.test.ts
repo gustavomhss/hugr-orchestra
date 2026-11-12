@@ -45,6 +45,9 @@ describe("test shard planner", () => {
     const own = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ]; then')[1]?.split("else")[0] ?? ""
     expect(own).toContain('alone+=("$file")')
     expect(own).not.toContain("kept")
+    const repairs = readFileSync(new URL("../../core/test/tool-safety-sandbox-repairs.test.ts", import.meta.url), "utf8")
+    expect(repairs).toContain("process.exit(failed ? 1 : 0)")
+    expect(repairs).not.toContain("process.exit(0)")
     expect(step).not.toContain("turbo build")
     expect(workflow).not.toContain("Build Windows test dependencies")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
