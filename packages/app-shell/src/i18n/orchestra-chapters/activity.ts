@@ -1,6 +1,7 @@
 export const ACTIVITY_COPY = {
   "orchestra.monitor.worktreeSource": "Source: {{source}} · registered Git worktrees",
   "orchestra.monitor.worktreeRead": "Read disk usage: {{path}}",
+  "orchestra.monitor.worktreeAttempt": "Latest attempt · Age {{age}} · Gaps {{issues}}",
   "orchestra.monitor.diskSource": "Source: node.fs.lstat · declared Orchestra roots",
   "orchestra.monitor.measureDisk": "Read disk usage",
   "orchestra.monitor.diskCount": "Declared roots: {{count}}",
@@ -93,6 +94,7 @@ export const ACTIVITY_COPY = {
 export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.worktreeSource": "Fonte: {{source}} · worktrees Git registrados",
   "orchestra.monitor.worktreeRead": "Ler uso de disco: {{path}}",
+  "orchestra.monitor.worktreeAttempt": "Última tentativa · Idade {{age}} · Lacunas {{issues}}",
   "orchestra.monitor.diskSource": "Fonte: node.fs.lstat · raízes declaradas do Orchestra",
   "orchestra.monitor.measureDisk": "Ler uso de disco",
   "orchestra.monitor.diskCount": "Raízes declaradas: {{count}}",

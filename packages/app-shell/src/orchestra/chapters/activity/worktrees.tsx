@@ -126,7 +126,9 @@ export function ActivityWorktrees(props: { query: string }) {
                           ? language.t("orchestra.monitor.bytes", { count: row.logical.bytes })
                           : language.t("orchestra.monitor.unread")}
                         <div class="mx-note">
-                          <code>{row.logical ? state().snapshot?.source : language.t("orchestra.monitor.unread")}</code>
+                          <Show when={row.logical}>
+                            <code>{state().snapshot?.source}</code>
+                          </Show>
                         </div>
                       </td>
                       <td>{language.t("orchestra.monitor.notCollapsed")}</td>
@@ -160,13 +162,19 @@ export function ActivityWorktrees(props: { query: string }) {
                           {(attempt) => (
                             <details class="activity-worktree-attempt">
                               <summary>
+                                {language.t("orchestra.monitor.worktreeAttempt", {
+                                  age: age(attempt().sampledAt),
+                                  issues: attempt().issueCount,
+                                })}
+                              </summary>
+                              <p class="mx-note">
                                 {language.t("orchestra.monitor.walkDetails", {
                                   bytes: attempt().observedBytes,
                                   entries: attempt().entries,
                                   age: age(attempt().sampledAt),
                                   issues: attempt().issueCount,
                                 })}
-                              </summary>
+                              </p>
                               <Show when={attempt().issueCount > 0}>
                                 <p class="mx-note">{language.t("orchestra.monitor.gapsLimit")}</p>
                                 <ul class="activity-members">

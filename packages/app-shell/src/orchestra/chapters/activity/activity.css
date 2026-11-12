@@ -106,6 +106,7 @@
 
 [data-mx-page="activity"] .activity-worktree-attempt {
   margin-block-start: 8px;
+  min-inline-size: 24ch;
   max-inline-size: 48ch;
   white-space: normal;
 }
