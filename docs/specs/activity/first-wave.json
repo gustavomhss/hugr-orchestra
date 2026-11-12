@@ -1,0 +1,106 @@
+{
+  "items": [
+    {
+      "id": "W01",
+      "test": "packages/core/test/activity-worktree.test.ts :: W01 (proposed; not executable yet)"
+    },
+    {
+      "id": "W02",
+      "test": "packages/core/test/activity-worktree.test.ts :: W02 (proposed; not executable yet)"
+    },
+    {
+      "id": "W03",
+      "test": "packages/core/test/activity-worktree.test.ts :: W03 (proposed; not executable yet)"
+    },
+    {
+      "id": "W04",
+      "test": "packages/core/test/activity-worktree.test.ts :: W04 (proposed; not executable yet)"
+    },
+    {
+      "id": "W05",
+      "test": "packages/server/test/activity-http.test.ts :: W05 (proposed; not executable yet)"
+    },
+    {
+      "id": "W06",
+      "test": "packages/server/test/activity-http.test.ts :: W06 (proposed; not executable yet)"
+    },
+    {
+      "id": "W07",
+      "test": "packages/server/test/activity-http.test.ts :: W07 (proposed; not executable yet)"
+    },
+    {
+      "id": "W08",
+      "test": "packages/server/test/activity-http.test.ts :: W08 (proposed; not executable yet)"
+    },
+    {
+      "id": "W09",
+      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W09 (proposed; not executable yet)"
+    },
+    {
+      "id": "W10",
+      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W10 (proposed; not executable yet)"
+    },
+    {
+      "id": "W11",
+      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W11 (proposed; not executable yet)"
+    },
+    {
+      "id": "W12",
+      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W12 (proposed; not executable yet)"
+    }
+  ],
+  "wps": [
+    {
+      "id": "WP-W1",
+      "covers": ["W01", "W02", "W03", "W04"],
+      "writes": [
+        "packages/core/src/activity-worktree.ts",
+        "packages/core/test/activity-worktree.test.ts",
+        "packages/core/package.json",
+        "packages/schema/src/activity-monitor.ts"
+      ],
+      "reads": ["packages/core/src/activity-disk.ts"]
+    },
+    {
+      "id": "WP-W2",
+      "covers": ["W05", "W06", "W07", "W08"],
+      "writes": [
+        "packages/protocol/src/groups/activity.ts",
+        "packages/server/src/handlers/activity.ts",
+        "packages/server/test/activity-http.test.ts",
+        "packages/client/src/generated",
+        "packages/client/src/generated-effect"
+      ],
+      "reads": [
+        "packages/schema/src/activity-monitor.ts",
+        "packages/core/src/activity-worktree.ts",
+        "packages/core/src/project/directories.ts"
+      ]
+    },
+    {
+      "id": "WP-W3",
+      "covers": ["W09", "W10", "W11", "W12"],
+      "writes": [
+        "packages/app-shell/src/orchestra/chapters/activity",
+        "packages/app-shell/src/i18n/orchestra-chapters/activity.ts",
+        "packages/app-shell/test-browser/activity-worktree.test.ts"
+      ],
+      "reads": [
+        "packages/client/src/generated",
+        "packages/client/src/generated-effect",
+        "packages/schema/src/activity-monitor.ts"
+      ]
+    }
+  ],
+  "baseline": "d20520c2d04221b77b4fdad6785d65886559e322",
+  "status": "preparation-only",
+  "readyForImplementationDispatch": false,
+  "integrationOrder": ["WP-W1", "WP-W2", "WP-W3"],
+  "prerequisites": [
+    "frozen-anchor-code",
+    "compilable-stubs",
+    "executable-acceptance",
+    "hosted-red-baselines",
+    "approved-final-write-sets"
+  ]
+}
