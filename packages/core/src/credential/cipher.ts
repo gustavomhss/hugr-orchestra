@@ -6,6 +6,7 @@ import path from "node:path"
 import { Context, Effect, Layer, Option } from "effect"
 import { makeGlobalNode } from "../effect/app-node"
 import { Flag } from "../flag/flag"
+import { CredentialKeychain } from "./keychain"
 
 /**
  * Secrets at rest (stored credentials, MCP OAuth tokens) are sealed with AES-256-GCM under one 32-byte data key.
@@ -63,7 +64,10 @@ function load() {
     }
     const { Global } = yield* Effect.promise(() => import("../global"))
     const fallback = path.join(Global.Path.data, "credential.key")
-    const keychain = yield* Effect.tryPromise(() => keychainKey()).pipe(Effect.timeout("10 seconds"), Effect.option)
+    const keychain = yield* Effect.tryPromise((signal) => keychainKey(fallback, signal)).pipe(
+      Effect.timeout("10 seconds"),
+      Effect.option,
+    )
     if (Option.isSome(keychain)) return [keychain.value, ...(existsSync(fallback) ? [fileKey(fallback)] : [])]
     yield* Effect.logWarning(
       "OS keychain unavailable: stored credentials are encrypted with a key file in the data directory, which is weaker",
@@ -115,18 +119,19 @@ function keys() {
   return loaded
 }
 
-async function keychainKey() {
+async function keychainKey(fallback: string, signal: AbortSignal) {
   if (typeof Bun === "undefined") throw new Error("The OS keychain needs the Bun runtime")
   // Linux keychains are the Secret Service on the D-Bus session bus; without a bus (headless, CI, bare WSL) the
   // native lookup can stall for a long time before it fails, so skip it and use the key file.
   if (process.platform === "linux" && !process.env.DBUS_SESSION_BUS_ADDRESS) throw new Error("No Secret Service session bus")
-  const stored = await Bun.secrets.get(KEYCHAIN)
-  if (stored) return decodeKey(stored)
-  await Bun.secrets.set({ ...KEYCHAIN, value: randomBytes(32).toString("base64") })
-  // Read back so two first starts racing on the same keychain entry converge on the value that won.
-  const created = await Bun.secrets.get(KEYCHAIN)
-  if (!created) throw new Error("The OS keychain did not keep the credential key")
-  return decodeKey(created)
+  return CredentialKeychain.load({
+    signal,
+    beforeCreate: () => refuseNewKey(fallback),
+    store: {
+      get: () => Bun.secrets.get(KEYCHAIN),
+      set: (value) => Bun.secrets.set({ ...KEYCHAIN, value }),
+    },
+  })
 }
 
 function fileKey(file: string) {
