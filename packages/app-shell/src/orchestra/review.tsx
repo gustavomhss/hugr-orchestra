@@ -28,6 +28,7 @@ export function createOrchestraReviewPanel() {
     const sidebarVisible = () => props.state.sidebarOpened() && (!compact() || props.state.sidebarWidth() > 0)
     const diffs = createMemo(() => props.diffs().filter(filterRenderableDiff))
     const [exporting, setExporting] = createSignal(false)
+    let exportRead = 0
 
     onMount(() => {
       const rail = root.closest<HTMLElement>("#review-panel") ?? root
@@ -42,12 +43,26 @@ export function createOrchestraReviewPanel() {
 
     // Writes the changes this view lists as one unified diff, loading any patch the list only summarizes.
     const exportDiff = async () => {
+      const started = ++exportRead
+      const version = props.diffVersion
+      const current = () => started === exportRead && props.diffVersion === version
       setExporting(true)
+      let told = false
       const result = await collectPatches({
         diffs: diffs(),
         needsLoad: reviewDiffNeedsLoad,
-        load: async (diff) => (await props.loadDiff?.(diff.file, props.diffVersion))?.patch,
-      }).finally(() => setExporting(false))
+        load: async (diff) => (await props.loadDiff?.(diff.file, version))?.patch,
+        current,
+        report: (error) => {
+          console.error(error)
+          if (!current() || told) return
+          told = true
+          showToast({ variant: "error", title: language.t("common.requestFailed") })
+        },
+      }).finally(() => {
+        if (started === exportRead) setExporting(false)
+      })
+      if (!current()) return
       if (result.skipped.length > 0)
         showToast({ title: language.t("orchestra.chat.exportDiffSkipped", { count: result.skipped.length }) })
       if (result.patches.length === 0) return
