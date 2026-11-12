@@ -83,7 +83,9 @@ describe("test shard planner", () => {
     for (const platform of ["linux", "windows"] as const) {
       const bins = plannedBins(timings, "packages/core", platform)
       expect(Math.max(...bins.map((bin) => bin.names.length))).toBeLessThanOrEqual(120)
-      expect(bins.filter((bin) => bin.names.length > 1).every((bin) => bin.seconds <= 280)).toBe(true)
+      // Windows 1.6 left multi-file bins at 255s, and that shard was still running at 8 minutes (run 43120112874).
+      const limit = platform === "windows" ? 220 : 280
+      expect(bins.filter((bin) => bin.names.length > 1).every((bin) => bin.seconds <= limit)).toBe(true)
       const bare = balance(
         weigh("packages/core", timings.files[`packages/core:${platform}`] ?? {}, timings.totals["packages/core"]?.[platform] ?? 0),
         packageShards(timings, "packages/core", platform),
