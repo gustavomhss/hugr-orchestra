@@ -163,10 +163,25 @@
       "id": "E6",
       "severity": "P2",
       "owner": "clients",
-      "status": "acceptance_in_progress",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "core_host_verified_wire_acceptance",
+      "runtime_reproduced": true,
+      "commits": [
+        "8253290d1d",
+        "ca0b8fc657",
+        "011474d4a5",
+        "3e6ace81ea"
+      ],
+      "evidence": [
+        {
+          "kind": "core_host_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160056512"
+        },
+        {
+          "kind": "claude_host_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160277386"
+        }
+      ],
+      "remaining": "Protocol/Server/Client wire and app/TUI consumption; Core ready is structural/advisory, not a lowering or network success guarantee."
     },
     {
       "id": "E7",
@@ -821,10 +836,20 @@
       "id": "H6",
       "severity": "P1",
       "owner": "security",
-      "status": "acceptance_in_progress",
-      "runtime_reproduced": false,
+      "status": "source_runtime_fix_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "source_partial_fail",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43159770050"
+        },
+        {
+          "kind": "after_hoist_narrow_fail",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43162642145"
+        }
+      ],
+      "remaining": "Three manager timeouts persist after approved G2 hoist dependency; full gate not green."
     },
     {
       "id": "H7",
@@ -1181,10 +1206,19 @@
       "id": "L3",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "status": "source_in_progress",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "controls_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43155876906"
+        },
+        {
+          "kind": "behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160405654"
+        }
+      ]
     },
     {
       "id": "L4",
@@ -1749,19 +1783,29 @@
       "id": "M9",
       "severity": "P2",
       "owner": "desktop",
-      "status": "contract_review",
-      "runtime_reproduced": false,
+      "status": "source_clean_runtime_gate",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "isolated_clean_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43161728304"
+        }
+      ]
     },
     {
       "id": "M10",
       "severity": "P2",
       "owner": "desktop",
-      "status": "contract_review",
-      "runtime_reproduced": false,
+      "status": "source_clean_runtime_gate",
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "isolated_clean_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43161728304"
+        }
+      ]
     },
     {
       "id": "M11",
