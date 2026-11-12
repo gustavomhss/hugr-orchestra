@@ -424,7 +424,10 @@ jobs:
             if [ -n "${files[0]:-}" ]; then
               # --only: core imports plugin and http-recorder from source. ^build would run plugin tsc, and that
               # compile does not finish inside this step on Windows (run 43110315940).
-              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- "${files[@]}" "${report[@]}"
+              # --only-failures prints no file header until a test fails. A hang before that left this step
+              # with no file name (run 43258630212, windows core 3/9). The preload writes the path to fd 2
+              # when bun resolves the file, which a pipe shows immediately.
+              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- --preload ./test/file-start.ts "${files[@]}" "${report[@]}"
             fi
             # One file per process. A second turbo exited 1 after a green watcher run (run 43150681461).
             # bun test is the same preload, without that wrapper. A hang in one file must not take the other.

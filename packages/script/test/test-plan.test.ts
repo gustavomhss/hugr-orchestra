@@ -38,7 +38,7 @@ describe("test shard planner", () => {
     const code = step.split("\n").filter((line) => !line.trim().startsWith("#")).join("\n")
     const invocations = [...code.matchAll(/bun turbo test --filter=@orchestra\/core[^\n]*/g)].map((match) => match[0])
     expect(invocations).toEqual([
-      "bun turbo test --filter=@orchestra/core --only --log-order=stream -- \"${files[@]}\" \"${report[@]}\"",
+      "bun turbo test --filter=@orchestra/core --only --log-order=stream -- --preload ./test/file-start.ts \"${files[@]}\" \"${report[@]}\"",
     ])
     expect(code).toContain('cd packages/core && GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 --only-failures "$alone_file"')
     expect(code).not.toContain('bun test --timeout 30000 --only-failures "${alone[@]}"')
@@ -57,6 +57,12 @@ describe("test shard planner", () => {
     expect(live).not.toContain("run(")
     expect(step).not.toContain("turbo build")
     expect(workflow).not.toContain("Build Windows test dependencies")
+    const start = strip(readFileSync(new URL("../../core/test/file-start.ts", import.meta.url), "utf8"))
+    const hook = start.split("build.onResolve")[1] ?? ""
+    expect(hook).toContain("writeSync(2,")
+    expect([...hook.matchAll(/return\s+[^\n]+/g)].map((match) => match[0].trim())).toEqual(["return undefined", "return undefined"])
+    expect(start).not.toContain("onLoad")
+    expect(start).not.toContain("console.")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget || 10 }}")
     const app = code.split("if printf '%s\\n' \"${filters[@]}\" | grep -qx -- '--filter=@orchestra/app'; then")[1]?.split("fi")[0] ?? ""
