@@ -9,10 +9,11 @@ import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { Prompt } from "@orchestra/core/session/prompt"
-import { SessionRevert } from "@orchestra/core/session/revert"
+import { SessionRevert } from "../src/session/revert"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionContextEpochTable, SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
+import { Snapshot } from "@orchestra/core/snapshot"
 import { SystemContext } from "@orchestra/core/system-context"
 import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
 import { LLMClient } from "@orchestra/llm"
@@ -86,9 +87,16 @@ const epoch = Effect.gen(function* () {
 const stage = (messageID: SessionMessage.ID) => Effect.gen(function* () {
   const session = yield* SessionV2.Service
   const execution = yield* SessionExecution.Service
+  const snapshot = yield* Snapshot.Service
+  const database = yield* Database.Service
+  const events = yield* EventV2.Service
   const owned = yield* execution.exclusive(Harness.sessionID, Effect.gen(function* () {
     const current = yield* session.get(Harness.sessionID)
-    return yield* SessionRevert.stage({ session: current, messageID, files: false })
+    return yield* SessionRevert.stage({ session: current, messageID, files: false }).pipe(
+      Effect.provideService(Snapshot.Service, snapshot),
+      Effect.provideService(Database.Service, database),
+      Effect.provideService(EventV2.Service, events),
+    )
   }))
   expect(Option.isSome(owned)).toBe(true)
 })
@@ -263,7 +271,7 @@ it.live("revert with no epoch does not invent one or execute a provider", () =>
     const events = yield* EventV2.Service
     const messageID = SessionMessage.ID.create()
     yield* events.publish(SessionEvent.Prompted, {
-      sessionID: Harness.sessionID, messageID, timestamp: DateTime.makeUnsafe(1), prompt: Prompt.make({ text: "historical user" }),
+      sessionID: Harness.sessionID, messageID, timestamp: DateTime.makeUnsafe(1), prompt: Prompt.make({ text: "historical user" }), delivery: "steer",
     })
     yield* revert(messageID)
     const database = yield* Database.Service
