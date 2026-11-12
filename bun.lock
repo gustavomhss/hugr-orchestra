@@ -232,6 +232,7 @@
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
         "@typescript/native-preview": "catalog:",
+        "drizzle-orm": "catalog:",
         "typescript": "catalog:",
       },
     },
