@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
 import { balance, packageLanes, packageShards, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
-import registry from "../../../script/module-registry.json"
+
+const registry: { modules: { kind: string; scope: string; name: string }[] } = JSON.parse(
+  readFileSync(new URL("../../../script/module-registry.json", import.meta.url), "utf8"),
+)
 
 describe("test shard planner", () => {
   test("package filters cover each registered package once and keep future packages in libs", () => {
