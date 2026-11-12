@@ -1,4 +1,4 @@
-import { settlePickerSearch } from "./picker-search"
+import { settlePickerSearch, StalePickerSearch } from "./picker-search"
 
 export function treeEntries(parent: string, nodes: ReadonlyArray<{ name: string; type: "file" | "directory" }>) {
   const prefix = parent.replace(/^\/+|\/+$/g, "")
@@ -410,7 +410,7 @@ export function createDirectorySearch(args: {
         },
         report: tell,
       })
-      if (!active()) return []
+      if (!active()) throw new StalePickerSearch()
       if (!found) throw new Error("picker search failed")
       if (results.length) {
         return results.map((path) => joinPickerPath(input.directory, path)).slice(0, 50)
@@ -418,7 +418,7 @@ export function createDirectorySearch(args: {
       const fallback = query
         ? await match(input.directory, query, 50)
         : (await directories(input.directory)).map((item) => item.absolute)
-      if (!active()) return []
+      if (!active()) throw new StalePickerSearch()
       return fallback
     }
     const segments = query.replace(/^\/+/, "").split("/")
@@ -426,7 +426,7 @@ export function createDirectorySearch(args: {
     const tail = segments.at(-1) ?? ""
     let paths = [input.directory]
     for (const part of head) {
-      if (!active()) return []
+      if (!active()) throw new StalePickerSearch()
       if (part === "..") {
         paths = paths.map(pickerParent)
         continue
@@ -435,13 +435,13 @@ export function createDirectorySearch(args: {
       if (!active() || paths.length === 0) return []
     }
     const matches = Array.from(new Set((await Promise.all(paths.map((path) => match(path, tail, 50)))).flat()))
-    if (!active()) return []
+    if (!active()) throw new StalePickerSearch()
     const base = raw.startsWith("~") ? trimPickerPath(input.directory) : ""
     if (raw.endsWith("/") || !tail) return Array.from(new Set([base, ...matches].filter(Boolean))).slice(0, 50)
     const target = matches.find((path) => getFilename(path).toLowerCase() === tail.toLowerCase())
     if (!target) return matches.slice(0, 50)
     const children = await match(target, "", 30)
-    if (!active()) return []
+    if (!active()) throw new StalePickerSearch()
     return Array.from(new Set([base, ...matches, ...children].filter(Boolean))).slice(0, 50)
   }
 }

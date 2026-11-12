@@ -1,3 +1,9 @@
+export class StalePickerSearch extends Error {
+  constructor() {
+    super("stale")
+  }
+}
+
 // A picker search for a file or folder.
 // A missing search is not a failure.
 // A stale search (a newer query already replaced it) is not this request.

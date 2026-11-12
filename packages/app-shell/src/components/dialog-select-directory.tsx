@@ -10,6 +10,7 @@ import { ServerConnection } from "@/context/server"
 import { useGlobal } from "@/context/global"
 import { cleanPickerInput, createDirectorySearch, displayPickerPath } from "./directory-picker-domain"
 import { showToast } from "@/utils/toast"
+import { StalePickerSearch } from "./picker-search"
 
 
 interface DialogSelectDirectoryProps {
@@ -117,6 +118,7 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
       held = uniqueRows([...visible, ...directoryRows])
       return held
     } catch (error) {
+      if (error instanceof StalePickerSearch) return held.length ? held : uniqueRows(visible)
       console.error(error)
       setSearchFailed(true)
       return held.length ? held : uniqueRows(visible)

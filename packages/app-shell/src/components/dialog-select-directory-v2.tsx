@@ -9,7 +9,7 @@ import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { showToast } from "@/utils/toast"
-import { settlePickerSearch } from "./picker-search"
+import { settlePickerSearch, StalePickerSearch } from "./picker-search"
 
 import {
   absoluteTreePath,
@@ -139,7 +139,9 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
       setHeld(next)
       return next
     } catch (error) {
-      if (input() !== value) return previous ?? { query: value, items: previous?.items ?? [] }
+      if (input() !== value || error instanceof StalePickerSearch) {
+        return previous ?? { query: value, items: previous?.items ?? [] }
+      }
       console.error(error)
       setSearchFailed(true)
       return previous ?? { query: value, items: previous?.items ?? [] }
