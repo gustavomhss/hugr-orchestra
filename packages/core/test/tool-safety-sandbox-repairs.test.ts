@@ -257,6 +257,10 @@ it.live("sandbox parent identities retain file ID and creation-time precision", 
   expect(SandboxParents.sameIdentity(original, later)).toBe(false)
   expect(SandboxParents.sameIdentity(original, { ...original })).toBe(true)
   expect(SandboxParents.sameIdentity(original, { ...original, dev: 2n })).toBe(false)
+  const unknown = { ...original, ino: 0n }
+  expect(SandboxParents.sameIdentity(unknown, { ...unknown })).toBe(false)
+  expect(SandboxParents.sameIdentity(unknown, original)).toBe(false)
+  expect(SandboxParents.sameIdentity(original, unknown)).toBe(false)
 }))
 
 it.live("failed preparation preserves a replacement directory with a different identity", () =>

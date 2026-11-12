@@ -96,7 +96,9 @@ export function sameIdentity(
   left: Pick<BigIntStats, "dev" | "ino" | "birthtimeNs">,
   right: Pick<BigIntStats, "dev" | "ino" | "birthtimeNs">,
 ) {
-  return left.dev === right.dev && left.ino === right.ino && left.birthtimeNs === right.birthtimeNs
+  // An omitted file ID cannot prove ownership, even when creation timestamps match.
+  return left.ino !== 0n && right.ino !== 0n &&
+    left.dev === right.dev && left.ino === right.ino && left.birthtimeNs === right.birthtimeNs
 }
 
 const stat = (target: string) => Effect.tryPromise({
