@@ -1,20 +1,22 @@
-# Sitting, 2026-11-11
+# Sitting, 2026-11-12
 
-Isolated server `127.0.0.1:4097`. Not the owner's Orchestra. The screen and the HTTP API were checked against each other. The story runner exited 0. This file records the look. The runner must not mark these passed.
+Isolated server `127.0.0.1:4097`, preview `127.0.0.1:3010`. Not the owner's Orchestra. The folder was chosen in the picker. The `?directory=` hack was not used. The story runner exited 0. This file records the look. The runner must not mark these passed.
 
-- J01 pass. The four lights sit on one row and can be read without hover. The one that is on is distinct.
-- J02 pass. Show the cut paints the cut on the source text.
-- J03 pass. Read again, cut again, redo numbers, and remove pieces are separate. Each has its own Run. There is no reindex button.
-- J04 pass. When retrieval is unnecessary, the screen says so. With K at 0, it does not.
-- J05 pass. Admitted files show read, failed, or not yet read. A path outside the folder is refused and is not listed. When the open folder is the git project, project source is refused as Atlas and is not listed.
-- J06 pass. Sent, search missed, and dropped before the model show the span on the source text. A missing sentence and an unread file show no span.
-- J07 pass. Sent says the span was in the block. It says that does not mean the model used it.
-- J08 pass. After one boundary change and a separate recut, every saved question is listed. The harbor sentence changed. The pier sentence did not.
-- J09 pass. Read, failed, and not yet read are visible. After remove, the file is gone from the list and from the API.
-- J10 pass. With the files read, exactly one light is on, matching the diagnosis. With the only relevant file not yet read, no light is on and that status is visible.
+The screen was `dev` at `250161b003`. A later path fix landed without changing this screen.
 
-Limits, not failures of these items:
+- J01. The four lights sit on one row. The names can be read without hover. The one that is on is filled and distinct.
+- J02. The cut is painted on the source text. It is not only a detached card.
+- J03. Read again, cut again, redo numbers, and remove pieces are separate rows. Each has its own Run. There is no reindex button.
+- J04. When the sentence is in the file, and when it is missing, the screen says retrieval is unnecessary. K at 0 was not looked at.
+- J05. The list showed Read, Failed, and Not yet read, and no other status. A path outside the folder was refused in words and was not listed. The screen and the API agreed. This look did not open a git project. The runner refused project source as Atlas when the location was that repo.
+- J06. A hit paints the span on the source text. A missing sentence and an unread file show no span. Search missed and dropped before the model were not on the screen.
+- J07. Sent says the span was in the block. It says that does not mean the model used it.
+- J08. After one boundary change, to each line, and a separate recut, both saved questions are listed by their stored text. Both spans changed.
+- J09. Read, failed, and not yet read were visible. After remove, the list said no admitted files. The API list was empty.
+- J10. With the file read, exactly one light was on. With only an unread file, after remove pieces, no light was on, the status was visible, and there was no span.
 
-- A file inside a nested git repo is admitted when the open folder is not that repo. The refusal is the open location's project tree. The same file admitted through `/var` and `/private/var` is one source.
-- A failed file has no text, so a question cannot name it as the only relevant file. The files screen still shows failed.
-- The preview query hack in `chapter-route.tsx` is not part of this change.
+Limits, not a claim that these items failed:
+
+- Asking while a removed file's pieces were still in the corpus said that did not finish. The revision fill was failed. After remove pieces, the unread ask completed with no light.
+- A failed file has no text, so the cut says not recorded.
+- A file inside a nested git repo was not retried on this screen. The refusal is the open location's project tree.
