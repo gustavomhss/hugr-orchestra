@@ -1,11 +1,84 @@
 import { describe, expect } from "bun:test"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Scheduler } from "effect"
 import { SessionRunCoordinator } from "@orchestra/core/session/run-coordinator"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(Layer.empty)
 
 describe("SessionRunCoordinator", () => {
+  for (const budget of [8, 32]) {
+  for (const outcome of ["success", "failure"] as const) {
+    it.effect(`returns exclusive ${outcome} after owner cleanup with a yield budget of ${budget}`, () =>
+      Effect.scoped(Effect.gen(function* () {
+        const started = yield* Deferred.make<void>()
+        const gate = yield* Deferred.make<void>()
+        const failure = new Error("failed operation")
+        const coordinator = yield* SessionRunCoordinator.make<string, never>({ drain: () => Effect.void }).pipe(
+          Effect.provideService(Scheduler.MaxOpsBeforeYield, budget),
+        )
+        yield* Effect.addFinalizer(() => Deferred.succeed(gate, undefined))
+        const serial = yield* Effect.gen(function* () {
+          const first = yield* coordinator.exclusive("session", Deferred.succeed(started, undefined).pipe(
+            Effect.andThen(Deferred.await(gate)),
+            Effect.andThen(outcome === "success" ? Effect.succeed("first") : Effect.fail(failure)),
+          )).pipe(Effect.exit)
+          const next = yield* coordinator.exclusive("session", Effect.succeed("next"))
+          return { first, next }
+        }).pipe(Effect.forkChild)
+        yield* Deferred.await(started)
+        yield* Deferred.succeed(gate, undefined)
+        const result = yield* Fiber.join(serial)
+        if (outcome === "success") expect(result.first).toEqual(Exit.succeed(Option.some("first")))
+        if (outcome === "failure") expect(Exit.isFailure(result.first) && Cause.hasFails(result.first.cause)).toBe(true)
+        expect(result.next).toEqual(Option.some("next"))
+        expect(yield* coordinator.active).toEqual(new Set())
+      })),
+    )
+  }
+  }
+
+  it.effect("interrupts an exclusive owner before its work starts without hanging its caller or running late work", () =>
+    Effect.scoped(Effect.gen(function* () {
+      const tasks: Array<() => void> = []
+      const loops = new Map<number, number>()
+      const state = { paused: false, work: 0 }
+      const scheduler: Scheduler.Scheduler = {
+        executionMode: "async",
+        shouldYield: (fiber) => {
+          if (fiber.currentOpCount !== 1) return false
+          const loop = (loops.get(fiber.id) ?? 0) + 1
+          loops.set(fiber.id, loop)
+          // Pause the captured owner when start releases its ready gate, before entering the supplied work.
+          if (state.paused || loop !== 2) return false
+          state.paused = true
+          return true
+        },
+        makeDispatcher: () => ({
+          scheduleTask: (task) => { tasks.push(task) },
+          flush: () => { tasks.splice(0).forEach((task) => task()) },
+        }),
+      }
+      const coordinator = yield* SessionRunCoordinator.make<string, never>({ drain: () => Effect.void }).pipe(
+        Effect.provideService(Scheduler.Scheduler, scheduler),
+      )
+      yield* Effect.addFinalizer(() => coordinator.interrupt("session"))
+      const caller = yield* coordinator.exclusive("session", Effect.sync(() => ++state.work)).pipe(
+        Effect.forkChild({ startImmediately: true }),
+      )
+      expect(state.paused).toBe(true)
+      expect(tasks).toHaveLength(1)
+      expect(state.work).toBe(0)
+      expect((yield* coordinator.active).has("session")).toBe(true)
+      yield* coordinator.interrupt("session")
+      expect(yield* coordinator.active).toEqual(new Set())
+      const exit = yield* Fiber.await(caller)
+      expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+      tasks.splice(0).forEach((task) => task())
+      expect(state.work).toBe(0)
+      expect(yield* coordinator.active).toEqual(new Set())
+    })),
+  )
+
   it.effect("joins concurrent resumes for one key", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -675,6 +748,8 @@ describe("SessionRunCoordinator", () => {
         yield* Deferred.succeed(holdGate, undefined)
         expect(Option.getOrThrow(yield* Fiber.join(owner))).toBe("held")
         yield* Deferred.await(drainStarted)
+        expect((yield* coordinator.active).has("session")).toBe(true)
+        expect(yield* Deferred.isDone(drainGate)).toBe(false)
         expect(forces).toEqual([false])
         expect(overlaps).toEqual([false])
         yield* Deferred.succeed(drainGate, undefined)
