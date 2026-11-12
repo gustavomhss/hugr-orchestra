@@ -410,11 +410,12 @@ export function createModelExecutionView(input: {
       model: model ? { providerID: model.providerID, id: model.modelID, variant } : undefined,
     }
     return { sdk, client: sdk.orchestra, server, credentials: JSON.stringify(server?.server?.http), version: version(),
+      active: sdk.transportCurrent?.() !== false && server?.transportCurrent?.() !== false,
       epoch: sdk.connectionEpoch?.() ?? server?.connectionEpoch?.() ?? 0,
       key: JSON.stringify({ request, intent }), request }
   }, undefined, { equals: (left, right) => !!left && left.sdk === right.sdk && left.client === right.client &&
     left.server === right.server && left.credentials === right.credentials && left.version === right.version &&
-    left.epoch === right.epoch && left.key === right.key })
+    left.active === right.active && left.epoch === right.epoch && left.key === right.key })
   let readyOwner: ReturnType<typeof owner> | undefined
   const query = makeModelExecutionQuery({
     changed: (value) => { readyOwner = value.status === "ready" ? owner() : undefined; setView("value", value) },
