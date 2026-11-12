@@ -423,12 +423,10 @@ jobs:
               GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- "${files[@]}" "${report[@]}"
             fi
             if [ -n "${alone[0]:-}" ]; then
-              echo "shard $PART runs ${alone[0]} in its own process"
-              alone_report=()
-              if [ "$COLD" = "true" ]; then
-                alone_report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART-watcher.xml")
-              fi
-              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- "${alone[@]}" "${alone_report[@]}"
+              echo "shard $PART runs ${alone[0]} in its own process" >&2
+              # A second turbo in this step exited 1 after a green watcher run (run 43150681461) and hid the reason.
+              # bun test is the same preload and the same file, without that wrapper.
+              (cd packages/core && GITHUB_ACTIONS=false bun test --timeout 30000 --only-failures "${alone[@]}")
             fi
             exit 0
           fi

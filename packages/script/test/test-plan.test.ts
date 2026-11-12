@@ -36,8 +36,11 @@ describe("test shard planner", () => {
     const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
     const step = workflow.split("- name: Run unit tests")[1]?.split("- name:")[0] ?? ""
     const invocations = [...step.matchAll(/bun turbo test --filter=@orchestra\/core[^\n]*/g)].map((match) => match[0])
-    expect(invocations.length).toBe(2)
-    expect(invocations.every((line) => line.includes("--only"))).toBe(true)
+    expect(invocations).toEqual([
+      "bun turbo test --filter=@orchestra/core --only --log-order=stream -- \"${files[@]}\" \"${report[@]}\"",
+    ])
+    expect(step).toContain("cd packages/core && GITHUB_ACTIONS=false bun test --timeout 30000 --only-failures \"${alone[@]}\"")
+    expect(step).toContain('"$file" = "test/filesystem/watcher.test.ts"')
     expect(step).not.toContain("turbo build")
     expect(workflow).not.toContain("Build Windows test dependencies")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
