@@ -759,7 +759,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
             console.error(new Error(description))
             showToast({ variant: "error", title: language.t("common.requestFailed"), description })
           }
-          if (sent && key && actions.get(key) === action) actions.delete(key)
+          if ((sent || action?.request.admitted) && key && actions.get(key) === action) actions.delete(key)
           return typeof sent === "boolean" ? sent : undefined
         }).finally(() => {
           setActivity("existing", (count) => count - 1)
