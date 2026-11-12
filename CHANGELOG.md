@@ -4,6 +4,7 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Opening Servers no longer treats a failed default read as no default. That failure is shown.
 - Searching sessions in the command palette no longer treats a failed search as no results. That failure is shown.
 - Opening Plugins no longer treats a failed behavior read as all behaviors off, or sends that set to the server. That failure is shown.
 - Replacing a server no longer hides a failed read of the default. That failure is shown. The default is not moved unless the read says this entry was it.

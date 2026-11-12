@@ -107,13 +107,16 @@ export const SettingsServersV2: Component = () => {
             </div>
           }
         >
+          <Show when={controller.defaultFailed()}>
+            <p role="alert">{language.t("common.requestFailed")}</p>
+          </Show>
           <SettingsListV2>
             <WslServerSettings controller={confirming} servers={wslServers} />
             <For each={filtered()}>
               {(item) => {
                 const key = ServerConnection.key(item)
                 const health = () => controller.status()[key]
-                const isDefault = () => controller.defaultKey() === key
+                const isDefault = () => controller.defaultKnown() && controller.defaultKey() === key
                 return (
                   <div class="settings-v2-servers-row">
                     <div class="settings-v2-servers-lead">
