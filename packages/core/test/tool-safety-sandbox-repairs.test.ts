@@ -263,7 +263,15 @@ it.live("sandbox parent identities retain file ID and creation-time precision", 
   expect(SandboxParents.sameIdentity(original, unknown)).toBe(false)
 }))
 
-it.live("failed preparation preserves a replacement directory with a different identity", () =>
+it.live("captured Windows replacement IDs stay distinct with identical creation timestamps", () => Effect.sync(() => {
+  const original = { dev: 1422631540n, ino: 37154696926115890n, birthtimeNs: 1794487583363679600n }
+  const replacement = { ...original, ino: 37154696926115891n }
+  expect(Number(original.ino)).toBe(Number(replacement.ino))
+  expect(SandboxParents.sameIdentity(original, replacement)).toBe(false)
+  expect(SandboxParents.sameIdentity(original, { ...original })).toBe(true)
+}))
+
+const replacementCase = () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const target = path.join(f.directory, "owned")
@@ -280,8 +288,13 @@ it.live("failed preparation preserves a replacement directory with a different i
     expect(failed.reason).toBe("sandbox-parent-placement-acquisition")
     expect(yield* f.fs.isDir(target)).toBe(true)
     expect(yield* f.fs.isDir(moved)).toBe(true)
-  }),
-)
+  })
+
+it.live("failed preparation preserves a replacement directory with a different identity", replacementCase)
+it.live("fixed release preserves replacement directories across 128 sequential attempts", () => Effect.gen(function* () {
+  for (let iteration = 0; iteration < 128; iteration++) yield* replacementCase().pipe(Effect.scoped)
+  console.info("sandbox fixed qualification: 128 replacement iterations completed")
+}))
 
 it.live("interrupted multi-root preparation rolls back its own empty directories", () =>
   Effect.gen(function* () {

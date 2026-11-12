@@ -1,0 +1,146 @@
+name: sandbox fixed qualification
+on:
+  push:
+    branches: [sandbox-fixed-qualification]
+permissions:
+  contents: read
+  actions: read
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  omni:
+    if: github.repository == 'gustavomhss/hugr-orchestra' && github.repository_id == '1405035578' && github.ref == 'refs/heads/sandbox-fixed-qualification'
+    name: omni test binaries (windows-latest)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Exact-source omni binaries
+        uses: ./.github/actions/omni-binaries
+      - name: Share binaries with consuming test jobs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: omni-test-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ env.HUGR_OMNI_ADDON }}
+            ${{ env.HUGR_OMNI_SUPERVISOR }}
+          if-no-files-found: error
+          retention-days: 7
+  core:
+    needs: omni
+    if: github.repository == 'gustavomhss/hugr-orchestra' && github.repository_id == '1405035578' && github.ref == 'refs/heads/sandbox-fixed-qualification'
+    name: unit (windows core 3/8)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 1
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+      - name: ripgrep
+        uses: ./.github/actions/ripgrep
+      - name: Native test binaries
+        uses: ./.github/actions/omni-binaries
+        with:
+          artifact: omni-test-${{ runner.os }}-${{ runner.arch }}
+      - name: Configure git identity
+        run: |
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+      # Frozen from failed run 43176744279; diagnostic edits must not rebalance its file weights.
+      # Cold replay deliberately restores no Turbo cache. Post-test Turbo cache save is omitted.
+      - name: Run unit tests
+        timeout-minutes: 12
+        env:
+          FILTERS: --filter=@orchestra/core
+          PART: core-3
+          SHARD: 3/8
+          COLD: "true"
+          PACKAGES: ""
+          ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
+          FILES_SHA256: 4aca3d114d662070349f64aff68c6aa6380e84624ec5fa71e3fd08c35e51c9b0
+          FILES: >-
+            test/actions/authoring-base.test.ts test/actions/authoring-outcomes.test.ts test/actions/authoring-phases.test.ts test/actions/authoring-schedule.test.ts
+            test/actions/config-environment-reviewers.test.ts test/actions/config-environments.test.ts test/actions/config-policy.test.ts test/actions/config-variable-scopes.test.ts
+            test/actions/cursor.test.ts test/actions/github-command-preflight.test.ts test/actions/github-command-run-job.test.ts test/actions/github-command-transport.test.ts
+            test/actions/github-read-identity.test.ts test/actions/github-read-metadata.test.ts test/actions/github-read-null-ranges.test.ts test/actions/github-read-runs-jobs.test.ts
+            test/actions/github-read-source.test.ts test/actions/gitlab-command-execution.test.ts test/actions/gitlab-command-http.test.ts test/actions/gitlab-command-launch.test.ts
+            test/actions/gitlab-command-mr.test.ts test/actions/gitlab-read-catalog.test.ts test/actions/gitlab-read-jobs.test.ts test/actions/gitlab-read-runs.test.ts
+            test/actions/operations-migration.test.ts test/actions/output-artifacts.test.ts test/actions/output-mutations.test.ts test/actions/output-process.test.ts
+            test/actions/source-github.test.ts test/actions/source-gitlab.test.ts test/agent-terminal.test.ts test/agent.test.ts
+            test/backend-toolkit-floors.test.ts test/backend-toolkit-hosted.test.ts test/backend-toolkit-packs.test.ts test/backend-toolkit-process.test.ts
+            test/backend-toolkit-source.test.ts test/backend-toolkit-target.test.ts test/board-spend.test.ts test/capability-artifact-selection.test.ts
+            test/capability-commit.test.ts test/capability-connection-management-rollback.test.ts test/capability-connection-management.test.ts test/capability-connection-setup-boundaries.test.ts
+            test/capability-connection-setup-frames.test.ts test/capability-connection-setup-races.test.ts test/capability-descriptors.test.ts test/capability-discovery-cursors.test.ts
+            test/capability-invocation.test.ts test/capability-mcp-bounds.test.ts test/capability-policy-boundaries.test.ts test/capability-process-output.test.ts
+            test/capability-verifier-cloudflare.test.ts test/capability-verifier-credential-only.test.ts test/capability-verifier-linear.test.ts test/capability-verifier-neon.test.ts
+            test/capability-verifier-stripe.test.ts test/capability-verifier-supabase.test.ts test/code-index-rank.test.ts test/command.test.ts
+            test/config/agent-file.test.ts test/config/agent.test.ts test/config/command.test.ts test/config/lsp.test.ts
+            test/config/markdown.test.ts test/config/plugin-file.test.ts test/config/provider-options.test.ts test/config/provider-policy-migration.test.ts
+            test/config/skill.test.ts test/config/tool-output-lean.test.ts test/credential.test.ts test/database-migration-backup.test.ts
+            test/database-migration-meeting-memory.test.ts test/distribution-bundle-deno.test.ts test/effect-native-interruption.test.ts test/effect/keyed-mutex.test.ts
+            test/effect/layer-node/layer-node-types.test.ts test/effect/layer-node/layer-node.test.ts test/effect/observability.test.ts test/event-order.test.ts
+            test/event-persist-gate.test.ts test/event-seal-limits.test.ts test/event-seal-window.test.ts test/event-seal.test.ts
+            test/event.test.ts test/filesystem/ignore.test.ts test/github-copilot/convert-to-copilot-messages.test.ts test/github-copilot/copilot-chat-model.test.ts
+            test/github-copilot/openai-responses-language-model.test.ts test/global.test.ts test/hook-prompt-context.test.ts test/inbox/notification-adapters.test.ts
+            test/inbox/slack-auth.test.ts test/inbox/unmounted-list.test.ts test/inbox/work-pagination.test.ts test/installation/installation.test.ts
+            test/lean-processor.test.ts test/lean-project-v2.test.ts test/lean-telemetry.test.ts test/location-startup-globals.test.ts
+            test/location.test.ts test/lsp-stdio.test.ts test/maestro-arsenal.test.ts test/mcp-debug.test.ts
+            test/mcp-trust.test.ts test/mcp/oauth-provider.test.ts test/model.test.ts test/oauth-page.test.ts
+            test/patch.test.ts test/patched-dependencies.test.ts test/permission.test.ts test/plugin/command.test.ts
+            test/plugin/provider-anthropic.test.ts test/plugin/provider-cloudflare-workers-ai.test.ts test/plugin/provider-cohere.test.ts test/plugin/provider-google-vertex-anthropic.test.ts
+            test/plugin/provider-vercel.test.ts test/plugin/variant.test.ts test/policy.test.ts test/project-copy.test.ts
+            test/prompt-context-compaction.test.ts test/provider-groq.test.ts test/provider-mistral.test.ts test/provider-xai-responses.test.ts
+            test/pty/info-schema.test.ts test/pty/protocol.test.ts test/pty/pty-session.test.ts test/pty/shell-cwd.test.ts
+            test/pty/shell-integration.test.ts test/pty/shell-marks.test.ts test/reference-guidance.test.ts test/relay-commands.test.ts
+            test/repository-cache.test.ts test/repository.test.ts test/research-artifacts.test.ts test/research-binding.test.ts
+            test/research-locate.test.ts test/research-probe-units.test.ts test/research-probe.test.ts test/research-toolkit-enclosing.test.ts
+            test/research-toolkit-packs.test.ts test/research-toolkit/capability.test.ts test/research-toolkit/code-index-filter.test.ts test/research-toolkit/code-index-go.test.ts
+            test/research-toolkit/code-index-python.test.ts test/research-toolkit/code-index-rust.test.ts test/research-toolkit/code-index-scip-encoding.test.ts test/research-toolkit/code-index-tree-sitter.test.ts
+            test/review-toolkit/ast-grep.test.ts test/review-toolkit/deep-impact.test.ts test/review-toolkit/lsp-diagnostics.test.ts test/review-toolkit/native-files.test.ts
+            test/review-toolkit/native-input-linux-conformance.test.ts test/review-toolkit/scratch-copy.test.ts test/review-toolkit/zizmor-pin.test.ts test/review/outcomes.test.ts
+            test/review/precision-catalog.test.ts test/review/precision-store.test.ts test/review/route.test.ts test/review/settings.test.ts
+            test/sandbox-project-config.test.ts test/scheduled-task-capability-model.test.ts test/scheduled-task-model.test.ts test/scheduled-task.test.ts
+            test/session-compaction.test.ts test/session-prompt.test.ts test/session-rename-remove.test.ts test/session-runner-governance.test.ts
+            test/session-runner-message.test.ts test/session-runner-tool-events.test.ts test/session-scope.test.ts test/session/meeting-briefing.test.ts
+            test/session/upstream-logical-resume.test.ts test/shared-schema.test.ts test/skill/guidance.test.ts test/slash-command.test.ts
+            test/snapshot.test.ts test/state.test.ts test/system-context/index.test.ts test/system-context/registry.test.ts
+            test/task-governance.test.ts test/test-ci-request.test.ts test/tool-live-look.test.ts test/tool-model-capture.acceptance.test.ts
+            test/tool-model-producer.test.ts test/tool-model-projection.test.ts test/tool-output-store.test.ts test/tool-question.test.ts
+            test/tool-safety-actions.test.ts test/tool-safety-appcontainer-runtimes.test.ts test/tool-safety-jail-enforced.test.ts test/tool-safety-p1.test.ts
+            test/tool-safety-remediation.test.ts test/tool-safety-sandbox-repairs.test.ts test/tool-safety-sandbox-workspace-code.test.ts test/tool-safety-sandbox.test.ts
+            test/tool-websearch-domains.test.ts test/tool-websearch.test.ts test/upstream-settlement-preservation.test.ts
+        run: |
+          read -ra files <<< "$FILES"
+          [ "${#files[@]}" -eq 199 ] || { echo "::error::expected original 199 files"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/junit"
+          printf '%s\n' "${files[@]}" > "$RUNNER_TEMP/junit/core3-files.txt"
+          # Hash stdin so filename escaping cannot prefix the checksum with a backslash.
+          actual=$(sha256sum < "$RUNNER_TEMP/junit/core3-files.txt" | cut -d ' ' -f 1)
+          [ "$actual" = "$FILES_SHA256" ] || { echo "::error::original file order/hash differs"; exit 1; }
+          [ -z "${ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER+x}" ]
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs'
+          const keys = ['GITHUB_SHA', 'RUNNER_OS', 'RUNNER_ARCH', 'ImageOS', 'ImageVersion', 'CI', 'FORCE_JAVASCRIPT_ACTIONS_TO_NODE24', 'ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD', 'HUGR_OMNI_ADDON', 'HUGR_OMNI_SUPERVISOR', 'ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER', 'PSModuleAnalysisCachePath']
+          fs.writeFileSync(`${process.env.RUNNER_TEMP}/junit/replay-context.json`, JSON.stringify({ source: process.env.GITHUB_SHA, historical: '2c0f005490dde198f1e4777b5da8dacb98f57ba2', diagnostic: 'b53e5a727f3b4f4ad01c3f92de56f12482e3437a', files: 199, manifestSHA256: process.env.FILES_SHA256, jobMinutes: 15, stepMinutes: 12, launcher: 'Turbo + unchanged core package test script', control: 'suite default, no nonce, default native spawner', env: Object.fromEntries(keys.map(key => [key, process.env[key] ?? null])) }, null, 2) + '\n')
+          NODE
+          bun --version
+          node --version
+          git --version
+          report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+          # Core's unchanged package script adds --timeout 30000 --only-failures.
+          GITHUB_ACTIONS=false exec bun turbo test --filter=@orchestra/core -- "${files[@]}" "${report[@]}"
+      - name: Upload JUnit timings and replay proof
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: junit-${{ runner.os }}-core-3
+          path: ${{ runner.temp }}/junit
+          if-no-files-found: ignore
+          retention-days: 14
