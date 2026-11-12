@@ -38,6 +38,7 @@ import { hostPolicyLayer } from "./host-policy"
 import { handlers } from "./handlers"
 import { authorizationLayer } from "./middleware/authorization"
 import { schemaErrorLayer } from "./middleware/schema-error"
+import { layer } from "./middleware/node-request-cancellation"
 import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { layer as inboxLocationLayer } from "./inbox-location"
 import { layer as locationLayer } from "./location"
@@ -142,6 +143,7 @@ function makeRoutes<AuthError, AuthServices>(
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.
     Layer.provide(corsLayer({ cors: options.cors })),
     Layer.provide(BodyLimit.layer),
+    Layer.provide(layer),
   )
   return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty).pipe(
     Layer.provide(hostPolicyLayer(options.allowedHosts)),

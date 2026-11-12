@@ -3,7 +3,7 @@ import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { testEffect } from "@orchestra/core/test/lib/effect"
 import { Cause, Context, Deferred, Effect, Exit, Layer } from "effect"
 import { HttpRouter, HttpServer, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
-import { Agent, IncomingMessage, request } from "node:http"
+import { Agent, createServer, IncomingMessage, request } from "node:http"
 import { connect, type Socket } from "node:net"
 
 const it = testEffect(NodeServices.layer)
@@ -20,6 +20,12 @@ const plannedLayer = Effect.gen(function* () {
     return Layer.empty
   const { layer } = yield* Effect.promise(() => import("../src/middleware/node-request-cancellation"))
   return layer
+})
+const plannedCreate = Effect.gen(function* () {
+  if (!(yield* Effect.promise(() => Bun.file(new URL("../src/node-server.ts", import.meta.url)).exists())))
+    return createServer
+  const { ServerNode } = yield* Effect.promise(() => import("../src/node-server"))
+  return ServerNode.create
 })
 
 const setup = (mode: "body" | "success" | "error" | "pending" | "already-aborted") =>
@@ -48,7 +54,7 @@ const setup = (mode: "body" | "success" | "error" | "pending" | "already-aborted
         if (!(incoming.source instanceof IncomingMessage)) return yield* Effect.die("Expected a real Node request")
         const source = incoming.source
         const socket = source.socket
-        const body = mode === "body" ? yield* incoming.text : ""
+        const body = mode === "body" ? yield* incoming.text.pipe(Effect.orDie) : ""
         if (mode === "already-aborted") {
           const closed = yield* Deferred.make<void>()
           socket.once("close", () => Deferred.doneUnsafe(closed, Effect.void))
@@ -98,7 +104,8 @@ const setup = (mode: "body" | "success" | "error" | "pending" | "already-aborted
         return HttpServerResponse.text("ok")
       }),
     )
-    const context = yield* Layer.build(NodeHttpServer.layerTest)
+    const create = yield* plannedCreate
+    const context = yield* Layer.build(NodeHttpServer.layer(create, { port: 0 }))
     const server = Context.get(context, HttpServer.HttpServer)
     if (server.address._tag !== "TcpAddress") return yield* Effect.die("Expected a real TCP server")
     yield* server.serve(router.asHttpEffect())
