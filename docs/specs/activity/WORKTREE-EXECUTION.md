@@ -2,8 +2,10 @@
 
 Baseline: `e33ec35c3c`, with WP-R0 completed and exact-source hosted proof.
 W1-A is complete with verified hosted red evidence. W1-B-state and W1-B-read
-are implemented with approved independent source reviews and passing Core
-typecheck; hosted green remains pending. All three tasks retain the six quality fields in PLAN.md.
+are complete with approved independent source reviews, passing Core/Schema
+typechecks and exact-source hosted green 43279701564. All three tasks retain
+the six quality fields in PLAN.md. Pending-request sections below are historical;
+the final receipt at the end supersedes them.
 No API/UI changes, cleanup, process queries or owner-app/database operations
 belong to this WP.
 
@@ -201,3 +203,27 @@ Log: /tmp/activity-worktree-green-metadata-ci.log; exit:
 c125baa2144abcb969e3a1440b35413a7ebdf185. Core and Schema typechecks passed;
 no local tests ran. W2-A preparations started after this snapshot was frozen,
 in disjoint Protocol/Server/Client files; they are not part of this W1 proof.
+
+## Final W1 receipt
+
+Run [43279701564](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279701564)
+passed the unchanged four-file pack: Linux 14 pass/0 fail (210 expects), Windows
+11 pass/3 existing platform skips/0 fail (202 expects). W01–W04 pass on both OS.
+All four named red cases became passes, and all old disk passes/skips retained
+their outcomes. The tests and fixture are byte-identical to red snapshot
+3c0f38b2691d41d56369d878fe9b77c8407f8f50. Full named outcomes are in
+worktree-validation.json; the first failed implementation remains separately
+recorded in worktree-first-validation.json.
+
+Fetched snapshot 334557aa3e17cc9064a4a1604777b9edbab29b79 matches the complete
+current Core tree 896ecacedc92ec83d74aa7ec82046ac0c24571cf and Schema tree
+c125baa2144abcb969e3a1440b35413a7ebdf185. Both focused Omni controls are
+explicitly not applicable: no declaring test ran, no Omni spawn and no delegated
+spawn. This pack proves no native-spawn behavior. Schema/Core typechecks passed;
+state, coordinator and scalar-metadata cold reviews approved. Completion guards
+passed with 0 gates and the existing reviewed R0 migration-ignore warning.
+
+W1-A, W1-B-state and W1-B-read are complete. The user guide remains accurate:
+per-Worktree manual reads are not available in the interface until W2/W3 integrate.
+Those WPs and the full R1–R20 monitor remain incomplete. No owner database,
+running app or server was migrated/restarted. No local tests ran.

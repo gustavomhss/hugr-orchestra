@@ -135,7 +135,8 @@ project SQL/service, new migration and generator outputs owned only by this WP.
 
 ## WP-W1 — registered-worktree reading state
 
-Status: implemented; source reviews and typecheck passed, hosted green pending.
+Status: complete; source reviews, typechecks and exact-source hosted green passed
+(43279701564). See worktree-validation.json for named outcomes and tree hashes.
 Owner: lead state integration and worktree_reader coordinator.
 Dependency: WP-R0 internal incarnation-aware reads, existing ActivityDisk.measure
 and DiskAttempt semantics; normative FIRST-WAVE-CONTRACT.md.
@@ -169,7 +170,7 @@ W1-B-state and W1-B-read own making those implementation checks pass. This is no
 
 ### Task W1-B-state — immutable reading state and wire contract
 
-Owner: lead; state: implemented, cold state review approved; parent green pending.
+Owner: lead; state: complete, cold state review and exact-source parent green passed.
 Writes: activity-worktree-state.ts; Schema additions integrated only by lead.
 Acceptance implementation owner: W01–W03 state transitions; W1-B-read supplies
 the shared facade used by acceptance tests. Neither task closes before the
@@ -184,7 +185,7 @@ integrated parent gate passes.
 
 ### Task W1-B-read — serialized validation and bounded manual readers
 
-Owner: worktree_reader; state: implemented, cold review approved; parent green pending. Writes: activity-worktree.ts and its package export;
+Owner: worktree_reader; state: complete, cold review and exact-source parent green passed. Writes: activity-worktree.ts and its package export;
 no state-module/Schema/registration/test writes. Acceptance owner: W04 plus its
 validation seam; parent closure still requires W01–W04.
 

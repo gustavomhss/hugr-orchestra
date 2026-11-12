@@ -31,26 +31,30 @@
     {
       "id": "W01",
       "test": "packages/core/test/activity-worktree.test.ts :: W01 cached snapshots and registry inventory never measure disk or invent readings",
-      "executionStatus": "hosted-red-verified-awaiting-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816"
+      "executionStatus": "complete-hosted-red-to-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279701564"
     },
     {
       "id": "W02",
       "test": "packages/core/test/activity-worktree.test.ts :: W02 real logical readings retain complete values through partial attempts and registry failures",
-      "executionStatus": "hosted-red-verified-awaiting-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816"
+      "executionStatus": "complete-hosted-red-to-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279701564"
     },
     {
       "id": "W03",
       "test": "packages/core/test/activity-worktree-identity.test.ts :: W03 persisted incarnation controls retention across projects, unobserved recreation and strategy ABA",
-      "executionStatus": "hosted-red-verified-awaiting-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816"
+      "executionStatus": "complete-hosted-red-to-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279701564"
     },
     {
       "id": "W04",
       "test": "packages/core/test/activity-worktree-concurrency.test.ts :: W04 bounded singleflight reads revalidate real walks and recover validation capacity",
-      "executionStatus": "hosted-red-verified-awaiting-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816"
+      "executionStatus": "complete-hosted-red-to-green",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279701564"
     },
     {
       "id": "W05",
@@ -123,7 +127,11 @@
       ],
       "reads": ["packages/core/src/activity-disk.ts", "packages/core/src/project/directories.ts"],
       "executionAnchor": "docs/specs/activity/WORKTREE-EXECUTION.md",
-      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-green"
+      "executionStatus": "complete",
+      "verifiedSourceTrees": {
+        "core": "896ecacedc92ec83d74aa7ec82046ac0c24571cf",
+        "schema": "c125baa2144abcb969e3a1440b35413a7ebdf185"
+      }
     },
     {
       "id": "WP-W2",
@@ -178,5 +186,5 @@
     "approved-final-write-sets"
   ],
   "normativeContract": "docs/specs/activity/FIRST-WAVE-CONTRACT.md",
-  "completedWps": ["WP-R0"]
+  "completedWps": ["WP-R0", "WP-W1"]
 }

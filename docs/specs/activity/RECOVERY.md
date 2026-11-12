@@ -4,30 +4,34 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
-WP-W1's first implementation run 43273027453 passed W02–W04 and all prior disk
-cases, but W01 failed on the scalar revision identifier on both OS (13 pass/1
-fail Linux; 10 pass/3 skip/1 fail Windows). Exact source trees were fetched and
-verified. The metadata correction moves annotate before check, preserving the
-regex and unchanged acceptance suite; independent review approved it. Schema
-and Core typechecks passed; the corrected hosted request is active at
-/tmp/activity-worktree-green-metadata-ci.log. W1 remains
-open. W2-A now has explicit unavailable API/service anchors, generated Client
+WP-W1 is complete: corrected hosted run 43279701564 passed W01–W04 and all
+prior disk outcomes, with 14 passes on Linux and 11 passes/3 existing platform
+skips on Windows. The fetched snapshot matches current Core/Schema trees;
+the original red suite is unchanged. Both focused Omni controls are not applicable
+(zero spawns/delegation), not native proof. Independent source reviews,
+Schema/Core typechecks and guards passed with the existing reviewed R0 warning.
+The first implementation's scalar identifier failure and correction are preserved
+in worktree-first-validation.json and WORKTREE-EXECUTION.md. W2-A has explicit unavailable API/service anchors, generated Client
 and real HTTP acceptance W05–W08: two clean coverage reviews and independent
 quality review approved; Protocol/Server/Client typechecks and guards passed.
 The W2 hosted red request uploaded its snapshot and is waiting for runners at
 /tmp/activity-worktree-http-red-ci.log; W2-B is not dispatched. No
 functional Worktrees manual-read API/button is exposed yet. See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
-worktree-first-validation.json for actual named outcomes.
+worktree-validation.json for actual named outcomes.
 
 W3 acceptance preparation is now in
 [WORKTREE-UI-PREPARATION.md](WORKTREE-UI-PREPARATION.md): current UI limits,
 canonical Client boundary, context/instance admission, exact revisions,
 operation-scoped errors, source/age/gaps and separate actual-HTTP rendered steps.
 Independent review found and closed a source-visibility oracle omission, then
-approved preparation. Exact signatures, executable suite, coverage sweeps and
-hosted red still precede implementation; W3 is not dispatched. A read-only Grok
-4.7 review of W2 composition is active through OpenCode; it has no verdict yet.
+approved preparation. A compilable unavailable controller anchor now freezes
+the generated Client/store/request/clock signatures; independent anchor review
+and App typecheck passed. Executable suite, coverage sweeps and hosted red still
+precede implementation; W3 runtime implementation is not dispatched. Grok 4.7
+was attempted for a read-only W2 review: opencode-go produced no verdict within
+the bounded attempt, and OpenRouter refused for exhausted credit. Neither is
+review evidence; existing independent agent reviews remain authoritative.
 No mechanical Relay enforcement is claimed because the hook is unconfigured.
 
 WP-R0 is complete on activity-monitor: persisted registrationID producer,
