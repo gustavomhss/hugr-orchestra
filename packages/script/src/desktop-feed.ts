@@ -125,8 +125,7 @@ export function validateDesktopFeedTargets(
     if (
       !payload ||
       payload.size !== file.size ||
-      payload.sha512 !== file.sha512 ||
-      (file.blockMapSize !== undefined && !payload.blockmap)
+      payload.sha512 !== file.sha512
     )
       throw new Error("RELEASE_FEED_PAYLOAD_MISMATCH")
   }

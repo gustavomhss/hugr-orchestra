@@ -306,7 +306,7 @@ for (const change of [
 }
 
 for (const approved of [false, true]) {
-  test(`real artifact verifier requires the adjacent blockmap used by an immutable feed, approved=${approved}`, async () => {
+  test(`real artifact verifier accepts embedded blockMapSize with an optional approved sidecar, sidecar=${approved}`, async () => {
     const { root, receipt } = await fixture()
     const path = "feed/latest.yml"
     const feed = Bun.YAML.parse(await readFile(join(root, path), "utf8")) as {
@@ -331,8 +331,6 @@ for (const approved of [false, true]) {
         sha256: createHash("sha256").update(blockmap).digest("hex"),
       })
     }
-    const result = verifyReleaseArtifacts(root, { ...receipt, files }, expected)
-    if (approved) return await expect(result).resolves.toBeUndefined()
-    await expect(result).rejects.toThrow()
+    await expect(verifyReleaseArtifacts(root, { ...receipt, files }, expected)).resolves.toBeUndefined()
   })
 }

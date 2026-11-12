@@ -118,7 +118,6 @@ export async function verifyReleaseArtifacts(root: string, receipt: unknown, exp
     await inspect(path)
   }
   for (const path of files.keys()) if (!seen.has(path)) throw new Error(`Missing artifact: ${path}`)
-  for (const [name, payload] of payloads) payload.blockmap = seen.has(`desktop/${name}.blockmap`)
   const repository = wanted.repository === undefined ? "gustavomhss/hugr-orchestra" : wanted.repository
   if (typeof repository !== "string") throw new Error("RELEASE_FEED_TARGET_INVALID")
   for (const feed of feeds) validateDesktopFeedTargets(feed, { version, repository, payloads })

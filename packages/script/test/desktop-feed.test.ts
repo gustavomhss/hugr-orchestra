@@ -145,11 +145,11 @@ test("desktop feed API admits complete legacy state but refuses unmarked partial
     expect(() => helper.assertDesktopFeedVersion({ ...input, currentFeeds: feeds })).toThrow()
 })
 
-test("desktop feed API validates actual immutable payload size and digest with approved adjacent blockmaps", async () => {
+test("desktop feed API validates immutable payload size and digest without requiring a sidecar for embedded blockmaps", async () => {
   const helper = await api()
   expect(() => helper.validateDesktopFeedTargets(immutable, target)).not.toThrow()
   const mapped = { ...immutable, files: [{ ...immutable.files[0], blockMapSize: 32 }] }
-  expect(() => helper.validateDesktopFeedTargets(mapped, target)).toThrow()
+  expect(() => helper.validateDesktopFeedTargets(mapped, target)).not.toThrow()
   expect(() =>
     helper.validateDesktopFeedTargets(mapped, {
       ...target,

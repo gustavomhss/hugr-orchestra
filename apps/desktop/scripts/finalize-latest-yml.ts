@@ -120,12 +120,5 @@ async function verifyPayload(directory: string, feed: string, file: DesktopFeed[
   const sha512 = hasher.digest("base64")
   if (payload.size !== file.size || sha512 !== file.sha512)
     throw new Error(`${file.url} differs from the size or sha512 in ${feed}`)
-  const blockmap = await lstat(`${filename}.blockmap`).then(
-    (stat) => stat.isFile() && !stat.isSymbolicLink(),
-    (error: unknown) => {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return false
-      throw error
-    },
-  )
-  return { size: payload.size, sha512, blockmap }
+  return { size: payload.size, sha512 }
 }
