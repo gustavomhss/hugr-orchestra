@@ -309,11 +309,6 @@ test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A re
     expect(fixture.queries().length).toBeGreaterThan(beforeNewA)
     expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: ref })
     await wait(() => { void fixture.app.renderOnce(); const frame = fixture.app.captureCharFrame(); return frame.includes("Consumer model") && !frame.includes("Blocked model") }, "NEW A model list applied")
-    const selectedBefore = selecting.mock.calls.length
-    await fixture.app.mockInput.pressEnter()
-    await wait(() => selecting.mock.calls.length === selectedBefore + 1, "NEW A ready row invokes the real set method")
-    expect(selecting.mock.calls.at(-1)?.[0]).toEqual({ providerID: ref.providerID, modelID: ref.id })
-    fixture.showModels()
     release.resolve()
     await returned.promise
     await fixture.app.renderOnce()
@@ -328,5 +323,11 @@ test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A re
     await Bun.sleep(0)
     expect(selecting.mock.calls).toHaveLength(selectionsBeforeMissingB)
     expect(fixture.context.sync.data.provider[0]?.models.blocked, "catalog B remains; only the canonical context list changed").toBeDefined()
+    await fixture.app.mockInput.pressKey("backspace")
+    await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Consumer model") }, "original dialog restores A after clearing the missing-B search")
+    const selectedBefore = selecting.mock.calls.length
+    await fixture.app.mockInput.pressEnter()
+    await wait(() => selecting.mock.calls.length === selectedBefore + 1, "NEW A ready row invokes the real set method after OLD A settled")
+    expect(selecting.mock.calls.at(-1)?.[0]).toEqual({ providerID: ref.providerID, modelID: ref.id })
   } finally { release.resolve(); selecting.mockRestore(); await fixture.dispose() }
 })
