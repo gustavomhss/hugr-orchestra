@@ -127,14 +127,23 @@ test("G01 migration backfills unique IDs without losing fields and matches fresh
           VALUES (${projectID}, ${`/activity/${index}`}, ${type}, ${index ? "git_worktree" : null}, 7)`),
       )
       yield* db.run(sql`INSERT INTO project_directory VALUES ('unrelated', '/unrelated', 'root', 'external', 19)`)
-      const before = yield* db.all(sql`SELECT * FROM project_directory ORDER BY directory`)
+      yield* db.run(
+        sql`UPDATE project_directory SET time_created = CAST('9007199254740993' AS INTEGER) WHERE project_id = 'unrelated'`,
+      )
+      const before = yield* db.all(sql`SELECT project_id, directory, type, strategy,
+        CAST(time_created AS TEXT) AS time_created FROM project_directory ORDER BY directory`)
       const target = migrations.filter((item) => item.id.endsWith("_activity_registration_identity"))
       expect(target).toHaveLength(1)
       yield* DatabaseMigration.applyOnly(db, target)
       expect(
-        yield* db.all(sql`SELECT project_id, directory, type, strategy, time_created
+        yield* db.all(sql`SELECT project_id, directory, type, strategy, CAST(time_created AS TEXT) AS time_created
         FROM project_directory ORDER BY directory`),
       ).toEqual(before)
+      expect(
+        yield* db.get(
+          sql`SELECT CAST(time_created AS TEXT) AS exact FROM project_directory WHERE project_id = 'unrelated'`,
+        ),
+      ).toEqual({ exact: "9007199254740993" })
       const rows = yield* db.all<{ registration_id: string }>(
         sql`SELECT registration_id FROM project_directory ORDER BY directory`,
       )
@@ -173,13 +182,15 @@ test("G01 migration backfills unique IDs without losing fields and matches fresh
       )
       yield* db.run(sql`DELETE FROM project WHERE id = ${projectID}`)
       expect(
-        yield* db.get(sql`SELECT project_id, directory, type, strategy, time_created FROM project_directory`),
+        yield* db.get(
+          sql`SELECT project_id, directory, type, strategy, CAST(time_created AS TEXT) AS time_created FROM project_directory`,
+        ),
       ).toEqual({
         project_id: "unrelated",
         directory: "/unrelated",
         type: "root",
         strategy: "external",
-        time_created: 19,
+        time_created: "9007199254740993",
       })
     }),
     file.filename,
