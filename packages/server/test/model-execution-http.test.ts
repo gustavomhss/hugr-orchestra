@@ -337,21 +337,26 @@ for (const failure of ["cycle", "storage"] as const) {
       Effect.gen(function* () {
         const fixture = yield* ModelExecutionFixture.setup
         yield* reachable(fixture)
+        const parent =
+          failure === "storage"
+            ? yield* fixture.sessions.create({ location: fixture.location, agent: AgentV2.defaultID })
+            : undefined
         yield* fixture.database.db
           .update(SessionTable)
-          .set(
-            failure === "cycle"
-              ? { parent_id: fixture.session.id }
-              : { subagent_models: '{"secret":"WIRE_CLIENT_PRIVATE_DETAIL"}' },
-          )
+          .set({ parent_id: parent?.id ?? fixture.session.id })
           .where(eq(SessionTable.id, fixture.session.id))
           .run()
           .pipe(Effect.orDie)
+        // Keep the requested Session decodable; the real ancestor-policy reader owns this typed StorageError.
+        if (parent)
+          yield* fixture.database.db
+            .update(SessionTable)
+            .set({ subagent_models: '{"secret":"WIRE_CLIENT_PRIVATE_DETAIL"}' })
+            .where(eq(SessionTable.id, parent.id))
+            .run()
+            .pipe(Effect.orDie)
         const before = yield* fixture.snapshot()
-        const context =
-          failure === "cycle"
-            ? { type: "session" as const, sessionID: fixture.session.id }
-            : { type: "draft" as const, parentID: fixture.session.id }
+        const context = { type: "session" as const, sessionID: fixture.session.id }
         const input = { location: { directory: fixture.directory }, context }
         const expected =
           failure === "cycle"
