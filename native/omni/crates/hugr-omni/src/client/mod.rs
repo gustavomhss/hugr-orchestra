@@ -8,6 +8,8 @@
 
 mod channel;
 mod hold;
+#[cfg(test)]
+pub(crate) mod inventory_probe;
 #[cfg(unix)]
 mod keeper;
 mod start;
@@ -119,6 +121,8 @@ pub(crate) struct Tree {
     id: u64,
     life: LifeTx,
     hold: Hold,
+    #[cfg(test)]
+    probe: inventory_probe::Probe,
 }
 
 impl Tree {
@@ -211,9 +215,27 @@ impl Tree {
             .ask(Want::List, id, Class::Normal, |req| Msg::List { req, id })
             .await?
         {
-            Answer::Processes(list) => Ok(list),
-            other => Err(self.refused("List", &other)),
+            Answer::Processes(list) => {
+                #[cfg(test)]
+                self.probe
+                    .received(inventory_probe::Receipt::Listed(list.iter().map(|p| p.pid).collect()))
+                    .await;
+                Ok(list)
+            }
+            other => {
+                #[cfg(test)]
+                if matches!(&other, Answer::Ack(Ack::Error)) {
+                    self.probe.received(inventory_probe::Receipt::Incomplete).await;
+                }
+                Err(self.refused("List", &other))
+            }
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inventory_probe(&self) -> Result<inventory_probe::Watch, Error> {
+        self.sup.home()?;
+        Ok(self.probe.attach())
     }
 
     fn new(sup: Arc<Gen>, id: u64, life: LifeTx, held: bool) -> Tree {
@@ -222,6 +244,8 @@ impl Tree {
             id,
             life,
             hold: Hold::new(held),
+            #[cfg(test)]
+            probe: inventory_probe::Probe::default(),
         }
     }
 

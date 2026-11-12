@@ -107,6 +107,11 @@ impl Life {
             .collect())
     }
 
+    #[cfg(test)]
+    pub(super) fn inventory_probe(&self) -> Result<crate::client::inventory_probe::Watch, Error> {
+        self.tree.inventory_probe()
+    }
+
     /// Contract §7: the cause is committed when the library acts, before the termination is sent.
     fn commit(&self, cause: Reason) {
         let mut committed = lock(&self.cause);
