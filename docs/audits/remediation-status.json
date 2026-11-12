@@ -2386,9 +2386,17 @@
       "id": "N2",
       "severity": "P2",
       "owner": "desktop",
-      "status": "behavioral_red_source_authorized",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "20cb8095f2",
+        "5e9e2fce91",
+        "db0cfd5da0",
+        "6d76fd8766",
+        "20f44175d0",
+        "b0707d0ec4",
+        "c33a3e32ec"
+      ],
       "evidence": [
         {
           "kind": "baseline_setup_failure_not_behavioral_red",
@@ -2404,8 +2412,18 @@
           "kind": "cancellation_behavioral_red",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43225258741",
           "result": "Linux2actual cancellation failures after realAckError+restore, observed old watcher ended, then original token cancelled and OS descendant remains alive3s. Checkpoint is not OS death proof; actual OS assertions remain mandatory. Source retry authorized only afterward."
+        },
+        {
+          "kind": "full_native_final_green_three_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43230439779",
+          "result": "Full c7b25c59fcc3d43e6a60323e899dd712987257ec on controller and all three checkouts; blank filter. Linux7N2+2helpers pass; Rust main library139/131/107pass Linux/macOS/Windows,0fail1ignored each. Node and Bun contracts38/38 Linux/macOS,40/40 Windows; hardening11 each runtime and OS. Build/clippy/Cargo all green."
+        },
+        {
+          "kind": "integration_and_cold_source",
+          "result": "Root and Rodney APPROVE. Seven own commits integrated serially;11/11 source/test/guide SHA256 exactly match frozen manifest. Public API/Error/protocol/contracts/deps unchanged. Root guards0gate/0error/1 inherited advisory; boundaries0new0stale; spawn0."
         }
-      ]
+      ],
+      "remaining": "Closed. Injected inventory failures exercised on Linux only; macOS/Windows run existing native controls. Dynamic sampler JoinError not claimed; no release/Node24/Deno qualification, atomic prlimit identity or universal reaping after supervisor loss claim."
     },
     {
       "id": "T1",
@@ -2825,9 +2843,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 49,
+    "new_fixes_verified": 50,
     "already_fixed_verified": 1,
-    "remaining": 15,
+    "remaining": 14,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "90420b0721",
