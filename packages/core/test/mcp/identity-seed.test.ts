@@ -1,4 +1,5 @@
 import path from "node:path"
+import { randomBytes } from "node:crypto"
 import fs from "node:fs/promises"
 import { expect } from "bun:test"
 import { Effect, Layer, Redacted } from "effect"
@@ -153,7 +154,7 @@ it.live(
         directory: f.directory,
         server: { type: "local", command: ["fixture-command"], environment: { CONFIGURED: "stable" } },
       }
-      const run = (variant: string) =>
+      const run = (variant: string, cipherFile?: string) =>
         app.run(
           ChildProcess.make(
             process.execPath,
@@ -165,7 +166,11 @@ it.live(
             ],
             {
               cwd: path.resolve(import.meta.dir, "../.."),
-              env: { ...process.env, H6_UNRELATED_INHERITED_VALUE: variant },
+              env: {
+                ...process.env,
+                H6_UNRELATED_INHERITED_VALUE: variant,
+                ...(cipherFile ? { ORCHESTRA_CREDENTIAL_KEY_FILE: cipherFile } : {}),
+              },
             },
           ),
           { timeout: "15 seconds" },
@@ -178,6 +183,15 @@ it.live(
       const restarted = yield* run("C")
       expect(restarted.exitCode).toBe(0)
       expect(JSON.parse(restarted.stdout.toString()).id).toBe(JSON.parse(first[0].stdout.toString()).id)
+      expect(yield* Effect.promise(() => Bun.file(f.seed).text())).toBe(bytes)
+      const wrongKey = path.join(f.directory, "wrong-cipher.key")
+      yield* Effect.promise(() =>
+        fs.writeFile(wrongKey, randomBytes(32).toString("base64"), { flag: "wx", mode: 0o600 }),
+      )
+      const locked = yield* run("wrong-key", wrongKey)
+      expect(locked.exitCode).toBe(1)
+      expect(JSON.parse(locked.stdout.toString()).error.tag).toBe("McpIdentity.IdentityError")
+      expect(JSON.parse(locked.stdout.toString()).error.message).not.toContain(f.directory)
       expect(yield* Effect.promise(() => Bun.file(f.seed).text())).toBe(bytes)
     }),
   30_000,

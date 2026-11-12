@@ -30,6 +30,10 @@ const result = await Effect.runPromise(
     )
     const service = Context.get(yield* Layer.build(layer), McpIdentity.Service)
     return yield* service.identify(authority, "probe")
-  }).pipe(Effect.scoped),
+  }).pipe(Effect.scoped, Effect.result),
 )
-console.log(JSON.stringify({ id: result.id }))
+if (result._tag === "Failure") {
+  console.log(JSON.stringify({ error: { tag: result.failure._tag, message: result.failure.message } }))
+  process.exitCode = 1
+}
+if (result._tag === "Success") console.log(JSON.stringify({ id: result.success.id }))
