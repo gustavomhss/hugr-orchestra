@@ -1,7 +1,7 @@
 name: omni
 
 # hugr-omni's own gate (native/omni/scripts/ci.mjs) on Linux, Windows and macOS. It runs on pushes to dev that touch
-# native/omni, on pull requests that touch native/omni (and when the epic label is added to one), and by hand. Orchestra's
+# native/omni at the epic gate, or by hand. Unlabeled PRs and pushes do not start this native suite. Orchestra's
 # test guard does not apply to it.
 on:
   push:
@@ -35,12 +35,12 @@ permissions:
 
 jobs:
   gate:
-    if: github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'epic'))
     name: gate (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2022, macos-14]
+        os: [ubuntu-24.04, windows-2022, macos-15]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:
