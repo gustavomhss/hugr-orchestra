@@ -408,6 +408,7 @@ jobs:
               files=("${kept[@]}")
             fi
             echo "shard $PART runs ${#files[@]} files"
+            printf '%s\n' "${files[@]}" >&2
             # A cold run also writes a JUnit report; its per-file times refresh packages/script/src/test-timings.json.
             report=()
             if [ "$COLD" = "true" ]; then
@@ -419,7 +420,7 @@ jobs:
             if [ -n "${files[0]:-}" ]; then
               # --only: core imports plugin and http-recorder from source. ^build would run plugin tsc, and that
               # compile does not finish inside this step on Windows (run 43110315940).
-              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only -- "${files[@]}" "${report[@]}"
+              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- "${files[@]}" "${report[@]}"
             fi
             if [ -n "${alone[0]:-}" ]; then
               echo "shard $PART runs ${alone[0]} in its own process"
@@ -427,7 +428,7 @@ jobs:
               if [ "$COLD" = "true" ]; then
                 alone_report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART-watcher.xml")
               fi
-              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only -- "${alone[@]}" "${alone_report[@]}"
+              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- "${alone[@]}" "${alone_report[@]}"
             fi
             exit 0
           fi
