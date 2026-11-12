@@ -18,4 +18,4 @@ Compare saved questions only when one of parser, boundary, tokenizer, the piece 
 
 Opening a folder through a symbolic link and through its real path uses one corpus, including on Windows. Files in a neighboring folder need external-directory permission.
 
-A path inside the project source tree is refused, including a path that only becomes project source after it is made canonical. Nothing is written under `.atlas/`. There is no preamble switch and no reranker.
+A folder outside any Git repository keeps that folder's own corpus. A path inside the project source tree is refused, including a path that only becomes project source after it is made canonical. Nothing is written under `.atlas/`. There is no preamble switch and no reranker.

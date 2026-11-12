@@ -1,8 +1,6 @@
 import { Integration } from "@orchestra/core/integration"
 import {
-  admit,
   ask,
-  placed,
   citationProof,
   compareRevisions,
   enableEmbedding,
@@ -22,14 +20,13 @@ import {
   type Encoder,
 } from "@orchestra/rag-studio"
 import { Database } from "@orchestra/core/database/database"
-import { extract } from "@orchestra/rag-studio/extract"
 import type { Store } from "@orchestra/rag-studio"
 import { InvalidRequestError } from "@orchestra/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { response } from "../location"
-import { session } from "./rag-studio-session"
+import { admitFile, session } from "./rag-studio-session"
 
 const rejected = new InvalidRequestError({ message: "rejected" })
 
@@ -64,15 +61,7 @@ export const RagStudioHandler = HttpApiBuilder.group(Api, "server.ragStudio", (h
     .handle("ragStudio.sources", () => response(bound( (_store, id) => listSources(id))))
     .handle("ragStudio.pipeline", () => response(bound( (_store, id) => readPipeline(id))))
     .handle("ragStudio.admit", (ctx) =>
-      response(
-        bound( async (store, id) => {
-          const read = await extract(ctx.payload.path)
-          const path = placed(ctx.payload.path)
-          if ("text" in read) store.writeFile(path, read.text)
-          if ("failed" in read && read.failed === "no_text_layer") store.writeFile(path, read)
-          return admit({ locationId: id, path })
-        }),
-      ),
+      response(bound((store, id) => admitFile(store, id, ctx.payload.path))),
     )
     .handle("ragStudio.parse", (ctx) => response(bound( () => parseSource(ctx.params.sourceId))))
     .handle("ragStudio.remove", (ctx) =>

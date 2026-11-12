@@ -51,9 +51,13 @@ function existingAncestor(file: string) {
 }
 
 export function inProject(file: string, projectRoot: string) {
-  const normalized = placed(file)
   const root = placed(projectRoot)
-  return normalized === root || normalized.startsWith(`${root}/`)
+  const normalized = placed(
+    path.isAbsolute(projectRoot) && (path.sep !== "\\" || path.parse(projectRoot).root.length > 1)
+      ? path.resolve(file)
+      : file,
+  )
+  return normalized === root || normalized.startsWith(root.endsWith("/") ? root : `${root}/`)
 }
 
 export function insideLocation(file: string, locationId: string, locationRoot?: string) {
@@ -61,7 +65,7 @@ export function insideLocation(file: string, locationId: string, locationRoot?: 
   if (normalized.startsWith(`/location/${locationId}/`)) return true
   if (!locationRoot) return false
   const root = placed(locationRoot)
-  return normalized === root || normalized.startsWith(`${root}/`)
+  return normalized === root || normalized.startsWith(root.endsWith("/") ? root : `${root}/`)
 }
 
 export function gate(
@@ -70,7 +74,7 @@ export function gate(
   file: string,
 ): { path: string } | { refused: "atlas" | "permission" } {
   const normalized = placed(file)
-  if (inProject(normalized, store.projectRoot)) return { refused: "atlas" }
+  if (store.projectRoot !== undefined && inProject(file, store.projectRoot)) return { refused: "atlas" }
   if (!insideLocation(normalized, locationId, store.locationRoot) && store.permission(locationId, normalized) !== "allow") {
     return { refused: "permission" }
   }
@@ -136,7 +140,7 @@ export interface VectorRow {
 export type ReadBytes = { text: string } | { failed: "no_text_layer"; bytes: string } | { failed: "missing" }
 
 export interface Store {
-  projectRoot: string
+  projectRoot: string | undefined
   locationRoot?: string
   atlasWrites: number
   chats: number
@@ -197,7 +201,7 @@ export function textAt(store: Store, span: SpanRef) {
 }
 
 export function memoryStore(input: {
-  projectRoot: string
+  projectRoot: string | undefined
   locationRoot?: string
   allowExternal?: (locationId: string, file: string) => boolean
   files?: Record<string, string | { failed: "no_text_layer"; bytes: string }>

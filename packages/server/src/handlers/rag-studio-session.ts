@@ -11,8 +11,10 @@ import {
   RagVectorTable,
 } from "@orchestra/core/rag-studio/sql"
 import { extract } from "@orchestra/rag-studio/extract"
-import { memoryStore, noteBytes, placed, withStore } from "@orchestra/rag-studio"
+import { admit, memoryStore, noteBytes, placed, withStore } from "@orchestra/rag-studio"
 import type { Store } from "@orchestra/rag-studio"
+import { Project } from "@orchestra/schema/project"
+import { parse, resolve } from "node:path"
 import { eq, inArray } from "drizzle-orm"
 import { Effect } from "effect"
 
@@ -81,7 +83,14 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
       return next
     })
     const store = memoryStore({
-      projectRoot: placed(location.project.directory),
+      // Project.resolve returns id global and the filesystem root outside any repo. That root is a
+      // placeholder, so a folder outside a repository keeps its own corpus.
+      projectRoot:
+        location.project.id === Project.ID.global &&
+        location.vcs === undefined &&
+        parse(location.project.directory).root === location.project.directory
+          ? undefined
+          : placed(location.project.directory),
       locationRoot: locationId,
       files,
     })
@@ -169,6 +178,14 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
     yield* save(db, store, locationId, revisionIds, questionIds)
     return result
   })
+}
+
+export async function admitFile(store: Store, locationId: string, file: string) {
+  const path = placed(resolve(file))
+  const read = await extract(path)
+  if ("text" in read) store.writeFile(path, read.text)
+  if ("failed" in read && read.failed === "no_text_layer") store.writeFile(path, read)
+  return admit({ locationId, path })
 }
 
 function adopt(db: Database.Interface["db"], locationId: string) {

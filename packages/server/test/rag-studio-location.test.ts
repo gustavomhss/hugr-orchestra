@@ -1,6 +1,6 @@
 import { mkdtemp, mkdir, realpath, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, parse, relative, sep } from "node:path"
 import { expect, test } from "bun:test"
 import { Database } from "@orchestra/core/database/database"
 import { Location } from "@orchestra/core/location"
@@ -8,7 +8,9 @@ import { RagPipelineTable, RagSourceTable } from "@orchestra/core/rag-studio/sql
 import { admit, canonical, listSources, memoryStore, placed, readPipeline, withStore } from "@orchestra/rag-studio"
 import { extract } from "@orchestra/rag-studio/extract"
 import { Context, Effect, Layer } from "effect"
-import { session } from "../src/handlers/rag-studio-session"
+import { admitFile, session } from "../src/handlers/rag-studio-session"
+import { Project } from "@orchestra/schema/project"
+import { AbsolutePath } from "@orchestra/core/schema"
 
 test("opening the folder as a symlink and as its real path is one corpus", async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), "rag-loc-")))
@@ -151,4 +153,105 @@ test("logical location paths stay lexical while native separators preserve their
   })
   expect(canonical("note\\part.txt")).toBe(process.platform === "win32" ? "note/part.txt" : "note\\part.txt")
   if (process.platform === "win32") expect(canonical("\\\\server\\share\\note.txt")).toBe("//server/share/note.txt")
+})
+
+
+test("a native store refuses root-relative project paths even with external permission", async () => {
+  const root = await realpath(await mkdtemp(join(process.cwd(), ".rag-project-")))
+  try {
+    const project = join(root, "project")
+    await mkdir(project)
+    const file = join(sep, relative(parse(project).root, project), "private.txt")
+    const store = memoryStore({
+      projectRoot: project,
+      locationRoot: join(root, "corpus"),
+      allowExternal: () => true,
+      files: { [canonical(file)]: "project source" },
+    })
+    await withStore(store, async () => {
+      expect(await admit({ locationId: placed(join(root, "corpus")), path: file })).toEqual({ refused: "atlas" })
+      expect(store.sources()).toEqual([])
+    })
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test("a filesystem-root project refuses corpus children before external permission", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "rag-root-")))
+  try {
+    const file = join(root, "private.txt")
+    const store = memoryStore({
+      projectRoot: parse(file).root,
+      locationRoot: root,
+      allowExternal: () => true,
+      files: { [placed(file)]: "project source" },
+    })
+    await withStore(store, async () => {
+      expect(await admit({ locationId: placed(root), path: file })).toEqual({ refused: "atlas" })
+      expect(store.sources()).toEqual([])
+    })
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+
+test("a non-project global location keeps a corpus despite its filesystem-root placeholder", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "rag-global-")))
+  const file = join(root, "note.txt")
+  await writeFile(file, "global corpus")
+  try {
+    const source = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+      const database = Context.get(yield* Layer.build(Database.layerFromPath(join(root, "global.sqlite"))), Database.Service)
+      return yield* session(database.db, (store, locationId) => admitFile(store, locationId, file)).pipe(
+        Effect.provideService(Location.Service, Location.Service.of({
+          directory: AbsolutePath.make(root),
+          project: { id: Project.ID.global, directory: AbsolutePath.make(parse(root).root) },
+        })),
+      )
+    })))
+    expect("id" in source).toBe(true)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test("native root-relative corpus reads use the same canonical path for admission and bytes", async () => {
+  const root = await realpath(await mkdtemp(join(process.cwd(), ".rag-corpus-")))
+  const file = join(root, "note.txt")
+  await writeFile(file, "corpus bytes")
+  try {
+    const store = memoryStore({ projectRoot: join(root, "project"), locationRoot: root })
+    await withStore(store, async () => {
+      const source = await admitFile(store, placed(root), join(sep, relative(parse(file).root, file)))
+      expect("id" in source).toBe(true)
+      if ("id" in source) expect(source.path).toBe(placed(file))
+      expect(store.sources()).toHaveLength(1)
+    })
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+
+test.each(["worktree", "filesystem root"])("an unidentified Git %s still excludes project source", async (placement) => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "rag-unidentified-")))
+  const file = join(root, "private.txt")
+  await writeFile(file, "project source")
+  try {
+    const source = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+      const database = Context.get(yield* Layer.build(Database.layerFromPath(join(root, "project.sqlite"))), Database.Service)
+      return yield* session(database.db, (store, locationId) => admitFile(store, locationId, file)).pipe(
+        Effect.provideService(Location.Service, Location.Service.of({
+          directory: AbsolutePath.make(root),
+          project: { id: Project.ID.global, directory: AbsolutePath.make(placement === "worktree" ? root : parse(root).root) },
+          vcs: { type: "git", store: AbsolutePath.make(join(root, ".git")) },
+        })),
+      )
+    })))
+    expect(source).toEqual({ refused: "atlas" })
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
 })
