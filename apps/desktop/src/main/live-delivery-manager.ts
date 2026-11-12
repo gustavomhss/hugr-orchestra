@@ -1,9 +1,12 @@
 import type { DeliveryFailureReason, LiveDeliveryManager, LiveDeliveryOptions } from "./live-delivery-contract"
 
 export class LiveDeliveryError extends Error {
-  constructor(readonly reason: DeliveryFailureReason) {
+  readonly reason: DeliveryFailureReason
+
+  constructor(reason: DeliveryFailureReason) {
     super("Live meeting delivery is unavailable")
     this.name = "LiveDeliveryError"
+    this.reason = reason
   }
 }
 
