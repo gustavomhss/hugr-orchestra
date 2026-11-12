@@ -136,7 +136,17 @@ test("depth and elapsed budgets cannot publish a closed logical reading", async 
     expect(result.state).toBe("partial")
     expect(result.issues.some((issue) => issue.reason === "limit")).toBe(true)
     expect(result.observedBytes).toBe(0)
+    expect(new Set(result.issues.map((issue) => `${issue.path}:${issue.reason}`)).size).toBe(result.issueCount)
   }
+})
+
+test.skipIf(process.platform === "win32")("socket entries are unread scopes, never file bytes", async () => {
+  await using root = await fixture()
+  const socket = Bun.listen({ unix: path.join(root.directory, "socket"), socket: { data() {} } })
+  const result = await measure(root.directory).finally(() => socket.stop(true))
+  expect(result.state).toBe("partial")
+  expect(result.observedBytes).toBe(0)
+  expect(result.issues.some((issue) => issue.reason === "unsupported" && issue.path.endsWith("socket"))).toBe(true)
 })
 
 test("bounded issue details retain the full gap count and do not modify files", async () => {

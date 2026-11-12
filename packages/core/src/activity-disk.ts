@@ -12,6 +12,7 @@ export async function measure(
   const startedAt = Date.now()
   const start = performance.now()
   const issues: ActivityMonitor.DiskIssue[] = []
+  const seen = new Set<string>()
   const canonical = await fs.realpath(directory).catch(() => undefined)
   const initial = await fs.lstat(directory).catch(() => undefined)
   const pending = [{ path: canonical ?? directory, depth: 0 }]
@@ -20,6 +21,9 @@ export async function measure(
   let entries = 0
   const expired = () => performance.now() - start >= (limits.maxMs ?? 2000)
   function unread(value: string, reason: ActivityMonitor.DiskIssue["reason"]) {
+    const key = `${reason}\0${value}`
+    if (seen.has(key)) return
+    seen.add(key)
     issueCount++
     if (issues.length < 32) issues.push({ path: value, reason })
   }
