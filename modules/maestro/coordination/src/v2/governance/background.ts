@@ -106,32 +106,48 @@ export const hold = Effect.fn("GovernanceBackgroundV2.hold")(function* (
   })
 })
 
-/** Watches registered background children; each child is watched at most once per process. */
+/** Watch each admitted background prompt independently, including resumes of an existing child. */
 export const make = Effect.fnUntraced(function* (events: EventV2.Interface) {
   const scope = yield* Scope.Scope
-  const registered = new Map<string, Watch>()
-  const started = new Set<string>()
+  const registered = new Map<string, Map<SessionMessage.ID, { input: Watch; started: boolean }>>()
+  yield* Effect.addFinalizer(() => Effect.sync(() => registered.clear()))
   return {
-    register: (input: Watch) => registered.set(input.childID, input),
+    register: (input: Watch) => {
+      const pending = registered.get(input.childID) ?? new Map()
+      if (!pending.has(input.promptID)) pending.set(input.promptID, { input, started: false })
+      registered.set(input.childID, pending)
+    },
     has: (childID: string) => registered.has(childID),
     start: (sessions: SessionV2.Interface, childID: string) =>
       Effect.gen(function* () {
-        const input = registered.get(childID)
-        if (!input || started.has(childID)) return
-        started.add(childID)
-        yield* deliver(sessions, input).pipe(
-          // Every cause but a shutdown is retried; an exact retry reconciles the same durable return.
-          Effect.sandbox,
-          Effect.retry({ times: RETRIES, schedule: Schedule.exponential("100 millis"), while: (cause) => !Cause.hasInterrupts(cause) }),
-          Effect.catch((cause) => (Cause.hasInterrupts(cause) ? Effect.failCause(cause) : hold(sessions, events, input, cause))),
-          // A removed parent has nowhere to show the hold; the child's reply stays in its own Session.
-          Effect.catchCause((cause) =>
-            Cause.hasInterruptsOnly(cause)
-              ? Effect.void
-              : Effect.logWarning("Background Task hold not recorded", { childID, cause: Cause.pretty(cause) }),
-          ),
-          Effect.forkIn(scope),
-        )
+        const pending = registered.get(childID)
+        if (!pending) return
+        // Several admissions can precede the child's next turn. Keep every prompt, and claim it before forking so
+        // repeated beforeTurn callbacks cannot start a second watcher while this one is waiting or retrying.
+        for (const entry of pending.values()) {
+          if (entry.started) continue
+          entry.started = true
+          const input = entry.input
+          yield* deliver(sessions, input).pipe(
+            // Every cause but a shutdown is retried; an exact retry reconciles the same durable return.
+            Effect.sandbox,
+            Effect.retry({ times: RETRIES, schedule: Schedule.exponential("100 millis"), while: (cause) => !Cause.hasInterrupts(cause) }),
+            Effect.catch((cause) => (Cause.hasInterrupts(cause) ? Effect.failCause(cause) : hold(sessions, events, input, cause))),
+            // A removed parent has nowhere to show the hold; the child's reply stays in its own Session.
+            Effect.catchCause((cause) =>
+              Cause.hasInterruptsOnly(cause)
+                ? Effect.void
+                : Effect.logWarning("Background Task hold not recorded", { childID, cause: Cause.pretty(cause) }),
+            ),
+            // Once settled, release the Watch payload. A later exact registration reconciles the same durable return
+            // through Session.prompt rather than retaining a process-lifetime set of every completed prompt.
+            Effect.ensuring(Effect.sync(() => {
+              pending.delete(input.promptID)
+              if (pending.size === 0) registered.delete(childID)
+            })),
+            Effect.forkIn(scope),
+          )
+        }
       }),
   }
 })
