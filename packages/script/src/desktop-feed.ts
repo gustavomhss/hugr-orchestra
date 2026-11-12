@@ -1,5 +1,4 @@
 import { YAML } from "bun"
-import semver from "semver"
 
 export type DesktopFeed = {
   readonly version: string
@@ -53,7 +52,7 @@ export function withDesktopFeedFloor(body: string, floor: FeedFloor): string {
   const current = parseDesktopFeedFloor(body)
   if (
     current &&
-    (semver.gt(current.version, floor.version) ||
+    (newer(current.version, floor.version) ||
       (current.version === floor.version && current.receiptSha256 !== floor.receiptSha256))
   )
     throw new Error("RELEASE_FEED_FLOOR_CONFLICT")
@@ -78,12 +77,12 @@ export function assertDesktopFeedVersion(input: {
       throw new Error("RELEASE_FEED_MANIFEST_SET_INVALID")
     names.add(current.name)
     const feed = requireFeed(current.feed)
-    if (semver.gt(feed.version, input.version)) throw new Error("RELEASE_FEED_NEWER_VERSION")
+    if (newer(feed.version, input.version)) throw new Error("RELEASE_FEED_NEWER_VERSION")
   }
   if (input.floor) {
     if (!stable(input.floor.version) || !receipt(input.floor.receiptSha256))
       throw new Error("RELEASE_FEED_FLOOR_INVALID")
-    if (semver.gt(input.floor.version, input.version)) throw new Error("RELEASE_FEED_NEWER_FLOOR")
+    if (newer(input.floor.version, input.version)) throw new Error("RELEASE_FEED_NEWER_FLOOR")
     if (input.floor.version === input.version && input.floor.receiptSha256 !== input.receiptSha256)
       throw new Error("RELEASE_FEED_RECEIPT_CONFLICT")
   }
@@ -141,8 +140,17 @@ function stable(value: unknown): value is string {
   return (
     typeof value === "string" &&
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(value) &&
-    semver.valid(value) === value
+    value.split(".").every((part) => Number.isSafeInteger(Number(part)))
   )
+}
+
+// Callers first validate the three canonical stable integer segments.
+function newer(left: string, right: string): boolean {
+  const current = right.split(".").map(Number)
+  for (const [index, part] of left.split(".").map(Number).entries()) {
+    if (part !== current[index]) return part > current[index]!
+  }
+  return false
 }
 
 function receipt(value: unknown): value is string {

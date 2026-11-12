@@ -57,6 +57,9 @@ test("desktop feed API accepts real producer and legacy fields without coercion"
 
 for (const invalid of [
   { ...local, version: "0.3.6-beta.1" },
+  { ...local, version: "9007199254740992.0.0" },
+  { ...local, version: "0.9007199254740992.0" },
+  { ...local, version: "0.0.9007199254740992" },
   { ...local, files: [] },
   { ...local, files: [{ ...local.files[0], size: "29" }] },
   { ...local, files: [{ ...local.files[0], size: -1 }] },
@@ -130,6 +133,26 @@ test("desktop feed API floor survives all manifests absent and authorizes only s
   expect(() =>
     helper.assertDesktopFeedVersion({ version, receiptSha256, currentFeeds: [], releaseExists: false }),
   ).not.toThrow()
+})
+
+test("desktop feed API compares canonical stable segments numerically in major minor patch order", async () => {
+  const helper = await api()
+  for (const [newer, older] of [
+    ["0.3.10", "0.3.9"],
+    ["0.10.0", "0.9.99"],
+    ["1.0.0", "0.99.99"],
+  ] as const) {
+    expect(() => helper.withDesktopFeedFloor(marker({ version: newer, receiptSha256 }), { version: older, receiptSha256 })).toThrow()
+    expect(() => helper.withDesktopFeedFloor(marker({ version: older, receiptSha256 }), { version: newer, receiptSha256 })).not.toThrow()
+    expect(() =>
+      helper.assertDesktopFeedVersion({
+        version: older,
+        receiptSha256,
+        currentFeeds: [{ name: "latest.yml", feed: { ...local, version: newer } }],
+        releaseExists: false,
+      }),
+    ).toThrow()
+  }
 })
 
 test("desktop feed API admits complete legacy state but refuses unmarked partial duplicate unknown and newer SO metadata", async () => {
