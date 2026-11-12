@@ -1,0 +1,159 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "accepted_predecessor_manifest_sha256": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+  "transport": {
+    "complete": true,
+    "received": {
+      "desktop-web": "2/2 partes, incluindo corpo completo, evidências e dependências.",
+      "app-session": "3/3 partes, incluindo corpo completo, evidências e dependências.",
+      "design-tui": "3/3 partes, incluindo corpo completo, evidências e dependências."
+    },
+    "missing_parts": [],
+    "integrity_limit": "Reconheço os conteúdos rotulados recebidos; hashes, reconciliação e ordenação são recibos externos. Não certifiquei bytes internos das mensagens nem executei ferramentas."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "body_bytes": 18440,
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "reason": "Explica propriedade, comportamento e consequências de manutenção nas 30 famílias sem ampliar a profundidade do L1. Preserva restart estático, divergência do comentário de readiness, localização, IPC não uniforme, CSP parcial e incertezas nativas.",
+      "locations": [
+        "Orientation and ownership",
+        "Startup publishes readiness before the renderer proceeds",
+        "Persistence and recovery have several owners",
+        "Privilege is checked at each request boundary",
+        "Native Dock preserves identity and uncertain outcomes",
+        "Maintenance evidence retains its original limits",
+        "Companion: Accepted sections supporting each synthesis; Family accounting retained through the synthesis; E1–E12"
+      ],
+      "direct_use_readiness": {
+        "case": "S2-I2D",
+        "decision": "PASS",
+        "locations": "Startup; Persistence and recovery; E7–E8.",
+        "reason": "Distingue a espera de health do filho owned da sondagem de recuperação de servidor remoto armazenado após falha local. A seleção/configuração do remoto não substitui sua saúde.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": {
+        "decision": "PASS",
+        "build": ["s2.l1.desktop-web"],
+        "navigation": ["s2.l2.app-session", "s2.l2.design-tui"],
+        "reason": "Predecessor exato coincide com o L1 examinado; consultas laterais não fornecem premissas ao corpo."
+      },
+      "optional_suggestions": [
+        {
+          "location": "Título Privilege is checked at each request boundary.",
+          "suggestion": "Opcionalmente substituir por Privilege depends on the request boundary, evitando que o título isolado pareça uma garantia universal. O texto subsequente já delimita corretamente a admissão não uniforme; não é bloqueio."
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "body_bytes": 24434,
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "reason": "Sintetiza as 59 famílias com consequências úteis para identidade, admissão, recuperação, apresentação e mutações. Os detalhes novos de cleanup otimista e as instruções adicionais possuem testemunhos próprios e não viram garantias de rollback ou execução.",
+      "locations": [
+        "Composition, identity and asynchronous ownership",
+        "Durable admission, optimistic state and draft storage",
+        "Transport, liveness and canonical recovery",
+        "Skills catalog, content and editing ownership",
+        "Visual resources and prescribed maintenance",
+        "Companion: N1–N4; C1–C7; Complete meaningful-family mapping"
+      ],
+      "direct_use_readiness": {
+        "case": "S2-I2A",
+        "decision": "PASS",
+        "locations": "Durable admission, optimistic state and draft storage; N1; C2.",
+        "reason": "Explica que admissão durável precede promoção/projeção; uma timeline vazia não resolve um envio ambíguo. Após dispatch, sessão e IDs são retidos; remoção exige tentativa não despachada e sessão confirmadamente vazia.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": {
+        "decision": "PASS",
+        "build": ["s2.l1.app-session"],
+        "navigation": ["s2.l2.desktop-web", "s2.l2.design-tui"],
+        "reason": "Usa o L1 r3 aceito e fontes de fronteira identificadas, sem depender semanticamente de outro L2 pendente."
+      },
+      "optional_suggestions": []
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "body_bytes": 21535,
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "reason": "As 67 famílias continuam explicadas com fronteiras concretas. Preserva ausência de ativação/disposal do host inspecionado, ordem sem transação nas ações, clearing anterior à aceitação, limites de acessibilidade e proveniência específica dos produtos gerados.",
+      "locations": [
+        "Terminal lifetime and synchronized navigation",
+        "V2 actions and prompt admission",
+        "Terminal configuration, persistence and extensions",
+        "Browser UI ownership, lifecycle and accessibility",
+        "Generated products and asset provenance",
+        "Storybook, design intent and verification limits",
+        "Companion: Synthesis-to-predecessor map; Complete family accounting; E01–E20"
+      ],
+      "direct_use_readiness": {
+        "case": "S2-I2U",
+        "decision": "PASS",
+        "locations": "V2 actions and prompt admission; E04–E07.",
+        "reason": "Explica switchAgent seguido de switchModel antes de prompt/command; contexto sintético com resume:false antecede prompt. A seleção da sessão governa o modelo, sem promessa de atomicidade ou retry com ID estável neste adaptador.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "dependencies": {
+        "decision": "PASS",
+        "build": ["s2.l1.design-tui"],
+        "navigation": ["s2.l2.app-session", "s2.l2.desktop-web"],
+        "reason": "O L1 aceito e capturas próprias sustentam os fatos; destinos de navegação são explicitamente externos à construção."
+      },
+      "optional_suggestions": []
+    }
+  ],
+  "grouped_criteria": [
+    {
+      "ids": ["GO-A1", "GO-A3", "CC-3", "QS-2"],
+      "decision": "PASS",
+      "scope": "Conteúdo L2 dos três artefatos.",
+      "locations": "Seções e casos diretos indicados por artefato.",
+      "reason": "Há explicações utilizáveis e seções delimitadas para consultas locais, não apenas títulos ou inventários. Leitura real por índice e limites de consumo ainda não foram demonstrados."
+    },
+    {
+      "ids": ["GO-A2", "GO-A4", "GO-A5", "GO-A6", "GO-A7", "AC-04: conteúdo", "CC-2: conteúdo", "QS-3", "QS-6"],
+      "decision": "PASS",
+      "scope": "Construção cumulativa, atribuição e desenho declarativo.",
+      "locations": "Orientação, mapas de síntese e Exact dependency rationale de cada pacote.",
+      "reason": "Reutiliza L1 aceito, vincula versões e fontes, separa manutenção de execução e não introduz mecanismos especulativos. Persistência operacional, atualização, CI e economia global permanecem fora deste PASS."
+    },
+    {
+      "ids": ["GO-I1", "GO-I2", "GO-I7", "GO-I8", "QS-1", "QS-4"],
+      "decision": "PASS",
+      "locations": "Identidades propostas, evidências decisivas e limites finais dos três corpos.",
+      "reason": "Preserva linhagem, conflitos, instruções atribuídas e desconhecidos; não promove documentos, mocks, hashes, ACKs ou revisão semântica a resultado runtime."
+    },
+    {
+      "ids": ["AC-01: conteúdo", "CC-1", "CC-7", "QS-5"],
+      "decision": "PASS",
+      "locations": "Mapas completos de 30/59/67 famílias e respectivas seções.",
+      "reason": "Todas as disposições locais herdadas permanecem representadas com limites explícitos. Não identifiquei necessidade obrigatória omitida."
+    },
+    {
+      "ids": ["AC-05: dependências", "AC-06: dependências"],
+      "decision": "PASS",
+      "locations": "Declarações build/navigation e vínculos exatos dos predecessores.",
+      "reason": "A separação declarativa é coerente com as premissas efetivamente usadas. Cache, invalidação, rebuild e controles de mutação não foram executados."
+    }
+  ],
+  "unaccepted_gates": {
+    "decision": "HOLD",
+    "items": [
+      "Liberação formal da camada L2 pela principal após ambos os pareceres de todas as unidades",
+      "L3 e L4",
+      "Consumidores reais e seus orçamentos de leitura",
+      "Reuso, atualização, publicação e recuperação operacional",
+      "Runtime, testes, CI, economia e demais controles globais"
+    ]
+  }
+}

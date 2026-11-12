@@ -1,0 +1,136 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "accepted_predecessor_manifest": "8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8",
+  "transport": {
+    "complete": true,
+    "received": {
+      "desktop-web": "2/2 partes",
+      "app-session": "3/3 partes",
+      "design-tui": "3/3 partes"
+    },
+    "replacement_used": "design-tui parte 1/3: substituição integral, ordinal 2; primeira transmissão desconsiderada.",
+    "missing_parts": [],
+    "integrity_limit": "Hashes, tamanhos, ordem de produção e reconciliação são recibos externos da principal. Não recomputei hashes nem atesto os bytes internos do transporte."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l2.desktop-web",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "scope": "Conteúdo L2 e dependências declaradas desta unidade.",
+      "coverage": {
+        "decision": "PASS",
+        "location": "Corpo completo; Accepted sections supporting each synthesis; Family accounting retained through the synthesis.",
+        "reason": "As 30 famílias e 532 entradas mantêm disposição significativa. A explicação conecta mecanismo, proprietário e consequência de manutenção sem elevar a profundidade herdada."
+      },
+      "fidelity": {
+        "decision": "PASS",
+        "location": "Startup; Privilege; Native Dock; Linux/WSL; Maintenance evidence retains its original limits; E1–E12.",
+        "reason": "Preserva o problema estático de reinício, o comentário incorreto sobre credenciais, a localização do diálogo, a admissão IPC não uniforme, o CSP parcial e os resultados incertos. Políticas e motivações históricas permanecem atribuídas."
+      },
+      "dependency": {
+        "decision": "PASS",
+        "location": "Orientation and ownership; Exact dependency rationale.",
+        "reason": "O predecessor factual é s2.l1.desktop-web, corpo 757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338. Fontes diretas têm identidades explícitas; os outros L2 são navegação, sem premissa factual importada."
+      },
+      "direct_use_case": {
+        "id": "S2-I2D",
+        "content_readiness": "PASS",
+        "location": "Startup publishes readiness before the renderer proceeds; Persistence and recovery have several owners; E7–E8.",
+        "reason": "Permite distinguir a espera de saúde do servidor possuído em main da sondagem do servidor remoto armazenado durante recuperação no renderer. Configuração remota, isoladamente, não estabelece saúde.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "optional_suggestions": []
+    },
+    {
+      "key": "s2.l2.app-session",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "scope": "Conteúdo L2 e dependências declaradas desta unidade.",
+      "coverage": {
+        "decision": "PASS",
+        "location": "Seções funcionais; Complete meaningful-family mapping.",
+        "reason": "As 59 famílias e 1.887 entradas estão representadas por explicações utilizáveis, mantendo os limites de Board, Guardrails, recursos nativos, idiomas, assets e folhas de menor profundidade."
+      },
+      "fidelity": {
+        "decision": "PASS",
+        "location": "Durable admission; Transport; Skills; Visual resources; N1–N4 e C1–C7.",
+        "reason": "Distingue admissão, promoção e execução; identidade de retry e projeção; limpeza visual e resultado remoto; recibo local e revisão durável; acesso lexical de Skills e enforcement de filesystem. Os novos detalhes têm testemunhos delimitados."
+      },
+      "dependency": {
+        "decision": "PASS",
+        "location": "Orientation and evidence status; Bound inputs and claim status; Exact dependency rationale.",
+        "reason": "Usa s2.l1.app-session, corpo 67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e, e fontes diretas identificadas. Desktop/design são destinos de consulta, sem dependência factual oculta."
+      },
+      "direct_use_case": {
+        "id": "S2-I2A",
+        "content_readiness": "PASS",
+        "location": "Durable admission, optimistic state and draft storage; N1 e C2.",
+        "reason": "Explica que uma resposta pode falhar após admissão durável e antes da promoção visível. Depois do despacho, preservam-se sessão e ID; uma timeline vazia não basta para justificar remoção.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "optional_suggestions": []
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "verdict": "PASS",
+      "mandatory_findings": [],
+      "scope": "Conteúdo L2 e dependências declaradas desta unidade.",
+      "coverage": {
+        "decision": "PASS",
+        "location": "Corpo completo; Synthesis-to-predecessor map; Complete family accounting.",
+        "reason": "As 67 famílias e 2.087 entradas conservam propósito, relações de consumo e limites. Temas, geração, assets, Storybook, serviços UI e contratos TUI recebem explicação específica."
+      },
+      "fidelity": {
+        "decision": "PASS",
+        "location": "Terminal lifetime; V2 actions; Browser UI; Generated products; Storybook; E01–E20.",
+        "reason": "Preserva host de plugins vazio, lifecycle incompleto, histórico tolerante a erro, despacho não aguardado, teste espelhado, lacuna RTL, loader sem decoder e ausência de execução. Não converte mocks ou proveniência parcial em garantias."
+      },
+      "dependency": {
+        "decision": "PASS",
+        "location": "Orientation; Evidence contract; Exact dependency rationale.",
+        "reason": "O predecessor é s2.l1.design-tui, corpo fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da. Capturas de fronteira estão identificadas; app/desktop permanecem navegação."
+      },
+      "direct_use_case": {
+        "id": "S2-I2U",
+        "content_readiness": "PASS",
+        "location": "V2 actions and prompt admission; E04–E07.",
+        "reason": "Explica switchAgent, depois switchModel, antes de prompt/command; contexto sintético com resume:false precede o prompt. Seleção da sessão, ordenação por chamada e ausência de transação/retry são distintas.",
+        "actual_consumer": "NOT_RUN"
+      },
+      "optional_suggestions": []
+    }
+  ],
+  "shared_criteria": [
+    {
+      "ids": ["GO-A1", "GO-A2", "GO-A3", "CC-2", "CC-3", "QS-2"],
+      "decision": "PASS_CONTENT_ONLY",
+      "locations": "Orientação, seções funcionais e mapas de síntese das três unidades.",
+      "reason": "Explicações cumulativas, seções estáveis e consequências práticas sustentam uso direto. Não certifica navegação por índice real ou limites de leitura medidos."
+    },
+    {
+      "ids": ["GO-A4", "GO-A5", "AC-05", "AC-06", "CC-1", "CC-7", "QS-4"],
+      "decision": "PASS_DECLARED_CONTENT_AND_DEPENDENCIES_ONLY",
+      "locations": "Identidades propostas, fontes utilizadas e Exact dependency rationale de cada unidade.",
+      "reason": "Entradas e predecessores estão identificados; manutenção e geração têm proprietários; build e navegação são distintos. Não certifica cache, propagação, atualização ou publicação executados."
+    },
+    {
+      "ids": ["GO-I2", "GO-I7", "GO-I8", "AC-01", "AC-04", "QS-1", "QS-5"],
+      "decision": "PASS_CONTENT_ONLY",
+      "locations": "Seções de limites e evidências decisivas de cada unidade.",
+      "reason": "Cobertura significativa, interpretação atribuída e limites preservados. Fonte, protocolo, instrução, inferência e execução não são confundidos."
+    },
+    {
+      "ids": ["GO-A6", "GO-A7", "GO-I1", "QS-3", "QS-6"],
+      "decision": "PASS_CONTENT_ONLY",
+      "locations": "Recibos, bindings de predecessor e pacotes delimitados.",
+      "reason": "Reutiliza a base aceita, conserva identidades e evita mecanismos paralelos ou garantias econômicas inventadas. Controles globais de preservação e orçamento permanecem separados."
+    }
+  ],
+  "acceptance_limit": "PASS semântico das três unidades L2. A principal registra a liberação da camada após ambos os juízes. Consumidores e seus budgets permanecem NOT_RUN; L3/L4, runtime, reutilização/atualização executadas, binding/publicação, economia, CI e controles globais não são aceitos por este parecer."
+}
