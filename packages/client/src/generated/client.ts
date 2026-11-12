@@ -598,6 +598,9 @@ import type {
   ServerInboxSlackSyncOutput,
   ServerInboxDoorInput,
   ServerInboxDoorOutput,
+  ActivityWorktreesOutput,
+  ActivityReadWorktreeInput,
+  ActivityReadWorktreeOutput,
   ActivityDiskOutput,
   ActivityReadDiskInput,
   ActivityReadDiskOutput,
@@ -4698,6 +4701,28 @@ export function make(options: ClientOptions) {
         ),
     },
     activity: {
+      worktrees: (requestOptions?: RequestOptions) =>
+        request<ActivityWorktreesOutput>(
+          {
+            method: "GET",
+            path: `/api/activity/worktrees`,
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      readWorktree: (input: ActivityReadWorktreeInput, requestOptions?: RequestOptions) =>
+        request<ActivityReadWorktreeOutput>(
+          {
+            method: "POST",
+            path: `/api/activity/worktrees/${encodeURIComponent(input.recordID)}/read`,
+            successStatus: 200,
+            declaredStatuses: [400, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
       disk: (requestOptions?: RequestOptions) =>
         request<ActivityDiskOutput>(
           { method: "GET", path: `/api/activity/disk`, successStatus: 200, declaredStatuses: [401, 400], empty: false },

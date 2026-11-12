@@ -13954,6 +13954,66 @@ export type ServerInboxDoorOutput = {
   readonly data: { readonly href: string } | { readonly openApp: true }
 }
 
+export type ActivityWorktreesOutput = {
+  readonly instanceID: string
+  readonly snapshotRevision: string
+  readonly readAt: number
+  readonly inventoryAt?: number
+  readonly source: "node.fs.lstat"
+  readonly coverage: "registered-git-worktrees"
+  readonly records: ReadonlyArray<{
+    readonly recordID: string
+    readonly projectID: string
+    readonly registrationID: string
+    readonly directory: string
+    readonly owner: string
+    readonly attempt?: {
+      readonly startedAt: number
+      readonly sampledAt: number
+      readonly state: "complete" | "partial"
+      readonly observedBytes: number
+      readonly entries: number
+      readonly issueCount: number
+      readonly issues: ReadonlyArray<{
+        readonly path: string
+        readonly reason: "unavailable" | "symlink" | "unsupported" | "changed" | "limit" | "overflow"
+      }>
+    }
+    readonly logical?: { readonly bytes: number; readonly sampledAt: number }
+  }>
+}
+
+export type ActivityReadWorktreeInput = { readonly recordID: { readonly recordID: string }["recordID"] }
+
+export type ActivityReadWorktreeOutput = {
+  readonly instanceID: string
+  readonly snapshotRevision: string
+  readonly readAt: number
+  readonly inventoryAt?: number
+  readonly source: "node.fs.lstat"
+  readonly coverage: "registered-git-worktrees"
+  readonly records: ReadonlyArray<{
+    readonly recordID: string
+    readonly projectID: string
+    readonly registrationID: string
+    readonly directory: string
+    readonly owner: string
+    readonly attempt?: {
+      readonly startedAt: number
+      readonly sampledAt: number
+      readonly state: "complete" | "partial"
+      readonly observedBytes: number
+      readonly entries: number
+      readonly issueCount: number
+      readonly issues: ReadonlyArray<{
+        readonly path: string
+        readonly reason: "unavailable" | "symlink" | "unsupported" | "changed" | "limit" | "overflow"
+      }>
+    }
+    readonly logical?: { readonly bytes: number; readonly sampledAt: number }
+  }>
+}
+
 export type ActivityDiskOutput = {
   readonly instanceID: string
   readonly readAt: number
