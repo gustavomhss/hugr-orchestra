@@ -600,10 +600,18 @@ describe("OpenAI Chat route", () => {
       const input = LLM.updateRequest(request, {
         tools: [{ name: "lookup", description: "Lookup data", inputSchema: { type: "object" } }],
       })
-      const events = Array.from(
-        yield* LLMClient.stream(input).pipe(Stream.runCollect, Effect.provide(fixedResponse(body))),
+      const events: LLMEvent[] = []
+      const streamError = yield* LLMClient.stream(input).pipe(
+        Stream.tap((event) =>
+          Effect.sync(() => {
+            events.push(event)
+          }),
+        ),
+        Stream.runDrain,
+        Effect.provide(fixedResponse(body)),
+        Effect.flip,
       )
-      const error = yield* LLMClient.generate(input).pipe(Effect.provide(fixedResponse(body)), Effect.flip)
+      const generateError = yield* LLMClient.generate(input).pipe(Effect.provide(fixedResponse(body)), Effect.flip)
 
       expect(events).toEqual([
         { type: "step-start", index: 0 },
@@ -612,7 +620,8 @@ describe("OpenAI Chat route", () => {
         { type: "tool-input-delta", id: "call_1", name: "lookup", text: ':"weather"}' },
       ])
       expect(events.filter(LLMEvent.is.toolCall)).toEqual([])
-      expect(error.message).toContain("Provider stream ended without a terminal finish event")
+      expect(streamError.message).toContain("Provider stream ended without a terminal finish event")
+      expect(generateError.message).toContain("Provider stream ended without a terminal finish event")
     }),
   )
 

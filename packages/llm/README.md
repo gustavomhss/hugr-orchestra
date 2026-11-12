@@ -26,6 +26,10 @@ const program = Effect.gen(function* () {
 
 Use `LLMClient.stream(request)` for incremental `LLMEvent`s; the event shape is the same across all protocols. Provide `WebSocketExecutor.layer` as well for WebSocket routes. `example/tutorial.ts` is a longer walkthrough.
 
+A fully consumed stream must end with a normalized `finish` or `provider-error` event. A truncated provider response fails instead of appearing complete; cancellation and partial downstream consumption retain their cancellation semantics. Protocols that emit their terminal event when the response ends remain supported.
+
+WebSocket receive buffering is bounded to 128 messages. When a stalled consumer lets the queue overflow, the stream reports a transport failure and closes the socket with code 1011; frames are never silently dropped.
+
 ## Entry points
 
 - `@orchestra/llm`: `LLM.request`, `LLMClient` (`generate`, `stream`, `prepare`), `Tool`, `ToolRuntime`, the canonical schema classes (`Message`, `Model`, `LLMEvent`, ...).
