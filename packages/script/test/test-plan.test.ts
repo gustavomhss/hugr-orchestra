@@ -43,6 +43,10 @@ describe("test shard planner", () => {
     expect(code).toContain('cd packages/core && GITHUB_ACTIONS=false ')
     expect(code).toContain('=declared bun test --timeout 30000 --only-failures --preload ./test/file-start.ts "$alone_file") &')
     expect(code).toContain('wait "$pid"')
+    const waited = code.split('if [ -n "${alone_pids[0]:-}" ]; then')[1]?.split("fi")[0] ?? ""
+    expect(waited).toContain('for pid in "${alone_pids[@]}"; do')
+    expect(waited).toContain('wait "$pid"')
+    expect(waited).not.toContain(":-")
     expect(code).not.toContain('bun test --timeout 30000 --only-failures "${alone[@]}"')
     const own = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ] || [ "$file" = "test/review-toolkit/dependency-shadow.test.ts" ]; then')[1]?.split("else")[0] ?? ""
     expect(own).toContain('alone+=("$file")')

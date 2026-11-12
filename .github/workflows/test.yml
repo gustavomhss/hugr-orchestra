@@ -444,9 +444,12 @@ jobs:
               GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- --preload ./test/file-start.ts "${files[@]}" "${report[@]}"
             fi
             # One file per process. A second turbo exited 1 after a green watcher run (run 43150681461).
-            for pid in "${alone_pids[@]:-}"; do
-              wait "$pid"
-            done
+            # "${alone_pids[@]:-}" is one empty word when the array is empty, and `wait ""` fails the step.
+            if [ -n "${alone_pids[0]:-}" ]; then
+              for pid in "${alone_pids[@]}"; do
+                wait "$pid"
+              done
+            fi
             exit 0
           fi
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
