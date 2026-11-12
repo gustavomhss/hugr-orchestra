@@ -135,7 +135,18 @@ async function main() {
     "replace-callback": 'subject.replace(/(a+)+$/, (match) => "replacement")',
     "match-all": "subject.matchAll(/(a+)+$/g)",
   }
-  if (!Object.hasOwn(expressions, mode)) throw new Error("Unknown deadline fixture scenario")
+  const probes = { "probe-512": 512, "probe-2048": 2048, "probe-4096": 4096 }
+  const passes = Object.hasOwn(probes, mode) ? probes[mode] : undefined
+  const pattern = passes === undefined ? undefined : "^" + "(?=a+$)".repeat(passes) + "a+$"
+  const subjectBytes = 8 * 1024 * 1024
+  if (!Object.hasOwn(expressions, mode) && passes === undefined) throw new Error("Unknown deadline fixture scenario")
+  if (pattern !== undefined) {
+    const patternBytes = Buffer.byteLength(pattern)
+    if (patternBytes > 40 * 1024) throw new Error("Probe pattern exceeds 40KiB")
+    await emit("PROBE_INPUT", { N: passes, patternBytes, subjectBytes })
+  }
+  const expression = pattern === undefined ? expressions[mode] : `new RegExp(${JSON.stringify(pattern)}).test(subject)`
+  const subject = pattern === undefined ? '"a".repeat(40) + "!"' : `"a".repeat(${subjectBytes})`
   const warmup = await Effect.runPromise(CodeMode.execute({ code: 'return "ready"' }))
   if (!warmup.ok || warmup.value !== "ready") throw new Error("Public CodeMode warmup failed")
   await emit("WARMUP_READY")
@@ -185,8 +196,8 @@ async function main() {
         const pending = tools.slow({})
         await tools.mark({})
         console.log("regex-phase")
-        const subject = "a".repeat(40) + "!"
-        ${expressions[mode]}
+        const subject = ${subject};
+        ${expression}
         console.log("regex-completed")
         await tools.after({})
         await pending
