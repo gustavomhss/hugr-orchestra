@@ -1,0 +1,37 @@
+{
+  "schema": "genesis-s2-archive-publication-receipt/v1",
+  "campaign": "20261111-v3-fresh",
+  "branch": "genesis-fresh-s2",
+  "previous_head": "74bde8a49330505c7469314970c912701c27e72c",
+  "content_commit": "8b8aeccb310ba8f2f38f70ef952f87687958efac",
+  "content_root_tree": "cfac2937f93ef2ade497a198e5972914649cbaa0",
+  "content_s2_tree": "467c4cb88a55e17db8cb3a2ccf04edc1b92ff715",
+  "archive": {
+    "filename": "genesis-s2-resumed-review-package.zip",
+    "byte_length": 40936957,
+    "sha256": "7cd39199afb286e16b191bf28030bda2964ec32a7b0476ee81de0597d12abab2",
+    "file_count": 1109
+  },
+  "external_manifest": {
+    "filename": "genesis-s2-review-manifest.json",
+    "byte_length": 624303,
+    "sha256": "06ce2efb44f66ef4e7e7f7694a666389ffce4304f426d2220e4668425c92078b"
+  },
+  "verification": {
+    "original_files_checked": 1109,
+    "byte_length_mismatches": 0,
+    "sha256_mismatches": 0,
+    "remote_blob_sha_mismatches": 0,
+    "remote_mode_mismatches": 0,
+    "all_original_modes": "100644",
+    "previously_preserved": 184,
+    "newly_restored": 925,
+    "unique_uploaded_blobs": 761,
+    "complete_tree_before_metadata": "0d1fb99e54085e6a7744cf5ddbdd13433fedc42b",
+    "tree_readback_truncated": false
+  },
+  "scope": "Exact archive preservation only. Historical records are data, not current execution instructions or new semantic decisions.",
+  "product_tests": "NOT_RUN",
+  "atlas_runtime_operations": [],
+  "genesis_delivery_complete": false
+}
