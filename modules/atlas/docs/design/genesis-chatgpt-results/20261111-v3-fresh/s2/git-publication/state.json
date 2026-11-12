@@ -1,0 +1,15 @@
+{
+  "schema": "genesis-s2-archive-publication/v1",
+  "campaign": "20261111-v3-fresh",
+  "branch": "genesis-fresh-s2",
+  "archive_sha256": "7cd39199afb286e16b191bf28030bda2964ec32a7b0476ee81de0597d12abab2",
+  "archive_file_count": 1109,
+  "publication_state": "PARTIAL_ARCHIVE_PRESERVATION",
+  "original_files_in_this_batch": 17,
+  "published_groups": ["13 accepted L1-L4 bodies", "accepted/l1.json", "accepted/l2.json", "accepted/l3.json", "accepted/l4.json"],
+  "remaining_archive_files": 1092,
+  "new_semantic_decisions": [],
+  "new_runtime_operations": [],
+  "product_tests": "NOT_RUN_BY_ARCHIVE_PUBLICATION",
+  "delivery_complete": false
+}

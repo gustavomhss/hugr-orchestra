@@ -1,0 +1,77 @@
+{
+  "schema": "genesis-s2-accepted-layer/v1",
+  "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "layer": 3,
+  "status": "SEMANTIC_LAYER_ACCEPTED",
+  "recorded_at": "2026-11-11T19:57:55.794177+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "population": 4506,
+  "paths_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+  "artifacts": [
+    {
+      "key": "s2.l3.desktop-web",
+      "body_path": "layers/l3/desktop-web/body.md",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715,
+      "reviews": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "response_path": "judgments/l3-r1/j1.json",
+          "response_sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "response_path": "judgments/l3-r1/j2.json",
+          "response_sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.app-session",
+      "body_path": "layers/l3/app-session/body.md",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334,
+      "reviews": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "response_path": "judgments/l3-r1/j1.json",
+          "response_sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "response_path": "judgments/l3-r1/j2.json",
+          "response_sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "body_path": "layers/l3/design-tui/body.md",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780,
+      "reviews": [
+        {
+          "judge": "/root/s2_resume_j1",
+          "verdict": "PASS",
+          "response_path": "judgments/l3-r2/j1.json",
+          "response_sha256": "2a5102a2be7dc1acd065c75c75df6d558985a25ef15720221c792ec9b12f6741"
+        },
+        {
+          "judge": "/root/s2_resume_j2",
+          "verdict": "PASS",
+          "response_path": "judgments/l3-r2/j2.json",
+          "response_sha256": "fc9edf21cf505d0b0e4fc535e68269e39e540ab2246d67e47bbdc376974f43e0"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "This mechanical manifest records actual independent semantic decisions; it is not a new judgment.",
+    "No runtime, consumer, CI, financial or global integration PASS is implied."
+  ]
+}
