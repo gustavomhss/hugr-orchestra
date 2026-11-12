@@ -1638,10 +1638,36 @@
       "id": "L8",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "c332738e83",
+        "6fd130a6a4",
+        "36c275208f",
+        "fb0689ae60"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_controls_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43240572296",
+          "result": "5pass/44assertions per OS; real provider entry/normal finish with later workflow escalation is not a full-workflow success claim."
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43241928664",
+          "result": "Corrected1fff fixture:6pass/3fail/57assertions perOS, all5controls plus listener pass. Idle old-provider entry, caller cancellation releases ownership, and explicit interrupt fails to settle actual post-rebind move. Later tails not reached until final."
+        },
+        {
+          "kind": "full_final_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43245223397",
+          "result": "17pass/127assertions perOS:9transfer+8existinghost. Linux329/Windows302Omni spawns,9declared; exact reviewed54984 uploaded as24b8b1b07f749870d7fa4fb5f8f95f4fb8b14d3a. All recovery/new-holder/current-step/lease tails execute."
+        },
+        {
+          "kind": "integration_source_types_cold",
+          "result": "Root+Lamport SOURCE APPROVE54984. Four owncommits integrated throughfb0689ae60;4/4 source/test hashes exact, guide resolves sole textual conflict preserving L7 andL8 paragraphs exactly once. Maestro final type0. Root guards78rules346paths0gates0errors/one existing advisory; boundaries0new0stale, spawn0."
+        }
+      ],
+      "remaining": "Closed for process-local Session ownership. Caller cancellation detaches its waiter; explicit holder interruption can leave filesystem/SQL partial state recovered by exact retry. No clustered ownership or cross-store atomicity claim."
     },
     {
       "id": "L9",
@@ -2897,9 +2923,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 52,
+    "new_fixes_verified": 53,
     "already_fixed_verified": 1,
-    "remaining": 12,
+    "remaining": 11,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "90420b0721",
