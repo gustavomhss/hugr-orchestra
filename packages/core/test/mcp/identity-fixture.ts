@@ -283,19 +283,22 @@ export function remote(names: readonly string[], value: string, options: { oauth
           status: 401,
           headers: { "www-authenticate": `Bearer resource_metadata="${url.origin}/metadata"` },
         })
-      if (request.method === "GET")
+      if (request.method === "GET") {
+        const stream: { controller?: ReadableStreamDefaultController<Uint8Array> } = {}
         return new Response(
           new ReadableStream<Uint8Array>({
             start(controller) {
+              stream.controller = controller
               listeners.add(controller)
               listening.resolve()
             },
             cancel() {
-              listeners.clear()
+              if (stream.controller) listeners.delete(stream.controller)
             },
           }),
           { headers: { "content-type": "text/event-stream", "cache-control": "no-cache" } },
         )
+      }
       if (request.method === "DELETE") return new Response(null, { status: 204 })
       const body = await request.text()
       const message = JSON.parse(body)
