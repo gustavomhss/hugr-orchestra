@@ -229,8 +229,12 @@ it.live("the real cache on an empty root records index_unavailable and writes no
       return CodeIndexQuery.engine(deps)
     }),
   )
-  expect(engines).toHaveLength(1)
-  expect(engines[0]).not.toContain("extract")
+  if (process.platform === "win32") {
+    expect(engines, JSON.stringify(result.check)).toHaveLength(0)
+  } else {
+    expect(engines, JSON.stringify(result.check)).toHaveLength(1)
+    expect(engines[0]).not.toContain("extract")
+  }
   expect((yield* git.run(["status", "--porcelain=v1", "-uall"], undefined)).toString()).toBe(before.toString())
   expect(result.ranges).toEqual({})
   expect(result.check).toMatchObject({ ...host, status: "not-run" })

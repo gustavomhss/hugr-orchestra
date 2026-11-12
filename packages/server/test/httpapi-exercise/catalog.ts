@@ -92,6 +92,7 @@ export const catalogScenarios: Scenario[] = [
     .get("/api/model/default", "v2.model.default")
     .inProject({
       git: true,
+      trusted: true,
       config: {
         formatter: false,
         lsp: false,
