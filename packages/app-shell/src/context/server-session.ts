@@ -7,7 +7,7 @@ import type { PermissionRequest, PermissionV2Request, QuestionRequest } from "@/
 import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
 
 import type { ServerApi } from "@/utils/server"
-import { batch } from "solid-js"
+import { batch, getOwner, onCleanup } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
 import { rootSession } from "@/utils/session-route"
@@ -208,6 +208,9 @@ export function createServerSession(
   })
   const requests = new Map<string, Promise<AppSession>>()
   const inflight = new Map<string, Promise<void>>()
+  const trailing = new Map<string, { predecessor: Promise<void>; task: Promise<void> }>()
+  const statusReads = new Set<{ touched: Set<string>; removed: Set<string> }>()
+  const lifetime = { disposed: false }
   const inflightTodo = new Map<string, Promise<void>>()
   const optimistic = new Map<string, Map<string, OptimisticItem>>()
   const v2 = createV2SessionReducer()
@@ -221,6 +224,17 @@ export function createServerSession(
   const infoSeen = new Set<string>()
   const pinned = new Map<string, number>()
   const generations = new Map<string, object>()
+  if (getOwner()) onCleanup(() => {
+    lifetime.disposed = true
+    generations.clear()
+    inflight.clear()
+    trailing.clear()
+    statusReads.clear()
+  })
+  const statusChanged = (sessionID: string, removed = false) => statusReads.forEach((read) => {
+    read.touched.add(sessionID)
+    if (removed) read.removed.add(sessionID)
+  })
   const [meta, setMeta] = createStore({
     limit: {} as Record<string, number | undefined>,
     cursor: {} as Record<string, string | undefined>,
@@ -415,11 +429,13 @@ export function createServerSession(
   const evict = (sessionIDs: string[]) => {
     if (sessionIDs.length === 0) return
     sessionIDs.forEach((sessionID) => {
+      statusChanged(sessionID, true)
       dropped.add(sessionID)
       generations.delete(sessionID)
       clearOptimistic(sessionID)
       requests.delete(sessionID)
       inflight.delete(sessionID)
+      trailing.delete(sessionID)
       inflightTodo.delete(sessionID)
       messageLoads.delete(sessionID)
       v2.clear(sessionID)
@@ -706,12 +722,14 @@ export function createServerSession(
   }
 
   const sync = (sessionID: string, options?: { force?: boolean; messageLimit?: number }) => {
+    if (lifetime.disposed) return Promise.resolve()
     touch(sessionID)
-    return runInflight(inflight, sessionID, async () => {
-      const active = recovery.generation(sessionID)
+    const active = recovery.generation(sessionID)
+    const read = () => runInflight(inflight, sessionID, async () => {
       const cached = data.message[sessionID] !== undefined && meta.limit[sessionID] !== undefined
       if (cached && data.info[sessionID] && !options?.force) return
-      await Promise.all([
+      // A rejected metadata read must not release ownership while history is still on the wire.
+      const results = await Promise.allSettled([
         recovery.resolve(sessionID, options).catch((error: unknown) => {
           if (generations.get(sessionID) !== active && error instanceof DOMException && error.name === "AbortError") return
           throw error
@@ -720,12 +738,27 @@ export function createServerSession(
           ? Promise.resolve()
           : loadMessages(sessionID, options?.messageLimit ?? meta.limit[sessionID] ?? initialMessagePageSize),
       ])
+      const failure = results.find((result) => result.status === "rejected")
+      if (failure?.status === "rejected") throw failure.reason
     })
+    const pending = inflight.get(sessionID)
+    if (!options?.force || !pending) return read()
+    const queued = trailing.get(sessionID)
+    if (queued?.predecessor === pending) return queued.task
+    const next = () => lifetime.disposed || generations.get(sessionID) !== active ? undefined : read()
+    const task = pending.then(next, next).finally(() => {
+      if (trailing.get(sessionID)?.task === task) trailing.delete(sessionID)
+    })
+    trailing.set(sessionID, { predecessor: pending, task })
+    return task
   }
 
   const prefetch = async (sessionID: string, limit: number) => {
+    if (lifetime.disposed) return
     touch(sessionID)
+    const active = recovery.generation(sessionID)
     await inflight.get(sessionID)
+    if (lifetime.disposed || generations.get(sessionID) !== active) return
     if (
       Date.now() - (meta.at[sessionID] ?? 0) <= 15_000 &&
       (meta.complete[sessionID] || (data.message[sessionID]?.length ?? 0) >= limit)
@@ -915,6 +948,7 @@ export function createServerSession(
       })
     const usage = info && (sessionSelection(info, event) ?? sessionUsage(info, event))
     if (usage) remember(usage)
+    if (status || event.type === "session.retry.scheduled") statusChanged(sessionID)
     if (status) setData("session_status", sessionID, reconcile({ type: status }))
     if (event.type === "session.retry.scheduled")
       setData("session_status", sessionID, {
@@ -977,6 +1011,7 @@ export function createServerSession(
       case "session.next.deleted": {
         const decoded = decodeSessionLifecycleEvent(event)
         if (decoded?.type !== "deleted") return
+        statusChanged(decoded.sessionID, true)
         recovery.forget(decoded.sessionID)
         infoSeen.delete(decoded.sessionID)
         setData(
@@ -1057,6 +1092,11 @@ export function createServerSession(
   return {
     data,
     set: setData,
+    captureStatusChanges() {
+      const read = { touched: new Set<string>(), removed: new Set<string>() }
+      if (!lifetime.disposed) statusReads.add(read)
+      return { ...read, release: () => { statusReads.delete(read) } }
+    },
     get: (sessionID: string) => data.info[sessionID],
     peek: (sessionID: string) => data.info[sessionID],
     remember,
@@ -1121,6 +1161,7 @@ export function createServerSession(
       },
     },
     async todo(sessionID: string, request?: { force?: boolean }) {
+      if (lifetime.disposed) return
       touch(sessionID)
       if (data.todo[sessionID] !== undefined && !request?.force) return
       return runInflight(inflightTodo, sessionID, () => {
@@ -1138,6 +1179,7 @@ export function createServerSession(
         meta.limit[sessionID] !== undefined && !meta.complete[sessionID] && !!meta.cursor[sessionID],
       loading: (sessionID: string) => meta.loading[sessionID] ?? false,
       async loadMore(sessionID: string, count = historyMessagePageSize) {
+        if (lifetime.disposed) return
         touch(sessionID)
         if (meta.loading[sessionID] || meta.complete[sessionID] || !meta.cursor[sessionID]) return
         await loadMessages(sessionID, count, meta.cursor[sessionID], "prepend")

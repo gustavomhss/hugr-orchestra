@@ -28,6 +28,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     const catalog = createCatalog(v2)
     // True while the event stream is down and being retried. Embedded event sources have no stream to observe.
     const [offline, setOffline] = createSignal(false)
+    const [connectionEpoch, setConnectionEpoch] = createSignal(0)
 
     const handlers = new Set<(event: GlobalEvent) => void>()
     const emitter = {
@@ -63,6 +64,9 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     }
 
     const handleEvent = (event: GlobalEvent) => {
+      if (abort.signal.aborted) return
+      // Recovery owners may mount after this greeting, and all observers must see its new epoch.
+      if (event.payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
       queue.push(event)
       const elapsed = Date.now() - last
 
@@ -111,10 +115,16 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       })().catch(() => {})
     }
 
-    onMount(async () => {
-      if (props.events) {
-        const unsub = await props.events.subscribe(handleEvent)
-        onCleanup(unsub)
+    let unsubscribe: (() => void) | undefined
+    onMount(() => {
+      const source = props.events
+      if (source) {
+        void Promise.resolve().then(() => source.subscribe(handleEvent)).then((release) => {
+          if (abort.signal.aborted) return release()
+          unsubscribe = release
+        }, (error) => {
+          if (!abort.signal.aborted) console.error("tui event subscription failed", error)
+        })
         return
       }
       startSSE()
@@ -122,9 +132,12 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
 
     onCleanup(() => {
       abort.abort()
+      unsubscribe?.()
+      unsubscribe = undefined
       sse?.abort()
       if (timer) clearTimeout(timer)
       handlers.clear()
+      queue = []
     })
 
     // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
@@ -165,6 +178,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       actions,
       catalog,
       offline,
+      connectionEpoch,
       directory: props.directory,
       event: emitter,
       fetch: props.fetch ?? fetch,

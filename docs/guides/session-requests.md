@@ -23,6 +23,8 @@ The TUI loads pending permissions and questions when it connects and when a Sess
 
 If a history read fails temporarily, reopening the Session retries it and retains messages already received live.
 
+After an event connection reconnects, the app and TUI refresh loaded Session history and running status without reopening the view. A refresh waits for an earlier history read to finish, then reads a new snapshot. Status events received during a snapshot read take precedence over that snapshot; deleted Sessions stay removed.
+
 ## Reverting history
 
 Staging, clearing or committing a revert is refused while the Session has active work. API clients receive HTTP 409. Wait for the turn or operation to finish, or explicitly interrupt the Session, then retry.

@@ -104,8 +104,10 @@ export const loadActiveSessionsQuery = (
 export function seedActiveSessionStatuses(
   session: Pick<ServerSession, "data" | "set">,
   active: SessionActiveOutput | Record<string, SessionStatus>,
+  touched?: ReadonlySet<string>,
 ) {
   for (const sessionID of Object.keys(active)) {
+    if (touched?.has(sessionID)) continue
     if (session.data.session_status[sessionID] !== undefined) continue
     const status = active[sessionID]
     session.set("session_status", sessionID, status?.type === "running" ? { type: "busy" } : status)
@@ -147,6 +149,7 @@ export function createServerSyncContextInner(
   const sessionLoads = new Map<string, Promise<void>>()
   const sessionMeta = new Map<string, { limit: number }>()
   const lifetime = { disposed: false }
+  const recoveryEpoch = { current: 0 }
   onCleanup(() => { lifetime.disposed = true })
 
   const session = createServerSession(serverSDK.api.session, serverSDK.api.message, {
@@ -176,17 +179,31 @@ export function createServerSyncContextInner(
   const [configQuery, providerQuery, pathQuery] = useQueries(() => ({
     queries: [queryOptionsApi.globalConfig(), queryOptionsApi.providers(null), queryOptionsApi.path(null)],
   }))
-  const activeSessions = () =>
-    loadActiveSessionsQuery(serverSDK.scope, {
-      active: async () => {
-        const active = await serverSDK.api.session.active()
-        seedActiveSessionStatuses(session, active)
-        for (const sessionID of Object.keys(active)) {
-          void session.resolve(sessionID).catch(() => undefined)
-        }
+  const readActiveSessions = async (recover = false) => {
+    if (lifetime.disposed) return {}
+    const epoch = recoveryEpoch.current
+    const changes = session.captureStatusChanges()
+    try {
+      const active = await serverSDK.api.session.active()
+      if (lifetime.disposed || recoveryEpoch.current !== epoch) return active
+      if (recover) {
+        void resyncAfterReconnect(session, active, changes.touched, changes.removed)
         return active
-      },
-    })
+      }
+      seedActiveSessionStatuses(session, active, changes.touched)
+      for (const sessionID of Object.keys(active)) {
+        if (!changes.touched.has(sessionID)) void session.resolve(sessionID).catch(() => undefined)
+      }
+      return active
+    } catch (error) {
+      if (recover && !lifetime.disposed && recoveryEpoch.current === epoch)
+        void resyncAfterReconnect(session, undefined, changes.touched, changes.removed)
+      throw error
+    } finally {
+      changes.release()
+    }
+  }
+  const activeSessions = () => loadActiveSessionsQuery(serverSDK.scope, { active: () => readActiveSessions() })
   const activeSessionsQuery = useQuery(activeSessions)
 
   const [globalStore, setGlobalStore] = createStore<GlobalStore>({
@@ -505,13 +522,11 @@ export function createServerSyncContextInner(
         void activeSessionsQuery.refetch()
       const gap = eventType === "server.connected" && connectedBefore
       if (eventType === "server.connected") {
-        if (gap)
-          void queryClient
-            .fetchQuery({ ...activeSessions(), staleTime: 0 })
-            .then(
-              (active) => resyncAfterReconnect(session, active),
-              () => resyncAfterReconnect(session),
-            )
+        if (gap) {
+          recoveryEpoch.current++
+          // A query may still own a pre-gap request: recovery needs a new HTTP snapshot after this greeting.
+          void readActiveSessions(true).catch(() => undefined)
+        }
         connectedBefore = true
       }
       applyGlobalEvent({

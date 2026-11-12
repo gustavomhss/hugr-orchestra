@@ -26,7 +26,7 @@ import { useTuiStartup } from "./runtime"
 import { createSimpleContext } from "./helper"
 import { useExit } from "./exit"
 import { useArgs } from "./args"
-import { batch, onMount } from "solid-js"
+import { batch, createEffect, on, onCleanup, onMount } from "solid-js"
 import path from "path"
 import { useKV } from "./kv"
 import { usePermission } from "./permission"
@@ -131,6 +131,12 @@ export const {
 
     const fullSyncedSessions = new Set<string>()
     const syncingSessions = new Map<string, Promise<void>>()
+    const trailing = new Map<string, { predecessor: Promise<void>; task: Promise<void> }>()
+    const owners = new Map<string, object>()
+    const statusReads = new Set<Set<string>>()
+    const lifetime = { disposed: false }
+    const recoveryEpoch = () => Math.max(0, sdk.connectionEpoch() - 1)
+    const statusChanged = (sessionID: string) => statusReads.forEach((touched) => touched.add(sessionID))
     // Message IDs that live events changed while a Session's history was being fetched.
     const hydratingSessions = new Map<string, Set<string>>()
     const pendingHistoryChanges = new Map<string, Set<string>>()
@@ -140,6 +146,39 @@ export const {
     const autoReplies = new Set<string>()
     const settledRequests = new Set<string>()
     const requestLocations = new Map<string, { directory: string; workspaceID?: string }>()
+    onCleanup(() => {
+      lifetime.disposed = true
+      owners.clear()
+      syncingSessions.clear()
+      trailing.clear()
+      hydratingSessions.clear()
+      pendingHistoryChanges.clear()
+      fullSyncedSessions.clear()
+      history.clear()
+      statusReads.clear()
+    })
+
+    async function readStatuses() {
+      if (lifetime.disposed) return
+      const epoch = recoveryEpoch()
+      const touched = new Set<string>()
+      statusReads.add(touched)
+      try {
+        const active = await sdk.catalog.status()
+        if (lifetime.disposed || recoveryEpoch() !== epoch) return
+        batch(() => {
+          for (const sessionID of Object.keys(store.session_status)) {
+            if (!touched.has(sessionID) && !active[sessionID])
+              setStore("session_status", sessionID, reconcile({ type: "idle" }))
+          }
+          for (const sessionID of Object.keys(active)) {
+            if (!touched.has(sessionID)) setStore("session_status", sessionID, reconcile(active[sessionID]))
+          }
+        })
+      } finally {
+        statusReads.delete(touched)
+      }
+    }
 
     function acceptPermission(request: PermissionV2Request) {
       if (permission.mode !== "auto") return false
@@ -152,11 +191,12 @@ export const {
       return true
     }
 
-    async function hydrateRequests(location: { directory: string; workspaceID?: string }) {
+    async function hydrateRequests(location: { directory: string; workspaceID?: string }, current = () => !lifetime.disposed) {
       const touched = new Set<string>()
       requestHydrations.add(touched)
       const results = await Promise.allSettled([
         sdk.api.permissions.listRequests({ location }).then((result) => {
+          if (!current()) return
           const requests = result.data as PermissionV2Request[]
           for (const request of requests) requestLocations.set(request.sessionID, location)
           const sessions = new Set([
@@ -195,6 +235,7 @@ export const {
           }
         }),
         sdk.api.questions.listRequests({ location }).then((result) => {
+          if (!current()) return
           const requests = result.data as QuestionV2Request[]
           for (const request of requests) requestLocations.set(request.sessionID, location)
           const sessions = new Set([
@@ -237,10 +278,10 @@ export const {
       for (const result of results)
         if (result.status === "rejected") console.error("tui pending request hydration failed", result.reason)
     }
-    function hydrateSessionRequests(session: Session) {
+    function hydrateSessionRequests(session: Session, current?: () => boolean) {
       const root = session.parentID ?? session.id
       const locations = new Map([session, ...store.session.filter((candidate) => candidate.id === root || candidate.parentID === root)].map((candidate) => [JSON.stringify([candidate.location.directory, candidate.location.workspaceID]), candidate.location]))
-      return Promise.all([...locations.values()].map((location) => hydrateRequests(location)))
+      return Promise.all([...locations.values()].map((location) => hydrateRequests(location, current)))
     }
 
     // Sessions with a compaction in progress, between its started and ended events.
@@ -251,6 +292,8 @@ export const {
     }
 
     function refreshDiff(sessionID: string) {
+      const active = owners.get(sessionID)
+      if (!active || lifetime.disposed) return Promise.resolve()
       const session = store.session.find((item) => item.id === sessionID)
       const files = new Set(
         (history.get(sessionID) ?? []).flatMap((message) =>
@@ -259,7 +302,9 @@ export const {
       )
       return sdk.catalog
         .diff({ directory: session?.location.directory, workspace: session?.location.workspaceID }, files)
-        .then((diff) => setStore("session_diff", sessionID, diff))
+        .then((diff) => {
+          if (!lifetime.disposed && owners.get(sessionID) === active) setStore("session_diff", sessionID, diff)
+        })
     }
 
     function receiveHistory(event: Event) {
@@ -332,7 +377,8 @@ export const {
         .catch(() => undefined)
     }
 
-    event.subscribe((event, { workspace, directory }) => {
+    onCleanup(event.subscribe((event, { workspace, directory }) => {
+      if (lifetime.disposed) return
       receiveHistory(event)
       if (event.type === "permission.v2.asked" || event.type === "question.v2.asked") {
         requestLocations.set(event.data.sessionID, { directory, workspaceID: workspace })
@@ -442,6 +488,20 @@ export const {
           break
 
         case "session.next.deleted": {
+          statusChanged(event.data.sessionID)
+          owners.delete(event.data.sessionID)
+          syncingSessions.delete(event.data.sessionID)
+          trailing.delete(event.data.sessionID)
+          hydratingSessions.delete(event.data.sessionID)
+          pendingHistoryChanges.delete(event.data.sessionID)
+          fullSyncedSessions.delete(event.data.sessionID)
+          history.delete(event.data.sessionID)
+          setStore(produce((draft) => {
+            delete draft.message[event.data.sessionID]
+            delete draft.todo[event.data.sessionID]
+            delete draft.session_diff[event.data.sessionID]
+            delete draft.session_status[event.data.sessionID]
+          }))
           const result = search(store.session, event.data.sessionID, (s) => s.id)
           if (result.found) {
             setStore(
@@ -482,7 +542,28 @@ export const {
         }
 
         case "session.status": {
+          statusChanged(event.data.sessionID)
           setStore("session_status", event.data.sessionID, event.data.status)
+          break
+        }
+
+        case "session.next.step.started": {
+          statusChanged(event.data.sessionID)
+          setStore("session_status", event.data.sessionID, reconcile({ type: "busy" }))
+          break
+        }
+        case "session.next.step.failed":
+        case "session.next.step.ended": {
+          if (event.type === "session.next.step.ended" && event.data.finish === "tool-calls") break
+          statusChanged(event.data.sessionID)
+          setStore("session_status", event.data.sessionID, reconcile({ type: "idle" }))
+          break
+        }
+        case "session.next.retried": {
+          statusChanged(event.data.sessionID)
+          setStore("session_status", event.data.sessionID, reconcile({
+            type: "retry", attempt: event.data.attempt, message: event.data.error.message, next: event.data.timestamp,
+          }))
           break
         }
 
@@ -499,7 +580,7 @@ export const {
           break
         }
       }
-    })
+    }))
 
     const exit = useExit()
     const args = useArgs()
@@ -516,6 +597,7 @@ export const {
       const catalogPromise = sdk.catalog.bootstrap(location)
       await Promise.all([catalogPromise, projectPromise, ...(args.continue ? [sessionListPromise] : [])])
         .then(async () => {
+          if (lifetime.disposed) return
           const catalog = await catalogPromise
           const sessions = args.continue ? await sessionListPromise : undefined
           batch(() => {
@@ -530,6 +612,7 @@ export const {
           })
         })
         .then(() => {
+          if (lifetime.disposed) return
           if (store.status !== "complete") setStore("status", "partial")
           // non-blocking
           void Promise.all([
@@ -561,10 +644,12 @@ export const {
                 ),
               )
               .catch(() => undefined),
-            sdk.catalog.status().then((x) => setStore("session_status", reconcile(x))),
+            readStatuses(),
             sdk.catalog.vcs(location).then((x) => setStore("vcs", reconcile(x))),
           ]).then(() => {
-            setStore("status", "complete")
+            if (!lifetime.disposed) setStore("status", "complete")
+          }).catch((error) => {
+            if (!lifetime.disposed) console.error("tui bootstrap refresh failed", error)
           })
         })
         .catch(async (e) => {
@@ -619,71 +704,104 @@ export const {
           if (last?.type === "assistant" || last?.type === "shell") return last.time.completed ? "idle" : "working"
           return "idle"
         },
-        async sync(sessionID: string) {
-          if (fullSyncedSessions.has(sessionID)) {
+        async sync(sessionID: string, options?: { force?: boolean }) {
+          if (lifetime.disposed) return
+          const active = owners.get(sessionID) ?? {}
+          owners.set(sessionID, active)
+          const current = () => !lifetime.disposed && owners.get(sessionID) === active
+          const read = () => {
+            if (!current()) return Promise.resolve()
+            const pending = syncingSessions.get(sessionID)
+            if (pending) return pending
+            const touched = pendingHistoryChanges.get(sessionID) ?? new Set<string>()
+            pendingHistoryChanges.set(sessionID, touched)
+            hydratingSessions.set(sessionID, touched)
+            const task = (async () => {
+              // Rejection of one child does not settle the other HTTP operations this owner started.
+              const [session, messages, todo] = await Promise.allSettled([
+                sdk.catalog.session(sessionID),
+                sdk.catalog.messages(sessionID).catch((error) => {
+                  console.error("tui history hydration failed", error)
+                  return undefined
+                }),
+                sdk.catalog.todo(sessionID),
+              ])
+              if (session.status === "rejected") throw session.reason
+              if (messages.status === "rejected") throw messages.reason
+              if (todo.status === "rejected") throw todo.reason
+              if (!current()) return
+              await hydrateSessionRequests(session.value, current)
+              if (!current()) return
+              if (!messages.value) {
+                if (!history.has(sessionID)) history.set(sessionID, [])
+                projectHistory(sessionID)
+                return
+              }
+              const live = history.get(sessionID) ?? []
+              const fetched = messages.value
+              history.set(
+                sessionID,
+                [
+                  ...fetched.map((message) => live.find((item) => item.id === message.id && touched.has(item.id)) ?? message),
+                  ...live.filter((item) => !fetched.some((message) => message.id === item.id)),
+                ].toSorted((a, b) => b.time.created - a.time.created || b.id.localeCompare(a.id)),
+              )
+              setStore(produce((draft) => {
+                const match = search(draft.session, sessionID, (s) => s.id)
+                if (match.found) draft.session[match.index] = session.value
+                if (!match.found) draft.session.splice(match.index, 0, session.value)
+                draft.todo[sessionID] = todo.value
+              }))
+              projectHistory(sessionID)
+              fullSyncedSessions.add(sessionID)
+              if (pendingHistoryChanges.get(sessionID) === touched) pendingHistoryChanges.delete(sessionID)
+              await refreshDiff(sessionID)
+            })().catch((error) => {
+              if (current()) projectHistory(sessionID)
+              throw error
+            }).finally(() => {
+              if (syncingSessions.get(sessionID) === task) syncingSessions.delete(sessionID)
+              if (hydratingSessions.get(sessionID) === touched) hydratingSessions.delete(sessionID)
+            })
+            syncingSessions.set(sessionID, task)
+            return task
+          }
+          const pending = syncingSessions.get(sessionID)
+          if (pending) {
+            if (!options?.force) return pending
+            const queued = trailing.get(sessionID)
+            if (queued?.predecessor === pending) return queued.task
+            const task = pending.then(read, read).finally(() => {
+              if (trailing.get(sessionID)?.task === task) trailing.delete(sessionID)
+            })
+            trailing.set(sessionID, { predecessor: pending, task })
+            return task
+          }
+          if (fullSyncedSessions.has(sessionID) && !options?.force) {
             const session = result.session.get(sessionID)
-            if (session) await hydrateSessionRequests(session)
+            if (session) await hydrateSessionRequests(session, current)
             return
           }
-          const syncing = syncingSessions.get(sessionID)
-          if (syncing) return syncing
-          const touched = pendingHistoryChanges.get(sessionID) ?? new Set<string>()
-          pendingHistoryChanges.set(sessionID, touched)
-          hydratingSessions.set(sessionID, touched)
-          const task = (async () => {
-            const [session, messages, todo] = await Promise.all([
-              sdk.catalog.session(sessionID),
-              sdk.catalog.messages(sessionID).catch((error) => {
-                // Keep the existing partial view, but leave this history retryable.
-                console.error("tui history hydration failed", error)
-                return undefined
-              }),
-              sdk.catalog.todo(sessionID),
-            ])
-            await hydrateSessionRequests(session)
-            if (!messages) {
-              if (!history.has(sessionID)) history.set(sessionID, [])
-              projectHistory(sessionID)
-              return
-            }
-            const live = history.get(sessionID) ?? []
-            history.set(
-              sessionID,
-              [
-                ...messages.map(
-                  (message) => live.find((item) => item.id === message.id && touched.has(item.id)) ?? message,
-                ),
-                ...live.filter((item) => !messages.some((message) => message.id === item.id)),
-              ].toSorted((a, b) => b.time.created - a.time.created || b.id.localeCompare(a.id)),
-            )
-            setStore(
-              produce((draft) => {
-                const match = search(draft.session, sessionID, (s) => s.id)
-                if (match.found) draft.session[match.index] = session
-                if (!match.found) draft.session.splice(match.index, 0, session)
-                draft.todo[sessionID] = todo
-              }),
-            )
-            projectHistory(sessionID)
-            fullSyncedSessions.add(sessionID)
-            pendingHistoryChanges.delete(sessionID)
-            await refreshDiff(sessionID)
-          })()
-            .catch((error) => {
-              // Keep live events visible and leave this Session retryable after a failed history read.
-              projectHistory(sessionID)
-              throw error
-            })
-            .finally(() => {
-              syncingSessions.delete(sessionID)
-              hydratingSessions.delete(sessionID)
-            })
-          syncingSessions.set(sessionID, task)
-          return task
+          return read()
         },
       },
       bootstrap,
     }
+    createEffect(on(sdk.connectionEpoch, (epoch) => {
+      if (epoch <= 1 || lifetime.disposed) return
+      const sessions = new Set([
+        ...history.keys(), ...fullSyncedSessions, ...syncingSessions.keys(),
+        ...hydratingSessions.keys(), ...pendingHistoryChanges.keys(),
+      ])
+      void Promise.allSettled([
+        readStatuses(),
+        ...[...sessions].map((sessionID) => result.session.sync(sessionID, { force: true })),
+      ]).then((results) => {
+        if (lifetime.disposed) return
+        for (const result of results)
+          if (result.status === "rejected") console.error("tui reconnect recovery failed", result.reason)
+      })
+    }))
     return result
   },
 })
