@@ -153,3 +153,11 @@ test("reusing a collector Effect keeps independent query budgets", async () => {
   const results = await Effect.runPromise(Effect.all([effect, effect], { concurrency: "unbounded" }))
   expect(results.map((result) => [result.status, result.queries])).toEqual([["pass", 2], ["pass", 2]])
 })
+
+
+test("caller file names cannot collide with object prototypes", async () => {
+  const result = await Effect.runPromise(ReviewImpact.collect(input, (_, query) => Effect.succeed(query.op === "symbols" ? outline : response({ resolved: symbol, hits: [{ ...caller, range: { ...caller.range, path: "__proto__" } }] }))))
+  expect(result.status).toBe("pass")
+  expect(Object.keys(result.ranges)).toEqual(["__proto__"])
+  expect(Object.getOwnPropertyDescriptor(result.ranges, "__proto__")?.value).toEqual([{ start: 40, end: 44 }])
+})
