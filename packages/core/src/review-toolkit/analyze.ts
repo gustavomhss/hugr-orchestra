@@ -9,6 +9,7 @@ import { ResearchProcess } from "../research-toolkit/process"
 import { ProbeRun } from "../research-toolkit/probe/run"
 import { Probe } from "../research-toolkit/probe/types"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
+import type { ReviewImpactCache } from "./impact-cache"
 import { ReviewItem } from "./item"
 import { ReviewNoise } from "./noise"
 import { ReviewSarif } from "./sarif"
@@ -117,6 +118,15 @@ export const ReadDiagnostics = Context.Reference<typeof ReviewLspDiagnostics.rea
   { defaultValue: () => ReviewLspDiagnostics.read },
 )
 
+/** Host-only Deep graph observation; lazy loading keeps ordinary reviews on their existing startup path. */
+export const ReadImpact = Context.Reference<typeof ReviewImpactCache.read>(
+  "@orchestra/ReviewAnalyze/ReadImpact",
+  { defaultValue: () => (context) => Effect.gen(function* () {
+    const { ReviewImpactCache } = yield* Effect.promise(() => import("./impact-cache"))
+    return yield* ReviewImpactCache.read(context)
+  }) },
+)
+
 // Base results by pack, version, template and the base commit's tree: a rereview, or a second review over the same base,
 // reads them instead of scanning again.
 const baseCache = new Map<string, { results: ReadonlyArray<ReviewSarif.Raw>; uri: string }>()
@@ -142,6 +152,11 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
       : { worktree: input.worktree, revision: input.head })),
     base: yield* Effect.cached(copy({ worktree: input.worktree, revision: input.base })),
   }
+  const requested = catalog.route.tiers.find((entry) => entry.id === input.tier)
+  const readImpact = yield* ReadImpact
+  const impact = requested?.id === "deep" && requested.built && requested.runs === "deep"
+    ? yield* readImpact(context)
+    : undefined
   // No-build packs first: a repository gate may rewrite files in the head copy.
   const ordered = input.packs
     .map((packID) => ({ packID, pack: catalog.packs.find((entry) => entry.id === packID) }))
@@ -152,6 +167,7 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
     head: outcomes.flatMap((outcome) => outcome.head).filter(inScope),
     base: outcomes.flatMap((outcome) => outcome.base).filter(inScope),
     changed: input.changed,
+    ...(impact === undefined ? {} : { blastRadius: impact.ranges }),
     ...(input.addedSuppressions === undefined ? {} : { addedSuppressions: input.addedSuppressions }),
     tier: input.tier,
     catalog,
@@ -160,7 +176,7 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
   const debt = yield* context.write("debt.json", JSON.stringify(result.debt))
   const diagnostics = yield* languageServer(selected, context)
   return {
-    checks: [...outcomes.flatMap((outcome) => outcome.checks), ...diagnostics],
+    checks: [...outcomes.flatMap((outcome) => outcome.checks), ...diagnostics, ...(impact === undefined ? [] : [impact.check])],
     items: result.items,
     retained: { uri: retained, total: result.retained.total, unread: result.retained.unread },
     debt: { uri: debt, total: result.debt.length },
