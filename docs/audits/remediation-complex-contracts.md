@@ -342,3 +342,8 @@ Acceptance before implementation: real existing API baseline proving native team
 ### E6 DTO and engine clarification before acceptance GO
 
 Inventory rows require real Model.Info: include existing enabled models plus the explicit candidate when it exists but is disabled. An absent candidate appears ONLY in mandatory selection with original ref/unavailable/model-missing; never fabricate Model.Info. Evaluate engineOf using original/prospective Session.model, not an agent.model promoted to that field. Normalize the effective model's default variant for host validation and Turn only after deciding engine, preserving inheritance semantics. Elon cold contract review GO received after the structural-ready clarification; implementer factual DTO blocker resolved here. **GO Core/host acceptance tests only**, no production or wire/UI changes until independent suite review and baseline evidence.
+
+
+### E6 Core acceptance interface
+
+`ModelExecution.Service.describe({context,model?}) -> Effect<Response,ContextError>` returns the frozen response DTO without Location envelope. `ContextError` tag is `ModelExecution.ContextError`, reason is `session-missing|parent-missing|location-mismatch|agent-missing`, message generic/no secrets. Invalid context fails the entire query; absent explicit agent and omitted selection without agent info both fail agent-missing. Remove agent-missing from model Decision reasons; no fabricated engine or Model.Info for invalid context. Server later maps this typed context error, while transport failure blocks UI Send. Runner check/assert internal signature is frozen only in the implementation stage; acceptance need not invent it.
