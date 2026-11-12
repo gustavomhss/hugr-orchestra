@@ -194,7 +194,7 @@ export function make() {
         ) })
       })),
     ), dependencies: [...native.dependencies, FSUtil.node, Global.node, Location.node] }
-    const host: ExecutionHost.Interface = { id: "authority-acceptance", stateKey: "authorityAcceptance",
+    const host: ExecutionHost.Interface = { id: "claude-code", stateKey: "authorityAcceptance",
       describeModel: () => Effect.succeed({ status: "ready" }),
       stream: (turn) => Stream.unwrap(Effect.gen(function* () {
         state.provider.push(turn.session.id)
@@ -242,7 +242,7 @@ export function make() {
     const location = Context.get(context, Location.Service)
     const agents = Context.get(context, AgentV2.Service)
     yield* agents.transform((draft) => draft.update(AgentV2.defaultID, (agent) => {
-      agent.engine = host.id
+      agent.engine = "claude-code"
       agent.mode = "primary"
       agent.permissions = [{ action: "*", resource: "*", effect: "allow" }]
     }))
