@@ -197,9 +197,11 @@ validation seam; parent closure still requires W01–W04.
 
 ## WP-W2 — authenticated registered-root API
 
-Status: specified; not dispatched. Owner: lead integration.
+Status: W2-A anchors and executable acceptance reviewed/typechecked; hosted red pending.
+Owner: lead integration. W2-B remains undispatched.
 Depends on R0 persisted internal reads and W1 frozen Schema/collector anchor. Writes: activity Protocol,
-Server handler, focused HTTP test, generated Client through generator only.
+Server handler and internal activity-worktree service, focused HTTP tests/fixture,
+actual composition/regression wiring, generated Client through generator only.
 Acceptance owner: W05–W08. No arbitrary path input or project mutation.
 
 - **Axioms:** ProjectDirectories entries with strategy git_worktree are the only inventory source; authenticated clients select opaque reading IDs, never filesystem paths (R10/R20).
@@ -211,7 +213,8 @@ Acceptance owner: W05–W08. No arbitrary path input or project mutation.
 
 ### Task W2-A — HTTP acceptance and red evidence
 
-Owner: lead; state: pending frozen API anchor. Writes: focused activity HTTP tests.
+Owner: lead; state: unavailable API/service anchors and focused tests reviewed/typechecked.
+Writes: focused HTTP tests/fixture, unavailable anchors and generated Client.
 
 - **Axioms:** codec/auth behavior must be exercised through the real HTTP implementation; a mocked handler cannot prove it (R1/R19).
 - **DoD:** write named W05–W08 cases, review coverage, capture hosted `bun run test:ci server test/activity-http.test.ts` red baseline and preserve tested snapshot/expected failure.
@@ -223,7 +226,8 @@ Owner: lead; state: pending frozen API anchor. Writes: focused activity HTTP tes
 ### Task W2-B — routes, registry integration and generation
 
 Owner: lead integration; state: awaits W2-A and W1 contract.
-Writes: Protocol activity group, Server activity handler, generated Client outputs.
+Writes: Protocol activity group, Server activity handler/internal service and
+actual composition/regression wiring, generated Client outputs.
 
 - **Axioms:** registry failure is failure, not an empty successful response; a reading ID has no cleanup or process-control authority (R12/R20).
 - **DoD:** implement the frozen routes/registration recheck, run `bun run generate` in packages/client, affected package `bun typecheck`, hosted W05–W08 green, cold diff review and guardrails.

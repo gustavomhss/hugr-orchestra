@@ -9,8 +9,13 @@ cases, but W01 failed on the scalar revision identifier on both OS (13 pass/1
 fail Linux; 10 pass/3 skip/1 fail Windows). Exact source trees were fetched and
 verified. The metadata correction moves annotate before check, preserving the
 regex and unchanged acceptance suite; independent review approved it. Schema
-typecheck passed, Core typecheck and hosted rerun remain pending. W1 remains
-open. No Worktrees manual-read API/button is exposed yet. See
+and Core typechecks passed; the corrected hosted request is active at
+/tmp/activity-worktree-green-metadata-ci.log. W1 remains
+open. W2-A now has explicit unavailable API/service anchors, generated Client
+and real HTTP acceptance W05–W08: two clean coverage reviews and independent
+quality review approved; Protocol/Server/Client typechecks and guards passed.
+The W2 hosted red request remains pending and W2-B is not dispatched. No
+functional Worktrees manual-read API/button is exposed yet. See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
 worktree-first-validation.json for actual named outcomes.
 

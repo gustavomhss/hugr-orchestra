@@ -188,4 +188,16 @@ Correction task (within W1-B-state):
 - **Completeness criteria:** preserve the exact canonical decimal regex and wire type; the new request must execute W01's remaining validation assertions as well as W02–W04 and all disk regressions.
 - **Invariants:** no oracle weakening, suppression, new skip, fabricated result or API/UI change; no local product tests.
 - **Success criteria:** W01 passes its metadata and invalid/large revision assertions while previous passes stay green; W1 remains open until that proof exists.
-- **Quality standards:** the installed Effect SchemaAST.annotate source confirms annotations after checks attach to the final check; placing it first preserves scalar metadata. Independent cold review approved this exact correction. Schema typecheck passed; Core typecheck is running; hosted rerun remains pending.
+- **Quality standards:** the installed Effect SchemaAST.annotate source confirms annotations after checks attach to the final check; placing it first preserves scalar metadata. Independent cold review approved this exact correction. Schema and Core typechecks passed; the unchanged hosted rerun is active.
+
+## Corrected validation request
+
+The metadata correction is committed/pushed as 3bf327f497. Its unchanged
+four-file Linux/Windows request uploaded its snapshot and is waiting for runner
+capacity (16 queued runs were observed). No duplicate scope was requested.
+Log: /tmp/activity-worktree-green-metadata-ci.log; exit:
+/tmp/activity-worktree-green-metadata-ci.exit. Requested Core tree remains
+896ecacedc92ec83d74aa7ec82046ac0c24571cf; corrected Schema tree is
+c125baa2144abcb969e3a1440b35413a7ebdf185. Core and Schema typechecks passed;
+no local tests ran. W2-A preparations started after this snapshot was frozen,
+in disjoint Protocol/Server/Client files; they are not part of this W1 proof.

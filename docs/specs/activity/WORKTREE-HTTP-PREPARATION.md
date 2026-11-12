@@ -3,7 +3,9 @@
 Preparation during the W1 hosted baseline's runner-capacity wait. This document
 records the lead's integration decisions for review; it is not a frozen code
 anchor, dispatch authorization, runtime implementation or test evidence.
-Existing Protocol, Server and Client code is unchanged.
+At that preparation review, Protocol, Server and Client code was unchanged.
+The later unavailable code anchors and executable acceptance are recorded in
+WORKTREE-HTTP-EXECUTION.md; the runtime implementation is still pending.
 
 ## Scope and quality contract
 
