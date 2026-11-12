@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { id } from "@atlas/kernel"
-import { observeOwnershipInput, ownershipInput, ownershipInputFromObservation } from "../src/ownership-input.js"
+import { observeOwnershipInput, ownershipInput, ownershipInputFromObservation, ownershipInputMaxBytes } from "../src/ownership-input.js"
 import type { OwnershipObserveSeams } from "../src/ownership-input.js"
 import { makeFixRepo } from "./harness/fix-repo.js"
 
@@ -42,17 +42,41 @@ describe("G2.2 host observer", () => {
   it("HO-02 file ceiling applies to bytes actually read", () => {
     const f = makeFixRepo()
     cleanups.push(f.cleanup)
+    expect(ownershipInputMaxBytes).toBe(2 * 1024 * 1024)
+    const bytes = new Uint8Array(ownershipInputMaxBytes).fill(255)
+    bytes[bytes.length - 1] = 1
     writeFileSync(join(f.repoPath, "empty.txt"), new Uint8Array(0))
-    writeFileSync(join(f.repoPath, "exact.txt"), new Uint8Array(256000))
-    writeFileSync(join(f.repoPath, "over.txt"), new Uint8Array(256001))
+    writeFileSync(join(f.repoPath, "exact.txt"), bytes)
+    writeFileSync(join(f.repoPath, "over.txt"), new Uint8Array(ownershipInputMaxBytes + 1))
     expect(observeOwnershipInput(f.repoPath, "file:empty.txt")).toEqual({ kind: "present", version: fileVersion(new Uint8Array(0)) })
-    expect(observeOwnershipInput(f.repoPath, "file:exact.txt").kind).toBe("present")
+    const started = performance.now()
+    const exact = observeOwnershipInput(f.repoPath, "file:exact.txt")
+    // Actions captures this observation; maxRSS is the worker's cumulative peak, not a 2 MiB heap guarantee.
+    console.info("ownership input ceiling resource observation:", JSON.stringify({
+      ceiling_bytes: ownershipInputMaxBytes, elapsed_ms: performance.now() - started,
+      max_rss_kib: process.resourceUsage().maxRSS, memory_scope: "cumulative Vitest worker peak",
+    }))
+    expect(exact).toEqual({ kind: "present", version: fileVersion(bytes) })
+    bytes[bytes.length - 1] = 2
+    writeFileSync(join(f.repoPath, "exact.txt"), bytes)
+    expect(observeOwnershipInput(f.repoPath, "file:exact.txt")).not.toEqual(exact)
     expect(observeOwnershipInput(f.repoPath, "file:over.txt")).toEqual({ kind: "unavailable" })
+    expect(ownershipInput(f.repoPath, "file:over.txt")).toBeUndefined()
     const grown: OwnershipObserveSeams = {
       lstat: () => ({ size: 10, isFile: true, isDirectory: false, isSymbolicLink: false }),
-      readBytes: () => new Uint8Array(256001),
+      readBytes: () => new Uint8Array(ownershipInputMaxBytes + 1),
     }
     expect(observeOwnershipInput(f.repoPath, "file:src/util.ts", grown)).toEqual({ kind: "unavailable" })
+  })
+
+  it.each([256000, 256001, 1131057])("keeps the v1 identity over all %i bytes, including text encodings and binary", (length) => {
+    const f = makeFixRepo()
+    cleanups.push(f.cleanup)
+    const bytes = new Uint8Array(length).fill(255)
+    bytes.set(text("\ufeffCafe\u0301\r\n"))
+    bytes[bytes.length - 1] = 128
+    writeFileSync(join(f.repoPath, "source.bin"), bytes)
+    expect(observeOwnershipInput(f.repoPath, "file:source.bin")).toEqual({ kind: "present", version: fileVersion(bytes) })
   })
 
   it("HO-03 absent requires a verified negative lookup", () => {

@@ -1,0 +1,216 @@
+{
+  "agent_id": "/root/local_j2",
+  "purpose": "semantic-layer4-review",
+  "review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "production_execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "record": "Decisão canônica após as partes 1/4 a 4/4 e FECHAMENTO L4.",
+  "scope": "atlas-continuity-rag-genesis",
+  "layer": 4,
+  "verdict": "PASS",
+  "reason": "Os quatro corpos históricos satisfazem os 15 critérios e os seis casos da barra congelada. O suporte complementar resolve J2-E01 e J2-E02: confirma os contratos operacionais questionados e a gramática das queries. Não restou correção semântica obrigatória nem solicitação decisiva de evidência. Este aceite alcança somente os bytes identificados e a adequação do procedimento descrito aos pins históricos.",
+  "independence": {
+    "tools_used": false,
+    "filesystem_accessed": false,
+    "delegation_used": false,
+    "other_judge_consulted": false,
+    "authorship_performed": false,
+    "previous_REQUEST_EVIDENCE_preserved": true,
+    "lost_original_envelope_reconstructed": false
+  },
+  "normative_basis": {
+    "oracle": "oracles/l4.json",
+    "oracle_frozen_at": "2026-11-11T18:07:40.973111+00:00",
+    "oracle_sha256": "ff39d9608b31a0d74abac2c66482a5c8489547efd0147d4801043efb93c9e6ce",
+    "runtime_pin": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+    "driver_and_predecessor_pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+    "body_snapshot": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "case_status": "Regressões históricas nesta retomada, sem alegação de avaliação cega nova."
+  },
+  "identities": {
+    "bodies": [
+      {
+        "key": "S4:L4:entry",
+        "bytes": 4921,
+        "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+      },
+      {
+        "key": "S4:L4:ownership",
+        "bytes": 9489,
+        "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+      },
+      {
+        "key": "S4:L4:maintenance",
+        "bytes": 9478,
+        "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be"
+      },
+      {
+        "key": "S4:L4:operational",
+        "bytes": 9481,
+        "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7"
+      }
+    ],
+    "metadata": [
+      {
+        "path": "producers/l4a/artifacts.json",
+        "bytes": 15342,
+        "sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+        "received_scope": "Projeção decisiva recebida no pedido anterior; identidade reiterada na parte 1 canônica. Arquivo bruto integral não recebido."
+      },
+      {
+        "path": "producers/l4b/artifacts.json",
+        "bytes": 18836,
+        "sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+        "received_scope": "Projeção decisiva recebida no pedido anterior; identidade reiterada na parte 1 canônica. Arquivo bruto integral não recebido."
+      }
+    ],
+    "verification_scope": "Os quatro corpos foram recebidos integralmente. Bytes e hashes são identificadores transmitidos pelo courier, sem recálculo por este juiz e sem substituição da análise semântica."
+  },
+  "criteria": [
+    {
+      "id": "AC-01",
+      "verdict": "PASS",
+      "reason": "Os quatro needs cobrem entrada, contratos, manutenção e operação com ações úteis, localizadores, condições de parada e limites. A camada explica o que fazer e como interpretar resultados sem afirmar execução realizada."
+    },
+    {
+      "id": "AC-03",
+      "verdict": "PASS",
+      "reason": "CLI integral e helpers confirmam CWD, argv, index com scope/need exatos, seleção exclusiva key/need, maxBytes seguro positivo e histórico explícito. O driver confirma seis argumentos, target relativo ao corpus e códigos de saída descritos."
+    },
+    {
+      "id": "CC-2",
+      "verdict": "PASS",
+      "reason": "L1, L2 e L3 são fontes e build deps declaradas, usadas substantivamente nos procedimentos. A entrada alcança os onze intermediários e distingue navegação de build, inclusive para os outros needs L4."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "reason": "Ownership e maintenance explicam propósito, comportamento, contratos, decisões, impacto e manutenção nos quatro domínios. Fronteiras, origens e gerador são identificados, assim como consequências de violações e limites das evidências."
+    },
+    {
+      "id": "CC-7",
+      "verdict": "PASS",
+      "reason": "Os corpos preservam fronteiras externas e compatibilidade estrutural do driver. Código e usage sustentam scope, roots, ordem de keys, contrato, inputs e dependências; file: obrigatório, teto histórico e exclusões de caminhos estão explícitos."
+    },
+    {
+      "id": "QS-1",
+      "verdict": "PASS",
+      "reason": "Os trechos recebidos sustentam as afirmações decisivas sobre validação, driver, publicação, proteção e reúso. O suporte novo confirma os pontos antes pendentes. Não foi identificada divergência semântica material nos corpos julgados."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "reason": "As instruções oferecem consultas concretas, diagnóstico, pontos de manutenção e sequência de preparação, revisão, publicação e leitura. Limites e recusas são acionáveis; o usuário consegue interromper o percurso diante de insuficiência."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "reason": "A divisão por need, as seções e as tabelas organizam a complexidade. A entrada permite parada suficiente e aprofundamento seletivo. A camada não impõe leitura integral nem espalha requisitos essenciais somente em referências vagas."
+    },
+    {
+      "id": "QS-6",
+      "verdict": "PASS",
+      "reason": "A rota contém 12 reads e soma 60752 bytes, abaixo de 62000. Entry de 4921 cabe em maxBytes 5000 e no raso de 6000; os outros corpos ficam abaixo de 9500. UNKNOWN e a distinção entre bytes, IO, tokens e dinheiro são preservados."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "reason": "Present divergente, ausência corroborada e indisponibilidade permanecem distintos. A parada da propagação é identificada como inferência contratual condicionada. Proteções, trace revisionId/questionId, seq e demais gaps do host continuam explícitos."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "reason": "Consumo corrente omite historical; passado exige historical:true e não restaura validade corrente. Pins e releases permanecem fixados, NOT_RUN é histórico e as declarações de CI ficam vinculadas ao candidato e ao run identificados."
+    },
+    {
+      "id": "GO-I4",
+      "verdict": "PASS",
+      "reason": "Reúso exige resultado completo, inputs, contrato e dependências válidos. Prosa igual não basta. Receipts e bindings afetados são preservados ou renovados; run/evaluate não são apresentados como autoria ou julgamentos novos."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "reason": "Indisponibilidade e drift não viram ausência ou impacto nulo. CAS e candidato duráveis são separados de ativação. O driver confirma revalidação, HOLD, activation_attempted, emissão positiva e readback corrente antes de sucesso operacional."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "reason": "Isolamento, política, ator, provenance, ratificador e binding permanecem portas distintas. IDs e variáveis locais não autenticam pessoas. Os textos recusam autoridade de fixture, contorno por CAS e transferência automática de aprovação."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "reason": "Supported, hashes, parsing, tipos e CI não substituem completude semântica, binding ou operação. O recibo projetado sustenta as contagens no alcance declarado e conserva NOT_RUN; relatos de aceite não viram prova de nova execução."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "L4-entry",
+      "verdict": "PASS",
+      "reason": "Scope/root e queries correspondem à CLI. A leitura inicial é rasa, a rota profunda é opcional e cabe no orçamento informado. O consumidor pode parar com sustentação e não é encaminhado a Markdown ou CAS bruto."
+    },
+    {
+      "id": "L4-ownership",
+      "verdict": "PASS",
+      "reason": "Contratos, ações, decisões e impactos abrangem Atlas, Continuity, RAG e Genesis. A lista de ferramentas protegidas, recall, cauda, erros, trace e gaps do host permanecem explícitos, com limites de mudança e autoridade."
+    },
+    {
+      "id": "L4-maintenance",
+      "verdict": "PASS",
+      "reason": "Fixa release, inputs e pins; identifica origem e gerador; separa affected de trabalho preciso; preserva revisão e juízes pertinentes. Prepare, binding, publicação e leitura têm identidades e evidências distintas."
+    },
+    {
+      "id": "L4-operational",
+      "verdict": "PASS",
+      "reason": "O suporte literal confirma CWD/argv, caminhos, limite histórico de inputs, reconstrução privada e publicação com readback. HOLD, histórico explícito, retomada, rollback compatível e gates de autoridade estão corretamente delimitados."
+    },
+    {
+      "id": "L4-economy",
+      "verdict": "PASS",
+      "reason": "Respeita 2 index, 12 read, 62000 bytes totais, raso 6000 e maxBytes até 18000. Recontagem é exigida para substituições. Não infere telemetria, custo financeiro ou economia universal a partir de reúso."
+    },
+    {
+      "id": "L4-cumulative",
+      "verdict": "PASS",
+      "reason": "Os onze intermediários são alcançáveis, e predecessores aceitos alimentam contratos e procedimentos reais. Autoridade, pins e gaps são preservados. Recibos e testes sustentam apenas o alcance documentado."
+    }
+  ],
+  "primary_corrections": [
+    {
+      "id": "J2-E01",
+      "previous_id": "E-01",
+      "type": "Complementação de evidência; sem edição de corpo.",
+      "status": "RESOLVED",
+      "expected": "Suporte literal do driver para argumentos, identidades, caminhos, limite de inputs e condições de publicação ou falha.",
+      "evidence": [
+        "maintenance-operation.mjs@c4a299, linhas 1–118: seis argumentos, digest de manifesto, target absoluto ou relativo ao corpus, captura com 256000 bytes, versão observada e igualdade do driver executado.",
+        "genesis-native-format.ts e genesis-native-io.ts@1b5a480: rejeição de caminhos reservados e symlinks; leitura limitada com verificações anteriores e posteriores.",
+        "maintenance-operation.mjs@c4a299, linhas 194–317: reconstrução, validação de entries, baseline publicado, check/emit, activation_attempted, leitor reaberto, readback e exit codes."
+      ],
+      "resolution": "Os trechos confirmam as afirmações questionadas. O driver identifica baseline por manifesto kernel/CAS, não por candidate_id; resolve target pelo corpus e exige emissão positiva e correspondência do readback para exit 0 de publicação."
+    },
+    {
+      "id": "J2-E02",
+      "previous_id": "E-02",
+      "type": "Complementação de evidência; sem edição de corpo.",
+      "status": "RESOLVED",
+      "expected": "Definições dos helpers e preparação da query para verificar campos exatos e texto NFC não vazio.",
+      "evidence": [
+        "genesis-native.ts@1b5a480 recebido integralmente, SHA256 18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce.",
+        "genesis-native-format.ts@1b5a480, linhas 24–57: nativeRecord, nativeKeys e nativeText.",
+        "validateNativeReadQuery integral recebido anteriormente."
+      ],
+      "resolution": "NativeKeys exige exatamente as propriedades esperadas; nativeText rejeita texto vazio e não NFC. A CLI valida scope antes do ramo index. A gramática declarada está sustentada."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "limits": [
+    "PASS semântico dos quatro corpos históricos identificados; não é runtime binding, autorização de publicação, execução, consumo Atlas ou DoD.",
+    "Os aceites históricos de L1/L2/L3 foram tratados como contexto dos predecessores, sem herdar identidade, memória ou aprovação de juízes antigos.",
+    "O driver avaliado é o de c4a299, com teto de 256000 bytes. O aceite não afirma que todo input possível caiba nesse teto e não alcança a alteração para 2 MiB em desenvolvimento.",
+    "A projeção do recibo de CI não foi tratada como arquivo bruto integral. Seu sucesso e suas contagens não demonstram operação do driver com o pacote da campanha.",
+    "As leituras internas de validação e readback do driver não foram apresentadas como execução da rota pública de consumo nem como prova de seu orçamento efetivamente gasto.",
+    "Nenhuma execução nova, autenticação global, atomicidade universal, recuperação universal ou custo não exposto foi inferido.",
+    "A decisão anterior REQUEST_EVIDENCE permanece no histórico. Esta decisão nova encerra suas pendências com o suporte recebido, sem reconstruir o envelope original perdido."
+  ]
+}

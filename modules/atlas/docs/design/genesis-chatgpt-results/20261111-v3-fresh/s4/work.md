@@ -1,3 +1,21 @@
+# ROOT continuation — runtime R4 candidate and canonical L4 review
+
+Execution 0a451b91-c4e7-4573-9958-fed60817f299 (local UUID); remote writer ROOT under the owner's explicit takeover. State IN_PROGRESS. Historical sections below remain unchanged and do not describe the active writer or current judge handles.
+
+Observed branch head: 6f643bc05245ebe912d52cbdd8347ce1e5b0046e. Source baseline and protocol remain 1cde2ff7a71bcf7aecb5d030917b577165135d38 and ee2521a5b966bd505cc95bd1c733e09e12f33531. The 2220-path population is unchanged.
+
+## Active queue and boundaries
+
+- L1 (7), L2 (3), L3 (1): historical accepted bytes and decisions retained. L4: four original bodies resent in full canonical requests to independent persistent /root/local_j1 and /root/local_j2; requested literal CLI/driver/CI support included. Final new decisions pending at this checkpoint. The first resumed request envelopes were only partially recoverable after compaction; prior-partial records that gap, and canonical requests do not pretend to reconstruct lost envelopes.
+- R4 shared large-source correction: six authored files plus one officially generated bundle. Shared file limit is 2097152 bytes; full kernel source identity format is unchanged; overflow is refused, never sliced. Generic transport limit and driver's separate self-read limit are unchanged. New source/driver bytes require new candidate and binding decisions.
+- Official boundary generate and check:generated both exit0 with Bun1.3.14. Seventeen of eighteen outputs remain exact; surface.js is the only generated delta. Local product tests were not run. Full package typecheck and scoped product tests remain pending Actions; no previous CI result transfers to this candidate.
+- Runtime release r3 remains historical, with its own pins and limited demonstrated capabilities. This source checkpoint is not release r4 and does not authorize using old bindings against changed code.
+- After CI: independently review the delta and exact gate; update impacted knowledge for the selected runtime; complete all15-artifact package; prepare exact candidate; obtain separate runtime binding; isolated governed publish/index/read; independent consumers; own maintenance; local final seal. All remain open.
+
+The frozen R4 oracle and driver addendum precede production. Producer /root/runtime_large_inputs had no access to reserved cases. Its request/analysis/source hashes and generation receipts are under producers/runtime-r4. Original command outputs are retained in this execution's work area; structured receipts identify their hashes. Tokens, physical attempts and billing are UNKNOWN. No dev/main merge, production activation, paid model call or force update is part of this checkpoint.
+
+## Preserved historical work
+
 # S4 — Atlas, continuidade, RAG e Genesis
 
 Execution: a2095d5a-1464-4c38-a222-6376974fc9c9 (local UUID, not a host conversation ID).

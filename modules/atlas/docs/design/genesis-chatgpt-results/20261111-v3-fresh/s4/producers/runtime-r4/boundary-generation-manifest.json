@@ -1,0 +1,265 @@
+{
+  "schema": "runtime-large-inputs-generated-boundary/v1",
+  "generator": "modules/atlas/boundary/script/build.ts",
+  "generator_sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c",
+  "bun": "1.3.14",
+  "outputs": [
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.d.ts",
+      "base": {
+        "byte_length": 4454,
+        "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+        "git_blob_sha": "dfe902e6ac336f1b2aac92ebf5015677b4c07f92"
+      },
+      "candidate": {
+        "byte_length": 4454,
+        "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+        "git_blob_sha": "dfe902e6ac336f1b2aac92ebf5015677b4c07f92"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.js",
+      "base": {
+        "byte_length": 32016,
+        "sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892",
+        "git_blob_sha": "4f75bdd2fbc7a8ed3dbac123977c04a17d9cbaa3"
+      },
+      "candidate": {
+        "byte_length": 32016,
+        "sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892",
+        "git_blob_sha": "4f75bdd2fbc7a8ed3dbac123977c04a17d9cbaa3"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.d.ts",
+      "base": {
+        "byte_length": 2463,
+        "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+        "git_blob_sha": "3ca74ee7da9b2e1f4c5498130249e32f4aaeb454"
+      },
+      "candidate": {
+        "byte_length": 2463,
+        "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+        "git_blob_sha": "3ca74ee7da9b2e1f4c5498130249e32f4aaeb454"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.js",
+      "base": {
+        "byte_length": 22119,
+        "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+        "git_blob_sha": "d4bb55c44a60d2df94861291694b66344a7a6cba"
+      },
+      "candidate": {
+        "byte_length": 22119,
+        "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+        "git_blob_sha": "d4bb55c44a60d2df94861291694b66344a7a6cba"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.d.ts",
+      "base": {
+        "byte_length": 14800,
+        "sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6",
+        "git_blob_sha": "4b186c87df56eaecd9ae18bcb0a3af55046bfc07"
+      },
+      "candidate": {
+        "byte_length": 14800,
+        "sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6",
+        "git_blob_sha": "4b186c87df56eaecd9ae18bcb0a3af55046bfc07"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.js",
+      "base": {
+        "byte_length": 22099,
+        "sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941",
+        "git_blob_sha": "f93908cc6f224b8e598d8e4986b13f2fe58ff526"
+      },
+      "candidate": {
+        "byte_length": 22099,
+        "sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941",
+        "git_blob_sha": "f93908cc6f224b8e598d8e4986b13f2fe58ff526"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.d.ts",
+      "base": {
+        "byte_length": 968,
+        "sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0",
+        "git_blob_sha": "501415204750e0ceae57587987f0e5f6e8dcf1c5"
+      },
+      "candidate": {
+        "byte_length": 968,
+        "sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0",
+        "git_blob_sha": "501415204750e0ceae57587987f0e5f6e8dcf1c5"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "base": {
+        "byte_length": 397156,
+        "sha256": "baaf70640cd293a0dd1d299348bbbb1093c91c6bfd383439336b1d105bf8c010",
+        "git_blob_sha": "dd6a874d93f2e44815e595c94cc83738e35472c1"
+      },
+      "candidate": {
+        "byte_length": 397156,
+        "sha256": "baaf70640cd293a0dd1d299348bbbb1093c91c6bfd383439336b1d105bf8c010",
+        "git_blob_sha": "dd6a874d93f2e44815e595c94cc83738e35472c1"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.d.ts",
+      "base": {
+        "byte_length": 9534,
+        "sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7",
+        "git_blob_sha": "a158e98765ffbcd8d98eccdccd75be18e92393e1"
+      },
+      "candidate": {
+        "byte_length": 9534,
+        "sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7",
+        "git_blob_sha": "a158e98765ffbcd8d98eccdccd75be18e92393e1"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.js",
+      "base": {
+        "byte_length": 47046,
+        "sha256": "40d34b651f88affdde4ba592c00ae31ef10b93ae92cba6b66d875f3021575dc1",
+        "git_blob_sha": "9fd49ff606df9054791aa77e8d7f3e1fab375654"
+      },
+      "candidate": {
+        "byte_length": 47046,
+        "sha256": "40d34b651f88affdde4ba592c00ae31ef10b93ae92cba6b66d875f3021575dc1",
+        "git_blob_sha": "9fd49ff606df9054791aa77e8d7f3e1fab375654"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.d.ts",
+      "base": {
+        "byte_length": 24443,
+        "sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c",
+        "git_blob_sha": "17347ce410128011937098b39dfe5962d3826adc"
+      },
+      "candidate": {
+        "byte_length": 24443,
+        "sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c",
+        "git_blob_sha": "17347ce410128011937098b39dfe5962d3826adc"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.js",
+      "base": {
+        "byte_length": 49122,
+        "sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59",
+        "git_blob_sha": "7304ad8c5426cd59be53e76a90dc4adaa0351e12"
+      },
+      "candidate": {
+        "byte_length": 49122,
+        "sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59",
+        "git_blob_sha": "7304ad8c5426cd59be53e76a90dc4adaa0351e12"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.d.ts",
+      "base": {
+        "byte_length": 7449,
+        "sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30",
+        "git_blob_sha": "110a7aa147b4b82e3c53e7f889efcf713a8ec62d"
+      },
+      "candidate": {
+        "byte_length": 7449,
+        "sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30",
+        "git_blob_sha": "110a7aa147b4b82e3c53e7f889efcf713a8ec62d"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.js",
+      "base": {
+        "byte_length": 27684,
+        "sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d",
+        "git_blob_sha": "c2eb7566ca6982282adfaf571fc0922b1bf49e0e"
+      },
+      "candidate": {
+        "byte_length": 27684,
+        "sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d",
+        "git_blob_sha": "c2eb7566ca6982282adfaf571fc0922b1bf49e0e"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.d.ts",
+      "base": {
+        "byte_length": 9784,
+        "sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c",
+        "git_blob_sha": "ed16198d5453fbfe0da3ac81bb98e501b3159140"
+      },
+      "candidate": {
+        "byte_length": 9784,
+        "sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c",
+        "git_blob_sha": "ed16198d5453fbfe0da3ac81bb98e501b3159140"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.js",
+      "base": {
+        "byte_length": 8035,
+        "sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba",
+        "git_blob_sha": "b6163d9661ef305e2c744388d368ee238b43235b"
+      },
+      "candidate": {
+        "byte_length": 8035,
+        "sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba",
+        "git_blob_sha": "b6163d9661ef305e2c744388d368ee238b43235b"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "base": {
+        "byte_length": 21840,
+        "sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31",
+        "git_blob_sha": "7614ff6a04ff82b76ed68836a843d7232fa8cd43"
+      },
+      "candidate": {
+        "byte_length": 21840,
+        "sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31",
+        "git_blob_sha": "7614ff6a04ff82b76ed68836a843d7232fa8cd43"
+      },
+      "changed": false
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "base": {
+        "byte_length": 562296,
+        "sha256": "ca8a653fe7fd5dd0d157a272c481fd18dc6b7def97716d2a2d551416c366e204",
+        "git_blob_sha": "7fa268ec81d2412e73fb63ea436181624eaa4a0b"
+      },
+      "candidate": {
+        "byte_length": 562363,
+        "sha256": "fc3056dc584746afb3b1fc9f5904a360d74b543a0c7b8101e0c2aa766918a696",
+        "git_blob_sha": "648e3ca5cd4fe21e43c6cb94c94a3e369c82e0ae"
+      },
+      "changed": true
+    }
+  ],
+  "generated_files_edited_manually": false,
+  "source_delta_manifest": "evidence/candidate-manifest.json",
+  "product_tests_executed": false,
+  "check_generated": "PASS",
+  "check_command_report": "evidence/runtime-build-commands/05-boundary-check.json"
+}

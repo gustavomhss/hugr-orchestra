@@ -6,6 +6,9 @@ import { isContainedIn } from "./containment.js"
 import { runGitStrict } from "./run-git.js"
 import type { RunGitStrictResult } from "./run-git.js"
 
+// File bytes expand into a number array and canonical JSON before hashing; keep this below the transport body cap.
+export const ownershipInputMaxBytes = 2 * 1024 * 1024
+
 export type OwnershipInputObservation = KnowledgeOwnershipInputObservation
 
 /** Narrow FS/Git injection seams for deterministic error tests (contract §3.2: transient FS/Git
@@ -167,9 +170,9 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
         for (;;) {
           const n = readSync(fd, probe, 0, probe.length, null)
           if (n === 0) break
-          chunks.push(Buffer.from(probe.subarray(0, n)))
           total += n
-          if (total > 256000) return { kind: "unavailable" }
+          if (total > ownershipInputMaxBytes) return { kind: "unavailable" }
+          chunks.push(Buffer.from(probe.subarray(0, n)))
         }
         bytes = Buffer.concat(chunks, total)
       } finally { closeSync(fd) }
@@ -178,7 +181,7 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
   let after: ReturnType<typeof lstatSync>
   try { after = lstatSync(requested) } catch { return { kind: "unavailable" } }
   if (after.ino !== before.ino || after.size !== before.size) return { kind: "unavailable" }
-  if (bytes.length > 256000) return { kind: "unavailable" }
+  if (bytes.length > ownershipInputMaxBytes) return { kind: "unavailable" }
   return { kind: "present", version: String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })) }
 }
 

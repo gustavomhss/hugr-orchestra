@@ -1,0 +1,10 @@
+{
+  "logs": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands",
+  "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+  "id": "01-bun-version",
+  "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate",
+  "command": [
+    "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "--version"
+  ]
+}

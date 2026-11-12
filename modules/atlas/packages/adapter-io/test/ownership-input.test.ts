@@ -1,7 +1,7 @@
 import { symlinkSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
-import { ownershipInput } from "../src/ownership-input.js"
+import { ownershipInput, ownershipInputMaxBytes } from "../src/ownership-input.js"
 import { makeFixRepo } from "./harness/fix-repo.js"
 
 const cleanups: (() => void)[] = []
@@ -35,7 +35,7 @@ describe("host-bound ownership input oracle", () => {
     expect(ownershipInput(f.repoPath, "recipe:pretend-version")).toBeUndefined()
     expect(ownershipInput(f.repoPath, "file:../outside")).toBeUndefined()
     expect(ownershipInput(f.repoPath, "file:.git/config")).toBeUndefined()
-    writeFileSync(join(f.repoPath, "oversized.txt"), new Uint8Array(256001))
+    writeFileSync(join(f.repoPath, "oversized.txt"), new Uint8Array(ownershipInputMaxBytes + 1))
     expect(ownershipInput(f.repoPath, "file:oversized.txt")).toBeUndefined()
     symlinkSync(join(f.repoPath, "src", "util.ts"), join(f.repoPath, "alias.ts"))
     expect(ownershipInput(f.repoPath, "file:alias.ts")).toBeUndefined()

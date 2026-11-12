@@ -1,0 +1,391 @@
+{
+  "agent_id": "/root/local_j2",
+  "purpose": "semantic-layer4-review",
+  "production_execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "scope": "atlas-continuity-rag-genesis",
+  "layer": 4,
+  "verdict": "REQUEST_EVIDENCE",
+  "summary": "Os quatro corpos cobrem os seis casos e preservam as distinções centrais entre sustentação, aceite semântico, binding, publicação e consumo. Não identifiquei contradição semântica demonstrada que justifique exigir uma reescrita neste momento. Restam duas solicitações delimitadas de suporte literal: o contrato operacional do driver e os helpers que completam a validação declarada das queries. Os excertos recebidos sustentam partes desses contratos, mas não todas as afirmações precisas dos corpos; não as aprovo por inferência.",
+  "review_limits": {
+    "included": [
+      "Semântica dos quatro corpos históricos identificados abaixo.",
+      "Completude e utilidade dos procedimentos descritos.",
+      "Fidelidade ao contexto normativo, aos metadados projetados e aos trechos de suporte recebidos.",
+      "Adequação aos 15 critérios e aos seis casos da barra congelada."
+    ],
+    "excluded": [
+      "Runtime binding.",
+      "Execução do driver ou da CLI.",
+      "Publicação ou autorização de publicação.",
+      "Consumo Atlas efetivamente realizado.",
+      "DoD da execução atual.",
+      "Reavaliação dos aceites históricos dos predecessores.",
+      "Transferência de aprovação para correções ou versões posteriores."
+    ],
+    "identity_handling": "Bytes, hashes e Git blobs abaixo são os identificadores transmitidos pelo courier. Não os recalculei e não os trato como prova de semântica.",
+    "independence": "Revisão nova e independente. Não usei ferramentas, filesystem, delegação ou consulta a outro juiz. Os aceites históricos são contexto dos predecessores, não minha decisão sobre L4."
+  },
+  "normative_basis": {
+    "repository": "gustavomhss/hugr-orchestra",
+    "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "protocol": "parallel-v3-fresh",
+    "results": "20261111-v3-fresh",
+    "body_snapshot": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "oracle": "oracles/l4.json",
+    "oracle_frozen_at": "2026-11-11T18:07:40.973111+00:00",
+    "oracle_sha256": "ff39d9608b31a0d74abac2c66482a5c8489547efd0147d4801043efb93c9e6ce",
+    "case_status": "Casos históricos usados como regressões nesta retomada; não constituem avaliação cega nova."
+  },
+  "identities": {
+    "bodies": [
+      {
+        "key": "S4:L4:entry",
+        "filename": "entry.md",
+        "utf8_bytes": 4921,
+        "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8",
+        "git_blob": "db69d91ef02269bf23f81ab0b9003bfb43c82755"
+      },
+      {
+        "key": "S4:L4:ownership",
+        "filename": "ownership.md",
+        "utf8_bytes": 9489,
+        "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+        "git_blob": "20030c152a02fdffe188cb95d0945d29624db538"
+      },
+      {
+        "key": "S4:L4:maintenance",
+        "filename": "maintenance.md",
+        "utf8_bytes": 9478,
+        "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be",
+        "git_blob": "ee4335c43858909f08ca109a7f77d1a3f300c862"
+      },
+      {
+        "key": "S4:L4:operational",
+        "filename": "operational.md",
+        "utf8_bytes": 9481,
+        "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7",
+        "git_blob": "8fa331d005ee9593fed034b94ec1a3c698f308d5"
+      }
+    ],
+    "metadata": [
+      {
+        "path": "producers/l4a/artifacts.json",
+        "bytes": 15342,
+        "sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+        "covers": [
+          "S4:L4:entry",
+          "S4:L4:ownership"
+        ]
+      },
+      {
+        "path": "producers/l4b/artifacts.json",
+        "bytes": 18836,
+        "sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+        "covers": [
+          "S4:L4:maintenance",
+          "S4:L4:operational"
+        ]
+      }
+    ]
+  },
+  "criteria": [
+    {
+      "id": "AC-01",
+      "verdict": "PASS",
+      "evidence": [
+        "entry.md: Comece pela porta real; Orçamento público e rota profunda opcional; Pare diante de limite ou evidência insuficiente.",
+        "ownership.md: contratos, fronteiras, implementação, propagação e recuperação.",
+        "maintenance.md: fonte governante, produção, revisão, reconstrução, ativação e classificação da evidência.",
+        "operational.md: ambiente, queries, saídas, driver, drift e histórico."
+      ],
+      "reason": "Há cobertura útil das necessidades de entrada, entendimento de ownership, manutenção e operação. A cobertura temática está presente; a confirmação de alguns contratos operacionais precisos permanece separadamente pendente em AC-03, CC-7, QS-1 e GO-I5."
+    },
+    {
+      "id": "AC-03",
+      "verdict": "REQUEST_EVIDENCE",
+      "evidence": [
+        "entry.md e operational.md fornecem scope exato, queries JSON, CWD e argv da CLI.",
+        "CLI-1 e CLI-2 confirmam a assinatura nativa, a resolução de control pelo CWD e o encaminhamento index/read.",
+        "validateNativeReadQuery confirma seleção exclusiva key/need, maxBytes seguro positivo, campos permitidos e historical exclusivamente true.",
+        "usage.md, linhas 15–20, confirma seis argumentos posicionais do driver."
+      ],
+      "reason": "As rotas principais estão bem especificadas e possuem suporte literal. Faltam os trechos que confirmam a resolução do target pelo corpus, os códigos e as condições de sucesso do driver, além dos helpers que sustentam toda a gramática declarada. Ver E-01 e E-02. Nenhuma execução é solicitada."
+    },
+    {
+      "id": "CC-2",
+      "verdict": "PASS",
+      "evidence": [
+        "Metadados projetados declaram build deps same_package em L1, L2 e L3 para os quatro corpos.",
+        "entry.md apresenta as onze keys intermediárias com propósito e seleção de corpo ou H2.",
+        "entry.md distingue outros L4 de fontes e dependências de build.",
+        "maintenance.md exige preservar pins herdados, inclusive o R2 da L2."
+      ],
+      "reason": "A cumulação não se limita a citar nomes: os predecessores orientam os procedimentos e os vínculos declarados. Os onze intermediários são alcançáveis pela rota apresentada, e navegação não é convertida em dependência semântica."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "evidence": [
+        "ownership.md: Delimite a mudança antes de agir; Atlas separa identidade, autoridade e atualidade; Host e Session têm portas diferentes.",
+        "ownership.md: Continuity reduz o pedido e conserva recuperação; RAG separa fonte, chunk, revisão e prova.",
+        "maintenance.md: Escolher a fonte que governa o comportamento; Interpretar affected e trabalho preciso."
+      ],
+      "reason": "Os corpos explicam propósito, comportamento, contratos, decisões, impacto e manutenção. Há ações concretas e limites para Atlas, Continuity, RAG e Genesis, com localizadores que ajudam a encaminhar mudanças ao dono adequado."
+    },
+    {
+      "id": "CC-7",
+      "verdict": "REQUEST_EVIDENCE",
+      "evidence": [
+        "ownership.md mantém packages/core, packages/server e protocolo/schema como fronteiras externas.",
+        "maintenance.md e operational.md preservam scope, roots, sequência de keys, contrato, inputs e dependências.",
+        "usage.md, linhas 42–45, confirma mesma estrutura, ordem lexicográfica, driver como input e aceitação exclusiva de file: obrigatório.",
+        "operational.md acrescenta teto de 256000 bytes e exclusões de .git, .atlas e symlinks."
+      ],
+      "reason": "A compatibilidade e as fronteiras estão explicitadas, e o suporte recebido confirma parte importante delas. Ainda falta confirmar no driver fixado o limite exato e as restrições de leitura anunciadas, sem importar comportamento de uma correção posterior. Ver E-01."
+    },
+    {
+      "id": "QS-1",
+      "verdict": "REQUEST_EVIDENCE",
+      "evidence": [
+        "Trechos de masking-rules.ts confirmam TAIL_STEPS, ERROR_LINES e o conjunto de ferramentas protegidas.",
+        "Trechos de L2 e L3 sustentam comparação RAG, recuperação, propagação pelo resultado e manutenção dos vínculos.",
+        "Trechos de native-runtime-delta sustentam gates independentes e binding novo para candidato alterado.",
+        "Os excertos do driver e dos helpers de validação estão incompletos para algumas afirmações operacionais precisas."
+      ],
+      "reason": "Não há divergência demonstrada entre os corpos e o suporte recebido. Porém, fidelidade integral não pode ser inferida da indicação de uma fonte ou dos hashes. E-01 e E-02 delimitam o suporte que falta para encerrar este critério."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "evidence": [
+        "entry.md oferece entrada rasa e aprofundamento opcional.",
+        "ownership.md relaciona problemas a contratos, riscos e pontos de manutenção.",
+        "maintenance.md organiza uma mudança desde a delimitação até o leitor separado.",
+        "operational.md apresenta comandos, variáveis, queries, estados e registros a preservar."
+      ],
+      "reason": "O conteúdo permite orientar trabalho real e interrompê-lo diante de limites ou evidência insuficiente. A utilidade não depende de ler todo o grafo nem de atribuir à documentação uma execução que ela não demonstra."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "evidence": [
+        "Separação dos quatro needs L4.",
+        "entry.md: Se esta entrada resolve a tarefa, responda e pare.",
+        "Tabelas de rota, pontos de manutenção e saídas."
+      ],
+      "reason": "A organização é legível e orientada à tarefa. A densidade dos corpos profundos acompanha a complexidade dos contratos; não há exigência indiscriminada de percorrer todos os intermediários."
+    },
+    {
+      "id": "QS-6",
+      "verdict": "PASS",
+      "evidence": [
+        "entry.md fixa 2 index, 12 read, 62000 bytes de corpos, raso até 6000 e maxBytes até 18000.",
+        "A rota soma 55831 bytes nos onze intermediários e 4921 bytes na entrada, total de 60752.",
+        "A entrada real cabe em maxBytes 5000; a rota usa entrada mais onze reads.",
+        "Todos os corpos preservam UNKNOWN para telemetria não exposta e distinguem bytes retornados de IO, tokens e dinheiro."
+      ],
+      "reason": "A conta publicada cabe no orçamento, com margem de 1248 bytes no catálogo informado. Substituições e novas seleções exigem recontagem. Não há inferência de custo financeiro ou zero IO a partir de reúso ou ausência de corpos no índice."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "evidence": [
+        "ownership.md diferencia present divergente, ausência corroborada e indisponibilidade.",
+        "ownership.md marca como inferência contratual a parada de propagação pelo resultado completo.",
+        "ownership.md preserva os gaps de trace revisionId/questionId, seq na hidratação, leitura antes de admissão e limites de recuperação.",
+        "maintenance.md separa efeito, intenção e evidência."
+      ],
+      "reason": "Observação, interpretação e intenção não são fundidas. Os gaps materiais do host continuam visíveis, e a conclusão sobre reúso conserva condições explícitas."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "evidence": [
+        "entry.md e operational.md exigem historical:true explícito e omissão desse campo para consumo corrente.",
+        "operational.md: Após drift, não sirva stale como corrente.",
+        "maintenance.md fixa predecessores em c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c e preserva pins herdados.",
+        "maintenance.md e operational.md limitam as declarações de CI ao candidato 1b5a4801acfae03969f78ee766ca6f0b7d0f9013."
+      ],
+      "reason": "O passado não é promovido a estado corrente. A documentação trata a produção histórica e os recibos futuros separadamente e não atualiza retrospectivamente o estado NOT_RUN."
+    },
+    {
+      "id": "GO-I4",
+      "verdict": "PASS",
+      "evidence": [
+        "L3, Mudanças propagam por resultados e vínculos, recebido literalmente.",
+        "ownership.md e maintenance.md exigem igualdade do resultado completo e validade dos vínculos do dependente.",
+        "maintenance.md preserva unidades independentes apenas enquanto seus inputs e vínculos continuam válidos.",
+        "usage.md, linhas 58–59, distingue run/evaluate persistidos de geração e julgamento novos."
+      ],
+      "reason": "Reúso é condicionado por identidade, inputs, contrato e dependências. Igualdade de Markdown não basta, e a economia não elimina receipts, revalidação ou binding pertinente."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "REQUEST_EVIDENCE",
+      "evidence": [
+        "entry.md manda parar diante de HOLD, erro ou gap material.",
+        "ownership.md e operational.md preservam CAS e candidato sem convertê-los em publicação corrente.",
+        "operational.md distingue activation_attempted, efeitos após erro, baseline ainda publicado e readback.",
+        "O código dessas condições específicas do driver não foi recebido."
+      ],
+      "reason": "A orientação semântica de impacto, indisponibilidade e retomada é adequada. Falta confirmar as afirmações precisas sobre tentativa de ativação, readback e critérios de sucesso ou falha da porta usada. Ver E-01."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "evidence": [
+        "operational.md: Fixar ambiente, corpus e autoridade.",
+        "native-runtime-delta, linhas 110–118, recebido literalmente.",
+        "ownership.md e maintenance.md recusam autoridade de fixture, aprovação antiga para candidato novo e promoção de blocked.",
+        "ownership.md preserva ferramentas protegidas, cauda, evidência de erro e limites de recall."
+      ],
+      "reason": "Política, ator, ratificador, provenance e binding permanecem gates distintos. O texto não confunde declarações locais com autenticação, não autoriza contornar recusas e conserva os limites de proteção e de dados."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "evidence": [
+        "Os quatro corpos distinguem documentação de execução, binding, publicação e consumo.",
+        "maintenance.md classifica typecheck, CI, revisão estática e operação NOT_RUN.",
+        "operational.md distingue callbacks de chamadas a modelos e registra limites de parsing, testes e readback.",
+        "Metadados projetados informam semantic_review_refs e runtime_receipt_refs originalmente vazios."
+      ],
+      "reason": "Forma, hashes, tipos, testes e registros antigos não são apresentados como aceite semântico novo ou operação nova. supported permanece uma condição de sustentação, sem promoção automática de autoridade."
+    }
+  ],
+  "cases": [
+    {
+      "id": "L4-entry",
+      "verdict": "PASS",
+      "evidence": [
+        "Scope atlas-continuity-rag-genesis e need entry nas queries.",
+        "CWD modules/atlas e arquivos de controle no CWD da CLI.",
+        "Root read com maxBytes 5000 para corpo de 4921 bytes.",
+        "Rota opcional, parada suficiente e proibição de substituir consumo por Markdown ou CAS bruto."
+      ],
+      "reason": "A entrada é concreta, rasa e compatível com os trechos da CLI recebidos. Permite parar com sustentação e aprofundar sem impor leitura integral."
+    },
+    {
+      "id": "L4-ownership",
+      "verdict": "PASS",
+      "evidence": [
+        "Contratos de identidade, autoridade, atualidade e publicação Atlas.",
+        "Fronteiras de Session e host.",
+        "Lista integral de ferramentas protegidas e regras de mascaramento.",
+        "Gaps de trace, seq, comparação, admissão e persistência RAG.",
+        "Localizadores e limites de mudança."
+      ],
+      "reason": "Há ações, decisões e consequências úteis nos quatro domínios. Proteção, trace e gaps materiais permanecem explícitos, sem exigir fonte bruta ao consumidor Atlas-only."
+    },
+    {
+      "id": "L4-maintenance",
+      "verdict": "PASS",
+      "evidence": [
+        "Pins de corpus, runtime, release e predecessores.",
+        "Origem e gerador do boundary, com bun run generate no CWD indicado.",
+        "affected separado de execução precisa e reúso condicionado.",
+        "Produção e revisão anteriores à ativação, com binding separado.",
+        "Leitor novo e classificação distinta de inspeção, tipos, CI e operação."
+      ],
+      "reason": "O procedimento descreve o ciclo completo de manutenção e preserva os limites históricos. As verificações ainda pendentes sobre detalhes do driver são tratadas no caso operacional e não são supridas por este resultado."
+    },
+    {
+      "id": "L4-operational",
+      "verdict": "REQUEST_EVIDENCE",
+      "evidence": [
+        "Isolamento, autoridade, queries e limites públicos estão explicitados.",
+        "HOLD corrente, histórico explícito, preservação de CAS/candidato e rollback compatível estão descritos.",
+        "usage.md confirma seis argumentos e restrições estruturais.",
+        "Faltam os blocos do driver que confirmam resolução de caminhos, limite de inputs e resultado de publicação; faltam helpers da gramática declarada."
+      ],
+      "reason": "O caso é coberto e não contém erro demonstrado, mas as afirmações operacionais precisas restantes exigem E-01 e E-02 para encerramento."
+    },
+    {
+      "id": "L4-economy",
+      "verdict": "PASS",
+      "evidence": [
+        "2 index; 12 read; 62000 bytes totais; raso 6000; maxBytes 18000.",
+        "Rota de 60752 bytes conforme os tamanhos recebidos.",
+        "UNKNOWN para modelo, tokens, cobrança e tentativas físicas não expostas.",
+        "Distinção entre corpos retornados, IO do servidor e callbacks."
+      ],
+      "reason": "Limites e conta são coerentes. Não há custo inventado nem equivalência indevida entre reúso e custo zero."
+    },
+    {
+      "id": "L4-cumulative",
+      "verdict": "PASS",
+      "evidence": [
+        "Onze intermediários acessíveis na tabela de entry.md.",
+        "Build deps same_package de L1, L2 e L3 nos quatro metadados projetados.",
+        "Uso substantivo de contratos e procedimentos dos predecessores.",
+        "Preservação de pins, autoridade, gaps e distinção entre navegação e build."
+      ],
+      "reason": "A camada acumula conhecimento governado dos predecessores sem atribuir às referências navegacionais influência automática no build ou no resultado."
+    }
+  ],
+  "required_findings": [
+    {
+      "id": "E-01",
+      "kind": "missing_exact_support",
+      "status": "OPEN",
+      "affects": [
+        "AC-03",
+        "CC-7",
+        "QS-1",
+        "GO-I5",
+        "L4-operational"
+      ],
+      "expected": "As instruções precisas de caminhos, leitura de inputs, publicação, readback e códigos de saída devem corresponder ao driver histórico vinculado.",
+      "observed": "Foram recebidos trechos de usage.md que confirmam seis argumentos, compatibilidade estrutural, file: obrigatório e contratos de run/evaluate. Não foram recebidos os blocos de implementação que sustentam target relativo ao corpus, baselineManifest distinto de candidate_id, teto de 256000 bytes, exclusões de leitura, activation_attempted e as condições exatas de sucesso e falha de publish.",
+      "correction_or_exact_question": "Forneça os trechos literais de maintenance-operation.mjs no pin c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c que implementam os três blocos listados em evidence_needed, incluindo os helpers chamados quando forem necessários para entender as condições. Se alguma afirmação do corpo não corresponder a esse pin, indique a divergência; não a substitua por código corrigido posterior.",
+      "evidence_needed": [
+        {
+          "source": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+          "pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "block": "Parsing dos argumentos, validação de baselineManifest e resolução de preparedTargetJsonPath e bindingPath."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+          "pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "block": "Leitura/captura/reobservação de inputs: limite exato de bytes, rejeição de .git/.atlas/symlinks e conferência entre driver executado e cópia observada no corpus."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+          "pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+          "block": "Ramo publish, com conferência de baseline publicado, check/emission, activation_attempted, abertura do leitor, readback e definição do exit code, incluindo tratamento de erro."
+        }
+      ],
+      "scope_of_request": "Suporte estático do procedimento histórico. Não requer executar driver, publicar, produzir binding ou demonstrar consumidor."
+    },
+    {
+      "id": "E-02",
+      "kind": "missing_exact_support",
+      "status": "OPEN",
+      "affects": [
+        "AC-03",
+        "QS-1",
+        "L4-operational"
+      ],
+      "expected": "A afirmação de que index aceita exatamente scope/need e de que key/section são textos NFC não vazios deve ser sustentada pelos validadores efetivamente usados.",
+      "observed": "validateNativeReadQuery foi entregue integralmente, mas delega a validação textual a nativeText. CLI-2 chama nativeKeys; a definição desse helper e a preparação do registro query antes desse ramo não foram recebidas. O código entregue sustenta os demais pontos expressos da validação read, mas não torna verificáveis sozinho essas duas afirmações adicionais.",
+      "correction_or_exact_question": "Forneça as definições literais de nativeText e nativeKeys usadas pela CLI/validateNativeReadQuery no pin 1b5a4801acfae03969f78ee766ca6f0b7d0f9013, além do trecho da CLI que cria e valida query imediatamente antes de if (mode === \"index\").",
+      "evidence_needed": [
+        {
+          "pin": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+          "block": "Definições de nativeText e nativeKeys, com caminho do arquivo de origem."
+        },
+        {
+          "source": "modules/atlas/scripts/genesis-native.ts",
+          "pin": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+          "block": "Criação e validação de query entre o tratamento de prepare/publish e o ramo index."
+        }
+      ],
+      "scope_of_request": "Trechos estáticos curtos; sem execução ou alteração dos corpos."
+    }
+  ],
+  "mandatory_corrections_demonstrated": [],
+  "optional_suggestions": [],
+  "next_decision_condition": "Reavaliar os critérios e o caso pendentes após receber E-01 e E-02. Os demais resultados acima não constituem aprovação da camada enquanto o verdict geral permanecer REQUEST_EVIDENCE."
+}

@@ -1,0 +1,3 @@
+Recebido o **PACOTE 2/4 — S4:L4:ownership**, incluindo o corpo integral, metadados e trechos de suporte.
+
+Registrei que o trecho da CLI do pacote anterior é uma transcrição reformatada, sem identidade de bytes ou hash atribuível à projeção. A decisão de camada permanece aberta até **FECHAMENTO L4**.

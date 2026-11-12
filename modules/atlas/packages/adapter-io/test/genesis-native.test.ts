@@ -9,6 +9,7 @@ import type { NativeBinding } from "../src/genesis-native-binding.js"
 import { nativeRecord, validateNativePackage, validateNativeReadQuery } from "../src/genesis-native-format.js"
 import type { NativeArtifact, NativePackage } from "../src/genesis-native-format.js"
 import { nativeBlobSha, nativeSha256 } from "../src/genesis-native-io.js"
+import { ownershipInputMaxBytes } from "../src/ownership-input.js"
 import { ownershipFixture } from "./harness/ownership-fixture.js"
 
 const prior = { actor: process.env.ATLAS_ACTOR, token: process.env.ATLAS_RATIFY_TOKEN }
@@ -110,6 +111,42 @@ describe("Genesis native adapter", () => {
     expect(f.runtime().ownership.read({ scope: "core", need: "entry", maxBytes: 4096 }).kind).toBe("hold")
   })
 
+  it("prepares and serves a complete source at the shared ceiling, then detects last-byte drift", async () => {
+    const f = fixture()
+    const bytes = new Uint8Array(ownershipInputMaxBytes).fill(97)
+    bytes.set(new TextEncoder().encode("\ufeff// Cafe\u0301\r\n"))
+    bytes[bytes.length - 1] = 10
+    f.write("src/large.ts", bytes)
+    const source = f.pack.artifacts[1]!
+    source.input_keys[0] = "file:src/large.ts"
+    source.source_refs[0] = {
+      commit: f.pack.source_revision, path: "src/large.ts",
+      git_blob_sha: nativeBlobSha(bytes), sha256: nativeSha256(bytes),
+    }
+    const prepared = f.prepare()
+    const version = String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) }))
+    expect(prepared.candidate.observations.find((input) => input.key === "file:src/large.ts"))
+      .toEqual({ key: "file:src/large.ts", version, sha256: nativeSha256(bytes) })
+    const entry = prepared.candidate.entries[1]!
+    expect(entry.inputs.find((input) => input.key === "file:src/large.ts")).toEqual({ key: "file:src/large.ts", version })
+    expect(version).not.toBe(source.source_refs[0]!.sha256)
+    expect(entry.dependencies).toEqual([{ key: "evidence", result: prepared.candidate.entries[0]!.artifact.result }])
+    expect(entry.artifact.navigation).toEqual(["navigation"])
+    f.write("native/approval.json", JSON.stringify(f.approval(prepared)))
+    process.env.ATLAS_RATIFY_TOKEN = "explicit-synthetic-fixture-token"
+    expect(await publishNativePackage(f.repoPath, prepared, "native/approval.json"))
+      .toMatchObject({ kind: "publication-attempt", emission: { ok: true, data: { emitted: true } } })
+    expect(f.runtime().ownership.index("core", "entry")).toMatchObject({ kind: "index", key: "entry", bodiesReturned: false })
+    const query = { scope: "core", need: "entry" as const, maxBytes: 4096 }
+    expect(f.runtime().ownership.read(query)).toMatchObject({
+      kind: "ready", body: readFileSync(join(f.repoPath, "native/bodies/entry.md"), "utf8"), checked: ["evidence", "entry"],
+    })
+    bytes[bytes.length - 1] = 13
+    f.write("src/large.ts", bytes)
+    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
+    await expect(publishNativePackage(f.repoPath, prepared, "native/approval.json")).rejects.toThrow("native-source-drift: src/large.ts")
+  })
+
   const malformed: [string, (pack: NativePackage) => void][] = [
     ["duplicate artifact", (pack) => { pack.artifacts.push(pack.artifacts[0]!) }],
     ["duplicate criterion", (pack) => { pack.contract.criteria.push(pack.contract.criteria[0]!) }],
@@ -167,8 +204,12 @@ describe("Genesis native adapter", () => {
     g.pack.artifacts[0]!.input_keys.push("members:missing-directory")
     expect(() => g.prepare()).toThrow("native-input-absent")
     g.pack.artifacts[0]!.input_keys.pop()
-    g.write("src/util.ts", new Uint8Array(256001))
-    expect(() => g.prepare()).toThrow("native-file-limit")
+    g.write("src/util.ts", new Uint8Array(ownershipInputMaxBytes + 1))
+    expect(() => g.prepare()).toThrow("native-file-limit: src/util.ts")
+    const h = fixture()
+    h.write("native/oversized-input.txt", new Uint8Array(ownershipInputMaxBytes + 1))
+    h.pack.artifacts[0]!.input_keys.push("file:native/oversized-input.txt")
+    expect(() => h.prepare()).toThrow("native-input-unavailable: file:native/oversized-input.txt")
   })
 
   it("requires two exact new binding decisions, all criteria and every input/result pair", () => {

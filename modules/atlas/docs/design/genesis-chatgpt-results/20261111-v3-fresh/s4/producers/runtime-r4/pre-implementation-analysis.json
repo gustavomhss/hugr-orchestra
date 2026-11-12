@@ -1,0 +1,90 @@
+{
+  "schema": "runtime-large-inputs-analysis/v1",
+  "phase": "PRE_IMPLEMENTATION_RECOMMENDATION",
+  "candidate_base": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "skill_pin": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "recommended_max_bytes": 2097152,
+  "known_source_lengths_from_root": [
+    369462,
+    390775,
+    1131057,
+    462732
+  ],
+  "headroom_for_largest_bytes": 966095,
+  "production_paths": [
+    "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+    "modules/atlas/packages/adapter-io/src/genesis-native.ts"
+  ],
+  "test_paths": [
+    "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+    "modules/atlas/packages/adapter-io/test/genesis-native.test.ts"
+  ],
+  "proposed_change": [
+    "Export ownershipInputMaxBytes = 2 * 1024 * 1024 from ownership-input.ts.",
+    "Use the common constant in the descriptor read loop and final actual byte length check.",
+    "Check the accumulated size before copying the next chunk to retained chunks.",
+    "Import the common constant in genesis-native.ts for source_refs and file: rereads.",
+    "Leave generic nativeMaxBytes = 8 * 1024 * 1024 unchanged."
+  ],
+  "identity_contract": {
+    "preserve": "id({ kind: 'ownership-source', version: 1, bytes: Array.from(bytes) })",
+    "kernel_canonical": "Sorted object keys; decimal integers in bytes array; encoder default BLAKE3.",
+    "transport_hashes": "SHA-256 and Git blob SHA remain separate capture checks.",
+    "old_present_input_versions": "Unchanged for identical bytes.",
+    "candidate_id": "Changes naturally because genesis-native.ts implementation hash changes; fresh binding remains required."
+  },
+  "bounds_inferred_not_measured": {
+    "read_chunk_bytes": 8192,
+    "max_retained_source_chunk_bytes": 2097152,
+    "max_source_concat_bytes": 2097152,
+    "max_extra_read_on_limit_detection_bytes": 8192,
+    "max_numeric_array_elements": 2097152,
+    "max_source_canonical_preimage_bytes": 8388657,
+    "canonical_preimage_derivation": "4*N+49 for N bytes rendered as three-digit decimal values.",
+    "work": "O(N) per observation with existing synchronous sequential loops; no caching or new parallelism.",
+    "typical_prepare_source_reads": "4 reads and 3 kernel IDs when a file appears once as one source_ref and input; artifact reuse repeats work, final observation is deduplicated by key.",
+    "heap_peak_bytes": "UNKNOWN; includes numeric array, mapped strings/references, joined serialized strings, UTF-8 preimage and hash temporaries.",
+    "elapsed_time": "UNKNOWN; product benchmark not executed.",
+    "source_persistence": "source_refs are verified; source bytes are not added as new ownership-body CAS objects."
+  },
+  "guard_preservation": [
+    "Path allowlist, containment, .git/.atlas refusals and unsupported key refusals.",
+    "Regular file and ancestor symlink refusal.",
+    "O_NOFOLLOW/O_NONBLOCK, descriptor close and existing before/after identity checks.",
+    "Full reads with actual byte count; no prefix hashing, slicing or truncation.",
+    "Absent requires verified negative lookup; read failure/oversize remain unavailable; legacy projection remains undefined.",
+    "readNativeFile stat/fd/length/mtime/ctime/component checks unchanged.",
+    "Authority, policies, reviewers, binding, body metadata, roots and dependencies unchanged."
+  ],
+  "planned_actions_tests": [
+    "Preserve exact old byte IDs including BOM/CRLF/decomposed text/binary.",
+    "Accept former limit, former limit+1, known large input range and inclusive 2 MiB boundary with full kernel ID.",
+    "Change only the final byte and prove the observation and live read detect it.",
+    "Reject 2 MiB+1 on real descriptor reads and injected readBytes seam.",
+    "Reject oversized source_refs and an extra file: input without a source_ref.",
+    "Prepare a large-source package retaining source identity, inputs, dependency and navigation.",
+    "Use existing synthetic governed fixture for publish/index/read and stale tail HOLD.",
+    "Retain existing symlink, traversal, absent/unavailable, binding and drift tests."
+  ],
+  "execution": {
+    "product_tests": "NOT_RUN; GitHub Actions only",
+    "local_integrity": "17 source files match connector-reported Git blob SHA",
+    "bun": "ABSENT_FROM_PATH",
+    "parse": "NOT_RUN",
+    "typecheck": "NOT_RUN",
+    "remote_writes": false
+  },
+  "exclusions": [
+    "S1–S5 transport/data",
+    "ROOT oracle",
+    "consumer directories",
+    "kernel",
+    "generic IO",
+    "format",
+    "binding",
+    "policy/authority/reviewers"
+  ],
+  "permissions": "Implementation awaits ROOT orientation; recommendation does not widen oracle or scope."
+}

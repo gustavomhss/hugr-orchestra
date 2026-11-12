@@ -1,0 +1,30 @@
+{
+  "agent_id": "/root/local_j2",
+  "purpose": "semantic-layer4-review",
+  "record": "Adendo ao parecer canônico após o suplemento de suporte literal.",
+  "review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "decision_changed": false,
+  "verdict": "PASS",
+  "reason": "O suplemento corrobora o procedimento histórico e não introduz divergência com os corpos julgados. Permanecem válidos os resultados dos 15 critérios e dos seis casos registrados na decisão canônica anterior.",
+  "supplement_assessment": {
+    "source": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+    "pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+    "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+    "received": "Trechos literais das linhas 38–40 e 143–152.",
+    "confirmed": [
+      "bindingArg passa por nativePath e o approval é lido relativamente à raiz do corpus.",
+      "O conteúdo do approval é encaminhado a validateNativeBinding com o prepared fresco.",
+      "O código preserva o approval e as evidências de pedido e resposta no CAS.",
+      "A captura das referências exige bytes não vazios e correspondência ao SHA256 declarado."
+    ],
+    "interpretation": "Esses trechos sustentam a vinculação e a preservação de evidências descritas como procedimento. Não demonstram que a validação ou a publicação tenham sido executadas nesta retomada."
+  },
+  "identities": "Permanecem exatamente as quatro identidades de corpos e as duas identidades de metadados registradas no parecer canônico anterior; nenhuma edição foi apresentada.",
+  "mandatory_findings": [],
+  "remaining_evidence_requests": [],
+  "limits": [
+    "A decisão continua restrita à semântica dos bytes históricos e à adequação do procedimento aos pins informados.",
+    "Este adendo não é runtime binding, autorização, execução, consumo ou DoD.",
+    "Não usei ferramentas, filesystem, execução, delegação ou consulta a outro juiz."
+  ]
+}

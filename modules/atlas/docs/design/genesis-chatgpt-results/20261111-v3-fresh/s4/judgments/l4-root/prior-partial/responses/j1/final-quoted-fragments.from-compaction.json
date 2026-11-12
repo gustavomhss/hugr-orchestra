@@ -1,0 +1,131 @@
+{
+  "preserver_agent": "/root/preserve_l4_review",
+  "original_author_attributed_by_context": "/root/local_j1",
+  "representation": "New fragment collection serialized as JSON; NOT the original final JSON and NOT a complete response.",
+  "provenance": "Quoted strings retained in the preserver compaction summary of the original visible /root/local_j1 final response. No access to the raw host envelope remains.",
+  "original_host_message_id": null,
+  "terminal_newline": "One LF added by preservation",
+  "complete_original_response_available": false,
+  "carried_context_metadata": {
+    "agent_id": "/root/local_j1",
+    "purpose": "semantic-layer4-review",
+    "review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+    "original_production_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+    "verdict": "REQUEST_EVIDENCE",
+    "metadata_warning": "These values are carried by the compaction summary; this object is not the original response schema."
+  },
+  "quoted_fragments": [
+    {
+      "field_hint": "summary",
+      "text": "Os quatro corpos oferecem cobertura cumulativa consistente, preservam fronteiras de autoridade, proteção, gaps, histórico e UNKNOWN, e apresentam a porta de index/read com suporte literal suficiente. Não identifiquei contradição semântica demonstrada nos materiais recebidos. O aceite integral permanece pendente de suporte delimitado para comportamentos operacionais exatos do prepare/publish e do driver, além das contagens atribuídas ao recibo de CI. A sintaxe geral e as projeções de metadados não demonstram esses comportamentos específicos."
+    },
+    {
+      "finding_id": "J1-E01",
+      "field_hint": "expected",
+      "text": "Os detalhes da porta nativa descritos no procedimento devem corresponder ao código fixado em 1b5a4801acfae03969f78ee766ca6f0b7d0f9013, especialmente a distinção entre caminhos de controle resolvidos pelo CWD e approval relativo ao corpus."
+    },
+    {
+      "finding_id": "J1-E01",
+      "field_hint": "observed",
+      "text": "CLI-1 demonstra o parser de argumentos e o resolvedor control(path); CLI-2 demonstra index/read. As branches de prepare/publish e os trechos responsáveis por gravar o candidato e carregar o approval não foram apresentados. Portanto, a criação com wx, o diretório preexistente, a resolução do approval e a re-preparação/igualdade no publish permanecem afirmadas pelo corpo, sem o suporte exato correspondente."
+    },
+    {
+      "finding_id": "J1-E01",
+      "field_hint": "exact_question",
+      "text": "Forneça as branches prepare e publish de genesis-native.ts no pin 1b5a4801acfae03969f78ee766ca6f0b7d0f9013 e os trechos chamados por elas que resolvem os caminhos do candidato e do approval, gravam o candidato sem sobrescrita e conferem igualdade após re-preparar."
+    },
+    {
+      "finding_id": "J1-E01",
+      "field_hint": "required_evidence[0]",
+      "text": "Trechos literais identificados por arquivo, pin e função ou intervalo de linhas."
+    },
+    {
+      "finding_id": "J1-E01",
+      "field_hint": "required_evidence[1]",
+      "text": "Se a lógica estiver em helper, seu trecho pertinente e a chamada que o liga à branch."
+    },
+    {
+      "finding_id": "J1-E01",
+      "field_hint": "correction",
+      "text": "Nenhuma correção de corpo é exigida antes da conferência; se o código divergir, corrigir somente as instruções afetadas em nova revisão, preservando o corpo julgado."
+    },
+    {
+      "finding_id": "J1-E02",
+      "field_hint": "expected",
+      "text": "A rota de manutenção deve documentar o comportamento real do driver histórico quanto a caminhos, leitura de inputs, guardas, saída, ativação e readback."
+    },
+    {
+      "finding_id": "J1-E02",
+      "field_hint": "observed",
+      "text": "O usage recebido confirma seis argumentos, estrutura estável, ordem dos inputs, file obrigatório e callbacks que retornam CAS/reviews. Não demonstra que target e binding sejam resolvidos contra o corpus, que o teto real seja 256000 bytes, que .git/.atlas/symlinks sejam recusados, nem que os modos produzam exatamente os tipos e códigos de saída descritos. Esses detalhes são relevantes para executar a rota sem substituir a cobertura ou interpretar uma tentativa como ativação."
+    },
+    {
+      "finding_id": "J1-E02",
+      "field_hint": "exact_question",
+      "text": "Forneça, do maintenance-operation.mjs preservado em c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c, os trechos de resolução de preparedTargetJsonPath e bindingPath; a leitura de inputs com o valor efetivo do limite e as recusas de .git/.atlas/symlinks; e as branches finais de rebuild/publish que determinam kind, stage, activation_attempted, códigos de saída e conferência do manifesto no readback."
+    },
+    {
+      "finding_id": "J1-E02",
+      "field_hint": "required_evidence[0]",
+      "text": "Trechos literais do driver histórico e das constantes ou helpers diretamente necessários."
+    },
+    {
+      "finding_id": "J1-E02",
+      "field_hint": "required_evidence[1]",
+      "text": "Identificação inequívoca de arquivo e pin."
+    },
+    {
+      "finding_id": "J1-E02",
+      "field_hint": "required_evidence[2]",
+      "text": "Não é solicitada execução nova nem revisão do limite histórico."
+    },
+    {
+      "finding_id": "J1-E02",
+      "field_hint": "correction",
+      "text": "Nenhuma alteração preventiva de cobertura ou de input é autorizada por este achado. Divergência eventual exige correção do procedimento em revisão nova."
+    },
+    {
+      "finding_id": "J1-E03",
+      "field_hint": "expected",
+      "text": "As contagens históricas atribuídas à CI devem ser fiéis ao recibo identificado, mantendo a separação entre evidência de CI e execução operacional."
+    },
+    {
+      "finding_id": "J1-E03",
+      "field_hint": "observed",
+      "text": "maintenance.md e operational.md atribuem ao run 43094387837 e ao candidato 1b5a4801acfae03969f78ee766ca6f0b7d0f9013 os números 220 casos, 22 mutações rejeitadas, 18 paridades e dois WARN de tamanho. O recibo foi citado, mas seus campos correspondentes não foram transcritos nos pacotes."
+    },
+    {
+      "finding_id": "J1-E03",
+      "field_hint": "exact_question",
+      "text": "Forneça o fragmento literal de producers/ci-c1/receipt.json preservado em c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c que vincula run e candidato a essas quatro contagens, junto ao registro que delimita a verificação do driver e seu estado operacional na produção."
+    },
+    {
+      "finding_id": "J1-E03",
+      "field_hint": "required_evidence[0]",
+      "text": "Campos pertinentes do recibo, com identificação do arquivo e pin."
+    },
+    {
+      "finding_id": "J1-E03",
+      "field_hint": "required_evidence[1]",
+      "text": "Se os números forem derivados, o trecho do registro que permite conferir a derivação."
+    },
+    {
+      "finding_id": "J1-E03",
+      "field_hint": "correction",
+      "text": "A distinção entre CI e operação já está adequada. Somente eventual divergência numérica ou de alcance exigirá corrigir a declaração histórica."
+    },
+    {
+      "field_hint": "next_decision_rule",
+      "text": "Após receber os trechos delimitados, revisar somente as pendências e seus critérios/casos dependentes. Ausência de divergência poderá sustentar PASS sem exigir execução; divergência material exigirá FIX-FIRST. Este parecer não produz binding, autorização, publicação ou aceite operacional."
+    }
+  ],
+  "known_missing_sections": [
+    "Complete review_limits",
+    "Complete identities",
+    "All complete criterion records and their evidence/reasons",
+    "All complete case records and their evidence/reasons",
+    "Full original mandatory_findings wrappers and any fields absent from these quoted strings",
+    "Original JSON formatting and enclosing host message bytes"
+  ],
+  "no_new_semantic_decision": true
+}

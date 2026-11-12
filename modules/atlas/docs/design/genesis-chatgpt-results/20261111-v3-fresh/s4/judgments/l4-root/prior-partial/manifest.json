@@ -1,0 +1,249 @@
+{
+  "artifact_type": "partial_mechanical_preservation_manifest",
+  "status": "PARTIAL_PRESERVATION",
+  "preserver_agent": "/root/preserve_l4_review",
+  "helper_agent": "/root/preserve_l4_review/save_j2_response",
+  "created_at_utc": "2026-11-12T04:13:59.692884+00:00",
+  "authorized_directory": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/preserve-l4-review",
+  "host_message_ids": null,
+  "agent_handles_are_not_host_message_ids": true,
+  "new_semantic_review_performed": false,
+  "remote_writes_performed": false,
+  "product_tests_performed": false,
+  "candidate_or_oracle_modified": false,
+  "scope": "Preserve available actual visible text and source references; declare unavailable original envelopes and full J1 response without reconstructing them.",
+  "coverage": {
+    "requests_expected": 8,
+    "complete_original_request_strings_recovered": 0,
+    "request_fragments_preserved": 2,
+    "j1_ack_texts_preserved": 3,
+    "j1_complete_final_response_preserved": false,
+    "j1_final_quoted_fragments_preserved": 21,
+    "j2_ack_texts_preserved": 3,
+    "j2_complete_visible_final_json_preserved": true,
+    "j2_full_raw_host_envelope_preserved": false,
+    "source_bodies_copied": 4,
+    "source_metadata_files_copied": 2,
+    "historical_reference_packets_copied": 4
+  },
+  "source_identity_check": {
+    "files_checked": 10,
+    "all_match_hashes_carried_by_context": true,
+    "source_commit_carried_by_context": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "check_does_not_establish_transmitted_body_identity": true
+  },
+  "transmitted_body_check": {
+    "status": "NOT_VERIFIABLE",
+    "actual_transmitted_bodies_extracted": 0,
+    "divergence_status": "UNKNOWN",
+    "no_silent_normalization": true,
+    "details": "requests/coverage.json"
+  },
+  "j2_mechanical_cross_check": {
+    "declared_author": "/root/local_j2",
+    "verdict_field": "REQUEST_EVIDENCE",
+    "counts_from_preserved_json": {
+      "criteria": 15,
+      "cases": 6,
+      "required_findings": 2
+    },
+    "file_hash_and_length_comparisons": [
+      {
+        "path": "responses/j2/ack-01.txt",
+        "sha256_matches_child_manifest": true,
+        "length_matches_child_manifest": true
+      },
+      {
+        "path": "responses/j2/ack-02.txt",
+        "sha256_matches_child_manifest": true,
+        "length_matches_child_manifest": true
+      },
+      {
+        "path": "responses/j2/ack-03.txt",
+        "sha256_matches_child_manifest": true,
+        "length_matches_child_manifest": true
+      },
+      {
+        "path": "responses/j2/request-evidence.json",
+        "sha256_matches_child_manifest": true,
+        "length_matches_child_manifest": true
+      }
+    ],
+    "not_a_new_judgment": true
+  },
+  "limits": [
+    "ROOT and this preserver both lost recoverable complete request strings through compaction; ROOT confirmed this directly in the preserved final direction.",
+    "J1 final quoted fragments are a new explicitly partial serialization, not the original response JSON.",
+    "J2 full visible JSON is copied from a literal block retained through the helper compaction; original host envelope, whitespace of presentation and original terminator are not independently recoverable.",
+    "Stored visible texts have an added terminal LF; file hashes identify stored files only.",
+    "Historical reference packets are not the new ROOT requests.",
+    "The packet 2 courier correction is retained; packet 1 reformatted CLI strings and packet 4 literal replacement strings are not retained in full.",
+    "No host message IDs were exposed or invented; canonical task_name handles identify agents only.",
+    "No semantic decision, authorization or runtime outcome is produced by this preservation."
+  ],
+  "files": [
+    {
+      "path": "README-PRESERVACAO.txt",
+      "utf8_bytes": 3312,
+      "sha256": "bdb3f2ccbab48c7ace8b73310aad53d2f5af3010b44849ce1d78d420bcea4e61",
+      "provenance": "New mechanical preservation metadata written by /root/preserve_l4_review"
+    },
+    {
+      "path": "compaction-visible-inventory.json",
+      "utf8_bytes": 3439,
+      "sha256": "5f364b5b90e65e78f3c67ad9ea7b5fe7ba24065248377b31b7829871d576e863",
+      "provenance": "New mechanical preservation metadata written by /root/preserve_l4_review"
+    },
+    {
+      "path": "historical-reference-packets/l4a-review-packet-01.txt",
+      "utf8_bytes": 21424,
+      "sha256": "ba88ffb6481ca7aeb1e44353c23bf6eaa20b6007aac49f86478691e233341d24",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "historical-reference-packets/l4a-review-packet-02.txt",
+      "utf8_bytes": 18377,
+      "sha256": "bdaa4565436b0039eacd43f0aaa4ee14269984ce07d7bead0447a21a81d1453c",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "historical-reference-packets/l4b-review-packet-01.txt",
+      "utf8_bytes": 20252,
+      "sha256": "60eecf1d4282cd8f4119d7cd9b0b176f2b5e6950cd451701d9bca7f7797a1a07",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "historical-reference-packets/l4b-review-packet-02.txt",
+      "utf8_bytes": 29445,
+      "sha256": "950a435b8d9830103cfef01b1ef8444df29032e128d3d5e05efc4e112701f820",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "provenance/root-final-preservation-direction.visible-text.txt",
+      "utf8_bytes": 506,
+      "sha256": "3b8bf8fed7c0d4dbf04d99019ea6fff155a65f69a037f14599b81d942ac19c75",
+      "provenance": "Direct visible message from /root to this preserver after compaction"
+    },
+    {
+      "path": "requests/coverage.json",
+      "utf8_bytes": 7950,
+      "sha256": "cd8d9bb0d0b75760ac08b8d86aef802575742830ee8c6b57bc09142d9f73af0c",
+      "provenance": "New mechanical preservation metadata written by /root/preserve_l4_review"
+    },
+    {
+      "path": "requests/visible-fragments/j1-packet-04-closing.compaction-visible.txt",
+      "utf8_bytes": 934,
+      "sha256": "13aa9f8b73fc39846c75b4d31d2f4f140dc9aa3dcf95b79b1903192a2f7c2374",
+      "provenance": "Request fragment retained in this preserver compaction summary, attributed there to /root"
+    },
+    {
+      "path": "requests/visible-fragments/packet-02-courier-correction.compaction-visible.txt",
+      "utf8_bytes": 372,
+      "sha256": "328f4513d3c4b25d60ae62859ad9e664a4185cf41055e9350dcd0bc65a29ab22",
+      "provenance": "Request fragment retained in this preserver compaction summary, attributed there to /root"
+    },
+    {
+      "path": "responses/j1/ack-01.compaction-visible.txt",
+      "utf8_bytes": 497,
+      "sha256": "c4f50b0b7353f3afe2c1f16d5144f01607278688be3814692ea92d750c58f366",
+      "provenance": "Text or quoted fragments retained in this preserver compaction summary, attributed there to /root/local_j1"
+    },
+    {
+      "path": "responses/j1/ack-02.compaction-visible.txt",
+      "utf8_bytes": 412,
+      "sha256": "19ca26c8e6c4af15ad99b6cfefeac448ace45d267e4fa73e5223574fda2f32bf",
+      "provenance": "Text or quoted fragments retained in this preserver compaction summary, attributed there to /root/local_j1"
+    },
+    {
+      "path": "responses/j1/ack-03.compaction-visible.txt",
+      "utf8_bytes": 362,
+      "sha256": "7d20e6487788aac3ca730fd707f05d8d65c3f8aab67d8b071895c1dd88764eab",
+      "provenance": "Text or quoted fragments retained in this preserver compaction summary, attributed there to /root/local_j1"
+    },
+    {
+      "path": "responses/j1/final-quoted-fragments.from-compaction.json",
+      "utf8_bytes": 7952,
+      "sha256": "0052d8dd1a3259fc8917786ac96a4b099cac9f1941060435f021f50bf904a779",
+      "provenance": "Text or quoted fragments retained in this preserver compaction summary, attributed there to /root/local_j1"
+    },
+    {
+      "path": "responses/j2/SHA256SUMS",
+      "utf8_bytes": 399,
+      "sha256": "ea3d2c0f56ca659be064a71c277251edd59a7b8e9e35091ebc485e8ebfb3d7e8",
+      "provenance": "Child preservation /root/preserve_l4_review/save_j2_response; see responses/j2/manifest.json"
+    },
+    {
+      "path": "responses/j2/ack-01.txt",
+      "utf8_bytes": 369,
+      "sha256": "6edcebc3c61e0023c301a960b642b88a0c86ceae18ccc6eaeef7cbb2f5794865",
+      "provenance": "Child preservation /root/preserve_l4_review/save_j2_response; see responses/j2/manifest.json"
+    },
+    {
+      "path": "responses/j2/ack-02.txt",
+      "utf8_bytes": 312,
+      "sha256": "10f4ef1173a4f7d1a1399e231861baf2b8a6466d0be68af692d386a20dcb8770",
+      "provenance": "Child preservation /root/preserve_l4_review/save_j2_response; see responses/j2/manifest.json"
+    },
+    {
+      "path": "responses/j2/ack-03.txt",
+      "utf8_bytes": 359,
+      "sha256": "f279c21d582b6bf76d34f9bda1dee00ef7249f5df253323c422a050ccdc1082d",
+      "provenance": "Child preservation /root/preserve_l4_review/save_j2_response; see responses/j2/manifest.json"
+    },
+    {
+      "path": "responses/j2/manifest.json",
+      "utf8_bytes": 4001,
+      "sha256": "06ee2b728db36928de722b0d5144ad919c5a9a945f8baef5461750594df3d5f0",
+      "provenance": "Child preservation /root/preserve_l4_review/save_j2_response; see responses/j2/manifest.json"
+    },
+    {
+      "path": "responses/j2/request-evidence.json",
+      "utf8_bytes": 23578,
+      "sha256": "5df76ebc286ca41a3c7db9a1e07ef75f6d3ead09df234ce3fe3c0c83c4982b67",
+      "provenance": "Child preservation /root/preserve_l4_review/save_j2_response; see responses/j2/manifest.json"
+    },
+    {
+      "path": "source-bodies/entry.md",
+      "utf8_bytes": 4921,
+      "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "source-bodies/maintenance.md",
+      "utf8_bytes": 9478,
+      "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "source-bodies/operational.md",
+      "utf8_bytes": 9481,
+      "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "source-bodies/ownership.md",
+      "utf8_bytes": 9489,
+      "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "source-inventory.json",
+      "utf8_bytes": 7591,
+      "sha256": "e5861c41f4cda010596ba3967c1aecc081b5e7d22a4fe9ab7925a68f104b599a",
+      "provenance": "New mechanical preservation metadata written by /root/preserve_l4_review"
+    },
+    {
+      "path": "source-metadata/l4a-artifacts.json",
+      "utf8_bytes": 15342,
+      "sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    },
+    {
+      "path": "source-metadata/l4b-artifacts.json",
+      "utf8_bytes": 18836,
+      "sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+      "provenance": "Byte-for-byte copy from materialized S4 snapshot; see source-inventory.json"
+    }
+  ],
+  "self_hash_note": "The manifest does not contain its own hash. SHA256SUMS hashes this manifest and every other file except SHA256SUMS itself."
+}

@@ -1,0 +1,28 @@
+{
+  "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "unit": "S4-R4-driver-capture",
+  "frozen_at": "2026-11-12 04:07:00 UTC",
+  "before_driver_delta": true,
+  "source_candidate": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "driver_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+  "cases": [
+    {
+      "id": "DRIVER-LARGE-CAPTURE",
+      "expected": "Driver file: capture uses same bounded exported ceiling as observer; all bytes verified before/after."
+    },
+    {
+      "id": "DRIVER-SELF-LIMIT",
+      "expected": "Independent 256000-byte readImplementation limit remains, because driver-size safety is distinct from source-size ceiling."
+    },
+    {
+      "id": "DRIVER-BINDING",
+      "expected": "Changed driver bytes are new observed recipe version; no reuse of prior binding or claim of past operation. Source and runtime driver bytes must match."
+    },
+    {
+      "id": "DRIVER-BOUNDARY",
+      "expected": "At cap capture may proceed, over cap refuses; no loosening keys/scope/layout/baseline/policy or gate behavior."
+    }
+  ],
+  "blindness": "Implementation reviewer oracle, not consumer oracle. Root keeps expected cases outside producer context.",
+  "status": "FROZEN"
+}

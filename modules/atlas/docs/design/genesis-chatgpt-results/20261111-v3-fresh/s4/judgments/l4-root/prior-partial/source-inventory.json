@@ -1,0 +1,117 @@
+{
+  "preserver_agent": "/root/preserve_l4_review",
+  "source_snapshot_commit_carried_by_context": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "source_snapshot_namespace": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4",
+  "files": [
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/entry.md",
+      "preserved_path": "source-bodies/entry.md",
+      "byte_length": 4921,
+      "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8",
+      "expected_sha256_carried_by_context": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/ownership.md",
+      "preserved_path": "source-bodies/ownership.md",
+      "byte_length": 9489,
+      "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+      "expected_sha256_carried_by_context": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/maintenance.md",
+      "preserved_path": "source-bodies/maintenance.md",
+      "byte_length": 9478,
+      "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be",
+      "expected_sha256_carried_by_context": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/operational.md",
+      "preserved_path": "source-bodies/operational.md",
+      "byte_length": 9481,
+      "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7",
+      "expected_sha256_carried_by_context": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/artifacts.json",
+      "preserved_path": "source-metadata/l4a-artifacts.json",
+      "byte_length": 15342,
+      "sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+      "expected_sha256_carried_by_context": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/artifacts.json",
+      "preserved_path": "source-metadata/l4b-artifacts.json",
+      "byte_length": 18836,
+      "sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+      "expected_sha256_carried_by_context": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/review-packet-01.txt",
+      "preserved_path": "historical-reference-packets/l4a-review-packet-01.txt",
+      "byte_length": 21424,
+      "sha256": "ba88ffb6481ca7aeb1e44353c23bf6eaa20b6007aac49f86478691e233341d24",
+      "expected_sha256_carried_by_context": "ba88ffb6481ca7aeb1e44353c23bf6eaa20b6007aac49f86478691e233341d24",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/review-packet-02.txt",
+      "preserved_path": "historical-reference-packets/l4a-review-packet-02.txt",
+      "byte_length": 18377,
+      "sha256": "bdaa4565436b0039eacd43f0aaa4ee14269984ce07d7bead0447a21a81d1453c",
+      "expected_sha256_carried_by_context": "bdaa4565436b0039eacd43f0aaa4ee14269984ce07d7bead0447a21a81d1453c",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/review-packet-01.txt",
+      "preserved_path": "historical-reference-packets/l4b-review-packet-01.txt",
+      "byte_length": 20252,
+      "sha256": "60eecf1d4282cd8f4119d7cd9b0b176f2b5e6950cd451701d9bca7f7797a1a07",
+      "expected_sha256_carried_by_context": "60eecf1d4282cd8f4119d7cd9b0b176f2b5e6950cd451701d9bca7f7797a1a07",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    },
+    {
+      "source_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/snapshots/s4/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/review-packet-02.txt",
+      "preserved_path": "historical-reference-packets/l4b-review-packet-02.txt",
+      "byte_length": 29445,
+      "sha256": "950a435b8d9830103cfef01b1ef8444df29032e128d3d5e05efc4e112701f820",
+      "expected_sha256_carried_by_context": "950a435b8d9830103cfef01b1ef8444df29032e128d3d5e05efc4e112701f820",
+      "matches_context_hash": true,
+      "operation": "byte-for-byte copy from materialized S4 snapshot",
+      "not_new_judge_request_envelope": true
+    }
+  ],
+  "transmitted_body_comparison": {
+    "status": "NOT_VERIFIABLE",
+    "reason": "Neither ROOT nor this preserver retains the complete actually transmitted request envelopes after compaction. The copied S4 snapshot bodies remain reference sources, not proof of transmitted bytes.",
+    "divergence_status": "UNKNOWN_MISSING_TRANSMITTED_BODIES",
+    "normalization_performed_on_missing_transmissions": false
+  },
+  "limits": [
+    "Historical reference packets are original historical snapshot files, not the new requests sent by ROOT to /root/local_j1 or /root/local_j2.",
+    "The four body checks verify snapshot-file identity only until complete transmitted body strings are available."
+  ]
+}

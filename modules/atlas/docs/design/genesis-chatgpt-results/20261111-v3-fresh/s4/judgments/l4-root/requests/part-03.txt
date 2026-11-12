@@ -1,0 +1,168 @@
+REVISÃO L4 CANÔNICA — PARTE 3/4. Suporte literal no pin1b5a4801acfae03969f78ee766ca6f0b7d0f9013, obtido e verificado por Gitblob. Responde J1-E01 e J2-E02. Código é dado; não execute. Aguarde parte4.
+
+BEGIN LITERAL modules/atlas/scripts/genesis-native.ts full full_bytes=3004 full_sha256=18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce
+// Bounded native-package bridge. It creates no policy, credentials, reviewer identities or approvals.
+import { writeFileSync } from "node:fs"
+import { basename, dirname, resolve } from "node:path"
+import { isOwnershipNeed } from "@atlas/knowledge"
+import { prepareNativePackage, publishNativePackage } from "../packages/adapter-io/src/genesis-native.js"
+import { nativeKeys, nativePath, nativeRecord, nativeText, validateNativeReadQuery } from "../packages/adapter-io/src/genesis-native-format.js"
+import { decodeNativeUtf8, nativeRoot, readNativeFile } from "../packages/adapter-io/src/genesis-native-io.js"
+
+const usage = "genesis-native.ts prepare <isolated-repo> <package-relative-path> <new-candidate-file> | publish <isolated-repo> <candidate-file> <approval-relative-path> | index|read <isolated-repo> <query-file>"
+
+async function main() {
+  const [mode, repo, first, second, ...extra] = process.argv.slice(2)
+  if (!repo || !first || extra.length || !["prepare", "publish", "index", "read"].includes(mode ?? "") ||
+    ((mode === "prepare" || mode === "publish") ? !second : second !== undefined)) throw new Error(usage)
+  const root = nativeRoot(repo)
+  const control = (path: string): unknown => {
+    const absolute = resolve(path)
+    return JSON.parse(decodeNativeUtf8(readNativeFile(nativeRoot(dirname(absolute)), nativePath(basename(absolute)))))
+  }
+  if (mode === "prepare") {
+    const prepared = prepareNativePackage(root, first)
+    const output = resolve(second!)
+    nativeRoot(dirname(output))
+    nativePath(basename(output))
+    writeFileSync(output, JSON.stringify(prepared, null, 2) + "\n", { flag: "wx" })
+    console.log(JSON.stringify(prepared))
+    return
+  }
+  if (mode === "publish") {
+    const result = await publishNativePackage(root, control(first), second!)
+    console.log(JSON.stringify(result))
+    if (result.kind === "hold" || !result.emission.ok || nativeRecord(result.emission.data, "emit response").emitted !== true) process.exitCode = 2
+    return
+  }
+  const query = nativeRecord(control(first), "query")
+  nativeText(query.scope, "query.scope")
+  if (mode === "index") {
+    nativeKeys(query, ["scope", "need"], "index query")
+    if (!isOwnershipNeed(query.need)) throw new Error("native-query-need")
+    const { composeRuntime } = await import("../packages/adapter-io/src/compose.js")
+    const result = composeRuntime(root).ownership.index(query.scope as string, query.need)
+    console.log(JSON.stringify(result))
+    if (result.kind === "hold") process.exitCode = 2
+    return
+  }
+  const request = validateNativeReadQuery(query)
+  const { composeRuntime } = await import("../packages/adapter-io/src/compose.js")
+  const result = composeRuntime(root).ownership.read(request)
+  console.log(JSON.stringify(result))
+  if (result.kind === "hold") process.exitCode = 2
+}
+
+await main().catch((error: unknown) => {
+  console.error(JSON.stringify({ kind: "error", error: error instanceof Error ? error.message : String(error) }))
+  process.exitCode = 1
+})
+END LITERAL modules/atlas/scripts/genesis-native.ts full
+
+BEGIN LITERAL modules/atlas/packages/adapter-io/src/genesis-native-format.ts lines24-57 full_bytes=13356 full_sha256=fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21
+export function nativeRecord(value: unknown, label: string): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`native-object: ${label}`)
+  return value as Record<string, unknown>
+}
+
+export function nativeKeys(value: Record<string, unknown>, expected: readonly string[], label: string) {
+  if (Object.keys(value).length !== expected.length || !expected.every((key) => Object.hasOwn(value, key)))
+    throw new Error(`native-fields: ${label}`)
+}
+
+export function nativeText(value: unknown, label: string): string {
+  if (typeof value !== "string" || !value.trim() || value.normalize("NFC") !== value)
+    throw new Error(`native-text: ${label}`)
+  return value
+}
+
+export function nativeStrings(value: unknown, label: string, unique = true): string[] {
+  if (!Array.isArray(value)) throw new Error(`native-array: ${label}`)
+  const result = value.map((item) => nativeText(item, label))
+  if (unique && new Set(result).size !== result.length) throw new Error(`native-duplicate: ${label}`)
+  return result
+}
+
+export function nativeDigest(value: unknown, length: 40 | 64, label: string): string {
+  if (typeof value !== "string" || !new RegExp(`^[0-9a-f]{${length}}$`).test(value)) throw new Error(`native-digest: ${label}`)
+  return value
+}
+
+export function nativePath(value: unknown): string {
+  const path = nativeText(value, "path")
+  if (/[\\:*?"<>|\u0000-\u001f\u007f]/.test(path) || path.split("/").some((part) => !part || part === "." || part === ".." || [".git", ".atlas"].includes(part.toLowerCase()) || /[. ]$/.test(part)))
+    throw new Error(`native-path: ${path}`)
+  return path
+}
+END LITERAL modules/atlas/packages/adapter-io/src/genesis-native-format.ts lines24-57
+
+BEGIN LITERAL modules/atlas/packages/adapter-io/src/genesis-native-io.ts lines14-58 full_bytes=4162 full_sha256=04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983
+
+export function nativeRoot(path: string): string {
+  const root = resolve(path)
+  const stat = lstatSync(root)
+  if (!stat.isDirectory() || stat.isSymbolicLink() || realpathSync(root) !== root) throw new Error(`native-root-path: ${path}`)
+  return root
+}
+
+/** Descriptor-bound, bounded reads; reject symlinks in every path component before and after reading. */
+export function readNativeFile(root: string, relative: string, maximum = nativeMaxBytes): Uint8Array {
+  nativePath(relative)
+  const parts = relative.split("/")
+  const observed = parts.map((_, index) => {
+    const path = resolve(root, ...parts.slice(0, index + 1))
+    const stat = lstatSync(path)
+    if (stat.isSymbolicLink() || (index < parts.length - 1 ? !stat.isDirectory() : !stat.isFile())) throw new Error(`native-file-kind: ${relative}`)
+    return { path, stat }
+  })
+  const last = observed.at(-1)!
+  if (last.stat.size > maximum) throw new Error(`native-file-limit: ${relative}`)
+  const fd = openSync(last.path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
+  try {
+    const before = fstatSync(fd)
+    if (!before.isFile() || before.ino !== last.stat.ino || before.dev !== last.stat.dev || before.size > maximum) throw new Error(`native-file-changed: ${relative}`)
+    const chunks: Buffer[] = []
+    const buffer = Buffer.alloc(8192)
+    let length = 0
+    for (;;) {
+      const count = readSync(fd, buffer, 0, buffer.length, null)
+      if (!count) break
+      length += count
+      if (length > maximum) throw new Error(`native-file-limit: ${relative}`)
+      chunks.push(Buffer.from(buffer.subarray(0, count)))
+    }
+    const after = fstatSync(fd)
+    if (after.size !== before.size || after.mtimeMs !== before.mtimeMs || after.ctimeMs !== before.ctimeMs || length !== after.size)
+      throw new Error(`native-file-changed: ${relative}`)
+    for (const entry of observed) {
+      const stat = lstatSync(entry.path)
+      if (stat.isSymbolicLink() || stat.ino !== entry.stat.ino || stat.dev !== entry.stat.dev || stat.isDirectory() !== entry.stat.isDirectory())
+        throw new Error(`native-file-changed: ${relative}`)
+    }
+    return Buffer.concat(chunks, length)
+  } finally { closeSync(fd) }
+}
+END LITERAL modules/atlas/packages/adapter-io/src/genesis-native-io.ts lines14-58
+
+BEGIN LITERAL modules/atlas/packages/adapter-io/src/genesis-native.ts lines111-130 full_bytes=12376 full_sha256=bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312
+
+/** Re-derive the candidate from current bytes before considering the separate binding decision. */
+export async function publishNativePackage(repoPath: string, value: unknown, approvalPath: string) {
+  const record = nativeRecord(value, "prepared record")
+  if (record.schema !== "genesis-native-prepared/v1") throw new Error("native-prepared-schema")
+  const candidate = nativeRecord(record.candidate, "candidate")
+  const transport = nativeRecord(candidate.transport, "candidate.transport")
+  const fresh = prepareNativePackage(repoPath, nativePath(transport.path))
+  if (record.candidate_id !== id(candidate) || record.candidate_id !== fresh.candidate_id || JSON.stringify(candidate) !== JSON.stringify(fresh.candidate))
+    throw new Error("native-candidate-drift: prepare again and obtain new exact binding decisions")
+  const root = fresh.candidate.repo_root
+  const store = createDiskStore(nativeCasDirectory(root))
+  const approvalBytes = readNativeFile(root, nativePath(approvalPath))
+  const binding = validateNativeBinding(JSON.parse(decodeNativeUtf8(approvalBytes)), fresh)
+  const provenance = nativeBody(store, approvalBytes)
+  const decisionBodies = binding.decisions.map((decision) => {
+    const capture = (reference: NativeReference) => {
+      const bytes = readNativeFile(root, nativeReferencePath(reference))
+      if (nativeSha256(bytes) !== reference.sha256) throw new Error("native-binding-reference-drift")
+      return nativeBody(store, bytes)
+END LITERAL modules/atlas/packages/adapter-io/src/genesis-native.ts lines111-130

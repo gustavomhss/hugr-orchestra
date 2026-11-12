@@ -1,0 +1,454 @@
+{
+  "schema": "runtime-large-inputs-dossier/v1",
+  "role": "S4-R4 technical producer",
+  "status": "SOURCE_DELTA_DELIVERED_RUNTIME_NOT_RUN",
+  "repository": "gustavomhss/hugr-orchestra",
+  "base_revision": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "source_identity": "Connector-materialized files; not a Git checkout or claimed HEAD",
+  "authorization": "ROOT approved 2097152 before source authorship and the minimal runtime driver delta before driver authorship; visible-dispatch.json preserves the instructions.",
+  "fixed_cap_bytes": 2097152,
+  "invariants": [
+    "Kernel source identity kind/version/Array.from(bytes) unchanged.",
+    "No byte slicing/truncation/normalization introduced.",
+    "Excess rejected before retaining its extra chunk.",
+    "Path/containment/symlink/descriptor/tri-state guards remain.",
+    "Generic readNativeFile 8 MiB cap unchanged.",
+    "Runtime driver self-read cap256000 unchanged; historical producer driver untouched.",
+    "No corpus package, authority, policy, reviewer, binding, oracle or threshold edited."
+  ],
+  "manifests": {
+    "schema": "runtime-large-inputs-candidate-manifest/v1",
+    "base_revision": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "rows": [
+      {
+        "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "base": {
+          "byte_length": 10101,
+          "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+          "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376"
+        },
+        "candidate": {
+          "byte_length": 10304,
+          "sha256": "9cb3d220d5f2de83e34c0303e5e6744c83e08a22e5ffdf5f5151355d88056f36",
+          "git_blob_sha": "ef317aab980f42601ce78269fcfba10649f06735"
+        }
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+        "base": {
+          "byte_length": 12376,
+          "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+          "git_blob_sha": "f89413ad102fba2d2d56fbf65da14c4d7e5b6c90"
+        },
+        "candidate": {
+          "byte_length": 12432,
+          "sha256": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+          "git_blob_sha": "187610f59758e185a8889412b9058b75eb6e62ca"
+        }
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+        "base": {
+          "byte_length": 2416,
+          "sha256": "38bd2fe5f8b0b2b0e8b21822547af64edf7284f686a17fa813945a5798197a64",
+          "git_blob_sha": "20d7347dbb6651e568b132a014dfd44367b64621"
+        },
+        "candidate": {
+          "byte_length": 2460,
+          "sha256": "7f1d43801b5d83c360950d0a6c8e05a270cd22c416d2b9d2b8ce56fb506ce1e6",
+          "git_blob_sha": "6ecb4614c35f5029d349040386521a5060b04b7d"
+        }
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+        "base": {
+          "byte_length": 13515,
+          "sha256": "7379976cc4705b6061f01f0ae59df2bf15d05bb2e01e9a3fc860adecd5a53535",
+          "git_blob_sha": "0f46c41f52f51ef9e72ff3f3ba8559d05b049e81"
+        },
+        "candidate": {
+          "byte_length": 14948,
+          "sha256": "25267cd4b5bf674c91ea487b8bfbc569b6eb83e677ac8d469d3aec54ff76aa05",
+          "git_blob_sha": "6634d269bc38f0cf3740e6de19a8b0b0fea83b5c"
+        }
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+        "base": {
+          "byte_length": 15139,
+          "sha256": "d0997dd5d07cd178eedb912af64623456f01fcfc7b467fa5f8c324db7018e665",
+          "git_blob_sha": "6d23739f9e83abf47bef3f3bd9b4932085d84e18"
+        },
+        "candidate": {
+          "byte_length": 17893,
+          "sha256": "cc156c5d4d174314ab4dd8a245c8ca823597837ce3fb160e1bf25afe16b15a29",
+          "git_blob_sha": "fcb6b787dce85bb275d1b8772e7afd34718b0d5c"
+        }
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+        "base": {
+          "byte_length": 22051,
+          "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+          "git_blob_sha": "2eb786c3cf96387e0e48d7c558d0d56bdc5dd8f5"
+        },
+        "candidate": {
+          "byte_length": 22091,
+          "sha256": "aee73eedb6136b0c362a9386fd7928e8d91fbc243626f73134b3ac2a70148ea3",
+          "git_blob_sha": "3969a515f1b72c2e2f9847aa5764b9f9341bcbca"
+        }
+      }
+    ],
+    "patch": {
+      "path": "evidence/runtime-large-inputs.patch",
+      "byte_length": 14582,
+      "sha256": "fd2aa021204689cdf844fe5a70f0be37db0d335eedf59e6a78226a67f190e0ff",
+      "git_blob_sha": "fb6252827116cdaf11ed7dbab41c5f6f9ff347e4"
+    },
+    "product_tests": "NOT_RUN",
+    "generated_files_edited": false,
+    "remote_writes": false
+  },
+  "pre_authorship_analysis": {
+    "schema": "runtime-large-inputs-analysis/v1",
+    "phase": "PRE_IMPLEMENTATION_RECOMMENDATION",
+    "candidate_base": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "skill_pin": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "recommended_max_bytes": 2097152,
+    "known_source_lengths_from_root": [
+      369462,
+      390775,
+      1131057,
+      462732
+    ],
+    "headroom_for_largest_bytes": 966095,
+    "production_paths": [
+      "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "modules/atlas/packages/adapter-io/src/genesis-native.ts"
+    ],
+    "test_paths": [
+      "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "modules/atlas/packages/adapter-io/test/genesis-native.test.ts"
+    ],
+    "proposed_change": [
+      "Export ownershipInputMaxBytes = 2 * 1024 * 1024 from ownership-input.ts.",
+      "Use the common constant in the descriptor read loop and final actual byte length check.",
+      "Check the accumulated size before copying the next chunk to retained chunks.",
+      "Import the common constant in genesis-native.ts for source_refs and file: rereads.",
+      "Leave generic nativeMaxBytes = 8 * 1024 * 1024 unchanged."
+    ],
+    "identity_contract": {
+      "preserve": "id({ kind: 'ownership-source', version: 1, bytes: Array.from(bytes) })",
+      "kernel_canonical": "Sorted object keys; decimal integers in bytes array; encoder default BLAKE3.",
+      "transport_hashes": "SHA-256 and Git blob SHA remain separate capture checks.",
+      "old_present_input_versions": "Unchanged for identical bytes.",
+      "candidate_id": "Changes naturally because genesis-native.ts implementation hash changes; fresh binding remains required."
+    },
+    "bounds_inferred_not_measured": {
+      "read_chunk_bytes": 8192,
+      "max_retained_source_chunk_bytes": 2097152,
+      "max_source_concat_bytes": 2097152,
+      "max_extra_read_on_limit_detection_bytes": 8192,
+      "max_numeric_array_elements": 2097152,
+      "max_source_canonical_preimage_bytes": 8388657,
+      "canonical_preimage_derivation": "4*N+49 for N bytes rendered as three-digit decimal values.",
+      "work": "O(N) per observation with existing synchronous sequential loops; no caching or new parallelism.",
+      "typical_prepare_source_reads": "4 reads and 3 kernel IDs when a file appears once as one source_ref and input; artifact reuse repeats work, final observation is deduplicated by key.",
+      "heap_peak_bytes": "UNKNOWN; includes numeric array, mapped strings/references, joined serialized strings, UTF-8 preimage and hash temporaries.",
+      "elapsed_time": "UNKNOWN; product benchmark not executed.",
+      "source_persistence": "source_refs are verified; source bytes are not added as new ownership-body CAS objects."
+    },
+    "guard_preservation": [
+      "Path allowlist, containment, .git/.atlas refusals and unsupported key refusals.",
+      "Regular file and ancestor symlink refusal.",
+      "O_NOFOLLOW/O_NONBLOCK, descriptor close and existing before/after identity checks.",
+      "Full reads with actual byte count; no prefix hashing, slicing or truncation.",
+      "Absent requires verified negative lookup; read failure/oversize remain unavailable; legacy projection remains undefined.",
+      "readNativeFile stat/fd/length/mtime/ctime/component checks unchanged.",
+      "Authority, policies, reviewers, binding, body metadata, roots and dependencies unchanged."
+    ],
+    "planned_actions_tests": [
+      "Preserve exact old byte IDs including BOM/CRLF/decomposed text/binary.",
+      "Accept former limit, former limit+1, known large input range and inclusive 2 MiB boundary with full kernel ID.",
+      "Change only the final byte and prove the observation and live read detect it.",
+      "Reject 2 MiB+1 on real descriptor reads and injected readBytes seam.",
+      "Reject oversized source_refs and an extra file: input without a source_ref.",
+      "Prepare a large-source package retaining source identity, inputs, dependency and navigation.",
+      "Use existing synthetic governed fixture for publish/index/read and stale tail HOLD.",
+      "Retain existing symlink, traversal, absent/unavailable, binding and drift tests."
+    ],
+    "execution": {
+      "product_tests": "NOT_RUN; GitHub Actions only",
+      "local_integrity": "17 source files match connector-reported Git blob SHA",
+      "bun": "ABSENT_FROM_PATH",
+      "parse": "NOT_RUN",
+      "typecheck": "NOT_RUN",
+      "remote_writes": false
+    },
+    "exclusions": [
+      "S1–S5 transport/data",
+      "ROOT oracle",
+      "consumer directories",
+      "kernel",
+      "generic IO",
+      "format",
+      "binding",
+      "policy/authority/reviewers"
+    ],
+    "permissions": "Implementation awaits ROOT orientation; recommendation does not widen oracle or scope."
+  },
+  "compatibility": {
+    "schema": "runtime-large-inputs-compatibility/v1",
+    "candidate_base": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+    "boundary": {
+      "generator": "modules/atlas/boundary/script/build.ts",
+      "generator_git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+      "authoritative_commands": {
+        "cwd": "modules/atlas/boundary",
+        "generate": "bun run generate",
+        "check": "bun run check:generated"
+      },
+      "mechanism": "Bun.build over nine entrypoints with dts-bundle-generator; committed generated bytes must match a fresh build.",
+      "bundle_scan": [
+        {
+          "path": "modules/atlas/boundary/src/generated/boundary.js",
+          "git_blob_sha": "4f75bdd2fbc7a8ed3dbac123977c04a17d9cbaa3",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/context.js",
+          "git_blob_sha": "d4bb55c44a60d2df94861291694b66344a7a6cba",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/materialize.js",
+          "git_blob_sha": "f93908cc6f224b8e598d8e4986b13f2fe58ff526",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/mine.js",
+          "git_blob_sha": "dd6a874d93f2e44815e595c94cc83738e35472c1",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/native-header.js",
+          "git_blob_sha": "9fd49ff606df9054791aa77e8d7f3e1fab375654",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/native-memory.js",
+          "git_blob_sha": "7304ad8c5426cd59be53e76a90dc4adaa0351e12",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/record-log.js",
+          "git_blob_sha": "c2eb7566ca6982282adfaf571fc0922b1bf49e0e",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/record.js",
+          "git_blob_sha": "b6163d9661ef305e2c744388d368ee238b43235b",
+          "has_ownership_observer": false,
+          "old_cap_occurrences": []
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/surface.js",
+          "git_blob_sha": "7fa268ec81d2412e73fb63ea436181624eaa4a0b",
+          "has_ownership_observer": true,
+          "old_cap_occurrences": [
+            {
+              "offset": 327780,
+              "context": "0,probe.length,null);if(n===0)break;if(chunks.push(Buffer.from(probe.subarray(0,n))),total+=n,total>256000)return{kind:\"unavailable\"}}bytes=Buffer.concat(chunks,total)}finally{closeSync2(fd)}}}catch{return{kind:\"unavailable\"}}let after;try{after=lsta"
+            },
+            {
+              "offset": 328075,
+              "context": "le\"}}if(after.ino!==before.ino||after.size!==before.size)return{kind:\"unavailable\"};if(bytes.length>256000)return{kind:\"unavailable\"};return{kind:\"present\",version:String(id({kind:\"ownership-source\",version:1,bytes:Array.from(bytes)}))}}function owne"
+            }
+          ]
+        }
+      ],
+      "known_stale_output": "modules/atlas/boundary/src/generated/surface.js",
+      "expected_but_unverified": "surface.js changes; all nine JS/d.ts pairs must be produced and checked by the generator to determine the exact delta.",
+      "generated_here": false,
+      "manual_bundle_edits": false
+    },
+    "maintenance": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "base_git_blob_sha": "2eb786c3cf96387e0e48d7c558d0d56bdc5dd8f5",
+      "authorized_delta": "Import ownershipInputMaxBytes and use only for input capture readNativeFile.",
+      "own_driver_file_limit": 256000,
+      "historical_copy_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/maintenance-operation.mjs",
+      "historical_copy_edited": false,
+      "identity_effect": "The current runtime driver bytes and recipe version change; use a new driver input, candidate and exact binding decisions. Historical execution evidence remains for the old bytes.",
+      "memory_inference": "The existing retained Map keeps one Uint8Array per captured unique file, so retained source memory is O(sum of captured sizes), bounded per file by 2 MiB. readNativeFile materializes chunks and a concat buffer; new Uint8Array and readCapturedBytes make full copies. Aggregate peak RSS and time are UNKNOWN; this change adds no new cache or parallelism.",
+      "runtime_verification": "NOT_RUN; ROOT owns Actions/runtime follow-up"
+    },
+    "environment": {
+      "node": "24.22.1",
+      "bun_initially_in_path": false,
+      "bun_now_available_by_root_report": "1.3.14 at ROOT-owned tools/runtime",
+      "runtime_root_touched_by_producer": false
+    }
+  },
+  "coverage_authored": [
+    {
+      "file": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "cases": [
+        "HO-02 asserts shared cap exactly2097152 and complete kernel ID at inclusive limit.",
+        "Changes only last byte and requires changed observation.",
+        "Rejects limit+1 on actual file and injected readBytes growth; legacy remains undefined.",
+        "Exact kernel v1 IDs at256000,256001,1131057 with BOM, decomposed Unicode, CRLF and non-UTF8 bytes.",
+        "Logs elapsed_ms and max_rss_kib; memory figure is cumulative Vitest worker peak, not an asserted heap bound.",
+        "Existing absent/unavailable, path and membership negative tests retained."
+      ]
+    },
+    {
+      "file": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "cases": [
+        "Oversize refusal moved from former limit+1 to actual shared limit+1; remaining negative controls retained."
+      ]
+    },
+    {
+      "file": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "cases": [
+        "Full2MiB source passes source_ref capture, complete kernel input identity, preparation, existing synthetic governed publication, index/read.",
+        "Checks dependency result and navigation retained.",
+        "Last-byte-only source change causes ownership-input-changed HOLD and source-drift publication refusal.",
+        "Limit+1 source_ref fails native-file-limit; limit+1 extra file input fails native-input-unavailable.",
+        "Existing authority/binding/source drift/symlink tests retained."
+      ]
+    }
+  ],
+  "static_parse": {
+    "schema": "runtime-large-inputs-static-parse/v1",
+    "node": "v24.22.1",
+    "method": "node:module.stripTypeScriptTypes for TypeScript then unlinked, unevaluated vm.SourceTextModule",
+    "rows": [
+      {
+        "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "syntax": "PASS",
+        "evaluated": false
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+        "syntax": "PASS",
+        "evaluated": false
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+        "syntax": "PASS",
+        "evaluated": false
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+        "syntax": "PASS",
+        "evaluated": false
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+        "syntax": "PASS",
+        "evaluated": false
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+        "syntax": "PASS",
+        "evaluated": false
+      }
+    ],
+    "typecheck": "NOT_RUN by producer; ROOT preparing runtime",
+    "product_tests": "NOT_RUN"
+  },
+  "patch_check": {
+    "schema": "runtime-large-inputs-patch-check/v1",
+    "command": [
+      "git",
+      "apply",
+      "--check",
+      "--whitespace=error",
+      "--directory=base",
+      "evidence/runtime-large-inputs.patch"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "mutated_files": false,
+    "product_execution": false
+  },
+  "remote_validation_request": {
+    "status": "NOT_RUN",
+    "execution_site": "GitHub Actions only",
+    "cwd": "modules/atlas",
+    "command": "npm test -- --project unit packages/adapter-io/test/ownership-input.test.ts packages/adapter-io/test/ownership-observe.test.ts packages/adapter-io/test/genesis-native.test.ts",
+    "existing_test_script": "vitest run",
+    "resource_log_prefix": "ownership input ceiling resource observation:",
+    "typecheck": {
+      "cwd": "modules/atlas/packages/adapter-io",
+      "command": "bun typecheck",
+      "owner": "ROOT"
+    },
+    "generated_outputs": {
+      "owner": "ROOT",
+      "cwd": "modules/atlas/boundary",
+      "commands": [
+        "bun run generate",
+        "bun run check:generated"
+      ]
+    },
+    "mutation_controls": "Existing convention requests meaningful RED controls. No mutants or test executions performed by producer; root may run the newly authored tests against former256000 behavior or prefix-only identity to verify named failures."
+  },
+  "measured_runtime_cost": {
+    "duration_ms": "UNKNOWN until Actions",
+    "max_rss_kib": "UNKNOWN until Actions"
+  },
+  "source_delta": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "patch": "--- a/modules/atlas/packages/adapter-io/src/ownership-input.ts\n+++ b/modules/atlas/packages/adapter-io/src/ownership-input.ts\n@@ -6,6 +6,9 @@\n import { runGitStrict } from \"./run-git.js\"\n import type { RunGitStrictResult } from \"./run-git.js\"\n \n+// File bytes expand into a number array and canonical JSON before hashing; keep this below the transport body cap.\n+export const ownershipInputMaxBytes = 2 * 1024 * 1024\n+\n export type OwnershipInputObservation = KnowledgeOwnershipInputObservation\n \n /** Narrow FS/Git injection seams for deterministic error tests (contract §3.2: transient FS/Git\n@@ -167,9 +170,9 @@\n         for (;;) {\n           const n = readSync(fd, probe, 0, probe.length, null)\n           if (n === 0) break\n-          chunks.push(Buffer.from(probe.subarray(0, n)))\n           total += n\n-          if (total > 256000) return { kind: \"unavailable\" }\n+          if (total > ownershipInputMaxBytes) return { kind: \"unavailable\" }\n+          chunks.push(Buffer.from(probe.subarray(0, n)))\n         }\n         bytes = Buffer.concat(chunks, total)\n       } finally { closeSync(fd) }\n@@ -178,7 +181,7 @@\n   let after: ReturnType<typeof lstatSync>\n   try { after = lstatSync(requested) } catch { return { kind: \"unavailable\" } }\n   if (after.ino !== before.ino || after.size !== before.size) return { kind: \"unavailable\" }\n-  if (bytes.length > 256000) return { kind: \"unavailable\" }\n+  if (bytes.length > ownershipInputMaxBytes) return { kind: \"unavailable\" }\n   return { kind: \"present\", version: String(id({ kind: \"ownership-source\", version: 1, bytes: Array.from(bytes) })) }\n }\n \n"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "patch": "--- a/modules/atlas/packages/adapter-io/src/genesis-native.ts\n+++ b/modules/atlas/packages/adapter-io/src/genesis-native.ts\n@@ -7,7 +7,7 @@\n import type { NativeReference } from \"./genesis-native-format.js\"\n import { decodeNativeUtf8, nativeBlobSha, nativeBody, nativeCasDirectory, nativeImplementation, nativeIoUrl, nativePut, nativeRoot, nativeSha256, readNativeFile } from \"./genesis-native-io.js\"\n import { nativeBindingUrl, validateNativeBinding } from \"./genesis-native-binding.js\"\n-import { observeOwnershipInput, ownershipInput } from \"./ownership-input.js\"\n+import { observeOwnershipInput, ownershipInput, ownershipInputMaxBytes } from \"./ownership-input.js\"\n import { ownershipClaim } from \"./ownership-access.js\"\n import { headSha } from \"./run-git.js\"\n import { createDiskStore } from \"./store.js\"\n@@ -54,7 +54,7 @@\n     for (const reference of [source.recipe_ref, source.producer_request_ref, source.producer_response_ref, ...source.semantic_review_refs, ...source.runtime_receipt_refs]) preserve(reference)\n     for (const reference of source.source_refs) {\n       expectFile(reference.path, reference.sha256)\n-      const bytes = readNativeFile(root, reference.path, 256000)\n+      const bytes = readNativeFile(root, reference.path, ownershipInputMaxBytes)\n       if (nativeSha256(bytes) !== reference.sha256 || nativeBlobSha(bytes) !== reference.git_blob_sha)\n         throw new Error(`native-source-drift: ${reference.path}`)\n     }\n@@ -64,7 +64,7 @@\n     const inputs = inputKeys.map((key) => {\n       const observed = observeOwnershipInput(root, key)\n       if (observed.kind !== \"present\") throw new Error(`native-input-${observed.kind}: ${key}`)\n-      const bytes = key.startsWith(\"file:\") ? readNativeFile(root, key.slice(5), 256000) : undefined\n+      const bytes = key.startsWith(\"file:\") ? readNativeFile(root, key.slice(5), ownershipInputMaxBytes) : undefined\n       if (bytes !== undefined && expectedFiles.has(key.slice(5)) && nativeSha256(bytes) !== expectedFiles.get(key.slice(5)))\n         throw new Error(`native-source-drift: ${key}`)\n       if (bytes !== undefined && observed.version !== String(id({ kind: \"ownership-source\", version: 1, bytes: Array.from(bytes) })))\n"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "patch": "--- a/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs\n+++ b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs\n@@ -30,7 +30,7 @@\n   const { validateNativeBinding } = await import(port(\"packages/adapter-io/src/genesis-native-binding.ts\"))\n   const { nativeBody, nativeCasDirectory, nativePut, nativeRoot, nativeSha256, readNativeFile, decodeNativeUtf8 } = await import(port(\"packages/adapter-io/src/genesis-native-io.ts\"))\n   const { nativeDigest, nativeKeys, nativePath, nativeRecord, nativeReferencePath } = await import(port(\"packages/adapter-io/src/genesis-native-format.ts\"))\n-  const { observeOwnershipInput } = await import(port(\"packages/adapter-io/src/ownership-input.ts\"))\n+  const { observeOwnershipInput, ownershipInputMaxBytes } = await import(port(\"packages/adapter-io/src/ownership-input.ts\"))\n   const { rebuildOwnershipUpdate } = await import(port(\"packages/adapter-io/src/ownership-rebuild.ts\"))\n   const { createDiskStore } = await import(port(\"packages/adapter-io/src/store.ts\"))\n   const { readOwnership } = await import(port(\"packages/knowledge/src/ownership/read.ts\"))\n@@ -65,7 +65,7 @@\n     fileKey(key)\n     const current = observeOwnershipInput(root, key)\n     if (!retained.has(key)) {\n-      const bytes = current.kind === \"present\" ? new Uint8Array(readNativeFile(root, key.slice(5), 256000)) : undefined\n+      const bytes = current.kind === \"present\" ? new Uint8Array(readNativeFile(root, key.slice(5), ownershipInputMaxBytes)) : undefined\n       if (bytes !== undefined) {\n         const after = observeOwnershipInput(root, key)\n         requireValue(after.kind === \"present\" && after.version === current.version && sourceID(bytes) === current.version,\n"
+    }
+  ],
+  "test_delta": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "patch": "--- a/modules/atlas/packages/adapter-io/test/ownership-input.test.ts\n+++ b/modules/atlas/packages/adapter-io/test/ownership-input.test.ts\n@@ -1,7 +1,7 @@\n import { symlinkSync, writeFileSync } from \"node:fs\"\n import { join } from \"node:path\"\n import { afterEach, describe, expect, it } from \"vitest\"\n-import { ownershipInput } from \"../src/ownership-input.js\"\n+import { ownershipInput, ownershipInputMaxBytes } from \"../src/ownership-input.js\"\n import { makeFixRepo } from \"./harness/fix-repo.js\"\n \n const cleanups: (() => void)[] = []\n@@ -35,7 +35,7 @@\n     expect(ownershipInput(f.repoPath, \"recipe:pretend-version\")).toBeUndefined()\n     expect(ownershipInput(f.repoPath, \"file:../outside\")).toBeUndefined()\n     expect(ownershipInput(f.repoPath, \"file:.git/config\")).toBeUndefined()\n-    writeFileSync(join(f.repoPath, \"oversized.txt\"), new Uint8Array(256001))\n+    writeFileSync(join(f.repoPath, \"oversized.txt\"), new Uint8Array(ownershipInputMaxBytes + 1))\n     expect(ownershipInput(f.repoPath, \"file:oversized.txt\")).toBeUndefined()\n     symlinkSync(join(f.repoPath, \"src\", \"util.ts\"), join(f.repoPath, \"alias.ts\"))\n     expect(ownershipInput(f.repoPath, \"file:alias.ts\")).toBeUndefined()\n"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "patch": "--- a/modules/atlas/packages/adapter-io/test/ownership-observe.test.ts\n+++ b/modules/atlas/packages/adapter-io/test/ownership-observe.test.ts\n@@ -9,7 +9,7 @@\n import { join } from \"node:path\"\n import { afterEach, describe, expect, it } from \"vitest\"\n import { id } from \"@atlas/kernel\"\n-import { observeOwnershipInput, ownershipInput, ownershipInputFromObservation } from \"../src/ownership-input.js\"\n+import { observeOwnershipInput, ownershipInput, ownershipInputFromObservation, ownershipInputMaxBytes } from \"../src/ownership-input.js\"\n import type { OwnershipObserveSeams } from \"../src/ownership-input.js\"\n import { makeFixRepo } from \"./harness/fix-repo.js\"\n \n@@ -42,19 +42,43 @@\n   it(\"HO-02 file ceiling applies to bytes actually read\", () => {\n     const f = makeFixRepo()\n     cleanups.push(f.cleanup)\n+    expect(ownershipInputMaxBytes).toBe(2 * 1024 * 1024)\n+    const bytes = new Uint8Array(ownershipInputMaxBytes).fill(255)\n+    bytes[bytes.length - 1] = 1\n     writeFileSync(join(f.repoPath, \"empty.txt\"), new Uint8Array(0))\n-    writeFileSync(join(f.repoPath, \"exact.txt\"), new Uint8Array(256000))\n-    writeFileSync(join(f.repoPath, \"over.txt\"), new Uint8Array(256001))\n+    writeFileSync(join(f.repoPath, \"exact.txt\"), bytes)\n+    writeFileSync(join(f.repoPath, \"over.txt\"), new Uint8Array(ownershipInputMaxBytes + 1))\n     expect(observeOwnershipInput(f.repoPath, \"file:empty.txt\")).toEqual({ kind: \"present\", version: fileVersion(new Uint8Array(0)) })\n-    expect(observeOwnershipInput(f.repoPath, \"file:exact.txt\").kind).toBe(\"present\")\n+    const started = performance.now()\n+    const exact = observeOwnershipInput(f.repoPath, \"file:exact.txt\")\n+    // Actions captures this observation; maxRSS is the worker's cumulative peak, not a 2 MiB heap guarantee.\n+    console.info(\"ownership input ceiling resource observation:\", JSON.stringify({\n+      ceiling_bytes: ownershipInputMaxBytes, elapsed_ms: performance.now() - started,\n+      max_rss_kib: process.resourceUsage().maxRSS, memory_scope: \"cumulative Vitest worker peak\",\n+    }))\n+    expect(exact).toEqual({ kind: \"present\", version: fileVersion(bytes) })\n+    bytes[bytes.length - 1] = 2\n+    writeFileSync(join(f.repoPath, \"exact.txt\"), bytes)\n+    expect(observeOwnershipInput(f.repoPath, \"file:exact.txt\")).not.toEqual(exact)\n     expect(observeOwnershipInput(f.repoPath, \"file:over.txt\")).toEqual({ kind: \"unavailable\" })\n+    expect(ownershipInput(f.repoPath, \"file:over.txt\")).toBeUndefined()\n     const grown: OwnershipObserveSeams = {\n       lstat: () => ({ size: 10, isFile: true, isDirectory: false, isSymbolicLink: false }),\n-      readBytes: () => new Uint8Array(256001),\n+      readBytes: () => new Uint8Array(ownershipInputMaxBytes + 1),\n     }\n     expect(observeOwnershipInput(f.repoPath, \"file:src/util.ts\", grown)).toEqual({ kind: \"unavailable\" })\n   })\n \n+  it.each([256000, 256001, 1131057])(\"keeps the v1 identity over all %i bytes, including text encodings and binary\", (length) => {\n+    const f = makeFixRepo()\n+    cleanups.push(f.cleanup)\n+    const bytes = new Uint8Array(length).fill(255)\n+    bytes.set(text(\"\\ufeffCafe\\u0301\\r\\n\"))\n+    bytes[bytes.length - 1] = 128\n+    writeFileSync(join(f.repoPath, \"source.bin\"), bytes)\n+    expect(observeOwnershipInput(f.repoPath, \"file:source.bin\")).toEqual({ kind: \"present\", version: fileVersion(bytes) })\n+  })\n+\n   it(\"HO-03 absent requires a verified negative lookup\", () => {\n     const f = makeFixRepo()\n     cleanups.push(f.cleanup)\n"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "patch": "--- a/modules/atlas/packages/adapter-io/test/genesis-native.test.ts\n+++ b/modules/atlas/packages/adapter-io/test/genesis-native.test.ts\n@@ -9,6 +9,7 @@\n import { nativeRecord, validateNativePackage, validateNativeReadQuery } from \"../src/genesis-native-format.js\"\n import type { NativeArtifact, NativePackage } from \"../src/genesis-native-format.js\"\n import { nativeBlobSha, nativeSha256 } from \"../src/genesis-native-io.js\"\n+import { ownershipInputMaxBytes } from \"../src/ownership-input.js\"\n import { ownershipFixture } from \"./harness/ownership-fixture.js\"\n \n const prior = { actor: process.env.ATLAS_ACTOR, token: process.env.ATLAS_RATIFY_TOKEN }\n@@ -110,6 +111,42 @@\n     expect(f.runtime().ownership.read({ scope: \"core\", need: \"entry\", maxBytes: 4096 }).kind).toBe(\"hold\")\n   })\n \n+  it(\"prepares and serves a complete source at the shared ceiling, then detects last-byte drift\", async () => {\n+    const f = fixture()\n+    const bytes = new Uint8Array(ownershipInputMaxBytes).fill(97)\n+    bytes.set(new TextEncoder().encode(\"\\ufeff// Cafe\\u0301\\r\\n\"))\n+    bytes[bytes.length - 1] = 10\n+    f.write(\"src/large.ts\", bytes)\n+    const source = f.pack.artifacts[1]!\n+    source.input_keys[0] = \"file:src/large.ts\"\n+    source.source_refs[0] = {\n+      commit: f.pack.source_revision, path: \"src/large.ts\",\n+      git_blob_sha: nativeBlobSha(bytes), sha256: nativeSha256(bytes),\n+    }\n+    const prepared = f.prepare()\n+    const version = String(id({ kind: \"ownership-source\", version: 1, bytes: Array.from(bytes) }))\n+    expect(prepared.candidate.observations.find((input) => input.key === \"file:src/large.ts\"))\n+      .toEqual({ key: \"file:src/large.ts\", version, sha256: nativeSha256(bytes) })\n+    const entry = prepared.candidate.entries[1]!\n+    expect(entry.inputs.find((input) => input.key === \"file:src/large.ts\")).toEqual({ key: \"file:src/large.ts\", version })\n+    expect(version).not.toBe(source.source_refs[0]!.sha256)\n+    expect(entry.dependencies).toEqual([{ key: \"evidence\", result: prepared.candidate.entries[0]!.artifact.result }])\n+    expect(entry.artifact.navigation).toEqual([\"navigation\"])\n+    f.write(\"native/approval.json\", JSON.stringify(f.approval(prepared)))\n+    process.env.ATLAS_RATIFY_TOKEN = \"explicit-synthetic-fixture-token\"\n+    expect(await publishNativePackage(f.repoPath, prepared, \"native/approval.json\"))\n+      .toMatchObject({ kind: \"publication-attempt\", emission: { ok: true, data: { emitted: true } } })\n+    expect(f.runtime().ownership.index(\"core\", \"entry\")).toMatchObject({ kind: \"index\", key: \"entry\", bodiesReturned: false })\n+    const query = { scope: \"core\", need: \"entry\" as const, maxBytes: 4096 }\n+    expect(f.runtime().ownership.read(query)).toMatchObject({\n+      kind: \"ready\", body: readFileSync(join(f.repoPath, \"native/bodies/entry.md\"), \"utf8\"), checked: [\"evidence\", \"entry\"],\n+    })\n+    bytes[bytes.length - 1] = 13\n+    f.write(\"src/large.ts\", bytes)\n+    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: \"hold\", reason: \"ownership-input-changed\" })\n+    await expect(publishNativePackage(f.repoPath, prepared, \"native/approval.json\")).rejects.toThrow(\"native-source-drift: src/large.ts\")\n+  })\n+\n   const malformed: [string, (pack: NativePackage) => void][] = [\n     [\"duplicate artifact\", (pack) => { pack.artifacts.push(pack.artifacts[0]!) }],\n     [\"duplicate criterion\", (pack) => { pack.contract.criteria.push(pack.contract.criteria[0]!) }],\n@@ -167,8 +204,12 @@\n     g.pack.artifacts[0]!.input_keys.push(\"members:missing-directory\")\n     expect(() => g.prepare()).toThrow(\"native-input-absent\")\n     g.pack.artifacts[0]!.input_keys.pop()\n-    g.write(\"src/util.ts\", new Uint8Array(256001))\n-    expect(() => g.prepare()).toThrow(\"native-file-limit\")\n+    g.write(\"src/util.ts\", new Uint8Array(ownershipInputMaxBytes + 1))\n+    expect(() => g.prepare()).toThrow(\"native-file-limit: src/util.ts\")\n+    const h = fixture()\n+    h.write(\"native/oversized-input.txt\", new Uint8Array(ownershipInputMaxBytes + 1))\n+    h.pack.artifacts[0]!.input_keys.push(\"file:native/oversized-input.txt\")\n+    expect(() => h.prepare()).toThrow(\"native-input-unavailable: file:native/oversized-input.txt\")\n   })\n \n   it(\"requires two exact new binding decisions, all criteria and every input/result pair\", () => {\n"
+    }
+  ],
+  "scope_exclusions": [
+    "No generated bundles manually edited",
+    "No remote writes",
+    "No local product test/benchmark/probe",
+    "No original historical producer driver changed",
+    "No oracle or consumer directory read",
+    "No semantic or binding judgment emitted"
+  ],
+  "remaining": [
+    "Run real scoped tests and capture resource output in Actions.",
+    "Run typecheck in ROOT prepared environment.",
+    "Regenerate boundary outputs with the official generator, recover exact generated delta and check byte equality.",
+    "Any operation using the new maintenance driver must bind its new exact bytes/recipe; historical receipts do not transfer."
+  ]
+}

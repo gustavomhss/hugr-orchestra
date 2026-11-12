@@ -7,7 +7,7 @@ import { nativeFormatUrl, nativePath, nativeRecord, nativeReferenceKey, nativeRe
 import type { NativeReference } from "./genesis-native-format.js"
 import { decodeNativeUtf8, nativeBlobSha, nativeBody, nativeCasDirectory, nativeImplementation, nativeIoUrl, nativePut, nativeRoot, nativeSha256, readNativeFile } from "./genesis-native-io.js"
 import { nativeBindingUrl, validateNativeBinding } from "./genesis-native-binding.js"
-import { observeOwnershipInput, ownershipInput } from "./ownership-input.js"
+import { observeOwnershipInput, ownershipInput, ownershipInputMaxBytes } from "./ownership-input.js"
 import { ownershipClaim } from "./ownership-access.js"
 import { headSha } from "./run-git.js"
 import { createDiskStore } from "./store.js"
@@ -54,7 +54,7 @@ export function prepareNativePackage(repoPath: string, packagePath: string): Pre
     for (const reference of [source.recipe_ref, source.producer_request_ref, source.producer_response_ref, ...source.semantic_review_refs, ...source.runtime_receipt_refs]) preserve(reference)
     for (const reference of source.source_refs) {
       expectFile(reference.path, reference.sha256)
-      const bytes = readNativeFile(root, reference.path, 256000)
+      const bytes = readNativeFile(root, reference.path, ownershipInputMaxBytes)
       if (nativeSha256(bytes) !== reference.sha256 || nativeBlobSha(bytes) !== reference.git_blob_sha)
         throw new Error(`native-source-drift: ${reference.path}`)
     }
@@ -64,7 +64,7 @@ export function prepareNativePackage(repoPath: string, packagePath: string): Pre
     const inputs = inputKeys.map((key) => {
       const observed = observeOwnershipInput(root, key)
       if (observed.kind !== "present") throw new Error(`native-input-${observed.kind}: ${key}`)
-      const bytes = key.startsWith("file:") ? readNativeFile(root, key.slice(5), 256000) : undefined
+      const bytes = key.startsWith("file:") ? readNativeFile(root, key.slice(5), ownershipInputMaxBytes) : undefined
       if (bytes !== undefined && expectedFiles.has(key.slice(5)) && nativeSha256(bytes) !== expectedFiles.get(key.slice(5)))
         throw new Error(`native-source-drift: ${key}`)
       if (bytes !== undefined && observed.version !== String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })))

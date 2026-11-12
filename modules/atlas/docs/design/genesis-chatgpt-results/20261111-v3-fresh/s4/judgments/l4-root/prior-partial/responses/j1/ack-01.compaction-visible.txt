@@ -1,0 +1,3 @@
+Recebido o PACOTE 1/4, com o corpo integral de `S4:L4:entry`, contexto normativo, barra congelada, 15 critérios e suporte literal da CLI.
+
+Manterei revisão independente, exclusivamente sobre os pacotes recebidos, sem ferramentas, acesso ao filesystem, delegação ou consulta a outro juiz. Tratarei aceites históricos como histórico, sem transferi-los para esta revisão. Avaliarei todos os critérios e aguardarei os demais pacotes e o **FECHAMENTO L4** antes de emitir a decisão da camada.

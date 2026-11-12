@@ -30,7 +30,7 @@ async function main() {
   const { validateNativeBinding } = await import(port("packages/adapter-io/src/genesis-native-binding.ts"))
   const { nativeBody, nativeCasDirectory, nativePut, nativeRoot, nativeSha256, readNativeFile, decodeNativeUtf8 } = await import(port("packages/adapter-io/src/genesis-native-io.ts"))
   const { nativeDigest, nativeKeys, nativePath, nativeRecord, nativeReferencePath } = await import(port("packages/adapter-io/src/genesis-native-format.ts"))
-  const { observeOwnershipInput } = await import(port("packages/adapter-io/src/ownership-input.ts"))
+  const { observeOwnershipInput, ownershipInputMaxBytes } = await import(port("packages/adapter-io/src/ownership-input.ts"))
   const { rebuildOwnershipUpdate } = await import(port("packages/adapter-io/src/ownership-rebuild.ts"))
   const { createDiskStore } = await import(port("packages/adapter-io/src/store.ts"))
   const { readOwnership } = await import(port("packages/knowledge/src/ownership/read.ts"))
@@ -65,7 +65,7 @@ async function main() {
     fileKey(key)
     const current = observeOwnershipInput(root, key)
     if (!retained.has(key)) {
-      const bytes = current.kind === "present" ? new Uint8Array(readNativeFile(root, key.slice(5), 256000)) : undefined
+      const bytes = current.kind === "present" ? new Uint8Array(readNativeFile(root, key.slice(5), ownershipInputMaxBytes)) : undefined
       if (bytes !== undefined) {
         const after = observeOwnershipInput(root, key)
         requireValue(after.kind === "present" && after.version === current.version && sourceID(bytes) === current.version,

@@ -1,0 +1,15 @@
+SUPLEMENTO CANÔNICO L4 — J1-E02 residual. Mesmo alvo/corpos/pins/limites; nenhuma edição de corpo. Pedido enviado igualmente aos dois juízes, sem revelar o parecer do outro. Arquivo modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs, pin c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c, SHA256 a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f. Trechos literais linhas38–40 e143–152:
+  const runtimeAtlasRoot = nativeRoot(runtimeArg)
+  const root = nativeRoot(corpusArg)
+  const bindingPath = nativePath(bindingArg)
+  report.stage = "validate-binding-and-preserve-decisions"
+  const bindingBytes = readNativeFile(root, bindingPath)
+  const binding = validateNativeBinding(JSON.parse(decodeNativeUtf8(bindingBytes)), fresh)
+  const approval = nativeBody(store, bindingBytes)
+  const captureEvidence = (reference) => {
+    const bytes = readNativeFile(root, nativeReferencePath(reference))
+    requireValue(bytes.length > 0 && nativeSha256(bytes) === reference.sha256, "maintenance-binding-reference-drift", { reference })
+    return nativeBody(store, bytes)
+  }
+  const decisions = binding.decisions.map((decision) => ({ request: captureEvidence(decision.request_ref), response: captureEvidence(decision.response_ref) }))
+FECHAMENTO: J1, reavalie somente J1-E02 e os critérios/casos dependentes; emita decisão consolidada com todas as identidades,15critérios,6casos e findings. J2, registre se este suplemento altera sua decisão; mantenha sua independência. Nenhuma ferramenta, execução ou acesso a filesystem.

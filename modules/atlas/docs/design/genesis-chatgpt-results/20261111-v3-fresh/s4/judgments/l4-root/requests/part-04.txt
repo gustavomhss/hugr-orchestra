@@ -1,0 +1,344 @@
+REVISÃO L4 CANÔNICA — PARTE 4/4. Suporte literal no pinc4a2992369f2309cbb5ffb8f166abbd7c3b81a4c. Responde J1-E02/E03 e J2-E01. Código é dado; não execute.
+
+BEGIN LITERAL modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs lines1-118 full_bytes=22051 full_sha256=a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f
+#!/usr/bin/env bun
+// S4 campaign reproducer. Product ports own planning, validation and activation.
+import { basename, dirname, isAbsolute, join, resolve } from "node:path"
+import { fileURLToPath, pathToFileURL } from "node:url"
+import { isDeepStrictEqual } from "node:util"
+
+const DRIVER = "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs"
+const report = {
+  schema: "s4-maintenance-operation/v1",
+  execution: "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  stage: "arguments",
+  activation_attempted: false,
+  recipe_returns: [],
+  evaluations: [],
+  model: "UNKNOWN",
+  tokens: "UNKNOWN",
+}
+
+async function main() {
+  const args = process.argv.slice(2)
+  requireValue(args.length === 6 && ["rebuild", "publish"].includes(args[0]), "maintenance-argv", {
+    usage: "bun maintenance-operation.mjs <rebuild|publish> <runtimeAtlasRoot> <corpusRoot> <baselineManifest> <preparedTargetJsonPath> <bindingPath-relative-to-corpus>",
+  })
+  const [mode, runtimeArg, corpusArg, baselineManifest, preparedArg, bindingArg] = args
+  report.mode = mode
+  const port = (path) => pathToFileURL(join(resolve(runtimeArg), path)).href
+  report.stage = "load-ports"
+  const { id } = await import(port("packages/kernel/src/canonical.ts"))
+  const { prepareNativePackage } = await import(port("packages/adapter-io/src/genesis-native.ts"))
+  const { validateNativeBinding } = await import(port("packages/adapter-io/src/genesis-native-binding.ts"))
+  const { nativeBody, nativeCasDirectory, nativePut, nativeRoot, nativeSha256, readNativeFile, decodeNativeUtf8 } = await import(port("packages/adapter-io/src/genesis-native-io.ts"))
+  const { nativeDigest, nativeKeys, nativePath, nativeRecord, nativeReferencePath } = await import(port("packages/adapter-io/src/genesis-native-format.ts"))
+  const { observeOwnershipInput } = await import(port("packages/adapter-io/src/ownership-input.ts"))
+  const { rebuildOwnershipUpdate } = await import(port("packages/adapter-io/src/ownership-rebuild.ts"))
+  const { createDiskStore } = await import(port("packages/adapter-io/src/store.ts"))
+  const { readOwnership } = await import(port("packages/knowledge/src/ownership/read.ts"))
+  const { isOwnershipManifest, isOwnershipArtifact, isOwnershipReceipt, isOwnershipResult, isOwnershipBody, isOwnershipContract } = await import(port("packages/knowledge/src/ownership/shape.ts"))
+  const runtimeAtlasRoot = nativeRoot(runtimeArg)
+  const root = nativeRoot(corpusArg)
+  const bindingPath = nativePath(bindingArg)
+  nativeDigest(baselineManifest, 64, "baselineManifest")
+  const executedPath = fileURLToPath(import.meta.url)
+  const readImplementation = () => readNativeFile(nativeRoot(dirname(executedPath)), basename(executedPath), 256000)
+  const implementationBytes = readImplementation()
+  const preparedPath = isAbsolute(preparedArg) ? preparedArg : resolve(root, nativePath(preparedArg))
+  const readPrepared = () => readNativeFile(nativeRoot(dirname(preparedPath)), basename(preparedPath))
+  const store = createDiskStore(nativeCasDirectory(root))
+  const load = (ref, matches) => {
+    nativeDigest(ref, 64, "CAS reference")
+    const value = store.get(ref)
+    requireValue(matches(value) && id(value) === ref, "maintenance-cas-integrity-or-shape", { ref })
+    return value
+  }
+  const sourceID = (bytes) => String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) }))
+  const fileKey = (key) => {
+    requireValue(typeof key === "string" && key.startsWith("file:"), "maintenance-file-input-only", { key })
+    nativePath(key.slice(5))
+    return key
+  }
+  Object.assign(report, { runtimeAtlasRoot, corpusRoot: root, baseline_manifest: baselineManifest, executed_driver: executedPath, recipe_input: `file:${DRIVER}` })
+
+  // Capture once; every observe invocation still reads the host. Later observations never replace bytes.
+  const retained = new Map()
+  const observe = (key) => {
+    fileKey(key)
+    const current = observeOwnershipInput(root, key)
+    if (!retained.has(key)) {
+      const bytes = current.kind === "present" ? new Uint8Array(readNativeFile(root, key.slice(5), 256000)) : undefined
+      if (bytes !== undefined) {
+        const after = observeOwnershipInput(root, key)
+        requireValue(after.kind === "present" && after.version === current.version && sourceID(bytes) === current.version,
+          "maintenance-input-raced-during-capture", { key, before: current, after })
+      }
+      retained.set(key, { observation: { ...current }, bytes })
+    }
+    return current
+  }
+  report.stage = "prepare-exact-target"
+  const implementation = observe(report.recipe_input)
+  requireValue(implementation.kind === "present", "maintenance-driver-unavailable", { observation: implementation })
+  requireValue(sourceID(implementationBytes) === implementation.version, "maintenance-executed-driver-mismatch")
+  report.recipe_version = implementation.version
+  const preparedBytes = readPrepared()
+  const record = nativeRecord(JSON.parse(decodeNativeUtf8(preparedBytes)), "prepared record")
+  nativeKeys(record, ["schema", "candidate_id", "candidate"], "prepared record")
+  requireValue(record.schema === "genesis-native-prepared/v1", "maintenance-prepared-schema")
+  const transportPath = nativePath(nativeRecord(nativeRecord(record.candidate, "candidate").transport, "transport").path)
+  const fresh = prepareNativePackage(root, transportPath)
+  requireValue(record.candidate_id === id(record.candidate) && record.candidate_id === fresh.candidate_id &&
+    JSON.stringify(record.candidate) === JSON.stringify(fresh.candidate), "maintenance-candidate-drift")
+  const target = fresh.candidate
+  report.target_candidate_id = fresh.candidate_id
+  report.contract = target.contract
+  const contract = load(target.contract, isOwnershipContract)
+  requireValue(isDeepStrictEqual(contract.criteria, target.criteria), "maintenance-contract-criteria-drift")
+
+  report.stage = "baseline-structure"
+  const baseline = load(baselineManifest, isOwnershipManifest)
+  requireValue(baseline.scope === target.scope && isDeepStrictEqual(baseline.roots, target.roots) &&
+    isDeepStrictEqual(baseline.entries.map((entry) => entry.key), target.entries.map((entry) => entry.key)),
+  "maintenance-structure-change", { baseline_scope: baseline.scope, target_scope: target.scope, baseline_roots: baseline.roots,
+    target_roots: target.roots, baseline_keys: baseline.entries.map((entry) => entry.key), target_keys: target.entries.map((entry) => entry.key) })
+  const baselines = new Map(baseline.entries.map((entry) => {
+    const artifact = load(entry.artifact, isOwnershipArtifact)
+    const receipt = load(artifact.receipt, isOwnershipReceipt)
+    return [entry.key, { ref: entry.artifact, artifact, receipt }]
+  }))
+  const targets = new Map(target.entries.map((entry) => [entry.key, entry]))
+  const outputs = new Map()
+  for (const entry of target.entries) {
+    const prior = baselines.get(entry.key)
+    const { receipt: omitted, result: previousResult, ...structure } = prior.artifact
+    const { result: targetResult, ...targetStructure } = entry.artifact
+    requireValue(isDeepStrictEqual(structure, targetStructure), "maintenance-artifact-structure-change", { key: entry.key, baseline: structure, target: targetStructure })
+    const keys = entry.inputs.map((input) => fileKey(input.key))
+    prior.receipt.inputs.forEach((input) => fileKey(input.key))
+    requireValue(isDeepStrictEqual(keys, [...keys].sort()) && isDeepStrictEqual(prior.receipt.inputs.map((input) => input.key), keys),
+      "maintenance-input-layout-change-or-order", { key: entry.key, baseline: prior.receipt.inputs.map((input) => input.key), target: keys })
+END LITERAL modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs lines1-118
+
+BEGIN LITERAL modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs lines194-317 full_bytes=22051 full_sha256=a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f
+  report.stage = "rebuild"
+  guard()
+  const rebuilt = rebuildOwnershipUpdate({
+    store, manifest: baselineManifest, scope: target.scope, contract: target.contract, recipes, observe,
+    readCapturedBytes: (key) => { const bytes = retained.get(fileKey(key))?.bytes; return bytes === undefined ? undefined : new Uint8Array(bytes) },
+    listMembers: (dir) => { throw failure("maintenance-members-unsupported", { dir }) },
+    evaluate: (input) => {
+      const entry = targets.get(input.key)
+      const inputsID = id({ inputs: input.inputs, dependencies: input.dependencies })
+      const matches = entry !== undefined && input.scope === target.scope && input.result === entry.artifact.result && inputsID === entry.inputs_id &&
+        isDeepStrictEqual(input.inputs, entry.inputs) && isDeepStrictEqual(input.dependencies, entry.dependencies)
+      report.evaluations.push({ key: input.key, result: input.result, inputs_id: inputsID, matched_target: matches })
+      return matches ? { kind: "ready", reviews: reviews.get(input.key) } : {
+        kind: "hold", reason: "ownership-review", evidence: [input.key, "maintenance-target-envelope-mismatch", input.result, inputsID],
+      }
+    },
+  })
+  report.rebuild = rebuilt
+  report.captures = [...retained].map(([key, value]) => ({ key, observation: value.observation,
+    ...(value.bytes === undefined ? {} : { byte_length: value.bytes.length, sha256: nativeSha256(value.bytes) }) }))
+  if (rebuilt.kind === "hold") return { ...report, kind: "hold", refusal: rebuilt }
+  report.affected = rebuilt.affected
+  report.calls = rebuilt.calls
+  report.private_manifest = rebuilt.manifest
+  report.manifest_changed = rebuilt.manifest !== baselineManifest
+  report.after = identities(rebuilt.manifest)
+
+  report.stage = "validate-complete-reconstruction"
+  const candidate = load(rebuilt.manifest, isOwnershipManifest)
+  requireValue(candidate.scope === baseline.scope && isDeepStrictEqual(candidate.roots, baseline.roots) &&
+    isDeepStrictEqual(candidate.entries.map((entry) => entry.key), baseline.entries.map((entry) => entry.key)), "maintenance-rebuilt-structure-change")
+  for (const entry of candidate.entries) {
+    const artifact = load(entry.artifact, isOwnershipArtifact)
+    const receipt = load(artifact.receipt, isOwnershipReceipt)
+    const expected = targets.get(entry.key)
+    const { receipt: omitted, ...nativeArtifact } = artifact
+    requireValue(isDeepStrictEqual(nativeArtifact, expected.artifact) && receipt.contract === target.contract &&
+      isDeepStrictEqual(receipt.inputs, expected.inputs) && isDeepStrictEqual(receipt.dependencies, expected.dependencies),
+    "maintenance-rebuild-does-not-match-target", { key: entry.key, actual: report.after[entry.key], expected_result: expected.artifact.result, expected_inputs_id: expected.inputs_id })
+  }
+  const validateEveryEntry = () => {
+    for (const entry of candidate.entries) {
+      const read = readOwnership(store, rebuilt.manifest, { scope: target.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, (key) => {
+        const current = observeOwnershipInput(root, fileKey(key))
+        return current.kind === "present" ? current.version : undefined
+      })
+      if (read.kind === "hold") throw Object.assign(failure("maintenance-current-entry-refusal", { key: entry.key }), { refusal: read })
+    }
+  }
+  guard()
+  validateEveryEntry()
+  if (mode === "rebuild") return { ...report, kind: "candidate", stage: "private-candidate", activation_attempted: false }
+
+  report.stage = "governed-publication"
+  const { composeRuntime } = await import(port("packages/adapter-io/src/compose.ts"))
+  const { ownershipClaim } = await import(port("packages/adapter-io/src/ownership-access.ts"))
+  const { deriveGroundingAxes } = await import(port("packages/adapter-io/src/grounding-computer.ts"))
+  const { walkFileTree } = await import(port("packages/adapter-io/src/fs.ts"))
+  const { readScipOrEmpty } = await import(port("packages/adapter-io/src/scip.ts"))
+  const axes = deriveGroundingAxes(walkFileTree(root), readScipOrEmpty(join(root, ".atlas/index.scip"))).axes
+  const node = {
+    kind: "advisory", id: String(id({ ownership: rebuilt.manifest })), tier: "T2", scope: target.scope,
+    claimNorm: ownershipClaim(target.scope), predicateSlot: "ownership", ownership: rebuilt.manifest,
+    grounding: { entries: [{ anchor: { kind: "repo", qualifiedPath: axes.spatial.key, subtreeHash: axes.spatial.subtreeHash }, path: "." }] },
+    freshness: "FRESH", claims: [], authoring: "ADVISORY",
+  }
+  const at = id({ kind: "genesis-native-binding", candidate: fresh.candidate_id })
+  const runtime = composeRuntime(root)
+  // Historical selection verifies the published baseline despite input drift; it never validates the target.
+  const validatePublishedBaseline = () => {
+    for (const need of Object.keys(baseline.roots)) {
+      const selected = runtime.ownership.read({ scope: target.scope, need, historical: true, maxBytes: Number.MAX_SAFE_INTEGER })
+      if (selected.kind === "hold") throw Object.assign(failure("maintenance-published-baseline-refusal", { need }), { refusal: selected })
+      requireValue(selected.manifest === baselineManifest, "maintenance-published-baseline-mismatch", { need, actual: selected.manifest, expected: baselineManifest })
+    }
+  }
+  validatePublishedBaseline()
+  guard()
+  validateEveryEntry()
+  const check = runtime.check(node, at)
+  report.check = check
+  if (!check.wouldEmit) return { ...report, kind: "hold", stage: "governed-check" }
+  // No cached observation is substituted here or in the native handler's ownership-input gate.
+  guard()
+  validateEveryEntry()
+  validatePublishedBaseline()
+  report.at = at
+  report.activation_attempted = true
+  report.emission = await runtime.handler.handle("atlas-emit", { node, at })
+  report.emitted = typeof report.emission?.data?.emitted === "boolean" ? report.emission.data.emitted : "UNKNOWN"
+  if (report.emission?.ok !== true || report.emitted !== true) return { ...report, kind: "hold", stage: "governed-emission" }
+  report.stage = "published-readback"
+  const reopened = composeRuntime(root)
+  report.indices = Object.keys(candidate.roots).map((need) => ({ need, result: reopened.ownership.index(target.scope, need) }))
+  report.readbacks = candidate.entries.map((entry) => {
+    const read = reopened.ownership.read({ scope: target.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER })
+    if (read.kind === "hold") return { key: entry.key, result: read }
+    return { key: entry.key, result: { kind: read.kind, manifest: read.manifest, artifact: read.artifact, receipt: read.receipt,
+      result: read.result, historical: read.historical, body_byte_length: new TextEncoder().encode(read.body).length,
+      body_sha256: nativeSha256(new TextEncoder().encode(read.body)) } }
+  })
+  const publishedMatches = report.indices.every((entry) => entry.result.kind === "index" && entry.result.manifest === rebuilt.manifest) &&
+    report.readbacks.every((entry) => entry.result.kind === "ready" && entry.result.manifest === rebuilt.manifest &&
+      entry.result.artifact === report.after[entry.key].artifact && entry.result.result === report.after[entry.key].result)
+  return { ...report, kind: "publication-attempt", published_manifest_matches_candidate: publishedMatches }
+}
+
+function failure(code, details = {}) {
+  return Object.assign(new Error(code), { code, details })
+}
+
+function requireValue(condition, code, details) {
+  if (!condition) throw failure(code, details)
+}
+
+try {
+  const result = await main()
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)
+  process.exitCode = result.kind === "hold" || (result.kind === "publication-attempt" && !result.published_manifest_matches_candidate) ? 1 : 0
+} catch (error) {
+  process.stdout.write(`${JSON.stringify({ ...report, kind: "hold", ...(error?.refusal === undefined ? {} : { refusal: error.refusal }),
+    error: { name: error?.name ?? "UnknownError", message: error?.message ?? String(error), code: error?.code ?? "UNKNOWN", details: error?.details ?? {} } }, null, 2)}\n`)
+  process.exitCode = 1
+}
+END LITERAL modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs lines194-317
+
+CI RECEIPT PROJECTION (valores exatos, projeção JSON declarada; não é o arquivo bruto integral): modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/ci-c1/receipt.json full_sha256=0e5ab3de3e3eff58fda61020dc4f3ec6b2c67007ecc3b42c7d81a7e97654ca0c
+{
+  "schema": "s4-ci-c1-mechanical-receipt/v1",
+  "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+  "ci": {
+    "run_id": 43094387837,
+    "job_id": 130779354662,
+    "job_name": "pilot",
+    "status": "completed",
+    "conclusion": "success",
+    "steps_observed": 14,
+    "steps_success": 14,
+    "jobs_source": "originals/jobs.json",
+    "job_duration_ms": "UNKNOWN",
+    "head_evidence": "principal request and ownership-guards.json candidate agree; jobs.json itself has no head field"
+  },
+  "mutations": {
+    "source": "originals/ownership-mutation-receipts.json",
+    "receipts": 22,
+    "unique_probes": 22,
+    "existing_probe_reports": 22,
+    "exit_code_counts": {
+      "1": 22
+    },
+    "report_success_false_count": 22,
+    "named_failure_exact_matches": 22,
+    "failed_assertions_total": 22,
+    "details": {
+      "path": "mutation-checks.json",
+      "bytes": 22155,
+      "sha256": "5d3c48b8dcdbb1325fd920c654a5a9df45a0087249d66291ddbdfd4618aabd5c"
+    },
+    "interpretation": "Existing mutant runs rejected their named controls; nonzero mutant exits are expected evidence, not main-suite failures. These 22 receipts do not establish exhaustive mutation coverage."
+  },
+  "generated_boundary": {
+    "artifact_files": 18,
+    "candidate_files": 18,
+    "byte_equal_files": 18,
+    "path_sets_equal": true,
+    "comparison": {
+      "path": "generated-comparison.json",
+      "bytes": 6517,
+      "sha256": "6bbe0409f83fdf0f6b421007b746c10a6261f477f7e610a979bcbd4b7029662d"
+    },
+    "not_executed_here": true
+  },
+  "maintenance_driver": {
+    "parse_step": {
+      "name": "Parse the native maintenance operation",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    "command": "node --check modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+    "local_driver_identity": {
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "bytes": 22051,
+      "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f"
+    },
+    "evidence_scope": "The CI step reports successful node --check parsing. This does not execute imports or the script body and does not prove prepare/rebuild/publish/read with the campaign package.",
+    "operational_execution": "NOT_RUN in this WP; no operational success inferred from this parse gate",
+    "local_parse_rerun": false
+  }
+}
+{
+  "runtime_tests": {
+    "success": true,
+    "reported_tests": {
+      "numTotalTests": 220,
+      "numPassedTests": 220,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numTodoTests": 0
+    },
+    "file_result_entries": 23,
+    "assertion_result_entries": 220,
+    "failure_messages": 0,
+    "count_limit": "assertionResults counts test-case records, not individual expect/assert invocations; 58 reported suites and 23 file-result records are retained as distinct quantities"
+  },
+  "guards": {
+    "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+    "exit_code": 0,
+    "counts": {
+      "rules": 78,
+      "changed_paths": 1188,
+      "gate_findings": 0,
+      "warn_findings": 2,
+      "errors": 0
+    },
+    "limit": "Success/exit 0 coexists with two warnings; this is the recorded changed-path guard run, not a claim about all repository states."
+  }
+}
+ROOT também consultou diretamente run43094387837 via conector: head1b5a4801acfae03969f78ee766ca6f0b7d0f9013, eventpush, workflow.github/workflows/atlas-pilot.yml, completedsuccess. Isso corrobora o pin; a prova das contagens é o recibo acima, não inferência do status.
+FECHAMENTO L4: Emita nova decisão independente JSON válida, agent_id real, purpose semantic-layer4-review, quatro identidades key/bytes/SHA e metadados com alcance recebido, verdict,15criteria comverdict/razão,6oracle_cases, primary_corrections listando J1-E01/E02/E03 ou J2-E01/E02 conforme seu histórico e resolução, mandatory_findings e limites. Pode manter REQUEST_EVIDENCE se suporte decisivo ainda faltar. Não precisa reabrir critérios já satisfeitos sem nova razão. A decisão não é binding nem afirma execução operacional. Cerca de8500bytes.
