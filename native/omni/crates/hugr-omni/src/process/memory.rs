@@ -15,6 +15,7 @@ use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
 use tokio::runtime::Handle;
 
 use super::child::Inner;
+use crate::client::InventoryFailure;
 use crate::types::Reason;
 
 /// How often the tree's resident memory is read.
@@ -28,15 +29,17 @@ pub(super) fn arm(rt: &Handle, inner: &Arc<Inner>, cap: Option<u64>) {
 }
 
 /// Holds the child only while it samples, so a dropped child (whose drop kills the tree) ends the watch. It ends
-/// too once the tree lists nothing (stopped, or ended on its own) or the supervisor cannot list it.
+/// too once the tree lists nothing or its inventory is terminal. A recoverable failure retries next period.
 async fn watch(child: Weak<Inner>, cap: u64) {
     loop {
         tokio::time::sleep(PERIOD).await;
         let Some(inner) = child.upgrade() else {
             return;
         };
-        let Ok(members) = inner.life.processes().await else {
-            return;
+        let members = match inner.life.inventory().await {
+            Ok(members) => members,
+            Err(InventoryFailure::Retryable(_)) => continue,
+            Err(InventoryFailure::Terminal(_)) => return,
         };
         if members.is_empty() {
             return;
@@ -44,7 +47,7 @@ async fn watch(child: Weak<Inner>, cap: u64) {
         let pids: Vec<Pid> = members.iter().map(|m| Pid::from_u32(m.pid)).collect();
         // Reading the OS' tables is blocking work: off the runtime's workers.
         let Ok(rss) = tokio::task::spawn_blocking(move || resident(&pids)).await else {
-            return;
+            continue;
         };
         if rss > cap {
             // Forced at once (no grace): a tree growing past its cap gets no time to grow further. A failure here
