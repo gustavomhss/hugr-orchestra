@@ -602,15 +602,71 @@
       "id": "G2",
       "severity": "P2",
       "owner": "ui",
-      "status": "implementation_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "72afa84e9e",
+        "03f2135224",
+        "50388b3d23",
+        "632f69f07e",
+        "4edc087b30",
+        "5bcf1e5ab9",
+        "dd92dce704",
+        "a862305c0d",
+        "d49e6e2abb",
+        "9ec1751833"
+      ],
       "evidence": [
         {
           "kind": "red",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43149079101",
           "snapshot": "53166e2ed7efeb3548737282ad81e18bf7ae99cb",
           "result": "Linux existing create API admits duplicate default-file hosts; one assertion fails, first-host survival and real default SQLite controls pass. Not yet a concurrent-provider corruption reproduction."
+        },
+        {
+          "kind": "api-red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43151943193",
+          "snapshot": "ad64e17789f06557a497f0cedf54e84752b65b93",
+          "result": "Future options/contributions ignored and helper absent; not provider-corruption reproduction"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43153604637",
+          "result": "Equivalent graph clones falsely conflict in two replacement orders; cycles hidden/misclassified"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154505105",
+          "snapshot": "a45a0a2bb8f8957f6a3d7cc1a134b4d31e33f2ce",
+          "result": "24 tests/3 files, Core hoist"
+        },
+        {
+          "kind": "partial-green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154562447",
+          "snapshot": "09e1e2da6d877915dc3a1ccb7ca963267c328c62",
+          "result": "Linux28pass1skip1fail, Windows27pass2skip1fail; sole failure fixture counted legitimate automatic SessionTitle request. Workflow failure, not green"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43155138978",
+          "snapshot": "a9e2dac1831e4dd5158371b6407eeaf58071f5d0",
+          "result": "Corrected sole provider case1pass10assertions eachOS, real rename before prompt excludes automatic title, one provider request and constructor, A text persisted"
+        },
+        {
+          "kind": "typecheck",
+          "result": "SDK final head0 and Core exact0",
+          "receipts": [
+            "/tmp/orchestra-embedded-sdk-type-head.exit",
+            "/tmp/orchestra-embedded-core-type-final-exact.exit"
+          ]
+        },
+        {
+          "kind": "review",
+          "result": "Elon APPROVE SDK/DB/README, Lamport APPROVE hoist f026; lead read both and integrated without conflict"
+        },
+        {
+          "kind": "limits",
+          "result": "One process/SDK module only; no workers/cross-process/duplicated-bundle or active file replacement protection. May create parents/empty file, never deletes selected DB on failure. SDK evidence compositional on identical production, no single full SDK green claimed."
         }
       ]
     },
@@ -2269,9 +2325,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 38,
+    "new_fixes_verified": 39,
     "already_fixed_verified": 1,
-    "remaining": 26,
+    "remaining": 25,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "1691632a77",
@@ -2322,23 +2378,23 @@
     "guards": {
       "exit": 0,
       "rules": 78,
-      "changed_paths": 169,
+      "changed_paths": 183,
       "gate": 0,
       "warn": 0,
-      "receipt": "/tmp/orchestra-audit-wave3-guards.exit"
+      "receipt": "/tmp/orchestra-wave4-guards.exit"
     },
     "boundaries": {
       "exit": 0,
-      "parsed_files": 5562,
-      "cross_package_edges": 4995,
+      "parsed_files": 5569,
+      "cross_package_edges": 5020,
       "ledgered": 92,
       "new": 0,
       "stale": 0,
-      "receipt": "/tmp/orchestra-audit-wave3-boundaries.exit"
+      "receipt": "/tmp/orchestra-wave4-boundaries.exit"
     },
     "spawn_imports": {
       "exit": 0,
-      "receipt": "/tmp/orchestra-audit-wave3-spawn.exit"
+      "receipt": "/tmp/orchestra-wave4-spawn.exit"
     },
     "desktop_boundary_import": {
       "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134685283",
@@ -2356,30 +2412,32 @@
     }
   },
   "next_contracts": {
-    "G2": "44b4b83de3 tests frozen; Elon and lead acceptance GO, implementation authorized; corrected API-red gate pending, behavioral RED verified",
-    "E6": "cdd57cd172 +9c1f9d421f: Core/host acceptance only GO; wire/UI deferred to subsequent bounded stage within same task",
-    "H6": "5d4733127f: factory/provenance/private sealed seed/config loader interfaces frozen; House GO, acceptance only",
-    "M9_M10": "da4887f41e: single publisher, immutable versioned feed URLs before approval, metadata-only latest promotion; cold contract review in progress"
+    "G2": "Integrated9ec1751833; fixed with compositional SDK evidence and hoist24green, both independent approvals",
+    "E6": "Core/host source implemented; typed fix Core+Claude checks and hosted await API window, wire/UI not started",
+    "H6": "Source d358674544, Coretype0/guards0; runtime gate not dispatched due403 API limit; House source review pending",
+    "M9_M10": "Acceptance a97103c978 approved with3 isolated digest/set conflicts green; source in progress, no live release"
   },
   "wave4": {
     "agents": {
       "security": {
         "branch": "mcp-identity",
         "baseline": "5d4733127f405a89e77a6319cbba3da1e45f1635",
-        "scope": "H6 acceptance only"
+        "scope": "H6 source frozen; type0, runtime gate awaiting API reset"
       },
       "desktop": {
-        "scope": "M9/M10 contract facts/review only"
+        "scope": "M9/M10 implementation after cold acceptance and scoped RED",
+        "branch": "release-recovery",
+        "baseline": "017b3118a92edb61f0963596203e1f94dbda3e56"
       },
       "clients": {
         "branch": "model-eligibility",
         "baseline": "cdd57cd1723c47219d347034520a7a255dbd1403",
-        "scope": "E6 Core/host acceptance only"
+        "scope": "E6 Core/host source frozen, typechecking; wire/UI later stage"
       },
       "ui": {
         "branch": "embedded-custody",
         "baseline": "367b8ef87948fe1d67d02d238ef2becc491f03ac",
-        "scope": "G2 implementation after cold acceptance and behavioral RED"
+        "scope": "G2 integrated, readonly E2/T2 revalidation complete"
       }
     },
     "conflicts": "G2 Core DB export only; E6 Core model/host then wire/UI; H6 MCP/Registry/Config readDocument; releases workflow/tools. Shared docs owned by root. Client generation serialized, no writer currently active.",
