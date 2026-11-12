@@ -4,6 +4,28 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Opening Settings no longer turns a failed live-seat read into a stopped meeting, a missing key, and protection on. Changing content protection no longer hides a failed write. The switch goes back, and that failure is shown.
+
+## 0.3.7 (2026-11-12)
+
+Command line and desktop release candidate, unsigned like 0.3.6. Publication reuses the exact artifacts validated for this cut; the release receipt records their source, runtime checks and SHA256 digests.
+
+- Sandbox parent rollback compares exact 64-bit filesystem identities and preserves directories when identity is unavailable.
+- Project provider overrides and agent execution, permissions and selection settings now require project trust, including discovered agent Markdown and trust revocation.
+- Undo replacement admission commits atomically with its history cut. Conflicting prompt IDs preserve history, staged undo blocks hidden-history execution, and busy revert requests return HTTP 409.
+- Child creation and parent deletion serialize through commit without holding lifecycle guards across observer callbacks.
+- Concurrent credential access shares one home-scoped key lock across profiles, retains ownership through native calls and recovers automatically after process death.
+- Claude mode preserves updated context and supported media, retains compaction archive identity, delivers every tracked background completion, and settles handed input even when cleanup fails.
+- Background Task retries reconcile through durable admission without retaining completed watchers or starting another child provider turn.
+- Owned desktop servers regain their retry budget after stable operation; bounded diagnostics retain newer-database refusals independently on each output stream.
+- Desktop updates keep services running until native preparation confirms quit; installation errors do not trigger partial teardown and forced recovery.
+- Slow terminal WebSocket clients have bounded output retention and disconnect cleanly while preserving replay order and the running PTY.
+- Ambiguous MCP tool owners fail explicitly with existing permission keys preserved; cancelled connection setup releases its claims.
+- Active workspace placement works when the picker is hidden and is revalidated at submission. Copied Sessions resolve their repository through canonical Location ownership.
+- Archive uninstall verifies ownership of its selected payload and links, preserves other versions, and refuses npm targets that do not match the executable's owner.
+- Unsolicited OAuth callbacks preserve the pending login; incomplete local requests cannot prevent listener cleanup.
+- Cold Session content renders before the first heavy review panel, including an empty undo projection; warm tab switches retain the mounted panel.
+
 - Changing pinch zoom no longer hides a failed write. The switch goes back, and that failure is shown. Reading it when Settings opens no longer treats a failed read as off.
 - The Flight Engineer home card no longer hides a failed meeting list. A meeting already shown stays, and that failure is shown. "No meetings yet" is only a list that came back empty.
 - Renaming a running Flight Engineer meeting no longer hides a failed write. The title stays as it was, and that failure is shown.

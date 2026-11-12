@@ -507,12 +507,6 @@
     {
       "rule": "R7",
       "file": "packages/server/src/handlers/pty.ts",
-      "specifier": "@orchestra/core/pty/protocol",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "packages/server/src/handlers/pty.ts",
       "specifier": "@orchestra/core/pty/ticket",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
     },

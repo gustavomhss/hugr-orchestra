@@ -104,3 +104,9 @@ These follow from Claude Code running the model. None of them changes what you s
   usage, use an API key, or pick another provider.
 
 Design and decisions: `docs/specs/claude-mode/meta-harness.md`.
+
+## Context, attachments and background work
+
+Claude mode forwards updated projected system context and supported attachments, including typed document and image tool results. Unsupported or unresolved media returns an error rather than a successful empty result. Engine compaction archives retain their identity so an owned archive is not replayed as fresh user input.
+
+All tracked background completions are delivered before query handoff. Interrupted work receives a pending notice, and input already handed to the engine stays settled even if notification cleanup fails; the failure remains visible.

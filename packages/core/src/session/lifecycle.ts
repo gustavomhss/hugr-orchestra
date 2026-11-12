@@ -9,6 +9,26 @@ import type { SessionExecution } from "./execution"
 import type { SessionRunCoordinator } from "./run-coordinator"
 import { SessionSchema } from "./schema"
 import { SessionTable } from "./sql"
+import { KeyedMutex } from "../effect/keyed-mutex"
+
+// These guards coordinate this process's child admission and recursive deletion; execution ownership remains separate.
+const parents = KeyedMutex.makeUnsafe<SessionSchema.ID>()
+export const withParent = <A, E, R>(sessionID: SessionSchema.ID, effect: Effect.Effect<A, E, R>) =>
+  parents.withLock(sessionID)(effect)
+
+/** Freeze child admission recursively. Never wait for execution/drain ownership inside this guard. */
+export const withTree = <A, E, R>(
+  db: Database.Interface["db"],
+  sessionID: SessionSchema.ID,
+  use: (ids: ReadonlyArray<SessionSchema.ID>) => Effect.Effect<A, E, R>,
+): Effect.Effect<A, E, R> => withParent(sessionID, Effect.gen(function* () {
+  const children = yield* db.select({ id: SessionTable.id }).from(SessionTable)
+    .where(eq(SessionTable.parent_id, sessionID)).all().pipe(Effect.orDie)
+  const hold = (index: number, ids: ReadonlyArray<SessionSchema.ID>): Effect.Effect<A, E, R> =>
+    index === children.length ? use(ids)
+      : withTree(db, children[index].id, (nested) => hold(index + 1, [...ids, ...nested]))
+  return yield* hold(0, [sessionID])
+}))
 
 const defaultTitle = /^(New session - |Child session - )\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 

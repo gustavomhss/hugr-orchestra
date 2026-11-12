@@ -159,11 +159,11 @@ function coreShards(name: Platform, host: string, count: number) {
 // lane that carried them with the other packages ran past the 10-minute limit). The legacy rollback proof rides in the
 // Windows atlas lane beside the process query proof, for the same reason.
 export function packageLanes(name: Platform, host: string) {
-  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay"].map((entry) => `@orchestra/${entry}`)
+  const linux = name === "linux"
+  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", ...(linux ? [] : ["desktop", "script"])].map((entry) => `@orchestra/${entry}`)
   // httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
   const excluded = name === "windows" ? [...claimed, "@orchestra/httpapi-codegen"] : claimed
   const filters = (packages: string[]) => packages.map((entry) => `--filter=@orchestra/${entry}`).join(" ")
-  const linux = name === "linux"
   const lane = (part: string, label: string, selected: string, extra: object = {}) => ({
     name,
     host,
@@ -182,6 +182,11 @@ export function packageLanes(name: Platform, host: string) {
       rollback: !linux,
     }),
     lane("relay", "relay", "--filter=@orchestra/relay"),
+    // Windows desktop and script together exceed the libs lane's serial test budget.
+    ...(linux ? [] : [
+      lane("desktop", "desktop", filters(["desktop"]), { budget: 15 }),
+      lane("script", "script", filters(["script"]), { budget: 15 }),
+    ]),
     lane("libs", "other packages", excluded.map((entry) => `--filter=!${entry}`).join(" "), {
       electron: linux,
       // The Windows lane left past the step's 8 minutes without assertions; the workflow gives that one a 12/15 budget.
