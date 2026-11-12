@@ -145,12 +145,24 @@ export function WslServerSettings(props: {
                             {language.t("wsl.server.retryStart")}
                           </MenuV2.Item>
                         </Show>
-                        <Show when={props.controller.canDefault() && props.controller.defaultKey() !== key}>
+                        <Show
+                          when={
+                            props.controller.defaultKnown() &&
+                            props.controller.canDefault() &&
+                            props.controller.defaultKey() !== key
+                          }
+                        >
                           <MenuV2.Item onSelect={() => props.controller.setDefault(key)}>
                             {language.t("dialog.server.menu.default")}
                           </MenuV2.Item>
                         </Show>
-                        <Show when={props.controller.canDefault() && props.controller.defaultKey() === key}>
+                        <Show
+                          when={
+                            props.controller.defaultKnown() &&
+                            props.controller.canDefault() &&
+                            props.controller.defaultKey() === key
+                          }
+                        >
                           <MenuV2.Item onSelect={() => props.controller.setDefault(null)}>
                             {language.t("dialog.server.menu.defaultRemove")}
                           </MenuV2.Item>
