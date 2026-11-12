@@ -1,7 +1,7 @@
 # WP-R0 execution anchor
 
-Baseline: `03aadc3a75` (planning corrections). R0-A is active; R0-B has not
-started. Existing project list/get and public output remain unchanged. The
+Baseline: `03aadc3a75` (planning corrections). R0-A has hosted red evidence;
+R0-B is implemented and awaiting hosted green. Existing project list/get and public output remain unchanged. The
 owner's installed application/database are outside this work.
 
 ## Frozen internal consumer surface
@@ -21,9 +21,9 @@ readonly getRegistration: (input: {
 }) => Effect.Effect<Registration | undefined>
 ```
 
-The initial implementation of those two methods dies with an explicit
-unavailable error. It never returns a fabricated empty registry. This is a
-compilable acceptance anchor, not the completed feature. The final acceptance
+The acceptance baseline used explicit unavailable errors for those methods;
+the current implementation reads persisted tokens through actual queries.
+It never substitutes a fabricated empty registry for a failure. The final acceptance
 Core typecheck passed after the rollback proof fixes (GOMAXPROCS=2); receipt:
 `/tmp/activity-registration-acceptance-sealed-typecheck.exit`, exit 0. No local
 product tests ran. The frozen interface itself did not change.
@@ -77,22 +77,40 @@ file plus explicit anchors, and the existing ProjectCopy test delta.
    explicit transaction argument. The existing test-only raw Drizzle inserts
    receive their insertion default; they are not additional production writers.
 
-## Gate receipt — pending baseline
+## Hosted baseline and implementation receipt
 
 Authoritative request: `bun run test:ci core test/activity-registration.test.ts
 test/project-copy.test.ts test/project-directories.test.ts --os both`.
-Log: `/tmp/activity-registration-red-sealed-ci.log`; exit file uses the same
-prefix. The earlier request was stopped while waiting for runner capacity,
-before a CI branch/run existed, so the corrected suite could be captured.
+After shared-runner, network and rate-limit delays, the backoff request produced
+[the expected red baseline](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453),
+snapshot `27e56db610d23cb8e82e5211633f170020565cb5`. Each of Linux/Windows ran
+22 tests: 15 pass and seven intended failures (G01–G04 plus three strengthened
+ProjectCopy cases). G01 found no migration; the other failures hit explicit
+unavailable anchors. Both Omni controls passed, with 52 real spawns and zero
+delegated spawns per platform. The workflow cleaned its snapshot branch.
+`registration-baseline.json` preserves the actual named outcomes. Nonzero exit
+is expected baseline evidence, not a successful production validation.
 
-No red runtime result exists yet. The helper uploaded a frozen snapshot and
-may wait up to thirty minutes behind unrelated queued workflows. Do not start
-R0-B or claim an executed red-to-green transition until the hosted baseline
-reports the intended missing-behavior failures on Linux and Windows. The sole
-post-upload source change before the superseded request stopped was a type-only
-nonnull assertion; the sealed request includes the complete corrected suite.
+R0-B now implements persisted IDs, transactional strategy renewal (including
+empty strings), no-op preservation, internal projections and the generated/new
+customized migration. G01 was further strengthened with an exact large SQLite
+integer preservation check; that additional assertion was not in the red run.
+INSERT…SELECT keeps legacy fields inside SQLite while UUIDs are allocated in
+the supplied transaction. Existing public Protocol/HttpApi did not change;
+Client generation is not required. Core's migration artifacts were generated.
 
-After the baseline: implement R0-B, run the same hosted pack plus migration
-generator checks and final package typecheck, independently review each bounded
-diff, and record exact snapshots/run URLs here and in RECOVERY.md. Local product
+Generator and `bun script/migration.ts --check` passed. Final Core typecheck
+passed (`/tmp/activity-registration-final-typecheck.exit`, 0). Formatting and
+diff checks passed. Independent cold review approved the source and precision
+delta. Guardrails have zero gates and one disclosed guardrail-ignore-added
+warning: migration-destructive permits an ignore on the rebuild's DROP line;
+the source copies every old field first in the transaction, and the independent
+reviewer confirmed that reason. No rule/approval label was changed.
+
+The authoritative green request uses the same three-file pack on Linux/Windows:
+`/tmp/activity-registration-green-sealed-ci.log` and matching `.exit` receipt.
+It is awaiting shared runner capacity. A superseded green uploader stopped
+before creating a CI branch when the precision oracle was strengthened. The
+only post-snapshot Core change is the reviewed guardrail rationale comment.
+No hosted-green or completed R0/whole-product claim is made yet. Local product
 tests, owner database migration and owner app/server restart remain prohibited.
