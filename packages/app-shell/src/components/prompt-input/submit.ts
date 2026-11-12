@@ -364,6 +364,17 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       (server.connectionEpoch?.() ?? 0) === captured.epoch &&
       JSON.stringify(modelSelection.intent()) === captured.intentKey &&
       (local.agent.current()?.id ?? local.agent.key?.()) === captured.currentAgent?.id
+    const untrackEarly = sessionID ? trackPendingPrompt(directorySDK.scope, sessionID, {
+      abort: controller,
+      cleanup: () => {},
+    }) : undefined
+    if (untrackEarly) admission.cleanup = untrackEarly
+    const reportPolicyError = (err: unknown) => {
+      if (!signal.aborted && ownsSource()) showToast({
+        title: language.t("common.requestFailed"),
+        description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
+      })
+    }
     const rulesKey = input.pendingKey?.() ?? draftSessionKey(directorySDK.scope, projectDirectory, draftID)
     const shouldAutoAccept = isNewSession && input.autoAccept()
     const delivery = captured.delivery
@@ -435,10 +446,13 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           }).session
 
     if (mode !== "shell" && !shouldQueue && !(admission.request?.kind === "prompt" && admission.request.admissionAttempted) && (!isNewSession || !session)) {
-      const policyReady = !sessionID || await Promise.resolve(server.sessionManagement.waitSubagentModels?.(sessionID))
-        .then(() => true, () => false)
-      if (!policyReady || !ownsSource() || captured.policyVersion !== captured.readPolicyVersion()) {
-        if (ownsSource()) showToast({ title: language.t("dialog.subagentModels.saveFailed") })
+      if (sessionID && !(await waitForSubagentPolicy({ sessionID, management: server.sessionManagement,
+        current: ownsSource, signal }).catch((err: unknown) => {
+        reportPolicyError(err)
+        return false
+      }))) return false
+      if (!ownsSource() || captured.policyVersion !== captured.readPolicyVersion()) {
+        if (!signal.aborted && ownsSource()) showToast({ title: language.t("dialog.subagentModels.saveFailed") })
         return false
       }
       const draftRevision = pendingSnapshot(rulesKey).revision
@@ -536,9 +550,12 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
 
     const messageID = admission.request?.id ?? Identifier.ascending("message")
+    const capturedRequest = admission.request
     const removeOptimisticMessage = () => {
-      if (ownsSource()) syncState.session.optimistic.remove({ directory: sessionDirectory, sessionID: session.id,
-        messageID: admission.request?.id ?? messageID })
+      const current = ownsSource()
+      if (!current && !(capturedRequest?.kind === "prompt" && !capturedRequest.admissionAttempted && ownsBinding())) return
+      syncState.session.optimistic.remove({ directory: sessionDirectory, sessionID: session.id,
+        messageID: current ? admission.request?.id ?? messageID : messageID })
     }
     const phase: { value?: { signal: AbortSignal; current: () => boolean; dispose: VoidFunction; ready: boolean } } = {}
     const disposePhase = () => { const previous = phase.value; phase.value = undefined; previous?.dispose() }
@@ -550,6 +567,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         sessionID: session.id, api, serverState,
       } : undefined,
     })
+    untrackEarly?.()
     admission.cleanup = () => { disposePhase(); untrackPending() }
     // A first send that fails leaves the Session this draft created behind, empty, in the sidebar. The draft itself
     // (text, context, subagent models, worktree) stays as it was for the next try.
@@ -581,10 +599,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     })
     const policyError = async (err: unknown) => {
       if (signal.aborted) return false as const
-      if (ownsSource()) showToast({
-        title: language.t("common.requestFailed"),
-        description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
-      })
+      reportPolicyError(err)
       await settleEmptySession(false)
       return false as const
     }
@@ -815,7 +830,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         return sent
       })
       .catch(async (err) => {
-        if (signal.aborted) return false
+        if (signal.aborted) {
+          removeOptimisticMessage()
+          restoreInput()
+          return false
+        }
         if (ownsSource() && (isCommand || sessionDirectory === projectDirectory) && !queued) {
           syncState.set("session_status", session.id, { type: "idle" })
         }

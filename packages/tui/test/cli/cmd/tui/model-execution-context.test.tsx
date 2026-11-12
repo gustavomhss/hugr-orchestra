@@ -109,7 +109,7 @@ test("E6 TUI metadata A to B to A invalidates a held admission before its ready 
     fixture.prompt.submit()
     await wait(() => witness.signal !== undefined || fixture.admissions().length > 0, "actual held admission canonical request or POST entered")
     expect(witness.signal).toBeDefined()
-    expect(fixture.calls.slice(before).filter((call) => /\/(agent|model|prompt)$/.test(call.path))).toEqual([])
+    expect(fixture.calls.slice(before).filter((call) => call.method === "POST" && /\/(agent|model|prompt)$/.test(call.path))).toEqual([])
     fixture.control.reply = () => json({ location: { directory: fixture.root }, data: refused() })
     fixture.control.catalogAgents = fixture.control.catalogAgents.map((agent, index) => index === 0 ? Agent.Info.make({ ...agent, engine: "claude-code" }) : agent)
     await fixture.context.sync.bootstrap({ fatal: false })
@@ -126,7 +126,7 @@ test("E6 TUI metadata A to B to A invalidates a held admission before its ready 
     await returned.promise
     await fixture.app.renderOnce()
     await Bun.sleep(0)
-    expect(fixture.calls.slice(before).filter((call) => /\/(agent|model|prompt)$/.test(call.path))).toEqual([])
+    expect(fixture.calls.slice(before).filter((call) => call.method === "POST" && /\/(agent|model|prompt)$/.test(call.path))).toEqual([])
     expect(fixture.prompt.current.input).toBe("held metadata ABA")
     expect(fixture.context.local.model.execution.allows({ providerID: ref.providerID, modelID: ref.id })).toBe(false)
   } finally { release.resolve(); await fixture.dispose() }

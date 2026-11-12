@@ -3,7 +3,7 @@ import { Schema } from "effect"
 import { unwrap } from "solid-js/store"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
-import { createFollowupSender, followupInput, commands, state, toasts, optimistic, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
+import { createFollowupSender, followupInput, commands, state, toasts, optimistic, optimisticRemovals, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
 import { createPromptState } from "@/context/prompt-state"
 import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
@@ -478,6 +478,8 @@ test.each(["Session", "raw model", "policy", "credentials"])("E6 App rechecks %s
     expect(calls.calls.filter((call) => call.path.endsWith("/agent"))).toHaveLength(1)
     expect(calls.calls.filter((call) => call.path.endsWith("/model"))).toHaveLength(1)
     expect(calls.admissions()).toEqual([])
+    const capturedOptimistic = optimistic.at(-1)
+    if (change === "raw model" || change === "policy") expect(capturedOptimistic).toBeDefined()
     if (change === "Session") state.params.id = "other-session"
     if (change === "raw model") state.modelID = "blocked"
     if (change === "policy") await server.sessionManagement.setSubagentModels("session-1", { mode: "inherit" })
@@ -489,6 +491,9 @@ test.each(["Session", "raw model", "policy", "credentials"])("E6 App rechecks %s
     expect(calls.admissions()).toEqual([])
     expect(calls.queries()).toHaveLength(1)
     expect(owner.prompt.current()).toEqual(text("canonical prompt"))
+    if (change === "raw model" || change === "policy") expect(optimisticRemovals).toContainEqual({
+      directory: calls.directory, sessionID: "session-1", messageID: capturedOptimistic!.message.id,
+    })
   } finally { release.resolve(); await pending; owner.dispose() }
 })
 
