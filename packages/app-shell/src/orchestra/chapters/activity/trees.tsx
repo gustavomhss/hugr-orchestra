@@ -1,9 +1,10 @@
 import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { For, Show, createMemo, onCleanup, onMount } from "solid-js"
-import { createStore, reconcile } from "solid-js/store"
+import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { readingAge } from "./reading"
+import { applySnapshot } from "./snapshot"
 
 const columns = ["process", "owner", "state", "pid", "supervisorID", "members", "footprint", "age"] as const
 
@@ -58,13 +59,7 @@ export function ActivityTrees(props: { query: string }) {
         (snapshot) => {
           if (controller.signal.aborted) return
           const receivedAt = performance.now()
-          // Keep disclosure rows stable across polls; a new server instance starts a new set of rows.
-          setState(
-            "snapshot",
-            state.snapshot?.instanceID === snapshot.instanceID
-              ? reconcile(snapshot, { key: "recordID" })
-              : () => snapshot,
-          )
+          setState(applySnapshot(snapshot))
           setState({ failure: undefined, receivedAt, now: receivedAt })
         },
         (error: unknown) => {
