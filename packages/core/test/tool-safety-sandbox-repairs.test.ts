@@ -1,11 +1,14 @@
+import { NodeFileSystem } from "@effect/platform-node"
 import { expect } from "bun:test"
 import path from "node:path"
 import { createServer } from "node:net"
 import { lstatSync, type BigIntStats } from "node:fs"
 import { pathToFileURL } from "node:url"
-import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, FileSystem, Layer } from "effect"
+import { systemError } from "effect/PlatformError"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
+import { filesystem } from "../src/effect/app-node-platform"
 import { FSUtil } from "../src/fs-util"
 import { AppProcess } from "../src/process"
 import { SandboxParents } from "../src/sandbox-parents"
@@ -286,6 +289,7 @@ function replacementState() {
     owned: undefined as string | undefined,
     moved: undefined as string | undefined,
     ownedIsDir: null as boolean | null,
+    verification: "not-started",
     original: { state: "not_observed" } as ReplacementObservation,
     replacement: { state: "not_observed" } as ReplacementObservation,
   }
@@ -331,6 +335,17 @@ function replacementSetup(fs: FSUtil.Interface, directory: string, state: Return
   })
 }
 
+function verifyReplacementDirectories(fs: FSUtil.Interface, target: string, moved: string, state: ReturnType<typeof replacementState>) {
+  return Effect.gen(function* () {
+    state.verification = "owned-stat"
+    state.ownedIsDir = yield* fs.isDir(target)
+    expect(state.ownedIsDir).toBe(true)
+    state.verification = "moved-stat"
+    expect(yield* fs.isDir(moved)).toBe(true)
+    state.verification = "complete"
+  })
+}
+
 function retainReplacementFailure<A, E, R>(effect: Effect.Effect<A, E, R>, state: ReturnType<typeof replacementState>,
   sink: (message: string) => void = (message) => console.error(message),
   observe: typeof replacementObservation = replacementObservation,
@@ -346,7 +361,7 @@ function retainReplacementFailure<A, E, R>(effect: Effect.Effect<A, E, R>, state
       // Later observations identify neither the actor nor the original isDir stat error.
       const report = JSON.stringify({ sandboxReplacement: {
         stage: state.stage, renameCompleted: state.renameCompleted, replacementCompleted: state.replacementCompleted,
-        controlCompleted: state.controlCompleted, ownedIsDir: state.ownedIsDir,
+        controlCompleted: state.controlCompleted, ownedIsDir: state.ownedIsDir, verification: state.verification,
         captured: { original: state.original, replacement: state.replacement },
         current: { owned: snapshot(state.owned), moved: snapshot(state.moved) },
       } })
@@ -375,11 +390,75 @@ it.live("failed preparation preserves a replacement directory with a different i
       )),
     }, f.directory, [target]))
     expect(failed.reason).toBe("sandbox-parent-placement-acquisition")
-    state.ownedIsDir = yield* f.fs.isDir(target)
-    expect(state.ownedIsDir).toBe(true)
-    expect(yield* f.fs.isDir(moved)).toBe(true)
+    yield* verifyReplacementDirectories(f.fs, target, moved, state)
   }), state)
 })
+
+for (const stage of ["rename", "replacement-mkdir"] as const) {
+  it.live(`replacement ${stage} failures preserve the setup error instead of becoming placement denial`, () => Effect.gen(function* () {
+    const f = yield* fixture
+    const target = path.join(f.directory, "owned")
+    const state = replacementState()
+    const primary = systemError({
+      _tag: "PermissionDenied", module: "FileSystem", method: stage === "rename" ? "rename" : "makeDirectory", pathOrDescriptor: target,
+      cause: Object.assign(new Error(`controlled ${stage} failure`), { code: "EACCES" }),
+    })
+    const injected: FSUtil.Interface = {
+      ...f.fs,
+      rename: (from, to) => stage === "rename" ? Effect.fail(primary) : f.fs.rename(from, to),
+      makeDirectory: (entry, options) => stage === "replacement-mkdir" ? Effect.fail(primary) : f.fs.makeDirectory(entry, options),
+    }
+    const exit = yield* SandboxParents.prepare({
+      ...f.fs,
+      realPath: (entry) => f.fs.realPath(entry).pipe(Effect.tap(() => entry === target ? replacementSetup(injected, f.directory, state) : Effect.void)),
+    }, f.directory, [target]).pipe(Effect.exit)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (!Exit.isFailure(exit)) throw new Error("Controlled replacement setup failure succeeded")
+    const defects = exit.cause.reasons.filter(Cause.isDieReason)
+    expect(defects).toHaveLength(1)
+    expect(defects[0].defect).toBe(primary)
+    expect(exit.cause.reasons.some(Cause.isFailReason)).toBe(false)
+    expect(state.stage).toBe(stage)
+    expect(state.renameCompleted).toBe(stage === "replacement-mkdir")
+    expect(state.replacementCompleted).toBe(false)
+    expect(state.controlCompleted).toBe(false)
+  }))
+}
+
+it.live("replacement verification preserves the actual stat error while both native directories remain", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const target = path.join(f.directory, "owned")
+  const moved = path.join(f.directory, "moved")
+  yield* f.fs.makeDirectory(target)
+  yield* f.fs.makeDirectory(moved)
+  const state = replacementState()
+  state.owned = target
+  state.moved = moved
+  const primary = systemError({
+    _tag: "PermissionDenied", module: "FileSystem", method: "stat", pathOrDescriptor: target,
+    cause: Object.assign(new Error("controlled verification stat failure"), { code: "EACCES" }),
+  })
+  const observed = { calls: 0 }
+  const underlying = Layer.effect(FileSystem.FileSystem, Effect.map(FileSystem.FileSystem, (native) => ({
+    ...native,
+    stat: (entry: string) => entry !== target ? native.stat(entry) : Effect.sync(() => { observed.calls++ }).pipe(Effect.andThen(Effect.fail(primary))),
+  }))).pipe(Layer.provide(NodeFileSystem.layer))
+  const exit = yield* Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    yield* verifyReplacementDirectories(fs, target, moved, state)
+  }).pipe(Effect.provide(Layer.fresh(LayerNode.compile(FSUtil.node, [[filesystem, underlying]]))), Effect.exit)
+  expect(observed.calls).toBe(1)
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (!Exit.isFailure(exit)) throw new Error("Controlled stat error was ignored")
+  const failures = exit.cause.reasons.filter(Cause.isFailReason)
+  expect(failures).toHaveLength(1)
+  expect(failures[0].error).toBe(primary)
+  expect(exit.cause.reasons.some(Cause.isDieReason)).toBe(false)
+  expect(state.verification).toBe("owned-stat")
+  expect(state.ownedIsDir).toBe(null)
+  expect(lstatSync(target).isDirectory()).toBe(true)
+  expect(lstatSync(moved).isDirectory()).toBe(true)
+}))
 
 it.live("replacement evidence preserves defects and reports before scope teardown even if the reporter throws", () => Effect.gen(function* () {
   for (const throwing of [false, true]) {
