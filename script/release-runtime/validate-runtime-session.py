@@ -111,7 +111,12 @@ class ProviderHandler(http.server.BaseHTTPRequestHandler):
             last_user = users[-1] if users else -1
             text = content_text(messages[last_user].get('content')) if last_user >= 0 else ''
             tool = None
-            if FIRST in text:
+            title = bool(messages and messages[0].get('role') == 'system'
+                         and content_text(messages[0].get('content')).startswith('You are a title generator.'))
+            if title:
+                require(body.get('tools', []) == [], 'Title request unexpectedly advertised tools', 'setup')
+                answer = 'Runtime qualification'
+            elif FIRST in text:
                 results = [item for item in messages[last_user + 1:] if item.get('role') == 'tool']
                 if results:
                     require(FIXTURE in canonical(results), 'Real read result did not reach next provider turn')
@@ -137,7 +142,7 @@ class ProviderHandler(http.server.BaseHTTPRequestHandler):
                 # Optional built-in title generation is tool-less and has independent prompt text.
                 answer = 'Runtime qualification'
             if body.get('stream') is not True:
-                require(tool is None and STOP not in text, 'Qualification turn unexpectedly requested nonstream generation', 'setup')
+                require(tool is None and (title or STOP not in text), 'Qualification turn unexpectedly requested nonstream generation', 'setup')
                 data = json.dumps({'id': 'runtime-generate', 'object': 'chat.completion', 'created': int(time.time()),
                                    'model': MODEL, 'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': answer},
                                                                'finish_reason': 'stop'}],
@@ -162,7 +167,7 @@ class ProviderHandler(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(('data: ' + json.dumps(payload) + '\n\n').encode())
                 self.wfile.flush()
             chunk({'role': 'assistant', 'content': ''})
-            if STOP in text:
+            if not title and STOP in text:
                 state.stop_entered.set()
                 require(state.stop_release.wait(60), 'Stop fixture was not released', 'setup')
                 return  # Deliberately unfinished stream: only the real interrupt cancels this turn.
