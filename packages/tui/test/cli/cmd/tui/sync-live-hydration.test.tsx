@@ -104,6 +104,10 @@ test("a mounted fully synced Session reloads history and status after a real SSE
       reloaded: true, historyReads: true, activeReads: true,
     })
     await wait(() => mounted.sync.session.status(sessionID) === "idle")
+    await wait(() => {
+      const restored = content(mounted.sync)?.[0]
+      return restored?.type === "text" && restored.text === "completed while disconnected"
+    })
     expect(content(mounted.sync)?.[0]).toMatchObject({ type: "text", text: "completed while disconnected" })
     expect(mounted.sync.data.session_status[sessionID]?.type ?? "idle").toBe("idle")
     expect(mounted.mounts.count).toBe(1)
