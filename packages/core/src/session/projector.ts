@@ -1,6 +1,6 @@
 export * as SessionProjector from "./projector"
 
-import { and, desc, eq, gt, or, sql } from "drizzle-orm"
+import { and, desc, eq, gt, gte, or, sql } from "drizzle-orm"
 import { isDeepStrictEqual } from "node:util"
 import { DateTime, Effect, Layer, Schema } from "effect"
 import { Database } from "../database/database"
@@ -15,7 +15,7 @@ import { SessionMessageUpdater } from "./message-updater"
 import { fromRow } from "./info"
 import { SessionInput } from "./input"
 import { WorkspaceV2 } from "../workspace"
-import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionTable } from "./sql"
+import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionContextEpochTable, SessionTable } from "./sql"
 
 type DatabaseService = Database.Interface["db"]
 
@@ -373,7 +373,7 @@ const layer = Layer.effectDiscard(
         yield* db
           .delete(SessionMessageTable)
           .where(
-            and(eq(SessionMessageTable.session_id, event.data.sessionID), gt(SessionMessageTable.seq, boundary.seq)),
+            and(eq(SessionMessageTable.session_id, event.data.sessionID), gte(SessionMessageTable.seq, boundary.seq)),
           )
           .run()
           .pipe(Effect.orDie)
@@ -382,11 +382,15 @@ const layer = Layer.effectDiscard(
           .where(
             and(
               eq(SessionInputTable.session_id, event.data.sessionID),
-              or(gt(SessionInputTable.admitted_seq, boundary.seq), gt(SessionInputTable.promoted_seq, boundary.seq)),
+              or(gte(SessionInputTable.admitted_seq, boundary.seq), gte(SessionInputTable.promoted_seq, boundary.seq)),
             ),
           )
           .run()
           .pipe(Effect.orDie)
+        // The prior baseline/snapshot can encode context observed after the reverted turn. Rebuild it against the
+        // restored filesystem on the next run instead of reusing a generation whose messages were just removed.
+        yield* db.delete(SessionContextEpochTable).where(eq(SessionContextEpochTable.session_id, event.data.sessionID))
+          .run().pipe(Effect.orDie)
         yield* db
           .update(SessionTable)
           .set({ revert: null, time_updated: DateTime.toEpochMillis(event.data.timestamp) })
