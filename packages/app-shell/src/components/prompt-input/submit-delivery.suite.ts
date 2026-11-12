@@ -291,6 +291,17 @@ describe("prompt delivery and model selection", () => {
     const model = {
       current: () => ({ id: "draft-model", provider: { id: "draft-provider" } }),
       variant: { current: () => "draft-variant" },
+      intent: () => {
+        const current = model.current()
+        return { model: current && { providerID: current.provider.id, modelID: current.id }, variant: model.variant.current() }
+      },
+      execution: {
+        context: () => "controlled-injected-model-metadata",
+        input: () => {
+          const current = model.current()
+          return { model: current && { providerID: current.provider.id, id: current.id, variant: model.variant.current() ?? undefined } }
+        },
+      },
     } as unknown as ModelSelection
     const submit = createPromptSubmit({
       prompt,
