@@ -35,6 +35,7 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { ExecutionHost } from "@orchestra/core/session/runner"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionStore } from "@orchestra/core/session/store"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { Snapshot } from "@orchestra/core/snapshot"
@@ -219,7 +220,7 @@ export function make() {
       })),
     }
     const graph = LayerNode.group([locationServices, Database.node, Global.node, FSUtil.node, EventV2.node, SessionProjector.node,
-      SessionStore.node, SessionV2.node, SessionExecutionLocal.node, ScheduledTask.node])
+      SessionStore.node, SessionSubagentModels.node, SessionV2.node, SessionExecutionLocal.node, ScheduledTask.node])
     const ready = yield* Deferred.make<Context.Context<LayerNode.Output<typeof graph>>>()
     // One Location and one graph: the Local coordinator resolves the same runner/DB/Event/projectors, not another application.
     const locations = Layer.effect(LocationServiceMap.Service, LayerMap.make((_: Location.Ref) =>
