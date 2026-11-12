@@ -142,13 +142,30 @@ function CommandPaletteView(props: {
   const [query, setQuery] = createSignal("")
   const [active, setActive] = createSignal(0)
 
-  const [entries] = createResource(query, props.loadItems, { initialValue: [] as CommandPaletteEntry[] })
-  // Render stale results while a new query loads to avoid flashing "Loading" per keystroke.
-  const visibleEntries = createMemo(() => uniqueCommandPaletteEntries(entries.latest ?? []))
+  const [searchFailed, setSearchFailed] = createSignal(false)
+  const [held, setHeld] = createSignal<CommandPaletteEntry[]>([])
+  const [entries] = createResource(
+    query,
+    async (text) => {
+      setSearchFailed(false)
+      try {
+        const next = await props.loadItems(text)
+        setHeld(next)
+        return next
+      } catch (error) {
+        console.error(error)
+        setSearchFailed(true)
+        return held()
+      }
+    },
+    { initialValue: [] as CommandPaletteEntry[] },
+  )
+  // Keep the last list while a new query loads, and after a failed search, so the page does not crash or flash empty.
+  const visibleEntries = createMemo(() => uniqueCommandPaletteEntries(entries.loading ? held() : (entries() ?? held())))
   const groupedEntries = createMemo(() => groups(visibleEntries()))
   const activeEntry = createMemo(() => visibleEntries()[active()])
   const status = () => {
-    if (entries.error) return language.t("common.requestFailed")
+    if (searchFailed()) return language.t("common.requestFailed")
     if (visibleEntries().length > 0) return ""
     return entries.loading ? language.t("common.loading") : language.t("palette.empty")
   }
