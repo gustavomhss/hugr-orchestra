@@ -49,8 +49,12 @@ use crate::types::{Exit, Reason, RunOutput, Stdin};
 /// How long the output may take to end once the tree is gone (the pumps' own drain; §8: "+ 1 s").
 const DRAIN: Duration = Duration::from_secs(1);
 
-/// Runs to completion (contract §6).
-pub(crate) async fn run(req: &Request, opts: &Options) -> Result<RunOutput, Error> {
+/// Runs the same machine, observing the acquired child before any feed, drive or async suspension.
+pub(crate) async fn run_owned(
+    req: &Request,
+    opts: &Options,
+    on_spawn: impl FnOnce(super::RunHandle) + Send,
+) -> Result<RunOutput, Error> {
     if let (Mode::Pty(_), Some(_)) = (req.mode, &opts.input) {
         return Err(Error::pty_run_input());
     }
@@ -63,10 +67,12 @@ pub(crate) async fn run(req: &Request, opts: &Options) -> Result<RunOutput, Erro
     match req.mode {
         Mode::Pipe => {
             let child = spawn_pipe(&launch, opts)?;
+            on_spawn(super::RunHandle::new(&child));
             drive(&child, feed(&child, opts.input.as_deref()), started, req, opts).await
         }
         Mode::Pty(_) => {
             let child = spawn_pty(&launch, opts)?;
+            on_spawn(super::RunHandle::new(&child));
             drive(&child, ready(None), started, req, opts).await
         }
     }

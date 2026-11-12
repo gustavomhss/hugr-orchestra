@@ -9,6 +9,7 @@ mod deadline;
 mod exit;
 mod life;
 mod memory;
+mod owned;
 mod run;
 #[cfg(test)]
 mod tests;
@@ -17,7 +18,16 @@ use tokio_util::sync::CancellationToken;
 
 pub use child::{Child, PipeChild, PtyChild};
 pub(crate) use child::{spawn_pipe, spawn_pty};
-pub(crate) use run::run;
+pub use owned::RunHandle;
+pub(crate) use run::run_owned;
+
+/// Runs to completion without binding custody (contract §6).
+pub(crate) async fn run(
+    req: &crate::spawn::Request,
+    opts: &Options,
+) -> Result<crate::types::RunOutput, crate::error::Error> {
+    run_owned(req, opts, |_| {}).await
+}
 
 /// Default `max_output_bytes` per stream (contract §6).
 pub(crate) const DEFAULT_MAX_OUTPUT: usize = 16 << 20;

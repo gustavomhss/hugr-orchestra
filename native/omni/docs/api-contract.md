@@ -253,9 +253,10 @@ glossary keeps its 15 concepts: `configure` is placed under *spawn* and `backpre
   consumer: `stop()` ends the tree as always, and detaching, `stop()` or the end of the tree lets the readers go.
 - **One pull hands over every queued item.** The TS iteration of `output` / `lines()` is unchanged (one item per step),
   but each round trip to the addon takes everything queued by then, so a burst costs one round trip, not one per chunk.
-- **A JS environment that ends stops its trees.** When a `Worker` (or any JS environment) that spawned children is
-  torn down, its children's trees are force-stopped before the teardown returns (bounded, 5 s), as the end of the host
-  process does through the supervisor. The garbage collector still never kills a child (§5).
+- **A JS environment that ends stops its own trees.** When a `Worker` (or any JS environment) that started children
+  through `run()` or `spawn()` is torn down, it requests forced stops without user grace and waits for those stops
+  against one aggregate 5 s bound. Other environments' trees are unaffected. An error or expiration of that bound
+  is not proof that every OS process was reaped. The garbage collector still never kills a child (§5).
 
 ## Amendment WP8b (approved by the lead, 2026-10-07)
 
