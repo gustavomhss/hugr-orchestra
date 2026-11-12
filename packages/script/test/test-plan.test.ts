@@ -1,7 +1,42 @@
 import { describe, expect, test } from "bun:test"
 import { balance, packageLanes, packageShards, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
+import registry from "../../../script/module-registry.json"
 
 describe("test shard planner", () => {
+  test("package filters cover each registered package once and keep future packages in libs", () => {
+    const packages = [...registry.modules.filter((entry) => entry.kind === "bun" && entry.scope === ".").map((entry) => entry.name), "@orchestra/future-package"]
+    for (const [platform, host] of [["linux", "ubuntu-24.04"], ["windows", "windows-latest"]] as const) {
+      const lanes = [
+        { part: "core", filters: "--filter=@orchestra/core" },
+        ...packageLanes(platform, host),
+      ] as { part: string; filters?: string }[]
+      for (const name of packages) {
+        const selected = lanes.filter((lane) => {
+          if (!lane.filters) return false
+          const filters = lane.filters.split(" ").map((filter) => filter.slice("--filter=".length))
+          const included = filters.filter((filter) => !filter.startsWith("!"))
+          return (included.length === 0 || included.includes(name)) && !filters.includes(`!${name}`)
+        }).map((lane) => lane.part)
+        expect(selected).toHaveLength(platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
+        if (["@orchestra/desktop", "@orchestra/script"].includes(name))
+          expect(selected).toEqual([platform === "linux" ? "packages-libs" : `windows-${name.slice("@orchestra/".length)}`])
+        if (name === "@orchestra/future-package") expect(selected).toEqual([platform === "linux" ? "packages-libs" : "windows-libs"])
+      }
+    }
+  })
+
+  test("Windows dedicated lanes reuse the existing budget and Linux package lanes stay unchanged", () => {
+    const linux = packageLanes("linux", "ubuntu-24.04")
+    expect(linux.map((lane) => lane.part)).toEqual([
+      "packages-app", "packages-cli", "packages-atlas", "packages-relay", "packages-libs", "gates", "httpapi", "sandbox",
+    ])
+    const windows = packageLanes("windows", "windows-latest") as { part: string; filters?: string; budget?: number }[]
+    expect(windows.filter((lane) => ["windows-desktop", "windows-script", "windows-libs"].includes(lane.part)).map((lane) => lane.budget)).toEqual([15, 15, 15])
+    const libs = windows.find((lane) => lane.part === "windows-libs")!
+    expect(libs.filters).toContain("--filter=!@orchestra/desktop")
+    expect(libs.filters).toContain("--filter=!@orchestra/script")
+  })
+
   test("a platform's overhead scales its total before the shard count", () => {
     const timings: Timings = {
       target: { linux: 300, windows: 300, e2e: 300 },
