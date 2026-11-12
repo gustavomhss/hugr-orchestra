@@ -168,7 +168,8 @@ test("spontaneous host interruption without a deadline preserves its actual Caus
     onToolCallEnd: () => Effect.sync(() => { state.endHooks++ }),
   }, unlimited, ToolRuntime.searchIndex(tools), observed.observe).pipe(Effect.timeout("10 seconds")))
   expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true)
-  if (Exit.isFailure(exit)) expect(exit.cause).toEqual(state.cause)
+  expect(state.cause).toBeDefined()
+  if (Exit.isFailure(exit) && state.cause !== undefined) expect(exit.cause).toEqual(state.cause)
   expect(state.endHooks).toBe(0)
   expectExited(observed)
 }, 15_000)
