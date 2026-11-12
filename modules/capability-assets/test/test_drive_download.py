@@ -2,6 +2,7 @@
 
 No OAuth, Google endpoint, gws or child process participates. Only the asset's
 service constructor and a delegating downloader constructor observer are replaced.
+Known DOS-device vectors also trap their exact FileIO target on Windows before OS access.
 """
 
 import argparse
@@ -335,17 +336,36 @@ def test_default_refuses_absolute_forms_on_both_operating_systems(drive, capsys,
     "NUL", "nul.pdf", "CoM1.txt", "lPt9.log", "AUX", "con.txt", "PRN.dat",
     None, 17, ["not a filename"],
 ])
-def test_default_refuses_portable_name_policy_before_filesystem_or_media(drive, capsys, name):
+def test_default_refuses_portable_name_policy_before_filesystem_or_media(drive, capsys, monkeypatch, name):
     drive.state.metadata["name"] = name
     inside = drive.work / "keep.bin"
     outside = drive.root / "outside.bin"
     inside.write_bytes(b"inside sentinel")
     outside.write_bytes(b"outside sentinel")
+    attempts = []
+    if os.name == "nt" and name in ("NUL", "nul.pdf", "CoM1.txt", "lPt9.log", "AUX", "con.txt", "PRN.dat"):
+        import io
+
+        file_io = io.FileIO
+        expected = os.path.normcase(os.path.abspath(drive.work / name))
+
+        # This is the one known target from this test vector, not a filename policy.
+        # The vulnerable baseline must fail without opening a Windows DOS device.
+        def trap_file_open(file, *args, **kwargs):
+            if isinstance(file, (str, bytes, os.PathLike)):
+                target = os.path.normcase(os.path.abspath(os.fsdecode(file)))
+                if target == expected:
+                    attempts.append(target)
+                    raise OSError("fixture blocked DOS device open before OS access")
+            return file_io(file, *args, **kwargs)
+
+        monkeypatch.setattr(io, "FileIO", trap_file_open)
     before = set(drive.root.rglob("*"))
     error = drive.attempt(drive.arguments())
     assert inside.read_bytes() == b"inside sentinel"
     assert outside.read_bytes() == b"outside sentinel"
     assert set(drive.root.rglob("*")) == before
+    assert attempts == []
     assert error is not None
     output = capsys.readouterr()
     assert "--output" in f"{error}\n{output.err}\n{output.out}"
