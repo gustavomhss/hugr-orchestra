@@ -250,12 +250,15 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         return { model: chosen(), variant }
       }
       const [view, setView] = createStore<{ value: ModelExecutionState }>({ value: { status: "idle" } })
+      const context = createMemo(() => JSON.stringify({ agents: sync.data.agent, config: sync.data.config,
+        provider: sync.data.provider, providerDefault: sync.data.provider_default, providerNext: sync.data.provider_next,
+        catalogRevision: sync.data.catalogRevision, semanticEpoch: sdk.modelExecutionEpoch() }))
       const owner = createMemo(() => {
         const model = candidate()
         const a = agent.current()
         const raw = intent()
         const variant = typeof raw.variant === "string" ? raw.variant : raw.variant === null ? undefined
-          : model && a?.model?.providerID === model.providerID && a.model.modelID === model.modelID && a.variant
+          : model && a?.model?.providerID === model.providerID && a.model.modelID === model.modelID && a.variant !== undefined
             ? a.variant : undefined
         const sessionID = route.data.type === "session" ? route.data.sessionID : undefined
         const binding = sdk.binding()
@@ -263,7 +266,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           context: sessionID ? { type: "session" as const, sessionID, agentID: a && agentKey(a) }
             : { type: "draft" as const, agentID: a && agentKey(a) },
           model: model ? { providerID: model.providerID, id: model.modelID, variant: variant ?? undefined } : undefined }
-        return { key: JSON.stringify({ request, raw, url: binding.url, directory: binding.directory,
+        return { key: JSON.stringify({ request, raw, context: context(), url: binding.url, directory: binding.directory,
           headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch,
           epoch: sdk.connectionEpoch(), request }
       }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.epoch === b.epoch && a.fetch === b.fetch })
@@ -302,6 +305,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       })
       onCleanup(() => { lifetime.disposed = true; executionQuery.dispose() })
       const execution = {
+        context,
         read: () => lifetime.disposed ? executionQuery.read() : view.value,
         input: () => owner().request,
         allows(model: { providerID: string; modelID: string }) {
@@ -321,7 +325,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         if (!selected) return
         const provider = sync.data.provider.find((item) => item.id === selected.providerID)
         const model = provider?.models[selected.modelID]
-        if (provider && model) known.set(`${provider.id}/${model.id}`, { title: model.name ?? model.id, provider: provider.name })
+        if (provider && model) known.set(JSON.stringify([provider.id, model.id]), { title: model.name ?? model.id, provider: provider.name })
       })
       const currentModel = createMemo(() => {
         const explicit = chosen()
@@ -337,7 +341,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       return {
         intent,
         execution,
-        known: (model: { providerID: string; modelID: string }) => known.get(`${model.providerID}/${model.modelID}`),
+        known: (model: { providerID: string; modelID: string }) => known.get(JSON.stringify([model.providerID, model.modelID])),
         current: currentModel,
         get ready() {
           return modelStore.ready
@@ -361,7 +365,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           const info = provider?.models[value.modelID]
           return {
             provider: provider?.name ?? value.providerID,
-            model: info?.name ?? known.get(`${value.providerID}/${value.modelID}`)?.title ?? value.modelID,
+            model: info?.name ?? known.get(JSON.stringify([value.providerID, value.modelID]))?.title ?? value.modelID,
             reasoning: info?.capabilities?.reasoning ?? false,
           }
         }),

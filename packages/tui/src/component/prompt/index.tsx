@@ -924,6 +924,7 @@ export function Prompt(props: PromptProps) {
     const binding = sdk.binding()
     return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data,
       intent: local.model.intent(), agent: local.agent.current()?.id,
+      context: local.model.execution.context(),
       epoch: sdk.connectionEpoch(), directory: binding.directory, url: binding.url,
       headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch }
   }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch })

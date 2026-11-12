@@ -58,6 +58,7 @@ export const {
     const permission = usePermission()
     const [store, setStore] = createStore<{
       status: "loading" | "partial" | "complete"
+      catalogRevision: number
       provider: Provider[]
       provider_default: Record<string, string>
       provider_next: ProviderListResponse
@@ -107,6 +108,7 @@ export const {
       },
       config: {},
       status: "loading",
+      catalogRevision: 0,
       agent: [],
       permission: {},
       question: {},
@@ -608,6 +610,7 @@ export const {
             setStore("capabilities", "experimentalBackgroundSubagents", true)
             setStore("agent", reconcile(catalog.agent))
             setStore("config", reconcile(catalog.config))
+            setStore("catalogRevision", (value) => value + 1)
             if (sessions !== undefined) setStore("session", reconcile(sessions))
           })
         })
