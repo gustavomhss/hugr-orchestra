@@ -254,9 +254,9 @@ export interface Interface {
       sessionID: SessionSchema.ID
       messageID: SessionMessage.ID
       files?: boolean
-    }) => Effect.Effect<Revert.State, NotFoundError | MessageNotFoundError | Snapshot.Error>
-    readonly clear: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | Snapshot.Error>
-    readonly commit: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError>
+    }) => Effect.Effect<Revert.State, NotFoundError | BusyError | MessageNotFoundError | Snapshot.Error>
+    readonly clear: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | BusyError | Snapshot.Error>
+    readonly commit: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | BusyError>
   }
 }
 
@@ -337,6 +337,28 @@ const layer = Layer.effect(
           Effect.flatMap(
             Option.match({
               onNone: () => Effect.fail(new BusyError({ sessionID: session.id })),
+              onSome: Effect.succeed,
+            }),
+          ),
+        )
+
+    // Revert owns the Session before reading its state. Cancelling its caller only detaches the waiter.
+    const exclusiveRevert = <A, E>(
+      sessionID: SessionSchema.ID,
+      use: (session: SessionSchema.Info) => Effect.Effect<A, E>,
+    ): Effect.Effect<A, E | NotFoundError | BusyError> =>
+      execution
+        .exclusive(
+          sessionID,
+          Effect.gen(function* () {
+            const session = yield* result.get(sessionID)
+            return yield* use(session)
+          }),
+        )
+        .pipe(
+          Effect.flatMap(
+            Option.match({
+              onNone: () => Effect.fail(new BusyError({ sessionID })),
               onSome: Effect.succeed,
             }),
           ),
@@ -710,25 +732,28 @@ const layer = Layer.effect(
       }),
       revert: {
         stage: Effect.fn("V2Session.revert.stage")(function* (input) {
-          const session = yield* result.get(input.sessionID)
-          return yield* SessionRevert.stage({ session, messageID: input.messageID, files: input.files }).pipe(
-            Effect.provideService(Database.Service, database),
-            Effect.provideService(EventV2.Service, events),
-            Effect.provide(locations.get(session.location)),
-            Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
+          return yield* exclusiveRevert(input.sessionID, (session) =>
+            SessionRevert.stage({ session, messageID: input.messageID, files: input.files }).pipe(
+              Effect.provideService(Database.Service, database),
+              Effect.provideService(EventV2.Service, events),
+              Effect.provide(locations.get(session.location)),
+              Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
+            ),
           )
         }),
         clear: Effect.fn("V2Session.revert.clear")(function* (sessionID) {
-          const session = yield* result.get(sessionID)
-          yield* SessionRevert.clear(session).pipe(
-            Effect.provideService(EventV2.Service, events),
-            Effect.provide(locations.get(session.location)),
-            Effect.mapError((error) => error as NotFoundError | Snapshot.Error),
+          return yield* exclusiveRevert(sessionID, (session) =>
+            SessionRevert.clear(session).pipe(
+              Effect.provideService(EventV2.Service, events),
+              Effect.provide(locations.get(session.location)),
+              Effect.mapError((error) => error as NotFoundError | Snapshot.Error),
+            ),
           )
         }),
         commit: Effect.fn("V2Session.revert.commit")(function* (sessionID) {
-          const session = yield* result.get(sessionID)
-          yield* SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events))
+          return yield* exclusiveRevert(sessionID, (session) =>
+            SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events)),
+          )
         }),
       },
     })

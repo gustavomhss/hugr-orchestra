@@ -19,7 +19,12 @@ Deny and Dismiss also reject the request, but they only answer that one request.
 
 Archiving or deleting a session stops its active run and discards pending wakeups, including wakeups received while the lifecycle operation holds execution. Deleting a parent does this for its descendants too. Unarchiving does not stop execution.
 
-
 The TUI loads pending permissions and questions when it connects and when a Session is opened, including requests from its Session family in the same Location. Replies received during that load take precedence over the snapshot. Auto-approve mode also applies to restored permission requests; questions still require an answer.
 
 If a history read fails temporarily, reopening the Session retries it and retains messages already received live.
+
+## Reverting history
+
+Staging, clearing or committing a revert is refused while the Session has active work. API clients receive HTTP 409. Wait for the turn or operation to finish, or explicitly interrupt the Session, then retry.
+
+Cancelling the request that waits for a revert does not cancel the revert itself. Refresh the Session to check its result before retrying. An explicit Session interruption stops the active operation.
