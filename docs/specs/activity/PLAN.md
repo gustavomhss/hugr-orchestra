@@ -135,7 +135,8 @@ project SQL/service, new migration and generator outputs owned only by this WP.
 
 ## WP-W1 — registered-worktree reading state
 
-Status: specified; not dispatched. Owner: lead until an exact packet is frozen.
+Status: implemented; source reviews and typecheck passed, hosted green pending.
+Owner: lead state integration and worktree_reader coordinator.
 Dependency: WP-R0 internal incarnation-aware reads, existing ActivityDisk.measure
 and DiskAttempt semantics; normative FIRST-WAVE-CONTRACT.md.
 Writes: Core activity-worktree and activity-worktree-state modules, the focused
@@ -154,7 +155,7 @@ Acceptance owner: W01–W04. No cleanup, ownership inference or use proof.
 
 ### Task W1-A — acceptance and red evidence
 
-Owner: lead; state: acceptance under review; writes: the three focused
+Owner: lead; state: complete, hosted red verified (43247422816); writes: the three focused
 activity-worktree\*.test.ts files and test/fixture/activity-worktree.ts in Core.
 Depends on exact exported signatures being frozen. Owns W01–W04 test authoring;
 W1-B-state and W1-B-read own making those implementation checks pass. This is not duplicate product ownership.
@@ -168,7 +169,7 @@ W1-B-state and W1-B-read own making those implementation checks pass. This is no
 
 ### Task W1-B-state — immutable reading state and wire contract
 
-Owner: unassigned implementation seat; state: awaits W1-A and frozen anchor.
+Owner: lead; state: implemented, cold state review approved; parent green pending.
 Writes: activity-worktree-state.ts; Schema additions integrated only by lead.
 Acceptance implementation owner: W01–W03 state transitions; W1-B-read supplies
 the shared facade used by acceptance tests. Neither task closes before the
@@ -183,8 +184,7 @@ integrated parent gate passes.
 
 ### Task W1-B-read — serialized validation and bounded manual readers
 
-Owner: unassigned reader implementation seat; state: awaits W1-A hosted red and
-the compiled state anchor. Writes: activity-worktree.ts and its package export;
+Owner: worktree_reader; state: implemented, cold review approved; parent green pending. Writes: activity-worktree.ts and its package export;
 no state-module/Schema/registration/test writes. Acceptance owner: W04 plus its
 validation seam; parent closure still requires W01–W04.
 

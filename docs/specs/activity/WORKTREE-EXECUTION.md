@@ -1,15 +1,18 @@
 # WP-W1 execution anchor
 
 Baseline: `e33ec35c3c`, with WP-R0 completed and exact-source hosted proof.
-W1-A is preparing executable acceptance; W1-B-state and W1-B-read have not
-started. All three tasks retain the six required quality fields in PLAN.md. No API/UI changes,
-cleanup, process queries or owner-app/database operations belong to this WP.
+W1-A is complete with verified hosted red evidence. W1-B-state and W1-B-read
+are implemented with approved independent source reviews and passing Core
+typecheck; hosted green remains pending. All three tasks retain the six quality fields in PLAN.md.
+No API/UI changes, cleanup, process queries or owner-app/database operations
+belong to this WP.
 
 ## Frozen public contract
 
 Core module/export: `@orchestra/core/activity-worktree`, namespace ActivityWorktree.
-The compilable unavailable anchor currently throws explicitly from make. It
-cannot fabricate an empty inventory or measured zero.
+The acceptance baseline used a compilable unavailable anchor that threw from
+make. The implementation now uses the same frozen signatures; no fabricated
+empty inventory or measured zero substitutes for source failure.
 
 ```ts
 export interface Registration extends ProjectDirectories.Registration {
@@ -91,7 +94,7 @@ The intended hosted pack is `bun run test:ci core test/activity-worktree.test.ts
 test/activity-worktree-identity.test.ts test/activity-worktree-concurrency.test.ts
 test/activity-disk.test.ts --os both`. Existing walker tests are the regression
 floor; the four new cases must fail for unavailable behavior before either implementation task starts.
-No hosted red result exists yet. Independent coverage review found and closed
+Hosted red is verified below. Independent coverage review found and closed
 fourteen specific oracle gaps, then returned two consecutive covers verdicts.
 Separate bounded cold quality review approved each unit after fixing swallowed
 inventory rejection and unbounded barrier cleanup. Final Core and Schema package typechecks passed. Guardrails: 0 gates, 1 previously reviewed R0
@@ -103,25 +106,51 @@ Review units: each of the three test files is reviewed separately (each under
 separate bounded unit. Schema additions are reviewed separately. Runtime tasks
 split pure state (activity-worktree-state.ts) from async coordination
 (activity-worktree.ts); the private State anchor freezes snapshot/reconcile/get/
-publish signatures, with both factories explicitly unavailable until red proof. No implementation worker is
-dispatched until the exact anchor and baseline gates have passed. W2 and W3
+publish signatures, with both factories kept explicitly unavailable until red proof was verified.
+The reader worker was dispatched only after those gates passed. W2 and W3
 remain pending; public Protocol/HttpApi and generated Client are unchanged.
 
-## Current hosted request
+## Initial hosted request (completed)
 
 The reviewed acceptance is committed through `a0dedcecc4` and pushed to
 activity-monitor. The exact requested Core tree is
 `bca4d35a48aa2d45cfbb0ce3b98d92a2a3765039`; Schema tree is
 `ef7da65d3a27715ef5b365733f513aba7562b843`.
 The four-file Linux/Windows test:ci request completed uploading its snapshot
-and is waiting for runner capacity (15 unrelated queued runs observed).
+and waited for runner capacity (15 unrelated queued runs were observed).
 The standard helper waits at most 30 minutes before creating its CI branch.
 No duplicate request was started and no unrelated run was changed.
 
-Local request log: `/tmp/activity-worktree-red-ci.log`; eventual helper exit:
+Local request log: `/tmp/activity-worktree-red-ci.log`; helper exit:
 `/tmp/activity-worktree-red-ci.exit`. The expected baseline is four new
 W01–W04 failures from the explicit unavailable constructor, with existing
 ActivityDisk tests retaining their passing/platform-skip outcomes. A nonzero
 helper exit alone is not red proof: inspect actual named hosted test outcomes,
 Omni control and exact snapshot before implementation. Final typecheck receipts:
 `/tmp/activity-worktree-final-{core,schema}-typecheck.exit`, both 0.
+
+## Verified red and implementation gate
+
+Run [43247422816](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816)
+completed with exactly W01–W04 failing on each OS because make threw
+"Worktree disk collection is not implemented". Existing disk cases retained
+10 passes on Linux and 7 passes/3 explicit skips on Windows. Both focused Omni
+controls were not applicable: zero actual/delegated spawns, no Omni proof claim.
+The fetched snapshot is 3c0f38b2691d41d56369d878fe9b77c8407f8f50; its complete
+Core and Schema trees match the requested hashes above. Named outcomes appear
+in worktree-baseline.json. No tests changed after this baseline.
+
+State and coordinator now occupy separate bounded implementation units. The
+lead owns pure state; a reader worker owns only the coordinator. Their frozen
+seam preserves unchanged internal record references and rejects publication by
+retired references. The state cold review approved atomic staging, identity,
+BigInt revisions, deep copies and partial retention. Reader cold review approved and Core typecheck passed. The erroneous unused first reader Relay arm had an
+incorrect expected SHA; it was replaced before dispatch with an arm containing
+the exact verified 79b28e82d4833b6a520e98517d5254a1db45ee2d baseline.
+No mechanical hook enforcement is claimed. No hosted green is claimed yet.
+
+Implementation gates: both bounded source units received independent APPROVE
+verdicts. Core bun typecheck passed (exit 0), and unchanged Schema retains its
+previous passing exact-source typecheck. Completion guards passed with 0 gates
+and the same reviewed R0 migration-ignore warning. The original four-file
+acceptance suite is unchanged. Hosted green is the remaining W1 runtime gate.

@@ -1,0 +1,146 @@
+{
+  "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43247422816",
+  "snapshot": "3c0f38b2691d41d56369d878fe9b77c8407f8f50",
+  "purpose": "Expected failing acceptance baseline; not a production validation pass",
+  "verifiedSourceTrees": {
+    "core": "bca4d35a48aa2d45cfbb0ce3b98d92a2a3765039",
+    "schema": "ef7da65d3a27715ef5b365733f513aba7562b843"
+  },
+  "expectedFailure": "Worktree disk collection is not implemented",
+  "jobs": [
+    {
+      "job": "test (windows-latest)",
+      "passed": 7,
+      "failed": 4,
+      "skipped": 3,
+      "omniControl": "not applicable (focused: no declaring test ran)",
+      "omniSpawns": 0,
+      "delegatedSpawns": 0,
+      "tests": [
+        {
+          "name": "W01 cached snapshots and registry inventory never measure disk or invent readings",
+          "status": "fail"
+        },
+        {
+          "name": "W02 real logical readings retain complete values through partial attempts and registry failures",
+          "status": "fail"
+        },
+        {
+          "name": "W03 persisted incarnation controls retention across projects, unobserved recreation and strategy ABA",
+          "status": "fail"
+        },
+        {
+          "name": "W04 bounded singleflight reads revalidate real walks and recover validation capacity",
+          "status": "fail"
+        },
+        {
+          "name": "logical walks count real nested file lengths, including empty directories and hardlink paths",
+          "status": "pass"
+        },
+        {
+          "name": "symlinks cannot turn an external directory into measured coverage",
+          "status": "pass"
+        },
+        {
+          "name": "missing roots and bounded walks stay partial with an explicit unread scope",
+          "status": "pass"
+        },
+        {
+          "name": "snapshots never walk and concurrent reads coalesce; failed rereads preserve the last complete value",
+          "status": "pass"
+        },
+        {
+          "name": "independent declared roots do not share an in-flight read and file roots are refused",
+          "status": "pass"
+        },
+        {
+          "name": "unreadable subdirectories are explicit gaps",
+          "status": "skip"
+        },
+        {
+          "name": "unsafe logical sums are partial without rounded totals",
+          "status": "skip"
+        },
+        {
+          "name": "depth and elapsed budgets cannot publish a closed logical reading",
+          "status": "pass"
+        },
+        {
+          "name": "socket entries are unread scopes, never file bytes",
+          "status": "skip"
+        },
+        {
+          "name": "bounded issue details retain the full gap count and do not modify files",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "job": "test (ubuntu-24.04)",
+      "passed": 10,
+      "failed": 4,
+      "skipped": 0,
+      "omniControl": "not applicable (focused: no declaring test ran)",
+      "omniSpawns": 0,
+      "delegatedSpawns": 0,
+      "tests": [
+        {
+          "name": "W01 cached snapshots and registry inventory never measure disk or invent readings",
+          "status": "fail"
+        },
+        {
+          "name": "W02 real logical readings retain complete values through partial attempts and registry failures",
+          "status": "fail"
+        },
+        {
+          "name": "W03 persisted incarnation controls retention across projects, unobserved recreation and strategy ABA",
+          "status": "fail"
+        },
+        {
+          "name": "W04 bounded singleflight reads revalidate real walks and recover validation capacity",
+          "status": "fail"
+        },
+        {
+          "name": "logical walks count real nested file lengths, including empty directories and hardlink paths",
+          "status": "pass"
+        },
+        {
+          "name": "symlinks cannot turn an external directory into measured coverage",
+          "status": "pass"
+        },
+        {
+          "name": "missing roots and bounded walks stay partial with an explicit unread scope",
+          "status": "pass"
+        },
+        {
+          "name": "snapshots never walk and concurrent reads coalesce; failed rereads preserve the last complete value",
+          "status": "pass"
+        },
+        {
+          "name": "independent declared roots do not share an in-flight read and file roots are refused",
+          "status": "pass"
+        },
+        {
+          "name": "unreadable subdirectories are explicit gaps",
+          "status": "pass"
+        },
+        {
+          "name": "unsafe logical sums are partial without rounded totals",
+          "status": "pass"
+        },
+        {
+          "name": "depth and elapsed budgets cannot publish a closed logical reading",
+          "status": "pass"
+        },
+        {
+          "name": "socket entries are unread scopes, never file bytes",
+          "status": "pass"
+        },
+        {
+          "name": "bounded issue details retain the full gap count and do not modify files",
+          "status": "pass"
+        }
+      ]
+    }
+  ]
+}

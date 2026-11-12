@@ -6,7 +6,7 @@ Open **Extensions → Monitor**. The page belongs to the selected server and ope
 
 Use **Filter** to search a full path or project name. **Refresh** reads the registry again. While the tab is visible, it refreshes every ten seconds. **Age** is the time since each registry response was received, not the directory’s age. If a refresh fails, an error appears and the previous complete inventory remains visible with its original timestamps.
 
-The registry has no recorded session owner, disk measurement, collapsed file identity or use proof. Owner stays empty; Logical is **unread**, Unique is **not collapsed**, and Use check is **unproved**. These rows offer no cleanup actions.
+The registry has no recorded session owner, disk measurement, collapsed file identity or use proof. Owner stays empty; Logical is **unread**, Unique is **not collapsed**, and Use check is **unproved**. Manual disk readings for individual Worktrees are not yet available on this page. These rows offer no cleanup actions.
 
 ## Trees
 
@@ -21,7 +21,6 @@ Per-process CPU, footprint and machine memory pressure have not been measured. T
 **Docker**, **IN/OUT** and **Quarantine** currently report **collection unavailable**. This means their collectors are not connected; it does not mean the machine has no containers or quarantined files. Process telemetry and cleanup are still under development.
 
 The category names stay in English in both supported languages. Tab through the category strip once, then use Left/Right, Home or End to select a category.
-
 
 ## Host CPU
 

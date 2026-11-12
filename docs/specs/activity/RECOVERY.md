@@ -4,15 +4,15 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
-WP-W1 acceptance passed two consecutive independent coverage reviews and
-bounded cold quality review.
-Four executable cases now cover cached state, real partial readings, persisted
-incarnations and concurrent pre/post validation. Core and Schema acceptance
-typechecks passed before the latest suite split; final Core and Schema passed,
-and the four-file Linux/Windows hosted request has uploaded its snapshot and
-is waiting for runner capacity. Hosted red evidence remains pending. Public and private anchors compile but both factories
-still throw explicitly; no W1 runtime implementation or API/UI change is claimed.
-See [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md).
+WP-W1 acceptance has verified hosted red: run 43247422816 produced exactly
+W01–W04 unavailable-constructor failures on both OS; existing disk tests passed
+10 on Linux and 7 on Windows with 3 explicit skips. Fetched snapshot Core/Schema
+trees match the request. State and reader implementations now replace the
+unavailable anchors against the unchanged suite. State cold review approved;
+reader review and Core typecheck also passed; hosted green remains pending. WP-W1 is not
+complete and no Worktrees manual-read UI/API is available yet. The W2 HTTP
+preparation draft separately passed independent review and is committed.
+See [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md) and worktree-baseline.json.
 
 WP-R0 is complete on activity-monitor: persisted registrationID producer,
 internal reads and data-preserving migration have hosted red-to-green proof.
