@@ -35,12 +35,15 @@ describe("test shard planner", () => {
   test("a core shard does not compile plugin inside the timed test step", () => {
     const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
     const step = workflow.split("- name: Run unit tests")[1]?.split("- name:")[0] ?? ""
-    const invocations = [...step.matchAll(/bun turbo test --filter=@orchestra\/core[^\n]*/g)].map((match) => match[0])
+    const code = step.split("\n").filter((line) => !line.trim().startsWith("#")).join("\n")
+    const invocations = [...code.matchAll(/bun turbo test --filter=@orchestra\/core[^\n]*/g)].map((match) => match[0])
     expect(invocations).toEqual([
       "bun turbo test --filter=@orchestra/core --only --log-order=stream -- \"${files[@]}\" \"${report[@]}\"",
     ])
-    expect(step).toContain("cd packages/core && GITHUB_ACTIONS=false bun test --timeout 30000 --only-failures \"${alone[@]}\"")
-    expect(step).toContain('"$file" = "test/filesystem/watcher.test.ts"')
+    expect(code).toContain("cd packages/core && GITHUB_ACTIONS=false bun test --timeout 30000 --only-failures \"${alone[@]}\"")
+    const watcher = code.split('if [ "$file" = "test/filesystem/watcher.test.ts" ]; then')[1]?.split("else")[0] ?? ""
+    expect(watcher).toContain('alone+=("$file")')
+    expect(watcher).not.toContain("kept")
     expect(step).not.toContain("turbo build")
     expect(workflow).not.toContain("Build Windows test dependencies")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
