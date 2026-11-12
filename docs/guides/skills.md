@@ -42,6 +42,16 @@ A read already in progress may finish with its earlier snapshot. It cannot put t
 
 **A page refresh and a source reload are not the same operation.** Asking the server for the catalog again can still use its in-memory source cache. This section describes source reloads, not a promise that every UI refresh rescans the disk. Cache invalidation also does not rewrite messages already recorded in a session.
 
+## Remote URL sources
+
+A remote acquisition admits at most 2 MiB per requested file and 32 MiB of file content in total. Cached files and non-Markdown companions count toward that same total. The index is limited to 1 MiB, 128 skills, 256 files per skill and 4,096 files across all entries, including invalid entries. A cached version marker may contain at most 4 KiB.
+
+Each complete request, including redirects, the existing transient retries and body transfer, has a 10-second deadline. The whole acquisition, including cache reads, has a 60-second deadline. Timeouts await cancellation and cleanup; blocking filesystem operations or cleanup can extend the elapsed time.
+
+A skill becomes available only when every requested file succeeds. A failed version refresh preserves the previous cache, but does not present unchecked old contents as a successful refresh. Other complete skills may still load; a whole-acquisition timeout returns no remote skills. An incomplete unversioned download can leave partial cache files without making that skill available.
+
+Remote Markdown is read from the validated acquisition snapshot: only indexed root-level `*.md` files and nested `SKILL.md` files are considered, including dotfiles. Stale files left in the cache are not added to the snapshot. These limits govern admitted file content, rather than total network traffic or process memory: transport buffers may receive bytes that are subsequently refused. Local folders and embedded sources keep their existing discovery behavior, and skill permissions remain independent.
+
 ## What this saves — and what it does not
 
 There are different costs involved:
