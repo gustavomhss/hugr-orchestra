@@ -6,6 +6,7 @@ import type { Capability } from "@orchestra/schema/capability"
 import { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import type { CapabilityScheduleContract } from "../capability/schedule/contract"
 import type { SessionV2 } from "../session"
+import type { AgentV2 } from "../agent"
 import { SessionInput } from "../session/input"
 import { ScheduledTaskCapabilityModel } from "./capability-model"
 import { ScheduledTaskModel } from "./model"
@@ -64,7 +65,11 @@ export interface Interface {
 
 // Capability halves of the Service layer. `plan`, `holds` and `present` serve the shared claim, dispatch and
 // settle path; `api` builds the public methods once that path exists.
-export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Interface) {
+export function make<E>(
+  store: ScheduledTaskShared.Store,
+  sessions: SessionV2.Interface,
+  resolveAgent: (session: SessionV2.Info) => Effect.Effect<AgentV2.Selection, E>,
+) {
   const { db, lease, immediate, find, lastRuns, advance, claim } = store
 
   const owned = (owner: Capability.Owner, id: ID) =>
@@ -145,16 +150,21 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
       )
 
   const present = (owner: Capability.Owner) =>
-    sessions.get(owner.sessionID).pipe(
-      Effect.map(
-        (session) =>
-          session.projectID === owner.projectID &&
-          session.location.directory === owner.location.directory &&
-          session.location.workspaceID === owner.location.workspaceID &&
-          session.agent === owner.agentID,
-      ),
-      Effect.catchTag("Session.NotFoundError", () => Effect.succeed(false)),
-    )
+    Effect.gen(function* () {
+      const session = yield* sessions
+        .get(owner.sessionID)
+        .pipe(Effect.catchTag("Session.NotFoundError", () => Effect.succeed(undefined)))
+      if (
+        !session ||
+        session.projectID !== owner.projectID ||
+        session.location.directory !== owner.location.directory ||
+        session.location.workspaceID !== owner.location.workspaceID
+      )
+        return false
+      if (session.agent !== undefined) return session.agent === owner.agentID
+      const selected = yield* resolveAgent(session)
+      return selected.info !== undefined && selected.id === owner.agentID
+    })
 
   // Runs `edit` on the owner's schedule under the write lock, then reads it back. Errors come back as values so
   // the transaction commits only what the edit wrote.

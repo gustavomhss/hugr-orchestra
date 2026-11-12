@@ -45,3 +45,9 @@ Each row shows the task name, its cadence and a status: **Scheduled** or **Pause
 
 - A task runs in the project where you created it.
 - Tasks kept on the device do not run while the page is closed.
+
+## Schedules created in a Session
+
+Schedules an agent creates through `schedule_manage` belong to that Session's effective agent and workspace. When the Session has no explicit agent, each dispatch checks its current selectable default. A selectable fallback is valid when the configured default is unavailable; a changed default or no selectable default disables the old schedule with `owner-missing`.
+
+A Session with an explicit agent keeps that identity when its default changes. Resolving an omitted agent does not save an explicit agent onto the owner Session.

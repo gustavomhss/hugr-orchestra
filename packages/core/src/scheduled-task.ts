@@ -4,6 +4,7 @@ import { and, asc, desc, eq, lt, lte, min, ne, notInArray } from "drizzle-orm"
 import { Cause, Clock, Context, Duration, Effect, Layer, Queue, Schema } from "effect"
 import { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import { AgentV2 } from "./agent"
+import { LocationServiceMap } from "./location-service-map"
 import { Database } from "./database/database"
 import { makeGlobalNode } from "./effect/app-node"
 import { AbsolutePath } from "./schema"
@@ -82,6 +83,7 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     const sessions = yield* SessionV2.Service
+    const locations = yield* LocationServiceMap.Service
     // At most one pending wake: the daemon needs to know that something was written, not how many times.
     const woken = yield* Queue.sliding<void>(1)
     const store = ScheduledTaskShared.store(db, crypto.randomUUID())
@@ -92,7 +94,10 @@ const layer = Layer.effect(
         store.immediate(effect).pipe(Effect.tap(() => Queue.offer(woken, undefined))),
     }
     const { lease, immediate, find, lastRuns, advance, claim } = tasks
-    const cap = ScheduledTaskCapability.make(tasks, sessions)
+    // Acquire the Location at dispatch, after the application's global context is complete.
+    const cap = ScheduledTaskCapability.make(tasks, sessions, (session) =>
+      AgentV2.Service.use((agents) => agents.select()).pipe(Effect.provide(locations.get(session.location))),
+    )
 
     const infos = Effect.fn("ScheduledTask.infos")(function* (tasks: LegacyTask[]) {
       const runs = yield* lastRuns(tasks)
@@ -478,7 +483,7 @@ const layer = Layer.effect(
   }),
 )
 
-export const node = makeGlobalNode({ service: Service, layer, deps: [Database.node, SessionV2.node] })
+export const node = makeGlobalNode({ service: Service, layer, deps: [Database.node, SessionV2.node, LocationServiceMap.node] })
 
 
 /** Serves due slots on the server whether or not any client is open, starting with a pass at boot. */
