@@ -110,6 +110,8 @@ export function createDeliveryHttp(connection: LiveDeliveryOptions["connection"]
         const cancel = () => abort.abort()
         let expired = false
         let complete = false
+        let badRequest = false
+        let classified: DeliveryRequestError | undefined
         let reader: ReadableStreamDefaultReader<Uint8Array> | undefined
         const timer = setTimeout(() => { expired = true; abort.abort() }, 10000)
         input.signal.addEventListener("abort", cancel, { once: true })
@@ -117,11 +119,14 @@ export function createDeliveryHttp(connection: LiveDeliveryOptions["connection"]
         try {
           input.sent?.(current)
           const response = await fetch(url, { method: operation === "read" ? "GET" : "POST", headers, body, redirect: "manual", signal: abort.signal })
+          reader = response.body?.getReader()
+          classified = headerFailure(response.status, operation === "append" ? 204 : 200, current)
+          if (classified) throw classified
+          badRequest = response.status === 400
           const limit = operation === "read" ? 128 * 1024 * 1024 : 1024 * 1024
           const chunks: Uint8Array[] = []
           let length = 0
-          if (response.body) {
-            reader = response.body.getReader()
+          if (reader) {
             while (true) {
               const chunk = await reader.read()
               if (chunk.done) { complete = true; break }
@@ -133,21 +138,19 @@ export function createDeliveryHttp(connection: LiveDeliveryOptions["connection"]
           if (input.signal.aborted && operation !== "start") throw new LiveDeliveryError("cancelled")
           if (expired) throw new DeliveryRequestError("deadline", true, current)
           const text = Buffer.concat(chunks, length).toString("utf8")
-          if (response.status >= 300 && response.status < 400) throw new DeliveryRequestError("target", false, current)
-          if (response.status === 401 || response.status === 403) throw new DeliveryRequestError("authentication", false, current)
-          if (response.status === 404) throw new DeliveryRequestError("missing", false, current)
-          if (response.status === 408 || response.status === 429 || response.status >= 500) throw new DeliveryRequestError("offline", true, current)
-          if (response.status === 400) {
+          if (badRequest) {
             let reason: unknown
             try { const value = deliveryObject(JSON.parse(text)); reason = value.name === "MeetingError" ? deliveryObject(value.data).reason : undefined } catch { reason = undefined }
-            throw new DeliveryRequestError(reason === "missing_meeting" || reason === "missing_session" ? "missing" : reason === "ended" ? "ended" : "conflict", false, current)
+            classified = new DeliveryRequestError(reason === "missing_meeting" || reason === "missing_session" ? "missing" : reason === "ended" ? "ended" : "conflict", false, current)
+            throw classified
           }
-          if (response.status !== (operation === "append" ? 204 : 200)) throw new DeliveryRequestError("conflict", false, current)
           if (operation === "append") return { connection: current, data: undefined }
           try { return { connection: current, data: JSON.parse(text) as unknown } }
           catch { throw new DeliveryRequestError("target", false, current) }
         } catch (error) {
           if (input.signal.aborted && !(operation === "start" && complete)) throw new LiveDeliveryError("cancelled")
+          if (badRequest && !classified) classified = new DeliveryRequestError("conflict", false, current)
+          if (classified) throw classified
           if (expired) throw new DeliveryRequestError("deadline", true, current)
           if (error instanceof LiveDeliveryError) throw error
           throw new DeliveryRequestError("offline", true, current)
@@ -155,10 +158,21 @@ export function createDeliveryHttp(connection: LiveDeliveryOptions["connection"]
           try {
             if (!complete) abort.abort()
             if (reader) { await Promise.allSettled([reader.cancel(), reader.closed]); reader.releaseLock() }
+            if (input.signal.aborted && !(operation === "start" && complete)) throw new LiveDeliveryError("cancelled")
+            if (classified) throw classified
             if (expired) throw new DeliveryRequestError("deadline", true, current)
           } finally { clearTimeout(timer); input.signal.removeEventListener("abort", cancel) }
         }
       } finally { release() }
     },
   }
+}
+
+// These statuses are definitive at headers; only400 needs a bounded body to refine its reason.
+function headerFailure(status: number, expected: number, connection: DeliveryConnection) {
+  if (status >= 300 && status < 400) return new DeliveryRequestError("target", false, connection)
+  if (status === 401 || status === 403) return new DeliveryRequestError("authentication", false, connection)
+  if (status === 404) return new DeliveryRequestError("missing", false, connection)
+  if (status === 408 || status === 429 || (status >= 500 && status < 600)) return new DeliveryRequestError("offline", true, connection)
+  if (status !== 400 && status !== expected) return new DeliveryRequestError("conflict", false, connection)
 }

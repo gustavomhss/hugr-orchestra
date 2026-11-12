@@ -412,15 +412,19 @@ export function createLiveDeliveryManager(options: LiveDeliveryOptions): LiveDel
   }
   function stop() {
     if (shutdown) return shutdown
+    // Abort listeners can reenter shutdown synchronously; publish its identity before aborting.
+    const completion = Promise.withResolvers<void>()
+    shutdown = completion.promise
     closing = true
     for (const start of starts.values()) closeOwner(start.owner)
     for (const adoption of adoptions.values()) closeOwner(adoption.owner)
     for (const value of entries.values()) { value.paused = true; value.next = false; closeOwner(value.owner); if (value.producer) { value.producer.closed = true; value.producer.controller.abort() } }
-    shutdown = (async () => {
+    const job = (async () => {
       while (jobs.size) await Promise.allSettled([...jobs])
       try { options.store.close(); closed = true } catch { throw new LiveDeliveryError("storage") }
       notify()
     })()
+    job.then(completion.resolve, completion.reject)
     return shutdown
   }
 
