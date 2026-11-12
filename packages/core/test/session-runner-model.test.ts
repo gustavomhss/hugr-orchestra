@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { LLM } from "@orchestra/llm"
+import { GenerationOptions, LLM } from "@orchestra/llm"
 import { LLMClient, RequestExecutor } from "@orchestra/llm/route"
 import { DateTime, Effect, Layer, Schema } from "effect"
 import { Headers } from "effect/unstable/http"
@@ -82,11 +82,11 @@ describe("SessionRunnerModel", () => {
     Effect.gen(function* () {
       const catalog = model({ type: "aisdk", package: "@ai-sdk/openai-compatible", url: "https://compatible.example/v1",
         settings: { generation: { temperature: 0 } } })
-      const resolved = yield* SessionRunnerModel.fromCatalogModel(ModelV2.Info.make({ ...catalog,
+      const failure = yield* SessionRunnerModel.fromCatalogModel(ModelV2.Info.make({ ...catalog,
         request: { headers: {}, body: { temperature: 0.5 } },
-      }))
-      const failure = yield* LLMClient.prepare(LLM.request({ model: resolved, prompt: "Hello" })).pipe(Effect.flip)
-      expect(failure.message).toContain("http.body cannot overlay protocol-owned field(s): temperature")
+      })).pipe(Effect.flip)
+      expect(failure).toMatchObject({ _tag: "SessionRunnerModel.ModelUnavailableError",
+        cause: expect.stringContaining("temperature") })
     }),
   )
 
@@ -259,10 +259,10 @@ describe("SessionRunnerModel", () => {
         {
           id: ModelV2.VariantID.make("high"),
           headers: { "x-variant": "high" },
+          generation: GenerationOptions.make({ temperature: 0.2 }),
           body: {
             store: false,
             service_tier: "priority",
-            temperature: 0.2,
             reasoning: { effort: "high" },
           },
         },
@@ -289,9 +289,9 @@ describe("SessionRunnerModel", () => {
         custom_extension: { enabled: true },
         store: false,
         service_tier: "priority",
-        temperature: 0.2,
         reasoning: { effort: "high" },
       })
+      expect(resolved.route.defaults.generation).toMatchObject({ temperature: 0.2 })
     }),
   )
 
@@ -358,13 +358,14 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
-  it.effect("overlays selected Anthropic Session variant bodies", () =>
+  it.effect("lowers selected Anthropic Session variant provider options outside body overlays", () =>
     Effect.gen(function* () {
       const catalog = model({ type: "aisdk", package: "@ai-sdk/anthropic", url: "https://anthropic.example/v1" }, [
         {
           id: ModelV2.VariantID.make("high"),
           headers: {},
-          body: { thinking: { type: "enabled", budget_tokens: 12000 } },
+          body: {},
+          providerOptions: { anthropic: { thinking: { type: "enabled", budget_tokens: 12000 } } },
         },
       ])
       const session = SessionV2.Info.make({
@@ -382,7 +383,9 @@ describe("SessionRunnerModel", () => {
 
       expect(resolved.route.defaults.http?.body).toEqual({
         custom_extension: { enabled: true },
-        thinking: { type: "enabled", budget_tokens: 12000 },
+      })
+      expect(resolved.route.defaults.providerOptions).toEqual({
+        anthropic: { thinking: { type: "enabled", budget_tokens: 12000 } },
       })
     }),
   )

@@ -2,6 +2,7 @@ export * as ConfigProviderPlugin from "./provider"
 
 import { define } from "../../plugin/internal"
 import { Effect } from "effect"
+import { mergeGenerationOptions, mergeProviderOptions } from "@orchestra/llm"
 import { Config } from "../../config"
 import { Global } from "../../global"
 import { Location } from "../../location"
@@ -115,6 +116,10 @@ export const Plugin = define({
                     }
                     Object.assign(existing.headers, variant.headers)
                     Object.assign(existing.body, variant.body)
+                    if (variant.generation !== undefined)
+                      Object.assign(existing, { generation: mergeGenerationOptions(existing.generation, variant.generation) })
+                    if (variant.providerOptions !== undefined)
+                      existing.providerOptions = mergeProviderOptions(existing.providerOptions, variant.providerOptions)
                   }
                 }
                 if (config.disabled !== undefined) model.enabled = !config.disabled

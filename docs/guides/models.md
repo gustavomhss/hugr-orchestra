@@ -21,6 +21,55 @@ Provider settings from your global config, including custom providers, keep thei
 
 Before approval, project provider declarations may change only provider/model names, model families and costs. A project cannot approve itself through its own `trusted_projects` setting. Review its provider configuration before trusting it; approved settings are applied when the catalog is loaded again.
 
+## Native model variants
+
+For Orchestra's native engine, put sampling and token options in `generation`. The model's base options remain in `api.settings.generation`; a selected variant overrides only the fields it supplies. Zero is a valid override, and a variant's `stop` array replaces the base array. In this example, replace `MODEL_ID` with your connected model's ID:
+
+```json
+{
+  "providers": {
+    "openai": {
+      "models": {
+        "MODEL_ID": {
+          "api": {
+            "type": "aisdk",
+            "package": "@ai-sdk/openai",
+            "settings": { "generation": { "temperature": 0.7, "maxTokens": 1024 } }
+          },
+          "variants": [{ "id": "precise", "generation": { "temperature": 0 } }]
+        }
+      }
+    }
+  }
+}
+```
+
+The canonical generation fields are `maxTokens`, `temperature`, `topP`, `topK`, `frequencyPenalty`, `presencePenalty`, `seed` and `stop`. Each protocol supports its own subset. Use `providerOptions` for protocol-specific settings, such as Anthropic thinking:
+
+```json
+{
+  "providers": {
+    "anthropic": {
+      "models": {
+        "MODEL_ID": {
+          "variants": [{
+            "id": "thinking",
+            "generation": { "maxTokens": 16000 },
+            "providerOptions": {
+              "anthropic": { "thinking": { "type": "enabled", "budgetTokens": 12000 } }
+            }
+          }]
+        }
+      }
+    }
+  }
+}
+```
+
+Move an old variant's `body.temperature` to `generation.temperature`, and its Anthropic `body.thinking` to `providerOptions.anthropic.thinking`. The old body spellings are rejected during native model resolution, before a provider request. Misspelled generation fields are rejected too. Headers and permitted body extensions retain their overlays; protocol-owned fields such as `messages`, `tools` and `model` cannot be overridden through `body`.
+
+Later trusted configuration layers merge generation fields and nested provider options into a variant with the same ID. If `request.variant` names a default variant, that variant must exist. Claude mode retains its host effort selection; this canonical variant lowering applies to the native engine.
+
 ## Prompt estimate
 
 For automatic compaction, the heuristic prompt estimate reuses bounded JSON-encoded lengths of identical long text values. The current request structure is serialized afresh for each estimate; whole requests or conversation histories are not cached.

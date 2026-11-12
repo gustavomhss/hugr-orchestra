@@ -1,11 +1,9 @@
 export * as SessionRunnerModel from "./model"
 
 import { makeLocationNode } from "../../effect/app-node"
-import { GenerationOptions, type Model } from "@orchestra/llm"
-import * as AnthropicMessages from "@orchestra/llm/protocols/anthropic-messages"
-import * as OpenAICompatibleChat from "@orchestra/llm/protocols/openai-compatible-chat"
-import * as OpenAIResponses from "@orchestra/llm/protocols/openai-responses"
-import { Auth, type AnyRoute } from "@orchestra/llm/route"
+import { GenerationOptions, mergeGenerationOptions, ProviderOptions, type Model } from "@orchestra/llm"
+import { AnthropicMessages, OpenAICompatibleChat, OpenAIResponses } from "@orchestra/llm/protocols"
+import { Auth, HttpTransport, type AnyRoute } from "@orchestra/llm/route"
 import { Context, Effect, Layer, Option, Schema } from "effect"
 import { produce } from "immer"
 import { Catalog } from "../../catalog"
@@ -144,7 +142,12 @@ const apiKey = (model: ModelV2.Info, credential?: Credential.Value) => {
   if (typeof value === "string") return Auth.value(value)
 }
 
-const withDefaults = (model: ModelV2.Info, route: AnyRoute, generation: GenerationOptions) => {
+const withDefaults = (
+  model: ModelV2.Info,
+  route: AnyRoute,
+  generation: GenerationOptions | undefined,
+  providerOptions: ProviderOptions,
+) => {
   const body = model.request.body
   const httpBody = Object.hasOwn(body, "apiKey")
     ? Object.fromEntries(Object.entries(body).filter(([key]) => key !== "apiKey"))
@@ -160,31 +163,36 @@ const withDefaults = (model: ModelV2.Info, route: AnyRoute, generation: Generati
       output: model.limit.output,
     },
     generation,
+    providerOptions,
   })
 }
 
 const withVariant = (
   model: ModelV2.Info,
   variantID: ModelV2.VariantID | undefined,
-): Effect.Effect<ModelV2.Info, VariantUnavailableError> => {
+): Effect.Effect<{
+  readonly model: ModelV2.Info
+  readonly variant: ModelV2.Info["variants"][number] | undefined
+}, VariantUnavailableError> => {
   const id = variantID === "default" || variantID === undefined ? model.request.variant : variantID
   const variant = model.variants.find((item) => item.id === id)
-  if (!variant && variantID !== undefined && variantID !== "default")
+  if (!variant && id !== undefined)
     return Effect.fail(
       new VariantUnavailableError({
         providerID: model.providerID,
         modelID: model.id,
-        variant: variantID,
+        variant: ModelV2.VariantID.make(id),
       }),
     )
-  return Effect.succeed(
-    variant
+  return Effect.succeed({
+    variant,
+    model: variant
       ? produce(model, (draft) => {
           Object.assign(draft.request.headers, variant.headers)
           Object.assign(draft.request.body, variant.body)
         })
       : model,
-  )
+  })
 }
 
 const apiName = (model: ModelV2.Info) =>
@@ -193,6 +201,7 @@ const apiName = (model: ModelV2.Info) =>
 export const fromCatalogModel = (
   model: ModelV2.Info,
   credential?: Credential.Value,
+  variant?: ModelV2.Info["variants"][number],
 ): Effect.Effect<Model, UnsupportedApiError | ModelUnavailableError> => {
   // Native V2 api.settings.generation uses canonical LLM options, not http.body.
   // Strict decoding rejects misspellings/coercion; absence keeps empty defaults.
@@ -207,30 +216,54 @@ export const fromCatalogModel = (
         cause: "Invalid api.settings.generation: expected canonical GenerationOptions",
       }),
     )
+  const variantGeneration = Schema.decodeUnknownOption(GenerationOptions, { onExcessProperty: "error" })(
+    variant?.generation === undefined ? {} : variant.generation,
+  )
+  const providerOptions = Schema.decodeUnknownOption(ProviderOptions)(
+    variant?.providerOptions === undefined ? {} : variant.providerOptions,
+  )
+  if (Option.isNone(variantGeneration) || Option.isNone(providerOptions))
+    return Effect.fail(
+      new ModelUnavailableError({
+        providerID: model.providerID,
+        modelID: model.id,
+        cause: "Invalid canonical variant generation/providerOptions",
+      }),
+    )
   const resolved =
     credential?.type !== "key" || credential.metadata === undefined
       ? model
       : produce(model, (draft) => {
           Object.assign(draft.request.body, credential.metadata)
         })
+  const forbiddenKeys = HttpTransport.forbiddenBodyOverlayKeys(resolved.request.body)
+  if (forbiddenKeys.length > 0)
+    return Effect.fail(
+      new ModelUnavailableError({
+        providerID: model.providerID,
+        modelID: model.id,
+        cause: `request.body cannot overlay protocol-owned field(s): ${forbiddenKeys.join(", ")}; use api.settings.generation, variant.generation or variant.providerOptions`,
+      }),
+    )
+  const mergedGeneration = mergeGenerationOptions(generation.value, variantGeneration.value)
   const key = apiKey(resolved, credential)
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai") {
     return Effect.succeed(
-      withDefaults(resolved, OpenAIResponses.route, generation.value)
+      withDefaults(resolved, OpenAIResponses.route, mergedGeneration, providerOptions.value)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
     ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
   }
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/anthropic") {
     return Effect.succeed(
-      withDefaults(resolved, AnthropicMessages.route, generation.value)
+      withDefaults(resolved, AnthropicMessages.route, mergedGeneration, providerOptions.value)
         .with({ auth: key === undefined ? Auth.none : Auth.header("x-api-key", key) })
         .model({ id: resolved.api.id }),
     ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
   }
   if (openAICompatible(resolved)) {
     return Effect.succeed(
-      withDefaults(resolved, OpenAICompatibleChat.route, generation.value)
+      withDefaults(resolved, OpenAICompatibleChat.route, mergedGeneration, providerOptions.value)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
     ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
@@ -251,7 +284,7 @@ const withPrices = (value: Model, model: ModelV2.Info) => {
 
 export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, credential?: Credential.Value) =>
   withVariant(model, session.model?.variant).pipe(
-    Effect.flatMap((model) => fromCatalogModel(model, credential)),
+    Effect.flatMap((selected) => fromCatalogModel(selected.model, credential, selected.variant)),
     Effect.map((value) =>
       withReference(value, { id: model.id, providerID: model.providerID, variant: session.model?.variant }),
     ),

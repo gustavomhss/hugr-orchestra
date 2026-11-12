@@ -293,6 +293,10 @@ function modelInfo(value: ModelV2.Info | ModelV2.MutableInfo) {
       ...variant,
       headers: { ...variant.headers },
       body: { ...variant.body },
+      generation: variant.generation && {
+        ...variant.generation,
+        stop: variant.generation.stop && [...variant.generation.stop],
+      },
     })),
     time: { ...value.time },
     cost: value.cost.map((cost) => ({ ...cost, tier: cost.tier && { ...cost.tier }, cache: { ...cost.cache } })),
