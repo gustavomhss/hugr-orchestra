@@ -15,6 +15,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { AppProcess } from "@orchestra/core/process"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionExecution } from "@orchestra/core/session/execution"
@@ -158,6 +159,8 @@ export function make() {
       SkillGuidance.Service.of({ load: () => Effect.succeed(SystemContext.empty) }),
     ),
     directory: paths.inside,
+    // Dependencies are private outputs: expose the same real nodes used by the runner for evaluate/reply assertions.
+    nodes: [PermissionV2.node, PermissionSaved.node],
     replacements: [
       // Last replacement restores the production node and its real Agent/Session/SQL dependencies over Harness's stub.
       [PermissionV2.node, PermissionV2.node],
