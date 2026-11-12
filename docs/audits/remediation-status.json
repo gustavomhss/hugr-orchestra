@@ -1367,6 +1367,14 @@
           "kind": "integrated_root_types_guards",
           "source": "9630aebc2c",
           "result": "Root Server bun typecheck0;78guards/373changedpaths/0gates/0errors/1inheriteddependencyadvisory. Boundaries5635files/5297edges/92existing/0new/0stale;spawn4020files/66allowlisted. No Schema/Protocol/HttpApi/dependency/generated change."
+        },
+        {
+          "kind": "aggregate_regression_actual_snapshot_blob_checks",
+          "snapshots": [
+            "705f8b946981d69f6e6efeda2c40edd381fda37c",
+            "f7e6ef7895102beaa1eae94949eec078ead38aec"
+          ],
+          "result": "All14reviewed/integratedpathSHAs match EACH actual aggregate regression snapshot (28checks), in addition to14focused snapshotchecks. No source drift."
         }
       ],
       "remaining": "Closed: focused50 and aggregate Core70 + ServerHTTP5 pass EACH Linux/Windows; integrated Server type0,14 actual snapshot blobs match, global guards/boundaries/spawn0. Checkpoint/empty-Session/hook limits are documented; no revocation linearizability after last checkpoint or commercial SDK claim."
