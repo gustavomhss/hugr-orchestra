@@ -1,8 +1,9 @@
 import { expect } from "bun:test"
 import path from "node:path"
 import { createServer } from "node:net"
+import { lstatSync, type BigIntStats } from "node:fs"
 import { pathToFileURL } from "node:url"
-import { Deferred, Effect, Fiber } from "effect"
+import { Deferred, Effect, Exit, Fiber } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
@@ -246,25 +247,137 @@ it.live("later multi-root mkdir failure rolls back only owned empty directories 
   }),
 )
 
-it.live("failed preparation preserves a replacement directory with a different identity", () =>
-  Effect.gen(function* () {
+type ReplacementObservation = {
+  state: "not_observed" | "present" | "absent" | "observation_failed"
+  code?: string
+  dev?: string
+  ino?: string
+  birthtimeNs?: string
+}
+
+function replacementState() {
+  return {
+    stage: "fixture",
+    renameCompleted: false,
+    replacementCompleted: false,
+    controlCompleted: false,
+    owned: undefined as string | undefined,
+    moved: undefined as string | undefined,
+    ownedIsDir: null as boolean | null,
+    verification: "not-started",
+    original: { state: "not_observed" } as ReplacementObservation,
+    replacement: { state: "not_observed" } as ReplacementObservation,
+  }
+}
+
+function replacementErrorCode(error: unknown) {
+  try {
+    if (error !== null && typeof error === "object" && "code" in error && typeof error.code === "string")
+      return error.code.slice(0, 64)
+  } catch {
+    // A diagnostic getter failure uses unknown and must not replace the original Effect failure.
+  }
+  return "unknown"
+}
+
+function replacementObservation(entry: string | undefined,
+  lookup: (entry: string) => Pick<BigIntStats, "dev" | "ino" | "birthtimeNs"> = (entry) => lstatSync(entry, { bigint: true }),
+): ReplacementObservation {
+  if (!entry) return { state: "not_observed" }
+  try {
+    const info = lookup(entry)
+    return { state: "present", dev: String(info.dev).slice(0, 80), ino: String(info.ino).slice(0, 80), birthtimeNs: String(info.birthtimeNs).slice(0, 80) }
+  } catch (error) {
+    const code = replacementErrorCode(error)
+    return { state: code === "ENOENT" ? "absent" : "observation_failed", code }
+  }
+}
+
+function replacementSetup(fs: FSUtil.Interface, directory: string, state: ReturnType<typeof replacementState>) {
+  return Effect.gen(function* () {
+    state.stage = "rename"
+    yield* fs.rename(path.join(directory, "owned"), path.join(directory, "moved")).pipe(Effect.orDie)
+    state.renameCompleted = true
+    state.stage = "replacement-mkdir"
+    yield* fs.makeDirectory(path.join(directory, "owned")).pipe(Effect.orDie)
+    state.replacementCompleted = true
+    // Observe only after the rename/mkdir gap; these lookups still perturb timing.
+    state.original = replacementObservation(path.join(directory, "moved"))
+    state.replacement = replacementObservation(path.join(directory, "owned"))
+    state.stage = "control-query"
+    yield* fs.realPath(path.join(directory, "absent-control"))
+    state.controlCompleted = true
+  })
+}
+
+function verifyReplacementDirectories(fs: FSUtil.Interface, target: string, moved: string, state: ReturnType<typeof replacementState>) {
+  return Effect.gen(function* () {
+    state.verification = "owned-stat"
+    state.ownedIsDir = (yield* fs.stat(target)).type === "Directory"
+    expect(state.ownedIsDir).toBe(true)
+    state.verification = "moved-stat"
+    expect((yield* fs.stat(moved)).type).toBe("Directory")
+    state.verification = "complete"
+  })
+}
+
+function retainReplacementFailure<A, E, R>(effect: Effect.Effect<A, E, R>, state: ReturnType<typeof replacementState>,
+  sink: (message: string) => void = (message) => console.error(message),
+  observe: typeof replacementObservation = replacementObservation,
+) {
+  return effect.pipe(Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.sync(() => {
+    const snapshot = (entry: string | undefined): ReplacementObservation => {
+      try { return observe(entry) } catch (error) {
+        return { state: "observation_failed", code: replacementErrorCode(error) }
+      }
+    }
+    let message = '{"sandboxReplacement":{"report":"formatting_failed"}}'
+    try {
+      // Later observations identify neither the actor nor the original isDir stat error.
+      const report = JSON.stringify({ sandboxReplacement: {
+        stage: state.stage, renameCompleted: state.renameCompleted, replacementCompleted: state.replacementCompleted,
+        controlCompleted: state.controlCompleted, ownedIsDir: state.ownedIsDir, verification: state.verification,
+        captured: { original: state.original, replacement: state.replacement },
+        current: { owned: snapshot(state.owned), moved: snapshot(state.moved) },
+      } })
+      message = Buffer.byteLength(report) <= 4096 ? report : '{"sandboxReplacement":{"report":"size_limit"}}'
+    } catch {
+      // Keep the bounded fallback if diagnostic formatting fails; preserve the original Effect failure.
+    }
+    try { sink(message) } catch {
+      // A diagnostic sink failure must never replace the original Effect failure.
+    }
+  }) : Effect.void))
+}
+
+function nativeReplacementProof() {
+  const state = replacementState()
+  return retainReplacementFailure(Effect.gen(function* () {
     const f = yield* fixture
     const target = path.join(f.directory, "owned")
     const moved = path.join(f.directory, "moved")
+    state.owned = target
+    state.moved = moved
     const failed = yield* Effect.flip(SandboxParents.prepare({
       ...f.fs,
-      realPath: (entry) => f.fs.realPath(entry).pipe(Effect.tap(() => Effect.gen(function* () {
-        if (entry !== target) return
-        yield* f.fs.rename(target, moved)
-        yield* f.fs.makeDirectory(target)
-        yield* f.fs.realPath(path.join(f.directory, "absent-control"))
-      }))),
+      realPath: (entry) => f.fs.realPath(entry).pipe(Effect.tap(() =>
+        entry === target ? replacementSetup(f.fs, f.directory, state) : Effect.void,
+      )),
     }, f.directory, [target]))
     expect(failed.reason).toBe("sandbox-parent-placement-acquisition")
-    expect(yield* f.fs.isDir(target)).toBe(true)
-    expect(yield* f.fs.isDir(moved)).toBe(true)
-  }),
-)
+    yield* verifyReplacementDirectories(f.fs, target, moved, state)
+  }), state)
+}
+
+it.live("failed preparation preserves a replacement directory with a different identity", nativeReplacementProof)
+
+it.live("native replacement proof completes 128 scoped preparations", () => Effect.gen(function* () {
+  for (let iteration = 0; iteration < 128; iteration++) {
+    console.info(JSON.stringify({ nativeReplacementAttempt: iteration }))
+    yield* Effect.scoped(nativeReplacementProof())
+  }
+  console.info(JSON.stringify({ nativeReplacementCompleted: 128 }))
+}))
 
 it.live("interrupted multi-root preparation rolls back its own empty directories", () =>
   Effect.gen(function* () {
