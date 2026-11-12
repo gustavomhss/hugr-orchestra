@@ -768,12 +768,12 @@ describe("DatabaseMigration", () => {
     )
   })
 
-  test("skips drizzle import when migration table already has state", async () => {
+  test("reconciles known legacy facts when migration table already has state", async () => {
     await run(
       Effect.gen(function* () {
         const db = yield* makeDb
         yield* db.run(sql`CREATE TABLE migration (id TEXT PRIMARY KEY, time_completed INTEGER NOT NULL)`)
-        yield* db.run(sql`INSERT INTO migration (id, time_completed) VALUES ('existing', 1)`)
+        yield* db.run(sql`INSERT INTO migration (id, time_completed) VALUES (${sessionMetadataMigration.id}, 1)`)
         yield* db.run(
           sql`CREATE TABLE __drizzle_migrations (id INTEGER PRIMARY KEY, hash text NOT NULL, created_at numeric, name text, applied_at TEXT)`,
         )
@@ -784,7 +784,10 @@ describe("DatabaseMigration", () => {
 
         yield* DatabaseMigration.applyOnly(db, [])
 
-        expect(yield* db.all(sql`SELECT id FROM migration ORDER BY id`)).toEqual([{ id: "existing" }])
+        expect(yield* db.all(sql`SELECT id FROM migration ORDER BY id`)).toEqual([
+          { id: "20260127222353_familiar_lady_ursula" },
+          { id: sessionMetadataMigration.id },
+        ])
       }),
     )
   })

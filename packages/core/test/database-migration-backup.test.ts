@@ -99,20 +99,17 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
     expect(await backups(tmp.path)).toEqual([])
   })
 
-  test("keeps only the three newest backups", async () => {
+  test("refuses invalid legacy backups without pruning them or migrating", async () => {
     await using tmp = await tmpdir()
     const file = path.join(tmp.path, "orchestra.db")
     await seed(file, ["001_a"])
     await Promise.all(
       [1, 2, 3, 4].map((n) => Bun.write(path.join(tmp.path, `orchestra.db.backup-old-${n}`), "x")),
     )
-
-    await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a"), addNote("002_b")]))
-
-    const kept = await backups(tmp.path)
-    expect(kept).toHaveLength(3)
-    expect(kept).not.toContain("orchestra.db.backup-old-1")
-    expect(kept).not.toContain("orchestra.db.backup-old-2")
+    const result = await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a"), addNote("002_b")]).pipe(Effect.exit))
+    expect(result._tag).toBe("Failure")
+    expect(await backups(tmp.path)).toEqual([1, 2, 3, 4].map((n) => `orchestra.db.backup-old-${n}`))
+    expect(await run(file, (db) => db.all(sql`SELECT body FROM note`))).toEqual([{ body: "precious" }])
   })
 
   test("refuses a database migrated by a newer build and leaves it untouched", async () => {
