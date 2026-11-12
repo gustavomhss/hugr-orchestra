@@ -2526,7 +2526,16 @@
       "owner": "lead",
       "status": "planned_unverified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "c56655e891",
+        "00c209b560",
+        "bb3cbaa9e6",
+        "fecacc06cd",
+        "e43559eb0b",
+        "34071d747d",
+        "e724fc8c52",
+        "80555b5f5f"
+      ],
       "evidence": [
         {
           "kind": "control",
@@ -2570,9 +2579,14 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43291173235",
           "source": "d1613bd057a1e91eec65999f95d27d72226ea130",
           "result": "One case/14 assertions/2 actual Omni Node children per OS. After committed atomic marker actual PID/live checks, parent SIGKILL, no normal-exit witnesses, actual exit/readers before exact profile/ID/body reopen. Signal exit numbers diagnostic only; no Electron/powerloss/fullsender claim."
+        },
+        {
+          "kind": "private_store_integrated_stage",
+          "source": "80555b5f5f",
+          "result": "Eight store paths integrated, byte-identical to BOTH actual hosted snapshots84308ab/e78d584 (16 checks). Root aggregate Desktop type0; guards78rules/364paths/0gates/0errors/one existing advisory; boundaries5629files/5292edges/92existing/0new/0stale; spawn4018files/66allowlisted. No PhaseA RED files integrated; client/sender still unchanged."
         }
       ],
-      "remaining": "Private store d161 repaired and verified on both OS; green8path stage integration underway. Original3 sender/redirect failures and manager/target/producer/IPC/UI remain open. PhaseA RED tests retained privately until integration source fixes them."
+      "remaining": "Private store verified/integrated as a green stage. Original3 sender/redirect failures and manager/target/producer/IPC/UI remain open; no capture/IPC/Electron or power-loss guarantee inferred."
     },
     {
       "id": "M14",
@@ -3117,6 +3131,150 @@
       "path": "packages/tui/src/context/sync.tsx",
       "snapshot_blob": "0362c01ea5c9bc02a75bd08fa5ff0d64fd197cc7",
       "local_blob": "0362c01ea5c9bc02a75bd08fa5ff0d64fd197cc7",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-contract.ts",
+      "sha256": "bc4782db64df0ca430dfdca81be727a73975103c77c50d5523246ba8bcabf6fc",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-control.node.test.ts",
+      "sha256": "f38ae90efd3fa53fd1957464cf7f404c9c5fd679409cce04378ccbfae0609c22",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.ts",
+      "sha256": "67b4744ef2ae5848fa08a08eb503bf11becaed0245912979b2c8475dec6aaa5d",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-crash.fixture.ts",
+      "sha256": "a1fbc33eff18c2c2631b467536fa08e073e3b893125d7d2c36f34f1984a97cc5",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+      "sha256": "1fd6e7b83c7776b1a318e1908e8dc6795b664c9b12fedae18f2f3d74db2615bf",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.node.test.ts",
+      "sha256": "623f56713d0296f008a05ebfa95bf136a96c47812beaadbf1b7e174252fa38c7",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox.node-smoke.mjs",
+      "sha256": "5854fc15c52760bbf77be085b8dbe29f8a7dcc8c47b222a081e2e871553f707a",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox-control.node-smoke.mjs",
+      "sha256": "a20cfa7e49906aed2aa156f34e3034b116f0371848c7677a8aeb51804b34df1a",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-contract.ts",
+      "sha256": "bc4782db64df0ca430dfdca81be727a73975103c77c50d5523246ba8bcabf6fc",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-control.node.test.ts",
+      "sha256": "f38ae90efd3fa53fd1957464cf7f404c9c5fd679409cce04378ccbfae0609c22",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.ts",
+      "sha256": "67b4744ef2ae5848fa08a08eb503bf11becaed0245912979b2c8475dec6aaa5d",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-crash.fixture.ts",
+      "sha256": "a1fbc33eff18c2c2631b467536fa08e073e3b893125d7d2c36f34f1984a97cc5",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+      "sha256": "1fd6e7b83c7776b1a318e1908e8dc6795b664c9b12fedae18f2f3d74db2615bf",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.node.test.ts",
+      "sha256": "623f56713d0296f008a05ebfa95bf136a96c47812beaadbf1b7e174252fa38c7",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox.node-smoke.mjs",
+      "sha256": "5854fc15c52760bbf77be085b8dbe29f8a7dcc8c47b222a081e2e871553f707a",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox-control.node-smoke.mjs",
+      "sha256": "a20cfa7e49906aed2aa156f34e3034b116f0371848c7677a8aeb51804b34df1a",
       "exact": true
     }
   ],
