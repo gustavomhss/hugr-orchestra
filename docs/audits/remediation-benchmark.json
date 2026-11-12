@@ -1104,5 +1104,29 @@
       }
     ],
     "purpose": "Updated after incoming dev UI changes, before audit UI commits; compare after against this baseline."
+  },
+  "reconnect_recovery": {
+    "before": {
+      "run": 43179487933,
+      "source_head": "0c3912232f3d061e18f54d9b494fea6f4cc4e63a",
+      "snapshot": "0e719363273bb1649455ade2436854e6b982b75e",
+      "tests": 6,
+      "page_records": 90,
+      "summary_records": 6,
+      "duration_ms": 260486.229,
+      "receipt": "/tmp/orchestra-e2-benchmark-before.exit"
+    },
+    "after": {
+      "run": 43197751238,
+      "source_head": "ef4961ca6afaa33132ab6e42817553db5536069f",
+      "snapshot": "30b65113aefd88971f77a11fb14d37c096bdd886",
+      "tests": 6,
+      "page_records": 90,
+      "summary_records": 6,
+      "duration_ms": 317432.572,
+      "receipt": "/tmp/orchestra-e2-benchmark-after.exit"
+    },
+    "config": "identical Linux/current renderer/production build/no reused server/one worker/fullyParallelfalse",
+    "claim": "completion and metrics only; no thresholds or causal performance claim"
   }
 }

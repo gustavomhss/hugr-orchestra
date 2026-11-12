@@ -21,11 +21,86 @@
     {
       "id": "E2",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "732b7964f87968af7e28f2e569ae31d6a0afc0c9",
+        "c676700dfd77a284ed7d341cde5241671c9f588c",
+        "84e44ac885e64760f5a20d0a775de840fa00d09d",
+        "d72a9b1808a57c63431c952ce6b4d2101de4b591",
+        "26b1f224e9fa4fd1aa8fe9b8f5568e180d3c2377",
+        "2a6249daa3a72def52dec9f9feb4ffea97f42f6f",
+        "f13ba00abce99a5499f2fda784d8ccd7b092c02a",
+        "e21ba52401cf129078e903ce918588c03344779e",
+        "8f0a52cf3606f387e136b421ef258123e8ed56b6",
+        "99d9325124fec8090f2dfbf3ff2332815a7e67c7",
+        "8498854e1f12560d573b52a7d9bd72233efa3523",
+        "4402107a43c141eff69937770b1569558273c2ff",
+        "5a4ffadf638a464a046b6cafe508750807a4041e",
+        "eab4e2b0dde43b2e7a8e2a8a143a7d12dc8f5cc4",
+        "e07e070d0e0de3ba900d405c12dcb73143e14c29",
+        "50d7eaf6855c21a7ac34f78701f7da40c66d5d0b",
+        "a5d4085c8d6fafbdde73f76a472adbc804538d41",
+        "c9bfdb162f68c8c448f0f7ba7ca982024e329084",
+        "c564f5f1a7cb5203a6727e114c84296469a10cb5"
+      ],
+      "evidence": [
+        {
+          "kind": "behavioral_red",
+          "runs": [
+            "43167013539",
+            "43171883724",
+            "43174178542"
+          ],
+          "result": "Original force, mounted TUI reconnect and stale active snapshot races"
+        },
+        {
+          "kind": "compositional_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43196556019",
+          "result": "75 unchanged unit cases and3 browser cases pass;2 final fixture assertions corrected without source changes"
+        },
+        {
+          "kind": "corrected_cases_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197297560",
+          "result": "2pass/46assertions; same message IDs assert refreshed text while preserving unfetched history"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43196823687",
+          "result": "TUI28pass/169assertions per OS"
+        },
+        {
+          "kind": "production_benchmark",
+          "before": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43179487933",
+          "after": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197751238",
+          "result": "6 scenarios each,90PAGE+6summary per run; no causal speed or threshold claim"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE final18ef; root read all5 source diffs and resolved each later delta"
+        },
+        {
+          "kind": "typechecks",
+          "result": "App finalef496 and TUI invariant18ef exit0",
+          "receipts": [
+            "/tmp/orchestra-e2-app-type-fixture.exit",
+            "/tmp/orchestra-e2-tui-type-final.exit"
+          ]
+        },
+        {
+          "kind": "integrated_hashes",
+          "result": "all13 owned paths exactly match ef4961ca6afaa33132ab6e42817553db5536069f"
+        },
+        {
+          "kind": "integrated_checks",
+          "guards": 0,
+          "boundaries": 0,
+          "spawn_imports": 0,
+          "note": "Only existing explained Drizzle guard advisory remains"
+        }
+      ]
     },
     {
       "id": "E3",
@@ -2122,11 +2197,37 @@
     {
       "id": "N1",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "84bd538a84",
+        "29bcc68821",
+        "699527e136",
+        "f06d8653e3"
+      ],
+      "evidence": [
+        {
+          "kind": "behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43194968284",
+          "result": "Node Linux/Windows10controls pass,N1 fails actual worker tree alive; Bun not reached; mac14 unsupported before steps"
+        },
+        {
+          "kind": "native_gate_green_three_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197913690",
+          "snapshot_sha": "b9c2ac3747cac64fa582524f3dd474ba83ed19b4",
+          "result": "Linux/Windows/macOS15: clippy/build/addon/Cargo pass; Node11+Bun11 hardening perOS,66total;6N1 executions"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE b95; root inspected complete8file source diff"
+        },
+        {
+          "kind": "integrated_hashes",
+          "result": "8source files match b95 and4test files match adfa; root-owned workflow/AGENT docs match tested b9"
+        }
+      ]
     },
     {
       "id": "N2",
@@ -2608,24 +2709,24 @@
     "guards": {
       "exit": 0,
       "rules": 78,
-      "changed_paths": 255,
+      "changed_paths": 273,
       "gate": 0,
       "warn": 1,
-      "receipt": "/tmp/orchestra-h10-integrated-guards.exit",
+      "receipt": "/tmp/orchestra-e2-l1-integrated-guards.exit",
       "warning_resolution": "dep-new-added: existing repo catalog drizzle-orm is required as Engine devDependency by relocated SQL integration tests; same version, one workspace lock entry; PR explains need, no ignore or approval label."
     },
     "boundaries": {
       "exit": 0,
-      "parsed_files": 5593,
+      "parsed_files": 5595,
       "cross_package_edges": 5087,
       "ledgered": 92,
       "new": 0,
       "stale": 0,
-      "receipt": "/tmp/orchestra-h6-integrated-boundaries.exit"
+      "receipt": "/tmp/orchestra-e2-l1-integrated-boundaries-final.exit"
     },
     "spawn_imports": {
       "exit": 0,
-      "receipt": "/tmp/orchestra-h6-integrated-spawn.exit"
+      "receipt": "/tmp/orchestra-e2-l1-integrated-spawn.exit"
     },
     "desktop_boundary_import": {
       "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134685283",
@@ -2653,11 +2754,13 @@
     "E6": "Core/host integrated; Schema5/Client5 and five package types green. Wire HTTP omitted-agent fixture and baseline transport cancellation diagnostics remain open.",
     "H6": "Integrated ce46eb7c0f; full both-OS source proof plus root merged seam4green and Coretype0. Closed.",
     "M9_M10": "Integrated e8ab184d15, all four scoped gates green, source hashes16 equal, closed.",
-    "L1": "Residual topology design cold GO after lifecycle resolutions; root tests-first next, no production GO.",
+    "L1": "Source767 type0; first4file gate63pass1fixturefail perOS. Fresh row-race facade duplicated real projectors; tests-only d046/f36 reuse existing registration. Earlier row baseline failure was setup, not behavior RED; isolated baseline and corrected source narrow pending.",
     "M11_M13": "M11 trusted permission/WS seams explicitly planned; implementation sequenced after M13 delivery/close-intent contract. No production GO.",
-    "E2": "Boundary cold APPROVE2e5 and browser witness2ba; RED classified with unreached assertions explicit. Source GO granted final frozen contract; before benchmark43179487933 retained.",
+    "E2": "Integrated c564f5f1a7;13 exact paths, compositional App80/TUI28 perOS,6before/after benchmarks, package types0. Closed.",
     "T2": "Legitimate800KiB admitted-event acceptance cold GO; no size/transport policy selected.",
-    "H10": "Integrated5b6b9bb290; 60pass perOS, exact hashes5, independent source approval, guards0. Closed."
+    "H10": "Integrated5b6b9bb290; 60pass perOS, exact hashes5, independent source approval, guards0. Closed.",
+    "N1": "Integrated29bcc68821; exact Rust/test hashes and3OS native gate Node+Bun green. Closed.",
+    "H4": "Source72a+38f independent APPROVE, Core/Engine types0; finalEngine42both and Core3both gates in progress."
   },
   "wave4": {
     "agents": {
