@@ -1,6 +1,5 @@
 export * as EligibilityFixture from "./model-eligibility-fixture"
 
-import type { Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
@@ -12,23 +11,19 @@ import { LLMEvent, type Model } from "@orchestra/llm"
 import { Effect, Layer, Stream } from "effect"
 import { ClaudeCodeSDK } from "../../../modules/engine-adapters/claude-code/src/sdk"
 import { ClaudeCodeHost } from "../../../modules/engine-adapters/claude-code/src/v2/host"
+import { ScriptedSDK } from "../../../modules/engine-adapters/claude-code/test/fixture/scripted-sdk"
 
-export const state = { options: [] as Options[], signedIn: true, accountFails: false, registered: true,
+const options: ScriptedSDK.Options[] = []
+export const state = { options, signedIn: true, accountFails: false, registered: true,
   customReady: false, customCalls: 0, tools: 0, materializations: 0, nativeResolves: 0, nativeModel: undefined as Model | undefined }
 export const ref = (providerID: string, variant?: string) => ModelV2.Ref.make({
   providerID: ProviderV2.ID.make(providerID), id: ModelV2.ID.make("fixture"),
   ...(variant === undefined ? {} : { variant: ModelV2.VariantID.make(variant) }),
 })
 
-const done = { type: "result", subtype: "success", is_error: false, session_id: "eligibility-sdk", result: "",
-  usage: { input_tokens: 1, output_tokens: 1, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as unknown as SDKMessage
 const sdk = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
   // Only the SDK boundary is scripted. Eligibility and host streaming are the real implementations.
-  query: ((input: { prompt: AsyncIterable<SDKUserMessage>; options: Options }) => (async function* () {
-    state.options.push(input.options)
-    await input.prompt[Symbol.asyncIterator]().next()
-    yield done
-  })()) as unknown as typeof query,
+  query: (input) => ScriptedSDK.query(input, state.options),
 }))
 export const account = Layer.succeed(ClaudeCodeAccount.Service, ClaudeCodeAccount.Service.of({
   account: Effect.suspend(() => state.accountFails ? Effect.die(new Error("Fictitious account read failure"))
