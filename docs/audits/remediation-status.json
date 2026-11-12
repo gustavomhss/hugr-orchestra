@@ -637,19 +637,43 @@
       "id": "H5",
       "severity": "P1",
       "owner": "lead",
-      "status": "regression_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "02054e2716",
+        "98cda7b13b8b2d34b62c57a3b58831dfecf6873f"
+      ],
       "evidence": [
         {
-          "kind": "red_partial",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43133837700",
-          "result": "Incoming join and partial graph setup reproduced. Two conditional-shape cases had a deepcopy runnable-identity fixture flaw; corrected baseline run pending."
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135443951",
+          "result": "8 fail, 2 pass; corrected branch snapshot keeps callable identity; incoming approval join and partial setup reproduced"
         },
         {
-          "kind": "green_partial",
-          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134679240",
-          "result": "17 pass, 2 fixture comparison failures; not green. Corrected shape preserves callable identity and snapshots mutable branch fields; final focused gate pending."
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135397913",
+          "result": "52 pass: 10 new real-LangGraph, 9 existing gate, 33 documentation tests"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE frozen 98cda7b13b; source, tests, docs and final run logs inspected"
+        },
+        {
+          "kind": "static_checks",
+          "guards": "78 rules, 116 paths, 0 gate/warn/errors",
+          "boundaries": "5540 files, 4954 cross-package edges, 92 existing ledger entries, 0 new/stale",
+          "docs": "local structural guard and index check exit0; hosted documentation tests passed",
+          "receipts": [
+            "/tmp/orchestra-audit-relay-final-guards.exit",
+            "/tmp/orchestra-audit-integrated-boundaries-final.exit",
+            "/tmp/orchestra-audit-relay-doc-guard-final.exit",
+            "/tmp/orchestra-audit-relay-doc-index-final-check.exit"
+          ]
+        },
+        {
+          "kind": "scope_limit",
+          "result": "Separately packaged Python LangGraph library; incoming approval joins are refused before mutations. No native/ARM authenticated-approval claim."
         }
       ]
     },
@@ -1758,12 +1782,12 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 29,
+    "new_fixes_verified": 30,
     "already_fixed_verified": 1,
-    "remaining": 35,
+    "remaining": 34,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "e46ab2cbc9",
+  "integration_checkpoint": "98cda7b13b",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
@@ -1806,5 +1830,35 @@
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
     "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+  },
+  "integrated_checks": {
+    "guards": {
+      "exit": 0,
+      "rules": 78,
+      "changed_paths": 116,
+      "gate": 0,
+      "warn": 0
+    },
+    "boundaries": {
+      "exit": 0,
+      "parsed_files": 5540,
+      "cross_package_edges": 4954,
+      "ledgered": 92,
+      "new": 0,
+      "stale": 0
+    },
+    "spawn_imports": {
+      "exit": 0,
+      "receipt": "/tmp/orchestra-audit-current-spawn.exit"
+    },
+    "desktop_boundary_import": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134685283",
+      "os": [
+        "linux",
+        "windows"
+      ],
+      "typecheck_exit": 0,
+      "receipt": "/tmp/orchestra-audit-desktop-boundary-type.exit"
+    }
   }
 }
