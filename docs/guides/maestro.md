@@ -85,6 +85,10 @@ first turn starts. If the tree or grounded source changes, or the bound evidence
 execution stops until the evidence is refreshed and you approve again. Replaying an already-consumed receipt after
 legitimate edits remains safe to retry; it does not grant another first turn.
 
+Maestro can transfer an unused workflow step to another Task. A running Task, or one with a recorded reply or review
+hold, keeps its step and needs a new contract instead. After a transfer, resuming the previous Task cannot continue
+that workflow.
+
 Reviews of plans and returned work go to the code review seat, `lucy`. See [Code review](review.md) for its card,
 verdicts and tiers.
 
