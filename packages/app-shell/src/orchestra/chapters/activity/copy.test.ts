@@ -1,6 +1,27 @@
 import { expect, test } from "bun:test"
 import { resolveTemplate, translator } from "@solid-primitives/i18n"
 import { ACTIVITY_COPY, ACTIVITY_COPY_BR } from "@/i18n/orchestra-chapters/activity"
+import { tabs } from "./reading"
+
+test.each([
+  { locale: "en", copy: ACTIVITY_COPY, unique: "not collapsed", proof: "unproved" },
+  { locale: "br", copy: ACTIVITY_COPY_BR, unique: "não colapsei", proof: "não provado" },
+])("W12 worktree $locale labels preserve source, row identity, unique and proof vocabulary", (fixture) => {
+  const t = translator(() => fixture.copy, resolveTemplate)
+  const source = t("orchestra.monitor.worktreeSource", { source: "node.fs.lstat" })
+  const action = t("orchestra.monitor.worktreeRead", { path: "/registered/worktree-a" })
+  expect(source).toContain("node.fs.lstat")
+  expect(action).toContain("/registered/worktree-a")
+  const details = t("orchestra.monitor.walkDetails", { bytes: 12345, entries: 907, age: "23 s", issues: 661 })
+  expect(details).toContain("12345 B")
+  expect(details).toContain("907")
+  expect(details).toContain("661")
+  expect(details).toContain("23 s")
+  expect(`${source} ${action} ${details}`).not.toMatch(/[{}]/)
+  expect(t("orchestra.monitor.notCollapsed")).toBe(fixture.unique)
+  expect(t("orchestra.monitor.unproved")).toBe(fixture.proof)
+  expect(tabs).toEqual(["Trees", "Worktrees", "Cache", "Docker", "Temporary", "Logs", "IN/OUT", "Quarantine"])
+})
 
 test.each([
   { locale: "en", copy: ACTIVITY_COPY },

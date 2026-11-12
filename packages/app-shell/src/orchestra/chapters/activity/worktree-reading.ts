@@ -32,3 +32,10 @@ export function make(_input: {
 }): Controller {
   throw new Error("Worktree reading request admission is not implemented")
 }
+
+export function matching(
+  _rows: readonly ActivityMonitor.WorktreeRecord[],
+  _query: string,
+): readonly ActivityMonitor.WorktreeRecord[] {
+  throw new Error("Worktree reading filtering is not implemented")
+}

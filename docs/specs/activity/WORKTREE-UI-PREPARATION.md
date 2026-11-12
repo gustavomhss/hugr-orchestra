@@ -65,6 +65,10 @@ performance.now and report defaults to console.error with an Activity context.
 Refresh/read promises settle after their owned operation's status is updated;
 disposal suppresses subsequent store updates and reporting, including ignored
 AbortSignals from a deferred transport. tick updates monotonic now only.
+The same module's matching(rows, query) returns a readonly filtered list of
+canonical WorktreeRecord references, matching trimmed case-insensitive directory
+or projectID text. Blank query includes all rows; no deduplication or inferred
+owner is permitted. Its anchor is explicitly unavailable as well.
 
 The component owns server/category context lifetime. Capture the SDK value that
 made a request; a later sdk() value must never redirect that request to a different
@@ -154,6 +158,12 @@ network responses, for these observations:
 - EN and BR: initial unread registered rows; explicit row read; real complete
   value and visible named source; real partial retry preserving the earlier
   value/time/source and showing gaps with separate logical/attempt ages.
+- Inspect a real complete zero-byte reading and a real partial attempt without
+  prior complete data: zero is measured zero; partial stays visibly unread.
+- Distinguish a filter miss, a successful empty registry and an unread failed
+  inventory. Change the selected session, filter, refresh and switch categories;
+  recorded owners remain blank. Exercise any offered sorting control and record
+  its absence if none exists; no sorting feature is introduced by this WP.
 - Inspect network behavior: mounting/refresh/filter/locale changes issue no
   measurement POST. Only the chosen row's action requests its opaque ID.
 - Keyboard: reach refresh, filter and every row read button; activate via keyboard;
