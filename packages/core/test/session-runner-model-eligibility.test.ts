@@ -14,6 +14,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
+import { SessionExecution } from "@orchestra/core/session/execution"
 import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
@@ -61,9 +62,11 @@ const admitOnly = Effect.fn(function* () {
   expect(EligibilityFixture.state.customCalls).toBe(0)
   return admitted
 })
-const expectFailedBeforeExecution = Effect.gen(function* () {
+const expectFailedBeforeExecution = (mode: "resume" | "wake" = "resume") => Effect.gen(function* () {
   const session = yield* SessionV2.Service
-  const exit = yield* session.resume(Harness.sessionID).pipe(Effect.exit)
+  const execution = yield* SessionExecution.Service
+  const exit = yield* (mode === "resume" ? session.resume(Harness.sessionID)
+    : execution.wake(Harness.sessionID).pipe(Effect.andThen(session.wait(Harness.sessionID)))).pipe(Effect.exit)
   const database = yield* Database.Service
   const rows = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, Harness.sessionID))
     .orderBy(asc(EventTable.seq)).all().pipe(Effect.orDie)
@@ -82,15 +85,15 @@ for (const provider of ["google", "anthropic#credential"]) {
     const session = yield* setup
     yield* session.switchModel({ sessionID: Harness.sessionID, model: EligibilityFixture.ref(provider) })
     yield* admitOnly()
-    yield* expectFailedBeforeExecution
+    yield* expectFailedBeforeExecution()
   }))
 }
 
-it.live("BEHAVIOR E6: signed-out host cannot execute an admitted SDK-default prompt", () => Effect.gen(function* () {
+it.live("BEHAVIOR E6: signed-out host cannot execute an admitted SDK-default prompt after advisory wake", () => Effect.gen(function* () {
   yield* setup
   EligibilityFixture.state.signedIn = false
   yield* admitOnly()
-  yield* expectFailedBeforeExecution
+  yield* expectFailedBeforeExecution("wake")
 }))
 
 it.live("BEHAVIOR E6: canonical variant generation is refused instead of ignored by Claude", () => Effect.gen(function* () {
@@ -101,7 +104,7 @@ it.live("BEHAVIOR E6: canonical variant generation is refused instead of ignored
   }))
   yield* session.switchModel({ sessionID: Harness.sessionID, model: EligibilityFixture.ref("anthropic", "high") })
   yield* admitOnly()
-  yield* expectFailedBeforeExecution
+  yield* expectFailedBeforeExecution()
 }))
 
 for (const variant of ["missing", "other"]) {
@@ -109,7 +112,7 @@ for (const variant of ["missing", "other"]) {
     const session = yield* setup
     yield* session.switchModel({ sessionID: Harness.sessionID, model: EligibilityFixture.ref("anthropic", variant) })
     yield* admitOnly()
-    yield* expectFailedBeforeExecution
+    yield* expectFailedBeforeExecution()
   }))
 }
 
@@ -137,7 +140,7 @@ for (const stale of [false, true]) {
       EligibilityFixture.state.customReady = false
     }
     yield* admitOnly()
-    yield* expectFailedBeforeExecution
+    yield* expectFailedBeforeExecution()
   }))
 }
 
@@ -145,7 +148,7 @@ it.live("BEHAVIOR E6: missing execution host is a typed failure with durable Ste
   yield* setup
   EligibilityFixture.state.registered = false
   yield* admitOnly()
-  const exit = yield* expectFailedBeforeExecution
+  const exit = yield* expectFailedBeforeExecution()
   expect(Exit.isFailure(exit)).toBe(true)
   if (Exit.isFailure(exit)) expect(Cause.hasDies(exit.cause)).toBe(false)
 }))
@@ -161,7 +164,7 @@ it.live("BEHAVIOR E6: agent.model is not promoted into Session.model while decid
   const database = yield* Database.Service
   yield* database.db.update(SessionTable).set({ parent_id: parentID }).where(eq(SessionTable.id, Harness.sessionID)).run()
   yield* admitOnly()
-  yield* expectFailedBeforeExecution
+  yield* expectFailedBeforeExecution()
 }))
 
 it.live("CONTROL E6: existing exact Anthropic model and effort remain executable", () => Effect.gen(function* () {
