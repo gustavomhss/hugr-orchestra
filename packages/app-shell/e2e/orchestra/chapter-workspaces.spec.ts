@@ -620,14 +620,14 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; profile?:
       return json(route, { state: root, config: root, worktree: root, directory, home: "/home/test" })
     if (url.pathname === "/provider")
       return json(route, { all: [], connected: [], default: { providerID: "", modelID: "" } })
-    if (url.pathname === "/agent") return json(route, [{ name: "build", mode: "primary" }])
+    if (url.pathname === "/agent") return json(route, [{ name: "maestro", mode: "primary" }])
     if (url.pathname === "/api/agent")
       return json(route, {
         location: { directory, project: { id: current.id, directory: root } },
         data: [
           {
-            id: "build",
-            name: "Build",
+            id: "maestro",
+            name: "Maestro",
             mode: "primary",
             hidden: false,
             request: { settings: {}, headers: {}, body: {} },
@@ -635,6 +635,9 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; profile?:
           },
         ],
       })
+    if (url.pathname === "/api/mcp/resource")
+      return json(route, { location: { directory, project: { id: current.id, directory: root } }, data: { resources: [], templates: [] } })
+    if (url.pathname === "/api/config") return json(route, { data: {} })
     if (["/api/provider", "/api/model", "/api/model/default"].includes(url.pathname)) {
       const model = {
         id: "mock-model",
