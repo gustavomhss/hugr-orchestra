@@ -14,6 +14,14 @@ Starting a new sign-in disconnects the server and clears its previous credential
 
 A configured `oauth.client_id` is also bound to its authorization server. To change that ID or server, run `orchestra mcp logout <server>` and then authenticate again. Editing project config or merely starting another sign-in does not approve the change. The configured client secret stays in config and is not copied into the stored login file.
 
+## MCP tool identity failures
+
+A server can stay connected while some tools cannot be registered. Its accepted tools and resources remain available; refused tools are omitted from the catalog. Orchestra reports a bounded `MCP tool registration refused` warning with the server and refused count.
+
+MCP identities use a private random key stored as a sealed `mcp-tool-identity.key` in Orchestra's data directory. This key is independent of OAuth tokens and is encrypted using the existing credential key. An empty, corrupt, linked or unreadable identity file is refused and left untouched. Restore the matching identity file and credential key rather than replacing a damaged record with guessed contents.
+
+If the identity file is lost, a fresh key produces new tool identifiers and existing exact approvals no longer match. Back up and restore it with the matching credential keychain entry or credential key file. On systems using the credential-file fallback, that existing fallback remains the protection boundary. Windows inherits the data directory's existing ACL; POSIX mode bits are not a new Windows ACL guarantee.
+
 ## OAuth callback port
 
 The browser sign-in for a remote server returns to `http://127.0.0.1:19876/mcp/oauth/callback`. If another program holds the port, starting the sign-in fails at once with `OAuth callback port <port> is already in use`. Close the program, or set `oauth.callback_port` (or `oauth.redirect_uri`) in the server's MCP config.

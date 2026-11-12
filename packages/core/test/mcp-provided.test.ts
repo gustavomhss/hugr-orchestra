@@ -79,7 +79,9 @@ describe("McpProvided", () => {
             const registry = yield* ToolRegistry.Service
             listed.splice(0, listed.length, provided("dock-linux", "tab:1", "look"))
             yield* mcp.ready()
-            expect((yield* registry.materialize()).definition("dock-linux_look")).toBeDefined()
+            const originalID = (yield* mcp.toolIds())["dock-linux"][0]
+            expect(originalID).toMatch(/^mcp_[A-Za-z0-9_-]{43}$/)
+            expect((yield* registry.materialize()).definition(originalID)).toBeDefined()
             expect(yield* mcp.tools()).toEqual({ "dock-linux": ["look"] })
 
             // Same name, same key: no reconnect. A new key (a reloaded tab) reconnects and serves the new tools.
@@ -89,11 +91,13 @@ describe("McpProvided", () => {
             yield* mcp.ready()
             expect(connects).toEqual(["dock-linux@tab:1", "dock-linux@tab:2"])
             expect(yield* mcp.tools()).toEqual({ "dock-linux": ["find"] })
+            const nextID = (yield* mcp.toolIds())["dock-linux"][0]
+            expect(nextID).not.toBe(originalID)
 
             listed.splice(0, listed.length)
             yield* mcp.ready()
             expect(yield* mcp.tools()).toEqual({})
-            expect((yield* registry.materialize()).definition("dock-linux_find")).toBeUndefined()
+            expect((yield* registry.materialize()).definition(nextID)).toBeUndefined()
           }).pipe(
             Effect.scoped,
             Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),

@@ -193,7 +193,10 @@ const withBash = <A, E, R>(options: {
   (tmp) => {
     let native: Tool.AnyTool | undefined
     const runs: string[] = []
-    const tools = Layer.succeed(Tools.Service, Tools.Service.of({ register: (entries) => Effect.sync(() => { native = entries.bash }) }))
+    const tools = Layer.succeed(Tools.Service, Tools.Service.of({
+      register: (entries) => Effect.sync(() => { native = entries.bash }),
+      registerMcp: () => Effect.die("Unexpected MCP registration in native producer fixture"),
+    }))
     const permission = Layer.succeed(PermissionV2.Service, PermissionV2.Service.of({
       evaluate: () => Effect.die("unused permission evaluation"),
       authorize: () => Effect.die("unused permission authorization"),

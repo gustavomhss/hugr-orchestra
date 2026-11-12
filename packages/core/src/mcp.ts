@@ -31,6 +31,7 @@ import { Global } from "./global"
 import { Location } from "./location"
 import { InstallationVersion } from "./installation/version"
 import { McpAuth } from "./mcp/auth"
+import type { McpIdentity } from "./mcp/identity"
 import { McpCatalog } from "./mcp/catalog"
 import { McpClient } from "./mcp/client"
 import { McpOAuthCallback } from "./mcp/oauth-callback"
@@ -96,6 +97,8 @@ export interface Interface {
   readonly entries: () => Effect.Effect<Record<string, Mcp.Entry>, ConfigError>
   /** The tool names of each connected server that lists tools. */
   readonly tools: () => Effect.Effect<Record<string, string[]>>
+  /** Effective registered IDs for internal workflow narrowing; tools() retains human-readable raw names. */
+  readonly toolIds: () => Effect.Effect<Record<string, string[]>>
   /** The resources and resource templates of the connected servers. */
   readonly resources: () => Effect.Effect<Mcp.ResourceCatalog>
   /** Reads a resource by URI from the connected server that lists it; undefined when no connected server lists it. */
@@ -131,6 +134,7 @@ type Entry = {
   tools?: Scope.Closeable
   // The names of the tools the server listed, while it is connected.
   toolNames?: string[]
+  toolIds?: string[]
   // Bumped by every connect and disconnect; an attempt that finishes under a newer generation is stale.
   generation: number
 }
@@ -160,7 +164,7 @@ const layer = Layer.effect(
     }
     const pending = new Map<string, AuthFlow>()
     // Project config documents are read once per Location open; servers added or removed here overlay them.
-    const added = new Map<string, ConfigMCP.Local | ConfigMCP.Remote>()
+    const added = new Map<string, { server: ConfigMCP.Local | ConfigMCP.Remote; source: string }>()
     const removed = new Set<string>()
     // Local servers the last connect refused because the project was not approved; applyTrust retries them.
     const blocked = new Set<string>()
@@ -170,6 +174,26 @@ const layer = Layer.effect(
       const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
       const servers = new Map<string, ConfigMCP.Local | ConfigMCP.Remote | Provided>(
         documents.flatMap((document) => Object.entries(document.info.mcp?.servers ?? {})),
+      )
+      const authorities = new Map<string, McpIdentity.Authority>(
+        documents.flatMap((document) =>
+          Object.entries(document.info.mcp?.servers ?? {}).map(
+            ([name, server]) =>
+              [
+                name,
+                {
+                  kind: "configured" as const,
+                  source:
+                    document.path === undefined
+                      ? JSON.stringify(["user-global", path.resolve(global.config)])
+                      : path.resolve(document.path),
+                  name,
+                  directory: location.directory,
+                  server,
+                },
+              ] as const,
+          ),
+        ),
       )
       // A repository's own config is not the user's: its local servers are commands the repository chose to run.
       // Only the user's global config can approve a project, and the document that wins a name decides its origin.
@@ -187,15 +211,29 @@ const layer = Layer.effect(
               ),
             ).flatMap(([name, fromProject]) => (fromProject ? [name] : [])),
       )
-      for (const [name, server] of added) {
-        servers.set(name, server)
+      for (const [name, overlay] of added) {
+        servers.set(name, overlay.server)
+        authorities.set(name, {
+          kind: "configured",
+          source: overlay.source,
+          name,
+          directory: location.directory,
+          server: overlay.server,
+        })
         unapproved.delete(name)
       }
-      for (const name of removed) servers.delete(name)
-      for (const [name, server] of provided.current)
-        if (!servers.has(name)) servers.set(name, { type: "provided", server })
+      for (const name of removed) {
+        servers.delete(name)
+        authorities.delete(name)
+      }
+      for (const [name, server] of provided.current) {
+        if (servers.has(name)) continue
+        servers.set(name, { type: "provided", server })
+        authorities.set(name, { kind: "provided", name, key: server.key })
+      }
       return {
         servers,
+        authorities,
         unapproved,
         // `timeout` resolves on its own: a project that only lists servers must not hide the global timeout.
         timeout: Config.mcpTimeout(documents),
@@ -216,6 +254,7 @@ const layer = Layer.effect(
       current.client = undefined
       current.tools = undefined
       current.toolNames = undefined
+      current.toolIds = undefined
       return Effect.all([
         scope ? Scope.close(scope, Exit.void) : Effect.void,
         client ? Effect.promise(() => client.close().catch(() => undefined)) : Effect.void,
@@ -224,31 +263,39 @@ const layer = Layer.effect(
 
     const register = Effect.fnUntraced(function* (
       name: string,
+      authority: McpIdentity.Authority,
       client: Client,
       defs: ListToolsResult["tools"],
       timeout: number,
     ) {
       const scope = yield* Scope.make()
-      // One registration per tool, so a tool whose name the registry refuses leaves the others available.
-      yield* Effect.forEach(
-        defs,
-        (def) =>
-          tools
-            .register({ [McpCatalog.toolName(name, def.name)]: mcpTool(name, client, def, timeout) })
-            .pipe(Effect.ignore),
-        { discard: true },
-      ).pipe(Scope.provide(scope))
-      return scope
+      const accepted = (yield* Effect.forEach(defs, (def) =>
+        tools
+          .registerMcp(authority, def.name, (id) => mcpTool(name, id, client, def, timeout))
+          .pipe(
+            Effect.map((id) => ({ id, name: def.name })),
+            Effect.orElseSucceed(() => undefined),
+          ),
+      ).pipe(Scope.provide(scope))).filter((entry) => entry !== undefined)
+      const refused = defs.length - accepted.length
+      if (refused) yield* Effect.logWarning("MCP tool registration refused", { server: name.slice(0, 128), refused })
+      return { scope, names: accepted.map((entry) => entry.name), ids: accepted.map((entry) => entry.id) }
     })
 
-    const mcpTool = (server: string, client: Client, def: ListToolsResult["tools"][number], timeout: number) =>
+    const mcpTool = (
+      server: string,
+      id: string,
+      client: Client,
+      def: ListToolsResult["tools"][number],
+      timeout: number,
+    ) =>
       Tool.dynamic({
         description: def.description ?? "",
         inputSchema: { ...def.inputSchema, type: "object", properties: def.inputSchema.properties ?? {} },
         execute: (input, context) =>
           Effect.gen(function* () {
             yield* permission.assert({
-              action: McpCatalog.toolName(server, def.name),
+              action: id,
               resources: ["*"],
               save: ["*"],
               metadata: { server, tool: def.name },
@@ -273,8 +320,10 @@ const layer = Layer.effect(
 
     const connect = Effect.fn("Mcp.connect")(function* (name: string) {
       const found = yield* configured()
-      const server = found.servers.get(name)
-      if (!server) return yield* new NotFoundError({ name })
+      const configuredServer = found.servers.get(name)
+      if (!configuredServer) return yield* new NotFoundError({ name })
+      const server = configuredServer.type === "provided" ? configuredServer : structuredClone(configuredServer)
+      const authority = structuredClone(found.authorities.get(name)!)
       const current = entry(name)
       const generation = ++current.generation
       yield* release(current)
@@ -316,9 +365,15 @@ const layer = Layer.effect(
       }
       const defs = listed?.success ?? []
       // Connected is reported only once the server's tools are in the registry.
+      const registered = yield* register(name, authority, client, defs, request)
+      if (current.generation !== generation) {
+        yield* Scope.close(registered.scope, Exit.void)
+        return yield* Effect.promise(() => client.close().catch(() => undefined))
+      }
       current.client = client
-      current.tools = yield* register(name, client, defs, request)
-      current.toolNames = defs.map((def) => def.name)
+      current.tools = registered.scope
+      current.toolNames = registered.names
+      current.toolIds = registered.ids
       current.status = opened.status
       client.onclose = () => {
         if (current.client !== client) return
@@ -326,6 +381,7 @@ const layer = Layer.effect(
         current.client = undefined
         current.tools = undefined
         current.toolNames = undefined
+        current.toolIds = undefined
         current.status = failed(McpStdio.failure(opened.transport, new Error("Connection closed")))
         if (scope) Effect.runFork(Scope.close(scope, Exit.void))
       }
@@ -336,9 +392,12 @@ const layer = Layer.effect(
             if (current.client !== client) return
             const defs = yield* McpCatalog.defs(client, request)
             if (!defs || current.client !== client) return
+            const updated = yield* register(name, authority, client, defs, request)
+            if (current.client !== client) return yield* Scope.close(updated.scope, Exit.void)
             const previous = current.tools
-            current.tools = yield* register(name, client, defs, request)
-            current.toolNames = defs.map((def) => def.name)
+            current.tools = updated.scope
+            current.toolNames = updated.names
+            current.toolIds = updated.ids
             if (previous) yield* Scope.close(previous, Exit.void)
           }),
         ),
@@ -441,12 +500,18 @@ const layer = Layer.effect(
     const add = Effect.fn("Mcp.add")(function* (name: string, server: ConfigMCP.Local | ConfigMCP.Remote) {
       if (!McpProjectConfig.validName(name))
         return yield* new ConfigError({ message: `Invalid MCP server name: ${name}` })
-      yield* McpProjectConfig.write(location.directory, name, McpProjectConfig.written(server)).pipe(
+      const file = yield* McpProjectConfig.write(location.directory, name, McpProjectConfig.written(server)).pipe(
         Effect.provideService(FSUtil.Service, fs),
         Effect.mapError((error) => new ConfigError({ message: error.message })),
       )
+      const loaded = yield* Config.readDocument(file).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.mapError(() => new ConfigError({ message: "MCP configuration could not be read" })),
+      )
+      const stored = loaded?.info.mcp?.servers?.[name]
+      if (!stored) return yield* new ConfigError({ message: "MCP configuration could not be read" })
       // Adding a local command is an explicit user action, so the project is approved for restarts too.
-      if (server.type === "local") {
+      if (stored.type === "local") {
         const trusted = (yield* Config.readGlobal().pipe(
           Effect.provideService(FSUtil.Service, fs),
           Effect.provideService(Global.Service, global),
@@ -457,7 +522,7 @@ const layer = Layer.effect(
             Effect.provideService(Global.Service, global),
           )
       }
-      added.set(name, server)
+      added.set(name, { server: stored, source: path.resolve(file) })
       removed.delete(name)
       yield* connect(name).pipe(Effect.ignore)
     })
@@ -501,6 +566,15 @@ const layer = Layer.effect(
       return Object.fromEntries(
         Array.from(entries).flatMap(([name, current]) =>
           current.client && current.toolNames ? [[name, current.toolNames] as const] : [],
+        ),
+      )
+    })
+
+    const toolIds = Effect.fn("Mcp.toolIds")(function* () {
+      yield* ready()
+      return Object.fromEntries(
+        Array.from(entries).flatMap(([name, current]) =>
+          current.client && current.toolIds ? [[name, [...current.toolIds]] as const] : [],
         ),
       )
     })
@@ -899,6 +973,7 @@ const layer = Layer.effect(
       config: resolved,
       entries: profile,
       tools: inventory,
+      toolIds,
       resources,
       readResource,
       prompts,

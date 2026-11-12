@@ -102,7 +102,8 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   experimental: ConfigExperimental.Experimental.pipe(Schema.optional),
   relay: ConfigRelay.Info.pipe(Schema.optional).annotate({ description: "Relay workflow and hook engine settings" }),
   research: ConfigResearch.Info.pipe(Schema.optional).annotate({
-    description: "Resource caps of the discovery seat's research toolkit. A configured value can only lower its built-in cap.",
+    description:
+      "Resource caps of the discovery seat's research toolkit. A configured value can only lower its built-in cap.",
   }),
   maestro: ConfigMaestro.Info.pipe(Schema.optional).annotate({
     description: "Project-bound static Atlas/Own context for governed Maestro work",
@@ -131,7 +132,9 @@ export function latest<K extends keyof Info>(entries: readonly Entry[], key: K):
 
 /** The MCP timeouts, each taken from the latest document that sets it, so a document that only lists servers does not hide them. */
 export function mcpTimeout(entries: readonly Entry[]) {
-  const timeouts = entries.flatMap((entry) => (entry.type === "document" && entry.info.mcp?.timeout ? [entry.info.mcp.timeout] : []))
+  const timeouts = entries.flatMap((entry) =>
+    entry.type === "document" && entry.info.mcp?.timeout ? [entry.info.mcp.timeout] : [],
+  )
   if (timeouts.length === 0) return undefined
   return timeouts.reduce((merged, timeout) => ({
     ...merged,
@@ -154,6 +157,47 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Config") {}
 
+export const readDocument = Effect.fn("Config.readDocument")(function* (filepath: string) {
+  const fs = yield* FSUtil.Service
+  const decodeOptions = { errors: "all", onExcessProperty: "ignore", propertyOrder: "original" } as const
+  const decodeInfo = Schema.decodeUnknownEffect(Info, decodeOptions)
+  const decodeOldInfo = Schema.decodeUnknownEffect(ConfigUpgradeSource.Info, decodeOptions)
+
+  const text = yield* fs
+    .readFileStringSafe(filepath)
+    .pipe(Effect.mapError(() => new InvalidError({ path: filepath, message: `Could not read ${filepath}` })))
+  if (!text) return
+
+  const errors: ParseError[] = []
+  const input: unknown = parse(text, errors, { allowTrailingComma: true })
+  if (errors.length)
+    return yield* new InvalidError({
+      path: filepath,
+      message: `${filepath}: ${errors.map((error) => `${printParseErrorCode(error.error)} at offset ${error.offset}`).join(", ")}`,
+    })
+
+  const info = yield* (
+    ConfigUpgrade.needsUpgrade(input)
+      ? decodeOldInfo(input).pipe(
+          Effect.map(ConfigUpgrade.migrate),
+          // Settings write current `permissions` into a file that may still hold old keys; the old-format decode drops them.
+          Effect.map((info) => {
+            const rules = [...(info.permissions ?? []), ...settings(text).permissions]
+            return { ...info, permissions: rules.length ? rules : undefined }
+          }),
+          Effect.flatMap(decodeInfo),
+        )
+      : decodeInfo(input)
+  ).pipe(Effect.mapError((error) => new InvalidError({ path: filepath, message: `${filepath}: ${error.message}` })))
+  const remote = info.instructions?.find((entry) => /^[a-z][a-z0-9+.-]*:\/\//i.test(entry))
+  if (remote !== undefined)
+    return yield* new InvalidError({
+      path: filepath,
+      message: `${filepath}: instructions must be local file paths; remote URLs are not supported (${remote})`,
+    })
+  return new Document({ type: "document", path: filepath, info })
+})
+
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
@@ -166,47 +210,10 @@ const layer = Layer.effect(
     const location = yield* Location.Service
     const policy = yield* Policy.Service
     const names = ["orchestra.json", "orchestra.jsonc"]
-    const decodeOptions = { errors: "all", onExcessProperty: "ignore", propertyOrder: "original" } as const
-    const decodeInfo = Schema.decodeUnknownEffect(Info, decodeOptions)
-    const decodeOldInfo = Schema.decodeUnknownEffect(ConfigUpgradeSource.Info, decodeOptions)
-
-    const loadFile = Effect.fnUntraced(function* (filepath: string) {
-      const text = yield* fs.readFileStringSafe(filepath)
-      if (!text) return
-
-      const errors: ParseError[] = []
-      const input: unknown = parse(text, errors, { allowTrailingComma: true })
-      if (errors.length)
-        return yield* new InvalidError({
-          path: filepath,
-          message: `${filepath}: ${errors.map((error) => `${printParseErrorCode(error.error)} at offset ${error.offset}`).join(", ")}`,
-        })
-
-      const info = yield* (
-        ConfigUpgrade.needsUpgrade(input)
-          ? decodeOldInfo(input).pipe(
-              Effect.map(ConfigUpgrade.migrate),
-              // Settings write current `permissions` into a file that may still hold old keys; the old-format decode drops them.
-              Effect.map((info) => {
-                const rules = [...(info.permissions ?? []), ...settings(text).permissions]
-                return { ...info, permissions: rules.length ? rules : undefined }
-              }),
-              Effect.flatMap(decodeInfo),
-            )
-          : decodeInfo(input)
-      ).pipe(Effect.mapError((error) => new InvalidError({ path: filepath, message: `${filepath}: ${error.message}` })))
-      const remote = info.instructions?.find((entry) => /^[a-z][a-z0-9+.-]*:\/\//i.test(entry))
-      if (remote !== undefined)
-        return yield* new InvalidError({
-          path: filepath,
-          message: `${filepath}: instructions must be local file paths; remote URLs are not supported (${remote})`,
-        })
-      return new Document({ type: "document", path: filepath, info })
-    })
 
     const loadDirectory = Effect.fnUntraced(function* (directory: AbsolutePath) {
       return [
-        ...(yield* Effect.forEach(names, (file) => loadFile(path.join(directory, file))).pipe(
+        ...(yield* Effect.forEach(names, (file) => readDocument(path.join(directory, file))).pipe(
           Effect.map((configs) => configs.filter((config): config is Document => config !== undefined)),
         )),
         new Directory({ type: "directory", path: directory }),
@@ -236,7 +243,7 @@ const layer = Layer.effect(
     // A config closer to the opened directory should win over one higher up.
     // Search starts nearby, so reverse the results before applying them.
     const directPaths = discovered.filter((item) => path.basename(item) !== ".orchestra").toReversed()
-    const direct = yield* Effect.forEach(directPaths, loadFile).pipe(
+    const direct = yield* Effect.forEach(directPaths, readDocument).pipe(
       Effect.orDie,
       Effect.map((configs) => configs.filter((config): config is Document => config !== undefined)),
     )
@@ -306,7 +313,9 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
     ...Object.entries(patch.providers ?? {}).map(([id, value]): [string[], unknown] => [["providers", id], value]),
     // Written whole: `leaves` would edit array indices, and a shorter list must drop the old tail.
     ...(patch.permissions === undefined ? [] : [[["permissions"], [...patch.permissions]] as [string[], unknown]]),
-    ...(patch.trustedProjects === undefined ? [] : [[["trusted_projects"], [...patch.trustedProjects]] as [string[], unknown]]),
+    ...(patch.trustedProjects === undefined
+      ? []
+      : [[["trusted_projects"], [...patch.trustedProjects]] as [string[], unknown]]),
   ].reduce(
     (text, [at, value]) =>
       applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),
@@ -325,7 +334,9 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
 export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
   const directory = (yield* Global.Service).config
   const document = yield* globalDocument()
-  const signature = createHash("sha256").update(document.text ?? "{}").digest("hex")
+  const signature = createHash("sha256")
+    .update(document.text ?? "{}")
+    .digest("hex")
   const cached = globalCache.get(directory)
   if (cached?.file === document.file && cached.signature === signature) return structuredClone(cached.value)
   const value = readGlobalDocument(document.text ?? "{}")
@@ -370,7 +381,12 @@ const globalDocument = Effect.fnUntraced(function* () {
     const file = path.join(global.config, name)
     return fs.readFileStringSafe(file).pipe(Effect.map((text) => ({ file, text })))
   }).pipe(Effect.orDie)
-  return files.find((item) => item.text !== undefined) ?? { file: path.join(global.config, "orchestra.json"), text: undefined }
+  return (
+    files.find((item) => item.text !== undefined) ?? {
+      file: path.join(global.config, "orchestra.json"),
+      text: undefined,
+    }
+  )
 })
 
 // Disabled providers own the exact `provider.use` denials; other statements, such as an allowlist's `*` denial, stay.
@@ -407,8 +423,15 @@ function settings(text: string) {
   }
 }
 
-function providerDenial(item: Record<string, unknown>): item is { action: "provider.use"; effect: "deny"; resource: string } {
-  return item.action === "provider.use" && item.effect === "deny" && typeof item.resource === "string" && item.resource !== "*"
+function providerDenial(
+  item: Record<string, unknown>,
+): item is { action: "provider.use"; effect: "deny"; resource: string } {
+  return (
+    item.action === "provider.use" &&
+    item.effect === "deny" &&
+    typeof item.resource === "string" &&
+    item.resource !== "*"
+  )
 }
 
 export const locationLayer = layer.pipe(Layer.provideMerge(Policy.locationLayer))
