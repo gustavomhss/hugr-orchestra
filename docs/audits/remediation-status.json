@@ -331,9 +331,25 @@
         {
           "kind": "integrated_api_generated_typeproof",
           "result": "9 owncommits througha872842eb9;24files exact SHA256 match; official packages/client bun run generate0 and all24hashes still identical. Root Core+Server+CLI final types0. Root guard0/boundaries0/spawn0;92existing ledger entries, zero new/stale."
+        },
+        {
+          "kind": "ui_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43272578484",
+          "result": "App nine valid controls/64 assertions per OS, one popover fixture setup failure excluded."
+        },
+        {
+          "kind": "ui_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43275571435",
+          "result": "TUI five controls/21 assertions per OS."
+        },
+        {
+          "kind": "ui_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282763415",
+          "source": "3bd38316d8cdd1a385f610090a109a758cd08a51",
+          "result": "Actual popover/controller/TanStack rows: one control/two assertions per OS; isolated synthetic600x220 layout, no physical-browser geometry claim. Composes15/15 controls. Fault baselines not yet run."
         }
       ],
-      "remaining": "API/wire/transport stage integrated and verified. Contextual execution eligibility still needs App/TUI consumption. E1 owns composer changes first; E6 UI planned only after that ownership seam. Whole E6 remains open."
+      "remaining": "API stage integrated; App/TUI15 controls now pass compositionally on both OS. Freeze59 fault selectors before original behavioral baseline. Consumer source contract and implementation still pending; fresh production BEFORE benchmark archived."
     },
     {
       "id": "E7",
@@ -576,6 +592,12 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43275581639",
           "source": "341215e6ba0f169edacbce5b6dbb7a0c2ef4b30a",
           "result": "Lead cancelled only this owned full-package run after the same-source Core gate proved universal ordinary hangs; avoid repeating hundreds of 120-second timeouts. Both jobs cancelled, cleanup successful. Not GREEN."
+        },
+        {
+          "kind": "diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279188151",
+          "source": "f0083529770a2effafb722443899dfa04ba7904a",
+          "result": "Pinned Linux actual Worker reaches READY and parent sends start; no DONE/result by3s snapshot or owned6.5s containment. Does not establish worker received start or top-level-await causality; protocol pass is not product GREEN."
         }
       ]
     },
@@ -1212,9 +1234,27 @@
       "severity": "P2",
       "owner": "lead",
       "status": "planned_unverified",
-      "runtime_reproduced": false,
+      "runtime_reproduced": true,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43278533576",
+          "result": "Five controls/22 assertions per OS; same-run logs recovered after monitor HTTP504. No rerun."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279974654",
+          "result": "12 original semantic RED per OS; one writer fixture boundary miss excluded. Later rollback/provider tails not reached."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282798153",
+          "source": "c647f21975158ad21e0b7e45a8d7f240eaefcdef",
+          "result": "Remaining writer-after-SQL original RED both OS: real SQL barrier and active transaction assertions pass, revocation completes, target_denied absent. 0P/1F/3assertions each; composes13 valid originals per OS. Later tails not reached."
+        }
+      ],
+      "remaining": "Exact private CommitOptions, full-Cause preservation and failed-outcome provenance plan under independent cold review; no production source execution yet."
     },
     {
       "id": "H9",
