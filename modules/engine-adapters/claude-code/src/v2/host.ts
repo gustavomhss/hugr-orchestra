@@ -156,7 +156,7 @@ export const make = Effect.gen(function* () {
           // the baseline alone would leave Claude Code on the session's first context until a compaction.
           const updates = turn.history.flatMap((message) => (message.type === "system" ? [message] : []))
           const unsent = updates.filter((message) => !delivered.includes(message.id))
-          const lowered = yield* Effect.try(() => pending.flatMap(ClaudeCodeContext.input)).pipe(Effect.result)
+          const lowered = yield* Effect.try({ try: () => pending.flatMap(ClaudeCodeContext.input), catch: (error) => error }).pipe(Effect.result)
           if (lowered._tag === "Failure") return Stream.make(LLMEvent.providerError({ message: String(lowered.failure) }))
           const prompt = ClaudeCodeContext.prompt(lowered.success)
           if (lowered.success.length === 0) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
@@ -647,7 +647,7 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string, arg
       { signal: extra.signal },
     )
     if (tool.name === "skill" && request.params.arguments?.name === GOVERNED_PLAYBOOK && settlement.result.type !== "error") governedLoad()
-    const converted = await Effect.runPromise(Effect.try(() => ClaudeCodeContext.output(settlement.result)).pipe(Effect.result))
+    const converted = await Effect.runPromise(Effect.try({ try: () => ClaudeCodeContext.output(settlement.result), catch: (error) => error }).pipe(Effect.result))
     if (converted._tag === "Failure") return { content: [{ type: "text" as const, text: String(converted.failure) }], isError: true }
     return {
       content: converted.success,
