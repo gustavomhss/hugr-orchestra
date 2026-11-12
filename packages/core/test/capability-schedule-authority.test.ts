@@ -248,8 +248,9 @@ describe("Capability schedule authority", () => {
     const exit = yield* Fiber.join(pending)
     const own = f.state.commitCauses[0]?.reasons[0]
     expect(own?._tag === "Die" && ScheduleAuthorityFixture.denial(exit)).toMatchObject({ code: "target_denied" })
-    if (own?._tag === "Die" && own.defect instanceof Capability.Failure)
-      expect(ScheduleAuthorityFixture.denial(exit)).toBe(own.defect)
+    expect(own?._tag === "Die" && own.defect instanceof Capability.Failure).toBe(true)
+    if (own?._tag !== "Die" || !(own.defect instanceof Capability.Failure)) return yield* Effect.die("Expected the exact own Capability denial")
+    expect(ScheduleAuthorityFixture.denial(exit)).toBe(own.defect)
     const rows = yield* f.rows
     expect(rows.inputs).toEqual([])
     expect(rows.runs.some((row) => row.state === "started")).toBe(false)
