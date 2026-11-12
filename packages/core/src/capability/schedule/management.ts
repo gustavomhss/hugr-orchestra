@@ -52,7 +52,7 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
       captured.own = own
       return Effect.die(own)
     }))
-    const normalize = <A, E, R>(effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.catchCause((cause) => {
+    const normalize = <A, E, R>(effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.catchCause((cause): Effect.Effect<never, E | Capability.Failure> => {
       if (captured.own && isOwnDenial(cause, captured.own)) return Effect.fail(captured.own)
       const reason = cause.reasons.length === 1 ? cause.reasons[0] : undefined
       return reason?._tag === "Fail" && reason.error instanceof ScheduledTaskShared.NotFoundError
