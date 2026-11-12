@@ -143,13 +143,21 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
               send({ type: "start", code: options.code, namespaces, maxOutputBytes: limits.maxOutputBytes })
               continue
             }
-            if (event.type === "done") { finish(event.result); continue }
+            if (event.type === "done") {
+              if (expired()) continue
+              finish(event.result)
+              continue
+            }
             if (event.type === "interrupted") {
               state.open = false
               Deferred.doneUnsafe(completed, Effect.interrupt)
               continue
             }
-            if (event.type === "worker-error" || event.type === "worker-exit") { finish(failure()); continue }
+            if (event.type === "worker-error" || event.type === "worker-exit") {
+              if (expired()) continue
+              finish(failure())
+              continue
+            }
             if (event.type === "invoke") {
               if (expired()) continue
               const call: Call = { cancelRequested: false, fiber: undefined }

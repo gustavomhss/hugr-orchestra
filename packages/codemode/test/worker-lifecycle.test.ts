@@ -228,3 +228,25 @@ test("unsupported private worker URL returns a safe constructor failure without 
   expect(observed.exits).toHaveLength(observed.workers.length)
   observed.workers.forEach((worker) => expect(worker.threadId).toBe(-1))
 }, 15_000)
+
+test("absolute expiry rejects a real done event when parent acceptance is delayed beyond the budget", async () => {
+  const observed = lifetime()
+  const admittedAt = performance.now()
+  const timeoutMs = 1500
+  const state = { doneBeforeDeadline: false, acceptedSuccesses: 0 }
+  const result = await Effect.runPromise(executeWithLimits({ code: 'return "ordinary"' },
+    { ...unlimited, timeoutMs }, [], (worker) => {
+      observed.observe(worker)
+      worker.on("message", (message: unknown) => {
+        if (message === null || typeof message !== "object" || !("type" in message) || message.type !== "done") return
+        state.doneBeforeDeadline = performance.now() < admittedAt + timeoutMs
+        // Delay only the actual parent's event callback; no signal or program result is fabricated.
+        const unblockAt = performance.now() + timeoutMs + 50
+        while (performance.now() < unblockAt) {}
+      })
+    },
+  ).pipe(Effect.tap((result) => Effect.sync(() => { if (result.ok) state.acceptedSuccesses++ })), Effect.timeout("10 seconds")))
+  expect(state).toEqual({ doneBeforeDeadline: true, acceptedSuccesses: 0 })
+  expect(result).toEqual({ ok: false, error: { kind: "TimeoutExceeded", message: "Execution timed out after 1500ms." }, toolCalls: [] })
+  expectExited(observed)
+}, 15_000)
