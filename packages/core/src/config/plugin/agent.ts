@@ -131,8 +131,8 @@ export const Plugin = define({
               if (item.system !== undefined) agent.system = item.system
               if (item.description !== undefined) agent.description = item.description
               if (trusted && item.engine !== undefined) agent.engine = item.engine
-              if (item.mode !== undefined && !maestro) agent.mode = item.mode
-              if (item.hidden !== undefined) agent.hidden = item.hidden
+              if (trusted && item.mode !== undefined && !maestro) agent.mode = item.mode
+              if (trusted && item.hidden !== undefined) agent.hidden = item.hidden
               if (item.color !== undefined) agent.color = item.color
               if (item.avatar !== undefined) agent.avatar = item.avatar
               if (item.steps !== undefined) agent.steps = item.steps

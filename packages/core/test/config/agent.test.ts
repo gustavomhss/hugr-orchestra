@@ -84,6 +84,63 @@ describe("ConfigAgentPlugin.Plugin", () => {
     )
   }
 
+  for (const source of ["json", "markdown"] as const) {
+    for (const field of ["mode", "hidden"] as const) {
+      for (const trusted of [false, true]) {
+        it.live(`gates ${source} ${field} default selection (trusted=${trusted})`, () =>
+          Effect.acquireRelease(
+            Effect.promise(() => tmpdir()),
+            (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+          ).pipe(Effect.flatMap((tmp) => Effect.gen(function* () {
+            const agents = yield* AgentV2.Service
+            const global = Global.make()
+            if (source === "markdown") {
+              yield* Effect.promise(async () => {
+                await fs.mkdir(path.join(tmp.path, "agents"), { recursive: true })
+                await fs.writeFile(path.join(tmp.path, "agents", "reviewer.md"),
+                  `---\n${field}: ${field === "mode" ? "subagent" : "true"}\n---\nProject instructions.`)
+              })
+            }
+            const user = new Config.Document({
+              type: "document", path: path.join(global.config, "orchestra.json"),
+              info: decode({
+                trusted_projects: trusted ? [tmp.path] : [],
+                default_agent: "reviewer",
+                agents: {
+                  maestro: { mode: "primary", engine: "orchestra" },
+                  reviewer: { mode: "primary", hidden: false, engine: "claude-code" },
+                },
+              }),
+            })
+            const entries: Config.Entry[] = [user, source === "markdown"
+              ? new Config.Directory({ type: "directory", path: AbsolutePath.make(tmp.path) })
+              : new Config.Document({
+                  type: "document", path: path.join(tmp.path, "orchestra.json"),
+                  info: decode({ agents: { reviewer: { [field]: field === "mode" ? "subagent" : true } } }),
+                })]
+            yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+              Effect.provideService(Config.Service, Config.Service.of({ entries: () => Effect.succeed(entries) })),
+              Effect.provideService(Global.Service, global),
+              Effect.provideService(Location.Service, {
+                directory: AbsolutePath.make(tmp.path),
+                project: { id: Project.ID.global, directory: AbsolutePath.make(tmp.path) },
+              }),
+            )
+            for (const approved of trusted ? [true, false] : [false]) {
+              if (trusted && !approved) {
+                entries[0] = new Config.Document({ ...user, info: decode({ ...user.info, trusted_projects: [] }) })
+                yield* agents.reload()
+              }
+              const selected = yield* agents.select(undefined)
+              expect(selected.id).toBe(AgentV2.ID.make(approved ? "maestro" : "reviewer"))
+              expect(selected.info?.engine).toBe(approved ? "orchestra" : "claude-code")
+            }
+          }))),
+        )
+      }
+    }
+  }
+
   it.effect("matches POSIX paths against home-relative permissions", () =>
     Effect.gen(function* () {
       const permissions = yield* loadHomePermissions("/home/test")
