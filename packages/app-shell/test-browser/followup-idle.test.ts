@@ -91,8 +91,12 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
   const counts = { automatic: 0, manual: 0, dispatch: 0 }
   const failure = new Error("real dispatch error")
   const errors: unknown[] = []
-  const state = { throwDispatch: false, policyVersion: 0 }
-  const control = { execution: async (input: ModelsExecutionInput) => {
+  const [policyGeneration, setPolicyGeneration] = createStore({ version: 0 })
+  const state = { throwDispatch: false,
+    get policyVersion() { return policyGeneration.version },
+    set policyVersion(value: number) { setPolicyGeneration("version", value) },
+  }
+  const control = { execution: async (input: ModelsExecutionInput, _options: { signal: AbortSignal }) => {
     if (!input.model) throw new Error("Fake Page admission requires an exact model candidate")
     return { location: { directory: "/repo/main", project: { id: "project", directory: "/repo/main" } },
       data: { models: [], selection: { status: "ready" as const, ref: input.model, engine: "orchestra" as const } } }
@@ -105,7 +109,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
     counts.dispatch++
     if (state.throwDispatch) throw failure
   } } as unknown as FollowupSendInput["api"]
-  registerSessionModelExecution(api, (input) => control.execution(input))
+  registerSessionModelExecution(api, (input, options) => control.execution(input, options))
   const directorySync = { session: { get: () => undefined, optimistic: { add() {}, remove() {} } } } as unknown as FollowupSendInput["sync"]
   const serverState = { data: { project: [] }, session: { set() {} } } as unknown as FollowupSendInput["serverSync"]
   const server = { server: { http: { url: "https://queue.invalid", get password() { return status.password } } }, ready: Promise.resolve(),
@@ -207,16 +211,17 @@ test.each(["edit ABA", "remove and reinsert", "credentials ABA", "policy write"]
   const entered = Promise.withResolvers<void>()
   const release = Promise.withResolvers<void>()
   const tasks: Promise<unknown>[] = []
-  const witness = { entered: false }
+  const witness: { entered: boolean; signal?: AbortSignal } = { entered: false }
   try {
     expect(await queue.stopped.promise).toBe("failed")
     await queue.idle.promise
     queue.setStatus("busy", true)
     const original = queue.control.execution
-    queue.control.execution = async (input) => {
+    queue.control.execution = async (input, options) => {
       expect(input.context).toMatchObject({ type: "session", sessionID: "session-1", agentID: "backend" })
       expect(input.model).toEqual({ providerID: "provider", id: "model", variant: undefined })
-      const response = await original(input)
+      const response = await original(input, options)
+      witness.signal = options.signal
       witness.entered = true
       entered.resolve()
       await release.promise
@@ -244,6 +249,7 @@ test.each(["edit ABA", "remove and reinsert", "credentials ABA", "policy write"]
       queue.setStatus("password", "none")
     }
     if (change === "policy write") queue.state.policyVersion++
+    expect(witness.signal?.aborted).toBe(true)
     release.resolve()
     await pending
     expect(queue.counts.dispatch).toBe(0)
