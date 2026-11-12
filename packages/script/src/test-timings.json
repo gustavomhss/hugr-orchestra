@@ -5,7 +5,7 @@
     "e2e": 270
   },
   "overhead": {
-    "linux": 1,
+    "linux": 2,
     "windows": 1.6
   },
   "margin": 1.15,

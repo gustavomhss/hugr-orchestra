@@ -1,4 +1,5 @@
 // Runs the V2 HttpApi exercise: `bun run script/httpapi-exercise.ts --mode coverage|auth|effect [--fail-on-missing] ...`.
+// Effect mode only: `--shard i/n`. Coverage and auth reject the sharding flag.
 import { Effect } from "effect"
 import { main } from "../test/httpapi-exercise"
 import { message } from "../test/httpapi-exercise/assertions"

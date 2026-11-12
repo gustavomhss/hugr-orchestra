@@ -28,7 +28,7 @@ test("A76 — With no admit call, the location inventory contains zero sources, 
 test("a redundant slash in the location root still admits a file inside that location", async () => {
   const file = "/location/loc/studio/work/corpus/note.txt"
   const store = memoryStore({
-    projectRoot: "/",
+    projectRoot: "/source",
     locationRoot: "/location/loc//studio/work",
     files: { [file]: "The harbor light is blue." },
   })
@@ -53,7 +53,7 @@ test("the same file through a symlink is one source", async () => {
   const stored = placed(file)
   const soon = path.join(link, "soon.txt")
   const store = memoryStore({
-    projectRoot: path.parse(root).root,
+    projectRoot: path.join(root, "project"),
     locationRoot: link,
     files: { [stored]: "The harbor light is blue.", [placed(soon)]: "soon" },
   })
@@ -67,7 +67,7 @@ test("the same file through a symlink is one source", async () => {
     expect(first.path).toBe(stored)
     expect(store.sources()).toHaveLength(2)
     const gone = path.join(link, "gone", "note.txt")
-    expect(placed(gone)).toBe(path.join(fs.realpathSync(link), "gone", "note.txt"))
+    expect(placed(gone)).toBe(path.join(fs.realpathSync(link), "gone", "note.txt").split(path.sep).join("/"))
   })
 })
 
