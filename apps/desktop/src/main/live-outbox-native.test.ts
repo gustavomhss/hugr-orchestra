@@ -31,12 +31,29 @@ it.live("actual Node abrupt death after committed append preserves profile, IDs,
     const output = yield* Stream.runCollect(child.stdout).pipe(Effect.forkChild)
     const errors = yield* Stream.runCollect(child.stderr).pipe(Effect.forkChild)
     return yield* Effect.gen(function* () {
-      // A signal exit may be a PlatformError instead of a numeric code; both are awaited before reopening.
+      const evidence = mode === "commit" ? yield* Effect.raceFirst(
+        Effect.gen(function* () {
+          while (!(yield* Effect.promise(() => Bun.file(marker).exists()))) yield* Effect.sleep("10 millis")
+          return Schema.decodeUnknownSync(evidenceSchema)(JSON.parse(yield* Effect.promise(() => readFile(marker, "utf8"))))
+        }),
+        child.exitCode.pipe(Effect.result, Effect.andThen(Effect.die("Node fixture exited before parent could validate COMMITTED and kill"))),
+      ) : undefined
+      if (evidence) {
+        expect(evidence.pid).toBe(Number(child.pid))
+        expect(yield* child.isRunning).toBe(true)
+      }
+      const killPerformed = mode === "commit" ? yield* child.kill({ killSignal: "SIGKILL" }).pipe(Effect.as(true)) : false
+      // Exit numbers/signals are diagnostic only. Validated live PID + explicit parent kill + absent normal-exit witnesses prove this path.
       const exit = yield* child.exitCode.pipe(Effect.result)
       const stdout = Buffer.concat([...(yield* Fiber.join(output))]).toString("utf8")
       const stderr = Buffer.concat([...(yield* Fiber.join(errors))]).toString("utf8")
       expect(yield* child.isRunning).toBe(false)
-      return { exit, stdout, stderr }
+      if (mode === "commit") {
+        expect(killPerformed).toBe(true)
+        expect(stdout).not.toContain("live-outbox-normal-exit")
+        expect(yield* Effect.promise(() => Bun.file(`${marker}.normal-exit`).exists())).toBe(false)
+      }
+      return { exit, stdout, stderr, evidence, killPerformed }
     }).pipe(Effect.timeout("3 seconds"), Effect.ensuring(
       child.isRunning.pipe(Effect.flatMap((running) => running ? child.kill({ forceKillAfter: "1 second" }) : Effect.void),
         Effect.andThen(child.isRunning), Effect.flatMap((running) => running ? Effect.die("Owned Node fixture still running") : Effect.void),
@@ -44,15 +61,15 @@ it.live("actual Node abrupt death after committed append preserves profile, IDs,
     ))
   }))
   const crashed = yield* run("commit")
-  // Missing marker is fixture/API setup failure, never evidence of durable crash recovery.
-  const evidence = Schema.decodeUnknownSync(evidenceSchema)(JSON.parse(yield* Effect.promise(() => readFile(marker, "utf8"))))
+  const evidence = crashed.evidence
+  if (!evidence) return yield* Effect.die("Missing validated COMMITTED evidence")
   expect(evidence.pid).toBeGreaterThan(0)
   expect(evidence.node).toMatch(/^v24\./)
-  expect(Result.isFailure(crashed.exit) || crashed.exit.success !== 0, crashed.stderr).toBe(true)
+  expect(crashed.killPerformed).toBe(true)
   const recovered = yield* run("reopen")
   expect(Result.isSuccess(recovered.exit) && recovered.exit.success === 0, recovered.stderr).toBe(true)
   const report = Schema.decodeUnknownSync(reopenedSchema)(JSON.parse(recovered.stdout.trim()))
   expect(report.pid).not.toBe(evidence.pid)
   expect(report).toMatchObject({ kind: "live-outbox-reopened", profileID: evidence.profileID, recordID: evidence.recordID, segmentID: evidence.segmentID, sha256: evidence.sha256, pendingCount: 1, rememberedCount: 1, node: evidence.node })
-  console.log(JSON.stringify({ kind: "live-outbox-crash-proof", committed: true, childDeadBeforeReopen: true, pendingCount: report.pendingCount, rememberedCount: report.rememberedCount, node: report.node }))
+  console.log(JSON.stringify({ kind: "live-outbox-crash-proof", committed: true, parentKilled: crashed.killPerformed, exit: Result.isSuccess(crashed.exit) ? crashed.exit.success : "non-numeric", childDeadBeforeReopen: true, pendingCount: report.pendingCount, rememberedCount: report.rememberedCount, node: report.node }))
 }), 8000)

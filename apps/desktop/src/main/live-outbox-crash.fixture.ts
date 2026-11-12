@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { createHash, randomUUID } from "node:crypto"
-import { closeSync, fsyncSync, openSync, readFileSync, writeFileSync } from "node:fs"
+import { closeSync, fsyncSync, openSync, readFileSync, renameSync, writeFileSync, writeSync } from "node:fs"
 import { openLiveOutbox } from "./live-outbox.ts"
 
 const mode = process.argv[2]
@@ -23,14 +23,20 @@ if (mode === "commit") {
   })
   store.requestClose(record.id)
   assert.equal(store.append(record.id, segment), "accepted")
-  // This independent observation follows the synchronous committed return. Never close the store before abrupt death.
-  const handle = openSync(marker, "wx", 0o600)
+  // Any ordinary return or exception emits both witnesses; the parent must instead force abrupt death.
+  process.once("exit", () => {
+    writeFileSync(`${marker}.normal-exit`, "live-outbox-normal-exit", { flag: "wx", mode: 0o600 })
+    writeSync(1, "live-outbox-normal-exit\n")
+  })
+  const idle = new Promise<void>((resolve) => setTimeout(resolve, 5000))
+  // Publish only a closed, fsynced marker after the committed return and the lifetime controls above exist.
+  const handle = openSync(`${marker}.pending`, "wx", 0o600)
   try {
     writeFileSync(handle, JSON.stringify({ pid: process.pid, profileID: store.profileID, recordID: record.id, segmentID: segment.id, sha256, node: process.version }))
     fsyncSync(handle)
   } finally { closeSync(handle) }
-  process.kill(process.pid, "SIGKILL")
-  throw new Error("Self SIGKILL unexpectedly returned")
+  renameSync(`${marker}.pending`, marker)
+  await idle // No store.close, self-kill, or exception after COMMITTED; the owned parent must kill this live process.
 }
 
 if (mode === "reopen") {
