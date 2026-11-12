@@ -50,7 +50,9 @@ export const Snapshot = Schema.Struct({
 }).annotate({ identifier: "ActivityMonitor.Snapshot" })
 export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
 
-export const DiskRootID = Schema.Literals(["cache", "logs", "temporary"])
+export const DiskRootID = Schema.Literals(["cache", "logs", "temporary"]).annotate({
+  identifier: "ActivityMonitor.DiskRootID",
+})
 export type DiskRootID = typeof DiskRootID.Type
 
 export const DiskIssue = Schema.Struct({
