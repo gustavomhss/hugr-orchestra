@@ -61,7 +61,7 @@ it.live("CONTROL E6 wire: actual TCP list/default and both imported clients keep
       }
     }).pipe(Effect.provide(FetchHttpClient.layer))
     expect(decoded.list.data.some((model) => model.providerID === "anthropic")).toBe(false)
-    expect(decoded.fallback.data?.providerID).toBe("openai")
+    expect(decoded.fallback.data).toMatchObject({ providerID: "openai" })
     const credentials = yield* Credential.Service
     expect(yield* credentials.list(Integration.ID.make("openai"))).toHaveLength(1)
     expect(yield* credentials.list(Integration.ID.make("google"))).toHaveLength(1)
@@ -407,7 +407,9 @@ for (const mode of ["promise", "effect"] as const) {
       const before = yield* fixture.snapshot()
       const entered = yield* Deferred.make<void>()
       const interrupted = yield* Deferred.make<void>()
-      ModelExecutionFixture.state.wait = { entered, interrupted }
+      const release = yield* Deferred.make<void>()
+      ModelExecutionFixture.state.wait = { entered, interrupted, release }
+      yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
       const input = {
         location: { directory: fixture.directory },
         context: { type: "draft" as const, agentID: "host-seat" },
@@ -421,7 +423,12 @@ for (const mode of ["promise", "effect"] as const) {
           () => ({ success: true }),
           (error: unknown) => ({ success: false, error }),
         )
-        yield* Deferred.await(entered).pipe(Effect.timeout("5 seconds"))
+        yield* Deferred.await(entered).pipe(
+          Effect.timeoutOrElse({
+            duration: "5 seconds",
+            orElse: () => Effect.fail(new Error("Server descriptor did not enter")),
+          }),
+        )
         controller.abort()
         expect(yield* Effect.promise(() => settled)).toMatchObject({ success: false })
       }
@@ -432,13 +439,23 @@ for (const mode of ["promise", "effect"] as const) {
           return yield* client.models.execution(input)
         }).pipe(Effect.provide(FetchHttpClient.layer))
         const fiber = yield* operation.pipe(Effect.forkChild)
-        yield* Deferred.await(entered).pipe(Effect.timeout("5 seconds"))
+        yield* Deferred.await(entered).pipe(
+          Effect.timeoutOrElse({
+            duration: "5 seconds",
+            orElse: () => Effect.fail(new Error("Server descriptor did not enter")),
+          }),
+        )
         yield* Fiber.interrupt(fiber)
         const exit = yield* Fiber.await(fiber)
         expect(Exit.isFailure(exit)).toBe(true)
         if (Exit.isFailure(exit)) expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true)
       }
-      yield* Deferred.await(interrupted).pipe(Effect.timeout("5 seconds"))
+      yield* Deferred.await(interrupted).pipe(
+        Effect.timeoutOrElse({
+          duration: "5 seconds",
+          orElse: () => Effect.fail(new Error("Server descriptor did not observe transport cancellation")),
+        }),
+      )
       expect(yield* fixture.snapshot()).toEqual(before)
       untouched()
     }),

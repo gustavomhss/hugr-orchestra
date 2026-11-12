@@ -31,7 +31,7 @@ import { ModelGroup } from "@orchestra/protocol/groups/model"
 import { Authorization } from "@orchestra/protocol/middleware/authorization"
 import { SchemaErrorMiddleware } from "@orchestra/protocol/middleware/schema-error"
 import { Context, Deferred, Effect, Layer, Option, Schema, Stream } from "effect"
-import { HttpRouter, HttpServer } from "effect/unstable/http"
+import { FetchHttpClient, HttpRouter, HttpServer } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
 import { mkdir, realpath } from "node:fs/promises"
 import path from "node:path"
@@ -50,7 +50,9 @@ export const state = {
   materializations: 0,
   tools: 0,
   provider: 0,
-  wait: undefined as { entered: Deferred.Deferred<void>; interrupted: Deferred.Deferred<void> } | undefined,
+  wait: undefined as
+    | { entered: Deferred.Deferred<void>; interrupted: Deferred.Deferred<void>; release: Deferred.Deferred<void> }
+    | undefined,
 }
 const hosts = Layer.succeed(
   ExecutionHost.Service,
@@ -60,11 +62,12 @@ const hosts = Layer.succeed(
       stateKey: "wireFixture",
       // This fixture declares a registered host's answer. Actual Claude eligibility was verified in its own package.
       describeModel: () =>
-        Effect.suspend(() => {
+        Effect.suspend((): Effect.Effect<ExecutionHost.Decision> => {
           const wait = state.wait
           if (wait)
             return Deferred.succeed(wait.entered, undefined).pipe(
-              Effect.andThen(Effect.never),
+              Effect.andThen(Deferred.await(wait.release)),
+              Effect.as({ status: "ready" as const }),
               Effect.onInterrupt(() => Deferred.succeed(wait.interrupted, undefined)),
             )
           return Effect.succeed(
@@ -137,22 +140,24 @@ const seed = makeLocationNode({
         draft.model.default.set(ProviderV2.ID.openai, ModelV2.ID.make("wire-model"))
       })
       const tools = yield* ToolRegistry.Service
-      yield* tools.register({
-        wire_probe: Tool.make({
-          get description() {
-            state.materializations++
-            return "Wire materialization probe"
-          },
-          input: Schema.Struct({}),
-          output: Schema.Struct({}),
-          toModelOutput: () => [],
-          execute: () =>
-            Effect.sync(() => {
-              state.tools++
-              return {}
-            }),
-        }),
-      })
+      yield* tools
+        .register({
+          wire_probe: Tool.make({
+            get description() {
+              state.materializations++
+              return "Wire materialization probe"
+            },
+            input: Schema.Struct({}),
+            output: Schema.Struct({}),
+            toModelOutput: () => [],
+            execute: () =>
+              Effect.sync(() => {
+                state.tools++
+                return {}
+              }),
+          }),
+        })
+        .pipe(Effect.orDie)
     }),
   ),
   deps: [locationServices, Credential.node],
@@ -199,6 +204,27 @@ const services = Layer.unwrap(
     )
   }),
 )
+// Configure the same real Agent instance the request's Location middleware provides, including cached instances.
+const currentLocation = Layer.effect(
+  LocationMiddleware,
+  Effect.gen(function* () {
+    const middleware = yield* LocationMiddleware
+    return LocationMiddleware.of((effect, metadata) =>
+      middleware(
+        Effect.suspend(() =>
+          state.defaultMissing
+            ? Effect.gen(function* () {
+                const agents = yield* AgentV2.Service
+                yield* agents.transform((draft) => draft.remove(AgentV2.defaultID))
+                return yield* effect
+              }).pipe(Effect.scoped)
+            : effect,
+        ),
+        metadata,
+      ),
+    )
+  }),
+).pipe(Layer.provide(layer))
 const routes = HttpApiBuilder.layer(
   HttpApi.make("server")
     .add(ModelGroup.middleware(LocationMiddleware))
@@ -206,14 +232,37 @@ const routes = HttpApiBuilder.layer(
     .middleware(SchemaErrorMiddleware),
 ).pipe(
   Layer.provide(ModelHandler),
-  Layer.provide(layer),
+  Layer.provide(currentLocation),
   Layer.provide(schemaErrorLayer),
   Layer.provide(authorizationLayer),
   Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() })),
+  Layer.provide(
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const { layer } = yield* Effect.promise(() => import("../src/middleware/node-request-cancellation"))
+        return layer
+      }),
+    ),
+  ),
+)
+const testServer = Layer.unwrap(
+  Effect.gen(function* () {
+    if (!(yield* Effect.promise(() => Bun.file(new URL("../src/node-server.ts", import.meta.url)).exists())))
+      return NodeHttpServer.layerTest
+    const { ServerNode } = yield* Effect.promise(() => import("../src/node-server"))
+    return HttpServer.layerTestClient.pipe(
+      Layer.provide(
+        Layer.fresh(FetchHttpClient.layer).pipe(
+          Layer.provide(Layer.succeed(FetchHttpClient.RequestInit)({ keepalive: false })),
+        ),
+      ),
+      Layer.provideMerge(NodeHttpServer.layer(ServerNode.create, { port: 0 })),
+    )
+  }),
 )
 export const it = testEffect(
   HttpRouter.serve(routes, { disableListenLog: true, disableLogger: true }).pipe(
-    Layer.provideMerge(NodeHttpServer.layerTest),
+    Layer.provideMerge(testServer),
     Layer.provideMerge(NodeServices.layer),
     Layer.provideMerge(services),
   ),
@@ -275,7 +324,7 @@ export const setup = Effect.gen(function* () {
   const server = yield* HttpServer.HttpServer
   if (server.address._tag !== "TcpAddress") return yield* Effect.die("Expected a real TCP server")
   const baseUrl = `http://127.0.0.1:${server.address.port}`
-  const request = (pathname: string, payload?: unknown, at = directory) =>
+  const request = (pathname: string, payload?: unknown, at: string = directory) =>
     Effect.promise(() => {
       const url = new URL(pathname, baseUrl)
       url.searchParams.set("location[directory]", at)
