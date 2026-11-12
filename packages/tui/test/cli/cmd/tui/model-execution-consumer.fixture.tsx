@@ -83,7 +83,11 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
   const [owner, setOwner] = createStore({ sessionID: options.draft ? undefined : "session-1", directory: root, url: "http://consumer.fixture", authorization: "Basic Zml4dHVyZTpub25l", generation: 1 })
   const calls: { path: string; method: string; body: unknown; authorization: string | null; url: URL; signal: AbortSignal }[] = []
   const control = { reply: options.reply ?? ((_request: Request) => json({ location: { directory: owner.directory }, data: options.initial ?? decision() })),
-    before: async (_path: string) => {}, catalogModel: options.catalogModel ?? model }
+    before: async (_path: string) => {}, catalogModel: options.catalogModel ?? model,
+    catalogProviders: [Provider.Info.empty(Provider.ID.make(ref.providerID))],
+    catalogAgents: [Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("maestro")), engine: "orchestra" }),
+      Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra" })],
+  }
   const events = createEventSource()
   const fallback = createFetch()
   const fetch: typeof Bun.fetch = Object.assign(async (...args: Parameters<typeof Bun.fetch>) => {
@@ -96,10 +100,10 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     const envelope = (data: unknown) => json({ location: { directory: root }, data })
     if (["/api/integration", "/api/skill", "/api/reference"].includes(url.pathname)) return envelope([])
     if (url.pathname === "/api/command") return envelope([Command.Info.make({ name: "known", template: "fixture command" })])
-    if (url.pathname === "/api/provider") return envelope([Provider.Info.empty(Provider.ID.make(ref.providerID))])
+    if (url.pathname === "/api/provider") return envelope(control.catalogProviders)
     if (url.pathname === "/api/model") return envelope([control.catalogModel, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }])
     if (url.pathname === "/api/model/default") return envelope(ref)
-    if (url.pathname === "/api/agent") return envelope([{ ...Agent.Info.empty(Agent.ID.make("maestro")), engine: "orchestra" }, { ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra" }])
+    if (url.pathname === "/api/agent") return envelope(control.catalogAgents)
     if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
     if (url.pathname === "/api/mcp/resource") return envelope({ resources: [] })
     if (url.pathname === "/api/location") return json({ directory: root, project: { id: "proj_test", directory: root } })
