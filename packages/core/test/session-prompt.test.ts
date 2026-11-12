@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { DateTime, Effect, Fiber, Layer, Stream } from "effect"
+import { DateTime, Effect, Fiber, Layer, Option, Schema, Stream } from "effect"
 import { eq } from "drizzle-orm"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -11,12 +11,15 @@ import { Project } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { ModelV2 } from "@orchestra/core/model"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionInput } from "@orchestra/core/session/input"
 import { SessionInputTable, SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
+import { SessionHistory } from "@orchestra/core/session/history"
 import { SessionStore } from "@orchestra/core/session/store"
 import { testEffect } from "./lib/effect"
 
@@ -28,7 +31,11 @@ const execution = Layer.succeed(
   SessionExecution.Service,
   SessionExecution.Service.of({
     active: Effect.sync(() => new Set(activeSessions)),
-    exclusive: (_, effect) => Effect.asSome(effect),
+    exclusive: (id, effect) => Effect.suspend(() => {
+      if (activeSessions.has(id)) return Effect.succeed(Option.none())
+      activeSessions.add(id)
+      return effect.pipe(Effect.asSome, Effect.ensuring(Effect.sync(() => activeSessions.delete(id))))
+    }),
     withRunner: () => Effect.die("unused"),
     resume: (sessionID) =>
       Effect.sync(() => {
@@ -46,7 +53,7 @@ const execution = Layer.succeed(
 )
 const it = testEffect(
   AppNodeBuilder.build(
-    LayerNode.group([Database.node, EventV2.node, SessionProjector.node, SessionStore.node, SessionV2.node]),
+    LayerNode.group([Database.node, EventV2.node, SessionProjector.node, SessionStore.node, SessionV2.node, SessionExecution.node]),
     [[SessionExecution.node, execution]],
   ),
 )
@@ -584,3 +591,136 @@ describe("SessionV2.prompt", () => {
     }),
   )
 })
+
+it.effect("audit: next prompt excludes the history hidden by staged undo", () =>
+  Effect.gen(function* () {
+    yield* setup
+    const { db } = yield* Database.Service
+    const events = yield* EventV2.Service
+    const session = yield* SessionV2.Service
+    const first = SessionMessage.ID.make("msg_audit_keep")
+    const undone = SessionMessage.ID.make("msg_audit_undone")
+    yield* events.publish(SessionEvent.Prompted, {
+      sessionID, messageID: first, timestamp: DateTime.makeUnsafe(1),
+      prompt: Prompt.make({ text: "keep this" }), delivery: "steer",
+    })
+    yield* events.publish(SessionEvent.Prompted, {
+      sessionID, messageID: undone, timestamp: DateTime.makeUnsafe(2),
+      prompt: Prompt.make({ text: "this instruction was undone" }), delivery: "steer",
+    })
+    const removed = SessionMessage.ID.make("msg_audit_removed_answer")
+    const { id: _id, type, ...data } = Schema.encodeSync(SessionMessage.Message)(SessionMessage.Assistant.make({
+      id: removed, type: "assistant", agent: "maestro",
+      model: { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") },
+      time: { created: DateTime.makeUnsafe(2) },
+      content: [
+        { type: "text", id: "removed_text", text: "undone assistant instructions" },
+        { type: "tool", id: "removed_tool", name: "read", time: { created: DateTime.makeUnsafe(2) },
+          state: { status: "completed", input: {}, structured: {}, content: [{ type: "text", text: "undone tool output" }] } },
+      ],
+    }))
+    yield* db.insert(SessionMessageTable).values({ id: removed, session_id: sessionID, type, seq: 2, time_created: 2, data })
+      .run().pipe(Effect.orDie)
+    // This is the durable state produced by revert.stage({files:false}); no filesystem fixture needed.
+    yield* events.publish(SessionEvent.RevertEvent.Staged, {
+      sessionID, timestamp: DateTime.makeUnsafe(3), revert: { messageID: undone, files: [] },
+    })
+    yield* session.prompt({
+      sessionID, id: SessionMessage.ID.make("msg_audit_replacement"),
+      prompt: { text: "replacement instruction" }, resume: false,
+    })
+    // Exactly the production runner's admission promotion and history read, without provider calls.
+    yield* SessionInput.promoteSteers(db, events, sessionID, yield* EventV2.latestSequence(db, sessionID))
+    const entries = yield* SessionHistory.entriesForRunner(db, sessionID, -1)
+    expect(entries.map(({ message }) => message.id)).toEqual([first, SessionMessage.ID.make("msg_audit_replacement")])
+    expect((yield* session.get(sessionID)).revert).toBeUndefined()
+    expect(yield* SessionInput.find(db, undone)).toBeUndefined()
+    expect((yield* SessionInput.find(db, first))?.id).toBe(first)
+    expect(entries.flatMap(({ message }) => message.type === "user" ? [message.text] : [])).toEqual([
+      "keep this", "replacement instruction",
+    ])
+  }),
+)
+
+for (const operation of ["stage", "clear", "commit"] as const) {
+  it.effect(`revert ${operation} rejects active execution before reading or restoring state`, () =>
+    Effect.gen(function* () {
+      yield* setup
+      const session = yield* SessionV2.Service
+      const events = yield* EventV2.Service
+      const boundary = SessionMessage.ID.make("msg_busy_boundary")
+      yield* events.publish(SessionEvent.Prompted, {
+        sessionID, messageID: boundary, timestamp: DateTime.makeUnsafe(1),
+        prompt: Prompt.make({ text: "preserved" }), delivery: "steer",
+      })
+      yield* events.publish(SessionEvent.RevertEvent.Staged, {
+        sessionID, timestamp: DateTime.makeUnsafe(2), revert: { messageID: boundary, files: [] },
+      })
+      activeSessions.add(sessionID)
+      const error = yield* (operation === "stage"
+        ? session.revert.stage({ sessionID, messageID: boundary, files: false })
+        : session.revert[operation](sessionID)).pipe(Effect.flip)
+      expect(error._tag).toBe("Session.BusyError")
+      expect((yield* session.get(sessionID)).revert?.messageID).toBe(boundary)
+      expect((yield* session.messages({ sessionID })).length).toBe(1)
+    }).pipe(Effect.ensuring(Effect.sync(() => activeSessions.clear()))),
+  )
+}
+
+it.effect("exact retry and conflicting reuse leave staged undo intact", () =>
+  Effect.gen(function* () {
+    yield* setup
+    const session = yield* SessionV2.Service
+    const events = yield* EventV2.Service
+    const id = SessionMessage.ID.make("msg_retry_undo")
+    const expected = { sessionID, id, prompt: { text: "original" }, resume: false } as const
+    const first = yield* session.prompt(expected)
+    const { db } = yield* Database.Service
+    yield* SessionInput.promoteSteers(db, events, sessionID, Number.MAX_SAFE_INTEGER)
+    yield* events.publish(SessionEvent.RevertEvent.Staged, {
+      sessionID, timestamp: DateTime.makeUnsafe(3), revert: { messageID: id, files: [] },
+    })
+    expect((yield* session.prompt(expected)).id).toBe(first.id)
+    expect((yield* session.prompt({ ...expected, prompt: { text: "conflict" } }).pipe(Effect.flip))._tag)
+      .toBe("Session.PromptConflictError")
+    expect((yield* session.get(sessionID)).revert?.messageID).toBe(id)
+    expect((yield* session.messages({ sessionID })).length).toBe(1)
+    expect(yield* eventCount("session.revert.committed")).toBe(0)
+  }),
+)
+
+it.effect("global message ID contention cannot truncate a rejected staged replacement", () =>
+  Effect.gen(function* () {
+    yield* setup
+    const session = yield* SessionV2.Service
+    const events = yield* EventV2.Service
+    const { db } = yield* Database.Service
+    const other = SessionV2.ID.make("ses_collision_other")
+    yield* db.insert(SessionTable).values({ id: other, project_id: Project.ID.global, slug: "other",
+      directory: "/project", title: "other", version: "test" }).run().pipe(Effect.orDie)
+    const boundary = SessionMessage.ID.make("msg_collision_boundary")
+    const replacement = SessionMessage.ID.make("msg_collision_replacement")
+    yield* events.publish(SessionEvent.Prompted, {
+      sessionID, messageID: boundary, timestamp: DateTime.makeUnsafe(1),
+      prompt: Prompt.make({ text: "preserve until replacement owns its ID" }), delivery: "steer",
+    })
+    yield* events.publish(SessionEvent.RevertEvent.Staged, {
+      sessionID, timestamp: DateTime.makeUnsafe(2), revert: { messageID: boundary, files: [] },
+    })
+    let competitorAccepted = false
+    yield* events.listen((event) => event.type === SessionEvent.RevertEvent.Committed.type
+      ? session.prompt({ sessionID: other, id: replacement, prompt: { text: "competitor" }, resume: false }).pipe(
+          Effect.match({ onFailure: () => false, onSuccess: () => true }),
+          Effect.tap((accepted) => Effect.sync(() => { competitorAccepted = accepted })), Effect.asVoid,
+        )
+      : Effect.void)
+    const outcome = yield* session.prompt({ sessionID, id: replacement, prompt: { text: "replacement" }, resume: false }).pipe(Effect.exit)
+    if (outcome._tag === "Failure") {
+      expect((yield* session.get(sessionID)).revert?.messageID).toBe(boundary)
+      expect((yield* session.messages({ sessionID })).map((message) => message.id)).toEqual([boundary])
+    }
+    expect(outcome._tag).toBe("Success")
+    expect(competitorAccepted).toBe(false)
+    expect((yield* SessionInput.find(db, replacement))?.sessionID).toBe(sessionID)
+  }),
+)

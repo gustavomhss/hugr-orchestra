@@ -71,6 +71,7 @@ function proof() {
       (dir) => Effect.promise(() => rm(dir, { recursive: true, force: true })),
     )
     const project = path.join(scratch, "project")
+    const globalConfig = path.join(scratch, "global-config")
     const hits: { messages: { role: string; tool_call_id?: string; content: string }[] }[] = []
     const turn = { callID: "call_enabled" }
     const provider = http.createServer(async (req, res) => {
@@ -95,6 +96,8 @@ function proof() {
     if (!address || typeof address === "string") throw new Error("Missing loopback provider port")
     yield* Effect.promise(async () => {
       await mkdir(project, { recursive: true })
+      await mkdir(globalConfig, { recursive: true })
+      await Bun.write(path.join(globalConfig, "orchestra.json"), JSON.stringify({ trusted_projects: [project] }))
       await Bun.write(path.join(project, "go.mod"), "module example.test\n\ngo 1.20\n")
       await Bun.write(path.join(project, "native_test.go"), `package example\nimport "testing"\n${Array.from({ length: 30 }, (_, i) => `func TestCase${i}(t *testing.T) {}`).join("\n")}\n`)
       await Bun.write(path.join(project, "orchestra.json"), JSON.stringify({ model: "test/test-model", autoupdate: false,
@@ -107,6 +110,7 @@ function proof() {
     // 4. The shipped binary, serving.
     const env: Record<string, string> = { PATH: process.env.PATH!, HOME: scratch, USERPROFILE: scratch, ORCHESTRA_TEST_HOME: scratch,
       XDG_DATA_HOME: path.join(scratch, "data"), XDG_CACHE_HOME: path.join(scratch, "cache"), XDG_CONFIG_HOME: path.join(scratch, "config"), XDG_STATE_HOME: path.join(scratch, "state"),
+      ORCHESTRA_CONFIG_DIR: globalConfig,
       ORCHESTRA_SERVER_PASSWORD: password, ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_DISABLE_MODELS_FETCH: "true",
       ORCHESTRA_DISABLE_AUTOUPDATE: "true", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
       ORCHESTRA_DISABLE_LSP_DOWNLOAD: "true", GOTOOLCHAIN: "local", GOPROXY: "off", GOSUMDB: "off", CGO_ENABLED: "0",
