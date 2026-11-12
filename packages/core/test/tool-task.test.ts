@@ -17,6 +17,8 @@ import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import type { LocationServices } from "@orchestra/core/location-services"
 import { ModelV2 } from "@orchestra/core/model"
+import { ModelExecution } from "@orchestra/core/model-execution"
+import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { ProjectV2 } from "@orchestra/core/project"
@@ -195,7 +197,7 @@ const execution = Layer.effect(SessionExecution.Service, Effect.gen(function* ()
 
 const taskLayer = (location: Location.Interface, resolve: ProjectV2.Interface["resolve"]) => AppNodeBuilder.build(LayerNode.group([
   Database.node, EventV2.node, AgentV2.node, Catalog.node, Integration.node, PermissionV2.node, PermissionSaved.node,
-  SessionSubagentModels.node, SessionExecution.node, SessionV2.node, Credential.node,
+  SessionSubagentModels.node, SessionExecution.node, SessionV2.node, Credential.node, ModelExecution.node,
   ToolRegistry.node, ToolRegistry.toolsNode, TaskTool.node, node,
 ]), [
   [Location.node, Layer.succeed(Location.Service, location)],
@@ -1135,5 +1137,124 @@ describe("TaskTool worktree lifecycle", () => {
     expect(after.registered).toHaveLength(before.registered.length + 1)
     expect(after.folders).toHaveLength(before.folders.length + 1)
     expect(after.registered).toContain(`worktree ${children[0].location.directory.replaceAll("\\", "/")}`)
+  }))
+})
+
+const e6VariantTask = (variant?: string, includeDefault = true) => Effect.gen(function* () {
+  const f = yield* setup
+  yield* f.agents.transform((draft) => {
+    draft.update(caller, (agent) => { agent.engine = "orchestra" })
+    draft.update(worker, (agent) => {
+      agent.engine = "orchestra"
+      agent.model = { ...cheap, ...(variant === undefined ? {} : { variant: ModelV2.VariantID.make(variant) }) }
+    })
+  })
+  yield* f.catalog.transform((draft) => {
+    draft.provider.update(providerID, (provider) => {
+      provider.api = { type: "aisdk", package: "@ai-sdk/openai", settings: { apiKey: "FICTITIOUS_E6_VARIANT_KEY" } }
+    })
+    draft.model.update(providerID, cheap.id, (model) => {
+      model.request.variant = "high"
+      model.variants = [
+        { id: ModelV2.VariantID.make("high"), headers: { "x-variant": "high" }, body: {} },
+        ...(includeDefault ? [{ id: ModelV2.VariantID.make("default"), headers: { "x-variant": "default" }, body: {} }] : []),
+      ]
+    })
+  })
+  return f
+})
+
+describe("E6 literal Task and shared model authority", () => {
+  it.effect("CONTROL E6 ordinary named Task model enters the real runner with one durable child input", () => Effect.gen(function* () {
+    const f = yield* e6VariantTask("high")
+    const call = yield* record(f.parent.id, "e6-named-task")
+    const completed = result(yield* settleTool(f.registry, call))
+    expect((yield* f.sessions.get(completed.sessionID)).model).toEqual({ ...cheap, variant: "high" })
+    expect(yield* inputRows(completed.sessionID)).toHaveLength(1)
+    expect(f.harness.requests).toHaveLength(1)
+    expect(f.harness.requests[0].model.route.defaults.headers).toMatchObject({ "x-variant": "high" })
+    const authority = yield* ModelExecution.Service
+    expect((yield* authority.describe({ context: { type: "session", sessionID: f.parent.id }, model: { ...cheap, variant: ModelV2.VariantID.make("high") } })).selection)
+      .toMatchObject({ engine: "orchestra", status: "ready", ref: { ...cheap, variant: "high" } })
+  }))
+
+  it.effect("E6: missing literal default is refused before Task permission, child or provider", () => Effect.gen(function* () {
+    const f = yield* e6VariantTask("default", false)
+    yield* f.agents.transform((draft) => draft.update(caller, (agent) => {
+      agent.permissions = [{ action: "task", resource: "*", effect: "ask" }]
+    }))
+    const call = yield* record(f.parent.id, "e6-missing-default")
+    const pending = yield* settleTool(f.registry, call).pipe(Effect.forkChild)
+    const first = yield* Effect.raceFirst(
+      Fiber.join(pending).pipe(Effect.map((settlement) => ({ type: "settled" as const, settlement }))),
+      Effect.repeat(f.permission.forSession(f.parent.id), { until: (requests) => requests.length > 0 })
+        .pipe(Effect.map((requests) => ({ type: "asked" as const, requests }))),
+    )
+    // A baseline permission prompt is observed and explicitly refused before asserting the earlier eligibility boundary.
+    if (first.type === "asked") {
+      yield* f.permission.reply({ requestID: first.requests[0].id, reply: "deny" })
+      yield* Fiber.join(pending)
+    }
+    expect(first.type).toBe("settled")
+    if (first.type !== "settled") return yield* Effect.die("Task requested permission for a nonexistent literal variant")
+    expect(first.settlement.result).toMatchObject({ type: "error", value: expect.stringContaining("Task model unavailable") })
+    expect(yield* f.permission.forSession(f.parent.id)).toEqual([])
+    expect((yield* f.sessions.list()).filter((child) => child.parentID === f.parent.id)).toEqual([])
+    expect(f.harness.requests).toEqual([])
+  }))
+
+  it.effect("E6: exact Task retry cannot equate a recorded literal default with a newly omitted target", () => Effect.gen(function* () {
+    const f = yield* e6VariantTask("default")
+    const call = yield* record(f.parent.id, "e6-default-retry")
+    const first = result(yield* settleTool(f.registry, call))
+    expect((yield* f.sessions.get(first.sessionID)).model?.variant).toBe("default")
+    const before = yield* inputRows(first.sessionID)
+    yield* f.agents.transform((draft) => draft.update(worker, (agent) => { agent.model = cheap }))
+    const retry = yield* settleTool(f.registry, call)
+    expect(retry.result).toMatchObject({ type: "error", value: expect.stringContaining("cannot change the recorded child model") })
+    expect(yield* inputRows(first.sessionID)).toEqual(before)
+    expect(f.harness.requests).toHaveLength(1)
+    expect((yield* f.sessions.get(first.sessionID)).model?.variant).toBe("default")
+  }))
+
+  it.effect("E6: target revalidation after real permission wait distinguishes omission from literal default", () => Effect.gen(function* () {
+    const f = yield* e6VariantTask()
+    yield* f.agents.transform((draft) => draft.update(caller, (agent) => {
+      agent.permissions = [{ action: "task", resource: "*", effect: "ask" }]
+    }))
+    const call = yield* record(f.parent.id, "e6-variant-revalidation")
+    const pending = yield* settleTool(f.registry, call).pipe(Effect.forkChild)
+    const asked = yield* Effect.repeat(f.permission.forSession(f.parent.id), { until: (requests) => requests.length === 1 })
+    expect((yield* f.sessions.list()).filter((child) => child.parentID === f.parent.id)).toEqual([])
+    yield* f.agents.transform((draft) => draft.update(worker, (agent) => {
+      agent.model = { ...cheap, variant: ModelV2.VariantID.make("default") }
+    }))
+    yield* f.permission.reply({ requestID: asked[0].id, reply: "once" })
+    const settled = yield* Fiber.join(pending)
+    expect(settled.result).toMatchObject({ type: "error", value: expect.stringContaining("target model changed after authorization") })
+    expect((yield* f.sessions.list()).filter((child) => child.parentID === f.parent.id)).toEqual([])
+    expect(f.harness.requests).toEqual([])
+  }))
+
+  it.effect("E6: shared ModelExecution.describe and actual native resolver agree on omitted and missing literal default", () => Effect.gen(function* () {
+    const f = yield* e6VariantTask(undefined, false)
+    const authority = yield* ModelExecution.Service
+    const model = yield* f.catalog.model.get(cheap.providerID, cheap.id)
+    if (!model) return yield* Effect.die("Expected the actual Task catalog model")
+    const context = { type: "session" as const, sessionID: f.parent.id }
+    const omitted = yield* authority.describe({ context, model: cheap })
+    expect(omitted.selection).toMatchObject({ ref: cheap, engine: "orchestra", status: "ready" })
+    const inherited = yield* SessionRunnerModel.resolve({ ...f.parent, model: cheap }, model)
+    expect(inherited.route.defaults.headers).toMatchObject({ "x-variant": "high" })
+    const literal = ModelV2.Ref.make({ ...cheap, variant: ModelV2.VariantID.make("default") })
+    const assessment = yield* authority.describe({ context, model: literal })
+    expect(assessment.selection).toMatchObject({ ref: literal, engine: "orchestra", status: "unavailable", reason: "variant-unavailable" })
+    const execution = yield* SessionRunnerModel.resolve({ ...f.parent, model: literal }, model).pipe(Effect.exit)
+    expect(Exit.isFailure(execution)).toBe(true)
+    if (Exit.isSuccess(execution)) return yield* Effect.die("Missing literal default was executed as inherited high")
+    expect(execution.cause.reasons[0]).toMatchObject({ _tag: "Fail", error: {
+      _tag: "SessionRunnerModel.VariantUnavailableError", variant: "default",
+    } })
+    expect(f.harness.requests).toEqual([])
   }))
 })

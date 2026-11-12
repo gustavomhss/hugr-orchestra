@@ -258,3 +258,35 @@ const insertV1 = (
         .pipe(Effect.orDie),
     )
   })
+
+describe("E6 literal variant legacy history", () => {
+  for (const variant of ["default", "", undefined] as const) {
+    it.live(`${variant === "" ? "E6:" : "CONTROL E6"} legacy assistant import preserves ${JSON.stringify(variant) ?? "omission"} without rewriting retained rows`, () => Effect.gen(function* () {
+      const database = yield* Database.Service
+      const sessions = yield* SessionV2.Service
+      const created = yield* sessions.create({ location })
+      const user = { id: "msg_e6_user", role: "user", time: { created: 1000 }, agent: "build",
+        model: { providerID: "p", modelID: "m" } }
+      const assistant = { id: "msg_e6_assistant", role: "assistant", parentID: user.id,
+        time: { created: 2000, completed: 3000 }, modelID: "m", providerID: "p", mode: "build", agent: "build",
+        path: { cwd: "/project", root: "/project" }, cost: 0,
+        tokens: { input: 1, output: 1, reasoning: 0, cache: { read: 0, write: 0 } }, finish: "stop",
+        ...(variant === undefined ? {} : { variant }),
+      }
+      yield* insertV1(created.id, [user, assistant], [
+        { id: "prt_e6_user", message_id: user.id, data: { type: "text", text: "question" } },
+        { id: "prt_e6_assistant", message_id: assistant.id, data: { type: "text", text: "answer" } },
+      ])
+      const before = yield* database.db.select().from(MessageTable).where(eq(MessageTable.session_id, created.id)).all().pipe(Effect.orDie)
+      expect(yield* SessionV2.SessionLegacyImport.run(database.db)).toBe(1)
+      const imported = (yield* sessions.messages({ sessionID: created.id, order: "asc" })).find((message) => message.type === "assistant")
+      if (imported?.type !== "assistant") return yield* Effect.die("Expected the actual imported assistant")
+      expect(imported.model).toEqual({ id: "m", providerID: "p", ...(variant === undefined ? {} : { variant }) })
+      expect(yield* SessionV2.SessionLegacyImport.run(database.db)).toBe(0)
+      expect(yield* database.db.select().from(MessageTable).where(eq(MessageTable.session_id, created.id)).all().pipe(Effect.orDie)).toEqual(before)
+      const retained = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.session_id, created.id)).all().pipe(Effect.orDie)
+      expect(retained).toHaveLength(2)
+      expect(retained.every((row) => row.seq < 0)).toBe(true)
+    }))
+  }
+})

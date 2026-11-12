@@ -1,6 +1,6 @@
 import path from "path"
 import { describe, expect } from "bun:test"
-import { DateTime, Effect, Layer, Schema } from "effect"
+import { DateTime, Effect, Exit, Layer, Schema } from "effect"
 import { LLM } from "@orchestra/llm"
 import { OpenAIResponses } from "@orchestra/llm/protocols"
 import { LLMClient, RequestExecutor } from "@orchestra/llm/route"
@@ -198,5 +198,64 @@ describe("E7 native canonical variants", () => {
     expect(server.calls).toHaveLength(1)
     expect(server.calls[0].body).toMatchObject({ temperature: 0.2, stop_sequences: ["trusted"],
       thinking: { type: "enabled", budget_tokens: 12000 } })
+  }))
+})
+
+describe("E6 literal native variant execution", () => {
+  it.live("CONTROL E6 ordinary named and omitted configured variants reach actual HTTP", () => Effect.gen(function* () {
+    const server = yield* capture()
+    const model = yield* configure([document({ request: { variant: "high" }, variants: [
+      { id: "high", headers: { "x-variant": "high" }, generation: { temperature: 0.7 } },
+      { id: "ordinary", headers: { "x-variant": "ordinary" }, generation: { temperature: 0.2 } },
+    ] }, { type: "aisdk", package: "@ai-sdk/openai", url: server.url })])
+    yield* generate(yield* SessionRunnerModel.resolve(session("ordinary"), model))
+    yield* generate(yield* SessionRunnerModel.resolve(session(), model))
+    expect(server.calls).toHaveLength(2)
+    expect(server.calls[0]).toMatchObject({ variant: "ordinary", body: { temperature: 0.2 } })
+    expect(server.calls[1]).toMatchObject({ variant: "high", body: { temperature: 0.7 } })
+  }))
+
+  it.live("E6: literal default overrides a different configured variant without mutating the base", () => Effect.gen(function* () {
+    const server = yield* capture()
+    const model = yield* configure([document({ request: { variant: "high", headers: { "x-base": "untouched" } }, variants: [
+      { id: "high", headers: { "x-variant": "high" }, generation: { temperature: 0.7 } },
+      { id: "default", headers: { "x-variant": "default" }, generation: { temperature: 0 } },
+    ] }, { type: "aisdk", package: "@ai-sdk/openai", url: server.url })])
+    const before = JSON.stringify(model)
+    yield* generate(yield* SessionRunnerModel.resolve(session("default"), model))
+    yield* generate(yield* SessionRunnerModel.resolve(session("high"), model))
+    expect(server.calls).toHaveLength(2)
+    expect(server.calls[0]).toMatchObject({ variant: "default", body: { temperature: 0 } })
+    expect(server.calls[1]).toMatchObject({ variant: "high", body: { temperature: 0.7 } })
+    expect(JSON.stringify(model)).toBe(before)
+    expect(model.request).toMatchObject({ variant: "high", headers: { "x-base": "untouched" } })
+    expect(model.request.headers).not.toHaveProperty("x-variant")
+  }))
+
+  for (const variant of ["default", ""] as const) {
+    it.live(`E6: absent literal ${JSON.stringify(variant)} is refused despite a valid configured high variant`, () => Effect.gen(function* () {
+      const server = yield* capture()
+      const model = yield* configure([document({ request: { variant: "high" }, variants: [
+        { id: "high", headers: { "x-variant": "high" }, generation: { temperature: 0.7 } },
+      ] }, { type: "aisdk", package: "@ai-sdk/openai", url: server.url })])
+      const outcome = yield* SessionRunnerModel.resolve(session(variant), model).pipe(Effect.exit)
+      expect(Exit.isFailure(outcome)).toBe(true)
+      if (Exit.isSuccess(outcome)) return yield* Effect.die("Literal variant unexpectedly inherited configured high")
+      expect(outcome.cause.reasons[0]).toMatchObject({ _tag: "Fail", error: {
+        _tag: "SessionRunnerModel.VariantUnavailableError", variant,
+      } })
+      expect(server.calls).toEqual([])
+    }))
+  }
+
+  it.live("CONTROL E6 an existing empty-string variant reaches actual HTTP literally", () => Effect.gen(function* () {
+    const server = yield* capture()
+    const model = yield* configure([document({ request: { variant: "high" }, variants: [
+      { id: "high", headers: { "x-variant": "high" }, generation: { temperature: 0.7 } },
+      { id: "", headers: { "x-variant": "" }, generation: { temperature: 0.1 } },
+    ] }, { type: "aisdk", package: "@ai-sdk/openai", url: server.url })])
+    yield* generate(yield* SessionRunnerModel.resolve(session(""), model))
+    expect(server.calls).toHaveLength(1)
+    expect(server.calls[0]).toMatchObject({ variant: "", body: { temperature: 0.1 } })
   }))
 })

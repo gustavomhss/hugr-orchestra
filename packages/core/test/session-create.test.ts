@@ -426,3 +426,47 @@ describe("SessionV2.create", () => {
     }),
   )
 })
+
+describe("E6 literal variant Session storage", () => {
+  for (const variant of ["high", "default", "", undefined] as const) {
+    it.effect(`${variant === "high" || variant === "default" ? "CONTROL E6" : "E6:"} create/get/fork preserves ${JSON.stringify(variant) ?? "omission"} exactly`, () => Effect.gen(function* () {
+      const sessions = yield* SessionV2.Service
+      const database = yield* Database.Service
+      const model = ModelV2.Ref.make({ id: ModelV2.ID.make("variant-storage"), providerID: ProviderV2.ID.anthropic,
+        ...(variant === undefined ? {} : { variant: ModelV2.VariantID.make(variant) }) })
+      const created = yield* sessions.create({ location, model })
+      const stored = yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, created.id)).get().pipe(Effect.orDie)
+      expect(stored?.model).toEqual(model)
+      expect(created.model).toEqual(model)
+      expect((yield* sessions.get(created.id)).model).toEqual(model)
+      const forked = yield* sessions.fork({ sessionID: created.id })
+      const forkRow = yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, forked.id)).get().pipe(Effect.orDie)
+      expect(forked.model).toEqual(model)
+      expect(forkRow?.model).toEqual(model)
+      const history = yield* sessions.history({ sessionID: created.id, limit: 10 })
+      expect(history.events[0]).toMatchObject({ type: "session.next.created", data: { model } })
+      expect(yield* sessions.create({ id: created.id, location, model: { ...model, variant: ModelV2.VariantID.make("different") } }))
+        .toEqual(created) // Existing identity adoption remains independent of replacement model arguments.
+    }))
+  }
+
+  it.effect("E6: switching omitted to literal default and back publishes distinct durable selections", () => Effect.gen(function* () {
+    const sessions = yield* SessionV2.Service
+    const database = yield* Database.Service
+    const model = ModelV2.Ref.make({ id: ModelV2.ID.make("variant-switch"), providerID: ProviderV2.ID.anthropic })
+    const created = yield* sessions.create({ location, model })
+    const named = ModelV2.Ref.make({ ...model, variant: ModelV2.VariantID.make("default") })
+    yield* sessions.switchModel({ sessionID: created.id, model: named })
+    const first = yield* sessions.history({ sessionID: created.id, limit: 10 })
+    expect(first.events).toHaveLength(2)
+    expect(first.events[1]).toMatchObject({ type: "session.next.model.switched", data: { model: named } })
+    expect((yield* sessions.get(created.id)).model).toEqual(named)
+    yield* sessions.switchModel({ sessionID: created.id, model })
+    yield* sessions.switchModel({ sessionID: created.id, model })
+    const final = yield* sessions.history({ sessionID: created.id, limit: 10 })
+    expect(final.events).toHaveLength(3)
+    expect(final.events[2]).toMatchObject({ type: "session.next.model.switched", data: { model } })
+    expect((yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, created.id)).get().pipe(Effect.orDie))?.model).toEqual(model)
+    expect((yield* sessions.get(created.id)).model).toEqual(model)
+  }))
+})
