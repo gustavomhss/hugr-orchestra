@@ -238,13 +238,22 @@
       "id": "E6",
       "severity": "P2",
       "owner": "clients",
-      "status": "core_host_verified_api_green_pending_integration_ui",
+      "status": "core_host_api_verified_ui_planned",
       "runtime_reproduced": true,
       "commits": [
         "8253290d1d",
         "ca0b8fc657",
         "011474d4a5",
-        "3e6ace81ea"
+        "3e6ace81ea",
+        "e2ef2e05ad",
+        "dd772e7242",
+        "6eccdf0b91",
+        "08dd672ba8",
+        "6c1f7bb14d",
+        "7daa49b325",
+        "76236cb726",
+        "65f6931a93",
+        "a872842eb9"
       ],
       "evidence": [
         {
@@ -274,9 +283,18 @@
           "kind": "wire_full_green",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43216224161",
           "result": "25pass/179assertions/3 Omni exerciser children. Strict generated Promise/Effect server interruption assertions unchanged; no temporary diagnostic waiver."
+        },
+        {
+          "kind": "wire_quiet_final_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43219521038",
+          "result": "2 strict cancellation cases pass9assertions/2.81s after TEMP/trace removal."
+        },
+        {
+          "kind": "integrated_api_generated_typeproof",
+          "result": "9 owncommits througha872842eb9;24files exact SHA256 match; official packages/client bun run generate0 and all24hashes still identical. Root Core+Server+CLI final types0. Root guard0/boundaries0/spawn0;92existing ledger entries, zero new/stale."
         }
       ],
-      "remaining": "API final source/types/cold review/integration pending; App/TUI contextual execution consumption remains. Factory and wire runtime gates green. No E6 whole closure until interface consumption is implemented and validated."
+      "remaining": "API/wire/transport stage integrated and verified. Contextual execution eligibility still needs App/TUI consumption. E1 owns composer changes first; E6 UI planned only after that ownership seam. Whole E6 remains open."
     },
     {
       "id": "E7",
@@ -1503,10 +1521,16 @@
       "id": "L6",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
+      "status": "acceptance_controls_verified_baseline_pending",
       "runtime_reproduced": false,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "actual_implementation_bridge_controls",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43221084330",
+          "result": "2pass/27assertions; actual Bun.build and8export controls pass. Production unchanged; five fault cases pending."
+        }
+      ]
     },
     {
       "id": "L7",
@@ -2323,10 +2347,16 @@
       "id": "N2",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
+      "status": "acceptance_baseline_setup_fix",
       "runtime_reproduced": false,
       "commits": [],
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "baseline_setup_failure_not_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43221281046",
+          "result": "Pinnedfbb checkout; Linux clippy zombie_processes prevents all new tests; Windows succeeds with0 Linux-only test matches and existing Node11/Bun11 controls; Mac queued at recording. Actor-only4a94 adds real wait thread, no suppression or production change, cold approved."
+        }
+      ]
     },
     {
       "id": "T1",
