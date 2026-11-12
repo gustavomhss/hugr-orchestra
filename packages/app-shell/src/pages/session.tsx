@@ -1619,7 +1619,8 @@ export default function Page() {
       const credentials = JSON.stringify(server.server.http)
       const item = (followup.items[input.sessionID] ?? []).find((entry) => entry.id === input.id)
       if (!item) return
-      const draft = structuredClone(unwrap(item))
+      const capturedItem = unwrap(item)
+      const draft = structuredClone(capturedItem)
       const identity = JSON.stringify([input.sessionID, input.id])
       const itemOwner = queuedItemOwner().get(identity)?.token
       if (!itemOwner) return
@@ -1661,7 +1662,7 @@ export default function Page() {
       if (!baseCurrent() || !itemCurrent()) return
       if (draft.source) queuedPromptSources.release(draft.source)
       if (!baseCurrent() || !itemCurrent()) return
-      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry !== item))
+      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry !== capturedItem))
       if (input.manual) owner.run(resumeScroll)
     },
   }))
