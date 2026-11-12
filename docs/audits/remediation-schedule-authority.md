@@ -1,6 +1,6 @@
 # H8 source contract — ROOT freeze, independently approved before execution
 
-Baseline c647f21975158ad21e0b7e45a8d7f240eaefcdef; existing 30-case main SHA2565506e35b17fe498ec48fa753f6ecbb1d548b124efe47579991f066aacd1cf74f unchanged. 5 controls GREEN both43278533576; 13 original RED both composition12@43279974654 plus1@43282798153. Earlier writer boundary setup miss is excluded; rollback/provider tails remain unexecuted. House independently approved this contract; Root authorized implementation only after that review.
+Baseline c647f21975158ad21e0b7e45a8d7f240eaefcdef; original 30-case main frozen at SHA2565506e35b17fe498ec48fa753f6ecbb1d548b124efe47579991f066aacd1cf74f before execution; separately reviewed FUTURE-case fixture corrections are recorded below. 5 controls GREEN both43278533576; 13 original RED both composition12@43279974654 plus1@43282798153. Earlier writer boundary setup miss is excluded; rollback/provider tails remain unexecuted. House independently approved this contract; Root authorized implementation only after that review.
 
 Owned source paths under packages/core/src: capability/schedule/management.ts; scheduled-task/capability.ts; scheduled-task/shared.ts; scheduled-task.ts; NEW scheduled-task/failure-cause.ts; NEW effect/cause.ts; session.ts; session/input.ts; event.ts. Add separate direct safety test file(s), never mutate existing30-case main. Update actual schedule guide with the checkpoint/empty-session limits. No Protocol, DTO, generated code, dependency or process spawn change.
 
@@ -28,11 +28,11 @@ Session.create only NEW Created publication supplies commit callback `() => opti
 
 Exact lossless conversion helper (synchronous; preserve each error/annotation and non-Fail reason identity/order):
 ```ts
-import { Cause } from "effect"
+import { Cause, Context } from "effect"
 export function dieFailures<E>(cause: Cause.Cause<E>): Cause.Cause<never> {
   return Cause.fromReasons(cause.reasons.map((reason) =>
     reason._tag === "Fail"
-      ? Cause.makeDieReason(reason.error).annotate(reason.annotations)
+      ? Cause.makeDieReason(reason.error).annotate(Context.makeUnsafe(new Map(reason.annotations)))
       : reason))
 }
 ```
@@ -59,3 +59,11 @@ Required new direct safety acceptance before final GREEN: dieFailures with multi
 Execution after explicit GO: Step0 exact HEAD check; implement source anchor in one conventional fix(core) commit, add direct safety tests separate test(core) commit, guide docs(core) commit. Return source freeze + complete diff/hash manifest + type lease request before any compiler/CI. Root/House cold-review ALL changed paths. Then single warm `bun typecheck` packages/core with GOMAXPROCS2/private cache and official scoped test:ci paths --os both; Root controls dispatch/push slots. No push/PR/merge by agent. Global guards root before completion. Not closed until behavioral tails and safety cases pass.
 
 Type-channel clarification after source inspection: Core CapabilityScheduleOperator.Error also includes the existing ScheduledTaskShared.NotFoundError, permitting mixed NotFound causes to propagate honestly instead of a cast or collapsed catchTag. Exact single NotFound still maps to hidden403. No Protocol/Schema/HttpApi error addition; existing Server per-reason fallback remains unchanged and will be typechecked after integration.
+
+## Integration and actual pinned-runtime results
+
+Root integrated all seventeen ordered commits through `9630aebc2c`; fourteen reviewed paths match actual hosted snapshot `1819c574bbc6d34ccc1ff46eded4e5174bfb655c` byte for byte. Final [focused gate](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43301047387) passes 50 tests and 303 assertions on EACH Linux and Windows, including all original rollback/provider tails and twenty direct safety tests. Core typecheck passes on the source branch. Root Server typecheck and aggregate scoped Session/Event/schedule plus Server HTTP regression gates remain pending, so the ledger does not close H8 yet.
+
+Two preceding full gates remain evidence, not green: 43294582027 produced38P/12F per OS and exposed pinned Effect beta83's runtime annotation API requiring Context despite its public Map overload, plus facade memoization in the test graph; 43297993727 produced44P/6F per OS after those fixes. Final fixture repairs explicitly combine observed body/finalizer failures because beta83 onExit REPLACES the body cause on finalizer failure. No claim is made that the runtime preserves failures already dropped upstream. Annotation containment permits additional Effect tracing while checking every original annotation by identity; the pure helper still requires exact annotations. All thirteen original cases retain their assertions. The main test hash moves from5506e35 to6bb2bd9 only through separately reviewed FUTURE-case annotation fixture corrections. Two fresh facades reuse actual installed projectors and the same SessionSubagentModels layer.
+
+The guide documents the remaining checkpoint boundary: a denied new prompt can leave an already committed empty Session, arbitrary hooks cannot be undone, and revocation after the last checkpoint is not linearizable with every later effect. No Protocol/HttpApi/generated change occurred.

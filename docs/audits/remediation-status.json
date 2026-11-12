@@ -639,7 +639,7 @@
           "kind": "source_cpu_gate_incomplete",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
           "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
-          "result": "Linux six cases reach valid CPU marks256–307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51–52ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79–5.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
+          "result": "Linux six cases reach valid CPU marks256\u2013307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51\u201352ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79\u20135.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
         },
         {
           "kind": "rejected_full_source_gate",
@@ -651,7 +651,7 @@
           "kind": "rejected_cpu_source_gate",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
           "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
-          "result": "Windows all6 have valid marks421–637ms<750, warmup/ready true,106–109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
+          "result": "Windows all6 have valid marks421\u2013637ms<750, warmup/ready true,106\u2013109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
         },
         {
           "kind": "native_cpu_termination_diagnostic",
@@ -664,9 +664,15 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43290827027",
           "source": "a597d5c002a9e401e898ee6ce8c48a9568b7dcb1",
           "result": "Original literal source case after read-before-matcher fixture correction fails RESULT absent: valid408ms mark,129 heartbeats, no setup errors, owned6500ms containment. Timing/decode tails unexecuted; no criterion/workload relaxation."
+        },
+        {
+          "kind": "os_process_capability_not_product_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43301049199",
+          "source": "14657189e4a94095cd1dd1b51ecc984c4fb1c164",
+          "result": "Both OS1pass/17assertions/Omni1. Actual child enters2048regex/8MiB at40.411ms Linux/63.484ms Windows. Requested1500ms kill, actual exit1506.181/1519.258ms and join1515.776/1519.380ms; no CPU_DONE/outer containment, parent heartbeat maxgap96.872/84.268ms. Actual PID liveness/death verified; backend signal null, no observed SIGKILL-report claim. Core type0. This supports native-op isolation planning, not CodeMode/default/compiled/Electron GREEN."
         }
       ],
-      "remaining": "Whole Worker approach rejected: native terminate fails to settle by6500ms even with zero host tools; four100ms compatibility regressions remain. No prototype production integrated. Existing process/native operation ports inventoried; new production architecture requires a new frozen independently reviewed plan."
+      "remaining": "Worker prototype rejected and not integrated. OS process preemption capability verified both OS; optional safe-default native-regex adapter, lexer and per-operation cancellation/serialization contracts still require exact freeze/cold review before implementation. No general parent CPU-preemption claim."
     },
     {
       "id": "E11",
@@ -1300,9 +1306,27 @@
       "id": "H8",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
+      "status": "integrated_focused_verified_regression_pending",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "d75ef4b541",
+        "edb8f5dd4b",
+        "2e3d1e2803",
+        "0b7a36c301",
+        "43e44e6412",
+        "d655f46a8b",
+        "87c658af0f",
+        "16830c27b2",
+        "c82062b15c",
+        "9dac901ab7",
+        "81334089ff",
+        "b1d1ad98a5",
+        "27923836e2",
+        "404d7fd26e",
+        "68b620ca4b",
+        "776ee0ba81",
+        "9630aebc2c"
+      ],
       "evidence": [
         {
           "kind": "control",
@@ -1319,9 +1343,16 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282798153",
           "source": "c647f21975158ad21e0b7e45a8d7f240eaefcdef",
           "result": "Remaining writer-after-SQL original RED both OS: real SQL barrier and active transaction assertions pass, revocation completes, target_denied absent. 0P/1F/3assertions each; composes13 valid originals per OS. Later tails not reached."
+        },
+        {
+          "kind": "integrated_focused_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43301047387",
+          "source": "33a65714297d414b12d59c773d7204c6954da461",
+          "snapshot": "1819c574bbc6d34ccc1ff46eded4e5174bfb655c",
+          "result": "50pass/0fail/303assertions per OS; all original13 tails reached. Root14 reviewed blobs equal actual hosted snapshot. Two earlier source gates38P12F and44P6F retained; pinned runtime Context annotation and explicitly composed finalizer fixture repairs independently reviewed. Core type0; integrated Server type and scoped aggregate regressions pending."
         }
       ],
-      "remaining": "Exact private CommitOptions, full-Cause preservation and failed-outcome provenance plan under independent cold review; no production source execution yet."
+      "remaining": "Focused implementation integrated and verified; Root Server typecheck and aggregate existing Session/Event/schedule + Server HTTP regression gates pending. Checkpoint/empty-Session/hook limits documented."
     },
     {
       "id": "H9",
@@ -3347,7 +3378,7 @@
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
-    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   },
   "integrated_checks": {
     "guards": {
