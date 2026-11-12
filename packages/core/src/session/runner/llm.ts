@@ -205,13 +205,14 @@ const layer = Layer.effect(
       const isLastStep =
         currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS) || (scoped !== undefined && SessionScope.exhausted(scoped))
       if (!isLastStep) yield* mcp.ready()
-      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
+      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.toolIds() : {})
       const materialized = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
       // The scope narrows what is advertised; `settle` and `authorize` refuse the rest.
-      const toolMaterialization =
-        materialized && scoped
-          ? { ...materialized, definitions: materialized.definitions.filter((tool) => scoped.scope.tools.includes(tool.name)) }
-          : materialized
+      const toolMaterialization = materialized && {
+        ...materialized,
+        definitions: materialized.definitions.filter((tool) =>
+          stepTools.advertises(tool.name) && (!scoped || scoped.scope.tools.includes(tool.name))),
+      }
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
