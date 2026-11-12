@@ -342,6 +342,7 @@
     "./review-toolkit/manifest": "./src/review-toolkit/manifest.ts",
     "./review-toolkit/noise": "./src/review-toolkit/noise.ts",
     "./review-toolkit/osv-refresh": "./src/review-toolkit/osv-refresh.ts",
+    "./review-toolkit/rustsec-refresh": "./src/review-toolkit/rustsec-refresh.ts",
     "./review-toolkit/probe": "./src/review-toolkit/probe.ts",
     "./review-toolkit/release-evidence": "./src/review-toolkit/release-evidence.ts",
     "./review-toolkit/sarif": "./src/review-toolkit/sarif.ts",

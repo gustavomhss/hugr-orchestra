@@ -28,7 +28,9 @@ describe("collectPatches", () => {
     expect(result.skipped).toEqual([])
   })
 
-  test("keeps binary and rename-only headers and reports files with no patch text", async () => {
+  test("keeps binary and rename-only headers and does not call a failed load empty", async () => {
+    const error = new Error("load failed")
+    const reported: unknown[] = []
     const result = await collectPatches({
       diffs: [
         { file: "logo.png", patch: "diff --git a/logo.png b/logo.png\nBinary files differ\n" },
@@ -38,14 +40,16 @@ describe("collectPatches", () => {
       ],
       needsLoad: (diff) => diff.file === "failed.ts",
       load: async () => {
-        throw new Error("load failed")
+        throw error
       },
+      report: (cause) => reported.push(cause),
     })
     expect(result.patches).toEqual([
       "diff --git a/logo.png b/logo.png\nBinary files differ\n",
       "diff --git a/old.ts b/new.ts\nrename from old.ts\nrename to new.ts\n",
     ])
-    expect(result.skipped).toEqual(["gone.ts", "failed.ts"])
+    expect(result.skipped).toEqual(["gone.ts"])
+    expect(reported).toEqual([error])
   })
 })
 

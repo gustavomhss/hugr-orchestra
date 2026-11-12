@@ -13,6 +13,7 @@ import { golangci } from "./golangci"
 import { osv } from "./osv"
 import { syft } from "./syft"
 import { jscpd } from "./jscpd"
+import { cargoAudit } from "./cargo-audit"
 import { hadolint, shellcheck } from "./invoke"
 import { gosec } from "./gosec"
 import { govet } from "./govet"
@@ -117,6 +118,7 @@ export const current = {
     syft.pack,
     typeAware.pack,
     jscpd.pack,
+    cargoAudit.pack,
   ],
   rules: [
     {
@@ -137,6 +139,7 @@ export const current = {
     ...typeAware.rules,
     ...zizmor.rules,
     ...jscpd.rules,
+    ...cargoAudit.rules,
   ],
   overlays: [
     {

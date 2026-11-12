@@ -30,7 +30,7 @@ import { ReviewZizmorAnalyze } from "./zizmor-analyze"
 import { ReviewBuildLane } from "./build-lane"
 import { ReviewGolangci } from "./golangci"
 import { ReviewInvoke } from "./invoke"
-import { ReviewOsv } from "./osv"
+import { ReviewAdvisory } from "./advisory"
 import { ReviewSyft } from "./syft"
 import { ReviewJscpdAnalyze } from "./jscpd-analyze"
 import { ReviewGoPinned } from "./go-pinned"
@@ -42,8 +42,8 @@ export const TYPECHECK_CI = ReviewBuildLane.TYPECHECK_CI
 export const LSP_ABSENT = ReviewLspDiagnostics.ABSENT
 export const NATIVE_UNQUALIFIED = ReviewTypeAware.UNQUALIFIED
 export const GOLANGCI_ABSENT = ReviewGolangci.ABSENT
-export const OSV_DATABASE_ABSENT = ReviewOsv.DATABASE_ABSENT
-export const OSV_DATABASE_AGE = ReviewOsv.DATABASE_AGE
+export const OSV_DATABASE_ABSENT = ReviewAdvisory.DATABASE_ABSENT
+export const OSV_DATABASE_AGE = ReviewAdvisory.DATABASE_AGE
 
 // K6 analyze half (design §7.2, §8.6, plan WP 1.4): the host runs the routed packs before any model turn, each confined
 // in a scratch copy (head, and base for the new-only step), keeps every raw output as a citable artifact, normalizes it
@@ -283,7 +283,7 @@ const runPack = Effect.fnUntraced(function* (packID: string, pack: Pack | undefi
   if (pack.template === "staticcheck" || pack.template === "gosec-sarif") return yield* ReviewGoPinned.run(pack, context, confined)
   if (pack.template === "golangci-lint") return yield* ReviewGolangci.run(pack, context, confined)
   if (pack.template === "invoke") return yield* ReviewInvoke.run(pack, context, confined)
-  if (pack.template === "osv-offline") return yield* ReviewOsv.run(pack, context, confined)
+  if (pack.template === "osv-offline" || pack.template === "cargo-audit-lock-json") return yield* ReviewAdvisory.run(pack, context, confined, rules(context.catalog))
   if (pack.template === "syft-dir-json") return yield* ReviewSyft.run(pack, context, confined)
   if (pack.template === "jscpd-dir-sarif") return yield* ReviewJscpdAnalyze.run(pack, context, confined, rules(context.catalog))
   if (pack.lane === "build") return yield* ReviewBuildLane.run(pack, context, confined)

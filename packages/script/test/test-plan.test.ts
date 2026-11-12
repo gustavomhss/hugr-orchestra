@@ -55,6 +55,23 @@ describe("test shard planner", () => {
     expect(packageShards(timings, "packages/missing", "windows")).toBe(1)
   })
 
+  test("new unmeasured files contribute to the package shard count", () => {
+    const actual = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const timings = { ...actual, target: { ...actual.target, linux: 1 }, margin: 1, files: { "packages/core:linux": { "test/behavior.test.ts": 1 } }, totals: { "packages/core": { linux: 1, windows: 1 } } }
+    expect(packageShards(timings, "packages/core", "linux")).toBeGreaterThan(1)
+  })
+
+  test("a network proof reserves its declared budget without rewriting its measured time", () => {
+    const actual = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const file = "test/review-toolkit/rustsec-native-refresh.test.ts"
+    const measured = { ...actual.files["packages/core:linux"], [file]: 1 }
+    const timings = { ...actual, reserves: {}, files: { ...actual.files, "packages/core:linux": measured } }
+    const reserved = { ...timings, reserves: { "packages/core:linux": { [file]: 300 } } }
+    expect(weigh("packages/core", measured, actual.totals["packages/core"]!.linux, reserved.reserves["packages/core:linux"]).find((entry) => entry.name === file)?.weight).toBe(300)
+    expect(packageShards(reserved, "packages/core", "linux")).toBeGreaterThan(packageShards(timings, "packages/core", "linux"))
+    expect(measured[file]).toBe(1)
+  })
+
   test("relay, gates and rollback never share a lane with a bulk package", () => {
     for (const [name, host] of [["linux", "ubuntu-24.04"], ["windows", "windows-latest"]] as const) {
       const lanes = packageLanes(name, host) as { part: string; filters?: string; turbo?: boolean; relay?: boolean; repo_gates?: boolean; rollback?: boolean }[]
