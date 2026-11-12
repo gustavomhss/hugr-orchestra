@@ -238,7 +238,7 @@
       "id": "E6",
       "severity": "P2",
       "owner": "clients",
-      "status": "core_host_verified_wire_acceptance",
+      "status": "core_host_verified_api_green_pending_integration_ui",
       "runtime_reproduced": true,
       "commits": [
         "8253290d1d",
@@ -264,9 +264,19 @@
           "kind": "completed_body_disconnect_behavioral_red",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43204148939",
           "result": "Plain real HttpRouter plus production bridge fails strict5s server interruption after completed JSON body and actual peer disconnect."
+        },
+        {
+          "kind": "http_factory_and_bridge_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43209675765",
+          "result": "13pass/51assertions/1 Omni Node child; actual completed-body peer disconnect now interrupts. Same GitHub run recovered after local monitor network failure, no rerun."
+        },
+        {
+          "kind": "wire_full_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43216224161",
+          "result": "25pass/179assertions/3 Omni exerciser children. Strict generated Promise/Effect server interruption assertions unchanged; no temporary diagnostic waiver."
         }
       ],
-      "remaining": "Wire API/schema/client scoped proof exists but strict HTTP interruption remains open; Bun public factory implementation authorized after6 controls and1 behavioral RED. App/TUI consumption also remains. No final wire green claimed."
+      "remaining": "API final source/types/cold review/integration pending; App/TUI contextual execution consumption remains. Factory and wire runtime gates green. No E6 whole closure until interface consumption is implemented and validated."
     },
     {
       "id": "E7",
