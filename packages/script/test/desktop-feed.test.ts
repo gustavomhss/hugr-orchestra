@@ -37,13 +37,13 @@ const repository = "fixture/release"
 const name = "orchestra-desktop-mac-x64.zip"
 const bytes = "approved exact desktop payload"
 const sha512 = createHash("sha512").update(bytes).digest("base64")
-const local: DesktopFeed = {
+const local = {
   version,
-  files: [{ url: name, sha512, size: Buffer.byteLength(bytes) }],
+  files: [{ url: name, sha512, size: Buffer.byteLength(bytes) }] as const,
   releaseDate: "2026-11-01T00:00:00.000Z",
-}
+} satisfies DesktopFeed
 const absolute = `https://github.com/${repository}/releases/download/desktop-v${version}/${name}`
-const immutable: DesktopFeed = { ...local, files: [{ ...local.files[0], url: absolute }] }
+const immutable = { ...local, files: [{ ...local.files[0], url: absolute }] as const } satisfies DesktopFeed
 const currentFeeds = ["latest.yml", "latest-mac.yml", "latest-linux.yml"].map((name) => ({ name, feed: local }))
 const target = { version, repository, payloads: new Map([[name, { size: Buffer.byteLength(bytes), sha512 }]]) }
 const marker = (floor: FeedFloor) => `<!-- orchestra-feed-v1:${JSON.stringify(floor)} -->`
@@ -138,7 +138,7 @@ test("desktop feed API admits complete legacy state but refuses unmarked partial
   expect(() => helper.assertDesktopFeedVersion(input)).not.toThrow()
   for (const feeds of [
     currentFeeds.slice(1),
-    [...currentFeeds, currentFeeds[0]],
+    [...currentFeeds, currentFeeds[0]!],
     [...currentFeeds, { name: "unknown.yml", feed: local }],
     [...currentFeeds, { name: "latest-linux-arm64.yml", feed: { ...local, version: "0.3.7" } }],
   ])
