@@ -140,9 +140,12 @@ async function main() {
   if (!warmup.ok || warmup.value !== "ready") throw new Error("Public CodeMode warmup failed")
   await emit("WARMUP_READY")
   const slowStarted = Deferred.makeUnsafe()
-  const facts = { heartbeats: 0, slowCompleted: 0, slowInterrupted: 0, afterCalls: 0, phaseStarted: 0 }
+  const facts = {
+    heartbeats: 0, slowCompleted: 0, slowInterrupted: 0, afterCalls: 0,
+    executionStarted: 0, phaseStarted: 0, elapsedToMark: 0,
+  }
   const trace = []
-  const heartbeat = { timer: undefined }
+  const heartbeat = { timer: undefined, times: [] }
   const slow = Tool.make({
     description: "Wait interruptibly past the product deadline", input, output: Schema.String,
     run: () => Effect.gen(function* () {
@@ -156,12 +159,15 @@ async function main() {
     description: "Admit the real CPU phase", input, output: Schema.String,
     run: () => Effect.gen(function* () {
       yield* Deferred.await(slowStarted)
-      facts.phaseStarted = Date.now()
+      facts.phaseStarted = performance.now()
+      facts.elapsedToMark = facts.phaseStarted - facts.executionStarted
       heartbeat.timer = setInterval(() => {
+        const timestamp = performance.now()
         facts.heartbeats++
-        void emit("HEARTBEAT", { sequence: facts.heartbeats }).catch(() => undefined)
+        heartbeat.times.push(timestamp)
+        void emit("HEARTBEAT", { sequence: facts.heartbeats, timestamp }).catch(() => undefined)
       }, 50)
-      yield* Effect.promise(() => emit("CPU_PHASE_ADMITTED"))
+      yield* Effect.promise(() => emit("CPU_PHASE_ADMITTED", { elapsedToMark: facts.elapsedToMark }))
       return "marked"
     }),
   })
@@ -170,6 +176,7 @@ async function main() {
     run: () => Effect.sync(() => { facts.afterCalls++; return "unexpected" }),
   })
   try {
+    facts.executionStarted = performance.now()
     const result = await Effect.runPromise(CodeMode.execute({
       tools: { slow, mark, after }, limits: { timeoutMs: 1500 },
       onToolCallStart: (call) => Effect.sync(() => { trace.push(`start:${call.name}`) }),
@@ -187,8 +194,13 @@ async function main() {
       `,
     }))
     clearInterval(heartbeat.timer)
+    const resultAt = performance.now()
+    const boundaries = [facts.phaseStarted, ...heartbeat.times, resultAt]
     await emit("RESULT", {
-      result, facts: { ...facts, elapsedAfterMarkMs: Date.now() - facts.phaseStarted }, trace,
+      result, facts: {
+        ...facts, resultAt, elapsedAfterMarkMs: resultAt - facts.phaseStarted,
+        maxGapMs: boundaries.slice(1).reduce((gap, timestamp, index) => Math.max(gap, timestamp - boundaries[index]), 0),
+      }, trace,
     })
   } finally {
     clearInterval(heartbeat.timer)

@@ -70,7 +70,12 @@ function assertSetup(report: Report, cpu = false) {
   expect(report.messages.some((message) => message.type === "FIXTURE_READY")).toBe(true)
   if (cpu) {
     expect(report.messages.some((message) => message.type === "WARMUP_READY")).toBe(true)
-    expect(report.messages.some((message) => message.type === "CPU_PHASE_ADMITTED")).toBe(true)
+    const mark = report.messages.find((message) => message.type === "CPU_PHASE_ADMITTED")
+    expect(mark, "SETUP: actual mark tool must admit the CPU phase").toBeDefined()
+    const timing = Schema.decodeUnknownSync(Schema.Struct({ elapsedToMark: Schema.Number }))(mark?.payload)
+    expect(timing.elapsedToMark, "SETUP: CPU phase needs at least 750ms of the unchanged 1500ms product budget")
+      .toBeLessThan(750)
+    expect(timing.elapsedToMark).toBeGreaterThanOrEqual(0)
   }
 }
 
@@ -210,11 +215,14 @@ const assertDeadline = Effect.fn("CodeModeDeadline.assertDeadline")(function* (i
     trace: expect.arrayContaining(["start:slow", "start:mark", "end:mark:success"]),
   })
   const facts = Schema.decodeUnknownSync(Schema.Struct({
-    facts: Schema.Struct({ heartbeats: Schema.Number }),
+    facts: Schema.Struct({ heartbeats: Schema.Number, elapsedAfterMarkMs: Schema.Number, maxGapMs: Schema.Number }),
     result: Schema.Struct({ toolCalls: Schema.Array(Schema.Struct({ name: Schema.String })) }),
     trace: Schema.Array(Schema.String),
   }))(report.result)
-  expect(facts.facts.heartbeats).toBeGreaterThan(0)
+  expect(facts.facts.heartbeats).toBeGreaterThanOrEqual(3)
+  expect(facts.facts.elapsedAfterMarkMs).toBeGreaterThanOrEqual(250)
+  expect(facts.facts.elapsedAfterMarkMs).toBeLessThan(3000)
+  expect(facts.facts.maxGapMs).toBeLessThan(750)
   expect(report.result).not.toMatchObject({ result: { logs: expect.arrayContaining(["regex-completed"]) } })
   expect(report.messages.some((message) => message.type === "HEARTBEAT")).toBe(true)
   expect(facts.result.toolCalls).toHaveLength(2)
