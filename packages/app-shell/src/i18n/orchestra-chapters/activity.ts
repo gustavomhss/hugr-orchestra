@@ -1,4 +1,24 @@
 export const ACTIVITY_COPY = {
+  "orchestra.monitor.diskSource": "Source: node.fs.lstat · declared Orchestra roots",
+  "orchestra.monitor.measureDisk": "Read disk usage",
+  "orchestra.monitor.diskCount": "Declared roots: {{count}}",
+  "orchestra.monitor.bytes": "{{count}} B",
+  "orchestra.monitor.diskFailed":
+    "The disk reading failed. Previous values and their original ages remain visible. Try Read disk usage.",
+  "orchestra.monitor.diskLimit":
+    "Manual metadata walks only: up to 10,000 entries, depth 64 and a cooperative 2-second budget per root. OS I/O can take longer. Logical bytes count file lengths per path, including hardlinks. This is a reading window, not an atomic snapshot, unique space, reclaimable space or a use check. Only named roots are covered; other temporary files remain unread. The memory ceiling does not see paths.",
+  "orchestra.monitor.walkComplete": "walk complete",
+  "orchestra.monitor.walkPartial": "walk partial",
+  "orchestra.monitor.walkDetails":
+    "Latest attempt: {{bytes}} B observed across {{entries}} entries · Age {{age}} · Gaps {{issues}}. Partial observations do not replace the last complete logical reading.",
+  "orchestra.monitor.gapsLimit":
+    "Unread scopes (first 32 shown). A limit at the root includes all remaining descendants.",
+  "orchestra.monitor.diskIssue.unavailable": "unavailable",
+  "orchestra.monitor.diskIssue.symlink": "symbolic link not followed",
+  "orchestra.monitor.diskIssue.unsupported": "entry type unsupported",
+  "orchestra.monitor.diskIssue.changed": "path changed during reading",
+  "orchestra.monitor.diskIssue.limit": "walk limit reached",
+  "orchestra.monitor.diskIssue.overflow": "logical size exceeds exact numeric range",
   "orchestra.nav.monitor": "Monitor",
   "orchestra.monitor.title": "Monitor",
   "orchestra.monitor.description":
@@ -69,6 +89,26 @@ export const ACTIVITY_COPY = {
 }
 
 export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
+  "orchestra.monitor.diskSource": "Fonte: node.fs.lstat · raízes declaradas do Orchestra",
+  "orchestra.monitor.measureDisk": "Ler uso de disco",
+  "orchestra.monitor.diskCount": "Raízes declaradas: {{count}}",
+  "orchestra.monitor.bytes": "{{count}} B",
+  "orchestra.monitor.diskFailed":
+    "A leitura de disco falhou. Os valores anteriores e suas idades originais continuam visíveis. Tente Ler uso de disco.",
+  "orchestra.monitor.diskLimit":
+    "Caminhadas manuais de metadados: até 10.000 entradas, profundidade 64 e orçamento cooperativo de 2 segundos por raiz. Operações de E/S podem demorar mais. Bytes lógicos contam o tamanho dos arquivos por caminho, incluindo hardlinks. É uma janela de leitura, não um snapshot atômico, espaço único, espaço recuperável ou verificação de uso. Apenas raízes nomeadas são cobertas; outros arquivos temporários continuam não lidos. O teto de memória não vê caminhos.",
+  "orchestra.monitor.walkComplete": "caminhada completa",
+  "orchestra.monitor.walkPartial": "caminhada parcial",
+  "orchestra.monitor.walkDetails":
+    "Última tentativa: {{bytes}} B observados em {{entries}} entradas · Idade {{age}} · Lacunas {{issues}}. Observações parciais não substituem a última leitura lógica completa.",
+  "orchestra.monitor.gapsLimit":
+    "Escopos não lidos (primeiros 32). Um limite na raiz inclui todos os descendentes restantes.",
+  "orchestra.monitor.diskIssue.unavailable": "indisponível",
+  "orchestra.monitor.diskIssue.symlink": "link simbólico não seguido",
+  "orchestra.monitor.diskIssue.unsupported": "tipo de entrada sem suporte",
+  "orchestra.monitor.diskIssue.changed": "caminho mudou durante a leitura",
+  "orchestra.monitor.diskIssue.limit": "limite da caminhada atingido",
+  "orchestra.monitor.diskIssue.overflow": "tamanho lógico excede a faixa numérica exata",
   "orchestra.nav.monitor": "Monitor",
   "orchestra.monitor.title": "Monitor",
   "orchestra.monitor.description":

@@ -11,6 +11,13 @@ test.each([
     { key: "orchestra.monitor.cpuPercent", params: { value: "12.5" }, value: "12.5%" },
     { key: "orchestra.monitor.cpuWindow", params: { seconds: "2.0", age: "4 s" }, value: "2.0 s" },
     { key: "orchestra.monitor.processCount", params: { count: 3 }, value: "3" },
+    { key: "orchestra.monitor.diskCount", params: { count: 1 }, value: "1" },
+    { key: "orchestra.monitor.bytes", params: { count: 12345 }, value: "12345 B" },
+    {
+      key: "orchestra.monitor.walkDetails",
+      params: { bytes: 12345, entries: 10, age: "4 s", issues: 2 },
+      value: "12345 B",
+    },
     { key: "orchestra.monitor.registeredCount", params: { count: 3 }, value: "3" },
     { key: "orchestra.monitor.retired", params: { count: 3 }, value: "3" },
     { key: "orchestra.monitor.seconds", params: { count: 4 }, value: "4 s" },

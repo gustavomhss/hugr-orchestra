@@ -1,4 +1,5 @@
 import { For, Show } from "solid-js"
+import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
@@ -7,11 +8,20 @@ import { MxPage } from "../kit"
 import { tabs, type Tab } from "./reading"
 import { ActivityWorktrees } from "./worktrees"
 import { ActivityTrees } from "./trees"
+import { ActivityDisk } from "./disk"
 import "./activity.css"
 
 export default function ActivityPage(_props: ChapterPageProps) {
   const language = useLanguage()
   const [state, setState] = createStore({ tab: "Trees" as Tab, query: "" })
+  const diskRoot = (): ActivityMonitor.DiskRootID | undefined =>
+    state.tab === "Cache"
+      ? "cache"
+      : state.tab === "Temporary"
+        ? "temporary"
+        : state.tab === "Logs"
+          ? "logs"
+          : undefined
   return (
     <MxPage
       id="activity"
@@ -53,11 +63,14 @@ export default function ActivityPage(_props: ChapterPageProps) {
         />
       </div>
       <div id="activity-panel" role="tabpanel" aria-labelledby={`activity-tab-${tabs.indexOf(state.tab)}`} tabindex={0}>
+        <Show when={diskRoot()} keyed>
+          {(rootID) => <ActivityDisk rootID={rootID} query={state.query} />}
+        </Show>
         <Show when={state.tab === "Trees"}>
           <ActivityTrees query={state.query} />
         </Show>
         <Show
-          when={state.tab === "Worktrees" || state.tab === "Trees"}
+          when={state.tab === "Worktrees" || state.tab === "Trees" || diskRoot()}
           fallback={
             <div class="mx-empty" role="status">
               <strong>{language.t("orchestra.monitor.collectionUnavailable", { category: state.tab })}</strong>
