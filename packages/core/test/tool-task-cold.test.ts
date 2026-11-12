@@ -44,7 +44,7 @@ function fixture(source: "native" | "legacy" | "markdown", engine?: "orchestra" 
       providers: {
         "cold-task": {
           api: { type: "aisdk", package: "@ai-sdk/openai", settings: { apiKey: "test" } },
-          models: { chat: { disabled: false, capabilities: { tools: true, input: ["text"], output: ["text"] }, limit: { context: 100_000, output: 1_000 } } },
+          models: { chat: { api: { type: "aisdk", package: "@ai-sdk/openai", settings: {} }, disabled: false, capabilities: { tools: true, input: ["text"], output: ["text"] }, limit: { context: 100_000, output: 1_000 } } },
         },
       },
     }))
