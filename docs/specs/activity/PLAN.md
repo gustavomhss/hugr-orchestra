@@ -198,8 +198,8 @@ validation seam; parent closure still requires W01–W04.
 
 ## WP-W2 — authenticated registered-root API
 
-Status: W2-A complete; exact-source hosted red verified (43282200736). W2-B
-implemented and independently reviewed; package checks pass, hosted green pending.
+Status: complete; exact-source hosted red-to-green verified (43282200736 →
+43289677269), reviews and package checks passed. See worktree-http-validation.json.
 Owner: lead integration and worktree_reader source worker.
 Depends on R0 persisted internal reads and W1 frozen Schema/collector anchor. Writes: activity Protocol,
 Server handler and internal activity-worktree service, focused HTTP tests/fixture,
@@ -227,8 +227,8 @@ Writes: focused HTTP tests/fixture, unavailable anchors and generated Client.
 
 ### Task W2-B — routes, registry integration and generation
 
-Owner: lead integration and disjoint source worker; state: implemented, independent
-source/handler reviews approved, generator and package checks passed; hosted green pending.
+Owner: lead integration and disjoint source worker; state: complete, exact-source
+hosted green and independent integration review passed.
 Writes: Protocol activity group, Server activity handler/internal service and
 actual composition/regression wiring, generated Client outputs.
 
@@ -242,7 +242,7 @@ actual composition/regression wiring, generated Client outputs.
 ## WP-W3 — Worktrees manual-reading interface
 
 Status: W3-A complete; exact-source hosted red verified (43288085468), runtime
-implementation ready against the frozen contract. See WORKTREE-UI-EXECUTION.md
+candidate implemented/reviewed/typechecked; hosted green/rendered inspection pending. See WORKTREE-UI-EXECUTION.md
 and WORKTREE-UI-PREPARATION.md for separate rendered obligations.
 Owner: controller worker and lead-owned component/localization integration.
 Depends on W2 generated API and frozen W1 reading shape. Writes: activity
@@ -271,8 +271,8 @@ Writes: focused activity unit/store tests.
 
 ### Task W3-B — interface implementation and isolated verification
 
-Owner: controller worker plus lead UI integration; state: W3-A verified, ready
-against frozen Client; W2 green still gates closure and rendered HTTP acceptance.
+Owner: controller worker plus lead UI integration; state: candidate implemented,
+cold reviewed and typechecked; W2 passed, own green and rendered acceptance pending.
 Writes: disjoint activity view files; lead serializes page/localization edits.
 
 - **Axioms:** read-only inventory is registration evidence, not idle/owner evidence; partial observed bytes cannot replace the logical cell (R1/R7/R20).

@@ -1,0 +1,100 @@
+{
+  "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43289677269",
+  "snapshot": "876f74180b44cdb77caba3804de07677d77833b8",
+  "purpose": "Final exact-source W2 HTTP integration validation",
+  "verifiedSourceTrees": {
+    "server": "e504ffb90aad4a4bcb5a4389b4d91c9cdd0996ba",
+    "protocol": "896cd83f929f6af133f030d347c2e06fdbb9b9f5",
+    "client": "cc7c3fd50fd7cf86c377b257456980917e23db7c",
+    "core": "896ecacedc92ec83d74aa7ec82046ac0c24571cf",
+    "schema": "c125baa2144abcb969e3a1440b35413a7ebdf185"
+  },
+  "redBaseline": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282200736",
+  "unchangedNewAcceptanceAndFixtureSinceRed": true,
+  "legacyAssertionsUnchanged": true,
+  "legacyCompositionChange": "Provide actual registry layer and owned in-memory Database",
+  "redToGreenPerOS": 4,
+  "priorPassingOutcomesPreserved": true,
+  "jobs": [
+    {
+      "job": "test (ubuntu-24.04)",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "expects": 184,
+      "omniControl": "pass (declared: 1 test(s) in test/activity-http.test.ts)",
+      "omniSpawns": 1,
+      "delegatedSpawns": 0,
+      "tests": [
+        {
+          "name": "W05 HTTP inventory authenticates and selects only persisted git worktree roots",
+          "status": "pass"
+        },
+        {
+          "name": "W07 generated Client measures real worktrees and retains complete bytes after partial HTTP reads",
+          "status": "pass"
+        },
+        {
+          "name": "W08 registry failure is explicit HTTP failure and recovery preserves readings and server lifetime isolation",
+          "status": "pass"
+        },
+        {
+          "name": "W06 real HTTP walks coalesce, enforce capacity and reject retired incarnations before publication",
+          "status": "pass"
+        },
+        {
+          "name": "disk reads require authentication and accept only declared root ids",
+          "status": "pass"
+        },
+        {
+          "name": "activity snapshot is authenticated and independent of a project Location",
+          "status": "pass"
+        },
+        {
+          "name": "activity HTTP preserves a real native tree identity separately from PID and observation id",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "job": "test (windows-latest)",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "expects": 184,
+      "omniControl": "pass (declared: 1 test(s) in test/activity-http.test.ts)",
+      "omniSpawns": 1,
+      "delegatedSpawns": 0,
+      "tests": [
+        {
+          "name": "W05 HTTP inventory authenticates and selects only persisted git worktree roots",
+          "status": "pass"
+        },
+        {
+          "name": "W07 generated Client measures real worktrees and retains complete bytes after partial HTTP reads",
+          "status": "pass"
+        },
+        {
+          "name": "W08 registry failure is explicit HTTP failure and recovery preserves readings and server lifetime isolation",
+          "status": "pass"
+        },
+        {
+          "name": "W06 real HTTP walks coalesce, enforce capacity and reject retired incarnations before publication",
+          "status": "pass"
+        },
+        {
+          "name": "disk reads require authentication and accept only declared root ids",
+          "status": "pass"
+        },
+        {
+          "name": "activity snapshot is authenticated and independent of a project Location",
+          "status": "pass"
+        },
+        {
+          "name": "activity HTTP preserves a real native tree identity separately from PID and observation id",
+          "status": "pass"
+        }
+      ]
+    }
+  ]
+}

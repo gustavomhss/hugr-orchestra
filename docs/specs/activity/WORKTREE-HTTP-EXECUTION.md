@@ -6,7 +6,10 @@ HTTP behavior; all three older HTTP cases pass and Omni control passes with
 one real spawn per OS, zero delegated. Named outcomes and exact five-package
 trees are in worktree-http-baseline.json. W2-A is complete; W2-B implemented
 the frozen source/handler/composition seams in cab0b838ef, with cold reviews and
-local package checks passed. Hosted green remains pending. Subsequent pending-request
+local package checks passed. Hosted green 43289677269 is now verified: all seven
+cases pass on each OS, with 184 expects and passing declared Omni control (one
+real spawn, zero delegated). Exact trees and outcomes are in
+worktree-http-validation.json. W2 is complete. Subsequent pending-request
 wording is historical preparation, superseded by this checkpoint and final receipt.
 
 Baseline: 3bf327f497 (W1 scalar metadata correction). This is W2-A acceptance
@@ -164,8 +167,9 @@ Commit cab0b838ef implements the actual one-SELECT registry source, one Core
 monitor per composed Database/service lifetime, and the frozen handler mappings.
 Normal routes provide the registry before the existing application services;
 legacy tests provide their own in-memory Database without changing assertions.
-The new HTTP fixture still injects its observed actual monitor. No acceptance
-test, Core collector, Schema, Protocol or generated Client output changed.
+The new HTTP fixture still injects its observed actual monitor. No new W05–W08
+test/fixture, legacy assertion, Core collector, Schema, Protocol or generated
+Client output changed; only the necessary legacy service composition changed.
 
 Independent cold source and handler/composition reviews approved the bounded
 units. Server and Protocol bun typecheck passed. Official Client generation
@@ -185,3 +189,23 @@ The unchanged both-OS green request is active at
 /tmp/activity-worktree-http-green-ci.log (exit file with the same prefix).
 It uploaded 14 changed files over 939fa6e868 and is waiting for runner capacity
 (16 queued runs observed). Do not duplicate this scope. No green result exists yet.
+
+## Final W2 receipt
+
+Run [43289677269](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43289677269)
+passed all seven named cases on both Linux and Windows, zero skips/failures and
+184 expects per OS. W05–W08 turned red-to-green; all three legacy passes stayed
+green. Declared Omni control passed with one real spawn and zero delegated on
+each OS. The new acceptance tests/fixture are byte-identical to the red snapshot;
+legacy assertions are unchanged, with only owned Database/service composition added.
+
+Fetched snapshot 876f74180b44cdb77caba3804de07677d77833b8 matches Server tree
+e504ffb90aad4a4bcb5a4389b4d91c9cdd0996ba. Protocol/Client/Core/Schema trees match
+both the requested source and current packages. Exact named outcomes and source
+boundaries are in worktree-http-validation.json. Source/handler cold reviews and
+cross-layer adversarial review approved; package typechecks, official generation
+(no generated delta), formatting, diff and guards passed with the existing R0 warning.
+
+W2-A/W2-B are complete. W3 still requires its own hosted green and separate
+actual-HTTP rendered inspection. No local product test or owner app/server/database
+operation occurred; no merge, release or installation is claimed.

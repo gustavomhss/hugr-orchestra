@@ -21,8 +21,11 @@ outcomes are in worktree-http-baseline.json. W2-A is complete; W2-B now implemen
 the frozen registry source, handler and server composition (cab0b838ef).
 Independent source/handler reviews, Server/Protocol/Client typechecks, official
 Client generation (no generated delta), formatting and guards passed. Hosted
-green is active at /tmp/activity-worktree-http-green-ci.log, waiting for runners;
-no manual Worktrees row button is available yet. See
+green 43289677269 is verified: seven passes/184 expects per OS, zero skips/failures,
+declared Omni pass with one real spawn and zero delegated. Fetched Server tree
+e504ffb90aad4a4bcb5a4389b4d91c9cdd0996ba and all supporting trees match current
+source. W2 is complete; worktree-http-validation.json preserves named outcomes.
+See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
 worktree-validation.json for actual named outcomes.
 
@@ -41,6 +44,11 @@ spawns/delegation. Exact App/Client/Protocol/Schema trees and 31 named outcomes
 are in worktree-ui-baseline.json. W3-A is complete; frozen disjoint implementation
 may proceed while W2 validates. W2 green still gates W3 closure and actual-HTTP
 rendered inspection. See WORKTREE-UI-EXECUTION.md.
+W3's controller and component candidate are now implemented (5a41bd9f5a and
+2b1f6613e0), with independent controller/UI reviews approved and fixed App
+package typecheck passed. The public readonly facade is preserved while the
+internal store is mutable. No tests changed. Own hosted green and actual-HTTP
+EN/BR/narrow/keyboard/error inspection remain open before W3 closes.
 The mistaken root typecheck was stopped and a scoped App rerun passed. No local
 tests ran. Grok 4.7
 was attempted for a read-only W2 review: opencode-go produced no verdict within

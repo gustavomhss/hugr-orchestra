@@ -1,14 +1,14 @@
 # WP-W3 UI acceptance anchor
 
-This is W3-A acceptance preparation, not a working manual-reading interface.
+This record tracks W3-A acceptance and the implemented W3-B candidate; its own
+hosted green and actual-HTTP rendered validation remain pending.
 Current receipt: hosted red 43288085468 is verified against exact source. Solid
 lane passed all 17 cases; browser lane passed the three existing store cases and
 failed all eleven new controller/filter cases for the explicit unavailable anchors.
 Focused Omni control is not applicable (zero spawns/delegated). W3-A is complete;
-W3-B may author the frozen disjoint implementation. Subsequent pending-request
-wording is historical. W2 green still gates closure and actual-HTTP rendered proof.
-W1 is complete; W2's hosted red is verified and its candidate is implemented
-and independently reviewed; hosted green remains pending.
+W3-B's frozen disjoint candidate is implemented/reviewed/typechecked. Subsequent
+pending-request wording is historical. W2 green 43289677269 is now verified;
+own green and rendered proof still gate W3 closure. W1/W2 are complete.
 W3-B dispatch requires its own verified hosted red and the frozen API/Client;
 W2 integration still gates W3 closure and actual-HTTP rendered acceptance.
 PLAN.md retains the six explicit fields for WP-W3 and each task.
@@ -151,6 +151,31 @@ also match current source; all 31 named outcomes and both lane boundaries are in
 worktree-ui-baseline.json. No acceptance case or anchor changed after capture.
 The actual HTTP/DOM/rendered observations remain pending, separate from this proof.
 
-All first-wave executable red baselines now exist; first-wave dispatch readiness
-is true, with implementation in progress. This is not completion: only R0/W1
-are closed. W2 and W3 retain their independent green, review and integration gates.
+At that baseline checkpoint all first-wave executable red baselines existed and
+dispatch readiness became true, with implementation in progress. Only R0/W1 were
+closed then; later receipts record W2 green. W3 retains its own green/rendered gates.
+
+## Implemented W3 candidate
+
+Commits 5a41bd9f5a (controller) and 2b1f6613e0 (component/CSS/copy/guide) implement
+the frozen interfaces and execution decisions above. The controller's readonly
+public State remains unchanged; internal mutable store inference fixes the first
+typecheck's readonly-path setter errors without casts of the setter or oracle changes.
+Independent controller and component reviews returned APPROVE. App package
+typecheck, scoped formatting, diff and guard checks passed (the existing reviewed
+R0 migration warning remains). The eleven red cases, shared fixture, copy cases
+and old regression cases are unchanged.
+
+The component uses the captured SDK after readiness, GET-only mount/visible poll,
+per-row manual reads, monotonic ages, named source, complete/partial details and
+target-specific errors. SDK/category cleanup disposes both timers and requests.
+Copy and the user guide now describe that behavior. Current candidate App tree:
+ee64c43c5a8bcdafaca772f404578fbd97d8fd17. This is not hosted-green or rendered proof.
+No local product test ran and no owner app/server/database was touched.
+
+W2's hosted green is verified; its runtime source/supporting contracts are unchanged.
+The isolated actual-HTTP rendered gate may now inspect this W3 candidate. Preview
+launch metadata is prepared at /tmp/activity-worktree-preview-preflight.json;
+no preview process had been started when this receipt was written. Only owned
+temporary backend/frontend/browser state and fixture roots may be used. Hosted
+W3 green and every rendered step remain required before closure.
