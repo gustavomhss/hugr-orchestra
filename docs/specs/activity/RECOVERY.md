@@ -26,9 +26,12 @@ canonical Client boundary, context/instance admission, exact revisions,
 operation-scoped errors, source/age/gaps and separate actual-HTTP rendered steps.
 Independent review found and closed a source-visibility oracle omission, then
 approved preparation. A compilable unavailable controller anchor now freezes
-the generated Client/store/request/clock signatures; independent anchor review
-and App typecheck passed. Executable suite, coverage sweeps and hosted red still
-precede implementation; W3 runtime implementation is not dispatched. Grok 4.7
+the generated Client/store/request/clock signatures. W09–W12 executable cases
+and translation assertions received independent quality review and two clean
+coverage sweeps per disjoint scope after closing identified gaps. App typecheck,
+formatting and guards passed; hosted red is next. See WORKTREE-UI-EXECUTION.md.
+The mistaken root typecheck was stopped and a scoped App rerun passed. No local
+tests ran. W3 runtime implementation is not dispatched. Grok 4.7
 was attempted for a read-only W2 review: opencode-go produced no verdict within
 the bounded attempt, and OpenRouter refused for exhausted credit. Neither is
 review evidence; existing independent agent reviews remain authoritative.

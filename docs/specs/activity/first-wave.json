@@ -78,19 +78,23 @@
     },
     {
       "id": "W09",
-      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W09 (proposed; not executable yet)"
+      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W09 manual requests use owned signals, coalesce, and admit only known row IDs; additional W09 ordering/lifetime cases in the same file; rendered steps in WORKTREE-UI-PREPARATION.md pending",
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     },
     {
       "id": "W10",
-      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W10 (proposed; not executable yet)"
+      "test": "packages/app-shell/test-browser/activity-worktree-reading.test.ts :: W10 unread, complete zero and partial readings retain separate monotonic ages and named source; W10 missing and noncanonical wire revisions fail without replacing a successful inventory; rendered steps pending",
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     },
     {
       "id": "W11",
-      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W11 (proposed; not executable yet)"
+      "test": "packages/app-shell/test-browser/activity-worktree-reading.test.ts :: W11 filtering preserves opaque cross-project rows, blank owners and registered facts; rendered selection/category/empty-state steps in WORKTREE-UI-PREPARATION.md pending",
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     },
     {
       "id": "W12",
-      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W12 (proposed; not executable yet)"
+      "test": "packages/app-shell/test-browser/activity-worktree.test.ts :: W12 row failures stay per target, retries coalesce, and current failures retain facts and timestamps; activity-worktree-stale.test.ts :: W12 retired same-ID completions cannot settle a replacement row's busy or failed action; src/orchestra/chapters/activity/copy.test.ts :: W12 worktree $locale labels preserve source, row identity, unique and proof vocabulary; actual-HTTP rendered steps pending",
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red"
     }
   ],
   "wps": [
@@ -159,18 +163,22 @@
     {
       "id": "WP-W3",
       "preparationAnchor": "docs/specs/activity/WORKTREE-UI-PREPARATION.md",
-      "executionStatus": "reviewed-preparation-awaiting-exact-anchors-and-suite",
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-red",
       "covers": ["W09", "W10", "W11", "W12"],
       "writes": [
         "packages/app-shell/src/orchestra/chapters/activity",
         "packages/app-shell/src/i18n/orchestra-chapters/activity.ts",
-        "packages/app-shell/test-browser/activity-worktree.test.ts"
+        "packages/app-shell/test-browser/activity-worktree.test.ts",
+        "packages/app-shell/test-browser/activity-worktree-reading.test.ts",
+        "packages/app-shell/test-browser/activity-worktree-stale.test.ts",
+        "packages/app-shell/test-browser/activity-worktree-fixture.ts"
       ],
       "reads": [
         "packages/client/src/generated",
         "packages/client/src/generated-effect",
         "packages/schema/src/activity-monitor.ts"
-      ]
+      ],
+      "executionAnchor": "docs/specs/activity/WORKTREE-UI-EXECUTION.md"
     }
   ],
   "baseline": "d20520c2d04221b77b4fdad6785d65886559e322",

@@ -239,8 +239,9 @@ actual composition/regression wiring, generated Client outputs.
 
 ## WP-W3 — Worktrees manual-reading interface
 
-Status: acceptance preparation reviewed; not dispatched. See
-WORKTREE-UI-PREPARATION.md; exact signatures and executable suite remain pending.
+Status: exact anchors and executable acceptance reviewed/typechecked; hosted red
+pending, runtime implementation not dispatched. See WORKTREE-UI-EXECUTION.md
+and WORKTREE-UI-PREPARATION.md for separate rendered obligations.
 Owner: unassigned UI seat after anchor freeze.
 Depends on W2 generated API and frozen W1 reading shape. Writes: activity
 inventory/view helpers and tests; page and EN/BR localization integrated by lead.
@@ -255,8 +256,9 @@ Acceptance owner: W09–W12. Existing tab names/tokens/layout remain authoritati
 
 ### Task W3-A — UI acceptance and red evidence
 
-Owner: lead; state: generated Client frozen; reviewed acceptance preparation,
-exact anchors and executable cases pending. Writes: focused activity unit/store tests.
+Owner: lead; state: generated Client and exact anchors frozen; executable cases
+passed two coverage sweeps and cold quality review, hosted red pending.
+Writes: focused activity unit/store tests.
 
 - **Axioms:** Solid store replacement and request ordering need actual production updaters; projection-only tests cannot prove component requests or visual behavior (R19/R20).
 - **DoD:** map W09–W12 to named unit/store cases and explicit browser steps, obtain cold coverage review, then capture a scoped hosted App red baseline using the repository test:ci runner.
