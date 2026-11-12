@@ -147,13 +147,14 @@ function CommandPaletteView(props: {
   const [entries] = createResource(
     query,
     async (text) => {
-      setSearchFailed(false)
       try {
         const next = await props.loadItems(text)
         if (query() !== text) return held()
+        setSearchFailed(false)
         setHeld(next)
         return next
       } catch (error) {
+        if (query() !== text) return held()
         console.error(error)
         setSearchFailed(true)
         return held()
