@@ -7,38 +7,36 @@ import {
 } from "./new-session-workspace-controller"
 
 describe("new session workspace selection", () => {
-  test("uses main when the workspace bar is unavailable", () => {
+  test("preserves an explicitly selected direct workspace", () => {
     expect(
       resolveNewSessionWorktree({
-        enabled: false,
         selected: "/project/feature",
         directory: "/project/feature",
         projectWorktree: "/project",
       }),
-    ).toBe("main")
+    ).toBe("/project/feature")
   })
 
   test("derives an existing worktree from the current directory", () => {
     expect(
-      resolveNewSessionWorktree({ enabled: true, directory: "/project/feature", projectWorktree: "/project" }),
+      resolveNewSessionWorktree({ directory: "/project/feature", projectWorktree: "/project" }),
     ).toBe("/project/feature")
-    expect(resolveNewSessionWorktree({ enabled: true, directory: "/project", projectWorktree: "/project" })).toBe(
+    expect(resolveNewSessionWorktree({ directory: "/project", projectWorktree: "/project" })).toBe(
       "main",
     )
   })
 
   test("a root draft starts in the profile's preferred workspace unless the draft chose otherwise", () => {
-    const root = { enabled: true, directory: "/project", projectWorktree: "/project", preferred: "/project/feature" }
+    const root = { directory: "/project", projectWorktree: "/project", preferred: "/project/feature" }
     expect(resolveNewSessionWorktree(root)).toBe("/project/feature")
     expect(resolveNewSessionWorktree({ ...root, selected: "main" })).toBe("main")
     expect(resolveNewSessionWorktree({ ...root, selected: "create" })).toBe("create")
     expect(resolveNewSessionWorktree({ ...root, directory: "/project/other" })).toBe("/project/other")
-    expect(resolveNewSessionWorktree({ ...root, enabled: false })).toBe("main")
     expect(resolveNewSessionWorktree({ ...root, preferred: undefined })).toBe("main")
   })
 
   test("the profile default composes with the saved choice: stale, explicit pick and other servers", () => {
-    const draft = { enabled: true, directory: "/project", projectWorktree: "/project" }
+    const draft = { directory: "/project", projectWorktree: "/project" }
     const listed = { ready: true, sandboxes: ["/project/feature"], known: ["/copies/review"] }
     const preferred = (stored?: string, ready = true) => preferredSandbox({ ...listed, ready, stored })
     expect(resolveNewSessionWorktree({ ...draft, preferred: preferred("/copies/review") })).toBe("/copies/review")
