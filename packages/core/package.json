@@ -13,6 +13,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "exports": {
+    "./activity-worktree": "./src/activity-worktree.ts",
     "./activity-disk": "./src/activity-disk.ts",
     "./process-provenance": "./src/process-provenance.ts",
     "./activity-monitor": "./src/activity-monitor.ts",

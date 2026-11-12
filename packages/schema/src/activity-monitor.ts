@@ -88,3 +88,30 @@ export const DiskSnapshot = Schema.Struct({
   roots: Schema.Array(DiskRoot),
 }).annotate({ identifier: "ActivityMonitor.DiskSnapshot" })
 export interface DiskSnapshot extends Schema.Schema.Type<typeof DiskSnapshot> {}
+
+export const WorktreeRevision = Schema.String.check(Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/)).annotate({
+  identifier: "ActivityMonitor.WorktreeRevision",
+})
+export type WorktreeRevision = typeof WorktreeRevision.Type
+
+export const WorktreeRecord = Schema.Struct({
+  recordID: Schema.NonEmptyString,
+  projectID: Schema.NonEmptyString,
+  registrationID: Schema.NonEmptyString,
+  directory: Schema.NonEmptyString,
+  owner: Schema.String,
+  attempt: optional(DiskAttempt),
+  logical: optional(Schema.Struct({ bytes: NonNegativeInt, sampledAt: NonNegativeInt })),
+}).annotate({ identifier: "ActivityMonitor.WorktreeRecord" })
+export interface WorktreeRecord extends Schema.Schema.Type<typeof WorktreeRecord> {}
+
+export const WorktreeSnapshot = Schema.Struct({
+  instanceID: Schema.NonEmptyString,
+  snapshotRevision: WorktreeRevision,
+  readAt: NonNegativeInt,
+  inventoryAt: optional(NonNegativeInt),
+  source: Schema.Literal("node.fs.lstat"),
+  coverage: Schema.Literal("registered-git-worktrees"),
+  records: Schema.Array(WorktreeRecord),
+}).annotate({ identifier: "ActivityMonitor.WorktreeSnapshot" })
+export interface WorktreeSnapshot extends Schema.Schema.Type<typeof WorktreeSnapshot> {}
