@@ -179,7 +179,8 @@ export function make() {
     if (!Layer.isLayer(native.implementation)) return yield* Effect.die("Expected the concrete native registry Layer")
     // Actual native registry/profile loader/hook evaluation, with a barrier AFTER the real prompt hook returns.
     // The native descriptor exposes an erased implementation type; its real Layer exports this registry service.
-    const registry = { ...native, implementation: (native.implementation as Layer.Layer<ToolRegistry.Service>).pipe(
+    const nativeLayer = native.implementation as Layer.Layer<ToolRegistry.Service>
+    const registry = { ...native, implementation: nativeLayer.pipe(
       Layer.provide(Layer.effect(ToolSafety.RuntimeProfileLoader, Effect.gen(function* () {
         const fs = yield* FSUtil.Service
         const global = yield* Global.Service
