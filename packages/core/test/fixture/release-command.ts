@@ -231,8 +231,9 @@ if (tool === "npm") {
     const tag = resource.slice("releases/tags/".length)
     output(await operation(`release.read:${tag}`, false, () => metadata(getRelease(tag))))
   } else if (method === "PATCH" && /^releases\/\d+$/.test(resource)) {
-    const release = Object.values(state.releases).find((item) => item.id === Number(resource.split("/")[1]))
-    if (!release) fail("HTTP 404 release id")
+    const release =
+      Object.values(state.releases).find((item) => item.id === Number(resource.split("/")[1])) ??
+      fail("HTTP 404 release id")
     output(
       await operation(`release.edit:${release.tag_name}`, true, () => {
         if (input.body !== undefined) release.body = input.body
