@@ -18,6 +18,8 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 2
+      - name: Fetch the frozen installer commit
+        run: git -c credential.helper= -c 'credential.helper=!gh auth git-credential' fetch --no-tags --depth=1 origin "$SOURCE_SHA"
       - name: Require the exact successful CLI producer
         run: |
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CLI_RUN" | jq -e --arg sha "$SOURCE_SHA" --arg repo "$GITHUB_REPOSITORY" '.head_sha==$sha and .head_repository.full_name==$repo and .head_branch=="release-0.3.7" and .path==".github/workflows/release-cli.yml" and .status=="completed" and .conclusion=="success"'
