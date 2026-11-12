@@ -668,10 +668,11 @@ check("shutdown is memoized, aborts actual body reader, closes store, and no req
 
 check("producer abort reentering shutdown observes the same Promise and joined actual HTTP/store cleanup", async (t) => {
   const f = await started(t), entered = gate(), reentrant: { promise?: Promise<void> } = {}
-  f.remote.handlers.set("POST /api/meeting/segments", (_, response) => { response.writeHead(200); response.write("{"); entered.resolve() })
+  f.remote.handlers.set("GET /api/meeting", (_, response) => { response.writeHead(200); response.write("{"); entered.resolve() })
+  f.current.value = { ...f.current.value, epoch: {} }
   assert.equal(f.producer.append(segment()), "accepted")
   await entered.promise
-  const request = sends(f)[0]
+  const request = f.remote.requests.find((request) => request.method === "GET" && request.path === "/api/meeting")
   assert.ok(request); assert.equal(request.closed, false)
   f.producer.signal.addEventListener("abort", () => { reentrant.promise = f.manager.shutdown() }, { once: true })
   const outer = f.manager.shutdown()
