@@ -171,3 +171,43 @@ for (const configured of [false, true]) {
       }),
   )
 }
+
+it.live("invalid stamp types are isolated to one sealed entry without rewriting its healthy neighbor", () =>
+  Effect.gen(function* () {
+    const file = yield* storage
+    const servers = yield* network
+    const invalid = yield* Effect.promise(() =>
+      signIn({ auth: file.first, url: servers.url, metadata: servers.metadata, name: "invalid" }),
+    )
+    yield* Effect.promise(() =>
+      signIn({ auth: file.second, url: servers.url, metadata: servers.metadata, name: "healthy" }),
+    )
+    const data = yield* file.first.all()
+    const healthy = JSON.stringify(data.healthy)
+    for (const value of ["invalid", 42, {}]) {
+      for (const broken of [
+        { ...data.invalid, issuer: value },
+        { ...data.invalid, tokens: { ...data.invalid.tokens, issuer: value } },
+        { ...data.invalid, clientInfo: { ...data.invalid.clientInfo, issuer: value } },
+        { ...data.invalid, clientInfo: { ...data.invalid.clientInfo, source: value } },
+        { ...data.invalid, generation: value },
+        { ...data.invalid, staticClientBinding: value },
+      ]) {
+        yield* file.seed({ ...data, invalid: broken })
+        const before = yield* Effect.promise(() => Bun.file(file.file).text())
+        const calls = servers.calls.length
+        const result = yield* Effect.promise(() =>
+          invalid.provider.tokens().then(
+            (tokens) => tokens,
+            (error: unknown) => error,
+          ),
+        )
+        expect(result).toBeInstanceOf(Error)
+        if (result instanceof Error) expect(authStatus(result, true)).toEqual({ status: "needs_auth" })
+        expect(servers.calls).toHaveLength(calls)
+        expect(JSON.stringify(yield* file.second.get("healthy"))).toBe(healthy)
+        expect(yield* Effect.promise(() => Bun.file(file.file).text())).toBe(before)
+      }
+    }
+  }),
+)
