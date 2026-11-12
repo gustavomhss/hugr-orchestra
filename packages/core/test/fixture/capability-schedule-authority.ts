@@ -28,7 +28,7 @@ import { ScheduledTaskRunTable, ScheduledTaskTable } from "@orchestra/core/sched
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
-import { InboxHandoff } from "@orchestra/core/inbox/handoff"
+import { InboxHandoff } from "@orchestra/core/inbox"
 import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { SessionProjector } from "@orchestra/core/session/projector"
