@@ -152,6 +152,7 @@ const layer = Layer.effect(
     const global = yield* Global.Service
     const auth = yield* McpAuth.Service
     const layerScope = yield* Scope.Scope
+    const runPromise = Effect.runPromiseWith(yield* Effect.context())
     const entries = new Map<string, Entry>()
     // Sign-ins waiting for their authorization code, by server.
     type AuthFlow = {
@@ -387,7 +388,7 @@ const layer = Layer.effect(
       }
       if (!client.getServerCapabilities()?.tools) return
       client.setNotificationHandler(ToolListChangedNotificationSchema, () =>
-        Effect.runPromise(
+        runPromise(
           Effect.gen(function* () {
             if (current.client !== client) return
             const defs = yield* McpCatalog.defs(client, request)
