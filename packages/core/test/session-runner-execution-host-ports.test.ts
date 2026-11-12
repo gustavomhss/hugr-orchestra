@@ -251,7 +251,7 @@ describe("SessionRunner execution host ports", () => {
       expect(recalled).toContain("- [in_progress] ship it")
       expect(recalled).not.toContain("already done")
       const archived = (yield* sessions.messages({ sessionID })).find((message) => message.type === "synthetic")
-      expect(archived?.id).toBe("msg_engine_archive")
+      expect(archived?.id).toBe(SessionMessage.ID.make("msg_engine_archive"))
       // Asserted on the text itself: Bun 1.3's toMatchObject replaces a property an asymmetric matcher matched.
       const text = archived?.type === "synthetic" ? archived.text : undefined
       expect(text).toContain("We fixed the bug.")
