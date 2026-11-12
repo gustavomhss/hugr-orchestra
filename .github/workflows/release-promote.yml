@@ -39,7 +39,7 @@ jobs:
     timeout-minutes: 45
     environment: ${{ inputs.publish == true && 'release' || '' }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - name: Bind the cut to reviewed source and successful producers
@@ -75,7 +75,7 @@ jobs:
             --pattern VALIDATION.json --dir "$RUNNER_TEMP/validated"
           printf '%s  %s\n' "$RECEIPT_SHA256" "$RUNNER_TEMP/validated/VALIDATION.json" | sha256sum --check -
           jq -e --argjson id "$FULL_RUN_ID" '.fullRunId == $id' "$RUNNER_TEMP/validated/VALIDATION.json" >/dev/null
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.full_run }}
@@ -83,20 +83,20 @@ jobs:
           path: ${{ runner.temp }}/qualification
       - name: Require the full test scope
         run: jq -e --arg sha "$SOURCE_SHA" '.sourceSha == $sha and .packages == ""' "$RUNNER_TEMP/qualification/test-scope.json"
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.cli_run }}
           name: release-assembled
           path: ${{ runner.temp }}/validated/cli
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.desktop_run }}
           pattern: desktop-*
           merge-multiple: true
           path: ${{ runner.temp }}/validated/desktop
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.desktop_run }}
@@ -108,7 +108,7 @@ jobs:
       - name: Verify the exact bytes approved by installed-app validation
         run: |
           bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.RUNNER_TEMP+"/validated"; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:process.env.VERSION,sourceSha:process.env.SOURCE_SHA,cliRunId:Number(process.env.CLI_RUN_ID),desktopRunId:Number(process.env.DESKTOP_RUN_ID),qualificationRunId:Number(process.env.QUALIFICATION_RUN_ID)});'
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         if: inputs.publish == true
         with:
           node-version: "22"
