@@ -14,7 +14,8 @@ and Core typechecks passed; the corrected hosted request is active at
 open. W2-A now has explicit unavailable API/service anchors, generated Client
 and real HTTP acceptance W05–W08: two clean coverage reviews and independent
 quality review approved; Protocol/Server/Client typechecks and guards passed.
-The W2 hosted red request remains pending and W2-B is not dispatched. No
+The W2 hosted red request uploaded its snapshot and is waiting for runners at
+/tmp/activity-worktree-http-red-ci.log; W2-B is not dispatched. No
 functional Worktrees manual-read API/button is exposed yet. See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
 worktree-first-validation.json for actual named outcomes.

@@ -92,3 +92,35 @@ with 0 gates and the existing reviewed R0 migration-ignore warning. Hosted red
 remains pending. No W2-B worker is
 released; no owner DB migration or app/server restart occurred. The stop hook
 remains unconfigured, so review/Relay evidence is manual only.
+
+## Current hosted request
+
+Acceptance, unavailable anchors and generated Client are committed/pushed
+through 5781c6c952. The three-file Server Linux/Windows test:ci request uploaded
+its snapshot and is waiting for runner capacity (15 queued runs observed).
+It is a distinct package/purpose from the active W1 corrected validation, not
+a duplicate. Do not dispatch it again. Log: /tmp/activity-worktree-http-red-ci.log;
+exit: /tmp/activity-worktree-http-red-ci.exit. No hosted W2 result exists yet.
+Requested trees: Server 8c66263cec04327dcdb44dee11a93ff213337380;
+Protocol 896cd83f929f6af133f030d347c2e06fdbb9b9f5;
+Client cc7c3fd50fd7cf86c377b257456980917e23db7c;
+Core 896ecacedc92ec83d74aa7ec82046ac0c24571cf;
+Schema c125baa2144abcb969e3a1440b35413a7ebdf185.
+The new W05–W08 cases must fail for the explicit unavailable new behavior while
+existing activity HTTP outcomes and declared Omni control remain valid.
+A helper exit alone is not proof: inspect named hosted outcomes and exact trees.
+
+## Frozen composition placement for W2-B
+
+ActivityHandler must require the registry Service from its composing layer;
+it must not internally provide a fresh default registry and hide the fixture's
+actual decorated monitor. In src/routes.ts, provide the registry layer after
+providing handlers and before the existing serviceLayer provides Database.
+The legacy activity-http.test.ts composition supplies the actual registry layer
+and its own in-memory Database; the new fixture already supplies its separately
+composed real monitor and forwards all reads unchanged. This preserves server
+lifetime isolation and the read/query observability used by acceptance.
+The real source must call the void afterRegistryRead hook only after its actual
+single-statement SELECT and before returning those rows. The callback receives
+no data and cannot replace the authoritative result. These are frozen integration
+decisions, not an implementation or a waiver of W2's hosted-red prerequisite.
