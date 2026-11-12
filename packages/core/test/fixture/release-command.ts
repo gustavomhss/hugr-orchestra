@@ -15,6 +15,10 @@ const save = async () => {
   await rename(`${filename}.pending`, filename)
 }
 const fail = (message: string): never => {
+  if (tool === "gh" && args[0] === "api" && args.includes("--include")) {
+    const status = /HTTP (\d{3})/.exec(message)?.[1] ?? "500"
+    process.stdout.write(`HTTP/2.0 ${status} Fixture\n\n{}\n`)
+  }
   process.stderr.write(`${message}\n`)
   process.exit(1)
 }
@@ -112,6 +116,7 @@ const metadata = (release: Release) => ({
   })),
 })
 const output = (result: unknown) => {
+  if (tool === "gh" && args[0] === "api" && args.includes("--include")) process.stdout.write("HTTP/2.0 200 OK\n\n")
   const query = value("--jq")
   if (query === ".assets[].name") {
     if (!result || typeof result !== "object" || !("assets" in result) || !Array.isArray(result.assets))

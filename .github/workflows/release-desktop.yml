@@ -1,13 +1,7 @@
 name: release-desktop
 
-# Builds the prod-channel Orchestra desktop installers (macOS dmg+zip on arm64 and x64, Windows NSIS x64 and arm64, Linux
-# AppImage+deb+rpm x64) and their electron-updater feed. With publish=true it creates desktop-v<version> with the
-# installers and SHA256SUMS, then replaces the assets of desktop-latest, the fixed release prod builds read their update
-# feed from (electron-builder.config.ts). The desktop releases stay apart from the CLI's v<version> releases and are
-# never marked Latest. sign=true reads the `release` environment's secrets, signs and notarizes macOS, signs Windows
-# with Azure Artifact Signing and verifies both. sign=false builds the same installers with no identity: macOS warns on
-# first open and unsigned macOS builds only announce updates (Squirrel.Mac cannot install into an unsigned app), and
-# Windows shows SmartScreen. Linux installers are unsigned either way.
+# Builds prod-channel installers and immutable versioned-target update metadata.
+# Publishing is exclusively release-promote. sign=true preserves the release environment signing behavior.
 on:
   workflow_dispatch:
     inputs:
@@ -20,7 +14,7 @@ on:
         type: boolean
         default: false
       publish:
-        description: Create desktop-v<version> and replace the desktop-latest update feed
+        description: Deprecated; publish=true refuses. Use release-promote with approved dry-run artifacts.
         type: boolean
         default: false
 
@@ -43,18 +37,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require a stable, unreleased version to publish
+      - name: Validate build-only release inputs
         env:
           PUBLISH: ${{ inputs.publish == true }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
           if [ "$PUBLISH" = true ]; then
-            [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
-            if gh release view "desktop-v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_EXISTS: desktop-v$VERSION" >&2; exit 1; fi
-            if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/desktop-v$VERSION" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: desktop-v$VERSION" >&2; exit 1; fi
+            echo "RELEASE_BUILD_ONLY: run dry builds with publish=false, validate their original artifacts, then use release-promote." >&2
+            exit 1
           fi
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
 
   # A Windows desktop bundles its own CLI and the Linux CLIs its WSL guests run (scripts/cli-staging.ts). Bun on
   # Windows cannot cross-compile the Linux CLIs, so a Linux producer builds all three, as omni-desktop-smoke.yml does,
@@ -424,70 +416,3 @@ jobs:
           path: ${{ runner.temp }}/feed/
           if-no-files-found: error
           retention-days: 14
-
-  publish:
-    if: inputs.publish == true
-    needs: [feed]
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    environment: release
-    permissions:
-      contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      SIGNED: ${{ inputs.sign == true }}
-    steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          pattern: desktop-*
-          merge-multiple: true
-          path: dist
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: release-desktop-feed
-          path: feed
-
-      - name: Create desktop-v<version> with the installers and SHA256SUMS
-        run: |
-          set -euo pipefail
-          tag="desktop-v$VERSION"
-          # Checked again: gh release create attaches to an existing tag instead of failing.
-          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_EXISTS: $tag" >&2; exit 1; fi
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: $tag" >&2; exit 1; fi
-          {
-            echo "Download the installer for your system and check it against SHA256SUMS."
-            echo
-            echo "Windows and AppImage installs update themselves. deb and rpm installs tell you when a new version is out and link to its release page."
-            if [ "$SIGNED" != true ]; then
-              echo
-              echo "This release is not signed. On macOS, open it from System Settings > Privacy & Security > Open Anyway, or run \`xattr -dr com.apple.quarantine \"/Applications/HuGR Orchestra.app\"\`; the macOS builds tell you when a new version is out but do not install it themselves. On Windows, choose More info > Run anyway on the SmartScreen prompt."
-            fi
-          } > notes.md
-          shopt -s nullglob
-          installers=(dist/*.dmg dist/*.zip dist/*.exe dist/*.AppImage dist/*.deb dist/*.rpm)
-          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
-            --title "HuGR Orchestra $VERSION" --notes-file notes.md "${installers[@]}" feed/SHA256SUMS
-
-      - name: Replace the desktop-latest feed
-        run: |
-          set -euo pipefail
-          release=desktop-latest
-          if ! gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release create "$release" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
-              --title "HuGR Orchestra desktop update feed" \
-              --notes "The update feed installed desktop apps read. Its files are replaced on every desktop release; installers are in the desktop-v<version> releases."
-          fi
-          # Payloads first, then the feeds that name them, so a feed never names a file that is not there yet.
-          payloads=()
-          while read -r name; do
-            payloads+=("dist/$name")
-            if [ -f "dist/$name.blockmap" ]; then payloads+=("dist/$name.blockmap"); fi
-          done < <(sed -n 's/^  - url: //p' feed/latest*.yml | sort -u)
-          [ "${#payloads[@]}" -gt 0 ] || { echo "RELEASE_FEED_EMPTY" >&2; exit 1; }
-          gh release upload "$release" --repo "$GITHUB_REPOSITORY" --clobber "${payloads[@]}"
-          gh release upload "$release" --repo "$GITHUB_REPOSITORY" --clobber feed/latest*.yml
-          # Drop what an earlier release left that this feed no longer names.
-          keep=$(printf '%s\n' "${payloads[@]##*/}"; cd feed && printf '%s\n' latest*.yml)
-          gh release view "$release" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | while read -r asset; do
-            grep -qxF -- "$asset" <<<"$keep" || gh release delete-asset "$release" "$asset" --repo "$GITHUB_REPOSITORY" --yes
-          done
