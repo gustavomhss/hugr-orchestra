@@ -2,6 +2,12 @@
 
 Autorização do owner: delegar simples em quatro partes; planejar complexos antes da implementação; uma única PR. Base de implementação: `74bfb2f4474e3c8a2657af6730edbfd90504816c` (`origin/dev` no despacho). Integração: branch `audit-remediation`, worktree `orchestra-fixes`. O snapshot auditado antigo e sua evidência permanecem separados e não serão tratados como prova de falha atual sem revalidação.
 
+## Estado atual da execução
+
+A única entrega externa continua sendo a [PR draft1463](https://github.com/gustavomhss/hugr-orchestra/pull/1463), para `dev`. O ledger registra **55/65 encerrados** (54 correções novas e um controle de correção existente); **10 permanecem abertos**: E6, E10, H8, L4, L5, L9, L11, M11, M13 e T2. Consulte [remediation-status.json](remediation-status.json) para a disposição por ID e [remediation-complex-contracts.md](remediation-complex-contracts.md) para decisões, recusas e limites de prova. Esta é uma execução em andamento, sem aprovação de merge ou suíte épica verde.
+
+As quatro frentes atuais são consumo de modelos App/TUI, isolamento CodeMode, autoridade de schedules e entrega durável desktop. Evidência de setup não é RED de produto; source/typecheck/revisão estática não é runtime GREEN. O CodeMode341 teve seu gate rejeitado por travamento ordinário e somente o nosso run amplo foi cancelado, documentadamente; a reprodução original permanece separada. Contratos de store/outbox, causas e publicação de Memory foram planejados antes de qualquer implementação dependente. A canonical continua preservada.
+
 ## Fluxo e limites
 
 Quatro agentes Sol, cada um em worktree/branch privada e com arquivos de escrita exclusivos. Nenhum abre PR, faz push de branch de trabalho, altera manifest/lock ou modifica a canonical. O lead integra commits, mantém este registro e abre somente a PR agregadora para dev. Branches temporárias criadas por test:ci são infraestrutura de teste, não PRs adicionais. A exigência de uma única PR prevalece sobre a recomendação genérica de dividir PRs por tamanho; commits e revisão serão divididos por responsabilidade.
