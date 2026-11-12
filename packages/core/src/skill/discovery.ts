@@ -169,6 +169,7 @@ const layer = Layer.effect(
           const sourceRoot = path.resolve(global.cache, "skills", Bun.hash(base).toString(16))
           return yield* Effect.forEach(
             data.skills.flatMap((skill) => {
+              if (skill.version !== undefined && Buffer.byteLength(skill.version, "utf8") > MAX_VERSION_BYTES) return []
               if (!isSafeSegment(skill.name)) {
                 return []
               }
