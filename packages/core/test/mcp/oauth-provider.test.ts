@@ -6,7 +6,11 @@ import type { McpAuth } from "@orchestra/core/mcp/auth"
 const stubAuth = {} as McpAuth.Interface
 
 const makeProvider = (config: ConstructorParameters<typeof McpOAuthProvider>[2]) =>
-  new McpOAuthProvider("test-server", "https://mcp.example.com/mcp", config, { onRedirect: async () => {} }, stubAuth)
+  new McpOAuthProvider("test-server", "https://mcp.example.com/mcp", config, { onRedirect: async () => {} }, stubAuth, {
+    name: "test-server",
+    serverUrl: "https://mcp.example.com/mcp",
+    generation: "fixture",
+  })
 
 describe("McpOAuthProvider.redirectUrl", () => {
   test("defaults to 127.0.0.1:19876/mcp/oauth/callback", () => {

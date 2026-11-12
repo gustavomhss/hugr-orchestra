@@ -6,6 +6,14 @@
 - **A local server that exits or crashes** is `failed` with `Connection closed` (or the connect error), followed by `Last stderr lines:` and the last 20 lines it wrote. Use them to find why it stopped.
 - **`orchestra mcp logout <server>`** removes the stored OAuth credentials, disconnects the server and sets its status to `needs_auth`. Run `orchestra mcp auth <server>` to sign in again. Servers without OAuth are not changed.
 
+## OAuth authority changes
+
+Each remote server's stored login is bound to its resource URL and the authorization server discovered during sign-in. Older logins without that binding, or a changed authorization server, show `needs_auth`. Authenticate that server again; other servers keep their logins.
+
+Starting a new sign-in disconnects the server and clears its previous credentials. Cancelling or failing that attempt leaves it needing authentication. An earlier browser callback cannot overwrite a newer sign-in.
+
+A configured `oauth.client_id` is also bound to its authorization server. To change that ID or server, run `orchestra mcp logout <server>` and then authenticate again. Editing project config or merely starting another sign-in does not approve the change. The configured client secret stays in config and is not copied into the stored login file.
+
 ## OAuth callback port
 
 The browser sign-in for a remote server returns to `http://127.0.0.1:19876/mcp/oauth/callback`. If another program holds the port, starting the sign-in fails at once with `OAuth callback port <port> is already in use`. Close the program, or set `oauth.callback_port` (or `oauth.redirect_uri`) in the server's MCP config.

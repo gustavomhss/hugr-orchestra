@@ -33,7 +33,12 @@ function authFile(initial = "") {
                 Effect.flatMap((json) =>
                   json === undefined
                     ? Effect.fail(
-                        systemError({ _tag: "NotFound", module: "FileSystem", method: "readJson", pathOrDescriptor: file }),
+                        systemError({
+                          _tag: "NotFound",
+                          module: "FileSystem",
+                          method: "readJson",
+                          pathOrDescriptor: file,
+                        }),
                       )
                     : Effect.succeed(json),
                 ),
@@ -79,10 +84,17 @@ test("serializes concurrent auth file updates across service instances", async (
       const first = yield* authService(file.fsLayer)
       const second = yield* authService(file.fsLayer)
 
+      const binding = yield* first.checkout("posthog", "https://mcp.posthog.com/mcp")
+      yield* first.updateBinding(binding, {
+        issuer: "https://issuer.example/",
+        clientInfo: { issuer: "https://issuer.example/", source: "dynamic", clientId: "client-id" },
+      })
       yield* Effect.all(
         [
-          first.updateTokens("posthog", { accessToken: "access-token" }, "https://mcp.posthog.com/mcp"),
-          second.updateClientInfo("posthog", { clientId: "client-id" }, "https://mcp.posthog.com/mcp"),
+          first.updateBinding(binding, { tokens: { issuer: "https://issuer.example/", accessToken: "access-token" } }),
+          second.updateBinding(binding, {
+            clientInfo: { issuer: "https://issuer.example/", source: "dynamic", clientId: "client-id" },
+          }),
         ],
         { concurrency: "unbounded" },
       )
@@ -107,7 +119,12 @@ test("seals the auth file and reads a plaintext file written before encryption",
       expect(JSON.parse(file.raw())).toStartWith("enc:v1:")
       expect(file.raw()).not.toContain("legacy-token")
 
-      yield* auth.updateTokens("posthog", { accessToken: "new-token" })
+      const flow = yield* auth.begin("posthog", "https://mcp.example/posthog")
+      yield* auth.updateBinding(flow.binding, {
+        issuer: "https://issuer.example/",
+        clientInfo: { issuer: "https://issuer.example/", source: "dynamic", clientId: "client-id" },
+        tokens: { issuer: "https://issuer.example/", accessToken: "new-token" },
+      })
       expect(file.raw()).not.toContain("new-token")
       expect((yield* auth.get("posthog"))?.tokens?.accessToken).toBe("new-token")
     }),
@@ -123,7 +140,12 @@ test("moves a corrupt auth file aside instead of overwriting it", async () => {
       const auth = yield* authService(file.fsLayer)
 
       expect(yield* auth.get("posthog")).toBeUndefined()
-      yield* auth.updateTokens("linear", { accessToken: "fresh" })
+      const binding = yield* auth.checkout("linear", "https://mcp.example/linear")
+      yield* auth.updateBinding(binding, {
+        issuer: "https://issuer.example/",
+        clientInfo: { issuer: "https://issuer.example/", source: "dynamic", clientId: "client-id" },
+        tokens: { issuer: "https://issuer.example/", accessToken: "fresh" },
+      })
 
       expect([...file.aside.values()]).toEqual([corrupt])
       expect([...file.aside.keys()][0]).toMatch(/mcp-auth\.json\.corrupt-\d+$/)
@@ -143,7 +165,7 @@ test("leaves an auth file sealed under a key it cannot load in place and never o
       const auth = yield* authService(file.fsLayer)
 
       expect(yield* auth.all()).toEqual({})
-      const write = yield* Effect.exit(auth.updateTokens("linear", { accessToken: "fresh" }))
+      const write = yield* Effect.exit(auth.begin("linear", "https://mcp.example/linear"))
 
       expect(Exit.isFailure(write)).toBe(true)
       expect(file.raw()).toBe(sealed)
