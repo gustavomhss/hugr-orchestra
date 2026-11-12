@@ -21,7 +21,7 @@ it.live("rollback discards nested projections, sequences, seals and all notifica
     yield* events.listen((event) => Effect.sync(() => { seen.push(event.type) }))
     const failure = yield* events.transact(Effect.gen(function* () {
       yield* events.publish(Changed, { id: "a", value: "one" }, {
-        commit: () => db.insert(EventSequenceTable).values({ aggregate_id: "projection", seq: 99 }).run().pipe(Effect.orDie),
+        commit: () => db.insert(EventSequenceTable).values({ aggregate_id: "projection", seq: 99 }).run().pipe(Effect.orDie, Effect.asVoid),
       })
       yield* events.transact(events.publish(Changed, { id: "a", value: "two" }))
       yield* events.publish(Local, { value: "local" })
