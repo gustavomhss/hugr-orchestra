@@ -181,7 +181,7 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160277386"
         }
       ],
-      "remaining": "Protocol/Server/Client wire and app/TUI consumption; Core ready is structural/advisory, not a lowering or network success guarantee."
+      "remaining": "Wire acceptance/HTTP fixtures and app/TUI consumption remain. Relocated tests require final hosted proof; Engine typecheck0. Core ready is structural/advisory, not lowering/network success."
     },
     {
       "id": "E7",
@@ -1206,9 +1206,13 @@
       "id": "L3",
       "severity": "P2",
       "owner": "lead",
-      "status": "source_in_progress",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "be7fbd96fd",
+        "d232818a89",
+        "2d7cf5872a"
+      ],
       "evidence": [
         {
           "kind": "controls_green",
@@ -1217,6 +1221,23 @@
         {
           "kind": "behavioral_red",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160405654"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43166399141",
+          "snapshot_sha": "1bf52bff4bb404ea9a9ecdb51be0dc0ffabed715",
+          "result": "45 pass/244 assertions/57 omni spawns per OS across five files"
+        },
+        {
+          "kind": "typecheck",
+          "exit": 0,
+          "receipt": "/tmp/orchestra-l3-source-type-final.exit"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE",
+          "source": "d232818a89"
         }
       ]
     },
@@ -1783,13 +1804,58 @@
       "id": "M9",
       "severity": "P2",
       "owner": "desktop",
-      "status": "source_clean_runtime_gate",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "932225d649a3826c7bdc961f973ed31b9d564a81",
+        "e11a8f63e9c7ab13ae523e54b5ee45c8ef2c1159",
+        "c31e3b5b43406c93bb8f3978a72c088bcba528d8",
+        "d6faad55fe1a96f8527f6f07d3c39f4d0013ca7e",
+        "f60f19ce4280b1f36e1ee247a676fb43655291f7",
+        "d96a0bc78983149151fda7b044479f9455b617f1",
+        "d157503e16f76c4386d21f34c6871a818d264ed5",
+        "4b4e057d172928e13caaf3a8607929420d84fe4c",
+        "3246ae11ee4c6881716303acb9526434008ff693",
+        "257c8bc44aebfb82cba916444218c02d83cc1bcd",
+        "488fe76a094ca260dbcf31a8faf37d241b694252",
+        "8f43bc577110bd858017bb1643f69fdfda15ce2f",
+        "41f43829f91f148e28cfd4a38fb3308cfeea3c8e",
+        "7ebe09e38fe23a371509cd7d0b89e3bb12fcf57b",
+        "e8ab184d1535886a704a6b5f9c0f5ac447d7f70c"
+      ],
       "evidence": [
         {
           "kind": "isolated_clean_red",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43161728304"
+        },
+        {
+          "kind": "isolated_clean_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43166739187",
+          "result": "1 pass/6 assertions/2 omni spawns; Bun --no-install outside repo"
+        },
+        {
+          "kind": "script_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167100416",
+          "result": "61 pass/121 assertions per OS"
+        },
+        {
+          "kind": "core_green_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167754798",
+          "result": "36 pass/277 assertions/243 omni spawns"
+        },
+        {
+          "kind": "desktop_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167964882",
+          "result": "19 pass/48 assertions/1 omni spawn per OS"
+        },
+        {
+          "kind": "seal",
+          "source": "6ebcac0f168e81b0bf6cc9cdfadc4599c5b94e87",
+          "receipt": "/tmp/audit-release-seal.json",
+          "integrated_hashes": 16,
+          "hash_mismatches": 0,
+          "typechecks": "Script6eb=0; Core53d=0, identical Core afterward; Desktopdf243=0, identical Desktop afterward",
+          "cold_review": "Rodney APPROVE plus lead verified exact receipt predicate condition"
         }
       ]
     },
@@ -1797,13 +1863,58 @@
       "id": "M10",
       "severity": "P2",
       "owner": "desktop",
-      "status": "source_clean_runtime_gate",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "932225d649a3826c7bdc961f973ed31b9d564a81",
+        "e11a8f63e9c7ab13ae523e54b5ee45c8ef2c1159",
+        "c31e3b5b43406c93bb8f3978a72c088bcba528d8",
+        "d6faad55fe1a96f8527f6f07d3c39f4d0013ca7e",
+        "f60f19ce4280b1f36e1ee247a676fb43655291f7",
+        "d96a0bc78983149151fda7b044479f9455b617f1",
+        "d157503e16f76c4386d21f34c6871a818d264ed5",
+        "4b4e057d172928e13caaf3a8607929420d84fe4c",
+        "3246ae11ee4c6881716303acb9526434008ff693",
+        "257c8bc44aebfb82cba916444218c02d83cc1bcd",
+        "488fe76a094ca260dbcf31a8faf37d241b694252",
+        "8f43bc577110bd858017bb1643f69fdfda15ce2f",
+        "41f43829f91f148e28cfd4a38fb3308cfeea3c8e",
+        "7ebe09e38fe23a371509cd7d0b89e3bb12fcf57b",
+        "e8ab184d1535886a704a6b5f9c0f5ac447d7f70c"
+      ],
       "evidence": [
         {
           "kind": "isolated_clean_red",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43161728304"
+        },
+        {
+          "kind": "isolated_clean_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43166739187",
+          "result": "1 pass/6 assertions/2 omni spawns; Bun --no-install outside repo"
+        },
+        {
+          "kind": "script_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167100416",
+          "result": "61 pass/121 assertions per OS"
+        },
+        {
+          "kind": "core_green_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167754798",
+          "result": "36 pass/277 assertions/243 omni spawns"
+        },
+        {
+          "kind": "desktop_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167964882",
+          "result": "19 pass/48 assertions/1 omni spawn per OS"
+        },
+        {
+          "kind": "seal",
+          "source": "6ebcac0f168e81b0bf6cc9cdfadc4599c5b94e87",
+          "receipt": "/tmp/audit-release-seal.json",
+          "integrated_hashes": 16,
+          "hash_mismatches": 0,
+          "typechecks": "Script6eb=0; Core53d=0, identical Core afterward; Desktopdf243=0, identical Desktop afterward",
+          "cold_review": "Rodney APPROVE plus lead verified exact receipt predicate condition"
         }
       ]
     },
@@ -2369,9 +2480,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 39,
+    "new_fixes_verified": 42,
     "already_fixed_verified": 1,
-    "remaining": 25,
+    "remaining": 22,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "1691632a77",
@@ -2422,19 +2533,20 @@
     "guards": {
       "exit": 0,
       "rules": 78,
-      "changed_paths": 183,
+      "changed_paths": 231,
       "gate": 0,
-      "warn": 0,
-      "receipt": "/tmp/orchestra-wave4-guards.exit"
+      "warn": 1,
+      "receipt": "/tmp/orchestra-wave6-guards.exit",
+      "warning_resolution": "dep-new-added: existing repo catalog drizzle-orm is required as Engine devDependency by relocated SQL integration tests; same version, one workspace lock entry; PR explains need, no ignore or approval label."
     },
     "boundaries": {
       "exit": 0,
-      "parsed_files": 5569,
-      "cross_package_edges": 5020,
+      "parsed_files": 5582,
+      "cross_package_edges": 5082,
       "ledgered": 92,
       "new": 0,
       "stale": 0,
-      "receipt": "/tmp/orchestra-wave4-boundaries.exit"
+      "receipt": "/tmp/orchestra-wave6-boundaries.exit"
     },
     "spawn_imports": {
       "exit": 0,
@@ -2451,15 +2563,25 @@
     },
     "core_typecheck": {
       "exit": 0,
-      "source": "1691632a77",
-      "receipt": "/tmp/orchestra-audit-root-core-type.exit"
+      "source": "2d7cf5872a",
+      "receipt": "/tmp/orchestra-l3-source-type-final.exit",
+      "scope": "L3 final plus prior integrated source; release Core tests separately checked in seal"
+    },
+    "engine_typecheck": {
+      "exit": 0,
+      "source": "610603b94e",
+      "receipt": "/tmp/orchestra-e6-relocation-type.exit"
     }
   },
   "next_contracts": {
     "G2": "Integrated9ec1751833; fixed with compositional SDK evidence and hoist24green, both independent approvals",
-    "E6": "Core/host source implemented; typed fix Core+Claude checks and hosted await API window, wire/UI not started",
-    "H6": "Source d358674544, Coretype0/guards0; runtime gate not dispatched due403 API limit; House source review pending",
-    "M9_M10": "Acceptance a97103c978 approved with3 isolated digest/set conflicts green; source in progress, no live release"
+    "E6": "Core/host source proved and integrated; wire tests-only ca359 fixture cold GO, controls pending. Root relocated fixture isolation retry pending; Engine type0.",
+    "H6": "cdaf source delta cold APPROVE; original three timeouts diagnosed fixture teardown/context; narrow6 queued, final runtime/type still open.",
+    "M9_M10": "Integrated e8ab184d15, all four scoped gates green, source hashes16 equal, closed.",
+    "L1": "Residual topology design cold GO after lifecycle resolutions; root tests-first next, no production GO.",
+    "M11_M13": "Startup cancellation design acceptance blocked on explicit STT/permission transport seams and cleanup semantics; outbox factual revalidation underway. No production GO.",
+    "E2": "Force-inflight behavioral RED; browser status and TUI mounted reconnect fixtures corrected, gates pending. No production GO.",
+    "T2": "Legitimate800KiB admitted-event acceptance cold GO; no size/transport policy selected."
   },
   "wave4": {
     "agents": {
