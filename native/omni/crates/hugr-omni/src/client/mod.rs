@@ -125,6 +125,21 @@ pub(crate) struct Tree {
     probe: inventory_probe::Probe,
 }
 
+/// The private inventory policy; the public API returns the original error unchanged.
+#[derive(Debug)]
+pub(crate) enum InventoryFailure {
+    Retryable(Error),
+    Terminal(Error),
+}
+
+impl InventoryFailure {
+    pub(crate) fn into_error(self) -> Error {
+        match self {
+            Self::Retryable(error) | Self::Terminal(error) => error,
+        }
+    }
+}
+
 impl Tree {
     /// Unix PTY roots: lets the held root exec, once the host's reader runs, and returns when exec
     /// succeeded or failed (the second bounded round trip of a PTY spawn). A no-op elsewhere.
@@ -201,20 +216,38 @@ impl Tree {
 
     /// The live processes `stop` would end now; `[]` once gone; `Io` if the inventory is incomplete.
     pub(crate) async fn processes(&self) -> Result<Vec<ProcEntry>, Error> {
-        self.sup.home()?;
+        self.inventory().await.map_err(InventoryFailure::into_error)
+    }
+
+    /// Classifies the actual List boundary for resource watchers without conflating failure with an empty tree.
+    pub(crate) async fn inventory(&self) -> Result<Vec<ProcEntry>, InventoryFailure> {
+        self.sup.home().map_err(InventoryFailure::Terminal)?;
         let life = *self.life.borrow();
         if life.gone {
             return Ok(Vec::new());
         }
         if life.lost {
-            return Err(self.lost());
+            return Err(InventoryFailure::Terminal(self.lost()));
+        }
+        if !self.sup.alive() {
+            return Err(InventoryFailure::Terminal(self.sup.gone()));
         }
         let id = self.id;
-        match self
+        let answer = self
             .sup
             .ask(Want::List, id, Class::Normal, |req| Msg::List { req, id })
-            .await?
-        {
+            .await;
+        // A future may be polled again after a fork: refuse before any state lock or test observation.
+        self.sup.home().map_err(InventoryFailure::Terminal)?;
+        let answer = answer.map_err(|error| {
+            // For this fixed-size List, a live generation's error was refused before send (normal admission).
+            // Every post-registration failure ends the generation; do not retry through that lost channel.
+            match self.sup.alive() {
+                true => InventoryFailure::Retryable(error),
+                false => InventoryFailure::Terminal(error),
+            }
+        })?;
+        match answer {
             Answer::Processes(list) => {
                 #[cfg(all(test, target_os = "linux"))]
                 self.probe
@@ -223,11 +256,16 @@ impl Tree {
                 Ok(list)
             }
             other => {
+                let error = self.refused("List", &other);
+                let failure = match &other {
+                    Answer::Ack(Ack::Error) if self.sup.alive() => InventoryFailure::Retryable(error),
+                    _ => InventoryFailure::Terminal(error),
+                };
                 #[cfg(all(test, target_os = "linux"))]
                 if matches!(&other, Answer::Ack(Ack::Error)) {
                     self.probe.received(inventory_probe::Receipt::Incomplete).await;
                 }
-                Err(self.refused("List", &other))
+                Err(failure)
             }
         }
     }
