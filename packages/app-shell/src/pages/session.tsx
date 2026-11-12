@@ -518,6 +518,7 @@ export default function Page() {
     newSessionWorktree: "main",
     deferRender: false,
     reviewPanelV2Rendered: false,
+    initialContentKey: undefined as string | undefined,
   })
 
   const followupOwner = { serverScopeKey: serverSDK().scope, directory: sdk().directory }
@@ -1190,8 +1191,15 @@ export default function Page() {
   // Give loaded session content a paint before the first heavy diff mount. Keep
   // the latch across tab switches so later loads do not remount the review pane.
   createEffect(() => {
-    sessionKey()
-    if (!params.id || store.reviewPanelV2Rendered || !messagesReady() || store.deferRender) return
+    const key = sessionKey()
+    if (
+      !params.id ||
+      store.reviewPanelV2Rendered ||
+      store.initialContentKey !== key ||
+      !messagesReady() ||
+      store.deferRender
+    )
+      return
     const owner = sessionOwnership.capture()
     let timer: number | undefined
     const frame = requestAnimationFrame(() => {
@@ -1972,43 +1980,52 @@ export default function Page() {
           </Match>
           <Match when={params.id}>
             <Show when={messagesReady() ? params.id : undefined} keyed fallback={<SessionLoading />}>
-              {(_id) => (
-                <MessageTimeline
-                  actions={actions}
-                  scroll={ui.scroll}
-                  onResumeScroll={resumeScroll}
-                  setScrollRef={setScrollRef}
-                  onScheduleScrollState={scheduleScrollState}
-                  onAutoScrollHandleScroll={autoScroll.handleScroll}
-                  onMarkScrollGesture={markScrollGesture}
-                  hasScrollGesture={hasScrollGesture}
-                  onUserScroll={markUserScroll}
-                  onHistoryScroll={onHistoryScroll}
-                  onAutoScrollInteraction={autoScroll.handleInteraction}
-                  shouldAnchorBottom={() =>
-                    !location.hash && !store.messageId && !ui.pendingMessage && !autoScroll.userScrolled()
-                  }
-                  centered={centered()}
-                  setContentRef={(el) => {
-                    content = el
+              {(_id) => {
+                const key = sessionKey()
+                const owner = sessionOwnership.capture()
+                return (
+                  <MessageTimeline
+                    onInitialContentRendered={() =>
+                      owner.run(() => {
+                        if (sessionKey() === key) setStore("initialContentKey", key)
+                      })
+                    }
+                    actions={actions}
+                    scroll={ui.scroll}
+                    onResumeScroll={resumeScroll}
+                    setScrollRef={setScrollRef}
+                    onScheduleScrollState={scheduleScrollState}
+                    onAutoScrollHandleScroll={autoScroll.handleScroll}
+                    onMarkScrollGesture={markScrollGesture}
+                    hasScrollGesture={hasScrollGesture}
+                    onUserScroll={markUserScroll}
+                    onHistoryScroll={onHistoryScroll}
+                    onAutoScrollInteraction={autoScroll.handleInteraction}
+                    shouldAnchorBottom={() =>
+                      !location.hash && !store.messageId && !ui.pendingMessage && !autoScroll.userScrolled()
+                    }
+                    centered={centered()}
+                    setContentRef={(el) => {
+                      content = el
 
-                    const root = scroller
-                    if (root) scheduleScrollState(root)
-                  }}
-                  userMessages={visibleUserMessages()}
-                  turnDiffs={timeline.turnDiffs}
-                  setHistoryAnchor={(handlers) => {
-                    captureHistoryAnchor = handlers.capture
-                    restoreHistoryAnchor = handlers.restore
-                  }}
-                  anchor={anchor}
-                  setRevealMessage={(fn) => (revealMessage = fn)}
-                  setScrollToEnd={(fn) => {
-                    scrollToEnd = fn
-                  }}
-                  renderExecutionEvidence={renderExecutionEvidence}
-                />
-              )}
+                      const root = scroller
+                      if (root) scheduleScrollState(root)
+                    }}
+                    userMessages={visibleUserMessages()}
+                    turnDiffs={timeline.turnDiffs}
+                    setHistoryAnchor={(handlers) => {
+                      captureHistoryAnchor = handlers.capture
+                      restoreHistoryAnchor = handlers.restore
+                    }}
+                    anchor={anchor}
+                    setRevealMessage={(fn) => (revealMessage = fn)}
+                    setScrollToEnd={(fn) => {
+                      scrollToEnd = fn
+                    }}
+                    renderExecutionEvidence={renderExecutionEvidence}
+                  />
+                )
+              }}
             </Show>
           </Match>
           <Match when={true}>
