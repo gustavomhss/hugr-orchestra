@@ -14,12 +14,16 @@
 // Memory is many files: one per seat and kind, and one per task or PR (`memberMemoryPath`), so two
 // branches that touch different units never touch the same file. A read folds the legacy single file first,
 // then every member file in sorted order.
+// New proposal decisions are projected from jointly validated immutable receipts; legacy events remain the
+// left authority when a receipt carries an already-recorded native Memory identity.
 
+import { combine } from "@atlas/kernel"
 import type { EventLog } from "@atlas/kernel"
 import { respawnFromRecord, versioned } from "@atlas/memory"
 import type { MemoryRecord, MemoryStore } from "@atlas/memory"
 import { createDurableLog, jsonlFiles, readDurableLogs } from "./durable-log.js"
 import { legacyLogPath, memberMemoryPath, membersDir } from "./layout.js"
+import { readMemoryDecisionReceipts } from "./memory-decision-receipts.js"
 
 /** What a read found — the folded store, the log it folded, and the lines the log refused. */
 export interface MemoryRead {
@@ -52,12 +56,14 @@ export function createDurableMemory(repoPath: string): DurableMemory {
       // Only `<seat>/memory/` files: a seat's `knowledge/` logs hold other records.
       const memory = files.paths.filter((path) => path.slice(dir.length + 1).split(/[\\/]/)[1] === "memory")
       const raw = readDurableLogs([legacyLogPath(repoPath, "memory"), ...memory])
+      const receipts = readMemoryDecisionReceipts(repoPath)
       // Frecency counts logged waves, which are positions in this fold. Files fold in path order, so the order the
       // records were appended in is the `seq` each append stamped; the sort is stable, so legacy and merged
       // lines (all `seq` 0, or tied) keep their file order.
-      const log: EventLog = new Map([...raw.log].sort((a, b) => a[1].seq - b[1].seq))
-      const base = { store: respawnFromRecord(log), log, rejected: raw.rejected + (files.unreadable ? 1 : 0) }
-      return raw.unreadable === true || files.unreadable === true ? { ...base, unreadable: true } : base
+      // Legacy is the left authority on duplicate native event identity, including its original seq.
+      const log: EventLog = new Map([...combine(raw.log, receipts.log)].sort((a, b) => a[1].seq - b[1].seq))
+      const base = { store: respawnFromRecord(log), log, rejected: raw.rejected + receipts.rejected + (files.unreadable ? 1 : 0) }
+      return raw.unreadable === true || files.unreadable === true || receipts.unreadable === true ? { ...base, unreadable: true } : base
     },
     append(record: MemoryRecord): void {
       // The record is versioned through `@atlas/memory` rather than event-shaped here, so the identity seam

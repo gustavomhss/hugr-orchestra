@@ -9,6 +9,8 @@ packages/app-shell/src/pages/session/orchestra-evidence-fixtures/** -text
 # Rationale and the rank effect of union ordering: `modules/atlas/.gitattributes`.
 # One pattern covers the legacy single files and the `.atlas/{project,members}/` tree.
 .atlas/**/*.jsonl merge=union
+# A joint decision is one winner per proposal, so divergent receipts require an explicit text conflict.
+.atlas/project/memory-decisions/*.jsonl merge
 # Collapsed in GitHub reviews: Memory travels with the code but is not the change under review.
 .atlas/**/*.jsonl linguist-generated=true
 # Shipped specialist skills and seat prompts are LF on every platform (F6.6); Windows checkouts must not convert them.
