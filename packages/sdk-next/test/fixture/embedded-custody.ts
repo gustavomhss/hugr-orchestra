@@ -1,11 +1,11 @@
 import { expect } from "bun:test"
 import { stat } from "node:fs/promises"
 import { Context, Deferred, Effect, Exit, Layer, Scope } from "effect"
-import { Auth } from "@orchestra/llm/route"
-import { OpenAICompatibleChat } from "@orchestra/llm/protocols"
 import { Database } from "@orchestra/core/database/database"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import type { Host } from "@orchestra/core/host"
+import { ModelV2 } from "@orchestra/core/model"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { tmpdir } from "@orchestra/core/test/fixture/tmpdir"
 import { Orchestra } from "../../src"
@@ -94,14 +94,19 @@ export function provider() {
           await server.stop(true)
         }),
     )
-    const model = OpenAICompatibleChat.route
-      .with({
-        provider: "custody-http",
-        auth: Auth.none,
-        endpoint: { baseURL: server.url.origin + "/v1" },
-        limits: { context: 20000, output: 100 },
-      })
-      .model({ id: "custody-http-model" })
+    const info = ModelV2.Info.empty(ProviderV2.ID.make("custody-http"), ModelV2.ID.make("custody-http-model"))
+    const model = yield* SessionRunnerModel.fromCatalogModel({
+      ...info,
+      api: {
+        id: info.id,
+        type: "aisdk",
+        package: "@ai-sdk/openai-compatible",
+        url: server.url.origin + "/v1",
+        settings: {},
+      },
+      capabilities: { tools: true, input: ["text"], output: ["text"] },
+      limit: { context: 20000, output: 100 },
+    })
     const contribution: Host.Contribution = {
       id: "custody-http-model",
       replacements: [[SessionRunnerModel.node, SessionRunnerModel.layerWith(() => Effect.succeed(model))]],
