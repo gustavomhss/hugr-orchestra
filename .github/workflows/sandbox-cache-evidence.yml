@@ -1,0 +1,49 @@
+name: sandbox-cache-evidence
+
+on:
+  pull_request:
+    branches: [release-0.3.7]
+    types: [opened, synchronize]
+    paths: [.github/workflows/sandbox-cache-evidence.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'sandbox-cache-evidence'
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      # A PR can read its base branch's cache; the published branch stays untouched.
+      - name: Restore the exact original cache without running repository code
+        id: original
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .turbo/cache
+          key: turbo-test-Windows-core-3-2c0f005490dde198f1e4777b5da8dacb98f57ba2-1
+          fail-on-cache-miss: true
+      - name: Inventory retained bytes
+        shell: python
+        env:
+          EXACT_HIT: ${{ steps.original.outputs.cache-hit }}
+          RESTORED_KEY: ${{ steps.original.outputs.cache-matched-key }}
+          SOURCE_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          import hashlib, json, os, pathlib
+          assert os.environ['EXACT_HIT'] == 'true', 'Exact original cache was not restored'
+          assert os.environ['RESTORED_KEY'] == 'turbo-test-Windows-core-3-2c0f005490dde198f1e4777b5da8dacb98f57ba2-1', 'Restored cache key differs from original'
+          root = pathlib.Path('.turbo/cache')
+          files = [{'path': str(p), 'bytes': p.stat().st_size, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.rglob('*')) if p.is_file()]
+          assert files, 'Original cache contains no retained files'
+          pathlib.Path('cache-inventory.json').write_text(json.dumps({'original_run': 43176744279, 'original_cache_id': 10399584323, 'restored_key': os.environ['RESTORED_KEY'], 'source_head': os.environ['SOURCE_HEAD'], 'recovery_run': os.environ['GITHUB_RUN_ID'], 'files': files}, indent=2))
+      - name: Preserve recovered cache and inventory
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sandbox-original-turbo-cache
+          path: |
+            .turbo/cache
+            cache-inventory.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
