@@ -85,3 +85,35 @@ testEffect(Layer.empty).live("remove stops children admitted during its initial 
     )))
   }),
 )
+
+// Real event callbacks may synchronously request another admission under the same parent.
+testEffect(Layer.empty).live("Created listener can await sibling creation after the durable parent guard releases", () =>
+  Effect.gen(function* () {
+    const projects = Layer.succeed(ProjectV2.Service, ProjectV2.Service.of({
+      resolve: () => Effect.succeed({ id: ProjectV2.ID.global, directory: location.directory }),
+      list: () => Effect.succeed([]), directories: () => Effect.succeed([]), commit: () => Effect.void,
+    }))
+    yield* Effect.gen(function* () {
+      const session = yield* SessionV2.Service
+      const events = yield* EventV2.Service
+      const parent = yield* session.create({ location })
+      const target = SessionV2.ID.make("ses_listener_target")
+      const sibling = SessionV2.ID.make("ses_listener_sibling")
+      let observed = false
+      yield* events.listen((event) => event.type === "session.next.created" && event.data.sessionID === target
+        ? Effect.gen(function* () {
+            expect((yield* session.get(target)).parentID).toBe(parent.id)
+            yield* session.create({ id: sibling, parentID: parent.id, location })
+            observed = true
+          }).pipe(Effect.orDie)
+        : Effect.void)
+      yield* session.create({ id: target, parentID: parent.id, location })
+      expect(observed).toBe(true)
+      expect((yield* session.get(sibling)).parentID).toBe(parent.id)
+      yield* session.remove(parent.id)
+    }).pipe(Effect.provide(AppNodeBuilder.build(
+      LayerNode.group([Database.node, EventV2.node, SessionV2.node, SessionExecution.node]),
+      [[ProjectV2.node, projects], [SessionExecution.node, SessionExecution.noopLayer]],
+    )))
+  }).pipe(Effect.timeout("5 seconds")),
+)
