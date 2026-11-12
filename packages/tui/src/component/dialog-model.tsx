@@ -27,7 +27,7 @@ export function DialogModel(props: { providerID?: string }) {
     const unavailable = (providerID: string, modelID: string) => {
       if (canonical.status === "idle") return "Model availability has not been checked"
       if (canonical.status === "loading") return "Checking model availability"
-      if (canonical.status === "error") return "Could not check model availability"
+      if (canonical.status !== "ready") return "Could not check model availability"
       const selection = canonical.response.data.selection
       const entry = canonical.response.data.models.find((item) => item.model.providerID === providerID && item.model.id === modelID)
       const reason = selection?.ref.providerID === providerID && selection.ref.id === modelID && selection.status !== "ready"

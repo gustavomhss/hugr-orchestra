@@ -210,7 +210,7 @@ test.each(["matching empty", "different model", "raw null", "raw empty"] as cons
     await fixture.context.sync.bootstrap({ fatal: false })
     if (choice === "raw null") fixture.context.local.model.variant.set(undefined)
     if (choice === "raw empty") fixture.context.local.model.variant.set("")
-    const expected = choice === "matching empty" || choice === "raw empty" ? "" : undefined
+    const expected = choice === "matching empty" || choice === "raw empty" ? Model.VariantID.make("") : undefined
     await wait(() => fixture.context.local.model.execution.read().status === "ready", "current configured/raw variant response applied")
     expect(fixture.context.local.model.execution.input().model?.variant).toBe(expected)
     fixture.prompt.set({ input: `empty variant ${choice}`, parts: [], mode: "normal" })
@@ -231,7 +231,7 @@ test("E6 TUI explicit empty CLI variant reaches the actual setter and generated 
     fixture.prompt.set({ input: "CLI empty variant", parts: [], mode: "normal" })
     fixture.prompt.submit()
     await wait(() => fixture.admissions().length === 1, "actual CLI-empty prompt reaches SDK")
-    expect(Schema.decodeUnknownSync(ModelExecution.Input)(fixture.queries().at(-1)?.body).model?.variant).toBe("")
+    expect(Schema.decodeUnknownSync(ModelExecution.Input)(fixture.queries().at(-1)?.body).model?.variant).toBe(Model.VariantID.make(""))
     expect(fixture.calls.filter((call) => call.path.endsWith("/model") && call.method === "POST").at(-1)?.body)
       .toEqual({ model: { ...ref, variant: "" } })
   } finally { await fixture.dispose() }
