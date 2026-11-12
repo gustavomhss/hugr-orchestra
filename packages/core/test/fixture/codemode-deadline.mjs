@@ -128,25 +128,25 @@ async function main() {
     return
   }
 
-  const expressions = {
-    "literal-test": "/(a+)+$/.test(subject)",
-    "dynamic-exec": 'new RegExp("(a+)+$").exec(subject)',
-    "string-match": 'subject.match("(a+)+$")',
-    "replace-callback": 'subject.replace(/(a+)+$/, (match) => "replacement")',
-    "match-all": "subject.matchAll(/(a+)+$/g)",
-  }
   const probes = { "probe-512": 512, "probe-2048": 2048, "probe-4096": 4096 }
   const passes = Object.hasOwn(probes, mode) ? probes[mode] : undefined
-  const pattern = passes === undefined ? undefined : "^" + "(?=a+$)".repeat(passes) + "a+$"
+  const pattern = "^" + "(?=a+$)".repeat(passes ?? 2048) + "a+$"
+  const expressions = {
+    "literal-test": `/${pattern}/.test(subject)`,
+    "dynamic-exec": `new RegExp(${JSON.stringify(pattern)}).exec(subject)`,
+    "string-match": `subject.match(${JSON.stringify(pattern)})`,
+    "replace-callback": `subject.replace(/${pattern}/, (match) => "replacement")`,
+    "match-all": `subject.matchAll(/${pattern}/g)`,
+  }
   const subjectBytes = 8 * 1024 * 1024
   if (!Object.hasOwn(expressions, mode) && passes === undefined) throw new Error("Unknown deadline fixture scenario")
-  if (pattern !== undefined) {
-    const patternBytes = Buffer.byteLength(pattern)
-    if (patternBytes > 40 * 1024) throw new Error("Probe pattern exceeds 40KiB")
+  const patternBytes = Buffer.byteLength(pattern)
+  if (patternBytes > 40 * 1024) throw new Error("Deadline pattern exceeds 40KiB")
+  if (passes !== undefined) {
     await emit("PROBE_INPUT", { N: passes, patternBytes, subjectBytes })
   }
-  const expression = pattern === undefined ? expressions[mode] : `new RegExp(${JSON.stringify(pattern)}).test(subject)`
-  const subject = pattern === undefined ? '"a".repeat(40) + "!"' : `"a".repeat(${subjectBytes})`
+  const expression = passes === undefined ? expressions[mode] : `new RegExp(${JSON.stringify(pattern)}).test(subject)`
+  const subject = `"a".repeat(${subjectBytes})`
   const warmup = await Effect.runPromise(CodeMode.execute({ code: 'return "ready"' }))
   if (!warmup.ok || warmup.value !== "ready") throw new Error("Public CodeMode warmup failed")
   await emit("WARMUP_READY")
