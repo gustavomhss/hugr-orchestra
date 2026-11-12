@@ -1,11 +1,10 @@
 import { Pty } from "@orchestra/core/pty"
-import { PtyProtocol } from "@orchestra/core/pty/protocol"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { Location } from "@orchestra/core/location"
-import { Effect, Queue } from "effect"
+import { Effect } from "effect"
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
-import * as Socket from "effect/unstable/socket/Socket"
+import { connectPty } from "./pty-outbox"
 import { Api } from "../api"
 import { CorsConfig, isAllowedRequestOrigin } from "../cors"
 import { ForbiddenError, PtyNotFoundError } from "@orchestra/protocol/errors"
@@ -165,57 +164,7 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
               : undefined
 
           const socket = yield* Effect.orDie(ctx.request.upgrade)
-          const write = yield* socket.writer
-          const closeAccepted = (event: Socket.CloseEvent) =>
-            socket
-              .runRaw(() => Effect.void, { onOpen: write(event).pipe(Effect.catch(() => Effect.void)) })
-              .pipe(
-                Effect.timeout("1 second"),
-                Effect.catchReason("SocketError", "SocketCloseError", () => Effect.void),
-                Effect.catch(() => Effect.void),
-              )
-
-          // Outbound frames flow through one queue drained by a single writer so replay, live
-          // output, and the close frame keep their order.
-          // TODO: Integrate graceful-shutdown socket tracking before clients migrate to this route.
-          const outbox = yield* Queue.unbounded<string | Uint8Array | Socket.CloseEvent>()
-          const attachment = yield* pty
-            .attach(ctx.params.ptyID, {
-              cursor,
-              onData: (chunk) => Queue.offerUnsafe(outbox, chunk),
-              onEnd: () => Queue.offerUnsafe(outbox, new Socket.CloseEvent(1000)),
-            })
-            .pipe(
-              Effect.catchTags({
-                "Pty.NotFoundError": () =>
-                  closeAccepted(new Socket.CloseEvent(4404, "session not found")).pipe(Effect.as(undefined)),
-              }),
-            )
-          if (!attachment) return HttpServerResponse.empty()
-
-          for (const chunk of PtyProtocol.chunks(attachment.replay)) Queue.offerUnsafe(outbox, chunk)
-          Queue.offerUnsafe(outbox, PtyProtocol.metaFrame(attachment.cursor))
-          attachment.activate()
-
-          const drain = Effect.gen(function* () {
-            while (true) {
-              const item = yield* Queue.take(outbox)
-              yield* write(item)
-              if (item instanceof Socket.CloseEvent) return
-            }
-          })
-
-          yield* Effect.race(
-            drain,
-            socket.runRaw((message) => {
-              const decoded = PtyProtocol.decodeInput(message)
-              if (decoded !== undefined) attachment.write(decoded)
-            }),
-          ).pipe(
-            Effect.catchReason("SocketError", "SocketCloseError", () => Effect.void),
-            Effect.ensuring(Effect.sync(() => attachment.detach())),
-            Effect.orDie,
-          )
+          yield* connectPty(pty, ctx.params.ptyID, cursor, socket).pipe(Effect.orDie)
           return HttpServerResponse.empty()
         }),
       )
