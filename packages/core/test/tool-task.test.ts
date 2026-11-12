@@ -1193,7 +1193,11 @@ describe("E6 literal Task and shared model authority", () => {
     // A baseline permission prompt is observed and explicitly refused before asserting the earlier eligibility boundary.
     if (first.type === "asked") {
       yield* f.permission.reply({ requestID: first.requests[0].id, reply: "reject" })
-      yield* Fiber.join(pending)
+      const refused = yield* Fiber.await(pending)
+      expect(Exit.isFailure(refused)).toBe(true)
+      if (Exit.isSuccess(refused)) return yield* Effect.die("Expected the actual permission refusal during cleanup")
+      expect(refused.cause.reasons).toHaveLength(1)
+      expect(refused.cause.reasons[0]).toMatchObject({ _tag: "Die", defect: expect.any(PermissionV2.DeclinedError) })
     }
     expect(first.type).toBe("settled")
     if (first.type !== "settled") return yield* Effect.die("Task requested permission for a nonexistent literal variant")
