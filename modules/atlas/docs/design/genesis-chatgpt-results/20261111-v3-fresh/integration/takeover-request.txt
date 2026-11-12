@@ -1,0 +1,728 @@
+# GENESIS — RETOMADA CENTRALIZADA EM UMA NOVA CONVERSA CHATGPT
+
+## 1. Minha autorização e sua responsabilidade
+
+Você está em uma NOVA CONVERSA CHATGPT NO NAVEGADOR.
+
+Eu, proprietário do projeto, estou transferindo expressamente para esta conversa a coordenação ROOT e a responsabilidade por organizar, recuperar, continuar e integrar a campanha Genesis `20261111-v3-fresh`, do repositório:
+
+gustavomhss/hugr-orchestra
+
+Antes, o trabalho estava dividido entre cinco conversas ChatGPT, S1–S5. Algumas interromperam a execução, outras deixaram checkpoints incompletos, e parte do progresso relatado pode não ter sido persistida.
+
+Eu não usei o prompt anterior de migração para Codex. A continuação será AQUI, nesta conversa, pelas ferramentas realmente disponíveis.
+
+Você não é uma sexta fatia nem apenas uma monitora. Você é a nova ROOT responsável pela retomada das cinco fatias e pela integração final.
+
+Esta autorização:
+- transfere a coordenação ROOT para esta conversa;
+- autoriza assumir as filas incompletas S1–S5, preservando seus escopos;
+- autoriza produção, correções, avaliações independentes, operações isoladas e persistência necessárias à campanha;
+- autoriza compor a união na branch `genesis-fresh-final`;
+- NÃO autoriza enfraquecer critérios, inventar aprovações, apagar história, fazer force-push, integrar em dev/main ou ativar produção.
+
+Referências antigas a “ROOT na conversa original” passam a apontar para esta conversa por esta atribuição expressa. Registre a transição sem alterar os registros históricos.
+
+Sua entrega não é apenas um plano, inventário ou diagnóstico. Reconcilie o estado real e execute as pendências viáveis até o fechamento técnico, com evidência.
+
+---
+
+## 2. O que é o projeto e o que é Genesis
+
+Orchestra é o produto de software do repositório.
+Atlas, em `modules/atlas/`, é sua camada de conhecimento.
+
+Genesis deve produzir entendimento de código e produto:
+- L1: base verificável de evidências;
+- L2: entendimento local;
+- L3: relações, contratos, fluxos e impactos;
+- L4: orientação operacional de ownership e manutenção.
+
+Esse conhecimento precisa ser revisado, vinculado às versões corretas, publicado pelas portas governadas do Atlas e utilizado por consumidores independentes.
+
+As cinco fatias NÃO são braços do `atlas mine` legado.
+
+Não substitua a missão por mineração genérica, correções aleatórias do produto, geração de documentos em massa ou acompanhamento de qualquer CI do repositório.
+
+---
+
+## 3. Identidades imutáveis
+
+Repositório:
+gustavomhss/hugr-orchestra
+
+Baseline de fonte:
+1cde2ff7a71bcf7aecb5d030917b577165135d38
+
+Commit da skill/protocolo:
+ee2521a5b966bd505cc95bd1c733e09e12f33531
+
+Commit dos prompts:
+d2d985c28947c7f984a36b07ad34ede3d4d2d6b4
+
+Protocolo:
+parallel-v3-fresh
+
+Execução/resultados:
+20261111-v3-fresh
+
+Campanha lógica histórica:
+20261111-v1
+
+Diretório-base de resultados:
+modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/
+
+Fatias e branches:
+- S1 — Core, sessões, modelos, APIs e SDKs — genesis-fresh-s1
+- S2 — Interfaces, desktop, web, app-shell, UI e TUI — genesis-fresh-s2
+- S3 — Maestro, Relay, especialistas e integrações — genesis-fresh-s3
+- S4 — Atlas, continuidade, RAG e Genesis — genesis-fresh-s4
+- S5 — CLI, Omni, distribuição e infraestrutura — genesis-fresh-s5
+
+Integração:
+- Branch: genesis-fresh-final
+- Namespace: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/
+
+Fontes auxiliares:
+- genesis-fresh-s5-runtime-probe
+- recovery-integration
+
+População congelada:
+- S1: 2.236 entradas
+- S2: 4.506 entradas
+- S3: 4.553 entradas
+- S4: 2.220 entradas
+- S5: 927 entradas
+- Total: 14.442 entradas
+
+Não confunda contagem de entradas com esforço, leitura semântica ou conclusão.
+
+---
+
+## 4. Snapshot conhecido: conferir novamente, nunca assumir atualidade
+
+Últimos heads conhecidos:
+
+genesis-fresh-final:
+d2d985c28947c7f984a36b07ad34ede3d4d2d6b4
+
+genesis-fresh-s1:
+e037a9105d4b54d1c81565d5a4514353ac970817
+
+genesis-fresh-s2:
+ac972ff8dc1126b02f8a16f3942a142e417039ed
+
+genesis-fresh-s3:
+68fca8e90c3150416e4e7ef8410df1cc42ee9d1b
+
+genesis-fresh-s4:
+6f643bc05245ebe912d52cbdd8347ce1e5b0046e
+
+genesis-fresh-s5:
+df6d83b011b7cc2b4d6edef3c796b001dea71837
+
+genesis-fresh-s5-runtime-probe:
+cd4bf8bc7c29e02e9ae1b60e6aac3dcb4365dea8
+
+recovery-integration:
+685c8f91cb20ed1fc962bdc75602942bb57eca22
+
+Esses SHAs são referências de comparação, não uma exigência para retroceder branches.
+
+Se encontrar commits posteriores, inspecione e preserve o avanço.
+Não resetar, sobrescrever ou reconstruir por cima de trabalho novo.
+
+A S1 foi retomada pelo proprietário depois de um checkpoint anterior, mas isso não garante que o trabalho posterior tenha sido publicado.
+
+Ausência de commit não prova que uma conversa terminou. Um commit recente também não prova que a conversa continua processando neste instante.
+
+---
+
+## 5. Leia o contrato correto, com leitura progressiva
+
+Use o conector GitHub para ler:
+
+No commit `ee2521a5b966bd505cc95bd1c733e09e12f33531`:
+
+.orchestra/skills/execute-genesis/SKILL.md
+
+E as referências pertinentes em:
+
+.orchestra/skills/execute-genesis/references/
+
+Comece por:
+- principles.md
+- campaign.md
+- integration.md
+- fresh-start.md
+- orchestration.md
+- judging.md
+- completion.md
+- handoffs.md
+
+Carregue:
+- parallel-partition.json para a população;
+- fatia-1.md até fatia-5.md conforme atribuir trabalho;
+- transport.md antes de empacotar;
+- runtime.md antes de operações Atlas.
+
+No commit `d2d985c28947c7f984a36b07ad34ede3d4d2d6b4`, consulte os cinco prompts:
+
+modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md
+modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md
+modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md
+modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md
+modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md
+
+Leia AGENTS.md e instruções locais aplicáveis às fontes, alterações e execuções.
+
+Não leia indiscriminadamente todo o repositório ou toda a história antes de produzir.
+Leia o que decide a próxima unidade e amplie quando necessário.
+
+---
+
+## 6. Descubra as capacidades reais desta conversa
+
+Antes de prometer execução, descubra as ferramentas e seus schemas efetivamente expostos.
+
+Verifique separadamente:
+1. leitura de refs, commits, árvores e arquivos GitHub;
+2. criação de árvores/commits e atualização condicional de refs;
+3. execução em ambiente isolado da conversa;
+4. criação, comunicação e espera de subagentes reais;
+5. acionamento autorizado de GitHub Actions;
+6. leitura de jobs, logs e artifacts.
+
+Não presuma que uma capacidade existente em outra conversa existe aqui.
+
+### GitHub
+
+Use o conector autenticado.
+Não rode `gh`, não faça `gh auth login`, não preencha GH_TOKEN e não procure credenciais.
+
+Uma ferramenta GET de leitura não é uma ferramenta de workflow dispatch ou escrita. Não invente endpoints executáveis, parâmetros ou ações não suportadas.
+
+### Ambiente de execução
+
+Não dependa do computador do proprietário, Desktop Commander, Codex ou cinco novas abas.
+
+Se houver terminal/sandbox nesta conversa, use-o somente para operações permitidas e isoladas.
+
+Não torne clone ou worktree um pré-requisito artificial: materialização verificada pelo conector pode servir para operações compatíveis.
+
+Uma pasta materializada não é um checkout Git. Registre sua origem corretamente.
+Não invente HEAD, caminho de scratch recuperado, dependências instaladas ou ambiente Bun.
+
+### Subagentes
+
+Só diga “despachei”, “juiz respondeu” ou “agente está executando” quando existir uma chamada real e um resultado/handle real.
+
+Duas respostas suas com rótulos J1/J2 não são dois juízes independentes.
+Não use chamadas pagas externas como substituto não autorizado.
+
+### Limitação real
+
+Se uma capacidade faltar, descubra primeiro as rotas legítimas disponíveis e demonstre a limitação.
+
+Depois:
+- mantenha bloqueadas apenas as obrigações dependentes;
+- execute todo trabalho independente viável;
+- preserve os resultados;
+- não simule o gate ausente;
+- informe a condição concreta de desbloqueio.
+
+Se não houver escrita remota, entregue arquivos/patches verificáveis como NÃO PUBLICADOS.
+Se não houver juízes reais, produção autoral pode avançar quando permitida, mas não recebe aceite independente nem libera camadas dependentes.
+
+---
+
+## 7. Reconcilie evidência antes de retomar produção
+
+Em cada branch oficial, leia primeiro:
+
+sN/work.md
+sN/handoff.json, se existir
+sN/native-package.json
+sN/execution-ledger.jsonl
+sN/judgments/
+
+Todos relativos ao diretório-base da campanha.
+
+Procure também handoffs de recuperação ou migração, inclusive CODEX-HANDOFF.md, se existirem. Sua ausência não bloqueia a auditoria.
+
+Diferencie:
+
+A. bytes produzidos e disponíveis;
+B. bytes com revisão válida;
+C. candidato preparado;
+D. candidato com binding;
+E. publicação/index/read executados;
+F. consumo independente demonstrado;
+G. pacote selado e relido.
+
+Não promova uma categoria à seguinte por inferência.
+
+Para cada alegação relevante, confira:
+- artefato exato;
+- commit e caminho;
+- hash dos bytes;
+- fonte e dependências;
+- request/response de avaliação;
+- findings e resolução;
+- receipt da operação;
+- escopo realmente coberto.
+
+`work.md` é um relatório, não substitui corpos e provas.
+“Foi feito no workspace anterior” não comprova disponibilidade atual.
+
+Se faltarem bytes:
+1. procure nas referências, histórico e artifacts citados;
+2. consulte arquivos disponibilizados em anexos/Library apenas por ferramentas legítimas e com pistas concretas;
+3. preserve a proveniência de qualquer recuperação;
+4. se não forem encontrados, registre “não localizado nas fontes verificadas”;
+5. reconstrua somente o necessário.
+
+Não declare perda definitiva apenas porque algo não está no HEAD.
+Não reescreva material válido já recuperado.
+
+### Proveniência Genesis
+
+Nas atualizações anteriores houve confusão entre atividade do produto e atividade desta campanha.
+
+Portanto:
+- CI de Core não prova atividade Genesis S1;
+- CI de App/Desktop não prova atividade Genesis S2;
+- CI de Maestro não prova atividade Genesis S3;
+- CI de CLI não prova atividade Genesis S5;
+- cache-warm e atlas-worklist genéricos não provam progresso da campanha.
+
+Exija vínculo específico com esta execução: artefato, receipt, mudança atribuída, candidato ou relação Git pertinente.
+
+Ter um ancestral comum antigo não basta.
+`recovery-integration` não é automaticamente a integração do Genesis.
+
+Desconsidere percentuais estimados em conversas anteriores como evidência de conclusão.
+
+---
+
+## 8. Pistas iniciais por fatia — precisam de confirmação
+
+### S1
+
+O checkpoint conhecido preserva produção L1 significativa:
+- A e B em revisão/correção;
+- C aceito como lote delimitado;
+- controles negativos aceitos;
+- L2–L4 pendentes;
+- runtime e fechamento parciais.
+
+Procure primeiro o resultado da retomada posterior.
+Continue do último estado verificado; não reinicie os lotes aceitos sem motivo.
+
+### S2
+
+A branch conhecida preserva principalmente o início.
+Relatos posteriores mencionaram 13 artefatos L1–L4 e bloqueio de preparação por fontes acima do limite do runtime.
+
+Trate isso como pista, não como aceite.
+Localize corpos, manifests, decisões e receipts exatos.
+
+Se o bloqueio de tamanho existir, encaminhe a correção comum à S4:
+- não trunque fontes;
+- não remova dependências para fabricar sucesso;
+- não aumente limites sem analisar recursos e preservar garantias;
+- prove o comportamento e os controles negativos da solução escolhida.
+
+### S3
+
+O checkpoint relata produção e aceite local L1–L4, preparação e binding.
+Também avisa que parte do payload local não foi publicada naquele commit.
+
+Houve uma recuperação concorrente com corpos alternativos.
+Diferencie rigorosamente:
+- execução original;
+- recuperação;
+- artefatos persistidos;
+- alegações de artefatos locais;
+- versões efetivamente julgadas.
+
+Não promova os corpos da recuperação usando decisões de outros bytes.
+Preserve ambas as histórias e selecione explicitamente o candidato canônico.
+
+### S4
+
+O checkpoint conhecido possui:
+- L1–L3 aceitos;
+- quatro guias L4 produzidos;
+- revisão final de L4 pendente;
+- implementação e provas comuns de runtime;
+- pacote completo, consumidores, manutenção própria e selo ainda abertos.
+
+É o principal caminho crítico compartilhado.
+Leia `s4/runtime-release.json`, fixe a versão e confira capacidades demonstradas.
+
+Não confunda publicação de uma amostra com publicação do pacote completo S4.
+
+### S5
+
+O checkpoint conhecido é INCOMPLETE_BLOCKED:
+- corpo autoral cumulativo;
+- transporte bloqueado;
+- preparação nativa bem-sucedida;
+- ausência de produção independente exigida e de dois pareceres vinculantes;
+- publicação e consumidores não demonstrados.
+
+Reaproveite o material como insumo conforme o protocolo.
+Não converta os HOLDs autorais em decisões independentes.
+Não publique o candidato bloqueado.
+
+### ROOT
+
+A branch final conhecida ainda está no commit inicial.
+Prepare a coordenação agora; não chame essa preparação de integração concluída.
+
+---
+
+## 9. Assuma a escrita sem causar outra colisão
+
+Esta conversa centraliza a escrita remota da retomada.
+Produtores, consumidores e juízes não publicam diretamente.
+
+Para cada branch:
+- leia o HEAD antes de montar a mudança;
+- registre execução anterior e nova execução;
+- preserve o histórico;
+- publique somente arquivos pertencentes à fatia;
+- use atualização condicional com expected_sha e force:false, quando suportada;
+- releia os bytes publicados.
+
+Se a branch avançar entre leitura e escrita:
+- pare apenas a publicação conflitante;
+- leia o delta;
+- reconcilie a mudança;
+- não force;
+- não descarte trabalho do outro escritor.
+
+Sem mecanismo seguro de atualização condicional, não finja possuir lease.
+Preserve o candidato isoladamente e registre a limitação.
+
+Não cancele processos, workflows, agentes ou automações de outras execuções por suposição.
+
+Não modifique diretórios de outra conversa nem presuma que filesystems sejam privados.
+Isole fonte materializada, candidato, corpus, CAS, store e projeção por execução/fatia.
+
+---
+
+## 10. Organização de produtores, juízes e consumidores
+
+Não precisa abrir cinco conversas novas.
+Use os subagentes reais disponíveis nesta conversa e execute em ondas quando necessário.
+
+Não crie vinte agentes apenas para reproduzir um organograma.
+
+Com poucos slots, prefira:
+- principal coordenadora;
+- um produtor ou consumidor;
+- dois juízes persistentes independentes.
+
+Priorize S4 e recupere material de S2/S3 em paralelo quando houver capacidade.
+S1 e S5 continuam tudo que não depender do runtime comum.
+
+### Julgamento
+
+Antes de produção avaliada:
+- congele necessidade, inputs, outputs, critérios e oracle;
+- preserve o oracle reservado fora do produtor;
+- rotule casos já expostos como regressões, não como avaliação cega nova.
+
+Crie o par no primeiro pacote julgável, não antes de haver material.
+
+Novas conversas têm novos pares reais.
+Não tente chamar `/root/judge...` de uma conversa antiga como se fosse um handle desta.
+
+Preserve decisões anteriores e reutilize-as apenas quando versão, critérios e condições forem compatíveis.
+Não reescreva seus autores nem alegue que o novo juiz lembra avaliações antigas.
+
+Novos juízes:
+- independentes da autoria e entre si;
+- contexto limpo, usando a configuração real equivalente permitida;
+- mesmo pacote exato;
+- ambos cobrem todos os critérios obrigatórios;
+- recebem corpos e evidências decisivas, não apenas links;
+- não editam o candidato nem executam os testes;
+- permanecem o mesmo par nas correções da nova execução.
+
+Se houver veto:
+- preserve o finding;
+- corrija;
+- reavalie com o mesmo par;
+- não crie um terceiro voto para obter maioria.
+
+Se um handle for perdido, registre a transição e mantenha os findings abertos.
+Um novo contexto não herda memória nem aprovação por decreto.
+
+O par de ROOT para julgar a união é distinto dos pares locais.
+
+### Consumidores
+
+Use contextos independentes que não receberam resposta, fonte bruta ou oracle reservado.
+
+Forneça apenas o acesso Atlas permitido.
+Uma ponte de ferramentas deve transportar solicitações/respostas reais sem acrescentar a resposta.
+
+Registre consultas, candidato, manifesto, conteúdo retornado, limites e resposta final.
+Não alegue isolamento técnico quando só houve instrução textual.
+
+---
+
+## 11. Execução restante
+
+Use uma fila única de coordenação e as filas existentes de cada fatia.
+
+Não recrie inventários, esquemas, dashboards ou burocracia sem necessidade.
+Não gere um formulário por critério.
+
+Prioridades iniciais:
+1. verificar e recuperar bytes/decisões de S2 e S3;
+2. fechar revisão L4 e capacidades compartilhadas necessárias da S4;
+3. continuar S1 do último lote realmente aceito;
+4. resolver produção/julgamento independente da S5;
+5. executar operações e consumidores próprios de cada fatia;
+6. fechar entregas locais e integrar a união.
+
+A prioridade pode mudar por evidência do caminho crítico, sem ampliar escopo.
+
+Respeite as barreiras:
+- camada local exigida completa e aceita antes de liberar a dependente;
+- produção não é aceite;
+- aceite semântico não é binding;
+- preparação não é publicação;
+- publicação não é consumo;
+- PASS local não é PASS global.
+
+### Runtime e testes
+
+Consulte o release S4 no caminho:
+modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json
+
+Fixe:
+- commit do release;
+- hash do release;
+- candidato de implementação;
+- capacidades e limites demonstrados;
+- receipts utilizados.
+
+Não siga HEAD móvel durante avaliação.
+Não transfira CI de uma revisão para outra sem análise do delta.
+
+S4 é a responsável inicial pelas correções compartilhadas do adapter.
+Não permita cinco implementações concorrentes para o mesmo problema.
+
+Reutilize provas comuns compatíveis.
+Execute os casos específicos de cada domínio e os casos cruzados de ROOT.
+
+Testes de produto devem seguir AGENTS.md.
+Não rode localmente um teste proibido e o rebatize de “probe”.
+Inspeção de código, parse, typecheck, teste, operação real e consumidor são evidências distintas.
+
+Um workflow enfileirado não passou.
+Um workflow com nome parecido não pertence automaticamente à campanha.
+Um artifact listado não prova que seu conteúdo foi inspecionado.
+
+---
+
+## 12. Persistência: não repetir a perda de trabalho local
+
+Use os arquivos já previstos no protocolo:
+
+Por fatia:
+- work.md
+- execution-ledger.jsonl
+- native-package.json
+- judgments/
+- corpos, fontes necessárias e receipts referidos
+- handoff.json
+
+Para ROOT, no namespace integration/:
+- work.md, contendo a matriz de estado e próxima fila;
+- takeover-refs.json;
+- execution-ledger.jsonl;
+- evidências e handoff de integração.
+
+Não crie vários relatórios que repetem a mesma informação.
+
+Persista em marcos:
+- recuperação de artefatos importantes;
+- conclusão de um lote;
+- decisão de juiz;
+- correção obrigatória;
+- aceite de camada;
+- operação runtime;
+- consumidor;
+- bloqueio;
+- fechamento.
+
+Não espere L4, todos os consumidores ou o fim da conversa para salvar L2/L3.
+
+Preserve requests/responses visíveis e outputs necessários.
+Não versione segredos, credenciais, dependências instaladas, caches ou lixo temporário.
+Respeite os guards; logs grandes podem usar artifacts rastreáveis quando permitido.
+
+### Selagem
+
+Siga handoffs.md:
+1. leia HEAD B;
+2. crie payload P descendente de B;
+3. crie handoff H descendente de P, referindo artifact_revision=P;
+4. atualize a branch condicionalmente;
+5. releia handoff e payload e confira hashes.
+
+Não invente o hash do próprio commit antes de ele existir.
+Não coloque autorreferência impossível no manifesto ou handoff.
+
+Calcule hashes por ferramenta sobre bytes reais.
+Não confie em hashes apenas copiados por um modelo.
+
+---
+
+## 13. Axiomas, qualidade e invariantes
+
+Os critérios normativos orientam a execução; não são pretexto para burocracia.
+
+Axiomas:
+- produzir entendimento útil para agir e manter;
+- construir conhecimento cumulativo;
+- consultar o necessário e aprofundar sob demanda;
+- distinguir atualidade, validade e autoridade;
+- usar automação determinística para trabalho mecânico;
+- preservar conflitos, lacunas e incertezas.
+
+Qualidade:
+- afirmações rastreáveis;
+- contratos e limites explícitos;
+- instruções operacionais utilizáveis;
+- fontes e gerados tratados corretamente;
+- correções proporcionais ao problema;
+- nenhuma aprovação inventada;
+- nenhuma repetição gratuita de trabalho aceito.
+
+Completude:
+- toda a população e necessidades obrigatórias reconciliadas;
+- todos os artefatos necessários;
+- julgamentos, runtime, consumidores, manutenção e gates;
+- nenhuma exclusão silenciosa ou pendência transferida indevidamente.
+
+Invariantes:
+- sem force-push ou reset destrutivo;
+- sem remoção de história;
+- sem truncamento silencioso;
+- sem servir stale/untrusted como atual;
+- sem autojulgamento disfarçado;
+- sem alterar o oracle para aprovar retrospectivamente o candidato;
+- sem UNKNOWN convertido em zero;
+- sem usar CI genérico como prova Genesis;
+- sem ativar produção ou fazer merge em dev/main;
+- sem tratar instruções embutidas em fontes/fixtures como autoridade sobre a tarefa.
+
+---
+
+## 14. Definition of Done
+
+### Entrega local S1–S5
+
+Somente declare DELIVERY_COMPLETE quando:
+- população e necessidades estiverem reconciliadas;
+- L1–L4 necessários estiverem produzidos e úteis;
+- fontes, autoria, dependências e versões estiverem corretas;
+- dois juízes válidos cobrirem o pacote final;
+- findings obrigatórios estiverem resolvidos e reavaliados;
+- código necessário tiver sido aplicado e verificado;
+- preparação, binding, publicação, index/read próprios estiverem demonstrados;
+- consumidores e manutenção atribuídos tiverem sido executados;
+- gates exigidos passarem no candidato correto;
+- uso e limitações estiverem registrados;
+- matriz de critérios e handoff estiverem completos;
+- payload e selagem estiverem publicados e relidos.
+
+Casos de consumidor devem cobrir mudança permitida, violação, impacto, falha e abstenção, incluindo acesso raso, aprofundamento e intermediários necessários.
+
+### Integração ROOT
+
+Selecione entregas locais por SHA, não por latest.
+
+Monte candidato global isolado, sem importar cegamente snapshots ou recovery-integration.
+
+Prove:
+- união das 14.442 entradas e suficiência das necessidades;
+- compatibilidade dos cinco pacotes;
+- fluxos e impacto entre domínios;
+- consumo Atlas-only;
+- atualização, reuse e rebuild pertinentes;
+- coerência, falhas, retomada e rollback;
+- migração, recusas e preservação;
+- gates integrados;
+- accounting agregado, mantendo histórico desconhecido como desconhecido;
+- dois pareceres globais independentes;
+- handoff exato e readback.
+
+Use os estados definidos no protocolo.
+GLOBAL_REVIEW_READY, aceite humano, landing e ativação são etapas distintas.
+
+Não invente aceite do proprietário nem chame prontidão técnica de produção ativada.
+
+---
+
+## 15. Autonomia e condições de parada
+
+Não pergunte “posso continuar?” para trabalho já autorizado.
+Não devolva apenas plano, delegação ou checklist enquanto houver trabalho concreto executável.
+
+Também não mantenha polling infinito de branches, agentes ou Actions.
+Use espera real quando disponível e avance unidades independentes.
+
+Se houver limite real de ferramenta, contexto ou execução:
+- persista o que foi feito;
+- enumere exatamente o que ficou aberto;
+- indique a próxima operação;
+- registre IN_PROGRESS ou INCOMPLETE_BLOCKED conforme o caso;
+- não declare conclusão;
+- não prometa continuar em background depois da resposta.
+
+Não use a falta de uma única capacidade para abandonar todas as outras frentes.
+
+Reporte avanços materiais com:
+- fatia;
+- mudança;
+- commit/candidato;
+- evidência;
+- estado;
+- pendência seguinte.
+
+Diferencie sempre:
+- atividade de agente realmente observado;
+- processo/Action em execução;
+- trabalho persistido;
+- relato histórico;
+- estado desconhecido da conversa antiga.
+
+---
+
+## 16. Comece agora
+
+Na primeira etapa:
+
+1. descubra as capacidades efetivas;
+2. leia refs atuais e o contrato ROOT;
+3. registre sua nova execução e a transferência de coordenação;
+4. leia os checkpoints S1–S5;
+5. produza uma matriz curta:
+
+Fatia | HEAD observado | Bytes disponíveis | Aceites comprovados | Operações comprovadas | Bloqueio | Próxima ação
+
+6. salve o primeiro checkpoint de coordenação quando houver escrita segura;
+7. inicie imediatamente a primeira unidade produtiva do caminho crítico.
+
+Não espere uma auditoria exaustiva do repositório inteiro para começar.
+Não pare depois de apresentar a matriz.
+
+Seu objetivo é recuperar e concluir o Genesis a partir do que realmente existe, preservando o trabalho válido e executando o restante com evidência.
