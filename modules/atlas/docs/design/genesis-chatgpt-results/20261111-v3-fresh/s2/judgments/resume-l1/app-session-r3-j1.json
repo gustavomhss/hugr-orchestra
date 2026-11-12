@@ -1,0 +1,99 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "complete": true,
+    "received": "Delta app-session r3, parte 1/1 completa, aplicado ao dossiê r2 previamente recebido em 18/18 partes.",
+    "missing_parts": [],
+    "integrity_limit": "Identidades, comparação integral e reconciliação são recibos externos da principal. Não recomputei hashes nem atesto bytes internos do transporte."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l1.app-session",
+      "revision": 3,
+      "body_bytes": 42047,
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "verdict": "PASS",
+      "required_l1_scope_resolved": true,
+      "scope": "Aceite semântico independente desta unidade L1, nos limites de inspeção e suporte familiar declarados.",
+      "mandatory_findings": [],
+      "resolved_findings": [
+        {
+          "id": "J1-AS-01",
+          "decision": "PASS",
+          "location": "Authority, composition and identity; Transport, stream health and canonical recovery; Assets, localization and verification evidence; R3-N01–N03; deltas das famílias authority, transport, timeline e benchmarks.",
+          "reason": "O corpo e as famílias agora preservam a ordem estabilidade/simplicidade/performance, o baseline de benchmark de produção antes de alterações de sessão/timeline e a comparação posterior, as regras de copy do session-ui e a disciplina de geração do Client. A proibição de Core/Server no runtime do Client está expressamente separada da exceção browserSafe da camada UI. Os três trechos normativos sustentam essas disposições sem alegar execução."
+        },
+        {
+          "id": "J1-AS-02",
+          "decision": "PASS",
+          "location": "Prompt admission and draft ownership, parágrafo 'The boundary makes admission precise'; E15 preservado, packages/core/src/session/input.ts:59–62,291–316.",
+          "reason": "A frase agora distingue retorno da admissão anterior para reutilização equivalente e LifecycleConflict para reutilização não equivalente. Publicação e verificação da projeção são atribuídas à criação de nova admissão. A diferença entre equivalência de retry e de projeção permanece correta."
+        }
+      ],
+      "criteria": [
+        {
+          "ids": ["GO-A1", "AC-01", "CC-7", "QS-1", "QS-5"],
+          "decision": "PASS",
+          "location": "Correções J1-AS-01–02, R3-N01–N03 e E15.",
+          "reason": "As omissões obrigatórias e a inexatidão de retry estão resolvidas; os pedidos delimitados de evidência foram atendidos."
+        },
+        {
+          "ids": ["GO-A2", "GO-I1", "CC-1"],
+          "decision": "PASS",
+          "location": "Scope, identity and depth; identidades r2/r3; mapa de 59 famílias.",
+          "reason": "Mantidas as disposições anteriores: escopo, profundidades, histórico e identidades explícitos, com nova revisão vinculada e preservação de r2."
+        },
+        {
+          "ids": ["GO-A6", "QS-6"],
+          "decision": "PASS",
+          "location": "Recibo e delta completo r3.",
+          "reason": "Correção delimitada reutiliza fontes existentes, mantém contagens e não inventa execução, custos ou resultados."
+        },
+        {
+          "ids": ["GO-I2", "GO-I7", "GO-I8"],
+          "decision": "PASS",
+          "location": "Seções de transporte, admissão, Skills e verificação; testemunhos normativos r3.",
+          "reason": "Preservadas as distinções entre implementação, autoridade prescrita, protocolo, histórico e lacunas. Contagem ou hash não é promovido a correção do produto."
+        },
+        {
+          "ids": ["AC-04", "QS-2", "QS-3", "QS-4"],
+          "decision": "PASS",
+          "location": "Dossiê r2 preservado, seção Skills e mapa de famílias com quatro atualizações.",
+          "reason": "Mantido o aceite das parcelas documentais L1 de construção real, utilidade, simplicidade e engenharia; nenhuma nova deficiência obrigatória foi introduzida pelo delta."
+        }
+      ],
+      "oracle": [
+        {
+          "id": "L1-COVERAGE",
+          "decision": "PASS",
+          "location": "Abertura e recibo.",
+          "reason": "Preservados 1.887 caminhos e profundidades 234/1.623/30, sem alegação de leitura integral."
+        },
+        {
+          "id": "L1-AUTHORITY",
+          "decision": "PASS",
+          "location": "R3-N01–N03; Authority, composition and identity; E01.",
+          "reason": "As regras locais e a fronteira Client agora têm testemunhos próprios, separados da política UI e do histórico."
+        },
+        {
+          "id": "L1-UI",
+          "decision": "PASS",
+          "location": "Três inserções normativas e quatro famílias atualizadas.",
+          "reason": "As obrigações congeladas de manutenção pertinentes à unidade estão integralmente registradas."
+        },
+        {
+          "id": "L1-SCOPE",
+          "decision": "PASS",
+          "location": "Seções funcionais e 59 famílias.",
+          "reason": "Mantido o aceite anterior das famílias significativas e dos limites explícitos de conhecimento."
+        }
+      ],
+      "oracle_outside_unit": ["L1-DESKTOP: decisão anterior preservada, sem reavaliação."],
+      "optional_suggestions": []
+    }
+  ],
+  "provenance_note": "Registrada a exposição declarada do produtor após a fixação de r3 e o recibo de ausência de alterações posteriores. Este parecer avalia os bytes vinculados e seus testemunhos; não utiliza opinião de J2 nem transforma essa divulgação em prova de independência adicional.",
+  "acceptance_limit": "PASS de conteúdo da unidade. A principal registra eventual aceite da camada inteira somente após ambos os pareceres app-r3. Runtime, consumidores, CI, publicação, L2–L4 e controles globais/S4 permanecem não aceitos por este parecer."
+}

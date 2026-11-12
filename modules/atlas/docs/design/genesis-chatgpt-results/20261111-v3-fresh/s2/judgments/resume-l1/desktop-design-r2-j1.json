@@ -1,0 +1,196 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J1",
+  "execution": "46d09d97-39a9-482a-a290-646ba1d94c99",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "desktop_web_r2": "Recebida a parte delta-1/1, aplicada ao dossiê r1 preservado.",
+    "design_tui_r2": "Recebidas 14/14 partes: header 2, body 3, evidence 4, families 5.",
+    "missing_parts": [],
+    "integrity_limit": "Hashes, tamanhos e reconciliação são recibos externos da principal. Não recomputei hashes nem atesto igualdade dos bytes internos do transporte."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l1.desktop-web",
+      "revision": 2,
+      "body_bytes": 29075,
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "verdict": "PASS",
+      "scope": "Aceite semântico desta unidade L1, com os limites de inspeção declarados.",
+      "mandatory_findings": [],
+      "resolved_findings": [
+        {
+          "id": "J1-DW-01",
+          "verdict": "PASS",
+          "location": "l1.md §1, primeiro parágrafo; delta desktop-cwd-and-readiness-publication e desktop-cwd-maintenance.",
+          "reason": "A descrição agora identifica join(app.getPath(\"userData\"), \"global\"), criação recursiva e passagem como cwd. Index.ts:431–466 confirma a implementação; a skill:18–21 confirma separadamente a orientação. O custo histórico permanece explicitamente histórico."
+        },
+        {
+          "id": "J1-DW-02",
+          "verdict": "PASS",
+          "location": "Delta desktop-readiness-cap, desktop-readiness-race e desktop-cwd-and-readiness-publication.",
+          "reason": "Owned-serve.ts:15–25,94–102,130–141 mostra 120000 ms, Promise.race entre poll de saúde, saída do primeiro filho e prazo, autenticação Basic e predicado response.ok. Index.ts:467–475 confirma a espera antes de publicar serverReady."
+        },
+        {
+          "id": "J1-DW-03",
+          "verdict": "PASS",
+          "location": "Delta desktop-native-typed-bridge, native-translations.ts:1–24; evidência r1 E25.",
+          "reason": "A ponte importa bundle e chave tipados e nativeT delega ao formatador compartilhado. A exceção do diálogo literal permanece registrada, sem alegar conformidade universal."
+        }
+      ],
+      "criteria": [
+        {
+          "ids": ["GO-A1", "AC-01", "QS-1"],
+          "verdict": "PASS",
+          "location": "l1.md §§1–9; 30 famílias; parágrafo corrigido de startup.",
+          "reason": "A omissão obrigatória foi corrigida. Propósito, comportamento, fronteiras, manutenção e lacunas têm suporte suficiente para a base L1."
+        },
+        {
+          "ids": ["GO-A2", "GO-I1", "CC-1"],
+          "verdict": "PASS",
+          "location": "Scope and evidentiary status; recibos r1/r2 e delta completo.",
+          "reason": "Escopo e identidades estão fixados; r1 permanece preservado e r2 tem identidade própria. Reutilização documental não é apresentada como prova dos controles globais de preservação."
+        },
+        {
+          "ids": ["GO-A6", "QS-6"],
+          "verdict": "PASS",
+          "location": "Recibo mecânico e delta de cinco fontes já capturadas.",
+          "reason": "A correção reutiliza fontes, separa reconciliação determinística de interpretação e não inventa testes, consumo ou custos."
+        },
+        {
+          "ids": ["GO-I2", "GO-I7", "GO-I8", "AC-04", "QS-5"],
+          "verdict": "PASS",
+          "location": "E01–E25, testemunhos adicionais e Open evidence and maintenance consequences.",
+          "reason": "Os pedidos de evidência estão resolvidos. Código, instrução, inferência, teste não executado e relato histórico permanecem distintos; fontes não recebem autoridade operacional."
+        },
+        {
+          "ids": ["CC-7", "QS-2", "QS-3", "QS-4"],
+          "verdict": "PASS",
+          "location": "§§2,4–9 e mapa de famílias.",
+          "reason": "Contratos, geração, compatibilidade e manutenção são utilizáveis no recorte; não há mecanismo especulativo ou mudança de produto para encobrir lacunas."
+        }
+      ],
+      "oracle": [
+        {
+          "id": "L1-COVERAGE",
+          "verdict": "PASS",
+          "location": "Abertura, recibo e 30 famílias.",
+          "reason": "532 caminhos com profundidades explícitas; contagem não é equiparada a leitura integral."
+        },
+        {
+          "id": "L1-AUTHORITY",
+          "verdict": "PASS",
+          "location": "§§1,9; E23–E25.",
+          "reason": "Implementação, instruções atuais, comentários e história estão corretamente atribuídos."
+        },
+        {
+          "id": "L1-DESKTOP",
+          "verdict": "PASS",
+          "location": "§§1–3,9; delta de prontidão, cwd, tradução e preload.",
+          "reason": "Os fatos obrigatórios de startup, window.api, main IPC e nativeT estão sustentados."
+        },
+        {
+          "id": "L1-UI",
+          "verdict": "PASS",
+          "location": "E25 e desktop-native-typed-bridge.",
+          "reason": "PASS restrito à fronteira desktop de localização e preservação de copy; não aprova as obrigações próprias de app/session."
+        },
+        {
+          "id": "L1-SCOPE",
+          "verdict": "PASS",
+          "location": "§§1–9 e famílias.",
+          "reason": "Famílias significativas e limites explícitos, sem garantia de backend ou runtime externo."
+        }
+      ],
+      "optional_suggestions": []
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "revision": 2,
+      "body_bytes": 36964,
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "verdict": "PASS",
+      "scope": "Aceite semântico desta unidade L1, com os limites de inspeção declarados.",
+      "mandatory_findings": [],
+      "criteria": [
+        {
+          "ids": ["GO-A1", "AC-01", "QS-1"],
+          "verdict": "PASS",
+          "location": "Terminal application; V2 session action boundary; Browser UI library; Generation, assets and source ownership.",
+          "reason": "A base explica contratos e consequências concretas. A tabela V2 corresponde ao adapter e às declarações de protocolo, incluindo ordem, mapeamentos, ausência de rollback/retry e distinção entre admissão e execução."
+        },
+        {
+          "ids": ["GO-A2", "GO-I1", "CC-1"],
+          "verdict": "PASS",
+          "location": "Scope and evidence strength; recibo; 67 famílias.",
+          "reason": "2.087 caminhos, profundidades e lacunas estão fixados. Coverage-v1 e capturas anteriores permanecem identificados; a correção tem evidência própria sem duplicar contagens."
+        },
+        {
+          "ids": ["GO-A6", "QS-6"],
+          "verdict": "PASS",
+          "location": "Scope and evidence strength; Evidence integrity and unresolved transport boundary; evidência de correção.",
+          "reason": "Recuperação exata do schema e verificações mecânicas são separadas de interpretação. O limite de importação não é confundido com ausência da fonte; não há economia ou execução inventada."
+        },
+        {
+          "ids": ["GO-I2", "GO-I7", "GO-I8", "AC-04", "QS-5"],
+          "verdict": "PASS",
+          "location": "E01–E09,E22–E28; tui-adapter; tui-session-protocol; tui-request-assertions.",
+          "reason": "Fontes demonstram construção real e conflitos relevantes. Host vazio, lifecycle incompleto, fallback de histórico, teste espelhado e Storybook com mocks são preservados como limites, sem promoção a sucesso."
+        },
+        {
+          "ids": ["CC-7", "QS-4"],
+          "verdict": "PASS",
+          "location": "Generation, assets and source ownership; E21–E24; famílias de geração e proveniência.",
+          "reason": "Formatos TUI/desktop, fontes geradoras, espelhos, compatibilidade e produtos sem produtor confirmado têm disposições distintas. Presença de assets não vira prova de geração, carregamento ou direitos."
+        },
+        {
+          "ids": ["QS-2", "QS-3"],
+          "verdict": "PASS",
+          "location": "Seções funcionais e mapa das 67 famílias.",
+          "reason": "Organização permite localizar mecanismos e manutenção sem catchall de completude ou framework novo. A aceitação de skills/índices e consumidores reais permanece posterior."
+        }
+      ],
+      "oracle": [
+        {
+          "id": "L1-COVERAGE",
+          "verdict": "PASS",
+          "location": "Scope and evidence strength; mapa completo.",
+          "reason": "185 inspecionados, 1.889 com suporte familiar e 13 apenas metadados estão explicitamente delimitados."
+        },
+        {
+          "id": "L1-AUTHORITY",
+          "verdict": "PASS",
+          "location": "Entry, ownership and lifetime; E01,E27; histórico e famílias.",
+          "reason": "A arquitetura terminal atual é separada do antigo alvo sem Core. Relatos históricos, comentários, testes e protocolos não são convertidos em execução comprovada."
+        },
+        {
+          "id": "L1-UI",
+          "verdict": "PASS",
+          "location": "Localization and desktop themes; E01,E17–E24.",
+          "reason": "PASS nas responsabilidades UI/TUI: inglês e chaves preservados, API de localização, fronteiras de dependência e geração delimitadas. Obrigações específicas de app-shell/session-ui permanecem no lote correspondente."
+        },
+        {
+          "id": "L1-SCOPE",
+          "verdict": "PASS",
+          "location": "Terminal, UI, geração, Storybook, registros e 67 famílias.",
+          "reason": "Mecanismos têm testemunhos concretos; assets repetitivos têm suporte limitado. Não identifiquei lacuna material obrigatória escondida por agrupamento."
+        }
+      ],
+      "oracle_outside_unit": ["L1-DESKTOP: avaliado na unidade desktop-web deste parecer."],
+      "optional_suggestions": [
+        {
+          "location": "Selection, local persistence and prompt admission; família tui-prompt.",
+          "suggestion": "Preferir 'guard around the awaited submitInner execution' a 'around awaited admission'. A ressalva já existente sobre ações não aguardadas torna o limite correto, mas essa expressão reduziria a possibilidade de confundir o guard com espera por toda confirmação do servidor.",
+          "blocking": false
+        }
+      ]
+    }
+  ],
+  "not_accepted_by_this_batch": [
+    "app-session: lote ainda não selado e não julgado",
+    "camada L1 global de 4.506 caminhos",
+    "L2–L4",
+    "runtime e testes efetivamente executados",
+    "consumidores reais, CI, publicação e controles globais/S4"
+  ]
+}

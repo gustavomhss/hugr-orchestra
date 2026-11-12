@@ -1,0 +1,112 @@
+{
+  "reviewer": "parallel-v3-fresh/S2/J2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "transport": {
+    "complete": true,
+    "received": "Delta r3 completo 1/1, aplicado à avaliação do dossiê r2 completo anteriormente recebido.",
+    "missing_parts": [],
+    "integrity_limit": "Identidades, comparação integral e preservação dos bytes são recibos externos; não recomputei hashes nem verifiquei a serialização interna das mensagens.",
+    "provenance_note": "Registrada a divulgação de exposição do produtor ao parecer público r2 após o congelamento, conforme relato da principal. A comparação externa informa ausência de alteração posterior nos artefatos congelados. Isso não é prova adicional de independência ou cegamento; não modifica a avaliação do conteúdo recebido."
+  },
+  "artifacts": [
+    {
+      "key": "s2.l1.app-session",
+      "revision": 3,
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "body_bytes": 42047,
+      "verdict": "PASS",
+      "resolves_required_l1_scope": true,
+      "scope": "Aceitação semântica local deste artefato L1, com as profundidades e lacunas expressamente delimitadas.",
+      "mandatory_findings": [],
+      "resolved_findings": [
+        {
+          "id": "APP-J2-F1",
+          "decision": "PASS",
+          "location": "Authority, composition and identity, novo parágrafo; Assets, localization and verification evidence, novo parágrafo; R3-N01/R3-N02; famílias authority, timeline e benchmarks.",
+          "reason": "A correção registra a ordem estabilidade, simplicidade e desempenho, além de baseline de benchmark de produção antes de mudanças em sessão/timeline e comparação posterior. A exclusão da descoberta normal não elimina a obrigação. A atribuição distingue corretamente app-shell das regras de localização de session-ui."
+        },
+        {
+          "id": "APP-J2-F2",
+          "decision": "PASS",
+          "location": "Transport, stream health and canonical recovery, novo parágrafo; R3-N03; famílias authority e transport; E01 preservado.",
+          "reason": "A correção explicita a regeneração após alteração pública de Protocol/Server HttpApi, proíbe edição manual de generated/generated-effect e impede dependências runtime de Client em Core/Server. A exceção browserSafe de UI permanece separada."
+        }
+      ],
+      "additional_delta_review": {
+        "decision": "PASS",
+        "location": "Prompt admission and draft ownership, frase de equivalência corrigida; E15 preservado, input.ts:59–62,291–316.",
+        "reason": "A redação agora distingue retorno da admissão existente para reutilização equivalente, LifecycleConflict para reutilização não equivalente e publicação de nova admissão. Também mantém distinta a equivalência de projeção, que inclui contexto e tempo."
+      },
+      "criteria": [
+        {
+          "ids": ["GO-A1", "AC-01: parcela semântica L1", "CC-7", "QS-2"],
+          "decision": "PASS",
+          "location": "Correções F1/F2 e respectivas atualizações de famílias.",
+          "reason": "As obrigações de manutenção antes ausentes agora são concretas, atribuídas e operacionalmente utilizáveis."
+        },
+        {
+          "ids": ["AC-04: parcela documental L1", "QS-5"],
+          "decision": "PASS",
+          "location": "R3-N01–R3-N03, junto ao dossiê r2 preservado.",
+          "reason": "Os testemunhos normativos solicitados completam a evidência deste recorte; não representam execução de benchmark, geração ou testes."
+        },
+        {
+          "ids": ["GO-A2", "GO-A6", "QS-3", "QS-6"],
+          "decision": "PASS",
+          "location": "Scope, identity and depth; delta limitado; recibos externos.",
+          "reason": "Disposições anteriores mantidas: construção persistente, reaproveitamento delimitado, separação entre derivação mecânica e interpretação, sem novos mecanismos ou economia fictícia."
+        },
+        {
+          "ids": ["GO-I1"],
+          "decision": "PASS",
+          "location": "Identidades r2/r3, decisão r2 preservada e nota de exposição.",
+          "reason": "A revisão recebe identidade própria e preserva a atribuição anterior. Não certifica preservação global da campanha."
+        },
+        {
+          "ids": ["GO-I2", "GO-I7", "GO-I8", "QS-1", "QS-4"],
+          "decision": "PASS",
+          "location": "Dossiê r2 inalterado; inserts normativos; E15 e seção Skills preservados.",
+          "reason": "Observação, prescrição, inferência, testes não executados e limites de autoridade continuam distintos."
+        },
+        {
+          "ids": ["CC-1"],
+          "decision": "PASS",
+          "location": "Inventário local e delta das quatro famílias.",
+          "reason": "Escopo, fontes e lacunas permanecem delimitados; entradas, classificações e profundidades não foram promovidas pela correção."
+        }
+      ],
+      "oracle": [
+        {
+          "case": "L1-COVERAGE",
+          "decision": "PASS",
+          "location": "Recibo local preservado: 1887 caminhos e 59 famílias.",
+          "reason": "Disposição anterior mantida; atualização sem alteração da população."
+        },
+        {
+          "case": "L1-AUTHORITY",
+          "decision": "PASS",
+          "location": "R3-N01–R3-N03; Authority e Transport.",
+          "reason": "As autoridades locais solicitadas agora estão explicitadas e sustentadas."
+        },
+        {
+          "case": "L1-UI",
+          "decision": "PASS",
+          "location": "F1/F2 resolvidos; localização previamente examinada.",
+          "reason": "Obrigações pertinentes de prioridade, benchmark, inglês, localização e Client estão resolvidas neste artefato."
+        },
+        {
+          "case": "L1-SCOPE",
+          "decision": "PASS",
+          "location": "Mapa completo preservado e quatro famílias corrigidas.",
+          "reason": "Disposição anterior mantida; nenhum novo gap obrigatório identificado."
+        }
+      ],
+      "optional_suggestions": []
+    }
+  ],
+  "global_status": {
+    "decision": "HOLD",
+    "reason": "A principal registra a liberação da camada somente após ambos os pareceres app-r3. Este PASS não aceita runtime, consumidores, CI, publicação, L2–L4 ou obrigações globais. Desktop/design permanecem sem reavaliação."
+  }
+}
