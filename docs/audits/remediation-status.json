@@ -387,6 +387,22 @@
           "kind": "consumer_typecheck_fixture_and_callsite_errors",
           "source": "a678f8e108abbb4c8711e7725f06b83841333ff4",
           "result": "Client and SessionUI typecheck0; App typecheck1 with exactly two errors: excess scope/directory keys in waitForSubagentPolicy call, optional test identity value after an explicit defined assertion. Chain stops before TUI; no consumer hosted gate dispatched. Root and independent critic approve removing only unused call arguments and asserting that already-validated test value nonnull; no authority or assertion requirement changed. App/TUI rerun required after narrow patch."
+        },
+        {
+          "kind": "consumer_functional_first_gate_failed_unresolved",
+          "source": "cbb84e10d6ca58a06eff1da2a9d6080f4c9c7c27",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43325725994",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43325724696",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43325816365"
+          ],
+          "result": "Client/SessionUI/App/TUI typechecks compose0 after narrow static fixes (historical failures retained). Linux A69pass44fail564assertions; C65pass7fail305assertions; B regression wrapper failures/timeouts, other wrappers and refcount/roster pass. Existing-Session early policy wait occurs before Stop tracking and collapses original error formatting: concrete source regression to repair. Shared submit-harness cross-file hooks may contaminate E1; isolated unchanged34 diagnostic authorized, no SQL regression claim without HTTP witness. TUI metadata bootstrap assertion also matches intentional GETs instead of mutation-only POSTs; fix proposal pending. Other key/frame/selector witnesses and Windows verdicts unresolved. No consumer integration or AFTER benchmark authorized."
+        },
+        {
+          "kind": "isolated_original_retry_diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43326635728",
+          "source": "cbb84e10d6ca58a06eff1da2a9d6080f4c9c7c27",
+          "result": "Both OS32pass/2fail249assertions/Omni2. All nonnative32 pass, separating most combined-A retry failures from product behavior. Native two receive canonical route404 before any prompt POST/SQL ACK witness; their existing fixture exposes SessionGroup only. Actual ModelsGroup service wiring and shared-harness isolation are proposed fixture ports, no fake canonical READY or assertion waiver. Direct Stop/policy formatting and captured draft restoration source repairs planned before edits; benchmark remains blocked."
         }
       ],
       "remaining": "Core/host/API and literal variant identity are integrated and verified in scoped hosted gates. Consumer correction freeze/cold review, Client/SessionUI/App/TUI types, full consumer/E1/owner regressions and production AFTER benchmark remain required. Whole E6 stays open. Historical stored default strings are preserved literally; ambiguous old aliases are not rewritten."
@@ -698,7 +714,7 @@
           "kind": "os_process_capability_not_product_green",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43301049199",
           "source": "14657189e4a94095cd1dd1b51ecc984c4fb1c164",
-          "result": "Both OS1pass/17assertions/Omni1. Actual child enters2048regex/8MiB at40.411ms Linux/63.484ms Windows. Requested1500ms kill, actual exit1506.181/1519.258ms and join1515.776/1519.380ms; no CPU_DONE/outer containment, parent heartbeat maxgap96.872/84.268ms. Actual PID liveness/death verified; backend signal null, no observed SIGKILL-report claim. Core type0. This supports native-op isolation planning, not CodeMode/default/compiled/Electron GREEN."
+          "result": "Both OS1pass/17assertions/Omni1. Actual child enters2048regex/8MiB at40.411ms Linux/63.484ms Windows. Requested1500ms kill, actual exit1506.181/1519.258ms and join1515.776/1519.380ms; no CPU_DONE/outer containment, parent heartbeat maxgap96.872/84.268ms. PID identity and owned-handle liveness/death observed, without independent syscall reap proof; backend signal null, no observed SIGKILL-report claim. Core type0. This supports native-op isolation planning, not CodeMode/default/compiled/Electron GREEN."
         },
         {
           "kind": "private_parser_preparatory_stage_integrated_green",
@@ -706,6 +722,12 @@
           "source": "cc371ed21bb42bd031e80e3a929ffa772b5d1dcd",
           "snapshot": "0b1096b5d4ac31aa9269fc0a8797a8abe5ec2c7f",
           "result": "89pass/0fail/282assertions per OS (44original controls+45future acceptance), cleanup/wrapper0. Two actual hosted blobs equal integrated Root. CodeMode type0; Root guards78rules382paths0errors/one inherited advisory, boundaries0new0stale, spawn0. Private utility is not wired into execution. Acorn8.15 grammar/errors/positions/callbacks preserved; user native construction omitted. Compiled legal-notice retention still pending."
+        },
+        {
+          "kind": "hardened_source_compiled_capability_mixed_verdict",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43326689238",
+          "source": "9999cd2d8d825c5096f6c49f7995c1e14e2317cc",
+          "result": "Core type0. Windows5pass/0fail163assertions; Linux1pass/4fail105assertions, all four fail independent OS PID sample taken after exit/readers but before kill join and full Scope. CPU marks27/25ms Linux and44/47ms Windows; kills/exits/readers around1.5s, no CPU_DONE/outer containment; compiled BUN_BE_BUN eval with trailing embedded -- works observationally, no complete Linux GREEN. Primary source confirms Unix Exited uses WNOWAIT and Stopped follows reap; no /proc state was observed, so do not label actual PIDs zombies. Original146 used kill join plus cached child.isRunning, not independent syscall0: earlier claim of independently verified reap is corrected. Root/critic authorize a proposed observation-boundary repair preserving early sample and original absolute3s full-settlement/OS-absence deadline; no rerun or product timeout proof yet."
         }
       ],
       "remaining": "Worker prototype rejected and not integrated. OS-process preemption and private parser stage verified, but hardened source/compiled child capability, native operation codec/factory, original-scope tool barriers and deadline semantics still require exact contract and acceptance before production execution changes. No product timeout GREEN or general parent CPU-preemption claim."
@@ -2011,6 +2033,20 @@
           "kind": "acceptance_typecheck",
           "source": "bdb0872ef0",
           "result": "Root Atlas boundary package bun typecheck0 (tsgo), new fixture/tests included; no local test or runtime build executed."
+        },
+        {
+          "kind": "joint_receipt_acceptance_static_approved",
+          "source": "56e9b573fc359da1cc441cc30e26a9dd8b2e9eee",
+          "result": "62declared Linux cases across4new test/fixture files; original split-publication baseline untouched. Full Root/independent cold review, then one added internally coherent forged-proposal case isolates actual raw review authority; previous61 byte-identical. No runtime of new suite. Boundary/Core serial types now authorized, positive4controls precede any source implementation. Production generated boundary remains a separate official hosted qualification obligation."
+        },
+        {
+          "kind": "joint_receipt_positive_controls_green",
+          "source": "811ab81451d5ed7ee2749970bc045d6c49340315",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43327595307",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43327594693"
+          ],
+          "result": "Linux boundary3pass28assertions and Core1pass13assertions/3Omni spawns, cleanup/wrapper0. Boundary/Core type0 after one explicit numeric fixture guard; failed56e9type2 retained. Original Root baseline type log was overwritten by initial acceptance type attempt; do not fabricate a backfill. Runtime baseline/controls remain separately hosted and immutable. Source-only implementation authorized against frozen contract;62future suite and installed generated bundle remain unverified."
         }
       ],
       "remaining": "Original joint-publication inconsistency reproduced by real scanner-to-review I/O fault after two actual controls. One immutable per-proposal receipt plan remains unimplemented; exact typed/source/reader/merge contracts and additional concurrency/corruption acceptance still required before source GO."
@@ -2706,6 +2742,20 @@
           "kind": "manager_acceptance_three_edge_cases_cold_approved",
           "source": "f00d794f514e7e1e8824219a82b9a8b962884df5",
           "result": "Three new real SQLite/HTTP cases preserve original102 byte-for-byte: Finish paused8 does not restart budget, recovered closed paused/blocked does not auto-send, seal after append latch releases producer without durable seal until retained retry+Finish. Root and independent cold critic approve. Now105Node=6controls+99future,3Core bridges; no future runtime yet. Recovery close-intent interrupted remains eligible under original single-instance contract; no13fixture rewrite."
+        },
+        {
+          "kind": "manager_source_frozen_pending_cold",
+          "source": "6186b56dbf8147f7f257bc015165992481b411f1",
+          "result": "Four private source files750lines; contract/Store/105Node+3Core unchanged. No type or runtime yet. Synchronous producer abort can reenter shutdown before memoized Promise assignment; Root confirmed author finding, one acceptance case plus publish-Promise-first proposal required before source delta. Full independent cold review in progress. No production Main/IPC/UI wiring."
+        },
+        {
+          "kind": "manager_source_cold_fixed_typed_runtime_pending",
+          "source": "0c63edf83da1287b00716837297b1944b1d03e84",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43328346012",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43328345986"
+          ],
+          "result": "Root and critic full source review found shutdown reentry and terminal headers delayed until body. Three added acceptance cases, including valid heldGET for shutdown, preserve original105; final108Node=6controls+102future and3Core bridges. Exact approved source patches publish shutdown Promise before callbacks and classify headers before body with owned cancellation/join and no terminal-to-deadline retry conversion. Desktop type0 excludes harness files; runtime gates pending, no wholeM13/source GREEN."
         }
       ],
       "remaining": "Private store verified/integrated. Manager implementation now authorized against frozen private API and cold-reviewed acceptance, without changing legacy client/Senses/Main/IPC/UI yet. Original3 failures and production capture/target/quit wiring remain open; controls do not prove manager behavior."

@@ -1,0 +1,19 @@
+# E10 — exit, stop, Scope e PID: fatos/proposta
+
+READONLY em regex-child@9999. Nenhuma mutação/execução/compiler/CI nova. Raw4falhas Linux e hashes preservados.
+
+**Cadeia real.** `packages/core/src/process.ts:312` reexporta spawn do spawner. Em `core/src/omni-spawner.ts:153–164`, exit Deferred exige root-status + output-ended; `:215` recebe child.wait(); `:249` isRunning é APENAS !Deferred.isDone(exit), não syscall. `:250` exitCode consome esse Deferred. `:256` kill aguarda stop(), halt-output e Deferred; `:277` stop(SIGKILL) aguarda child.stop({graceMs:0}). Finalizer acquireRelease (`:199–210`) fecha output, para a árvore não adotada e aguarda `OmniAdoption.release`; `core/src/omni-adoption.ts:45–55` também aguarda child.stop quando não há adoção. Esta fixture não fornece serviço de adoção.
+
+Binding `native/omni/bindings/node/index.js:230,255–260` cacheia native.exited para wait e delega stop separadamente. `bindings/node/src/child.rs:145–159` mapeia wait versus stop reais. `crates/hugr-omni/src/process/life.rs:57–76`: wait recebe Tree.exited; stop aguarda Tree.stop antes de wait. `client/mod.rs:169–181` exige resposta Stopped.
+
+Unix distingue exit/reap deliberadamente: `crates/omni-supervisor/src/unix/exits.rs:16–29` usa WEXITED|WNOHANG|WNOWAIT; `trees.rs:160` publica Exited sem reap. `sweep.rs:79–91` exige duas varreduras completas vazias, chama reap e só depois publica Stopped; `:295` usa waitpid(WNOHANG). Intervalo SWEEP10ms em25. O código prevê raiz terminada ainda fixando PID; NÃO há /proc state testemunhado para os quatro PIDs do nosso run, portanto não atribuir-lhes Z por inferência.
+
+**Comparação correta.** Original14657189 (`core/test/native-regex-process-probe.test.ts:65–70,83–86`) aguardava child.kill e depois lia child.isRunning=false. NÃO usava process.kill(pid,0): seu GREEN não prova reap independente. Atual `codemode-native-process.test.ts:194` amostra OS após exit+dois leitores, ANTES join(productKill):195 e ANTES retorno de Effect.scoped/provide:204. joinedMs também é pré-Scope-finalizer. Linux apresentou OStrue nessa amostra; Windowsfalse. Nenhuma amostra pós-killjoin/pós-Scope foi registrada.
+
+**Proposta para freeze Root/House, não aplicada.** Preservar amostras iniciais e adicionar timestamps/estado como diagnóstico. Capturar admission no mesmo ponto imediatamente antes do spawn; medir depois kill+readers, depois retorno completo do Scope/layer e no instante de ESRCH. Manter heartbeat owned cobrindo cleanup/poll até essa fronteira.
+
+Depois do cleanup completo, repetir apenas syscall0 do PID próprio até desaparecer OU admission+3000ms; todas as etapas compartilham esse deadline absoluto, sem timeout renovado. ESRCH é ausência; EPERM/outros erros falham. Se ainda existir no Linux, ler somente /proc/PID/stat desse PID e registrar estado/tempo antes/depois; ENOENT da leitura é observação de corrida, não substitui ESRCH. Z observado continua insuficiente: exigir PID realmente ausente antes da conclusão. Poll condicional curto não vira espera fixa nem amplia limite.
+
+Exigir fullScopeEnd e finalOSDeadTime<3000, ambos leitores/kill joined, OSfinal=false; manter mark750/kill1500/HB/canários/identidade e contenção8000trigger. Se cleanup ultrapassar3s ou PID persistir, falhar com witness; nunca retornar sucesso antecipado. Isso testa settlement completo, sem alegar hard-wall return para finalizer bloqueado. Nenhum native/Core produto precisaria ser alterado nesta correção de observação.
+
+Root and independent critic verified the primary sources and approve authoring only the corrected observation harness. Preserve early samples as diagnostics; heartbeat and containment belong to the outer harness Scope, covering inner cleanup and bounded polling. The original absolute admission+3000ms limit remains. No additional execution has yet validated this revision.
