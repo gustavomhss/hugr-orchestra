@@ -14,6 +14,10 @@ export interface Directory {
   readonly strategy?: string
 }
 
+export interface Registration extends Directory {
+  readonly registrationID: string
+}
+
 export const CreateInput = Schema.Struct({
   projectID: ProjectSchema.ID,
   directory: AbsolutePath,
@@ -45,6 +49,11 @@ export const ListOutput = Schema.Array(
 export type ListOutput = typeof ListOutput.Type
 
 export interface Interface {
+  readonly listRegistrations: (projectID: ProjectSchema.ID) => Effect.Effect<ReadonlyArray<Registration>>
+  readonly getRegistration: (input: {
+    projectID: ProjectSchema.ID
+    directory: AbsolutePath
+  }) => Effect.Effect<Registration | undefined>
   readonly list: (projectID: ProjectSchema.ID) => Effect.Effect<ReadonlyArray<Directory>>
   readonly get: (input: {
     projectID: ProjectSchema.ID
@@ -146,6 +155,9 @@ const layer = Layer.effect(
     })
 
     return Service.of({
+      // Explicit unavailable anchors for the hosted acceptance baseline; never fabricate an empty registry.
+      listRegistrations: () => Effect.die("Registration incarnation reading is not implemented"),
+      getRegistration: () => Effect.die("Registration incarnation reading is not implemented"),
       list,
       get,
       contains,
