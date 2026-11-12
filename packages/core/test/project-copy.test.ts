@@ -83,33 +83,35 @@ describe("ProjectCopy", () => {
     }),
   )
 
-  it.effect("rejects duplicate strategies and reports unavailable ids", () =>
-    Effect.gen(function* () {
-      const input = yield* setup()
-      const copy = yield* ProjectCopy.Service
-      const strategy: ProjectCopy.Strategy = {
-        id: ProjectCopy.StrategyID.make("test/duplicate"),
-        create: () => Effect.die("unused"),
-        remove: () => Effect.die("unused"),
-        list: () => Effect.succeed([]),
-      }
+  it.effect(
+    "rejects duplicate strategies and reports unavailable ids",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* setup()
+        const copy = yield* ProjectCopy.Service
+        const strategy: ProjectCopy.Strategy = {
+          id: ProjectCopy.StrategyID.make("test/duplicate"),
+          create: () => Effect.die("unused"),
+          remove: () => Effect.die("unused"),
+          list: () => Effect.succeed([]),
+        }
 
-      yield* copy.register(strategy)
-      expect(yield* copy.register(strategy).pipe(Effect.flip)).toBeInstanceOf(ProjectCopy.DuplicateStrategyError)
+        yield* copy.register(strategy)
+        expect(yield* copy.register(strategy).pipe(Effect.flip)).toBeInstanceOf(ProjectCopy.DuplicateStrategyError)
 
-      const unavailable = ProjectCopy.StrategyID.make("acme/missing")
-      const error = yield* copy
-        .create({
-          projectID: input.projectID,
-          strategy: unavailable,
-          sourceDirectory: input.sourceDirectory,
-          directory: abs(`${input.root.path}-missing-strategy`),
-          name: "copy",
-        })
-        .pipe(Effect.flip)
-      expect(error).toBeInstanceOf(ProjectCopy.StrategyUnavailableError)
-      if (error instanceof ProjectCopy.StrategyUnavailableError) expect(error.strategy).toBe(unavailable)
-    }),
+        const unavailable = ProjectCopy.StrategyID.make("acme/missing")
+        const error = yield* copy
+          .create({
+            projectID: input.projectID,
+            strategy: unavailable,
+            sourceDirectory: input.sourceDirectory,
+            directory: abs(`${input.root.path}-missing-strategy`),
+            name: "copy",
+          })
+          .pipe(Effect.flip)
+        expect(error).toBeInstanceOf(ProjectCopy.StrategyUnavailableError)
+        if (error instanceof ProjectCopy.StrategyUnavailableError) expect(error.strategy).toBe(unavailable)
+      }),
     process.platform === "win32" ? 30_000 : 5_000,
   )
 
@@ -120,6 +122,7 @@ describe("ProjectCopy", () => {
       Effect.gen(function* () {
         const input = yield* setup()
         const copy = yield* ProjectCopy.Service
+        const registrations = yield* ProjectDirectories.Service
         const events = yield* EventV2.Service
         const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
         const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-created"))
@@ -140,6 +143,8 @@ describe("ProjectCopy", () => {
           name: "copy",
         })
         expect(created.directory).toBe(target)
+        const registered = yield* registrations.getRegistration({ projectID: input.projectID, directory: target })
+        expect(registered?.registrationID).toMatch(/^[0-9a-f-]{36}$/)
         expect(yield* stored(input.projectID)).toEqual(
           [
             { directory: input.sourceDirectory, strategy: null },
@@ -149,6 +154,7 @@ describe("ProjectCopy", () => {
         expect(Array.from(yield* Fiber.join(fiber))[0]?.data).toEqual({ projectID: input.projectID })
 
         yield* copy.remove({ projectID: input.projectID, directory: created.directory, force: false })
+        expect(yield* registrations.getRegistration({ projectID: input.projectID, directory: target })).toBeUndefined()
 
         expect(yield* stored(input.projectID)).toEqual([{ directory: input.sourceDirectory, strategy: null }])
         expect(yield* Effect.promise(() => Bun.file(target).exists())).toBe(false)
@@ -167,6 +173,7 @@ describe("ProjectCopy", () => {
           .run()
           .pipe(Effect.orDie)
         const copy = yield* ProjectCopy.Service
+        const registrations = yield* ProjectDirectories.Service
         const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
         const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-first"))
         yield* Effect.addFinalizer(() =>
@@ -180,10 +187,26 @@ describe("ProjectCopy", () => {
           directory: parent,
           name: "copy",
         })
+        const source = yield* registrations.getRegistration({
+          projectID: input.projectID,
+          directory: input.sourceDirectory,
+        })
+        expect(source?.registrationID).toMatch(/^[0-9a-f-]{36}$/)
+        yield* copy.create({
+          projectID: input.projectID,
+          strategy: gitWorktree,
+          sourceDirectory: input.sourceDirectory,
+          directory: parent,
+          name: "second",
+        })
+        expect(
+          yield* registrations.getRegistration({ projectID: input.projectID, directory: input.sourceDirectory }),
+        ).toEqual(source)
         expect(yield* stored(input.projectID)).toEqual(
           [
             { directory: input.sourceDirectory, strategy: null },
             { directory: created.directory, strategy: "git_worktree" },
+            { directory: abs(path.join(parent, "second")), strategy: "git_worktree" },
           ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
         )
 
@@ -361,6 +384,7 @@ describe("ProjectCopy", () => {
       Effect.gen(function* () {
         const input = yield* setup()
         const copy = yield* ProjectCopy.Service
+        const registrations = yield* ProjectDirectories.Service
         const events = yield* EventV2.Service
         const target = abs(`${input.root.path}-copy-external`)
         yield* Effect.addFinalizer(() =>
@@ -378,7 +402,16 @@ describe("ProjectCopy", () => {
         yield* Effect.yieldNow
 
         const discovered = abs(yield* Effect.promise(() => fs.realpath(target)))
+        const previous = yield* registrations.getRegistration({ projectID: input.projectID, directory: discovered })
+        expect(previous?.registrationID).toMatch(/^[0-9a-f-]{36}$/)
         expect(yield* copy.refresh({ projectID: input.projectID })).toEqual({ updated: [discovered], removed: [] })
+        const updated = yield* registrations.getRegistration({ projectID: input.projectID, directory: discovered })
+        expect(updated?.registrationID).toMatch(/^[0-9a-f-]{36}$/)
+        expect(updated?.registrationID).not.toBe(previous?.registrationID)
+        expect(yield* copy.refresh({ projectID: input.projectID })).toEqual({ updated: [], removed: [] })
+        expect(yield* registrations.getRegistration({ projectID: input.projectID, directory: discovered })).toEqual(
+          updated,
+        )
 
         expect(yield* stored(input.projectID)).toEqual(
           [
@@ -390,6 +423,9 @@ describe("ProjectCopy", () => {
 
         yield* Effect.promise(() => $`git worktree remove --force ${target}`.cwd(input.root.path).quiet())
         expect(yield* copy.refresh({ projectID: input.projectID })).toEqual({ updated: [], removed: [discovered] })
+        expect(
+          yield* registrations.getRegistration({ projectID: input.projectID, directory: discovered }),
+        ).toBeUndefined()
         expect(yield* stored(input.projectID)).toEqual([{ directory: input.sourceDirectory, strategy: null }])
       }),
     30_000,
