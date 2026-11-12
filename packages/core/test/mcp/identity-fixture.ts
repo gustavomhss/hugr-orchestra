@@ -138,7 +138,7 @@ export const graph = Effect.fn(function* (
   const agentID = AgentV2.ID.make("identity-audit")
   yield* database.db
     .insert(ProjectTable)
-    .values({ id: f.projectID, worktree: f.directory, sandboxes: [] })
+    .values({ id: f.projectID, worktree: AbsolutePath.make(f.directory), sandboxes: [] })
     .onConflictDoNothing()
     .run()
     .pipe(Effect.orDie)
@@ -157,7 +157,7 @@ export const graph = Effect.fn(function* (
     .pipe(Effect.orDie)
   yield* agents.transform((draft) =>
     draft.update(agentID, (agent) => {
-      agent.permissions = options.rules ?? [{ action: "*", resource: "*", effect: "allow" }]
+      agent.permissions = [...(options.rules ?? [{ action: "*", resource: "*", effect: "allow" }])]
     }),
   )
   return {

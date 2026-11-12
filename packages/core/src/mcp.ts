@@ -574,7 +574,7 @@ const layer = Layer.effect(
       yield* ready()
       return Object.fromEntries(
         Array.from(entries).flatMap(([name, current]) =>
-          current.client && current.toolIds ? [[name, [...current.toolIds]] as const] : [],
+          current.client && current.toolIds ? [[name, current.toolIds.slice()] as const] : [],
         ),
       )
     })

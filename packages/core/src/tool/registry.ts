@@ -280,7 +280,8 @@ const registryLayer = Layer.effect(
       }),
       registerMcp: Effect.fn("ToolRegistry.registerMcp")(function* (authority, rawToolName, make) {
         const derived = yield* identities.identify(authority, rawToolName).pipe(Effect.mapError(refusal))
-        yield* validateName(derived.id).pipe(Effect.mapError(refusal))
+        const checked: Effect.Effect<void, RegistrationError> = validateName(derived.id)
+        yield* checked.pipe(Effect.mapError(refusal))
         yield* install(() => {
           if (
             applications.entries().has(derived.id) ||

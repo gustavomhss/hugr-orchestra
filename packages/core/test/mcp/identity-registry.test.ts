@@ -66,7 +66,7 @@ it.live("registerMcp derives before factory publication and its advertised ID is
               source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
             })
             return "BOUND"
-          }),
+          }).pipe(Effect.mapError((error) => new Tool.Failure({ message: error.message }))),
       })
     })
     expect(id).toMatch(/^mcp_[A-Za-z0-9_-]{43}$/)

@@ -210,10 +210,11 @@ const layer = Layer.effect(
     const location = yield* Location.Service
     const policy = yield* Policy.Service
     const names = ["orchestra.json", "orchestra.jsonc"]
+    const loadFile = (filepath: string) => readDocument(filepath).pipe(Effect.provideService(FSUtil.Service, fs))
 
     const loadDirectory = Effect.fnUntraced(function* (directory: AbsolutePath) {
       return [
-        ...(yield* Effect.forEach(names, (file) => readDocument(path.join(directory, file))).pipe(
+        ...(yield* Effect.forEach(names, (file) => loadFile(path.join(directory, file))).pipe(
           Effect.map((configs) => configs.filter((config): config is Document => config !== undefined)),
         )),
         new Directory({ type: "directory", path: directory }),
@@ -243,7 +244,7 @@ const layer = Layer.effect(
     // A config closer to the opened directory should win over one higher up.
     // Search starts nearby, so reverse the results before applying them.
     const directPaths = discovered.filter((item) => path.basename(item) !== ".orchestra").toReversed()
-    const direct = yield* Effect.forEach(directPaths, readDocument).pipe(
+    const direct = yield* Effect.forEach(directPaths, loadFile).pipe(
       Effect.orDie,
       Effect.map((configs) => configs.filter((config): config is Document => config !== undefined)),
     )

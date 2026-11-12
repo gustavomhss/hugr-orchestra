@@ -210,7 +210,9 @@ it.live(
       yield* Effect.promise(() => Bun.write(file, text))
       const loaded = yield* Config.readDocument(file).pipe(Effect.provide(AppNodeBuilder.build(FSUtil.node)))
       const fresh = yield* graph(f)
-      const admitted = (yield* fresh.config.entries()).find((entry) => entry.type === "document" && entry.path === file)
+      const admitted = (yield* fresh.config.entries()).find(
+        (entry): entry is Config.Document => entry.type === "document" && entry.path === file,
+      )
       expect(loaded).toEqual(admitted)
       expect(loaded?.info.mcp?.servers?.same).toMatchObject({
         type: "remote",
