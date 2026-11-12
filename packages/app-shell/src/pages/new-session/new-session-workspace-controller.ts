@@ -10,14 +10,12 @@ import { pathKey } from "@/utils/path-key"
 const workspaceBarEnabled = import.meta.env.VITE_ORCHESTRA_CHANNEL !== "prod"
 
 export function resolveNewSessionWorktree(input: {
-  enabled: boolean
   selected?: string
   directory: string
   projectWorktree?: string
   // The repository profile's active workspace (Orchestra Workspaces), already validated against its sandboxes.
   preferred?: string
 }) {
-  if (!input.enabled) return "main"
   if (input.selected) return input.selected
   if (input.projectWorktree && input.directory !== input.projectWorktree) return input.directory
   if (input.preferred) return input.preferred
@@ -46,9 +44,9 @@ export function createNewSessionWorkspaceController() {
   const [worktree, setWorktree] = createSignal<string>()
   const visible = createMemo(() => workspaceBarEnabled && sync().project?.vcs === "git")
   const projectRoot = createMemo(() => sync().project?.worktree ?? sdk().directory)
+  // Release channels hide the picker; placement still follows the draft and verified profile preference.
   const value = createMemo(() =>
     resolveNewSessionWorktree({
-      enabled: visible(),
       selected: worktree(),
       directory: sdk().directory,
       projectWorktree: sync().project?.worktree,
