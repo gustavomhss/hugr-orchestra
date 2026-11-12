@@ -21,16 +21,17 @@ function withLocal<T>(setup: Setup, read: (local: ReturnType<typeof createLocal>
     const agents = setup.agents ?? roster
     const local = createLocal({
       params: setup.params ?? {},
-      sdk: (() => ({ directory: "/repo" })) as unknown as Deps["sdk"],
+      sdk: (() => ({ directory: "/repo", modelExecutionEpoch: () => 0 })) as unknown as Deps["sdk"],
       sync: (() => ({ data: { agent: agents, config: {} } })) as unknown as Deps["sync"],
-      serverSDK: (() => ({ scope: "local" })) as unknown as Deps["serverSDK"],
+      serverSDK: (() => ({ scope: "local", sessionManagement: { subagentModelsWriteVersion: () => 0 } })) as unknown as Deps["serverSDK"],
       providers: {
         all: () => new Map(),
         connected: () => [],
         default: () => ({}),
         defaultModel: () => undefined,
       } as unknown as Deps["providers"],
-      models: { recent: { list: () => [] }, find: () => undefined } as unknown as Deps["models"],
+      models: { ready: Object.assign(() => true, { promise: Promise.resolve(true) }),
+        recent: { list: () => [] }, find: () => undefined } as unknown as Deps["models"],
       saved,
       setSaved,
       savedReady: () => true,
