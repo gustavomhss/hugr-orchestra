@@ -318,6 +318,9 @@ const replacementCase = (iteration: number | "original") =>
   })
 
 it.live("failed preparation preserves a replacement directory with a different identity", () => replacementCase("original"))
+it.live("diagnostic bounded replacement case repeats 128 times", () => Effect.gen(function* () {
+  for (let iteration = 0; iteration < 128; iteration++) yield* replacementCase(iteration).pipe(Effect.scoped)
+}))
 
 it.live("interrupted multi-root preparation rolls back its own empty directories", () =>
   Effect.gen(function* () {
