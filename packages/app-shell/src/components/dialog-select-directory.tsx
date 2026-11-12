@@ -106,14 +106,21 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
       })
   })
 
+  let held: ReturnType<typeof uniqueRows> = []
   const items = async (value: string) => {
     setSearchFailed(false)
-    const results = await directories(value)
-    const directoryRows = results.map((absolute) => toRow(absolute, home(), "folders"))
-    // Cap the idle list only. Once a query narrows the results, every project stays searchable.
     const recent = recentProjects()
     const visible = value ? recent : recent.slice(0, RECENT_PROJECT_LIMIT)
-    return uniqueRows([...visible, ...directoryRows])
+    try {
+      const results = await directories(value)
+      const directoryRows = results.map((absolute) => toRow(absolute, home(), "folders"))
+      held = uniqueRows([...visible, ...directoryRows])
+      return held
+    } catch (error) {
+      console.error(error)
+      setSearchFailed(true)
+      return held.length ? held : uniqueRows(visible)
+    }
   }
 
   function resolve(absolute: string) {

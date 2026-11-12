@@ -371,7 +371,7 @@ export function createDirectorySearch(args: {
       .catch((error: unknown) => {
         cache.delete(key)
         tell(error)
-        return []
+        throw error
       })
     cache.set(key, request)
     return request
@@ -411,7 +411,8 @@ export function createDirectorySearch(args: {
         report: tell,
       })
       if (!active()) return []
-      if (found && results.length) {
+      if (!found) throw new Error("picker search failed")
+      if (results.length) {
         return results.map((path) => joinPickerPath(input.directory, path)).slice(0, 50)
       }
       const fallback = query

@@ -88,6 +88,7 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     base: () => root() || start(),
     report: reportSearch,
   })
+  const [held, setHeld] = createSignal<{ query: string; items: Array<{ absolute: string; type: "file" | "directory" }> }>()
   const [suggestions] = createResource(input, async (value) => {
     told = false
     setSearchFailed(false)
@@ -95,33 +96,51 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     const typed = cleaned.replace(/\/+$/, "")
     const current = displayPickerPath(root(), value, home()).replace(/\/+$/, "")
     if (!cleaned || (root() && typed === current)) return { query: value, items: [] }
-    const directories = (await search(value)).map((absolute) => ({ absolute, type: "directory" as const }))
-    if (!policy.includeFiles) return { query: value, items: directories.slice(0, 5) }
-    const base = pickerRoot(cleaned) || root() || start()
-    if (!base) return { query: value, items: directories.slice(0, 5) }
-    let files: Array<{ path: string }> = []
-    await settlePickerSearch({
-      read: sdk.api.file
-        .find({
-          location: { directory: base },
-          query: pickerFileSearchQuery(base, value, home()),
-          type: "file",
-          limit: 20,
-        })
-        .then((result) => result.data),
-      current: () => input() === value,
-      apply: (data) => {
-        files = data
-      },
-      report: reportSearch,
-    })
-    const results = [
-      ...directories,
-      ...files.map((entry) => ({ absolute: absoluteTreePath(base, entry.path), type: "file" as const })),
-    ]
-    return {
-      query: value,
-      items: Array.from(new Map(results.map((result) => [result.absolute, result])).values()).slice(0, 8),
+    const previous = held()
+    try {
+      const directories = (await search(value)).map((absolute) => ({ absolute, type: "directory" as const }))
+      if (!policy.includeFiles) {
+        const next = { query: value, items: directories.slice(0, 5) }
+        setHeld(next)
+        return next
+      }
+      const base = pickerRoot(cleaned) || root() || start()
+      if (!base) {
+        const next = { query: value, items: directories.slice(0, 5) }
+        setHeld(next)
+        return next
+      }
+      let files: Array<{ path: string }> | undefined
+      const found = await settlePickerSearch({
+        read: sdk.api.file
+          .find({
+            location: { directory: base },
+            query: pickerFileSearchQuery(base, value, home()),
+            type: "file",
+            limit: 20,
+          })
+          .then((result) => result.data),
+        current: () => input() === value,
+        apply: (data) => {
+          files = data
+        },
+        report: reportSearch,
+      })
+      if (!found || !files) return previous ?? { query: value, items: directories }
+      const results = [
+        ...directories,
+        ...files.map((entry) => ({ absolute: absoluteTreePath(base, entry.path), type: "file" as const })),
+      ]
+      const next = {
+        query: value,
+        items: Array.from(new Map(results.map((result) => [result.absolute, result])).values()).slice(0, 8),
+      }
+      setHeld(next)
+      return next
+    } catch (error) {
+      console.error(error)
+      setSearchFailed(true)
+      return previous ?? { query: value, items: [] }
     }
   })
   const currentSuggestions = createMemo(() => currentPickerSuggestions(suggestions(), input()))
