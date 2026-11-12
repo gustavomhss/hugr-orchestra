@@ -19,13 +19,12 @@ import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { SessionStore } from "@orchestra/core/session/store"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
-import { EligibilityFixture } from "./model-eligibility-fixture"
-import { Harness } from "./session-runner-harness"
-import { testEffect } from "./lib/effect"
+import { EligibilityFixture } from "./fixture/model-eligibility"
+import { Harness } from "@orchestra/core/test/session-runner-harness"
+import { testEffect } from "@orchestra/core/test/lib/effect"
 
-// A missing future module is API RED inside each test, never a loader failure hiding runner behavioral evidence.
-const future = await Bun.file(new URL("../src/model-execution.ts", import.meta.url)).exists()
-  ? await import("../src/model-execution") : undefined
+// Original missing-API evidence is retained in the audit ledger; this integration now uses the public Core entry.
+const future = await import("@orchestra/core/model-execution")
 const it = testEffect(Layer.unwrap(Effect.suspend(() => {
   if (!future) return Effect.die("API RED E6: ModelExecution module is not implemented")
   return Effect.succeed(AppNodeBuilder.build(LayerNode.group([

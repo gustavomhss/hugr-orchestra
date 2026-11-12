@@ -338,6 +338,8 @@
           "patterns": [
             "src/provider.ts",
             "src/model.ts",
+            "src/model-execution.ts",
+            "src/model-execution-options.ts",
             "src/models-dev.ts",
             "src/aisdk.ts",
             "src/catalog.ts",

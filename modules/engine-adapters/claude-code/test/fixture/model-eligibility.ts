@@ -1,4 +1,4 @@
-export * as EligibilityFixture from "./model-eligibility-fixture"
+export * as EligibilityFixture from "./model-eligibility"
 
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
@@ -9,9 +9,9 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { ExecutionHost } from "@orchestra/core/session/runner"
 import { LLMEvent, type Model } from "@orchestra/llm"
 import { Effect, Layer, Stream } from "effect"
-import { ClaudeCodeSDK } from "../../../modules/engine-adapters/claude-code/src/sdk"
-import { ClaudeCodeHost } from "../../../modules/engine-adapters/claude-code/src/v2/host"
-import { ScriptedSDK } from "../../../modules/engine-adapters/claude-code/test/fixture/scripted-sdk"
+import { ClaudeCodeSDK } from "../../src/sdk"
+import { ClaudeCodeHost } from "../../src/v2/host"
+import { ScriptedSDK } from "./scripted-sdk"
 
 const options: ScriptedSDK.Options[] = []
 export const state = { options, signedIn: true, accountFails: false, registered: true,

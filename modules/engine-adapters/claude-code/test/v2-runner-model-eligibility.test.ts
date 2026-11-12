@@ -22,8 +22,8 @@ import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { SystemContext } from "@orchestra/core/system-context"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tool } from "@orchestra/core/tool/tool"
-import { EligibilityFixture } from "./model-eligibility-fixture"
-import { Harness } from "./session-runner-harness"
+import { EligibilityFixture } from "./fixture/model-eligibility"
+import { Harness } from "@orchestra/core/test/session-runner-harness"
 
 const it = Harness.make({
   client: LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer)),

@@ -3,7 +3,7 @@ import { Effect } from "effect"
 import { GenerationOptions } from "@orchestra/llm"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
-import { EligibilityFixture } from "../../../../packages/core/test/model-eligibility-fixture"
+import { EligibilityFixture } from "./fixture/model-eligibility"
 
 const model = (provider = "anthropic") => ModelV2.Info.make({
   ...ModelV2.Info.empty(ProviderV2.ID.make(provider), ModelV2.ID.make("fixture")),
