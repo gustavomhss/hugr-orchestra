@@ -7,7 +7,8 @@ export type UpdaterReadyRecord = { version: string }
 export type UpdaterBackend = {
   checkForUpdates(): Promise<{ isUpdateAvailable?: boolean; updateInfo?: { version?: string } } | null | undefined>
   downloadUpdate(onProgress: (percent: number) => void): Promise<unknown>
-  quitAndInstall(): void
+  // True only once the application has committed to quitting; false after a bounded grace period.
+  quitAndInstall(): Promise<boolean>
 }
 
 type UpdaterPersistence = {
@@ -23,7 +24,6 @@ export function createUpdaterController(input: {
   currentVersion: string
   backend: UpdaterBackend
   persistence: UpdaterPersistence
-  stop: () => Promise<void>
   log?: (message: string, data?: object) => void
 }) {
   let state: UpdaterState = input.enabled ? { status: "idle" } : { status: "disabled" }
@@ -40,7 +40,7 @@ export function createUpdaterController(input: {
 
   const check = () => {
     if (!input.enabled) return Promise.resolve(state)
-    if (state.status === "ready") return Promise.resolve(state)
+    if (state.status === "ready" || state.status === "installing") return Promise.resolve(state)
     if (pending) return pending
 
     pending = (async () => {
@@ -89,18 +89,55 @@ export function createUpdaterController(input: {
       if (state.status !== "ready") throw new Error("Update is not ready to install")
       const version = state.version
       transition({ status: "installing", version })
-      await input
-        .stop()
-        .then(() => {
-          input.backend.quitAndInstall()
-          transition({ status: "ready", version })
-        })
-        .catch((error) => {
-          transition({ status: "ready", version })
-          throw error
-        })
+      // Services stay operational until the app's existing before-quit handler owns teardown.
+      await input.backend.quitAndInstall().then((exiting) => {
+        if (!exiting) transition({ status: "ready", version })
+      }).catch((error: unknown) => {
+        transition({ status: "ready", version })
+        throw error
+      })
     },
   }
 }
 
 export type UpdaterController = ReturnType<typeof createUpdaterController>
+
+/** Observe the quit itself; an accepted before-quit hands ownership to main's shutdown handler. */
+export function confirmUpdaterQuit(input: {
+  subscribe: (onQuit: () => void, onQuitting: () => void) => () => void
+  install: () => void
+  timeout?: number
+}) {
+  return new Promise<boolean>((resolve, reject) => {
+    const state = { quitting: false }
+    const cleanup = () => { clearTimeout(timer); unsubscribe() }
+    const unsubscribe = input.subscribe(
+      () => { cleanup(); resolve(true) },
+      () => { state.quitting = true; clearTimeout(timer) },
+    )
+    const timer = setTimeout(() => { cleanup(); resolve(false) }, input.timeout ?? 15_000)
+    try { input.install() } catch (error) {
+      if (state.quitting) return
+      cleanup()
+      reject(error)
+    }
+  })
+}
+
+/** Squirrel downloads from MacUpdater's staged proxy only after its native check begins. */
+export function prepareNativeUpdate(input: {
+  subscribe: (onReady: () => void, onError: (error: Error) => void) => () => void
+  prepare: () => void
+  timeout?: number
+}) {
+  return new Promise<void>((resolve, reject) => {
+    const cleanup = () => { clearTimeout(timer); unsubscribe() }
+    const unsubscribe = input.subscribe(
+      () => { cleanup(); resolve() },
+      (error) => { cleanup(); reject(error) },
+    )
+    // This deadline never exits the app or arms a later automatic quit: services remain operational.
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Native updater preparation timed out")) }, input.timeout ?? 600_000)
+    try { input.prepare() } catch (error) { cleanup(); reject(error) }
+  })
+}
