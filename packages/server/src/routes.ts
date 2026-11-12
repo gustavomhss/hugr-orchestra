@@ -1,4 +1,5 @@
 import { Database } from "@orchestra/core/database/database"
+import { ActivityWorktreeRegistry } from "./activity-worktree"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -135,7 +136,12 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(auth),
     Layer.provide(options.operator ? Layer.succeed(ServerOperator.Service, options.operator) : ServerOperator.layer),
     Layer.provide(ServerContentTicket.layer),
-    Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),
+    Layer.provide(
+      options.verifier
+        ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier)
+        : ServerCapabilityVerification.layer,
+    ),
+    Layer.provide(ActivityWorktreeRegistry.layer()),
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.
     Layer.provide(corsLayer({ cors: options.cors })),

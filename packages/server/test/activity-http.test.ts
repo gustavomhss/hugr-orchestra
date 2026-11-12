@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Global } from "@orchestra/core/global"
+import { Database } from "@orchestra/core/database/database"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { observe } from "@orchestra/core/activity-monitor"
@@ -17,6 +18,7 @@ import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
 import { testEffect } from "@orchestra/core/test/lib/effect"
 import { ServerAuth } from "../src/auth"
 import { ActivityHandler } from "../src/handlers/activity"
+import { ActivityWorktreeRegistry } from "../src/activity-worktree"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
 
@@ -27,6 +29,8 @@ const routes = HttpApiBuilder.layer(
   Layer.provide(authorizationLayer),
   Layer.provide(schemaErrorLayer),
   Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some("activity-test") })),
+  Layer.provide(ActivityWorktreeRegistry.layer()),
+  Layer.provide(Database.layerFromPath(":memory:")),
 )
 
 const it = testEffect(
