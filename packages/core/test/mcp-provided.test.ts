@@ -6,7 +6,8 @@ import { describe, expect, test } from "bun:test"
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
-import { Effect, Layer } from "effect"
+import { Deferred, Effect, Fiber, Layer } from "effect"
+import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { LocationServiceMap } from "@orchestra/core/location-services"
@@ -27,6 +28,7 @@ import { Database } from "../src/database/database"
 import { EventV2 } from "../src/event"
 import { ApplicationTools } from "../src/tool/application-tools"
 import { ToolRegistry } from "../src/tool/registry"
+import { Tools } from "../src/tool/tools"
 
 const listed: McpProvided.Server[] = []
 const connects: string[] = []
@@ -34,6 +36,17 @@ const calls: string[] = []
 const permissions: PermissionV2.AssertInput[] = []
 const active = new Map<string, Server>()
 const advertised = new Map<string, string[]>()
+let pause: { entered: Deferred.Deferred<void>; release: Deferred.Deferred<void> } | undefined
+const registrationLayer = Layer.effect(Tools.Service, Effect.gen(function* () {
+  const registry = yield* ToolRegistry.Service
+  return Tools.Service.of({ register: (tools) => Effect.gen(function* () {
+    yield* registry.register(tools)
+    if (pause && "cancel_b_c" in tools) {
+      yield* Deferred.succeed(pause.entered, undefined)
+      yield* Deferred.await(pause.release)
+    }
+  }) })
+}))
 
 function provided(name: string, key: string, tool: string): McpProvided.Server {
   return {
@@ -71,6 +84,7 @@ const it = testEffect(
     [
       [SessionExecution.node, SessionExecutionLocal.node],
       [Global.node, Global.layerWith({ config })],
+      [ToolRegistry.toolsNode, makeLocationNode({ service: Tools.Service, layer: registrationLayer, deps: [ToolRegistry.node] })],
       [PermissionV2.node, Layer.mock(PermissionV2.Service, { assert: (input) => Effect.sync(() => { permissions.push(input) }) })],
       [McpProvided.node, Layer.succeed(McpProvided.Service, McpProvided.Service.of({ servers: () => Effect.sync(() => [...listed]) }))],
     ],
@@ -191,6 +205,41 @@ for (const [first, second] of [
     ), 30_000,
   )
 }
+
+it.live("cancelled public connect releases private identity claims and registrations", () =>
+  Effect.acquireRelease(Effect.promise(() => tmpdir()), (dir) => Effect.promise(() => dir[Symbol.asyncDispose]())).pipe(
+    Effect.flatMap((dir) => Effect.gen(function* () {
+      calls.length = 0
+      advertised.clear()
+      listed.splice(0, listed.length, provided("cancel_b", "one", "c"), provided("cancel", "one", "b_c"))
+      const mcp = yield* Mcp.Service
+      const registry = yield* ToolRegistry.Service
+      yield* mcp.ready()
+      yield* mcp.disconnect("cancel")
+      const materialized = yield* registry.materialize()
+      const identity = materialized.registrationIdentity("cancel_b_c")
+      pause = { entered: yield* Deferred.make<void>(), release: yield* Deferred.make<void>() }
+      const connecting = yield* mcp.connect("cancel").pipe(Effect.forkChild)
+      yield* Deferred.await(pause.entered)
+      expect((yield* registry.materialize()).registrationIdentity("cancel_b_c")).not.toBe(identity)
+      yield* Fiber.interrupt(connecting)
+      pause = undefined
+      yield* mcp.disconnect("cancel")
+      const restored = yield* registry.materialize()
+      expect(restored.registrationIdentity("cancel_b_c")).toBe(identity)
+      const result = yield* restored.settle({
+        sessionID: SessionV2.ID.make("ses_mcp_cancel"), agent: AgentV2.ID.make("maestro"),
+        assistantMessageID: SessionMessage.ID.make("msg_mcp_cancel"),
+        call: { type: "tool-call", id: "cancel-recovered", name: "cancel_b_c", input: {} },
+      })
+      expect(result.result.type).toBe("text")
+      expect(calls).toEqual(["cancel_b/c"])
+      listed.splice(0, listed.length)
+      yield* mcp.ready()
+    }).pipe(Effect.ensuring(Effect.sync(() => { pause = undefined })), Effect.scoped,
+      Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))))),
+  ), 30_000,
+)
 
 test("the default service provides no servers", async () => {
   const servers = await Effect.runPromise(

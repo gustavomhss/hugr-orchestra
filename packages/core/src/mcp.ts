@@ -227,13 +227,14 @@ const layer = Layer.effect(
     }
 
     const register = Effect.fnUntraced(function* (
+      current: Entry,
       name: string,
       client: Client,
       defs: ListToolsResult["tools"],
       timeout: number,
     ) {
-      const scope = yield* Scope.make()
-      yield* Effect.uninterruptible(Effect.gen(function* () {
+      return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+        const scope = yield* Scope.make()
         const token = {}
         for (const def of defs) {
           const canonical = McpCatalog.toolName(name, def.name)
@@ -255,17 +256,22 @@ const layer = Layer.effect(
             if (owners?.size === 0) claims.delete(canonical)
           }
         }))
+        // One registration per tool, so a tool whose name the registry refuses leaves the others available.
+        yield* restore(Effect.forEach(
+          defs,
+          (def) =>
+            tools
+              .register({ [McpCatalog.toolName(name, def.name)]: mcpTool(name, client, def, timeout) })
+              .pipe(Effect.ignore),
+          { discard: true },
+        ).pipe(Scope.provide(scope))).pipe(
+          Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void),
+        )
+        // Transfer ownership before restoring interruption; no private claims may escape a cancelled connect.
+        const previous = current.tools
+        current.tools = scope
+        if (previous) yield* Scope.close(previous, Exit.void)
       }))
-      // One registration per tool, so a tool whose name the registry refuses leaves the others available.
-      yield* Effect.forEach(
-        defs,
-        (def) =>
-          tools
-            .register({ [McpCatalog.toolName(name, def.name)]: mcpTool(name, client, def, timeout) })
-            .pipe(Effect.ignore),
-        { discard: true },
-      ).pipe(Scope.provide(scope))
-      return scope
     })
 
     const mcpTool = (server: string, client: Client, def: ListToolsResult["tools"][number], timeout: number) =>
@@ -352,7 +358,7 @@ const layer = Layer.effect(
       const defs = listed?.success ?? []
       // Connected is reported only once the server's tools are in the registry.
       current.client = client
-      current.tools = yield* register(name, client, defs, request)
+      yield* register(current, name, client, defs, request)
       current.toolNames = defs.map((def) => def.name)
       current.status = opened.status
       client.onclose = () => {
@@ -371,10 +377,8 @@ const layer = Layer.effect(
             if (current.client !== client) return
             const defs = yield* McpCatalog.defs(client, request)
             if (!defs || current.client !== client) return
-            const previous = current.tools
-            current.tools = yield* register(name, client, defs, request)
+            yield* register(current, name, client, defs, request)
             current.toolNames = defs.map((def) => def.name)
-            if (previous) yield* Scope.close(previous, Exit.void)
           }),
         ),
       )
