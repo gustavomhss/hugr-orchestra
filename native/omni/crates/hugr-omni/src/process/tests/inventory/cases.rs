@@ -57,6 +57,7 @@ pub(super) fn deadline(periodic: bool, cancel: bool) {
     assert!(alive(run.pids[1]), "real pipeless member present at inventory failure");
     run.recover();
     if cancel {
+        run.after_error();
         assert!(!token.is_cancelled());
         token.cancel();
         run.assert_dead(Duration::from_secs(3));

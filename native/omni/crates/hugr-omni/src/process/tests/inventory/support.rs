@@ -250,6 +250,27 @@ impl Scenario {
         );
     }
 
+    pub(super) fn after_error(&self) {
+        eventually("post-error watcher continuation before cancellation", || {
+            if Arc::strong_count(&self.inner) == 2 && Arc::weak_count(&self.inner) == 0 {
+                println!("N2 post-error checkpoint: armed task ended (not OS death)");
+                return true;
+            }
+            match self.watch.receipts.try_recv() {
+                Ok(Receipt::Listed(pids)) => {
+                    assert!(
+                        pids.contains(&self.pids[1]),
+                        "post-error inventory lost the actual member: {pids:?}"
+                    );
+                    println!("N2 post-error checkpoint: actual watcher List after the AckError");
+                    true
+                }
+                Ok(Receipt::Incomplete) | Err(std::sync::mpsc::TryRecvError::Empty) => false,
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => panic!("post-error observer disconnected"),
+            }
+        });
+    }
+
     pub(super) fn no_weak(&self) {
         let held = if self.child.is_some() { 2 } else { 1 };
         eventually("watch released weak custody and retained no strong state", || {
