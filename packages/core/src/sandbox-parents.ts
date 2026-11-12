@@ -7,6 +7,8 @@ import { Effect, Exit, Result } from "effect"
 import { FSUtil } from "./fs-util"
 import { ToolSafety } from "./tool-safety"
 
+export const diagnostic: { path?: string; entries: unknown[] } = { entries: [] }
+
 /** Plan every root before touching the worktree. Existing bytes and directory modes are never changed. */
 export const plan = Effect.fn("SandboxParents.plan")(function* (
   fs: FSUtil.Interface,
@@ -81,15 +83,42 @@ export const prepare = Effect.fn("SandboxParents.prepare")(function* (
   }).pipe(Effect.onExit((exit) => Exit.isSuccess(exit) ? Effect.void : Effect.sync(() => {
     // Nonrecursive rmdir refuses unfamiliar bytes. Changed identities or redirected ancestors are left alone.
     // Synchronous cleanup also runs on interruption with this Effect version.
-    created.toReversed().forEach((entry) => Result.try(() => {
-      const info = lstatSync(entry.path)
-      // Windows can reuse a file index for the replacement directory. Birth time keeps that identity distinct.
-      if (!info.isDirectory() || info.isSymbolicLink() || info.dev !== entry.dev || info.ino !== entry.ino ||
-        info.birthtimeMs !== entry.birthtimeMs ||
-        realpathSync(path.dirname(entry.path)) !== path.dirname(entry.path) || realpathSync(entry.path) !== entry.path)
-        return
-      rmdirSync(entry.path)
-    }))
+    created.toReversed().forEach((entry) => {
+      if (diagnostic.path !== entry.path) return Result.try(() => {
+        const info = lstatSync(entry.path)
+        // Windows can reuse a file index for the replacement directory. Birth time keeps that identity distinct.
+        if (!info.isDirectory() || info.isSymbolicLink() || info.dev !== entry.dev || info.ino !== entry.ino ||
+          info.birthtimeMs !== entry.birthtimeMs ||
+          realpathSync(path.dirname(entry.path)) !== path.dirname(entry.path) || realpathSync(entry.path) !== entry.path)
+          return
+        rmdirSync(entry.path)
+      })
+      const trace: { stage?: string; info?: unknown; witness?: unknown; witnessError?: unknown } = {}
+      const result = Result.try(() => {
+        const info = lstatSync(entry.path)
+        // Windows can reuse a file index for the replacement directory. Birth time keeps that identity distinct.
+        if (!info.isDirectory() || info.isSymbolicLink() || info.dev !== entry.dev || info.ino !== entry.ino ||
+          info.birthtimeMs !== entry.birthtimeMs ||
+          realpathSync(path.dirname(entry.path)) !== path.dirname(entry.path) || realpathSync(entry.path) !== entry.path) {
+          trace.info = { dev: info.dev, ino: info.ino, birthtimeMs: info.birthtimeMs, mode: info.mode }
+          trace.stage = "preserved"
+          return
+        }
+        trace.info = { dev: info.dev, ino: info.ino, birthtimeMs: info.birthtimeMs, mode: info.mode }
+        trace.stage = "rmdir"
+        if (diagnostic.path === entry.path) {
+          try {
+            const witness = lstatSync(entry.path, { bigint: true })
+            trace.witness = { dev: witness.dev, ino: witness.ino, birthtimeNs: witness.birthtimeNs, mode: witness.mode }
+          } catch (error) {
+            trace.witnessError = error
+          }
+        }
+        rmdirSync(entry.path)
+        trace.stage = "removed"
+      })
+      if (diagnostic.path === entry.path) diagnostic.entries.push({ entry, ...trace, result })
+    })
   })))
 })
 

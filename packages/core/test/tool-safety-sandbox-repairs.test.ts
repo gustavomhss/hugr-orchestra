@@ -1,6 +1,8 @@
 import { expect } from "bun:test"
 import path from "node:path"
 import { createServer } from "node:net"
+import { lstatSync } from "node:fs"
+import { inspect } from "node:util"
 import { pathToFileURL } from "node:url"
 import { Deferred, Effect, Fiber } from "effect"
 import { ChildProcess } from "effect/unstable/process"
@@ -251,18 +253,44 @@ it.live("failed preparation preserves a replacement directory with a different i
     const f = yield* fixture
     const target = path.join(f.directory, "owned")
     const moved = path.join(f.directory, "moved")
-    const failed = yield* Effect.flip(SandboxParents.prepare({
-      ...f.fs,
-      realPath: (entry) => f.fs.realPath(entry).pipe(Effect.tap(() => Effect.gen(function* () {
-        if (entry !== target) return
-        yield* f.fs.rename(target, moved)
-        yield* f.fs.makeDirectory(target)
-        yield* f.fs.realPath(path.join(f.directory, "absent-control"))
-      }))),
-    }, f.directory, [target]))
-    expect(failed.reason).toBe("sandbox-parent-placement-acquisition")
-    expect(yield* f.fs.isDir(target)).toBe(true)
-    expect(yield* f.fs.isDir(moved)).toBe(true)
+    SandboxParents.diagnostic.path = target
+    SandboxParents.diagnostic.entries = []
+    FSUtil.diagnostic.path = target
+    FSUtil.diagnostic.entries = []
+    try {
+      const failed = yield* Effect.flip(SandboxParents.prepare({
+        ...f.fs,
+        realPath: (entry) => f.fs.realPath(entry).pipe(Effect.tap(() => Effect.gen(function* () {
+          if (entry !== target) return
+          yield* f.fs.rename(target, moved)
+          yield* f.fs.makeDirectory(target)
+          yield* f.fs.realPath(path.join(f.directory, "absent-control"))
+        }))),
+      }, f.directory, [target]))
+      expect(failed.reason).toBe("sandbox-parent-placement-acquisition")
+      const isDir = yield* f.fs.isDir(target)
+      const native = [target, moved].map((entry) => {
+        try {
+          return { path: entry, number: lstatSync(entry), bigint: lstatSync(entry, { bigint: true }) }
+        } catch (error) {
+          return { path: entry, error }
+        }
+      })
+      try {
+        console.error("sandbox cause", inspect({ cleanup: SandboxParents.diagnostic.entries,
+          isDir: FSUtil.diagnostic.entries, actual: isDir, native }, {
+          depth: 6, maxArrayLength: 16, maxStringLength: 4000, customInspect: false, getters: false,
+          compact: true, breakLength: Infinity, colors: false,
+        }))
+      } catch {
+        try { console.error("sandbox cause: diagnostic rendering failed") } catch {}
+      }
+      expect(isDir).toBe(true)
+      expect(yield* f.fs.isDir(moved)).toBe(true)
+    } finally {
+      SandboxParents.diagnostic.path = undefined
+      FSUtil.diagnostic.path = undefined
+    }
   }),
 )
 

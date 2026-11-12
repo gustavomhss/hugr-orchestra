@@ -12,6 +12,8 @@ import { makeGlobalNode } from "./effect/app-node"
 import { filesystem } from "./effect/app-node-platform"
 
 export namespace FSUtil {
+  export const diagnostic: { path?: string; entries: unknown[] } = { entries: [] }
+
   export class FileSystemError extends Schema.TaggedErrorClass<FileSystemError>()("FileSystemError", {
     method: Schema.String,
     cause: Schema.optional(Schema.Defect()),
@@ -76,8 +78,14 @@ export namespace FSUtil {
       })
 
       const isDir = Effect.fn("FileSystem.isDir")(function* (path: string) {
-        const info = yield* fs.stat(path).pipe(Effect.catch(() => Effect.void))
-        return info?.type === "Directory"
+        let error: unknown
+        const info = yield* fs.stat(path).pipe(Effect.catch((failure) => {
+          error = failure
+          return Effect.void
+        }))
+        const result = info?.type === "Directory"
+        if (diagnostic.path === path) diagnostic.entries.push({ path, info, error, result })
+        return result
       })
 
       const isFile = Effect.fn("FileSystem.isFile")(function* (path: string) {
