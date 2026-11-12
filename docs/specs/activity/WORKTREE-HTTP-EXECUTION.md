@@ -180,3 +180,8 @@ still passing. Do not close W2 until actual named outcomes, unchanged oracles
 and exact snapshot trees are inspected. Candidate Server tree:
 e504ffb90aad4a4bcb5a4389b4d91c9cdd0996ba. Protocol/Client/Core/Schema trees remain
 those in worktree-http-baseline.json. The whole R1–R20 monitor and W3 remain open.
+
+The unchanged both-OS green request is active at
+/tmp/activity-worktree-http-green-ci.log (exit file with the same prefix).
+It uploaded 14 changed files over 939fa6e868 and is waiting for runner capacity
+(16 queued runs observed). Do not duplicate this scope. No green result exists yet.

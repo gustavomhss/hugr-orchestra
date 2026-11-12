@@ -74,3 +74,51 @@ The reviewed pack is now active in test:ci; log /tmp/activity-worktree-ui-red-ci
 exit /tmp/activity-worktree-ui-red-ci.exit. Do not start a duplicate request.
 No hosted W3 result exists yet. Rendered actual-HTTP EN/BR/narrow/keyboard/source/
 error observations remain explicitly pending until W2 and W3 implementation.
+
+## Frozen W3-B execution decisions, not dispatch permission
+
+W3's red and W2's integration gates still precede runtime dispatch. Once both
+are verified, the controller worker owns only activity/worktree-reading.ts;
+the lead owns worktrees.tsx, copy, guide, any narrow CSS/page changes and rendered
+inspection. Their only shared seam is the existing Controller/State signature.
+The worker does not change tests, Client, Server, Schema or component files.
+
+Controller implementation decisions:
+
+1. Use one actual Solid createStore for the public State. Keep request ownership
+   in a private context epoch, disposed flag, AbortController set and per-scope
+   pending promises. Constructing/ticking starts no request or timer.
+2. Coalesce inventory and same-ID reads separately. Read only IDs present in the
+   accepted snapshot; different rows remain independent. Each actual request has
+   a distinct owned signal. Starting a request clears only that scope's failure.
+3. Check context ownership before decoding/publishing/reporting/settling status.
+   Decode using the canonical WorktreeSnapshot schema; report the actual generated
+   Client error wrapper unchanged. Compare decimal revisions exactly with BigInt.
+4. Adopt the first valid snapshot, including revision zero. Within one instance,
+   greater revisions admit the entire immutable snapshot and one monotonic
+   receivedAt anchor; equal/older ones settle their operation without changing
+   readings, membership or age anchors. Same-instance keyed reconciliation may
+   preserve row identity; new lifetimes replace the whole snapshot property.
+5. On a different instance, advance the epoch synchronously, abort every old
+   signal, clear old flights/status/readings, and start one fresh GET handshake.
+   Coalesced refreshes join it. Only the new-context handshake establishes its
+   instance. Old finalizers must never delete/settle new same-ID flights/status.
+   Failed handshakes stay unavailable with deliberate refresh retry.
+6. A GET error superseded by a newer admitted snapshot is obsolete. Other current
+   failures set only their own scope's error, retain data/anchors and report once.
+   Another row's success cannot clear that failure. Completed statuses for retired
+   row IDs may be pruned with inventory membership; retain active scopes until
+   settled. Disposal aborts/retire ownership and suppresses all later updates.
+7. Default clock is performance.now; default reporting is console.error with
+   Activity context. tick changes monotonic now only. matching preserves canonical
+   row references/order and matches trimmed case-insensitive directory/projectID.
+
+The component captures one resolved SDK object per reactive server context.
+Its generated-method wrappers await that captured SDK's ready promise, check the
+owned signal, then call the same captured client's method. It never reads sdk()
+again after awaiting. Context/category cleanup aborts the controller and removes
+its owned age timer. Mount/Refresh issue inventory only; row buttons issue reads.
+Use source/age/attempt data from the admitted snapshot, preserving explicit unread,
+zero, partial, blank owner, uncollapsed and unproved values. The project column and
+filter use canonical projectID. Keep shared kit typography/horizontal scrolling;
+inline errors and keyboard labels remain tied to the actual target.

@@ -21,7 +21,8 @@ outcomes are in worktree-http-baseline.json. W2-A is complete; W2-B now implemen
 the frozen registry source, handler and server composition (cab0b838ef).
 Independent source/handler reviews, Server/Protocol/Client typechecks, official
 Client generation (no generated delta), formatting and guards passed. Hosted
-green is pending; no manual Worktrees row button is available yet. See
+green is active at /tmp/activity-worktree-http-green-ci.log, waiting for runners;
+no manual Worktrees row button is available yet. See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
 worktree-validation.json for actual named outcomes.
 
