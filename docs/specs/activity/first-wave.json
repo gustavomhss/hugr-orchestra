@@ -3,26 +3,30 @@
     {
       "id": "G01",
       "test": "packages/core/test/activity-registration.test.ts :: G01 migration backfills unique IDs without losing fields and matches fresh constraints",
-      "executionStatus": "red-verified-awaiting-hosted-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453"
+      "executionStatus": "red-to-green-verified",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43228040756"
     },
     {
       "id": "G02",
       "test": "packages/core/test/activity-registration.test.ts :: G02 unobserved same-path recreation and strategy ABA renew persisted identity at equal timestamps",
-      "executionStatus": "red-verified-awaiting-hosted-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453"
+      "executionStatus": "red-to-green-verified",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43228040756"
     },
     {
       "id": "G03",
       "test": "packages/core/test/activity-registration.test.ts :: G03 no-op and failed producer transactions preserve the committed incarnation",
-      "executionStatus": "red-verified-awaiting-hosted-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453"
+      "executionStatus": "red-to-green-verified",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43228040756"
     },
     {
       "id": "G04",
       "test": "packages/core/test/activity-registration.test.ts :: G04 reopened storage retains identity and internal reads preserve public output without mutation",
-      "executionStatus": "red-verified-awaiting-hosted-green",
-      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453"
+      "executionStatus": "red-to-green-verified",
+      "redRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43163118453",
+      "greenRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43228040756"
     },
     {
       "id": "W01",
@@ -89,7 +93,8 @@
       "reads": ["packages/core/script/migration.ts"],
       "acceptanceBaseline": "03aadc3a75",
       "executionAnchor": "docs/specs/activity/REGISTRATION-EXECUTION.md",
-      "executionStatus": "implemented-awaiting-hosted-green"
+      "executionStatus": "complete",
+      "verifiedSourceTree": "c8a25f60a8a70eddb3da18f8ac6d75e07686e4df"
     },
     {
       "id": "WP-W1",
@@ -145,5 +150,6 @@
     "hosted-red-baselines",
     "approved-final-write-sets"
   ],
-  "normativeContract": "docs/specs/activity/FIRST-WAVE-CONTRACT.md"
+  "normativeContract": "docs/specs/activity/FIRST-WAVE-CONTRACT.md",
+  "completedWps": ["WP-R0"]
 }

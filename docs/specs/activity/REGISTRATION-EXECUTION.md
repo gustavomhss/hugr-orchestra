@@ -1,7 +1,7 @@
 # WP-R0 execution anchor
 
-Baseline: `03aadc3a75` (planning corrections). R0-A has hosted red evidence;
-R0-B is implemented and awaiting hosted green. Existing project list/get and public output remain unchanged. The
+Baseline: `03aadc3a75` (planning corrections). R0-A and R0-B are complete on
+the activity-monitor branch, with hosted red-to-green evidence. Existing project list/get and public output remain unchanged. The
 owner's installed application/database are outside this work.
 
 ## Frozen internal consumer surface
@@ -121,11 +121,24 @@ lock. No assertion, test timeout, shared helper or production code changed in
 this cleanup correction. Independent review approved it; final Core typecheck
 passed (`/tmp/activity-registration-cleanup-typecheck.exit`, 0).
 
-The authoritative retry uses the same three-file pack on Linux/Windows:
-`/tmp/activity-registration-green-cleanup-ci.log` and matching `.exit` receipt.
-It is awaiting shared runner capacity. An earlier uploader stopped before
-creating a CI branch when the precision oracle was strengthened. The first
-implementation snapshot predates only the reviewed guardrail comment; the new
-retry includes that comment and the cleanup correction. No completed R0 or
-whole-product claim is made yet. Local product tests, owner database migration
-and owner app/server restart remain prohibited.
+The authoritative retry,
+[43228040756](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43228040756),
+passed all 22 tests on each of Linux and Windows, with zero failures. Both Omni
+controls passed with 79 real spawns and zero delegated spawns per OS; the
+workflow cleaned its temporary branch and the helper exited 0. Snapshot:
+`f29dac14de9af72a4d3403f7f3febfe1307de3a9`. The fetched snapshot matches the
+entire current Core tree exactly: `c8a25f60a8a70eddb3da18f8ac6d75e07686e4df`.
+
+The full hosted logs were compared by actual test name against the red baseline:
+all seven former failures per OS became passes, all fifteen former passes
+remained passing, and no test disappeared or changed names. Structured outcomes
+are in registration-validation.json. G01's later precision assertion is
+explicitly recorded as additional coverage, not an independently executed red
+assertion. These are focused package/fixture gates, not full-suite or installed
+desktop acceptance.
+
+The lead inspected source, reviews and exact-scope evidence and closes WP-R0.
+WP-W1/W2/W3 and the remaining product requirements remain outstanding. This
+closure does not authorize merge, release, owner database migration or app/server
+restart. No local product tests ran. The authoritative helper receipt is
+`/tmp/activity-registration-green-cleanup-ci.exit` (0).

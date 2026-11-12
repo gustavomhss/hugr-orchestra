@@ -4,18 +4,18 @@ Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activi
 
 ## Current checkpoint
 
-WP-R0 now has a real hosted red baseline on Linux and Windows (15 pass/seven
-intended failures per OS; Omni controls pass with 52 real spawns each), followed
-by an implemented persisted registrationID producer, internal reads and a
-data-preserving migration. Generation/check, final Core typecheck, formatting,
-diff checks and independent source/precision reviews passed. The same hosted
-pack passed 22 tests on Linux; Windows passed 21 and failed G04's temporary
-fixture disposal with EBUSY. The test now reuses the repository's bounded EBUSY
-cleanup helper; review and final typecheck passed. The corrected same-pack retry
-is awaiting shared runner capacity; R0 is not complete yet.
+WP-R0 is complete on activity-monitor: persisted registrationID producer,
+internal reads and data-preserving migration have hosted red-to-green proof.
+The corrected three-file pack passed 22/22 tests on each of Linux and Windows,
+with Omni controls passing (79 real spawns per OS, zero delegated). The fetched
+tested snapshot matches the complete current Core tree exactly. Generation/check,
+final Core typecheck, formatting, diff checks and independent source/precision/
+cleanup reviews passed. The earlier Windows fixture EBUSY failure is resolved
+through the repository's existing bounded cleanup helper. Actual named outcomes
+show seven failures became passes and all fifteen prior passes stayed green per OS.
 Guardrails have zero gates and one reviewed rebuild-ignore warning. No owner
 database was migrated and no running app/server was restarted. Exact source,
-oracle strengthening, comment-only snapshot boundary and pending green receipt
+oracle strengthening, exact snapshot boundary and passing green receipt
 are in [REGISTRATION-EXECUTION.md](REGISTRATION-EXECUTION.md).
 
 Planning follow-up: [PLAN.md](PLAN.md) records the whole R1–R20 coverage ledger

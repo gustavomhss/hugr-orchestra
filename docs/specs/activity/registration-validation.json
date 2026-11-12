@@ -1,0 +1,208 @@
+{
+  "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43228040756",
+  "snapshot": "f29dac14de9af72a4d3403f7f3febfe1307de3a9",
+  "jobs": [
+    {
+      "job": "test (ubuntu-24.04)",
+      "passed": 22,
+      "failed": 0,
+      "omniControl": "pass",
+      "omniSpawns": 79,
+      "delegatedSpawns": 0,
+      "redToGreen": 7,
+      "regressions": 0,
+      "tests": [
+        {
+          "name": "G01 migration backfills unique IDs without losing fields and matches fresh constraints",
+          "status": "pass"
+        },
+        {
+          "name": "G02 unobserved same-path recreation and strategy ABA renew persisted identity at equal timestamps",
+          "status": "pass"
+        },
+        {
+          "name": "G03 no-op and failed producer transactions preserve the committed incarnation",
+          "status": "pass"
+        },
+        {
+          "name": "G04 reopened storage retains identity and internal reads preserve public output without mutation",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > accepts arbitrary non-empty strategy ids",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > rejects duplicate strategies and reports unavailable ids",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > creates and removes a git worktree directory",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > registers the project checkout as a source on first use and rejects other directories",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > requires force to remove a dirty git worktree",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > preserves copies whose stored strategy is unavailable",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > adds a numeric suffix when a copy directory already exists",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > fails after ten copy directory conflicts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > does not publish an event when refresh finds no directory changes",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh discovers and prunes an externally managed git worktree",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh ignores stale git worktree registrations",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh ignores existing directories that are no longer git checkouts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh with no roots is a no-op",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh removes missing ordinary checkouts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > names a copy after the first three words of the model reply",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectDirectories > decodes directory schemas",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectDirectories > creates once and ignores conflicts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectDirectories > replaces the strategy when requested",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "job": "test (windows-latest)",
+      "passed": 22,
+      "failed": 0,
+      "omniControl": "pass",
+      "omniSpawns": 79,
+      "delegatedSpawns": 0,
+      "redToGreen": 7,
+      "regressions": 0,
+      "tests": [
+        {
+          "name": "G01 migration backfills unique IDs without losing fields and matches fresh constraints",
+          "status": "pass"
+        },
+        {
+          "name": "G02 unobserved same-path recreation and strategy ABA renew persisted identity at equal timestamps",
+          "status": "pass"
+        },
+        {
+          "name": "G03 no-op and failed producer transactions preserve the committed incarnation",
+          "status": "pass"
+        },
+        {
+          "name": "G04 reopened storage retains identity and internal reads preserve public output without mutation",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > accepts arbitrary non-empty strategy ids",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > rejects duplicate strategies and reports unavailable ids",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > creates and removes a git worktree directory",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > registers the project checkout as a source on first use and rejects other directories",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > requires force to remove a dirty git worktree",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > preserves copies whose stored strategy is unavailable",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > adds a numeric suffix when a copy directory already exists",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > fails after ten copy directory conflicts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > does not publish an event when refresh finds no directory changes",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh discovers and prunes an externally managed git worktree",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh ignores stale git worktree registrations",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh ignores existing directories that are no longer git checkouts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh with no roots is a no-op",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > refresh removes missing ordinary checkouts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectCopy > names a copy after the first three words of the model reply",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectDirectories > decodes directory schemas",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectDirectories > creates once and ignores conflicts",
+          "status": "pass"
+        },
+        {
+          "name": "ProjectDirectories > replaces the strategy when requested",
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "acceptanceGate": "All seven previously failing tests per OS pass; all fifteen previously passing tests remain passing; no removed or renamed tests",
+  "subsequentOracleStrengthening": "G01 later checks SQLite integer preservation above Number.MAX_SAFE_INTEGER; that extra assertion was not executed in this baseline."
+}

@@ -93,7 +93,7 @@ preparation; code anchors, migrations, stubs and runtime proof still do not exis
 
 ## WP-R0 — observable registration incarnations
 
-Status: implemented, awaiting hosted green; not complete. Owner: lead integration. Dependency: existing
+Status: complete on activity-monitor, hosted red-to-green verified; not merged/released. Owner: lead integration. Dependency: existing
 ProjectDirectories persistence and migration mechanism. Writes: Core project
 SQL/service, focused registration test, one new migration and generator-owned
 Core schema/registry outputs. It does not change existing public project APIs.
@@ -109,7 +109,7 @@ the monitor never creates or edits a registration to manufacture identity.
 
 ### Task R0-A — persistence acceptance and red evidence
 
-Owner: lead; state: hosted red baseline captured. The internal-read anchor and
+Owner: lead; state: complete, hosted red baseline captured and final suite green. The internal-read anchor and
 `packages/core/test/activity-registration.test.ts` now exist; details and exact
 gates are in REGISTRATION-EXECUTION.md. G01–G04 test authoring only;
 R0-B owns making the implementation checks pass.
@@ -123,7 +123,7 @@ R0-B owns making the implementation checks pass.
 
 ### Task R0-B — durable identity producer and internal reads
 
-Owner: lead integration; state: implemented, awaiting hosted green and final evidence closure. Writes: Core
+Owner: lead integration; state: complete, exact-source hosted green and final evidence verified. Writes: Core
 project SQL/service, new migration and generator outputs owned only by this WP.
 
 - **Axioms:** registrationID is a persisted incarnation token, not an observation UUID, PID, timestamp or R12 action-generation capability (R3/R12).
