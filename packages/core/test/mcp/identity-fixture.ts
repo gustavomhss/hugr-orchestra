@@ -290,6 +290,7 @@ export function remote(names: readonly string[], value: string, options: { oauth
             start(controller) {
               stream.controller = controller
               listeners.add(controller)
+              controller.enqueue(new TextEncoder().encode(": ready\n\n"))
               listening.resolve()
             },
             cancel() {
