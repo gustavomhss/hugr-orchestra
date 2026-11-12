@@ -1,4 +1,4 @@
-# M13 manager contract — acceptance authorized, implementation not authorized
+# M13 manager contract — source implementation authorized after acceptance review
 
 # M13 manager phase — Root design FREEZE FOR ACCEPTANCE ONLY, no authoring/source GO
 
@@ -99,3 +99,9 @@ export type LiveDeliveryOptions = {
   readonly sleep?: (milliseconds: number, signal: AbortSignal) => Promise<void>
 }
 ```
+
+## Root source-only authorization
+
+Acceptance freeze `ecdb6bb8ffb299fb40acaab89bd25608783c81ad` was reviewed in full by Root and an independent critic. [Independent Node controls](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43319471495) pass all six cases on Linux and Windows; snapshot `17867ef69b42341096173365d3d0a424c4750787`. They do not import the manager. Node24.22.2/SQLite3.53.4 measured; exact128MiB detail parses in653/619ms. The 96 manager cases and three real-Core bridges remain unexecuted.
+
+Root authorizes manager source implementation against the frozen packet and actual private contract `live-delivery-contract.ts`; this supersedes the earlier acceptance-only prohibition. Exported error name is `LiveDeliveryError`. API, store, frozen tests and legacy production wiring remain outside the write set. Return full source freeze for cold review before compiler or hosted gates. Whole M13 remains open; capture/IPC/Electron/quit require subsequent explicit contracts and verification.

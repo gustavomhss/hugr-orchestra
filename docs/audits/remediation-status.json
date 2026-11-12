@@ -292,7 +292,12 @@
         "7daa49b325",
         "76236cb726",
         "65f6931a93",
-        "a872842eb9"
+        "a872842eb9",
+        "696793eae0",
+        "e288a0387a",
+        "a2870ff7e8",
+        "e14cf72118",
+        "2ba68435ec"
       ],
       "evidence": [
         {
@@ -365,9 +370,16 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43287303247",
           "source": "8983671c77199fd8eacae6f2eb0f1697c9b52cb5",
           "result": "Deferred public sender returns true instead of false; captured draft and no prior POST assertions pass,1F/3assertions per OS. One invalid queue return assertion removed in separately reviewed fixture correction; sender/query/draft requirements unchanged. Completes59 original first-witness cases compositionally, not59 distinct defects or proven later tails."
+        },
+        {
+          "kind": "literal_variant_identity_integrated_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43319261692",
+          "source": "2b56c6cc9f0eb70eb96653bdd80d48fb441500da",
+          "snapshot": "473bd697b5bec75f768561b4a301e25986453e5c",
+          "result": "Five complete Core files:104pass/0fail/430assertions per OS, including21new acceptance cases. Eleven actual hosted blobs equal frozen source and integrated Root. Core type0; only undefined inherits, every string including default and empty is literal. No API/schema/dependency/generated changes. Root Server aggregate type and guards pending at this entry."
         }
       ],
-      "remaining": "Consumer source authorized only after59 composed first-witness RED,15controls and independent exact-contract review. Root contract in remediation-model-consumers.md; actual source, regression and AFTER benchmark gates still pending."
+      "remaining": "Core/host/API and literal variant identity are integrated and verified in scoped hosted gates. Consumer correction freeze/cold review, Client/SessionUI/App/TUI types, full consumer/E1/owner regressions and production AFTER benchmark remain required. Whole E6 stays open. Historical stored default strings are preserved literally; ambiguous old aliases are not rewritten."
     },
     {
       "id": "E7",
@@ -577,7 +589,14 @@
       "owner": "lead",
       "status": "planned_unverified",
       "runtime_reproduced": true,
-      "commits": [],
+      "commits": [
+        "fa4edeb7b0",
+        "58aa2d4751",
+        "6229d287b1",
+        "450dc9bad7",
+        "412ef9205a",
+        "5024bbf7b2"
+      ],
       "evidence": [
         {
           "kind": "red",
@@ -670,9 +689,16 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43301049199",
           "source": "14657189e4a94095cd1dd1b51ecc984c4fb1c164",
           "result": "Both OS1pass/17assertions/Omni1. Actual child enters2048regex/8MiB at40.411ms Linux/63.484ms Windows. Requested1500ms kill, actual exit1506.181/1519.258ms and join1515.776/1519.380ms; no CPU_DONE/outer containment, parent heartbeat maxgap96.872/84.268ms. Actual PID liveness/death verified; backend signal null, no observed SIGKILL-report claim. Core type0. This supports native-op isolation planning, not CodeMode/default/compiled/Electron GREEN."
+        },
+        {
+          "kind": "private_parser_preparatory_stage_integrated_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43314982070",
+          "source": "cc371ed21bb42bd031e80e3a929ffa772b5d1dcd",
+          "snapshot": "0b1096b5d4ac31aa9269fc0a8797a8abe5ec2c7f",
+          "result": "89pass/0fail/282assertions per OS (44original controls+45future acceptance), cleanup/wrapper0. Two actual hosted blobs equal integrated Root. CodeMode type0; Root guards78rules382paths0errors/one inherited advisory, boundaries0new0stale, spawn0. Private utility is not wired into execution. Acorn8.15 grammar/errors/positions/callbacks preserved; user native construction omitted. Compiled legal-notice retention still pending."
         }
       ],
-      "remaining": "Worker prototype rejected and not integrated. OS process preemption capability verified both OS; optional safe-default native-regex adapter, lexer and per-operation cancellation/serialization contracts still require exact freeze/cold review before implementation. No general parent CPU-preemption claim."
+      "remaining": "Worker prototype rejected and not integrated. OS-process preemption and private parser stage verified, but hardened source/compiled child capability, native operation codec/factory, original-scope tool barriers and deadline semantics still require exact contract and acceptance before production execution changes. No product timeout GREEN or general parent CPU-preemption claim."
     },
     {
       "id": "E11",
@@ -2658,9 +2684,16 @@
           "kind": "private_store_integrated_stage",
           "source": "80555b5f5f",
           "result": "Eight store paths integrated, byte-identical to BOTH actual hosted snapshots84308ab/e78d584 (16 checks). Root aggregate Desktop type0; guards78rules/364paths/0gates/0errors/one existing advisory; boundaries5629files/5292edges/92existing/0new/0stale; spawn4018files/66allowlisted. No PhaseA RED files integrated; client/sender still unchanged."
+        },
+        {
+          "kind": "private_manager_independent_runtime_controls_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43319471495",
+          "source": "ecdb6bb8ffb299fb40acaab89bd25608783c81ad",
+          "snapshot": "17867ef69b42341096173365d3d0a424c4750787",
+          "result": "Six controls pass per OS on actual Node24.22.2/SQLite3.53.4: reopen, Basic/location, manual307/308, real response-body abort/socket closure, valid exact128MiB detail. No manager import. Full102Node acceptance (6controls+96future) and3Core bridges cold-reviewed; future96 and bridges not yet run. Desktop package type0 excludes test harness. Root source-only GO after frozen contract; no compiler/CI GO yet."
         }
       ],
-      "remaining": "Private store verified/integrated as a green stage. Original3 sender/redirect failures and manager/target/producer/IPC/UI remain open; no capture/IPC/Electron or power-loss guarantee inferred."
+      "remaining": "Private store verified/integrated. Manager implementation now authorized against frozen private API and cold-reviewed acceptance, without changing legacy client/Senses/Main/IPC/UI yet. Original3 failures and production capture/target/quit wiring remain open; controls do not prove manager behavior."
     },
     {
       "id": "M14",
