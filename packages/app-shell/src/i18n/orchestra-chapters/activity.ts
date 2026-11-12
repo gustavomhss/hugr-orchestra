@@ -60,7 +60,7 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.registeredCount": "Registered worktrees: {{count}}",
   "orchestra.monitor.noRegistered": "This server has no recorded git worktrees.",
   "orchestra.monitor.registryLimit":
-    "Registration does not verify that a directory still exists. Disk usage and use checks have not been read. Owners remain empty until a session name is recorded at creation.",
+    "Registration does not verify that a directory still exists. Owners remain empty and use checks unproved. Readings do not establish unique or reclaimable space.",
   "orchestra.monitor.path": "Path",
   "orchestra.monitor.project": "Project",
   "orchestra.monitor.logical": "Logical",
@@ -153,7 +153,7 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.registeredCount": "Worktrees registradas: {{count}}",
   "orchestra.monitor.noRegistered": "Este servidor não tem worktrees git registradas.",
   "orchestra.monitor.registryLimit":
-    "O registro não confirma que um diretório ainda existe. Uso de disco e verificações de uso não foram lidos. O dono fica vazio até que o nome da sessão seja gravado na criação.",
+    "O registro não confirma que o diretório ainda existe. O campo Dono permanece vazio e a verificação de uso continua não provada. As leituras não determinam espaço único nem recuperável.",
   "orchestra.monitor.path": "Caminho",
   "orchestra.monitor.project": "Projeto",
   "orchestra.monitor.logical": "Lógico",

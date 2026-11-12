@@ -2,11 +2,32 @@
 
 Open **Extensions → Monitor**. The page belongs to the selected server and opens without choosing a project.
 
-**Worktrees** reads that server’s registered project directories. Only entries recorded with the `git_worktree` strategy appear. It lists their paths and projects; the count is the number of registrations, not a scan of the machine. Worktrees created outside this registry are not included. A registration can outlive its directory.
+**Worktrees** reads that server’s registered Git project directories. Only entries
+recorded with the `git_worktree` strategy appear. It lists paths and project IDs;
+the count is the number of registrations, not a scan of the machine. Worktrees
+created outside this registry are not included. A registration can outlive its
+directory.
 
-Use **Filter** to search a full path or project name. **Refresh** reads the registry again. While the tab is visible, it refreshes every ten seconds. **Age** is the time since each registry response was received, not the directory’s age. If a refresh fails, an error appears and the previous complete inventory remains visible with its original timestamps.
+Use **Filter** to search a full path or project ID. Opening the tab, **Refresh**
+and the ten-second visible-tab refresh read registry metadata and cached readings
+only. Select a row's **Read disk usage** button to start its bounded metadata walk.
+Each row can be read independently; occupied server capacity produces an explicit
+error and can be retried.
 
-The registry has no recorded session owner, disk measurement, collapsed file identity or use proof. Owner stays empty; Logical is **unread**, Unique is **not collapsed**, and Use check is **unproved**. Manual disk readings for individual Worktrees are not yet available on this page. These rows offer no cleanup actions.
+**Logical** shows only the last complete logical-path byte reading, with source
+`node.fs.lstat`. **Age** compares server timestamps and then advances with the
+client's monotonic clock. Before a complete reading, value and age are **unread**;
+a successfully measured empty directory can show zero. Expand the attempt details
+for observed bytes, entry count, separate attempt age and unread scopes. A partial
+retry retains the earlier complete value and its original timestamp. The limits
+and gap semantics are the same as Cache, Temporary and Logs below.
+
+Failed inventory or manual reads show errors while retaining prior readings and
+timestamps. Server or category changes retire pending requests; older/equal
+snapshots cannot erase newer readings. A removed/replaced registration starts a
+new unread row. This registry has no recorded session owner: Owner stays empty
+even when a session is selected. Unique is **not collapsed** and Use check is
+**unproved**. These rows offer no cleanup actions.
 
 ## Worktree API
 

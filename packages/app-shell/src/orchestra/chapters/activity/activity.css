@@ -104,6 +104,16 @@
   cursor: pointer;
 }
 
+[data-mx-page="activity"] .activity-worktree-attempt {
+  margin-block-start: 8px;
+  max-inline-size: 48ch;
+  white-space: normal;
+}
+
+[data-mx-page="activity"] .activity-worktree-attempt code {
+  overflow-wrap: anywhere;
+}
+
 [data-mx-page="activity"] .activity-members {
   display: grid;
   gap: 4px;
