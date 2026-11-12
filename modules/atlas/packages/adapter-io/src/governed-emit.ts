@@ -1,3 +1,4 @@
+import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/governed-emit.ts  (COMPOSE-A: the governed durable emit leg)
 //
 // The runtime composition-root's governed write door. `atlas-emit` persists DURABLY only THROUGH the
@@ -154,6 +155,7 @@ export interface GovernedEmitDeps extends NegationEmitDeps {
   /** ARCH-9 — where this write came from, DERIVED by the door that built this leg, never by the payload. ABSENT ⇒ `authored` ⇒ behaviour unchanged (`wire.ts` sets none); `promoted` removes the KNOW-18 fast path so every staged row faces the ratifier. Why a new field and not a forged `contested`/`lowRisk`: `governed-emit-route.ts` + `RatifyContext.origin`. */
   readonly origin?: WriteOrigin // #99b N2 — the NEGATION leg's channels are inherited from `NegationEmitDeps`.
   /** Host-bound current source/recipe/membership identities, never payload-supplied versions. */
+  readonly evaluation?: EvaluationAccess
   readonly ownershipInput?: (key: string) => string | undefined
 }
 
@@ -282,7 +284,7 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
         // ARCH-9: the class the RESOURCE carries. Absent on a CREATE (nothing to derive from — ARCH-D3b, the
         // OPEN owner DEFINE) and on a refusal (the write does not reach `route` at all).
         const derivedTier = authzVerdict.derivedTier
-        const ownershipRefusal = ownershipAttachmentRefusal(node, deps.store, deps.ownershipInput)
+        const ownershipRefusal = ownershipAttachmentRefusal(node, deps.store, deps.ownershipInput, deps.evaluation)
         if (ownershipRefusal !== undefined) return { out: { emitted: false, rejected: ownershipRefusal } }
 
         // RATIFY (`GateName:'ratify'`, gate 2.5) — the KNOW-8/KNOW-18 tier-ratification gate, BETWEEN authz

@@ -16,7 +16,10 @@ export { isSemanticSlot } from "./types.js"
 export { readOwnership, indexOwnership } from "./ownership/read.js"
 export { planOwnershipUpdate } from "./ownership/update-plan.js"
 export type { OwnershipInputObservation, OwnershipUpdatePlan } from "./ownership/update-plan.js"
-export { isOwnershipManifest, isOwnershipNeed } from "./ownership/shape.js"
+export { isOwnershipManifest, isOwnershipNeed, isEvaluationOwnershipManifest, isEvaluationOwnershipContract,
+  isEvaluationOwnershipReview, isEvaluationOwnershipReceipt, isEvaluationOwnershipArtifact } from "./ownership/shape.js"
+export { OWNERSHIP_ADMISSION_CRITERIA, isOwnershipEvaluationAuthority, isOwnershipEvaluationContext,
+  ownershipEvaluationLabel, sameOwnershipEvaluation } from "./ownership/evaluation.js"
 export type * from "./ownership/types.js"
 export type * from "./types.js"
 

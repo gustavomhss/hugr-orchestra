@@ -35,6 +35,10 @@ jobs:
         working-directory: modules/atlas
         run: |
           npx --no-install vitest run \
+            packages/knowledge/test/ownership-evaluation.test.ts \
+            packages/adapter-io/test/evaluation-boundaries.test.ts \
+            packages/adapter-io/test/genesis-evaluation.test.ts \
+            packages/adapter-io/test/evaluation-rebuild.test.ts \
             packages/knowledge/test/ownership-read.test.ts \
             packages/knowledge/test/ownership-update-plan.test.ts \
             packages/knowledge/test/fastpath-promotion-origin.test.ts \

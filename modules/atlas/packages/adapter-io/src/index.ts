@@ -389,3 +389,11 @@ export type { OwnExport } from "./own-export.js"
 export { ATLAS_IGNORE_BLOCK, ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ATLAS_TREE_NEGATIONS, ensureAtlasIgnored } from "./gitignore.js"
 export type { IgnoreOutcome, IgnoreResult } from "./gitignore.js"
 export { PROPOSE_TEMPLATE } from "./propose-template.js" // D39 — the advisory template as text, for the bundled mine
+
+export { loadEvaluationAccess, initializeEvaluationStore } from "./ownership-evaluation-policy.js"
+export type { EvaluationAccess } from "./ownership-evaluation-policy.js"
+
+export { prepareEvaluation, admitEvaluation, admitEvaluationRebuildTarget } from "./genesis-evaluation.js"
+export type { EvaluationCandidate, PreparedEvaluation } from "./genesis-evaluation.js"
+export { prepareEvaluationUpdate, finalizeEvaluationUpdate } from "./evaluation-rebuild.js"
+export type { EvaluationRebuildRequest, PreparedEvaluationUpdate, EvaluationRebuildPreparation } from "./evaluation-rebuild.js"

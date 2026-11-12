@@ -104,6 +104,9 @@ const copyObservation = (observation: OwnershipInputObservation): OwnershipInput
 
 /** Planner → capture → reuse/revalidation → candidate (contract §2.3 steps 1..11). */
 export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): OwnershipRebuildResult {
+  const baseline = request.store.get(request.manifest)
+  if (baseline !== null && typeof baseline === "object" && "version" in baseline && baseline.version === 2)
+    return { kind: "hold", reason: "ownership-phase", evidence: ["unsupported-evaluation-rebuild: target candidate and new exact reviews required"] }
   const captured = new Map<string, OwnershipInputObservation>()
   const observing = (key: string): OwnershipInputObservation => {
     const found = captured.get(key)
@@ -302,20 +305,20 @@ function hold(reason: OwnershipRefusal["reason"], evidence: readonly string[]): 
   return { kind: "hold", reason, evidence }
 }
 
-function sameObservation(a: OwnershipInputObservation | undefined, b: OwnershipInputObservation | undefined): boolean {
+export function sameObservation(a: OwnershipInputObservation | undefined, b: OwnershipInputObservation | undefined): boolean {
   if (a === undefined && b === undefined) return true
   if (a?.kind !== b?.kind) return false
   if (a?.kind === "present" && b?.kind === "present") return a.version === b.version
   return a?.kind === b?.kind
 }
 
-function isUnderMembers(input: string, receipt: OwnershipReceipt): boolean {
+function isUnderMembers(input: string, receipt: Pick<OwnershipReceipt, "inputs">): boolean {
   if (!input.startsWith("file:")) return false
   const path = input.slice("file:".length)
   return receipt.inputs.some((entry) => entry.key.startsWith("members:") && path.startsWith(`${entry.key.slice("members:".length)}/`))
 }
 
-function effectiveInputs(key: string, receipt: OwnershipReceipt, recipe: OwnershipRecipe, captured: ReadonlyMap<string, OwnershipInputObservation>, initialMembers: ReadonlyMap<string, readonly string[]>): readonly OwnershipInput[] | OwnershipRefusal {
+export function effectiveInputs(key: string, receipt: Pick<OwnershipReceipt, "inputs">, recipe: OwnershipRecipe, captured: ReadonlyMap<string, OwnershipInputObservation>, initialMembers: ReadonlyMap<string, readonly string[]>): readonly OwnershipInput[] | OwnershipRefusal {
   void key
   const mandatory = new Set(recipe.mandatoryInputs ?? recipe.declaredInputs)
   const membersDirs = receipt.inputs.filter((input) => input.key.startsWith("members:")).map((input) => input.key.slice("members:".length))
@@ -343,7 +346,7 @@ function effectiveInputs(key: string, receipt: OwnershipReceipt, recipe: Ownersh
   return out.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
 }
 
-function inputsChanged(baseline: readonly OwnershipInput[], candidate: readonly OwnershipInput[], captured: ReadonlyMap<string, OwnershipInputObservation>): boolean {
+export function inputsChanged(baseline: readonly OwnershipInput[], candidate: readonly OwnershipInput[], captured: ReadonlyMap<string, OwnershipInputObservation>): boolean {
   const base = new Map(baseline.map((input) => [input.key, input.version]))
   const next = new Map(candidate.map((input) => [input.key, input.version]))
   if (base.size !== next.size) return true

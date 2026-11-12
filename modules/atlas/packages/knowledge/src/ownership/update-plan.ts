@@ -1,3 +1,6 @@
+import { isOwnershipEvaluationContext, ownershipEvaluationLabel, sameOwnershipEvaluation } from "./evaluation.js"
+import { isEvaluationOwnershipManifest, isEvaluationOwnershipReceipt } from "./shape.js"
+import type { EvaluationOwnershipReceipt, OwnershipEvaluationContext, OwnershipEvaluationLabel } from "./types.js"
 import type { Hash } from "@atlas/contracts"
 import { id } from "@atlas/kernel"
 import type { StoreApi } from "@atlas/kernel"
@@ -12,6 +15,7 @@ export type OwnershipInputObservation =
 
 type UpdatePlan = {
   readonly kind: "ownership-update-plan"
+  readonly evaluation?: OwnershipEvaluationLabel
   readonly manifest: Hash
   readonly scope: string
   readonly changes: readonly {
@@ -33,25 +37,45 @@ export function planOwnershipUpdate(
   manifestRef: Hash,
   scope: string,
   observe: (key: string) => OwnershipInputObservation,
+  context?: OwnershipEvaluationContext,
+): OwnershipUpdatePlan {
+  if (context !== undefined && !isOwnershipEvaluationContext(context)) return hold("ownership-phase", [manifestRef, "invalid-context"])
+  const captured = context === undefined ? undefined : { ...context, evaluation: { ...context.evaluation } }
+  const plan = resolveUpdatePlan(store, manifestRef, scope, observe, captured)
+  return captured === undefined ? plan : { ...plan, evaluation: ownershipEvaluationLabel(captured, manifestRef) }
+}
+
+function resolveUpdatePlan(
+  store: StoreApi,
+  manifestRef: Hash,
+  scope: string,
+  observe: (key: string) => OwnershipInputObservation,
+  context: OwnershipEvaluationContext | undefined,
 ): OwnershipUpdatePlan {
   const manifest = store.get(manifestRef)
   if (manifest === undefined) return hold("ownership-missing", [manifestRef])
-  if (!isOwnershipManifest(manifest)) return hold("malformed-ownership", [manifestRef])
+  if (!(isOwnershipManifest(manifest) || isEvaluationOwnershipManifest(manifest))) return hold("malformed-ownership", [manifestRef])
+  if (context === undefined && manifest.version !== 1) return hold("ownership-phase", [manifestRef])
+  if (context !== undefined && (manifest.version !== 2 || !sameOwnershipEvaluation(manifest.evaluation, context.evaluation) ||
+    manifest.evaluationCandidate !== context.evaluationCandidate || manifest.generation !== context.generation)) return hold("ownership-phase", [manifestRef])
   if (id(manifest) !== manifestRef) return hold("ownership-integrity", [manifestRef])
   if (manifest.scope !== scope) return hold("ownership-scope", [scope])
 
   // Historical mode permits source drift, not invalid roots, reviews, result bindings or body bytes.
   for (const need of Object.keys(manifest.roots)) {
     if (!isOwnershipNeed(need)) return hold("ownership-selection", [need])
-    const read = readOwnership(store, manifestRef, { scope, need, historical: true, maxBytes: Number.MAX_SAFE_INTEGER }, () => undefined)
+    const read = readOwnership(store, manifestRef, { scope, need, historical: true, maxBytes: Number.MAX_SAFE_INTEGER }, () => undefined, context)
     if (read.kind === "hold") return read
   }
-  const receipts = new Map<string, OwnershipReceipt>()
+  const receipts = new Map<string, OwnershipReceipt | EvaluationOwnershipReceipt>()
   for (const key of manifest.entries.map((entry) => entry.key).sort()) {
-    const read = readOwnership(store, manifestRef, { scope, key, historical: true, maxBytes: Number.MAX_SAFE_INTEGER }, () => undefined)
+    const read = readOwnership(store, manifestRef, { scope, key, historical: true, maxBytes: Number.MAX_SAFE_INTEGER }, () => undefined, context)
     if (read.kind === "hold") return read
     const receipt = store.get(read.receipt)
-    if (!isOwnershipReceipt(receipt)) return hold("malformed-ownership", [read.receipt])
+    if (!(isOwnershipReceipt(receipt) || isEvaluationOwnershipReceipt(receipt))) return hold("malformed-ownership", [read.receipt])
+    if (context === undefined && receipt.version !== 1) return hold("ownership-phase", [read.receipt])
+    if (context !== undefined && (receipt.version !== 2 || !sameOwnershipEvaluation(receipt.evaluation, context.evaluation) ||
+      receipt.evaluationCandidate !== context.evaluationCandidate)) return hold("ownership-phase", [read.receipt])
     if (id(receipt) !== read.receipt) return hold("ownership-integrity", [read.receipt])
     receipts.set(key, receipt)
   }
@@ -90,7 +114,7 @@ export function planOwnershipUpdate(
   }
 }
 
-function dependencyOrder(keys: Iterable<string>, receipts: ReadonlyMap<string, OwnershipReceipt>): string[] | OwnershipRefusal {
+function dependencyOrder(keys: Iterable<string>, receipts: ReadonlyMap<string, OwnershipReceipt | EvaluationOwnershipReceipt>): string[] | OwnershipRefusal {
   const remaining = new Set(keys)
   const order: string[] = []
   while (remaining.size > 0) {

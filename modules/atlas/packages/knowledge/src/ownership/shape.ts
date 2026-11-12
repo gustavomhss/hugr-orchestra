@@ -1,3 +1,5 @@
+import { isOwnershipEvaluationAuthority, OWNERSHIP_ADMISSION_CRITERIA } from "./evaluation.js"
+import type { EvaluationOwnershipArtifact, EvaluationOwnershipContract, EvaluationOwnershipManifest, EvaluationOwnershipReceipt, EvaluationOwnershipReview } from "./types.js"
 import type {
   OwnershipArtifact,
   OwnershipBody,
@@ -73,4 +75,38 @@ export function isOwnershipManifest(value: unknown): value is OwnershipManifest 
   const entries = value.entries
   return Object.entries(value.roots).every(([need, key]) => isOwnershipNeed(need) && text(key) &&
     entries.some((entry) => entry.key === key))
+}
+
+/** Validate the v1 payload with existing exact-key validators, never persist a downgraded copy. */
+function evaluationPayload(value: unknown, candidate: boolean, generation = false): Record<string, unknown> | undefined {
+  if (!object(value) || value.version !== 2 || !isOwnershipEvaluationAuthority(value.evaluation) ||
+    (candidate && !hash(value.evaluationCandidate)) || (generation && !hash(value.generation))) return undefined
+  const payload: Record<string, unknown> = { ...value, version: 1 }
+  delete payload.evaluation
+  if (candidate) delete payload.evaluationCandidate
+  if (generation) delete payload.generation
+  return payload
+}
+
+export function isEvaluationOwnershipContract(value: unknown): value is EvaluationOwnershipContract {
+  const payload = evaluationPayload(value, false)
+  return isOwnershipContract(payload) && payload.criteria.length === OWNERSHIP_ADMISSION_CRITERIA.length &&
+    OWNERSHIP_ADMISSION_CRITERIA.every((criterion) => payload.criteria.includes(criterion))
+}
+
+export function isEvaluationOwnershipReview(value: unknown): value is EvaluationOwnershipReview {
+  return isOwnershipReview(evaluationPayload(value, true))
+}
+
+export function isEvaluationOwnershipReceipt(value: unknown): value is EvaluationOwnershipReceipt {
+  const payload = evaluationPayload(value, true)
+  return isOwnershipReceipt(payload) && payload.reviews.length === 2
+}
+
+export function isEvaluationOwnershipArtifact(value: unknown): value is EvaluationOwnershipArtifact {
+  return isOwnershipArtifact(evaluationPayload(value, true))
+}
+
+export function isEvaluationOwnershipManifest(value: unknown): value is EvaluationOwnershipManifest {
+  return isOwnershipManifest(evaluationPayload(value, true, true))
 }

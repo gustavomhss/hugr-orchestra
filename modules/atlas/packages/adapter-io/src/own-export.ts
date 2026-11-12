@@ -1,3 +1,4 @@
+import { assertEvaluationComposition } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/own-export.ts  (R7 / D21: the reviewed Own snapshot, built from the live store)
 //
 // `scripts/materialize-own-snapshot.mjs` writes OWN-SNAPSHOT.json and the static Own skills from a REVIEWED snapshot
@@ -25,6 +26,7 @@ export type OwnExport =
 
 /** Build the reviewed snapshot for `units` (repository paths relative to `repoPath`). Writes nothing. */
 export function buildOwnExport(repoPath: string, own: OwnLeg, units: readonly string[]): OwnExport {
+  try { assertEvaluationComposition(repoPath) } catch { return { ok: false, reason: "evaluation-export-refused" } }
   const head = headSha(repoPath)
   if (head === undefined) return { ok: false, reason: `'${repoPath}' has no readable HEAD commit` }
   const committed = committedSnapshot(repoPath)

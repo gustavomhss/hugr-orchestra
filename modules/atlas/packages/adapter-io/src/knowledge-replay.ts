@@ -1,3 +1,4 @@
+import { genericOwnershipVisible } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/knowledge-replay.ts  (rebuild the local projection from the committed knowledge logs)
 //
 // A committed line is a CLAIM that some seat applied a row, never authority to apply it here: anyone with push
@@ -49,7 +50,7 @@ export function replayKnowledge(
   const pending = [...read.rows.values()].filter(
     (e) => !sameRow(projection.current.get(e.row.nodeKey), e.row),
   )
-  const resolved = pending.filter((e) => restoreBlob(repoPath, disk, e))
+  const resolved = pending.filter((e) => restoreBlob(repoPath, disk, e) && genericOwnershipVisible(disk.get(e.row.contentHash as Hash)))
   const proven = resolved.filter((e) => {
     const fact = disk.get(e.row.contentHash as Hash) as GroundedFact
     return fact.seal === "proven" && actorInScope(policy, e.seat, e.row.scope) && reproven(e.row, fact)

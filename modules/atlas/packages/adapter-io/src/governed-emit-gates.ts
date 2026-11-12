@@ -1,3 +1,4 @@
+import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/governed-emit-gates.ts  (WP-10.A3.ADAPTER — the extracted, PURE gate chain)
 //
 // EXTRACTED from `governed-emit.ts`'s inline gate ladder (ADR-0004 CAMPAIGN-10.1). `governed-emit.ts` still
@@ -307,6 +308,7 @@ export interface GateChainDeps {
   readonly actor: string
   readonly origin?: WriteOrigin
   readonly ratifyToken?: string
+  readonly evaluation?: EvaluationAccess
   readonly ownershipInput?: (key: string) => string | undefined
 }
 
@@ -364,7 +366,7 @@ export function runGateChain(raw: GroundedFact, at: Hash, deps: GateChainDeps): 
   }
   gates.push({ gate: "authz", pass: true })
 
-  const ownershipRefusal = ownershipAttachmentRefusal(shape.node, deps.store, deps.ownershipInput)
+  const ownershipRefusal = ownershipAttachmentRefusal(shape.node, deps.store, deps.ownershipInput, deps.evaluation)
   if (ownershipRefusal !== undefined) {
     const failure: GateResult = {
       gate: "ratify", pass: false, reason: ownershipRefusal,

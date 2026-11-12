@@ -1,3 +1,5 @@
+import { assertEvaluationComposition, phaseFilteredStore } from "./ownership-evaluation-policy.js"
+import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/compose.ts  (COMPOSE-A: the runtime composition root + the real seams)
 //
 // The capstone: `composeRuntime(repoPath)` stands up a FULLY GOVERNED, DURABLE `WiredHandler` over the real
@@ -159,7 +161,8 @@ export function gitUserEmail(repoPath: string): string | undefined {
  * actor and the world-readable policy both become live vulnerabilities and this seam MUST be replaced with a
  * real identity before that transport ships. Pinned by `test/actor-is-unauthenticated.test.ts`.
  */
-export function composeRuntime(repoPath: string): ComposedRuntime {
+export function composeRuntime(repoPath: string, evaluation?: EvaluationAccess): ComposedRuntime {
+  assertEvaluationComposition(repoPath, evaluation)
   // Resolve the KNOW-11 write actor at the composition root: ATLAS_ACTOR (env) wins; else the LOCAL git
   // identity (`git config user.email`); else empty (fail-closed ⇒ every write denied). Passed EXPLICITLY to
   // the assembler below (no global env write).
@@ -268,7 +271,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   // `trusted` ⇒ `store` verbatim, no new cost. `tracked-staging` ⇒ a refusal, unchanged in kind. `tracked-
   // provable` ⇒ a raw re-read filtered to the facts that replay `re-proven` against `verifyFactLeg` — the
   // SAME oracle `atlas verify-fact`/`atlas verify-store` already ride, never a second one built here.
-  const readAccess = buildReadAccess({
+  const ownershipReadAccess = buildReadAccess({
     provenance,
     casPath: join(repoPath, CAS_REL),
     headSha: () => headSha(repoPath),
@@ -280,6 +283,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     // `unverifiable`. `readAccess.reverified` is now computed WITH it, keeping the `reverify()` `??` consistent.
     replay: tvFeed.replay,
   })
+  const readAccess = { ...ownershipReadAccess, store: phaseFilteredStore(ownershipReadAccess.store) }
 
   // WP-D3B-B.USE-OR-SEAL (ARCH-D3b item 2, INV-AUTH-16) — the ONE served-use ledger, bound here (the
   // composition root) and injected into the WIRE server seam. `atlas query`'s serve path
@@ -306,6 +310,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   const checkPort = buildCheckPort({
     store,
     ownershipInput: (key) => ownershipInput(repoPath, key),
+    ...(evaluation === undefined ? {} : { evaluation }),
     gate: truthGate,
     policy,
     actor,
@@ -358,6 +363,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   const memoryReadDoor = createMemoryRead({ store: memoryStore, actor })
 
   const config: WireConfig = {
+    ...(evaluation === undefined ? {} : { evaluation }),
     repoPath,
     casPath: join(repoPath, CAS_REL),
     scipPath,
@@ -453,6 +459,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     createGovernedEmit({
       store,
       ownershipInput: (key) => ownershipInput(repoPath, key),
+    ...(evaluation === undefined ? {} : { evaluation }),
       gate: seams.gate,
       policy,
       actor,
@@ -502,7 +509,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     // loaded `.atlas/policy.json` the write door gates on (it supplies the terrain OWNER, which is the
     // declared scope membership, not a second notion of ownership).
     own: createOwnLeg({ axes, store: readAccess.store, policy }),
-    ownership: createOwnershipAccess({ access: readAccess, current: (key) => ownershipInput(repoPath, key) }),
+    ownership: createOwnershipAccess({ access: ownershipReadAccess, current: (key) => ownershipInput(repoPath, key), ...(evaluation === undefined ? {} : { evaluation }) }),
     // THE `anchors` DISCOVERY PLANNER (WP-10.A1 / ADR-0004) — the ARCH-3 binding that makes `createAnchors`
     // running code (its production caller), over the ONE grounding computer. Read-only; not a `Tool`.
     anchors: anchorsLeg.anchors,

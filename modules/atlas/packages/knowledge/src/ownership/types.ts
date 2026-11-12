@@ -77,8 +77,40 @@ export interface OwnershipManifest {
   readonly roots: Readonly<Partial<Record<OwnershipNeed, string>>>
 }
 
+/** Evaluation authority is an immutable CAS field, never an operational acceptance. */
+export interface OwnershipEvaluationAuthority {
+  readonly phase: "evaluation"
+  readonly evaluationPlan: Hash
+  readonly obligationSet: Hash
+}
+
+/** Host policy/isolation validation belongs to the adapter; these are exact expected identities. */
+export interface OwnershipEvaluationContext {
+  readonly evaluation: OwnershipEvaluationAuthority
+  readonly evaluationCandidate: Hash
+  readonly generation: Hash
+}
+
+export interface OwnershipEvaluationLabel extends OwnershipEvaluationAuthority {
+  readonly evaluationCandidate: Hash
+  readonly generation: Hash
+  readonly manifest: Hash
+}
+
+type EvaluationObject<T> = Omit<T, "version"> & {
+  readonly version: 2
+  readonly evaluation: OwnershipEvaluationAuthority
+}
+type EvaluationCandidateObject<T> = EvaluationObject<T> & { readonly evaluationCandidate: Hash }
+export type EvaluationOwnershipContract = EvaluationObject<OwnershipContract>
+export type EvaluationOwnershipReview = EvaluationCandidateObject<OwnershipReview>
+export type EvaluationOwnershipReceipt = EvaluationCandidateObject<OwnershipReceipt>
+export type EvaluationOwnershipArtifact = EvaluationCandidateObject<OwnershipArtifact>
+export type EvaluationOwnershipManifest = EvaluationCandidateObject<OwnershipManifest> & { readonly generation: Hash }
+
 export type OwnershipRefusal = {
   readonly kind: "hold"
+  readonly evaluation?: OwnershipEvaluationLabel
   readonly reason:
     | "malformed-ownership"
     | "ownership-missing"
@@ -98,6 +130,7 @@ export type OwnershipRefusal = {
     | "ownership-store-unavailable"
     | "ownership-ambiguous"
     | "ownership-carrier"
+    | "ownership-phase"
   readonly evidence: readonly string[]
 }
 
@@ -105,6 +138,7 @@ export type OwnershipRead =
   | OwnershipRefusal
   | {
       readonly kind: "ready"
+      readonly evaluation?: OwnershipEvaluationLabel
       readonly manifest: Hash
       readonly artifact: Hash
       readonly result: Hash
@@ -133,6 +167,7 @@ export interface OwnershipQuery {
 
 export type OwnershipIndex = OwnershipRefusal | {
   readonly kind: "index"
+  readonly evaluation?: OwnershipEvaluationLabel
   readonly manifest: Hash
   readonly artifact: Hash
   readonly result: Hash

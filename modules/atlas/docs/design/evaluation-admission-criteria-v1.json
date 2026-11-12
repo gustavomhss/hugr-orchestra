@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-admission-criteria/v1",
+  "phase": "evaluation",
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": "Every required artifact is accounted for with exact body/result, metadata, navigation and build edges; no silent omission, truncation, fabricated input version or inherited approval.",
+    "ADMIT-SOURCE-BINDINGS": "Exact pinned package/source/protocol/implementation and current captured input membership/versions match candidate; unavailable input or changed recipe/authority/validity/gaps refuses.",
+    "ADMIT-SEMANTIC-SCOPE": "Each entry maps its actual independent semantic evidence, applicable obligations and limitations. Two new exact admission decisions cover the entry contract/input/result. Historical semantic approval is evidence only; no operational AC PASS is inferred.",
+    "ADMIT-ISOLATED-PLAN": "Persistent evaluation authority, finite plan, isolated state and verified policy constrain every supported reader/writer/replay/export path. Default operational selection refuses evaluation. No phase mutation or automatic promotion."
+  },
+  "applicability": {
+    "all_required_entries": [
+      "ADMIT-EXACT-TRANSFORM",
+      "ADMIT-SOURCE-BINDINGS",
+      "ADMIT-SEMANTIC-SCOPE",
+      "ADMIT-ISOLATED-PLAN"
+    ],
+    "per_entry_semantic_mapping": "Mandatory exact refs plus explicit limits; omissions are HOLD, not automatic N/A.",
+    "final_obligations": "Original AC01\u201310, 50-ID matrix, oracles and DoD unchanged and referenced immutably; admission PASS never fulfills them."
+  },
+  "state": "FROZEN_BEFORE_CODE"
+}

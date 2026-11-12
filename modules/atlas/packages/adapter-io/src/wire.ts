@@ -1,3 +1,5 @@
+import { genericOwnershipVisible } from "./ownership-evaluation-policy.js"
+import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/wire.ts  (WIRE-1: the ONE shared handler assembly)
 //
 // The single composition seam shared by every entrypoint (CLI, MCP): assemble the governance legs
@@ -132,6 +134,7 @@ export interface WireSeams {
 
 /** What the assembler needs to stand up the runtime (ring shape). */
 export interface WireConfig {
+  readonly evaluation?: EvaluationAccess
   readonly repoPath: string
   readonly casPath: CasPath
   /** The `.scip` dump `readScip` decodes for the index adapter. */
@@ -340,6 +343,7 @@ export function assembleHandler(config: WireConfig): WiredHandler {
   const governedEmit = createGovernedEmit({
     store,
     ownershipInput: (key) => ownershipInput(config.repoPath, key),
+    ...(config.evaluation === undefined ? {} : { evaluation: config.evaluation }),
     gate: config.seams.gate,
     policy: loadPolicy(config.repoPath),
     actor: config.actor ?? "",
@@ -531,7 +535,9 @@ export function assembleHandler(config: WireConfig): WiredHandler {
       // re-applies the same charset + sandbox guard (store.ts). READ-ONLY: no write path (TOOLS-1).
       const addr = String(nodeAddr)
       if (!/^[0-9a-f]{64}$/.test(addr)) return undefined
-      return readStore.get(addr as unknown as Hash) as GroundedFact | undefined
+      const value = readStore.get(addr as unknown as Hash)
+      if (!genericOwnershipVisible(value) || value === null || typeof value !== "object" || !("grounding" in value)) return undefined
+      return value as GroundedFact
     },
   }
 
