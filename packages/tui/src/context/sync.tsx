@@ -713,6 +713,7 @@ export const {
             if (!current()) return Promise.resolve()
             const pending = syncingSessions.get(sessionID)
             if (pending) return pending
+            fullSyncedSessions.delete(sessionID)
             const touched = pendingHistoryChanges.get(sessionID) ?? new Set<string>()
             pendingHistoryChanges.set(sessionID, touched)
             hydratingSessions.set(sessionID, touched)

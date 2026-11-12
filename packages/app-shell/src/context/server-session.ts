@@ -1181,8 +1181,9 @@ export function createServerSession(
       async loadMore(sessionID: string, count = historyMessagePageSize) {
         if (lifetime.disposed) return
         touch(sessionID)
-        if (meta.loading[sessionID] || meta.complete[sessionID] || !meta.cursor[sessionID]) return
-        await loadMessages(sessionID, count, meta.cursor[sessionID], "prepend")
+        const cursor = meta.cursor[sessionID]
+        if (meta.loading[sessionID] || meta.complete[sessionID] || !cursor) return
+        await runInflight(inflight, sessionID, () => loadMessages(sessionID, count, cursor, "prepend"))
       },
     },
     evict(sessionID: string) {

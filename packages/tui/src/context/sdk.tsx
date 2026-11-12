@@ -115,12 +115,21 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       })().catch(() => {})
     }
 
+    function releaseEvents(release: () => void, phase: "dispose" | "late") {
+      try {
+        release()
+      } catch {
+        // A delegated cleanup cannot prevent our own teardown or reject an unobserved subscription continuation.
+        console.error("tui event unsubscribe failed", { phase })
+      }
+    }
+
     let unsubscribe: (() => void) | undefined
     onMount(() => {
       const source = props.events
       if (source) {
         void Promise.resolve().then(() => source.subscribe(handleEvent)).then((release) => {
-          if (abort.signal.aborted) return release()
+          if (abort.signal.aborted) return releaseEvents(release, "late")
           unsubscribe = release
         }, (error) => {
           if (!abort.signal.aborted) console.error("tui event subscription failed", error)
@@ -132,12 +141,13 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
 
     onCleanup(() => {
       abort.abort()
-      unsubscribe?.()
-      unsubscribe = undefined
       sse?.abort()
       if (timer) clearTimeout(timer)
       handlers.clear()
       queue = []
+      const release = unsubscribe
+      unsubscribe = undefined
+      if (release) releaseEvents(release, "dispose")
     })
 
     // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
