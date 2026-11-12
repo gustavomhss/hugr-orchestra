@@ -5,7 +5,7 @@ import { expect, test } from "bun:test"
 import { Database } from "@orchestra/core/database/database"
 import { Location } from "@orchestra/core/location"
 import { RagPipelineTable, RagSourceTable } from "@orchestra/core/rag-studio/sql"
-import { admit, listSources, placed, readPipeline } from "@orchestra/rag-studio"
+import { admit, canonical, listSources, memoryStore, placed, readPipeline, withStore } from "@orchestra/rag-studio"
 import { extract } from "@orchestra/rag-studio/extract"
 import { Context, Effect, Layer } from "effect"
 import { session } from "../src/handlers/rag-studio-session"
@@ -117,4 +117,38 @@ test("a named model on the old spelling survives a default pipeline on the real 
     await rm(root, { recursive: true, force: true })
     await rm(linkParent, { recursive: true, force: true })
   }
+})
+
+
+test("native paths admit location children and still refuse project and neighboring paths", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "rag-native-")))
+  try {
+    const location = join(root, "corpus")
+    const project = join(location, "project")
+    const file = join(location, "note.txt")
+    const neighbor = join(root, "corpus-other", "note.txt")
+    await mkdir(project, { recursive: true })
+    await writeFile(file, "location text")
+    const store = memoryStore({ projectRoot: project, locationRoot: location, files: { [placed(file)]: "location text" } })
+    await withStore(store, async () => {
+      expect("id" in await admit({ locationId: placed(location), path: file })).toBe(true)
+      expect(await admit({ locationId: placed(location), path: join(project, "private.txt") })).toEqual({ refused: "atlas" })
+      expect(await admit({ locationId: placed(location), path: neighbor })).toEqual({ refused: "permission" })
+      expect(placed(join(location, "missing", "future.txt"))).toBe(`${placed(location)}/missing/future.txt`)
+    })
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+
+test("logical location paths stay lexical while native separators preserve their platform meaning", async () => {
+  const store = memoryStore({ projectRoot: "/repo", locationRoot: "/location/loc", files: { "/location/loc/note.txt": "logical" } })
+  await withStore(store, async () => {
+    expect(placed("/location/loc/note.txt")).toBe("/location/loc/note.txt")
+    expect("id" in await admit({ locationId: "loc", path: "/location/loc/note.txt" })).toBe(true)
+    expect(await admit({ locationId: "loc", path: "/repo/private.txt" })).toEqual({ refused: "atlas" })
+  })
+  expect(canonical("note\\part.txt")).toBe(process.platform === "win32" ? "note/part.txt" : "note\\part.txt")
+  if (process.platform === "win32") expect(canonical("\\\\server\\share\\note.txt")).toBe("//server/share/note.txt")
 })

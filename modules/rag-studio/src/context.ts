@@ -16,13 +16,15 @@ export function digest(value: string) {
 }
 
 export function canonical(file: string) {
-  return path.posix.normalize(file)
+  return path.normalize(file).split(path.sep).join("/")
 }
 
 // Compare by the real path of the longest prefix that exists, so /var and /private/var are one directory
 // even when the file itself has not been created yet. A path with no existing prefix stays lexical.
 export function placed(file: string) {
   const normalized = canonical(file)
+  // Rooted logical IDs have no Windows drive; do not adopt the process current drive.
+  if (path.sep === "\\" && normalized.startsWith("/") && !normalized.startsWith("//")) return normalized
   const existing = existingAncestor(normalized)
   if (!existing) return normalized
   try {
@@ -42,7 +44,7 @@ function existingAncestor(file: string) {
     } catch {
       return undefined
     }
-    const parent = path.posix.dirname(current)
+    const parent = canonical(path.dirname(current))
     if (parent === current) return undefined
     current = parent
   }
