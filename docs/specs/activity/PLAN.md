@@ -198,8 +198,9 @@ validation seam; parent closure still requires W01–W04.
 
 ## WP-W2 — authenticated registered-root API
 
-Status: W2-A complete; exact-source hosted red verified (43282200736).
-Owner: lead integration. W2-B ready for the frozen source/handler/composition work.
+Status: W2-A complete; exact-source hosted red verified (43282200736). W2-B
+implemented and independently reviewed; package checks pass, hosted green pending.
+Owner: lead integration and worktree_reader source worker.
 Depends on R0 persisted internal reads and W1 frozen Schema/collector anchor. Writes: activity Protocol,
 Server handler and internal activity-worktree service, focused HTTP tests/fixture,
 actual composition/regression wiring, generated Client through generator only.
@@ -226,8 +227,8 @@ Writes: focused HTTP tests/fixture, unavailable anchors and generated Client.
 
 ### Task W2-B — routes, registry integration and generation
 
-Owner: lead integration and disjoint source worker; state: W2-A/W1 gates passed,
-ready for frozen implementation and independent integration review.
+Owner: lead integration and disjoint source worker; state: implemented, independent
+source/handler reviews approved, generator and package checks passed; hosted green pending.
 Writes: Protocol activity group, Server activity handler/internal service and
 actual composition/regression wiring, generated Client outputs.
 

@@ -4,8 +4,9 @@ Current checkpoint: W1 is complete (43279701564). W2's actual hosted red is
 verified on Linux and Windows (43282200736): W05–W08 fail for explicit unavailable
 HTTP behavior; all three older HTTP cases pass and Omni control passes with
 one real spawn per OS, zero delegated. Named outcomes and exact five-package
-trees are in worktree-http-baseline.json. W2-A is complete; W2-B may implement
-only the frozen source/handler/composition seams below. Subsequent pending-request
+trees are in worktree-http-baseline.json. W2-A is complete; W2-B implemented
+the frozen source/handler/composition seams in cab0b838ef, with cold reviews and
+local package checks passed. Hosted green remains pending. Subsequent pending-request
 wording is historical preparation, superseded by this checkpoint and final receipt.
 
 Baseline: 3bf327f497 (W1 scalar metadata correction). This is W2-A acceptance
@@ -156,3 +157,26 @@ above stay frozen. Each source unit must receive independent cold review;
 Server typecheck and the unchanged three-file both-OS hosted pack gate integration.
 No owner app/server/database operations are included. W2 remains incomplete until
 the same named red cases become green without losing the existing passes/control.
+
+## Implemented candidate and green gate
+
+Commit cab0b838ef implements the actual one-SELECT registry source, one Core
+monitor per composed Database/service lifetime, and the frozen handler mappings.
+Normal routes provide the registry before the existing application services;
+legacy tests provide their own in-memory Database without changing assertions.
+The new HTTP fixture still injects its observed actual monitor. No acceptance
+test, Core collector, Schema, Protocol or generated Client output changed.
+
+Independent cold source and handler/composition reviews approved the bounded
+units. Server and Protocol bun typecheck passed. Official Client generation
+ran again and produced no delta; Client bun typecheck passed. Formatting/diff
+checks passed; guards report 0 gates and the existing reviewed R0 warning.
+The user guide now documents the actual API while retaining the page's unavailable
+manual-button boundary. No installed app/server/database was touched.
+
+The unchanged green pack is the same three named Server files on both OS.
+Expect W05–W08 plus all three legacy cases to pass, with declared Omni control
+still passing. Do not close W2 until actual named outcomes, unchanged oracles
+and exact snapshot trees are inspected. Candidate Server tree:
+e504ffb90aad4a4bcb5a4389b4d91c9cdd0996ba. Protocol/Client/Core/Schema trees remain
+those in worktree-http-baseline.json. The whole R1–R20 monitor and W3 remain open.

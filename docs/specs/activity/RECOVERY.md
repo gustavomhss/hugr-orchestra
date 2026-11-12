@@ -17,9 +17,11 @@ quality review approved; Protocol/Server/Client typechecks and guards passed.
 W2 hosted red 43282200736 is verified: all four new cases fail for unavailable
 HTTP behavior, all three legacy cases pass, and declared Omni control passes
 with one real spawn/zero delegated on each OS. Exact fetched trees and named
-outcomes are in worktree-http-baseline.json. W2-A is complete; frozen W2-B source
-and composition work is next. No
-functional Worktrees manual-read API/button is exposed yet. See
+outcomes are in worktree-http-baseline.json. W2-A is complete; W2-B now implements
+the frozen registry source, handler and server composition (cab0b838ef).
+Independent source/handler reviews, Server/Protocol/Client typechecks, official
+Client generation (no generated delta), formatting and guards passed. Hosted
+green is pending; no manual Worktrees row button is available yet. See
 [WORKTREE-EXECUTION.md](WORKTREE-EXECUTION.md), worktree-baseline.json and
 worktree-validation.json for actual named outcomes.
 

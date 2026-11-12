@@ -162,7 +162,7 @@
         "packages/core/src/project/directories.ts"
       ],
       "executionAnchor": "docs/specs/activity/WORKTREE-HTTP-EXECUTION.md",
-      "executionStatus": "hosted-red-verified-ready-for-implementation",
+      "executionStatus": "reviewed-and-typechecked-awaiting-hosted-green",
       "acceptanceBaseline": "5a9799069735f815ada51892f4d6cd9b717a727e"
     },
     {

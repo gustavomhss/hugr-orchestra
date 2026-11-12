@@ -8,6 +8,32 @@ Use **Filter** to search a full path or project name. **Refresh** reads the regi
 
 The registry has no recorded session owner, disk measurement, collapsed file identity or use proof. Owner stays empty; Logical is **unread**, Unique is **not collapsed**, and Use check is **unproved**. Manual disk readings for individual Worktrees are not yet available on this page. These rows offer no cleanup actions.
 
+## Worktree API
+
+Authenticated API clients can request `GET /api/activity/worktrees` to reconcile
+registered Git worktrees and retrieve cached readings. This does not walk their
+directories. Each row contains a project ID, registered directory, persisted
+registration ID and an opaque observation `recordID`. Owner is empty. A new row
+has no attempt or logical reading.
+
+Use `POST /api/activity/worktrees/:recordID/read` to request one row's bounded
+metadata walk. It uses the same limits and logical-path byte semantics described
+below for Cache, Temporary and Logs. A partial attempt retains the last complete
+logical value and its timestamp. The server rechecks the registration before
+walking and before publishing; a replaced registration cannot inherit the old
+reading. Concurrent requests for one row share a walk; at most four rows can
+have reads pending at once.
+
+Unknown or retired IDs return 400; occupied read capacity returns 409; registry
+or collection failures return 503 without a successful empty inventory. A client
+cannot supply another path. Responses contain full snapshots with `instanceID`
+and an exact decimal-string `snapshotRevision`; retain only newer revisions
+within an instance. A server-observer restart changes its instance and observation
+IDs and starts readings unread. On an instance change, retire outstanding requests
+and establish the replacement through a fresh inventory request. Compare revisions
+exactly without converting them to JavaScript Number. These IDs grant no cleanup
+or process action.
+
 ## Trees
 
 **Trees** reads the ledger of pipe processes observed through this server process’s Omni spawner since startup. It refreshes the ledger and host CPU reading every two seconds while visible, without querying OS process membership. The initial inventory does not include processes already running before this server started, native collection calls, terminals or desktop processes.
