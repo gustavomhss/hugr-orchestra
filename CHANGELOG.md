@@ -4,6 +4,10 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+## 0.3.7 (2026-11-12)
+
+Command line and desktop release candidate, unsigned like 0.3.6. Publication reuses the exact artifacts validated for this cut; the release receipt records their source, runtime checks and SHA256 digests.
+
 - Sandbox parent rollback compares exact 64-bit filesystem identities and preserves directories when identity is unavailable.
 - Project provider overrides and agent execution, permissions and selection settings now require project trust, including discovered agent Markdown and trust revocation.
 - Undo replacement admission commits atomically with its history cut. Conflicting prompt IDs preserve history, staged undo blocks hidden-history execution, and busy revert requests return HTTP 409.
