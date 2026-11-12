@@ -47,8 +47,14 @@ rendered inspection. See WORKTREE-UI-EXECUTION.md.
 W3's controller and component candidate are now implemented (5a41bd9f5a and
 2b1f6613e0), with independent controller/UI reviews approved and fixed App
 package typecheck passed. The public readonly facade is preserved while the
-internal store is mutable. No tests changed. Own hosted green and actual-HTTP
-EN/BR/narrow/keyboard/error inspection remain open before W3 closes.
+internal store is mutable. No tests changed. The independently reviewed compact
+attempt summary fixes preview layout; final App tree is
+c42c8963b52c64d7c5b22b9eaa0523ad85c6da1a. Actual-HTTP EN/BR/narrow/keyboard/error
+and two-server inspection is recorded in WORKTREE-UI-RENDERED.md. Both owned
+preview SQL faults were restored; all preview processes/ports/profile/state
+were closed and removed after evidence preservation. Own hosted green remains
+open at /tmp/activity-worktree-ui-green-final-ci.log before W3 closes. The earlier
+helper was superseded before workflow creation, not a test failure/result.
 The mistaken root typecheck was stopped and a scoped App rerun passed. No local
 tests ran. Grok 4.7
 was attempted for a read-only W2 review: opencode-go produced no verdict within

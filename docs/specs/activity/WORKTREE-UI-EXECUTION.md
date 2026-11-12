@@ -179,3 +179,25 @@ launch metadata is prepared at /tmp/activity-worktree-preview-preflight.json;
 no preview process had been started when this receipt was written. Only owned
 temporary backend/frontend/browser state and fixture roots may be used. Hosted
 W3 green and every rendered step remain required before closure.
+
+## Final visual candidate and rendered receipt
+
+The manual preview exposed overlong attempt summaries and duplicated unread
+copy. Independently reviewed commit e4bd0f754d keeps a short age/gap summary,
+puts detailed metrics in the disclosure and renders source only for a logical
+reading. The final candidate App tree is c42c8963b52c64d7c5b22b9eaa0523ad85c6da1a.
+All seven requested tests and the shared fixture remain byte-identical to the
+verified red snapshot. Final App package typecheck passed; guards report zero
+gates and the existing reviewed R0 warning. No local product test ran.
+
+The earlier hosted helper was superseded before any workflow/ref was created;
+its termination is not a test result. The final request uses
+/tmp/activity-worktree-ui-green-final-ci.log and captures the final App tree.
+It is still waiting for runner capacity; no hosted green is claimed here.
+
+[WORKTREE-UI-RENDERED.md](WORKTREE-UI-RENDERED.md) records actual authenticated
+HTTP web inspection across EN/BR, keyboard, narrow layout, real disk readings,
+source failures/retries and two server contexts. Both preview SQL faults were
+restored; owned preview processes/profile/state were closed and removed after
+artifact preservation. Owner runtime and database were untouched. This manual
+evidence does not replace the pending hosted controller/store acceptance gate.
