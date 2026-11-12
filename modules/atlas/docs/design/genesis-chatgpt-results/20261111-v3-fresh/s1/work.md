@@ -45,3 +45,8 @@ A observação real de `packages/client/src/generated/types.ts` retornou `unavai
 ## Novo caso no candidato corrigido S4
 
 O release r2 também identifica o candidato corrigido `673b90d82b8b888d5d0184d2e17dec6d5d1b05f1`, com o run remoto `43070538154` concluído com sucesso. A S1 materializou separadamente essa revisão, verificou todas as 394 identidades e executou nova preparação: candidato `8ee2d96d3a17afcbf0b03ace1afa3273dbc06d5e8cbb35abac68219055286654`. Só repo_root e hashes de implementação diferem da preparação anterior; os dez resultados e 294 versões de input são idênticos. A mudança abre novo caso e exige novos pareceres de binding. Os casos e3a8, inclusive sua limitação de CI, continuam preservados.
+
+
+## Recovery candidate 2026-11-12
+
+ROOT continuation a753db9b-40c6-4b3e-8953-c242affde3cb preserved an unaccepted A1 delta under producers/recovery-a1-20261112/. It corrects only the mandatory F1 replay-order paragraph and adds literal baseline evidence for E1-E4. The historical canonical bodies and all prior decisions are unchanged. This candidate has no new semantic PASS, binding or runtime authority. Both independent reviews remain required; L2-L4 remain gated by complete L1 acceptance. Native package remains the historical package until a reviewed replacement is bound.
