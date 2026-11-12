@@ -223,6 +223,9 @@ class Session {
       const stat = yield* io(() => info(path))
       if (!stat?.isFile() || stat.isSymbolicLink())
         return yield* Effect.fail(new Error(`Invalid migration backup: ${name}`))
+      const bytes = yield* io(() => readFile(path))
+      if (sqlite && (bytes.byteLength < 100 || bytes.subarray(0, 16).toString("binary") !== "SQLite format 3\0"))
+        return yield* Effect.fail(new Error(`Invalid SQLite migration backup header: ${name}`))
       if (sqlite)
         yield* readonlyDatabase(path, (db) =>
           Effect.gen(function* () {
@@ -231,7 +234,6 @@ class Session {
               return yield* Effect.fail(new Error(`Invalid SQLite migration backup: ${name}`))
           }),
         )
-      const bytes = yield* io(() => readFile(path))
       return { name, sha256: hash(bytes), bytes: bytes.byteLength }
     })
   }
@@ -292,7 +294,8 @@ class Session {
       // This is a separate real reader. Its scope closes before the caller performs any writer DML.
       yield* readonlyDatabase(self.file, (reader) => reader.run(sql`VACUUM INTO ${scratch}`))
       yield* io(async () => {
-        const handle = await openFile(scratch, "r")
+        // Windows FlushFileBuffers requires write access, even though no bytes are changed.
+        const handle = await openFile(scratch, "r+")
         try {
           await handle.sync()
         } finally {
