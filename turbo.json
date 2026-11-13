@@ -55,6 +55,10 @@
       // Hash and preserve the runner's cache path; strict mode otherwise triggers cold discovery past 10 s.
       "env": ["PSModuleAnalysisCachePath"]
     },
+    "@orchestra/app#test:unit": {
+      "dependsOn": ["transit", "^build", "@orchestra/web#transit"],
+      "outputs": []
+    },
     "@orchestra/app#test": {
       // Extension: the shell-owned E2E harness consumes the separate web entry.
       "dependsOn": ["transit", "^build", "@orchestra/web#transit"],
