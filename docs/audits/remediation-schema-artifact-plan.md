@@ -1,0 +1,7 @@
+# Hosted configuration schema recovery
+
+The cold epic's CLI schema comparison failed against the actual `configSchemaText()` implementation. Generated schema bytes must be recovered from hosted execution of the official generator, not edited by hand or generated locally.
+
+The bounded producer is a dedicated Core acceptance file, inert unless `.ci-run.json` names exactly that file on the Bun runner with the explicit900000ms budget and no environment overrides. It verifies the Linux CI snapshot, executes `bun run apps/cli/script/schema-files.ts` twice through AppProcess, requires successful non-truncated commands and identical installed output bytes, and packages exactly `schema/config.json`, `schema/tui.json`, `schema/theme.json` plus provenance. It records the real Git index before/after without modifying it, hashes a declared tracked-source manifest excluding those three outputs, and requires that source manifest to remain unchanged. All owned AppProcess scopes join before qualification.
+
+The existing test-ci workflow adds only an optional upload for this evidence directory. Ordinary package and epic runs do not execute the producer. Root independently checks the immutable snapshot, source/lock vector, exact artifact inventory, output hashes, duplicate-generation equality and cleanup, then copies only the qualified official bytes. Existing schema comparison tests must pass afterward. No local generation, schema hand edits, public API change or generator bypass is authorized.
