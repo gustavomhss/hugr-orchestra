@@ -67,12 +67,19 @@ def kernel_group_absent(anchor):
   return {'lifecycle_state':'TERMINATION_PROVEN','group_absent':True,'kernel_probe':'killpg-zero-ESRCH','members':[],'checked_monotonic':time.monotonic(),'anchor':anchor}
  raise RuntimeError('lifecycle-kernel-group-present')
 
+def safe_failure_diagnostic(error):
+ # Never serialize exception text: it may contain argv, envelopes, output or paths.
+ if isinstance(error,subprocess.TimeoutExpired):return 'reader-timeout-UNKNOWN'
+ if isinstance(error,KeyboardInterrupt):return 'reader-interrupted-UNKNOWN'
+ if isinstance(error,SystemExit):return 'reader-exit-UNKNOWN'
+ return 'reader-failure-UNKNOWN'
+
 def wait_unreaped(proc,timeout):
  end=time.monotonic()+timeout
  while True:
   value=os.waitid(os.P_PID,proc.pid,os.WEXITED|os.WNOHANG|os.WNOWAIT)
   if value is not None:return value
-  if time.monotonic()>=end:raise subprocess.TimeoutExpired(proc.args,timeout)
+  if time.monotonic()>=end:raise subprocess.TimeoutExpired('reader-process',timeout)
   time.sleep(.01)
 
 def finish_group(proc,anchor):
@@ -143,7 +150,7 @@ def gated_spawn(argv,cwd,env,out,err,run,timeout):
      durable(run/'process-spawn-stop.json',{'native_release':False,'gate_reaped':True,'group_absence':'UNKNOWN_NO_ANCHOR'})
     else:durable(run/'process-spawn-stop.json',stop_group(proc,anchor))
    except BaseException as cleanup:
-    durable(run/'process-spawn-uncertain.json',{'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','error':str(cleanup),'identity':anchor,'recovery':'EXPLICIT_REVIEW_REQUIRED'})
+    durable(run/'process-spawn-uncertain.json',{'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','diagnostic':safe_failure_diagnostic(cleanup),'identity':anchor,'recovery':'EXPLICIT_REVIEW_REQUIRED'})
   raise
  finally:
   if rd is not None:os.close(rd)
