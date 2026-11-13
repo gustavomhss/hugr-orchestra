@@ -22,7 +22,7 @@ function fixture(options: { duplicate?: boolean; missing?: boolean; changed?: bo
     authority: { scope, basis: "synthetic" }, validity: "supported", gaps: [], evidence: ["synthetic"] })
   const receiptFor = (receiptContract: Hash): Hash => store.put({
     kind: "ownership-receipt", version: 2, evaluation, evaluationCandidate: candidateId,
-    contract: receiptContract, inputs, dependencies, reviews: [],
+    contract: receiptContract, inputs, dependencies, reviews: [store.put({ review: "synthetic-a" }), store.put({ review: "synthetic-b" })],
   } satisfies EvaluationOwnershipReceipt)
   const candidateEntries = [{
     key, contract, inputs, dependencies,
@@ -51,7 +51,7 @@ function fixture(options: { duplicate?: boolean; missing?: boolean; changed?: bo
   const artifactId = store.put(artifact)
   const manifest: EvaluationOwnershipManifest = {
     kind: "ownership-manifest", version: 2, evaluation, evaluationCandidate: candidateId, generation,
-    scope, roots: { entry: key }, entries: options.duplicate ? [{ key, artifact: artifactId }, { key, artifact: artifactId }] : [{ key, artifact: artifactId }],
+    scope, roots: { entry: key }, entries: options.duplicate ? [{ key, artifact: artifactId }, { key: "other", artifact: artifactId }] : [{ key, artifact: artifactId }],
   }
   const manifestId = store.put(manifest)
   const context: OwnershipEvaluationContext = { evaluation, evaluationCandidate: candidateId, generation }
