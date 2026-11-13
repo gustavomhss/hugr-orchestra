@@ -32,6 +32,7 @@ def _file_evidence(path):
 
 def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
  if run is None:return None
+ complete=(process_outcome.get('lifecycle_state')=='TERMINATION_PROVEN' and process_outcome.get('group_absent') is True and process_outcome.get('kernel_probe')=='killpg-zero-ESRCH' and process_outcome.get('members')==[])
  outputs={
   'stdout_anonymous':_stream_evidence(out_stream,complete),
   'stderr_anonymous':_stream_evidence(err_stream,complete),
@@ -40,7 +41,6 @@ def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
   'response_persisted':_file_evidence(run/'response.json'),
  }
  lifecycle={name:(run/name).is_file() for name in ('process-start.json','process-release.json','process-exit.json','process-spawn-stop.json','process-spawn-uncertain.json')}
- complete=(process_outcome.get('lifecycle_state')=='TERMINATION_PROVEN' and process_outcome.get('group_absent') is True and process_outcome.get('kernel_probe')=='killpg-zero-ESRCH' and process_outcome.get('members')==[])
  evidence={'schema':'reader-failure-evidence/v1','status':'UNKNOWN',
   'diagnostic':safe_error_diagnostic(error),'outputs':outputs,'lifecycle_records':lifecycle,
   'capture_completeness':'COMPLETE_AFTER_TERMINATION_PROOF' if complete else 'INCOMPLETE_UNKNOWN',
