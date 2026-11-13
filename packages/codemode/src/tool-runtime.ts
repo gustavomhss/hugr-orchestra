@@ -759,6 +759,7 @@ export const make = <R>(
     keys: (path) => namespaceKeys(callableTools, path),
     invoke: (path, args) =>
       Effect.gen(function* () {
+        yield* guard
         const name = path.join(".")
         const externalArgs = args.map((arg) => copyOut(copyIn(arg, `Arguments for tool '${name}'`)))
         const call = { name }
@@ -780,6 +781,7 @@ export const make = <R>(
         }
         const input = isDefinition(tool) ? describedInput : externalArgs
         const index = yield* recordAndObserve(input)
+        yield* guard
         const currentCall = { index, name, input }
         if (isDefinition(tool)) {
           return yield* observeEnd(
