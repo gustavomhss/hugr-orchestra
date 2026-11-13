@@ -8,16 +8,19 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 43,
-    "documentary_pair_accepted": 43,
-    "pending": 157
+    "reviewed_by_both": 89,
+    "documentary_pair_accepted": 81,
+    "reviewed_with_material_findings": 8,
+    "awaiting_initial_pair_review": 111,
+    "pending_acceptance": 119
   },
   "accepted_units": [
     {
       "id": "A-01",
       "body": {
         "path": "bodies/a-01.md",
-        "sha256": "9ba73c99cdc6c0c05e5cac895320a463d9468b7e4d778ef81486dfd8b83f656e"
+        "sha256": "9ba73c99cdc6c0c05e5cac895320a463d9468b7e4d778ef81486dfd8b83f656e",
+        "byte_length": 11752
       },
       "source_ids": [
         "P014",
@@ -37,7 +40,7 @@
         "J2": "DOCUMENTARY_LOCAL_PASS"
       },
       "resolved_findings": [
-        "Explicit full-reading method and complete inherited criteria supplied."
+        "Método de leitura integral e critérios herdados completados; corpo inalterado."
       ],
       "optional_open": []
     },
@@ -45,7 +48,8 @@
       "id": "A-02",
       "body": {
         "path": "bodies/a-02.md",
-        "sha256": "49417c5c197630418170ec3bf46d3e39aac2d6104ba1b9f5a756c7038cab179b"
+        "sha256": "49417c5c197630418170ec3bf46d3e39aac2d6104ba1b9f5a756c7038cab179b",
+        "byte_length": 15164
       },
       "source_ids": [
         "P022",
@@ -66,7 +70,31 @@
         "J2": "DOCUMENTARY_LOCAL_PASS"
       },
       "resolved_findings": [
-        "Editorial identifier corrected to models.dev; exact delta approved by the same pair."
+        "Identificador corrigido para models.dev e delta revisto pela mesma dupla."
+      ],
+      "optional_open": []
+    },
+    {
+      "id": "A-03",
+      "body": {
+        "path": "bodies/a-03.md",
+        "sha256": "690a9b65eae04a4cba640384e5c699c0654472c057f854622feb7148168d42aa",
+        "byte_length": 11786
+      },
+      "source_ids": [
+        "P028",
+        "P025",
+        "P027",
+        "P036",
+        "P037",
+        "P039"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Lista de argumentos não vazia e unicidade textual separadas de tamanho do arquivo e identidade física."
       ],
       "optional_open": []
     },
@@ -74,7 +102,8 @@
       "id": "B-01",
       "body": {
         "path": "bodies/b-01.md",
-        "sha256": "e580ffbd580d99defb45d8ca063f48f19e5ec840bd80500a2b1e05bd2641cc97"
+        "sha256": "5764f08a06d60c22db605de956a09afab1786af86e126d81be4fc81496d7f1a5",
+        "byte_length": 16465
       },
       "source_ids": [
         "P072",
@@ -91,17 +120,41 @@
         "J2": "DOCUMENTARY_LOCAL_PASS"
       },
       "resolved_findings": [
-        "Full package-key/resolution query and explicit integrity-syntax results supplied; documentary processing only."
+        "Consulta integral de keys/resolutions e resultados de sintaxe de integridade fornecidos.",
+        "Descrição dos indicadores qemu/gcompat limitada ao que o código procura."
       ],
-      "optional_open": [
-        "Additional wording could emphasize that emulator rejection concerns implemented qemu/gcompat indicators, without universal detection."
-      ]
+      "optional_open": []
+    },
+    {
+      "id": "B-02",
+      "body": {
+        "path": "bodies/b-02.md",
+        "sha256": "f37a19f2ad44d31ac325a9d61cb0b383564bf743f3d530b5b30661dc5d2f076f",
+        "byte_length": 19564
+      },
+      "source_ids": [
+        "P187",
+        "P188",
+        "P178",
+        "P177",
+        "P189",
+        "P144"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "R5 descrito como modelo lexical, sem garantia de confinamento real; alcance intrapacote de R11 explicitado."
+      ],
+      "optional_open": []
     },
     {
       "id": "C-01",
       "body": {
         "path": "bodies/c-01.md",
-        "sha256": "41b285b84fbbf72693cbeb0784f70352636ec6f55bf952be4d5693edae9f3048"
+        "sha256": "41b285b84fbbf72693cbeb0784f70352636ec6f55bf952be4d5693edae9f3048",
+        "byte_length": 16779
       },
       "source_ids": [
         "P001",
@@ -123,21 +176,63 @@
       },
       "resolved_findings": [],
       "optional_open": []
+    },
+    {
+      "id": "C-02",
+      "body": {
+        "path": "bodies/c-02.md",
+        "sha256": "655e1baa50f43e5ede9a134f4107f39eab8e72fadacee30e2aa3ad1037513bc7",
+        "byte_length": 21932
+      },
+      "source_ids": [
+        "P011",
+        "P012",
+        "P013",
+        "P043",
+        "P044",
+        "P045",
+        "P046",
+        "P047",
+        "P048",
+        "P049",
+        "P050",
+        "P051",
+        "P052",
+        "P053",
+        "P054",
+        "P057",
+        "P058",
+        "P059",
+        "P060",
+        "P061",
+        "P062",
+        "P063",
+        "P064",
+        "P073",
+        "P199",
+        "P200"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Três linhas de suporte de portabilidade acrescentadas.",
+        "Dependências de ui/session-ui no Turbo distinguidas dos sete testes enumerados."
+      ],
+      "optional_open": []
     }
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [
-    "A-03",
     "A-04",
     "A-05",
     "A-06",
-    "B-02",
     "B-03",
     "B-04",
     "B-05",
     "B-06",
     "B-07",
-    "C-02",
     "C-03",
     "C-04",
     "C-05",
@@ -152,9 +247,28 @@
     "No global PASS. Private original judgments are not published here."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-37490b821af88191b1992581701f56df_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-338e795aa89c8191b147fe8afe609589_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "f7a3a109b1cb8d74f9e4585a1febbc8b3aeaf52fbb79ebfb4da418d302f9d2e3",
-    "scope": "Original records and literal packets through the four listed accepted units; no public private judgments."
-  }
+    "sha256": "1a42022d89cbdeb1246ffe068698dcfcf43434cc545656c39a90dc8a18863916",
+    "scope": "Originals through seven accepted units (81 unique sources), plus A04 initial opinions and open findings; no final closure."
+  },
+  "reviewed_pending_units": [
+    {
+      "id": "A-04",
+      "reviewed_body_sha256": "35fd265ea9dc9a878ae18a43e0a6e067c68f7ac74ef2f48f640513e4283d84a8",
+      "source_count": 8,
+      "state": "FIX_FIRST_DELTA_IN_REVIEW",
+      "findings": [
+        {
+          "id": "A04-F1",
+          "summary": "Condição de ambiente não autentica sozinha execução em Actions."
+        },
+        {
+          "id": "A04-F2",
+          "summary": "Estado Git observado no encerramento não detecta toda mutação intermediária."
+        }
+      ]
+    }
+  ],
+  "counting_note": "Revisadas por ambos inclui A04 na versão inicial com correção obrigatória; aceitas pela dupla usa somente os hashes atuais explicitamente listados. Apoios não são recontados."
 }
