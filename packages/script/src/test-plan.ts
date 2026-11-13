@@ -44,6 +44,7 @@ export function shardCount(seconds: number, target: number, margin: number) {
 // Size from the larger of the measured total and current file weights, scaled by platform overhead.
 export function packageShards(timings: Timings, directory: string, platform: Platform) {
   if (directory === "apps/desktop") return desktopAnchors.length
+  if (directory === "packages/app-shell") return platform === "windows" ? appBrowserAnchors.length : 1
   if (directory === "modules/atlas/boundary") return platform === "windows" ? 2 : 1
   const total = timings.totals[directory]?.[platform]
   if (total === undefined) return 1
@@ -53,9 +54,16 @@ export function packageShards(timings: Timings, directory: string, platform: Pla
 }
 
 // Longest-processing-time first: each item goes to the currently lightest bin. Deterministic for equal weights.
-export function balance(items: { name: string; weight: number }[], bins: number) {
-  const result = Array.from({ length: bins }, () => ({ seconds: 0, names: [] as string[] }))
-  for (const item of items.toSorted((a, b) => b.weight - a.weight || a.name.localeCompare(b.name))) {
+export function balance(items: { name: string; weight: number }[], bins: number, anchors: string[] = []) {
+  if (anchors.length > bins || new Set(anchors).size !== anchors.length) throw new Error("Invalid shard control anchors")
+  const result = Array.from({ length: bins }, (_, index) => {
+    const name = anchors[index]
+    if (name === undefined) return { seconds: 0, names: [] as string[] }
+    const anchor = items.find((item) => item.name === name)
+    if (!anchor) throw new Error(`Missing real process control: ${name}`)
+    return { seconds: anchor.weight, names: [name] }
+  })
+  for (const item of items.filter((item) => !anchors.includes(item.name)).toSorted((a, b) => b.weight - a.weight || a.name.localeCompare(b.name))) {
     const lightest = result.reduce((best, candidate) => (candidate.seconds < best.seconds ? candidate : best))
     lightest.seconds += item.weight
     lightest.names.push(item.name)
@@ -72,6 +80,8 @@ const UNTIMED_FLOOR = 1
 /** The bins `shard` prints. The floor lives here, so a test of this function is a test of the split CI runs. */
 export function plannedBins(timings: Timings, directory: string, platform: Platform) {
   if (directory === "apps/desktop") return desktopBins(timings, platform)
+  if (directory === "packages/app-shell" && platform === "windows")
+    return balance(weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, 0, UNTIMED_FLOOR), appBrowserAnchors.length, appBrowserAnchors)
   return balance(
     weigh(
       directory,
@@ -91,7 +101,7 @@ export function weigh(
   floorOrReserves: number | Record<string, number> = 0,
   reserves: Record<string, number> = {},
 ) {
-  const files = (directory === "apps/desktop" ? desktopFiles().bun : testFiles(path.join(root, directory))).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
+  const files = (directory === "apps/desktop" ? desktopFiles().bun : testFiles(path.join(root, directory), directory === "packages/app-shell" ? "test-browser" : "test")).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
   const knownSeconds = known.reduce((sum, entry) => sum + (measured[entry.file] ?? 0), 0)
@@ -114,7 +124,7 @@ export function weigh(
 export function suiteTimes(xml: string) {
   return [...xml.matchAll(/<testsuite\s[^>]*?name="([^"]+(?:\.test|_test|\.spec|_spec)\.[jt]sx?)"[^>]*?time="([\d.]+)"/g)].map((match) => {
     const name = (match[1] ?? "").replaceAll("\\", "/")
-    return [name.match(/(?:^|\/)((?:test|src|scripts)\/.+)$/)?.[1] ?? name, Number(match[2])] as [string, number]
+    return [name.match(/(?:^|\/)((?:test-browser|test|src|scripts)\/.+)$/)?.[1] ?? name, Number(match[2])] as [string, number]
   })
 }
 
@@ -172,10 +182,14 @@ export function desktopBins(timings: Timings, platform: Platform) {
   return bins
 }
 
-function testFiles(directory: string) {
-  return (readdirSync(path.join(directory, "test"), { recursive: true }) as string[])
-    .map((file) => `test/${file.replaceAll("\\", "/")}`)
-    .filter((file) => file.endsWith(".test.ts"))
+export const appBrowserAnchors = [
+  "test-browser/lean-chapter-route.test.ts", "test-browser/lean-native-product.test.ts", "test-browser/prompt-retry.test.ts",
+]
+
+function testFiles(directory: string, folder = "test") {
+  return (readdirSync(path.join(directory, folder), { recursive: true }) as string[])
+    .map((file) => `${folder}/${file.replaceAll("\\", "/")}`)
+    .filter((file) => folder === "test-browser" ? /(?:\.test|_test|\.spec|_spec)\.[jt]sx?$/.test(file) : file.endsWith(".test.ts"))
     .toSorted()
 }
 
@@ -220,6 +234,7 @@ function plan(timings: Timings) {
   // Validate the current Desktop discovery and all three real controls before emitting matrix entries.
   desktopBins(timings, "linux")
   desktopBins(timings, "windows")
+  plannedBins(timings, "packages/app-shell", "windows")
   if (plannedBins(timings, "modules/atlas/boundary", "windows").some((bin) => bin.names.length === 0))
     throw new Error("Windows Boundary selected an empty shard")
   const linuxCore = packageShards(timings, "packages/core", "linux")
@@ -274,7 +289,12 @@ export function packageLanes(name: Platform, host: string) {
     ...extra,
   })
   return [
-    lane("app", "app", filters(["app"]), { electron: linux }),
+    ...(linux
+      ? [lane("app", "app", filters(["app"]), { electron: linux })]
+      : [
+          lane("app-unit", "app unit", filters(["app"]), { appMode: "unit" }),
+          ...[1, 2, 3].map((index) => lane(`app-browser-${index}`, `app browser ${index}/3`, filters(["app"]), { appMode: "browser", appBrowserShard: `${index}/3` })),
+        ]),
     ...(linux
       ? [lane("cli", "cli, server, clients", filters(["cli", "server", "sdk-next", "client", "tui", "session-ui"]), { electron: linux })]
       : [
@@ -337,17 +357,18 @@ function refresh(timings: Timings, directory: string | undefined) {
     process.exit(2)
   }
   const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) =>
-    /(^|[\\/])(linux|windows)-(?:core-\d+(?:-watcher)?|(?:packages|windows)-desktop-bun-\d+|windows-atlas-\d+)\.xml$/.test(file),
+    /(^|[\\/])(linux|windows)-(?:core-\d+(?:-watcher)?|(?:packages|windows)-desktop-bun-\d+|windows-atlas-\d+|windows-app-browser-\d+)\.xml$/.test(file),
   )
   if (reports.length === 0) {
-    console.error(`no Core, Desktop or Boundary JUnit report under ${directory}`)
+    console.error(`no Core, Desktop, Boundary or App browser JUnit report under ${directory}`)
     process.exit(1)
   }
   const measured = new Map<string, Record<string, number>>()
   for (const report of reports) {
     const platform = path.basename(report).startsWith("linux") ? "linux" : "windows"
     const packageDirectory = path.basename(report).includes("desktop-bun-") ? "apps/desktop"
-      : path.basename(report).includes("windows-atlas-") ? "modules/atlas/boundary" : "packages/core"
+      : path.basename(report).includes("windows-atlas-") ? "modules/atlas/boundary"
+      : path.basename(report).includes("windows-app-browser-") ? "packages/app-shell" : "packages/core"
     const key = `${packageDirectory}:${platform}`
     const files = measured.get(key) ?? {}
     for (const [file, seconds] of suiteTimes(readFileSync(path.join(directory, report), "utf8"))) files[file] = Number(seconds.toFixed(2))
