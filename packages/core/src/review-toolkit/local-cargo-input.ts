@@ -101,7 +101,8 @@ function readManifest(root: string, entry: Entry) {
     if (!again.isFile() || again.size !== entry.bytes) return refusal("acquisition-error", "cargo-manifest-changed")
     const sha256 = new Bun.CryptoHasher("sha256").update(buffer).digest("hex")
     if (sha256 !== entry.sha256) return refusal("acquisition-error", "cargo-manifest-changed")
-    const parsed = yield* Effect.try({ try: () => Bun.TOML.parse(new TextDecoder("utf-8", { fatal: true }).decode(buffer)), catch: () => "cargo-manifest-invalid" as const }).pipe(
+    const { parse } = yield* Effect.promise(() => import("toml"))
+    const parsed = yield* Effect.try({ try: () => parse(new TextDecoder("utf-8", { fatal: true }).decode(buffer)), catch: () => "cargo-manifest-invalid" as const }).pipe(
       Effect.map((value) => ({ ok: true as const, value })),
       Effect.catch(() => Effect.succeed({ ok: false as const })),
     )
