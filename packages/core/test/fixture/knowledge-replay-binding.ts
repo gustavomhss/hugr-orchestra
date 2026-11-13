@@ -1,6 +1,6 @@
 export * as KnowledgeReplayBinding from "./knowledge-replay-binding"
 
-import { mkdtempSync, rmSync } from "node:fs"
+import { mkdtempSync, realpathSync, rmSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { Schema } from "effect"
@@ -34,11 +34,19 @@ async function build(root: string) {
   const source = path.resolve(import.meta.dir, "../../../..")
   const boundary = path.join(source, "modules/atlas/boundary")
   const packages = path.resolve(boundary, "../packages")
-  const parser = Bun.resolveSync("web-tree-sitter", boundary)
-  const metadata: unknown = await Bun.file(Bun.resolveSync("web-tree-sitter/package.json", boundary)).json()
-  if (typeof metadata !== "object" || metadata === null || !("version" in metadata) || typeof metadata.version !== "string")
-    throw new Error("Actual pinned parser package metadata unavailable")
-  const manifest = { parser: { resolved: parser, version: metadata.version }, astWarmup: false, scip: "controlled serialized protobuf" }
+  const metadataPath = path.join(boundary, "node_modules/web-tree-sitter/package.json")
+  const metadataBytes = await Bun.file(metadataPath).arrayBuffer()
+  const metadata: unknown = await Bun.file(metadataPath).json()
+  if (typeof metadata !== "object" || metadata === null || !("name" in metadata) || metadata.name !== "web-tree-sitter" ||
+    !("version" in metadata) || metadata.version !== "0.23.2" || !("main" in metadata) || metadata.main !== "tree-sitter.js")
+    throw new Error("Actual boundary parser must be web-tree-sitter@0.23.2 with main tree-sitter.js")
+  const parser = realpathSync(path.join(boundary, "node_modules/web-tree-sitter/tree-sitter.js"))
+  if (!statSync(parser).isFile()) throw new Error("Actual pinned parser entry is not a regular file")
+  const manifest = { parser: { resolved: parser, version: metadata.version, package: metadataPath,
+    packageSha256: new Bun.CryptoHasher("sha256").update(metadataBytes).digest("hex"),
+    entrySha256: new Bun.CryptoHasher("sha256").update(await Bun.file(parser).arrayBuffer()).digest("hex"),
+  }, astWarmup: false, scip: "controlled serialized protobuf" }
+  await Bun.write(Bun.stdout, `L4 replay setup: ${JSON.stringify(manifest)}\n`)
   const entry = path.join(root, "entry.ts")
   await Bun.write(entry, [
     `export { composeRuntime } from ${JSON.stringify(path.join(packages, "adapter-io/src/compose.ts"))}`,
@@ -60,7 +68,7 @@ async function build(root: string) {
       builder.onResolve({ filter: /^@bufbuild\/protobuf(\/.*)?$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@c4312\/scip$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       // Same pinned external as the official builder, made absolute for this owned OS-temp output.
-      builder.onResolve({ filter: /^web-tree-sitter$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary), external: true }))
+      builder.onResolve({ filter: /^web-tree-sitter$/ }, () => ({ path: parser, external: true }))
     } }],
   })
   if (!built.success || built.outputs.length !== 1 || built.outputs[0] === undefined)
