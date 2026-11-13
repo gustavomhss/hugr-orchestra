@@ -48,8 +48,7 @@ def durable(path, data):
     fsyncdir(path.parent)
 
 
-def emit(path, value):
-    durable(path, (json.dumps(value, sort_keys=True) + '\n').encode())
+def emit(p,x):durable(p,(json.dumps(x,sort_keys=True)+'\n').encode())
 
 
 def enable_subreaper():
@@ -210,6 +209,10 @@ def main():
     child_start = None
     try:
         enable_subreaper()
+        def interrupted(signum, frame):
+            raise InterruptedError('supervisor interrupted')
+        for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+            signal.signal(sig, interrupted)
         own = proc_row(os.getpid())
         if own is None:
             raise RuntimeError('SUPERVISOR_IDENTITY_UNKNOWN')
@@ -254,7 +257,7 @@ def main():
              'stderr_sha256': sha((run / 'stderr.raw').read_bytes()),
              'outer_tool_status': 'NOT_ASSERTED', 'ack_generated': False})
         # Durable terminal proof precedes the first externally visible byte.
-        sys.stdout.buffer.write(payload)
+        sys.stdout.buffer.write(payload);sys.stdout.buffer.flush()
         sys.stdout.buffer.flush()
         sys.stderr.write(json.dumps({'terminal_receipt': str(run / 'terminal.json'),
              'terminal_sha256': sha((run / 'terminal.json').read_bytes()),
