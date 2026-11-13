@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "verdict": "APPROVE bounded qualification",
+  "scope": "Two App E2E specs and two CLI schema comparison files only. No whole-browser or native-distribution qualification is claimed.",
+  "repair": {
+    "commit": "81594f7b0d4227f9756f4dafaf4b9da99ba0eab3",
+    "path": "packages/app-shell/e2e/utils/mock-server.ts",
+    "change": "Validate JSON.stringify(default response) through Schema.fromJsonString(Location.response(ModelExecution.Response)); discard decoded result and fulfill original response. Explicit override branch, catalog, selectors and assertions unchanged.",
+    "reason": "Pre-serialization family:undefined was not an encoded optionalKey value; JSON wire omits it.",
+    "snapshotGitBlob": "a2249e55a60df5f15bb4abe372c4e1415b644119",
+    "snapshotFileSHA256": "0a403764c3f4a735913ef8d7b130feb8152263868bca5f774757c2e08fd15dd4",
+    "snapshotMatchesRepairCommit": true
+  },
+  "snapshotBoundary": {
+    "parent": "8a8c7bb97acec51057cef86309bbbd8ae859e989",
+    "changedPaths": [".ci-run.json", "docs/audits/evidence/atlas-final-refresh.json", "docs/audits/evidence/post-extraction-qualification.json", "packages/app-shell/e2e/utils/mock-server.ts", "packages/core/test/memory-decision-process.test.ts"],
+    "interpretation": "Working-tree snapshots contain the repaired mock plus unrelated audit/Core-test changes. Selected E2E specs and CLI schema test files are unchanged from parent; source-bound repair blob independently matches commit above."
+  },
+  "priorFailure": {
+    "runID": 43450880577,
+    "jobID": 131972393338,
+    "snapshot": "283cf43f03445a198c3c9c604c8947adeef8cde8",
+    "passed": 23,
+    "failed": 8,
+    "skipped": 1,
+    "rawJobLogSHA256": "4ac40e9bc1d3caee4cec33d9d1a492b56f64dbb5d9af750b26d4156de8027666",
+    "evidence": "Valid model execution request bodies reached shared route; SchemaError rejected pre-JSON response before fulfill (trace response status -1). One chapter-agents and seven governance cases failed."
+  },
+  "e2e": {
+    "runID": 43452475375,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43452475375",
+    "jobID": 131977931569,
+    "snapshot": "850c1bac7dacf504003747077f1ff8c9328c79c3",
+    "conclusion": "success",
+    "os": "Linux",
+    "request": {
+      "package": "app",
+      "packageSelector": "packages/app",
+      "directory": "packages/app-shell",
+      "runner": "playwright",
+      "args": ["e2e/orchestra/chapter-agents.spec.ts", "e2e/orchestra/governance.spec.ts"],
+      "env": {},
+      "config": "e2e/playwright.production.config.ts"
+    },
+    "actual": {
+      "selected": 32,
+      "passed": 31,
+      "skipped": 1,
+      "failed": 0,
+      "workers": 1
+    },
+    "boundedRawLines": ["Running 32 tests using 1 worker", "1 skipped", "31 passed (2.3m)"],
+    "rawJobLogSHA256": "5d956be55220910d4d91d3e07bbfd0b926705412e63fb3a5e99aef3df225b461"
+  },
+  "cliSchema": {
+    "runID": 43452472712,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43452472712",
+    "snapshot": "b347cd311ea1bc979df53a3e57fed01402f9bc7a",
+    "conclusion": "success",
+    "request": {
+      "package": "cli",
+      "packageSelector": "packages/cli",
+      "directory": "apps/cli",
+      "runner": "bun",
+      "args": ["./test/schema-files.test.ts", "./test/schema.test.ts", "--timeout", "120000"],
+      "env": {}
+    },
+    "jobs": [
+      {
+        "os": "Linux",
+        "jobID": 131977918357,
+        "passed": 4,
+        "failed": 0,
+        "assertions": 72,
+        "omni": {
+          "verdict": "not applicable",
+          "reason": "focused: no declaring test ran",
+          "spawns": 0,
+          "delegated": 0
+        },
+        "rawJobLogSHA256": "7ef62b0362cb169116c71899981d8e5d19ce9cd5aa54a49687abbeec17be2f06"
+      },
+      {
+        "os": "Windows",
+        "jobID": 131977923057,
+        "passed": 4,
+        "failed": 0,
+        "assertions": 72,
+        "omni": {
+          "verdict": "not applicable",
+          "reason": "focused: no declaring test ran",
+          "spawns": 0,
+          "delegated": 0
+        },
+        "rawJobLogSHA256": "60f2c943ef5e642b4e5334643ad0390716731a9d7ecb8600179d36310b015e2b"
+      }
+    ]
+  }
+}
