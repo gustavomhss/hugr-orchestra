@@ -65,6 +65,10 @@ const en = {
     body: "Captions and answers are paused. The last 30 s of audio is kept and sent once you're back online; anything older isn't captioned.",
     recording: "Recording continues",
   },
+  storage: {
+    title: "Recording interrupted",
+    body: "Recent audio may be missing. Open Flight Engineer to review saved segments and retry delivery.",
+  },
   answer: {
     title: "Couldn't answer",
     body: "The model returned an error before any text. Ask again, or pick another model in the live seat's settings.",
@@ -140,6 +144,10 @@ const br: typeof en = {
     title: "Sem rede",
     body: "Legendas e respostas estão pausadas. Os últimos 30 s de áudio ficam guardados e são enviados quando você voltar a ficar online; o que for mais antigo fica sem legenda.",
     recording: "A gravação continua",
+  },
+  storage: {
+    title: "Gravação interrompida",
+    body: "Parte do áudio recente pode estar faltando. Abra o Flight Engineer para revisar os segmentos salvos e tentar o envio novamente.",
   },
   answer: {
     title: "Não foi possível responder",
@@ -613,6 +621,13 @@ function ErrorNote(props: { error: LiveOverlayError; state: LiveOverlayState }) 
           </div>
         </div>
       </Match>
+      <Match when={props.error.kind === "storage"}>
+        <div class="note">
+          <Icon id="x" />
+          <b>{copy.storage.title}</b>
+          <p>{copy.storage.body}</p>
+        </div>
+      </Match>
       <Match when={props.error.kind === "answer" && props.error}>
         {(error) => (
           <div class="note">
@@ -735,6 +750,7 @@ function Ended(props: {
 
 function status(state: LiveOverlayState) {
   const error = state.error
+  if (error?.kind === "storage") return copy.storage.title
   if (error?.kind === "network") return copy.status.offline(clock(error.offlineMs))
   if (error?.kind === "stt") return copy.status.sttPaused
   if (error?.kind === "permission" && error.microphone === "denied") return copy.status.micOff
