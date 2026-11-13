@@ -1,0 +1,43 @@
+{
+  "schema": "omni-binding-serialization/v1",
+  "recorded_at": "2026-11-13T16:21:36.333306+00:00",
+  "candidate_id": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "contract": "ad290fab1d7410d7a1afe431573c03ff2e4deafaf8cf8bb058014be12b14fc3c",
+  "entries": [
+    {
+      "key": "omni393.core.records-01",
+      "result": "b487fb9f8ad998bea86f8dba85e2d75dcd5e90e1b42c6e63450b7ec97b2835d4",
+      "inputs": "4e1174bae334a10871f921e6fc4eb04b17329e1cac39a4166531a25e0433631b"
+    }
+  ],
+  "criteria": [
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "C7",
+    "runtime-import-binding"
+  ],
+  "approval_payload_sha256": "054f1d0ac345afb223fdeee24268ab8ec78abbaac18fdaeb055c9e3c481c3a34",
+  "reviewers": [
+    {
+      "reviewer": "/root/omni_review_courier/omni_j1",
+      "response_sha256": "f5b61d01d5a58feae109878e1165a58f434f65fe93f242cf8f27460e86843f58",
+      "request_bundle_sha256": "af0c1375d9ed48d9e3d37253d2a9ed46258225a3e6c31e4fbb928a4e94bd7487",
+      "request_bundle_bytes": 177607,
+      "literal_message_parts": 15
+    },
+    {
+      "reviewer": "/root/omni_review_courier/omni_j2",
+      "response_sha256": "85dcc49f3421d189144153b8a88438d0f7ab6fac7243d4dc8f69fb3686bb6779",
+      "request_bundle_sha256": "bc2d42d77ae43111d16aecf7fa871ccda7025e183f78728a660e2de181034b05",
+      "request_bundle_bytes": 177607,
+      "literal_message_parts": 15
+    }
+  ],
+  "decision_source": "Exact JSON verdicts extracted from the two privately preserved actual final opinions; no generated vote or semantic-to-runtime conversion.",
+  "visibility": "Original opinions and literal request bundles stay private. This record is a public summary, not host authentication or owner acceptance.",
+  "publication": "NOT_RUN"
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "omni-consumer-limits/v1",
+  "frozen_at": "2026-11-13T16:09:06.139831+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "reserved_oracle_sha256": "9bcd0b2abc40c249963a774a3bc644337cec7735f714cc91f5b32f0bce80da1c",
+  "supplement_role": "Numeric read bounds for a future independent consumer evaluation; original pre-production oracle and its expected answers remain immutable. This supplement was fixed after initial L1 production and before formal L2/L3/L4 authoring or any independent consumer execution. It is not retroactive evidence that numeric bounds existed before L1.",
+  "public_objective": "Answer the reserved domain maintenance and boundary cases through actual Atlas ownership.index/read with progressive depth; no raw product source, other author output or reserved answer key.",
+  "shallow": {
+    "max_index_requests": 1,
+    "max_read_requests": 1,
+    "max_body_bytes_per_read": 131072,
+    "max_body_bytes_total": 131072,
+    "max_index_response_utf8_bytes": 131072,
+    "scope": "Select one relevant evidence artifact and reason about the selected source record; current evidence artifacts are coherent batches, and all returned batch bytes count even if only one record is used."
+  },
+  "deep": {
+    "max_index_requests": 4,
+    "max_read_requests": 8,
+    "max_body_bytes_per_read": 131072,
+    "max_body_bytes_total": 393216,
+    "max_index_response_utf8_bytes_total": 262144,
+    "scope": "Read relevant evidence batches and domain guides as needed, with no whole-corpus dump. Limits include requests already used during the shallow phase of that case."
+  },
+  "request_counting": "Every issued index/read request counts, including HOLD, error and repeated calls. Returned body byte counts use UTF-8 of the actual returned body; full serialized responses are recorded separately. No bytes-to-token or cost conversion.",
+  "consumer_counting": "One new context per independent consumer episode; no author or judge becomes consumer. Cases may share an episode only when the trace makes context reuse explicit and aggregate bounds are separately enforced.",
+  "unknown_usage": "Host provider/model tokens, physical attempts and billing UNKNOWN unless directly exposed. No external paid provider calls.",
+  "bridge": "Direct real ports when exposed, otherwise a faithful recorded request/response bridge with no enrichment. Instruction-only restrictions are reported as such; no technical isolation claim without enforcement evidence.",
+  "failure_rule": "A failed or over-budget response remains a failed/pending case; corrections or changed bounds create a new linked evaluation, never overwrite this freeze."
+}

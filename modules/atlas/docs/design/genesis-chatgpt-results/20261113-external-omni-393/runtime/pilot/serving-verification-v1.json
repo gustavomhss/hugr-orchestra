@@ -1,0 +1,53 @@
+{
+  "schema": "omni-native-pilot-serving-verification/v1",
+  "recorded_at": "2026-11-13T16:23:57.924013+00:00",
+  "selection": "C01v2 only: 6 of 393 production sources",
+  "candidate_id": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "ownership_manifest": "d3dc16dd75d10befa85e5bd8a3c1f2fd4fd5110ab79585801f66f6789ba83d34",
+  "artifact": "a0c66c47df100482600eef703ceeda08c8f0929a2ba19c7efef35036a17b134d",
+  "result": "b487fb9f8ad998bea86f8dba85e2d75dcd5e90e1b42c6e63450b7ec97b2835d4",
+  "receipt": "6a1d6893a65dab601489c6a1780f0e8529e2ab5c63c2b433fe3037abd7be5280",
+  "key": "omni393.core.records-01",
+  "body_sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34",
+  "body_bytes": 21914,
+  "body_exactly_equals_accepted_public_artifact": true,
+  "body_source": "bodies/core/records-01.v2.json",
+  "current_read": true,
+  "historical": false,
+  "index_bodies_returned": false,
+  "index_body_bytes_verified": true,
+  "governed_check": {
+    "wouldEmit": true,
+    "gates": [
+      {
+        "gate": "shape",
+        "pass": true
+      },
+      {
+        "gate": "truth",
+        "pass": true
+      },
+      {
+        "gate": "authz",
+        "pass": true
+      },
+      {
+        "gate": "ratify",
+        "pass": true
+      }
+    ]
+  },
+  "emitted": true,
+  "publication_exit_code": 0,
+  "index_exit_code": 0,
+  "read_exit_code": 0,
+  "operations_are_real": true,
+  "independent_consumer_evaluation": false,
+  "limits": [
+    "Only the accepted C01v2 partial package was activated in newly created isolated state.",
+    "Index verifies body bytes internally even though it does not return body text.",
+    "Operator read is not an independent maintenance-consumer case.",
+    "No Omni product tests, OS behavior, full layer release, other-session state, production activation or global Genesis acceptance follows.",
+    "Original binding requests/opinions remain private; their digests and public summaries disclose that visibility limit."
+  ]
+}

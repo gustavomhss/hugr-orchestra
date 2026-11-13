@@ -1,0 +1,402 @@
+{
+  "schema": "omni-runtime-binding-external-evidence/v1",
+  "recorded_at": "2026-11-13T16:02:35.780894+00:00",
+  "candidate_unchanged": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "source_baseline": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "root_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+    "ancestor_trees": [
+      {
+        "captured_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+        "reconstructed_git_tree": true,
+        "selected_child": {
+          "path": "native",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "3d6855b29342ef9ea42f0db77a70639adf8f7544"
+        }
+      },
+      {
+        "captured_tree": "3d6855b29342ef9ea42f0db77a70639adf8f7544",
+        "reconstructed_git_tree": true,
+        "selected_child": {
+          "path": "omni",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "6d1020e8641d699f2f3eeef3007b2749fb6b4c28"
+        }
+      }
+    ],
+    "omni_tree": "6d1020e8641d699f2f3eeef3007b2749fb6b4c28",
+    "recursive_truncated": false,
+    "blob_count": 426,
+    "selected_source_refs_verified": [
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/Cargo.toml",
+        "git_blob_sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+        "sha256": "49e545268f839655573698ee7d2f1d606178b262fb376704360ea2e8d0e063c9",
+        "bytes": 1625,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/GUARANTEES.md",
+        "git_blob_sha": "f51a3796266b532865e59e1b1f8147ff2ff23573",
+        "sha256": "60828f65581529e0a0ef09c80f74ad46dfcea8fd49f5575f7b0673427ad4a527",
+        "bytes": 7436,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/Cargo.toml",
+        "git_blob_sha": "da941bc372f94d998e00b51fba25b2152883db0e",
+        "sha256": "9793a8c1fc11d81a16f4741aef8e9380d8d4b91bd3b0d87d43aca65401407da2",
+        "bytes": 1010,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/README.md",
+        "git_blob_sha": "945f24792c30a37d3d445a28c029a5ec905793cc",
+        "sha256": "7400a8f3171678895fc18b7954d48121b2d1457ebd145b5d45e51b9b5b4da757",
+        "bytes": 1528,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+        "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+        "sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220",
+        "bytes": 7396,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/api/mod.rs",
+        "git_blob_sha": "4b3f37cc5070adaa0ae9f6d461e23f6faf58054e",
+        "sha256": "9230d7ea1770092ea26abd04ae43abbd60bf2753ada2c230a71e563ae9ea3b5c",
+        "bytes": 585,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/binding.rs",
+        "git_blob_sha": "e939c1d2c863fd35bde982a1232b4ffc1169c57e",
+        "sha256": "d7ba5604c33899e9612ff68f598b6f5eff9a773273504949eecd02ba9c02f19f",
+        "bytes": 5509,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+        "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+        "sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
+        "bytes": 13324,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/channel/route.rs",
+        "git_blob_sha": "e1eddb04bc55bdfde9cb5ea70f84b0c21b3d40f8",
+        "sha256": "a144d18da03062841d9c6f96919941ce0de099b6bc03ef1619c60825d12521cf",
+        "bytes": 10591,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/hold.rs",
+        "git_blob_sha": "1a3ab7d7cef5ae6be67255328b429ce3e958e9d9",
+        "sha256": "775e5364c8a48b99d672a52a4105704327f993ca12cd2f6f59d296db2e1775e4",
+        "bytes": 2427,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/keeper.rs",
+        "git_blob_sha": "96424d1b83dc75fdff07824c8979136a81ad31ee",
+        "sha256": "738da168685021d02ab413cc9b534c90cde2322728ff1d84a42ebd2e8372c757",
+        "bytes": 12132,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+        "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+        "sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
+        "bytes": 11037,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+        "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+        "sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+        "bytes": 11494,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/unix.rs",
+        "git_blob_sha": "55dfd50c72bdd1e3ea763febfb152f6d937c2126",
+        "sha256": "f67a2e5957d19bf0847cf1aaa71538f28174366e5fb2372df3275c46bbe514e8",
+        "bytes": 14084,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/client/windows.rs",
+        "git_blob_sha": "256b3cf8e5a6c067b4b71ce8024d897e424f5b50",
+        "sha256": "24938bab497dfd342790b8501738361c518bfc0138625de45da15920e66db9b9",
+        "bytes": 13776,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+        "git_blob_sha": "c7ef222f5a57cf93e250e077d35cd258527aa391",
+        "sha256": "7933963d860d697ccd3895899499257fa593eb20033be9867362fc8e8190d6d6",
+        "bytes": 3689,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+        "git_blob_sha": "cef9ad00238c99617b6a2ea2329e5fd0556af5c4",
+        "sha256": "2573e21fdf20f5e1087ddcc00a34abf534f5fe487cf3c84bbed6e20b0b28aa15",
+        "bytes": 1460,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+        "git_blob_sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+        "sha256": "7e6ea694a726ae0c56af9a76ec38b2e8008770c32ba4caf1f6cd6fd370f4b53a",
+        "bytes": 16767,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/hugr-omni/src/types.rs",
+        "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+        "sha256": "628de2e6808a85d1ea6d006eac2f80ac8d105a8f1b057b7e792ddb41ef1fa3f0",
+        "bytes": 4649,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/crates/omni-proto/src/codec/mod.rs",
+        "git_blob_sha": "afc8efe2c99cb3f1f527c5aa154928350627326e",
+        "sha256": "c17f8572ab5957a4371cecf405e531176331659f2e487b15b856628d3cd6b295",
+        "bytes": 9450,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      },
+      {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "native/omni/docs/api-contract.md",
+        "git_blob_sha": "4f61714ede48ad0eb6e8a57c9255ccfd5c71e569",
+        "sha256": "2786d322b4175e84f520a9c6c28a7aec5eed1d6a43d90e65001e66bfc39b20ab",
+        "bytes": 22648,
+        "membership": "Captured untruncated recursive Omni tree at baseline; ancestor Git tree identities reconstructed."
+      }
+    ]
+  },
+  "protocol_input": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+    "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+    "bytes": 8478,
+    "exact_mcp_content_match": true
+  },
+  "runtime_code": {
+    "commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "root_tree": "382e02b4d98746adf52221e605fb22c765aebdf7",
+    "atlas_tree": "1d68116f2d959be043b4ca635ba35375027c81f2",
+    "captured_files": 415,
+    "captured_bytes": 4876357,
+    "current_files_reverified": 415,
+    "errors": [],
+    "capture_manifest_sha256": "e285e869017ae878cb9158fd729c247eab07170809091acaf1f8b53ff6fc28b1",
+    "implementation_mapping": [
+      {
+        "role": "adapter",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+        "git_blob_sha": "f89413ad102fba2d2d56fbf65da14c4d7e5b6c90",
+        "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+        "bytes": 12376
+      },
+      {
+        "role": "format",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+        "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+        "bytes": 13356
+      },
+      {
+        "role": "io",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+        "git_blob_sha": "01a218ede3f71ef585fd280bc183e545f2a94321",
+        "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+        "bytes": 4162
+      },
+      {
+        "role": "binding",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+        "git_blob_sha": "64d29d3e67dea3bb826be5960a5b9bbf6719edc0",
+        "sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+        "bytes": 5198
+      }
+    ],
+    "current_git_checkout": false
+  },
+  "isolated_index": {
+    "tracked_source_entries": 426,
+    "baseline_paths_modes_blob_ids_match": true,
+    "ls_files_stdout_sha256": "0defdcd251f71ce0f3a1224e7bba386d41d164c93513a5a4251427f387c6de06",
+    "head_verify_exit_code": 128,
+    "observed_head": null,
+    "historical_checkout": false,
+    "new_local_index_only": true
+  },
+  "auxiliary_manifest": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/manifest.json",
+    "sha256": "89cf7a7b6d21b8476e29f5e94d226feb71d61dd037dcbf8e7c7135ac1362cc77",
+    "git_blob_sha": "32409179296d36880a2de376f5918be8b1e94f58",
+    "bytes": 179528,
+    "selected_mapping": [
+      {
+        "path": "native/omni/crates/hugr-omni/Cargo.toml",
+        "git_blob_sha": "da941bc372f94d998e00b51fba25b2152883db0e",
+        "git_mode": "100644",
+        "source_bytes": 1010,
+        "owner": "core",
+        "producer_task": "/root/omni_core_author",
+        "state": "DUAL_REVIEW_ACCEPTED_L1",
+        "artifacts": [
+          {
+            "path": "bodies/core/records-01.v2.json",
+            "record_index": 0
+          }
+        ],
+        "source_sha256": "9793a8c1fc11d81a16f4741aef8e9380d8d4b91bd3b0d87d43aca65401407da2",
+        "line_count": 38,
+        "review_refs": [
+          "reviews/C01v2-J1-summary.json",
+          "reviews/C01v2-J2-summary.json"
+        ]
+      },
+      {
+        "path": "native/omni/crates/hugr-omni/README.md",
+        "git_blob_sha": "945f24792c30a37d3d445a28c029a5ec905793cc",
+        "git_mode": "100644",
+        "source_bytes": 1528,
+        "owner": "core",
+        "producer_task": "/root/omni_core_author",
+        "state": "DUAL_REVIEW_ACCEPTED_L1",
+        "artifacts": [
+          {
+            "path": "bodies/core/records-01.v2.json",
+            "record_index": 1
+          }
+        ],
+        "source_sha256": "7400a8f3171678895fc18b7954d48121b2d1457ebd145b5d45e51b9b5b4da757",
+        "line_count": 28,
+        "review_refs": [
+          "reviews/C01v2-J1-summary.json",
+          "reviews/C01v2-J2-summary.json"
+        ]
+      },
+      {
+        "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+        "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+        "git_mode": "100644",
+        "source_bytes": 7396,
+        "owner": "core",
+        "producer_task": "/root/omni_core_author",
+        "state": "DUAL_REVIEW_ACCEPTED_L1",
+        "artifacts": [
+          {
+            "path": "bodies/core/records-01.v2.json",
+            "record_index": 2
+          }
+        ],
+        "source_sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220",
+        "line_count": 192,
+        "review_refs": [
+          "reviews/C01v2-J1-summary.json",
+          "reviews/C01v2-J2-summary.json"
+        ]
+      },
+      {
+        "path": "native/omni/crates/hugr-omni/src/api/mod.rs",
+        "git_blob_sha": "4b3f37cc5070adaa0ae9f6d461e23f6faf58054e",
+        "git_mode": "100644",
+        "source_bytes": 585,
+        "owner": "core",
+        "producer_task": "/root/omni_core_author",
+        "state": "DUAL_REVIEW_ACCEPTED_L1",
+        "artifacts": [
+          {
+            "path": "bodies/core/records-01.v2.json",
+            "record_index": 3
+          }
+        ],
+        "source_sha256": "9230d7ea1770092ea26abd04ae43abbd60bf2753ada2c230a71e563ae9ea3b5c",
+        "line_count": 11,
+        "review_refs": [
+          "reviews/C01v2-J1-summary.json",
+          "reviews/C01v2-J2-summary.json"
+        ]
+      },
+      {
+        "path": "native/omni/crates/hugr-omni/src/binding.rs",
+        "git_blob_sha": "e939c1d2c863fd35bde982a1232b4ffc1169c57e",
+        "git_mode": "100644",
+        "source_bytes": 5509,
+        "owner": "core",
+        "producer_task": "/root/omni_core_author",
+        "state": "DUAL_REVIEW_ACCEPTED_L1",
+        "artifacts": [
+          {
+            "path": "bodies/core/records-01.v2.json",
+            "record_index": 4
+          }
+        ],
+        "source_sha256": "d7ba5604c33899e9612ff68f598b6f5eff9a773273504949eecd02ba9c02f19f",
+        "line_count": 132,
+        "review_refs": [
+          "reviews/C01v2-J1-summary.json",
+          "reviews/C01v2-J2-summary.json"
+        ]
+      },
+      {
+        "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+        "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+        "git_mode": "100644",
+        "source_bytes": 13324,
+        "owner": "core",
+        "producer_task": "/root/omni_core_author",
+        "state": "DUAL_REVIEW_ACCEPTED_L1",
+        "artifacts": [
+          {
+            "path": "bodies/core/records-01.v2.json",
+            "record_index": 5
+          }
+        ],
+        "source_sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
+        "line_count": 386,
+        "review_refs": [
+          "reviews/C01v2-J1-summary.json",
+          "reviews/C01v2-J2-summary.json"
+        ]
+      }
+    ],
+    "binding_limit": "This auxiliary manifest is named in result.evidence but is not a live input or preserved reference of the frozen pilot candidate. Its snapshot is supplied for the exact six-path ownership mapping. Review progress of the other387 sources is not used to authorize the pilot; only the six-path body and its two preserved summaries are selected. No live-manifest guard is claimed."
+  },
+  "runtime_identity_for_publish": "The publish entrypoint re-prepares and requires exact candidate equality, including four implementation digests and all source/reference observations. Root will additionally reverify the415 captured runtime files against this preserved capture manifest immediately before publication and refuse any drift. That future check is not yet claimed executed.",
+  "limits": [
+    "No complete host-session export, cryptographic reviewer authentication, historical local Git checkout, product test execution or publication is established.",
+    "The complete415-file identity map is preserved publicly as verification/runtime-source-map.json; this bounded report reproduces its verification result and every implementation mapping material to the candidate, not all415 repetitive rows."
+  ]
+}

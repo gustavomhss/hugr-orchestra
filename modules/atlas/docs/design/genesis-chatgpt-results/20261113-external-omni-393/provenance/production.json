@@ -40,5 +40,15 @@
     "L2": "Authored drafts only; revalidation/release awaits accepted L1",
     "L3": "NOT_PRODUCED",
     "L4": "NOT_PRODUCED"
+  },
+  "runtime_observations": {
+    "partial_pilot_sources": 6,
+    "binding": "PASS by both persistent judges, separate runtime purpose",
+    "native_prepare": "EXECUTED_EXIT_0",
+    "native_governed_publish": "EXECUTED_EXIT_0_EMITTED_TRUE",
+    "ownership_index": "EXECUTED_EXIT_0",
+    "ownership_read": "EXECUTED_EXIT_0_EXACT_CURRENT_BODY",
+    "independent_consumer": "NOT_RUN",
+    "scope": "Only C01v2 in isolated local state; no complete layer or global acceptance."
   }
 }

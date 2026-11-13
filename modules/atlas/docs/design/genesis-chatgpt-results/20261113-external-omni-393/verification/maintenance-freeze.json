@@ -1,0 +1,24 @@
+{
+  "schema": "omni-maintenance-freeze/v2",
+  "frozen_at": "2026-11-13T16:17:33.597268+00:00",
+  "oracle_sha256": "5d8f4ff9ab86c7f6b32c0a885afd030bcaaf3b719292cffe614a20572c4dec42",
+  "oracle_public": false,
+  "case_count": 4,
+  "purpose": "Bounded future owned-knowledge runtime adaptation and maintenance evaluation; not retroactive L1 acceptance.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_code_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "allowed_scope": "Only owned result-package/recipe inputs in a dedicated isolated state; no native/omni source, source-tree membership, product workflow, shared S4 state or another session branch is edited.",
+  "bounds": {
+    "max_full_prepare_invocations": 9,
+    "max_publication_attempts": 3,
+    "max_observational_index_read_requests": 16,
+    "new_content_author_calls_for_mechanical_variants": 0,
+    "additional_binding_review_requests": "Two persistent judges for each changed exact candidate; account each visible request separately.",
+    "exhaustion": "A failed case is reported and corrected only through a new linked bounded evaluation; do not silently extend these limits.",
+    "prepare_counting": "At most five explicit prepare CLI operations plus at most one internal prepare per each of three publication attempts, with one additional recorded preparation slot; all internal and explicit derivations count. No case has run when this v2 supplement is fixed."
+  },
+  "visibility": "Reserved expected outcomes remain private. Public receipts will record only actual operations, results, scope and limitations.",
+  "status": "FROZEN_NOT_RUN",
+  "supersedes_public_freeze": "history/verification/maintenance-freeze-v1.json",
+  "reason": "Clarify the operation envelope before any case executes: native publish internally re-runs preparation. Count those internal derivations instead of silently excluding them."
+}

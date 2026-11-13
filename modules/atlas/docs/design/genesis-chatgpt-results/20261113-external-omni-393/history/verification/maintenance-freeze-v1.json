@@ -1,0 +1,21 @@
+{
+  "schema": "omni-maintenance-freeze/v1",
+  "frozen_at": "2026-11-13T16:17:05.171055+00:00",
+  "oracle_sha256": "d6c2719c720f9979e962a0573df829c5a23e16c9a758c3239b32212a352235b4",
+  "oracle_public": false,
+  "case_count": 4,
+  "purpose": "Bounded future owned-knowledge runtime adaptation and maintenance evaluation; not retroactive L1 acceptance.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_code_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "allowed_scope": "Only owned result-package/recipe inputs in a dedicated isolated state; no native/omni source, source-tree membership, product workflow, shared S4 state or another session branch is edited.",
+  "bounds": {
+    "max_full_prepare_invocations": 5,
+    "max_publication_attempts": 3,
+    "max_observational_index_read_requests": 16,
+    "new_content_author_calls_for_mechanical_variants": 0,
+    "additional_binding_review_requests": "Two persistent judges for each changed exact candidate; account each visible request separately.",
+    "exhaustion": "A failed case is reported and corrected only through a new linked bounded evaluation; do not silently extend these limits."
+  },
+  "visibility": "Reserved expected outcomes remain private. Public receipts will record only actual operations, results, scope and limitations.",
+  "status": "FROZEN_NOT_RUN"
+}

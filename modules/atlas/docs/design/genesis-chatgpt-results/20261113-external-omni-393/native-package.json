@@ -3347,7 +3347,16 @@
           "sha256": "32ec5c11c30fdae78721ace8daafabe39b7aaefeef789955bb3f08560c7c5290"
         }
       ],
-      "runtime_receipt_refs": []
+      "runtime_receipt_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/runtime/pilot/publish-v1.receipt.json",
+          "sha256": "caa07d799757022875bbfacbbbee468216afd3416ad0c356a5cc15ebbdfac9b1"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/runtime/pilot/serving-verification-v1.json",
+          "sha256": "669f98eadf7c797d28eaca76f770e1236872538ec894768336a5b1817eee33e0"
+        }
+      ]
     },
     {
       "key": "omni393.core.records-02",

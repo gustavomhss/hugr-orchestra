@@ -1,0 +1,109 @@
+{
+  "schema": "omni-public-runtime-binding-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "RTP01",
+  "layer": "L1",
+  "judge_identity": "/root/omni_review_courier/omni_j2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact": {
+    "author_path": "authors/core/records-01.v2.json",
+    "public_path": "bodies/core/records-01.v2.json",
+    "sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34",
+    "bytes": 21914
+  },
+  "verdict": "PASS",
+  "covered_records": 6,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/Cargo.toml",
+      "verdict": "PASS"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/README.md",
+      "verdict": "PASS"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/api/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/binding.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+      "verdict": "PASS"
+    }
+  ],
+  "criteria": {
+    "C1": {
+      "label": "Every covered path has an actual read-based, file-specific useful disposition",
+      "verdict": "PASS"
+    },
+    "C2": {
+      "label": "Assertions distinguish implementation, documentation/declaration, inference and gaps",
+      "verdict": "PASS"
+    },
+    "C3": {
+      "label": "Source identities, paths and exact quote evidence support claims",
+      "verdict": "PASS"
+    },
+    "C4": {
+      "label": "Contracts, failures, relations and maintenance implications are useful at L1",
+      "verdict": "PASS"
+    },
+    "C5": {
+      "label": "Test source, old reviews and docs are never current execution",
+      "verdict": "PASS"
+    },
+    "C6": {
+      "label": "Ownership/exclusions and authorized external scope preserved",
+      "verdict": "PASS"
+    },
+    "C7": {
+      "label": "No secrets/private evaluation/session material in candidate",
+      "verdict": "PASS"
+    },
+    "runtime-import-binding": {
+      "label": "Independent decision on the exact prepared candidate, contract, result and inputs",
+      "verdict": "PASS"
+    }
+  },
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "private_opinion_sha256": "85dcc49f3421d189144153b8a88438d0f7ab6fac7243d4dc8f69fb3686bb6779",
+  "private_opinion_digest_scope": "SHA256 of the privately retained UTF-8 opinion text with final LF; not a host-message envelope or authenticated transport receipt",
+  "transport_note": "Full candidate and evidence were literally supplied to both persistent tool-less reviewers; private copies and corrections are retained. File and response digests do not authenticate host-message transport or reviewer identity.",
+  "limitations": [
+    "Separate runtime-import-binding decision for C01v2 only: six of 393 sources; C02 is outside this candidate.",
+    "Source baseline and runtime implementation pin are distinct. No Omni product tests, platform validation, complete CI, release or global integration acceptance is established.",
+    "Governed publication was not run in the reviewed evidence. Fresh candidate equality, normal governed checks and the stated full runtime-file recheck remain future publication requirements.",
+    "The auxiliary manifest-at-prepare is a mapping snapshot, not a live guarded input.",
+    "Nominal policy/actor/reviewer labels and private-opinion digests do not establish cryptographic identity or human acceptance.",
+    "This does not release complete L1, later layers or independent ownership-consumer cases.",
+    "Original private exchanges and reserved material are withheld; no public reproducibility of withheld material is claimed."
+  ],
+  "purpose": "runtime-import-binding",
+  "runtime_source_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "candidate_id": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "contract": "ad290fab1d7410d7a1afe431573c03ff2e4deafaf8cf8bb058014be12b14fc3c",
+  "entries": [
+    {
+      "key": "omni393.core.records-01",
+      "result": "b487fb9f8ad998bea86f8dba85e2d75dcd5e90e1b42c6e63450b7ec97b2835d4",
+      "inputs": "4e1174bae334a10871f921e6fc4eb04b17329e1cac39a4166531a25e0433631b"
+    }
+  ],
+  "publication_status_at_review": "NOT_RUN"
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "omni-native-prepublication-check/v1",
+  "recorded_at": "2026-11-13T16:22:03.651210+00:00",
+  "runtime_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "runtime_files_verified": 415,
+  "baseline_source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "baseline_blobs_verified": 426,
+  "git_index_entries_verified": 426,
+  "observed_head": null,
+  "head_verify_exit_code": 128,
+  "frozen_payload_sha256_checks": [
+    {
+      "file": "prepared-v1.json",
+      "sha256": "b142c71975eb1dd0da43cdc711ceeae829b2502259500a0524063e76b1196d7b"
+    },
+    {
+      "file": "pilot-package.json",
+      "sha256": "040fd4baf1cf0b6c4b66789c791015bfdded2e0b76302fa2bfa7323ac2f45784"
+    },
+    {
+      "file": "policy.json",
+      "sha256": "39c860bdc37a4a1af65796f151bcdcf9be04398267a89f9e388094709a2abfb9"
+    },
+    {
+      "file": "RTP01-binding-v1.json",
+      "sha256": "054f1d0ac345afb223fdeee24268ab8ec78abbaac18fdaeb055c9e3c481c3a34"
+    }
+  ],
+  "errors": [],
+  "result": "PASS"
+}

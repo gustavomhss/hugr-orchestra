@@ -1,0 +1,47 @@
+{
+  "schema": "omni-native-operation/v1",
+  "operation": "ownership.index via native CLI and composeRuntime",
+  "runtime_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "candidate_id": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "selection": "C01v2 partial 6 of 393 sources",
+  "argv": [
+    "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-tools/node_modules/@oven/bun-linux-x64/bin/bun",
+    "scripts/genesis-native.ts",
+    "index",
+    "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-pilot-c01",
+    "/workspace/scratch/d3422440cdf1/omni-genesis/control/pilot/index-v1.query.json"
+  ],
+  "cwd": "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-code/modules/atlas",
+  "started_at": "2026-11-13T16:22:25.332813+00:00",
+  "elapsed_seconds": 0.6525220240000635,
+  "query": {
+    "scope": "native/omni",
+    "need": "evidence"
+  },
+  "query_sha256": "051f35e768fdfe03a29b46bf94d0406a66173b061356e6d3c7da467fac14a875",
+  "exit_code": 0,
+  "stdout_sha256": "737ef4fca276da0444ce1d903d5e1fe2e20ce9974d550caf6ee02bb8c7f8e977",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "result": {
+    "kind": "index",
+    "manifest": "d3dc16dd75d10befa85e5bd8a3c1f2fd4fd5110ab79585801f66f6789ba83d34",
+    "artifact": "a0c66c47df100482600eef703ceeda08c8f0929a2ba19c7efef35036a17b134d",
+    "result": "b487fb9f8ad998bea86f8dba85e2d75dcd5e90e1b42c6e63450b7ec97b2835d4",
+    "receipt": "6a1d6893a65dab601489c6a1780f0e8529e2ab5c63c2b433fe3037abd7be5280",
+    "key": "omni393.core.records-01",
+    "scope": "native/omni",
+    "title": "Omni core source records 01 (6 paths)",
+    "layer": 1,
+    "need": "evidence",
+    "sections": [],
+    "navigation": [],
+    "dependencies": [],
+    "bodyBytes": 21914,
+    "bodiesReturned": false,
+    "bodyBytesVerified": true,
+    "checked": [
+      "omni393.core.records-01"
+    ]
+  },
+  "scope": "Operational real-reader observation; root operator, not an independent consumer evaluation."
+}
