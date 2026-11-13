@@ -133,11 +133,11 @@
                 24
               ],
               [
-                122,
+                93,
                 135
               ]
             ],
-            "note": "Fetched complete blob and inspected full displayed content."
+            "note": "Fetched complete blob and inspected full displayed content. Evidence ranges augmented in B1 after pinned MCP reread; no runtime verification."
           }
         },
         {
@@ -150,7 +150,7 @@
                 24
               ],
               [
-                122,
+                93,
                 135
               ]
             ]
@@ -379,7 +379,6 @@
           "actor": "/root/contracts",
           "read_scope": {
             "kind": "full_content",
-            "ranges": [],
             "note": "Context source read; not required for every edge."
           }
         }
@@ -1088,7 +1087,6 @@
           "actor": "/root/contracts",
           "read_scope": {
             "kind": "full_content",
-            "ranges": [],
             "note": "Context source read; not required for every edge."
           }
         }
@@ -1110,8 +1108,50 @@
           "actor": "/root/contracts",
           "read_scope": {
             "kind": "partial_content",
-            "ranges": [],
-            "note": "Search-selected lines only; not used for a graph assertion."
+            "ranges": [
+              [
+                1,
+                23
+              ],
+              [
+                40,
+                40
+              ],
+              [
+                86,
+                86
+              ],
+              [
+                143,
+                143
+              ],
+              [
+                167,
+                167
+              ],
+              [
+                436,
+                476
+              ]
+            ],
+            "note": "Contextual source only; not used for a graph assertion. Initial tool output exposed the listed import/declaration ranges. A pinned GitHub MCP provenance-only reread inspected lines 1–23 and 436–476. Unlisted bodies remain outside the inspected scope; no whole-file semantic coverage or runtime result is claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                23
+              ],
+              [
+                436,
+                476
+              ]
+            ],
+            "note": "Two provenance supplement ranges in review-delta-B1.json; no new graph assertion."
           }
         }
       ],
@@ -1398,7 +1438,6 @@
           "actor": "/root/contracts",
           "read_scope": {
             "kind": "full_content",
-            "ranges": [],
             "note": "Complete 12-line RequestDescriptor declaration inspected; contextual source only."
           }
         }
@@ -1461,11 +1500,15 @@
             "kind": "partial_content",
             "ranges": [
               [
+                178,
+                181
+              ],
+              [
                 530,
                 538
               ]
             ],
-            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed. Evidence ranges augmented in B1 after pinned MCP reread; no runtime verification."
           }
         },
         {
@@ -1473,6 +1516,10 @@
           "read_scope": {
             "kind": "independent_exact_excerpt_byte_comparison",
             "ranges": [
+              [
+                178,
+                181
+              ],
               [
                 530,
                 538
@@ -1639,7 +1686,6 @@
           "actor": "/root/contracts",
           "read_scope": {
             "kind": "full_content",
-            "ranges": [],
             "note": "Context source read; not required for every edge."
           }
         }
@@ -1802,7 +1848,6 @@
           "actor": "/root/contracts",
           "read_scope": {
             "kind": "full_content",
-            "ranges": [],
             "note": "Context source read; not required for every edge."
           }
         }
@@ -1920,11 +1965,15 @@
             "kind": "partial_content",
             "ranges": [
               [
+                16,
+                16
+              ],
+              [
                 81,
                 139
               ]
             ],
-            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed. Evidence ranges augmented in B1 after pinned MCP reread; no runtime verification."
           }
         },
         {
@@ -1932,6 +1981,10 @@
           "read_scope": {
             "kind": "independent_exact_excerpt_byte_comparison",
             "ranges": [
+              [
+                16,
+                16
+              ],
               [
                 81,
                 139
@@ -1960,8 +2013,7 @@
         {
           "actor": "/root/contracts",
           "read_scope": {
-            "kind": "full_content",
-            "ranges": []
+            "kind": "full_content"
           }
         },
         {
@@ -1993,8 +2045,7 @@
         {
           "actor": "/root/contracts",
           "read_scope": {
-            "kind": "full_content",
-            "ranges": []
+            "kind": "full_content"
           }
         },
         {
@@ -2026,8 +2077,7 @@
         {
           "actor": "/root/contracts",
           "read_scope": {
-            "kind": "full_content",
-            "ranges": []
+            "kind": "full_content"
           }
         },
         {
@@ -2059,8 +2109,7 @@
         {
           "actor": "/root/contracts",
           "read_scope": {
-            "kind": "full_content",
-            "ranges": []
+            "kind": "full_content"
           }
         },
         {
@@ -2092,8 +2141,7 @@
         {
           "actor": "/root/contracts",
           "read_scope": {
-            "kind": "full_content",
-            "ranges": []
+            "kind": "full_content"
           }
         },
         {
@@ -2125,8 +2173,7 @@
         {
           "actor": "/root/contracts",
           "read_scope": {
-            "kind": "full_content",
-            "ranges": []
+            "kind": "full_content"
           }
         },
         {
@@ -2602,8 +2649,7 @@
         {
           "actor": "/root/contracts",
           "read_scope": {
-            "kind": "full_content",
-            "ranges": []
+            "kind": "full_content"
           }
         }
       ],
@@ -2628,9 +2674,15 @@
   "independent_source_excerpt_comparison": {
     "index": "evidence-excerpts-B.json",
     "sources": 40,
-    "ranges": 75,
+    "ranges": 77,
     "range_mismatches": 0,
-    "baseline_object_mismatches": 0
+    "baseline_object_mismatches": 0,
+    "supplement": {
+      "index": "review-delta-B1.json",
+      "source": "B-X06",
+      "ranges": 2,
+      "range_mismatches": 0
+    }
   },
   "limits": [
     "Content source count is distinct revision/path bindings, not 14442 semantic reads.",

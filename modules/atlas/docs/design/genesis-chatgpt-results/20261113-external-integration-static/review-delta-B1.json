@@ -1,0 +1,238 @@
+{
+  "schema": "genesis-static-contracts-author-delta/v1",
+  "delta_id": "B1",
+  "author": "external-contracts-producer",
+  "independent_review": "PENDING_COORDINATOR_REPRESENTATION",
+  "scope": "Public source evidence augmentation and narrowing of B-E04; not a review verdict.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "preserved": {
+    "node_count": 20,
+    "observed_edge_count": 17,
+    "impact_inference_count": 7,
+    "source_blob_count": 53,
+    "edge_ids": true,
+    "product_execution": "NOT_RUN"
+  },
+  "prior_artifact_sha256": {
+    "contracts.json": "9884f1717f7cf3390d21b84e6ffdf1f8a65c39de41b32e6361c88cfa4be5a42c",
+    "sources-B.json": "3252993f45dc905ec1ffa23e7c17ff3d759784775418b3b6c699d5eb670b31bf",
+    "evidence-excerpts-B.json": "b8c3c01fb8a7f9beb9b5abef4f1b271d89d680ccd16b665304d94f35c37f0561",
+    "contracts.md": "8893ea3d2198cbd9b124161bdc93fd44d4d78e5b4e705578334333c35eb7fc05"
+  },
+  "changes": [
+    {
+      "id": "B1-01",
+      "edge_ids": [
+        "B-E01",
+        "B-E02"
+      ],
+      "description": "Add the exact argument chain hosts() at serve.ts:93 -> listen host parameter at :113 -> bind at :114/:116 -> createRoutes({host}) at :125, plus hosts() definition at :133–135."
+    },
+    {
+      "id": "B1-02",
+      "edge_ids": [
+        "B-E04"
+      ],
+      "description": "Add routes.ts:16 importing @orchestra/core/host and core/package.json:178 mapping ./host to ./src/host.ts. Propagate ranges to edge and source/excerpt manifests."
+    },
+    {
+      "id": "B1-03",
+      "edge_ids": [
+        "B-E04"
+      ],
+      "description": "Narrow boundary to S1 Server -> S1 Core and the already traced application composition S5->S3 (E02/E03). Remove the unsupported assertion that E04 demonstrates contributions originating in S4."
+    }
+  ],
+  "boundary_replacement": {
+    "edge_id": "B-E04",
+    "before": "S1 Server → S1 Core; integra entradas de contribuições S3/S4/S5.",
+    "after": "S1 Server → S1 Core; aplica contribuições declaradas pela composição da aplicação (cadeia S5→S3 rastreada nas E02/E03)."
+  },
+  "read_augmentations": [
+    {
+      "source_id": "B-S02",
+      "path": "apps/cli/src/commands/handlers/serve.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+      "decisive_ranges": [
+        [
+          1,
+          24
+        ],
+        [
+          93,
+          135
+        ]
+      ],
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 24,
+          "text": "import { NodeHttpServer } from \"@effect/platform-node\"\nimport { ClaudeCodeAccount } from \"@orchestra/core/claude-code-account\"\nimport { Credential } from \"@orchestra/core/credential\"\nimport { Database } from \"@orchestra/core/database/database\"\nimport { AppNodeBuilder } from \"@orchestra/core/effect/app-node-builder\"\nimport { LayerNode } from \"@orchestra/core/effect/layer-node\"\nimport { PermissionSaved } from \"@orchestra/core/permission/saved\"\nimport { SessionV2 } from \"@orchestra/core/session\"\nimport { Context, Layer, Option } from \"effect\"\nimport * as Effect from \"effect/Effect\"\nimport { HttpRouter, HttpServer } from \"effect/unstable/http\"\nimport { createServer } from \"node:http\"\nimport { writeSync } from \"node:fs\"\nimport path from \"node:path\"\nimport { WebUi } from \"@orchestra/server/web-ui\"\nimport { createRoutes } from \"@orchestra/server/routes\"\nimport { AppDockSocket } from \"@orchestra/app-dock/socket-transport\"\nimport { Commands } from \"../commands\"\nimport { ProductHost } from \"../../host\"\nimport { ChildProcessSpawner } from \"effect/unstable/process/ChildProcessSpawner\"\nimport { Runtime } from \"../../framework/runtime\"\nimport { Daemon } from \"../../services/daemon\"\nimport { addressInUse } from \"./serve-port\"\nimport { ServeShutdown } from \"./serve-shutdown\""
+        },
+        {
+          "start_line": 93,
+          "end_line": 135,
+          "text": "        const listening = yield* listen(input.hostname, input.port, password, hosts(), root, input.cors)\n        const address = listening.address\n        // Closing the server waits for every open connection, and the event stream never ends on its own. Scope\n        // finalizers run in reverse, so this drops the connections before the server closes.\n        yield* Effect.addFinalizer(() => Effect.sync(() => listening.server.closeAllConnections?.()))\n        if (input.register) yield* daemon.register(address)\n        console.log(`server listening on ${HttpServer.formatAddress(address)}`)\n        if (input.onListening) yield* input.onListening(address, root)\n        return yield* ServeShutdown.untilSignal(process, process.platform, (signal) => {\n          if (shutdown.signal) return\n          shutdown.signal = signal\n          shutdown.startedAt = Date.now()\n          process.exitCode = ServeShutdown.exitCode(signal)\n          note(\"started\")\n          setTimeout(() => process.exit(), SHUTDOWN_GRACE_MS).unref()\n        })\n      }),\n    )\n})\n\nfunction listen(hostname: string, port: Option.Option<number>, password: string, host: ReturnType<typeof hosts>, root: string | undefined, cors?: ReadonlyArray<string>) {\n  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, cors)\n  const next = (port: number): ReturnType<typeof bind> =>\n    bind(hostname, port, password, host, root, cors).pipe(\n      Effect.catch((error) => (port === 65_535 || !addressInUse(error) ? Effect.fail(error) : next(port + 1))),\n    )\n  return next(4096)\n}\n\nfunction bind(hostname: string, port: number, password: string, host: ReturnType<typeof hosts>, root: string | undefined, cors?: ReadonlyArray<string>) {\n  const server = createServer()\n  return Layer.build(\n    HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors }), { disableListenLog: true, disableLogger: true }).pipe(\n      Layer.provideMerge(NodeHttpServer.layer(() => server, { port, host: hostname })),\n      Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),\n    ),\n  ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))\n}\n\n// The Dock tools exist only when the desktop that owns this child handed it a Dock channel.\nfunction hosts() {\n  return ProductHost.contributions(AppDockSocket.fromEnv())\n}"
+        }
+      ]
+    },
+    {
+      "source_id": "B-S03",
+      "path": "packages/server/src/routes.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+      "decisive_ranges": [
+        [
+          16,
+          16
+        ],
+        [
+          81,
+          139
+        ]
+      ],
+      "excerpts": [
+        {
+          "start_line": 16,
+          "end_line": 16,
+          "text": "import { Host } from \"@orchestra/core/host\""
+        },
+        {
+          "start_line": 81,
+          "end_line": 139,
+          "text": "export interface Options {\n  readonly password?: string\n  /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */\n  readonly host?: ReadonlyArray<Host.Contribution>\n  /** Directory of the built web UI; when set, the server also serves it at `/`. */\n  readonly webRoot?: string\n  /** Extra origins the server answers cross-origin, besides the local and desktop ones. */\n  readonly cors?: ReadonlyArray<string>\n  /** Replaces the capability operator; tests and sdk-next embed their own. */\n  readonly operator?: CapabilityOperatorContract.Interface\n  /** Replaces the capability setup verifier; tests avoid vendor calls with it. */\n  readonly verifier?: CapabilityConnectionSetupContract.Verifier\n}\n\nexport function createRoutes(options: Options = {}) {\n  return makeRoutes(\n    options.password\n      ? ServerAuth.Config.configLayer({ username: \"orchestra\", password: Option.some(options.password) })\n      : ServerAuth.Config.layer,\n    options,\n  )\n}\n\nexport function createEmbeddedRoutes(options: Pick<Options, \"host\" | \"operator\" | \"verifier\"> = {}) {\n  return makeRoutes(ServerAuth.Config.configLayer({ username: \"orchestra\", password: Option.none() }), options)\n}\n\nfunction makeRoutes<AuthError, AuthServices>(\n  auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,\n  options: Omit<Options, \"password\">,\n) {\n  const merged = Host.merge(options.host ?? [])\n  // Contributed global nodes add services and may not fail, so the root keeps the application services' types.\n  const serviceLayer: Layer.Layer<\n    LayerNode.Output<typeof applicationServices>,\n    LayerNode.Error<typeof applicationServices>\n  > = AppNodeBuilder.build(\n    LayerNode.group([applicationServices, ...merged.nodes]),\n    [[SessionExecution.node, SessionExecutionLocal.node], ...merged.replacements],\n    merged.locationNodes,\n  )\n\n  const api = HttpApiBuilder.layer(Api, { openapiPath: \"/openapi.json\" }).pipe(\n    Layer.provide(handlers),\n    Layer.provide(merged.references),\n    Layer.provide(sessionLocationLayer),\n    Layer.provide(locationLayer),\n    Layer.provide(authorizationLayer),\n    Layer.provide(capabilityAuthorizationLayer),\n    Layer.provide(schemaErrorLayer),\n    Layer.provide(auth),\n    Layer.provide(options.operator ? Layer.succeed(ServerOperator.Service, options.operator) : ServerOperator.layer),\n    Layer.provide(ServerContentTicket.layer),\n    Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),\n    Layer.provide(serviceLayer),\n    // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.\n    Layer.provide(corsLayer({ cors: options.cors })),\n  )\n  return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty)"
+        }
+      ]
+    },
+    {
+      "source_id": "B-S31",
+      "path": "packages/core/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "decisive_ranges": [
+        [
+          178,
+          181
+        ],
+        [
+          530,
+          538
+        ]
+      ],
+      "excerpts": [
+        {
+          "start_line": 178,
+          "end_line": 181,
+          "text": "    \"./host\": \"./src/host.ts\",\n    \"./host/agent-execution\": \"./src/host/agent-execution.ts\",\n    \"./host/catalog-availability\": \"./src/host/catalog-availability.ts\",\n    \"./host/pty-environment\": \"./src/host/pty-environment.ts\","
+        },
+        {
+          "start_line": 530,
+          "end_line": 538,
+          "text": "    \"@orchestra/atlas-boundary\": \"workspace:*\",\n    \"@orchestra/effect-drizzle-sqlite\": \"workspace:*\",\n    \"@orchestra/effect-sqlite-node\": \"workspace:*\",\n    \"@orchestra/llm\": \"workspace:*\",\n    \"@orchestra/maestro-arsenal\": \"workspace:*\",\n    \"@orchestra/plugin\": \"workspace:*\",\n    \"@orchestra/relay\": \"workspace:*\",\n    \"@orchestra/schema\": \"workspace:*\",\n    \"@parcel/watcher\": \"2.5.1\","
+        }
+      ]
+    }
+  ],
+  "provenance_supplements": [
+    {
+      "id": "B-X06-PROVENANCE",
+      "purpose": "Clarify contextual partial read scope after independent review request; no new edge, node, inference or runtime result.",
+      "source_id": "B-X06",
+      "path": "packages/app-shell/src/context/server-sdk.tsx",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "8163d68ab02ddbc65e968be3f20f8742bb1e1397",
+      "read_scope": "partial_content",
+      "initial_search_selected_ranges": [
+        [
+          1,
+          23
+        ],
+        [
+          40,
+          40
+        ],
+        [
+          86,
+          86
+        ],
+        [
+          143,
+          143
+        ],
+        [
+          167,
+          167
+        ],
+        [
+          436,
+          436
+        ],
+        [
+          466,
+          466
+        ],
+        [
+          468,
+          468
+        ],
+        [
+          476,
+          476
+        ]
+      ],
+      "provenance_reread_ranges": [
+        [
+          1,
+          23
+        ],
+        [
+          436,
+          476
+        ]
+      ],
+      "read_ranges": [
+        [
+          1,
+          23
+        ],
+        [
+          40,
+          40
+        ],
+        [
+          86,
+          86
+        ],
+        [
+          143,
+          143
+        ],
+        [
+          167,
+          167
+        ],
+        [
+          436,
+          476
+        ]
+      ],
+      "range_numbering": "1-based inclusive",
+      "excerpt_note": "Bodies below returned by pinned GitHub MCP reread; remaining initial sparse ranges were declaration lines observed in the initial search-selected tool output.",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 23,
+          "text": "import type { ClientEvent } from \"@/session-types\"\nimport type { Event } from \"@/v2-wire\"\nimport { createSimpleContext } from \"@orchestra/ui/context\"\nimport { createGlobalEmitter } from \"@solid-primitives/event-bus\"\nimport { makeEventListener } from \"@solid-primitives/event-listener\"\nimport { type Accessor, type ParentProps, batch, createMemo, createSignal, onCleanup, onMount } from \"solid-js\"\nimport { Orchestra } from \"@orchestra/client\"\nimport { authTokenFromCredentials, createApiForServer, type ServerApi } from \"@/utils/server\"\nimport { type Platform, usePlatform } from \"./platform\"\nimport { ServerConnection, useServer } from \"./server\"\nimport { ServerRequired } from \"@/components/server-unavailable\"\nimport { createRefCountMap } from \"@/utils/refcount\"\nimport { useGlobal } from \"./global\"\nimport { ServerScope } from \"@/utils/server-scope\"\nimport { describeError } from \"@/utils/server-errors\"\nimport { waitForServer, type ServerReadyOptions } from \"@/utils/server-ready\"\nimport { createCompatibleApi, type CompatibleApi } from \"@/utils/server-compat\"\nimport { createSessionManagementForServer } from \"@/utils/session-management\"\nimport { createScopedFetch } from \"@/utils/scoped-fetch\"\nimport { clearStreamActivity, tapStreamActivity, watchStreamStall } from \"@/utils/server-stream-liveness\"\nimport { SessionEvent } from \"@orchestra/schema/session-event\"\nimport { createNativeEventAdapter } from \"./server-event-native\"\nimport { Schema } from \"effect\""
+        },
+        {
+          "start_line": 436,
+          "end_line": 476,
+          "text": "export function createServerSdkContext(\n  server: ServerConnection.Any,\n  scope: ServerScope,\n  platform = usePlatform(),\n): ServerSDK {\n  const sdk = createServerSdkContextBase(server, scope, platform)\n  return Object.assign(sdk, {\n    ensureDirSdkContext: createRefCountMap((dir) => createDirSdkContext(dir, sdk)),\n  })\n}\n\nconst ServerSDKContext = createSimpleContext({\n  name: \"ServerSDK\",\n  // Returns an accessor so the resolved server can change reactively (e.g. a\n  // /new-session draft retargeting its server) without re-instantiating the subtree.\n  init: (props: { server?: Accessor<ServerConnection.Any | undefined>; value?: ServerSDK }) => {\n    const captured = props.value\n    if (captured) return () => captured\n    const global = useGlobal()\n    const server = useServer()\n\n    return createMemo<ServerSDK>(() => {\n      const conn = props.server?.() ?? server.current\n      // ServerRequired renders the unavailable state before this provider mounts without a connection.\n      if (!conn) throw new Error(\"No server connection resolved\")\n      return global.ensureServerCtx(conn).sdk\n    })\n  },\n})\n\nexport const useServerSDK = ServerSDKContext.use\n\nexport function ServerSDKProvider(props: ParentProps<Parameters<typeof ServerSDKContext.provider>[0]>) {\n  return (\n    <ServerRequired server={props.server} value={props.value}>\n      <ServerSDKContext.provider {...props}>{props.children}</ServerSDKContext.provider>\n    </ServerRequired>\n  )\n}\n\nexport function useServerReady() {"
+        }
+      ],
+      "source_manifest_prior_sha256": "d6d2e23b668a34e7e643161f8d8b68fcb2ec785c92d5d993568b96e0c067bce1",
+      "delta_record_prior_sha256": "69307eed2bf68471c85c10ef61c3508a23ae7d5bb5f9ebd9f03b0bbf33bf55ce"
+    }
+  ]
+}

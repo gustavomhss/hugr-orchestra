@@ -275,7 +275,7 @@
               24
             ],
             [
-              122,
+              93,
               135
             ]
           ]
@@ -286,6 +286,10 @@
           "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
           "ranges": [
+            [
+              16,
+              16
+            ],
             [
               81,
               139
@@ -345,7 +349,7 @@
               24
             ],
             [
-              122,
+              93,
               135
             ]
           ]
@@ -450,8 +454,8 @@
       ],
       "cross_shard": false,
       "epistemic_status": "OBSERVED_STATIC_SOURCE",
-      "mechanism": "makeRoutes chama Host.merge(options.host ?? []) e aplica nodes, replacements, locationNodes e references ao grafo de serviços.",
-      "boundary": "S1 Server → S1 Core; integra entradas de contribuições S3/S4/S5.",
+      "mechanism": "routes.ts importa Host de @orchestra/core/host, cujo export público ./host aponta para ./src/host.ts. makeRoutes chama Host.merge(options.host ?? []) e aplica nodes, replacements, locationNodes e references ao grafo de serviços.",
+      "boundary": "S1 Server → S1 Core; aplica contribuições declaradas pela composição da aplicação (cadeia S5→S3 rastreada nas E02/E03).",
       "limit": "Host.merge contém validações síncronas para IDs/nós duplicados e nós reservados; estas recusas não foram executadas.",
       "impact": {
         "status": "STATIC_INFERENCE",
@@ -469,6 +473,10 @@
           "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
           "ranges": [
             [
+              16,
+              16
+            ],
+            [
               81,
               139
             ]
@@ -483,6 +491,22 @@
             [
               15,
               59
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S31",
+          "path": "packages/core/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+          "ranges": [
+            [
+              178,
+              181
+            ],
+            [
+              530,
+              538
             ]
           ]
         }
@@ -1101,6 +1125,10 @@
           "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
           "ranges": [
             [
+              16,
+              16
+            ],
+            [
               81,
               139
             ]
@@ -1214,6 +1242,10 @@
           "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
           "ranges": [
+            [
+              178,
+              181
+            ],
             [
               530,
               538
@@ -1851,6 +1883,10 @@
           "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
           "ranges": [
             [
+              16,
+              16
+            ],
+            [
               81,
               139
             ]
@@ -1865,6 +1901,22 @@
             [
               15,
               59
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S31",
+          "path": "packages/core/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+          "ranges": [
+            [
+              178,
+              181
+            ],
+            [
+              530,
+              538
             ]
           ]
         }
@@ -2038,6 +2090,10 @@
           "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
           "ranges": [
             [
+              178,
+              181
+            ],
+            [
               530,
               538
             ]
@@ -2133,6 +2189,10 @@
           "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
           "ranges": [
+            [
+              16,
+              16
+            ],
             [
               81,
               139
@@ -2434,7 +2494,7 @@
               24
             ],
             [
-              122,
+              93,
               135
             ]
           ]
@@ -2495,5 +2555,12 @@
     "B-G05",
     "B-G06"
   ],
-  "acceptance": "No global PASS, integration completion or human acceptance asserted."
+  "acceptance": "No global PASS, integration completion or human acceptance asserted.",
+  "author_revisions": [
+    {
+      "delta_id": "B1",
+      "record": "review-delta-B1.json",
+      "description": "Expanded exact source evidence and narrowed B-E04; independent re-evaluation pending."
+    }
+  ]
 }

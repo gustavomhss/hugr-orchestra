@@ -106,15 +106,15 @@ Cada aresta tem direção, mecanismo, fronteira, limite, impacto e controle pend
 
 ### B-E04 — build: api_routes → core_host
 
-**Mecanismo:** makeRoutes chama Host.merge(options.host ?? []) e aplica nodes, replacements, locationNodes e references ao grafo de serviços.
+**Mecanismo:** routes.ts importa Host de @orchestra/core/host, cujo export público ./host aponta para ./src/host.ts. makeRoutes chama Host.merge(options.host ?? []) e aplica nodes, replacements, locationNodes e references ao grafo de serviços.
 
-**Fronteira:** S1 Server → S1 Core; integra entradas de contribuições S3/S4/S5. **Limite:** Host.merge contém validações síncronas para IDs/nós duplicados e nós reservados; estas recusas não foram executadas.
+**Fronteira:** S1 Server → S1 Core; aplica contribuições declaradas pela composição da aplicação (cadeia S5→S3 rastreada nas E02/E03). **Limite:** Host.merge contém validações síncronas para IDs/nós duplicados e nós reservados; estas recusas não foram executadas.
 
 **Impacto inferido:** Contrato Host.Contribution é ponto de impacto para todos os módulos selecionados que o entregam.
 
 **Controle ainda necessário — NOT_RUN:** Exercitar colisões de IDs/nós e preservação do SessionExecution global no candidato integrado.
 
-**Fontes:** [B-S03](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/routes.ts), [B-S04](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/host.ts).
+**Fontes:** [B-S03](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/routes.ts), [B-S04](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/host.ts), [B-S31](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/package.json).
 
 ### B-E05 — build: maestro_seats → workflow_host
 
@@ -366,3 +366,11 @@ Os SHAs são valores fornecidos pelo GitHub MCP. “Parcial” significa que o b
 
 Retomar os pins do cabeçalho e o freeze; carregar `contracts.json`, `sources-B.json`, `evidence-excerpts-B.json` e `gaps-B.json`. Preservar as diferenças entre build/call/navigation/impact. Qualquer fonte adicional deve entrar no manifesto com seu SHA real e escopo lido. Mudanças do candidato exigem avaliar quais arestas/provas foram afetadas; o avanço de HEAD de outra branch não troca automaticamente os inputs. A revisão independente deste pacote será coordenada pela orquestradora externa; a dupla da integração principal permanece responsável pelo julgamento da união.
 
+
+## Delta de autoria B1 — evidências complementares
+
+O encadeamento de argumentos de CLI está documentado por `serve.ts:93`, que passa `hosts()` a `listen`; `listen` repassa `host` a `bind` nas linhas 113–116; `bind` fornece esse argumento a `createRoutes` na linha 125; `hosts()` retorna `ProductHost.contributions(...)` nas linhas 133–135. O blob permanece `f11a2c92019d75847eac7b87d0b762cf944e7c93`.
+
+Em Server, `routes.ts:16` importa `Host` de `@orchestra/core/host` no blob `75b0f9753e4c879767ef186f5003519e2b681025`. O export público `./host` aponta para `./src/host.ts` em `packages/core/package.json:178`, blob `8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43`. Esses ranges foram incorporados aos manifestos de fontes, trechos e arestas.
+
+A descrição da fronteira B-E04 foi estreitada para S1 Server → S1 Core e para a composição S5→S3 já rastreada nas E02/E03. A aresta não afirma que tenha comprovado uma origem S4 para contribuições. O delta completo está em `review-delta-B1.json`. IDs, contagens e estados de runtime permanecem os mesmos. A reavaliação pertence aos mesmos revisores independentes; este registro não é um parecer.

@@ -94,10 +94,186 @@
   },
   "contract_source_excerpts": {
     "sources": 40,
-    "ranges": 75,
-    "exact_byte_comparisons": 75,
+    "ranges": 77,
+    "exact_byte_comparisons": 77,
     "range_mismatches": 0,
     "baseline_tree_object_mismatches": 0,
-    "method": "Root independently fetched all 40 cited source blobs by MCP and compared all 75 supplied ranges exactly."
+    "method": "Root independently fetched all 40 cited source blobs by MCP and compared all 77 supplied ranges exactly; includes the corrected B1 evidence.",
+    "provenance_supplement": {
+      "sources": 1,
+      "ranges": 2,
+      "exact_byte_comparisons": 2,
+      "range_mismatches": 0,
+      "index": "review-delta-B1.json"
+    }
+  },
+  "persisted_tsv_order": {
+    "data_rows": 16710,
+    "header_excluded": true,
+    "includes_directories": true,
+    "definition": "Ascending unsigned UTF-8 path bytes; all observed paths are ASCII so ordinal string sort is equivalent.",
+    "all_paths_ascii": true,
+    "adjacent_inversions": 0,
+    "sequence_position_mismatches": 0,
+    "tsv_blob": "e55c52312283c7babfe6ddd5bd52e42642cc6215"
+  },
+  "top_level_counts": {
+    "S1": {
+      "expected": {
+        ".orchestra": 6,
+        "docs": 55,
+        "packages": 2117,
+        "schema": 1,
+        "tooling": 57
+      },
+      "observed": {
+        ".orchestra": 6,
+        "docs": 55,
+        "packages": 2117,
+        "schema": 1,
+        "tooling": 57
+      },
+      "equal": true
+    },
+    "S2": {
+      "expected": {
+        ".github": 1,
+        ".orchestra": 28,
+        "apps": 555,
+        "assets": 7,
+        "docs": 90,
+        "packages": 3823,
+        "schema": 2
+      },
+      "observed": {
+        ".github": 1,
+        ".orchestra": 28,
+        "apps": 555,
+        "assets": 7,
+        "docs": 90,
+        "packages": 3823,
+        "schema": 2
+      },
+      "equal": true
+    },
+    "S3": {
+      "expected": {
+        ".orchestra": 12,
+        "docs": 274,
+        "modules": 4244,
+        "packages": 21,
+        "specs": 2
+      },
+      "observed": {
+        ".orchestra": 12,
+        "docs": 274,
+        "modules": 4244,
+        "packages": 21,
+        "specs": 2
+      },
+      "equal": true
+    },
+    "S4": {
+      "expected": {
+        ".atlas": 3,
+        ".github": 4,
+        ".orchestra": 3,
+        "docs": 15,
+        "modules": 1940,
+        "script": 93,
+        "specs": 162
+      },
+      "observed": {
+        ".atlas": 3,
+        ".github": 4,
+        ".orchestra": 3,
+        "docs": 15,
+        "modules": 1940,
+        "script": 93,
+        "specs": 162
+      },
+      "equal": true
+    },
+    "S5": {
+      "expected": {
+        ".claude": 10,
+        ".dockerignore": 1,
+        ".editorconfig": 1,
+        ".gitattributes": 1,
+        ".github": 32,
+        ".gitignore": 1,
+        ".gitleaksignore": 1,
+        ".orchestra": 18,
+        ".oxlintrc.json": 1,
+        ".prettierignore": 1,
+        ".sh": 1,
+        ".vscode": 2,
+        ".zed": 1,
+        "AGENTS.md": 1,
+        "CHANGELOG.md": 1,
+        "CONTEXT.md": 1,
+        "CONTRIBUTING.md": 1,
+        "LICENSE": 1,
+        "NOTICE": 1,
+        "README.md": 1,
+        "SECURITY.md": 1,
+        "apps": 162,
+        "bun.lock": 1,
+        "bunfig.toml": 1,
+        "docs": 38,
+        "flake.lock": 1,
+        "flake.nix": 1,
+        "godfile-waivers.json": 1,
+        "native": 426,
+        "nix": 31,
+        "package.json": 1,
+        "packages": 36,
+        "patches": 20,
+        "perf": 1,
+        "script": 126,
+        "tsconfig.json": 1,
+        "turbo.json": 1
+      },
+      "observed": {
+        ".claude": 10,
+        ".dockerignore": 1,
+        ".editorconfig": 1,
+        ".gitattributes": 1,
+        ".github": 32,
+        ".gitignore": 1,
+        ".gitleaksignore": 1,
+        ".orchestra": 18,
+        ".oxlintrc.json": 1,
+        ".prettierignore": 1,
+        ".sh": 1,
+        ".vscode": 2,
+        ".zed": 1,
+        "AGENTS.md": 1,
+        "CHANGELOG.md": 1,
+        "CONTEXT.md": 1,
+        "CONTRIBUTING.md": 1,
+        "LICENSE": 1,
+        "NOTICE": 1,
+        "README.md": 1,
+        "SECURITY.md": 1,
+        "apps": 162,
+        "bun.lock": 1,
+        "bunfig.toml": 1,
+        "docs": 38,
+        "flake.lock": 1,
+        "flake.nix": 1,
+        "godfile-waivers.json": 1,
+        "native": 426,
+        "nix": 31,
+        "package.json": 1,
+        "packages": 36,
+        "patches": 20,
+        "perf": 1,
+        "script": 126,
+        "tsconfig.json": 1,
+        "turbo.json": 1
+      },
+      "equal": true
+    }
   }
 }

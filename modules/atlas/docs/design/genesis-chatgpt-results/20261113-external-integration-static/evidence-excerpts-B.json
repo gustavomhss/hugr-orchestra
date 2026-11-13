@@ -40,14 +40,14 @@
       "object_type": "blob",
       "hash_provenance": "GitHub MCP fetch_file response sha",
       "read_scope": "full_content",
-      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "read_note": "Fetched complete blob and inspected full displayed content. Evidence ranges augmented in B1 after pinned MCP reread; no runtime verification.",
       "decisive_ranges": [
         [
           1,
           24
         ],
         [
-          122,
+          93,
           135
         ]
       ],
@@ -64,9 +64,9 @@
           "text": "import { NodeHttpServer } from \"@effect/platform-node\"\nimport { ClaudeCodeAccount } from \"@orchestra/core/claude-code-account\"\nimport { Credential } from \"@orchestra/core/credential\"\nimport { Database } from \"@orchestra/core/database/database\"\nimport { AppNodeBuilder } from \"@orchestra/core/effect/app-node-builder\"\nimport { LayerNode } from \"@orchestra/core/effect/layer-node\"\nimport { PermissionSaved } from \"@orchestra/core/permission/saved\"\nimport { SessionV2 } from \"@orchestra/core/session\"\nimport { Context, Layer, Option } from \"effect\"\nimport * as Effect from \"effect/Effect\"\nimport { HttpRouter, HttpServer } from \"effect/unstable/http\"\nimport { createServer } from \"node:http\"\nimport { writeSync } from \"node:fs\"\nimport path from \"node:path\"\nimport { WebUi } from \"@orchestra/server/web-ui\"\nimport { createRoutes } from \"@orchestra/server/routes\"\nimport { AppDockSocket } from \"@orchestra/app-dock/socket-transport\"\nimport { Commands } from \"../commands\"\nimport { ProductHost } from \"../../host\"\nimport { ChildProcessSpawner } from \"effect/unstable/process/ChildProcessSpawner\"\nimport { Runtime } from \"../../framework/runtime\"\nimport { Daemon } from \"../../services/daemon\"\nimport { addressInUse } from \"./serve-port\"\nimport { ServeShutdown } from \"./serve-shutdown\""
         },
         {
-          "start_line": 122,
+          "start_line": 93,
           "end_line": 135,
-          "text": "function bind(hostname: string, port: number, password: string, host: ReturnType<typeof hosts>, root: string | undefined, cors?: ReadonlyArray<string>) {\n  const server = createServer()\n  return Layer.build(\n    HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors }), { disableListenLog: true, disableLogger: true }).pipe(\n      Layer.provideMerge(NodeHttpServer.layer(() => server, { port, host: hostname })),\n      Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),\n    ),\n  ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))\n}\n\n// The Dock tools exist only when the desktop that owns this child handed it a Dock channel.\nfunction hosts() {\n  return ProductHost.contributions(AppDockSocket.fromEnv())\n}"
+          "text": "        const listening = yield* listen(input.hostname, input.port, password, hosts(), root, input.cors)\n        const address = listening.address\n        // Closing the server waits for every open connection, and the event stream never ends on its own. Scope\n        // finalizers run in reverse, so this drops the connections before the server closes.\n        yield* Effect.addFinalizer(() => Effect.sync(() => listening.server.closeAllConnections?.()))\n        if (input.register) yield* daemon.register(address)\n        console.log(`server listening on ${HttpServer.formatAddress(address)}`)\n        if (input.onListening) yield* input.onListening(address, root)\n        return yield* ServeShutdown.untilSignal(process, process.platform, (signal) => {\n          if (shutdown.signal) return\n          shutdown.signal = signal\n          shutdown.startedAt = Date.now()\n          process.exitCode = ServeShutdown.exitCode(signal)\n          note(\"started\")\n          setTimeout(() => process.exit(), SHUTDOWN_GRACE_MS).unref()\n        })\n      }),\n    )\n})\n\nfunction listen(hostname: string, port: Option.Option<number>, password: string, host: ReturnType<typeof hosts>, root: string | undefined, cors?: ReadonlyArray<string>) {\n  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, cors)\n  const next = (port: number): ReturnType<typeof bind> =>\n    bind(hostname, port, password, host, root, cors).pipe(\n      Effect.catch((error) => (port === 65_535 || !addressInUse(error) ? Effect.fail(error) : next(port + 1))),\n    )\n  return next(4096)\n}\n\nfunction bind(hostname: string, port: number, password: string, host: ReturnType<typeof hosts>, root: string | undefined, cors?: ReadonlyArray<string>) {\n  const server = createServer()\n  return Layer.build(\n    HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors }), { disableListenLog: true, disableLogger: true }).pipe(\n      Layer.provideMerge(NodeHttpServer.layer(() => server, { port, host: hostname })),\n      Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),\n    ),\n  ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))\n}\n\n// The Dock tools exist only when the desktop that owns this child handed it a Dock channel.\nfunction hosts() {\n  return ProductHost.contributions(AppDockSocket.fromEnv())\n}"
         }
       ]
     },
@@ -78,8 +78,12 @@
       "object_type": "blob",
       "hash_provenance": "GitHub MCP fetch_file response sha",
       "read_scope": "partial_content",
-      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed. Evidence ranges augmented in B1 after pinned MCP reread; no runtime verification.",
       "decisive_ranges": [
+        [
+          16,
+          16
+        ],
         [
           81,
           139
@@ -92,6 +96,11 @@
         "rule": "packages/server/"
       },
       "excerpts": [
+        {
+          "start_line": 16,
+          "end_line": 16,
+          "text": "import { Host } from \"@orchestra/core/host\""
+        },
         {
           "start_line": 81,
           "end_line": 139,
@@ -1151,8 +1160,12 @@
       "object_type": "blob",
       "hash_provenance": "GitHub MCP fetch_file response sha",
       "read_scope": "partial_content",
-      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed. Evidence ranges augmented in B1 after pinned MCP reread; no runtime verification.",
       "decisive_ranges": [
+        [
+          178,
+          181
+        ],
         [
           530,
           538
@@ -1165,6 +1178,11 @@
         "rule": "packages/core/"
       },
       "excerpts": [
+        {
+          "start_line": 178,
+          "end_line": 181,
+          "text": "    \"./host\": \"./src/host.ts\",\n    \"./host/agent-execution\": \"./src/host/agent-execution.ts\",\n    \"./host/catalog-availability\": \"./src/host/catalog-availability.ts\",\n    \"./host/pty-environment\": \"./src/host/pty-environment.ts\","
+        },
         {
           "start_line": 530,
           "end_line": 538,
