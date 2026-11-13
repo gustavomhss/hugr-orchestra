@@ -1,0 +1,15 @@
+{
+  "raw": [
+    {"url":"https://raw.githubusercontent.com/golang/go/go1.27.1/LICENSE","sha256":"911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad","filename":"shfmt-go1.27.1-license-e2adb25336.txt"},
+    {"url":"https://raw.githubusercontent.com/golang/go/go1.27.1/PATENTS","sha256":"96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc","filename":"shfmt-go1.27.1-patents-219f0003be.txt"}
+  ],
+  "archives": [
+    {"url":"https://proxy.golang.org/mvdan.cc/sh/v3/@v/v3.14.1.zip","sha256":"744b518b28db4b256f88954b7f5461fe2d2822f6f5818b137887bf9713175e25","format":"zip","files":[{"member":"mvdan.cc/sh/v3@v3.14.1/LICENSE","sha256":"ce63850f77649f00d1394045e2794ffb09a5596beabac51c9548edd958845d7c","filename":"shfmt-mvdan.cc-sh-v3-v3.14.1-7f0838a058.txt"}]},
+    {"url":"https://proxy.golang.org/github.com/google/renameio/v2/@v/v2.0.2.zip","sha256":"4ea1f7ec938cc2206827f129f40ed9a266f4df30198fcff08de07da4b72276cb","format":"zip","files":[{"member":"github.com/google/renameio/v2@v2.0.2/LICENSE","sha256":"cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30","filename":"shfmt-github.com-google-renameio-v2-v2.0.2-37f2285d11.txt"}]},
+    {"url":"https://proxy.golang.org/github.com/rogpeppe/go-internal/@v/v1.15.0.zip","sha256":"c84d958181618407e61f0f837c0a226016cc7bb0de6d26d2d82fd476e3bf1f70","format":"zip","files":[{"member":"github.com/rogpeppe/go-internal@v1.15.0/LICENSE","sha256":"4835612df0098ca95f8e7d9e3bffcb02358d435dbb38057c844c99d7f725eb20","filename":"shfmt-github.com-rogpeppe-go-internal-v1.15.0-5de338fa4c.txt"}]},
+    {"url":"https://proxy.golang.org/golang.org/x/sys/@v/v0.47.0.zip","sha256":"cdac013ddced0262926ec29ffcda645da39670e61c7e5b761e572b6b1809bb1b","format":"zip","files":[{"member":"golang.org/x/sys@v0.47.0/LICENSE","sha256":"911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad","filename":"shfmt-golang.org-x-sys-v0.47.0-506334a667.txt"}]},
+    {"url":"https://proxy.golang.org/golang.org/x/term/@v/v0.45.0.zip","sha256":"b3a3af689728b43012ae1b21482571a35c033c545e98e021606bd4fcf1f79108","format":"zip","files":[{"member":"golang.org/x/term@v0.45.0/LICENSE","sha256":"911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad","filename":"shfmt-golang.org-x-term-v0.45.0-120e08c623.txt"}]},
+    {"url":"https://proxy.golang.org/mvdan.cc/editorconfig/@v/v0.3.0.zip","sha256":"aa50c43e789b025f04bea950f104314946d2faa5035442bf5f7415eb97860fe1","format":"zip","files":[{"member":"mvdan.cc/editorconfig@v0.3.0/LICENSE","sha256":"3ffd3576875cec2ca5d8e0f6ec7d871d6fba8cb87cfb2285347fddce108fc57c","filename":"shfmt-mvdan.cc-editorconfig-v0.3.0-66d4214976.txt"}]}
+  ],
+  "scope": "all binary-reported Go modules, main module and Go runtime notices; CGO_ENABLED=0"
+}
