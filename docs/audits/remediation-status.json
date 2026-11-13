@@ -757,7 +757,7 @@
           "kind": "source_cpu_gate_incomplete",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
           "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
-          "result": "Linux six cases reach valid CPU marks256\u2013307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51\u201352ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79\u20135.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
+          "result": "Linux six cases reach valid CPU marks256–307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51–52ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79–5.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
         },
         {
           "kind": "rejected_full_source_gate",
@@ -769,7 +769,7 @@
           "kind": "rejected_cpu_source_gate",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
           "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
-          "result": "Windows all6 have valid marks421\u2013637ms<750, warmup/ready true,106\u2013109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
+          "result": "Windows all6 have valid marks421–637ms<750, warmup/ready true,106–109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
         },
         {
           "kind": "native_cpu_termination_diagnostic",
@@ -807,7 +807,7 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43330836910",
           "snapshot": "f835f546d8e583714f5d40f0349ebed76d045b1b",
           "source": "2fe953b51bf73dcc9b072ce876d0dc158e0779df",
-          "result": "Both OS5pass/0fail177assertions/Omni5, wrappers/cleanup0. Source/compiled eval, normal-entry sentinel and native CPU cases pass. Full owned Scope settlement plus independent OS PID absence at about1.509\u20131.515s; pidPolls0 all10, no CPU_DONE/outer containment/config canary execution. Earlier Linux pre-Scope PID sample retained as evidence, not called a zombie. Root independently fetched jobs/raw/snapshot blobs; two files and entire Core tree match typed source at integration4e4beaab61. Capability only: no production parser/codec/interpreter wiring, Mac/Electron qualification or product timeout closure."
+          "result": "Both OS5pass/0fail177assertions/Omni5, wrappers/cleanup0. Source/compiled eval, normal-entry sentinel and native CPU cases pass. Full owned Scope settlement plus independent OS PID absence at about1.509–1.515s; pidPolls0 all10, no CPU_DONE/outer containment/config canary execution. Earlier Linux pre-Scope PID sample retained as evidence, not called a zombie. Root independently fetched jobs/raw/snapshot blobs; two files and entire Core tree match typed source at integration4e4beaab61. Capability only: no production parser/codec/interpreter wiring, Mac/Electron qualification or product timeout closure."
         },
         {
           "kind": "absolute_deadline_preparatory_stage_qualified_controls_and_red",
@@ -834,10 +834,21 @@
             "81fadc842f9e6314b5ec6e88a3252ccc1bfa2d68",
             "fd87bae09e51a27ceb542ddb0a4a488473c3a606"
           ],
-          "result": "Both actual macOS architectures5pass/0fail177assertions/Omni5, wrappers/cleanup0; child Bun1.3.14. Source and compiled CPU helper kill/fullScope/independent PID absence about1.518\u20131.534s, pidPolls0, no CPU_DONE/watchdog/canaries. Root independently downloaded alljobs/raw and checked2 exact blobs per snapshot plus all11 structured records perOS. Intel architecture is bound by the executed unique compileTarget branch and manifest, not nominal runner label; direct request.json echo is not retained in normal Core jobs. Earlier ARM macos14 unsupported runner failure preserved, never product RED. Evidence/e10-macos-capability.json records provenance."
+          "result": "Both actual macOS architectures5pass/0fail177assertions/Omni5, wrappers/cleanup0; child Bun1.3.14. Source and compiled CPU helper kill/fullScope/independent PID absence about1.518–1.534s, pidPolls0, no CPU_DONE/watchdog/canaries. Root independently downloaded alljobs/raw and checked2 exact blobs per snapshot plus all11 structured records perOS. Intel architecture is bound by the executed unique compileTarget branch and manifest, not nominal runner label; direct request.json echo is not retained in normal Core jobs. Earlier ARM macos14 unsupported runner failure preserved, never product RED. Evidence/e10-macos-capability.json records provenance."
+        },
+        {
+          "kind": "isolated_runtime_integrated_green_final_epic_pending",
+          "runs": [
+            "43412871502",
+            "43410822105",
+            "43412873472",
+            "43415059223"
+          ],
+          "document": "docs/audits/evidence/e10-isolated-runtime.json",
+          "result": "Independent source-bound final runtime evidence, original twelve acceptance cases retained. Baseline and intermediate Linux/Windows differences, compiled setup repair, and post-dev harness/lock deltas are explicitly recorded. Source review APPROVE at9add986fc1; subsequent6f977bbe1b fixes architecture ownership and switches driver test to explicit package export, without runtime changes."
         }
       ],
-      "remaining": "Private parser, hardened Linux/Windows source+compiled helper capability and absolute execution deadline stage verified and integrated. Worker prototype rejected, absent. Typed native codec/factory/interpreter representation and original CPU acceptance remain open. No general parent CPU preemption or whole E10 closure."
+      "remaining": "Implementation and independent source review complete. Final 47-case Linux/Windows runtime pack, all six original CPU cases, full CodeMode419-case pack, and18-case provider packs on macOS ARM/Intel passed. Architecture export adjustment is in focused hosted qualification; final cold epic remains pending. No general parent CPU preemption or whole E10 closure yet."
     },
     {
       "id": "E11",
@@ -3036,9 +3047,18 @@
           "snapshot": "4d23c8297d83ed5ba6a64bb5e1c5da55beb07a67",
           "commit": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
           "result": "Linux and Windows each1pass/37assertions/2Omni spawns. Actual Electron42.11.16 main embeds Node24.19.0 and SQLite3.53.3. Real Store reopen, pending batch, exact UTF8 digest and integrity_check passed; owned process/profile cleanup completed. Root independently checked jobs, raw records, both snapshot source blobs, LF/CRLF transformations and identical hosted bundles. This is isolated Electron capability, not production Main/Senses/IPC/UI wiring."
+        },
+        {
+          "kind": "production_wiring_integrated_scoped_green_final_epic_pending",
+          "runs": [
+            "43411946093",
+            "43405244040",
+            "43415962700"
+          ],
+          "result": "Integrated Node47 per OS binds production before pure IPC dependency repair3f4f8ff41a; repaired Bun27 per OS binds current Desktop/App Live source. Source integration review APPROVE9add986fc1 includes Main startup fence, joined failure cleanup, synchronous admission fencing and metadata-only trusted recovery. Final focused Node IPC qualification will bind repaired source directly."
         }
       ],
-      "remaining": "Private Store, Manager and actual Electron SQLite capability verified and integrated. Original legacy client failures, target/capture/STT/IPC/UI/quit and M11 lifetime integration remain open."
+      "remaining": "Owner, durable capture, Loop, recovery UI, trusted IPC/export, Main startup/rotation/quit wiring implemented and independently reviewed. Integrated Node47 and UI34 passed per OS. Repaired Bun27 passed per OS; focused current-production IPC Node16 qualification and final cold epic remain pending. Physical capture and native permission-dialog behavior are outside this controlled-boundary proof."
     },
     {
       "id": "M14",
@@ -3827,7 +3847,7 @@
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
-    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   },
   "integrated_checks": {
     "guards": {
