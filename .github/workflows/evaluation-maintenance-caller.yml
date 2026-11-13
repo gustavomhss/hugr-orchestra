@@ -51,6 +51,7 @@ jobs:
           {
             printf 'schema=maintenance-caller-overlay/v1\nkind=overlay-not-standalone\n'
             printf 'base_commit=%s\nrepository=%s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY"
+            printf 'node_version=%s\\nnpm_version=%s\\n' "$(node --version)" "$(npm --version)"
             printf 'requires=complete-built-modules-atlas-tree-at-base_commit\n'
             printf 'source_family=host-v3-plus-evaluation-implementation-v6\n'
             printf 'host_source_commit=3aa3bd492f852cbf3711b7b6fb4647316560d0ec\n'
