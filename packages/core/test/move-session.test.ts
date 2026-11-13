@@ -245,7 +245,7 @@ describe("MoveSession", () => {
     process.platform === "win32" ? 30_000 : 5_000,
   )
 
-  it.live("retains every acknowledged independent writer byte after Session Moved, including an already-open descriptor", () =>
+  it.live("retains every independent writer byte acknowledged before Session Moved commits, including an already-open descriptor", () =>
     Effect.gen(function* () {
       expectSpawn(import.meta.path)
       const root = yield* Effect.acquireRelease(
@@ -294,14 +294,15 @@ describe("MoveSession", () => {
       const writer = yield* MoveSessionWriter.start(source, control.path)
       expect(writer.ready.descriptorOpen).toBe(true)
       expect(writer.ready.pid).not.toBe(process.pid)
-      const observed = { deliveries: 0, acknowledged: false }
+      const observed = { projections: 0, acknowledged: false }
+      const lifetime = { active: true }
+      yield* Effect.addFinalizer(() => Effect.sync(() => { lifetime.active = false }))
       const events = yield* EventV2.Service
-      const unsubscribe = yield* events.listen((event) => {
-        if (event.type !== SessionEvent.Moved.type || (event.data as { sessionID: string }).sessionID !== sessionID)
-          return Effect.void
+      yield* events.project(SessionEvent.Moved, (event, origin) => {
+        if (!lifetime.active || origin.replay || event.data.sessionID !== sessionID) return Effect.void
         return Effect.gen(function* () {
-          observed.deliveries++
-          // Real publication follows capture/apply; hold its callback until the independent writer ACK and exit.
+          observed.projections++
+          // Durable projectors are joined before commit returns, so the old post-publish cleanup must follow this ACK.
           const result = yield* writer.release
           expect(result.ack.pid).toBe(writer.ready.pid)
           expect(result.ack.writes).toBe(5)
@@ -310,11 +311,10 @@ describe("MoveSession", () => {
           observed.acknowledged = true
         }).pipe(Effect.orDie)
       })
-      yield* Effect.addFinalizer(() => unsubscribe)
       const move = yield* MoveSession.Service
       yield* move.moveSession({ sessionID, destination: { directory: moved }, moveChanges: true })
 
-      expect(observed).toEqual({ deliveries: 1, acknowledged: true })
+      expect(observed).toEqual({ projections: 1, acknowledged: true })
       const retained = yield* Effect.promise(() => Promise.all(Object.keys(MoveSessionWriter.contents).map(async (name) =>
         [name, await Bun.file(path.join(source, name)).exists() ? await Bun.file(path.join(source, name)).text() : null] as const)))
       expect(Object.fromEntries(retained)).toEqual(MoveSessionWriter.contents)
