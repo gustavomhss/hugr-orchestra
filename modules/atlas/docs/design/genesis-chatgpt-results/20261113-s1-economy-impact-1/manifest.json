@@ -1,0 +1,50 @@
+{
+  "schema": "genesis-s1-economy-impact-manifest/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-campaign-s1-economy-impact-1",
+  "branch_base": "158e612d4d7bd0f486a4bac91e812d7b615375da",
+  "immutable_source_baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "primary_source": {
+    "path": "packages/core/src/economy/admission.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "914a0b925dd282e264292b2247189c549c993a3f",
+    "inspected_ranges": [
+      "218-235",
+      "446-480",
+      "525-537"
+    ]
+  },
+  "inputs": {
+    "b15_original": "provided verbatim in s1-impact-1-prompt.txt",
+    "b15_v2": "provided verbatim in s1-impact-1-prompt.txt",
+    "assigned_bodies": {
+      "s1.l2.runtime-ownership": "8da484ba0a8f30f0a0da90c02b00650f9b48ed54294dcb0224533c36115cc9f0",
+      "s1.l3.session-provider-flow": "dd650372006f3ec161f50618ff92c409eef368bd34b7ea401b80d2ce416b9e2a",
+      "s1.l3.persistence-evidence-failures": "de4c070a6c99b11cbe5e8a85403769fd388da53215233a02774c3a1869e4f3a2",
+      "s1.l3.ownership-impact-map": "3548f7f3689e5ffcbf2eeeb62bf86f56d03cfffe091072c86efcbb1abc88eda4"
+    }
+  },
+  "decisions": {
+    "changed_bodies": [],
+    "no_change": [
+      "s1.l2.runtime-ownership",
+      "s1.l3.session-provider-flow",
+      "s1.l3.persistence-evidence-failures",
+      "s1.l3.ownership-impact-map"
+    ]
+  },
+  "outputs": {
+    "findings.md": {
+      "blob": "cc7856e7ea803c3bacb41a0ed30cb71e6326778d",
+      "commit": "ac1aa79a6fc8701841d83ae8d64882906720b069"
+    }
+  },
+  "limits": [
+    "No historical vote replaced",
+    "No private oracle or private campaign record accessed",
+    "No package 2/2 work",
+    "No code, CI, runtime, infrastructure, provider, database, reservation, settlement, fault injection, or product operation",
+    "No global ADMIT/PASS, consumer, maintenance execution, or Genesis acceptance claim",
+    "No real subagents were available; no delegated review is claimed"
+  ]
+}
