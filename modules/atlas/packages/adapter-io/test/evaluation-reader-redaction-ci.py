@@ -111,7 +111,12 @@ class ReaderErrorRedaction(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp)
             (run / "stdout.json").write_bytes(payload)
-            with mock.patch.object(broker.os, "open", side_effect=PermissionError("synthetic")):
+            original_open = broker.os.open
+            def deny_private_directory(path, flags, *args, **kwargs):
+                if Path(path).name == "private-failure-evidence":
+                    raise PermissionError("synthetic")
+                return original_open(path, flags, *args, **kwargs)
+            with mock.patch.object(broker.os, "open", side_effect=deny_private_directory):
                 evidence = broker.preserve_failure_evidence(
                     run, None, None, RuntimeError(sentinel.decode()), {"state": "UNKNOWN"})
             self.assertEqual(evidence["payload_retention"]["state"], "BLOCKED_NOT_PURGED")
