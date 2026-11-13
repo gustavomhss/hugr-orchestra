@@ -43,7 +43,7 @@ export function shardCount(seconds: number, target: number, margin: number) {
 export function packageShards(timings: Timings, directory: string, platform: Platform) {
   const total = timings.totals[directory]?.[platform]
   if (total === undefined) return 1
-  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, timings.reserves?.[`${directory}:${platform}`])
+  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, UNTIMED_FLOOR, timings.reserves?.[`${directory}:${platform}`])
   const seconds = Math.round(weights.reduce((sum, entry) => sum + entry.weight, 0) * 1000) / 1000
   return shardCount(Math.max(total, seconds) * timings.overhead[platform], timings.target[platform], timings.margin)
 }
@@ -60,7 +60,32 @@ export function balance(items: { name: string; weight: number }[], bins: number)
 }
 
 // Test files of a package with their weights in seconds.
-export function weigh(directory: string, measured: Record<string, number>, total: number, reserves: Record<string, number> = {}) {
+// A measured 0 is a skip or a file the timer missed. Left at 0, every such file falls into the lightest shard.
+// Windows core 4/6 then held 206 files and the 8-minute step died before a test printed (run 42923208918).
+// Linux core 2/4 held 151 files, estimated 319s, and the tests alone took 476s (run 42930009745).
+const UNTIMED_FLOOR = 1
+
+/** The bins `shard` prints. The floor lives here, so a test of this function is a test of the split CI runs. */
+export function plannedBins(timings: Timings, directory: string, platform: Platform) {
+  return balance(
+    weigh(
+      directory,
+      timings.files[`${directory}:${platform}`] ?? {},
+      timings.totals[directory]?.[platform] ?? 0,
+      UNTIMED_FLOOR,
+      timings.reserves?.[`${directory}:${platform}`],
+    ),
+    packageShards(timings, directory, platform),
+  )
+}
+
+export function weigh(
+  directory: string,
+  measured: Record<string, number>,
+  total: number,
+  floorOrReserves: number | Record<string, number> = 0,
+  reserves: Record<string, number> = {},
+) {
   const files = testFiles(path.join(root, directory)).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
@@ -70,7 +95,13 @@ export function weigh(directory: string, measured: Record<string, number>, total
   // With no measurement the package total is spread over the files by size.
   const rate =
     knownBytes > 0 ? knownSeconds / knownBytes : unknownBytes > 0 ? Math.max(total - knownSeconds, 0) / unknownBytes : 0
-  return files.map((entry) => ({ name: entry.file, weight: Math.max(measured[entry.file] ?? Math.max(entry.bytes * rate, 0.05), reserves[entry.file] ?? 0) }))
+  const floor = typeof floorOrReserves === "number" ? floorOrReserves : 0
+  const held = typeof floorOrReserves === "number" ? reserves : floorOrReserves
+  return files.map((entry) => {
+    const recorded = measured[entry.file]
+    const estimated = Math.max(recorded === undefined ? Math.max(entry.bytes * rate, 0.05) : recorded, held[entry.file] ?? 0)
+    return { name: entry.file, weight: floor > 0 && estimated < floor ? floor : estimated }
+  })
 }
 
 // Per-file seconds from a Bun JUnit report: only the top-level suites, which are named after the test file. Describe
@@ -112,8 +143,12 @@ function shard(timings: Timings, args: string[]) {
     console.error("usage: test-plan.ts shard <package directory> <linux|windows> <shard> <shards>")
     process.exit(2)
   }
-  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, timings.totals[directory]?.[platform] ?? 0, timings.reserves?.[`${directory}:${platform}`])
-  const mine = balance(weights, shards)[selected - 1]
+  const bins = plannedBins(timings, directory, platform)
+  if (bins.length !== shards) {
+    console.error(`shard count ${shards} does not match the plan (${bins.length})`)
+    process.exit(1)
+  }
+  const mine = bins[selected - 1]
   if (!mine || mine.names.length === 0) {
     console.error(`shard ${selected}/${shards} has no test files`)
     process.exit(1)
@@ -142,7 +177,7 @@ function plan(timings: Timings) {
     console.log(`::warning title=test plan::${jobs} jobs exceed the ${timings.budget.limit}-job account cap; max-parallel queues the surplus`)
 }
 
-function coreShards(name: Platform, host: string, count: number) {
+export function coreShards(name: Platform, host: string, count: number) {
   return Array.from({ length: count }, (_, index) => ({
     name,
     host,
@@ -151,8 +186,6 @@ function coreShards(name: Platform, host: string, count: number) {
     shard: `${index + 1}/${count}`,
     turbo: true,
     filters: "--filter=@orchestra/core",
-    // The dependency-shadow cap proof is allowed 10 minutes. An 8-minute step killed the Windows shard that held it.
-    ...(name === "windows" ? { budget: 15 } : {}),
   }))
 }
 
@@ -227,14 +260,16 @@ function e2eShards(timings: Timings) {
   return shardCount(seconds, timings.target.e2e, timings.margin)
 }
 
-// Folds the JUnit reports of a cold run (artifacts `junit-<os>-<part>`, files `<os>-<part>.xml`) into the per-file times
-// and the per-platform totals of test-timings.json.
+// Folds the JUnit reports of a cold run (artifacts `junit-<os>-<part>`, files `<os>-<part>.xml` and the Windows
+// watcher process's `<os>-<part>-watcher.xml`) into the per-file times and the per-platform totals of test-timings.json.
 function refresh(timings: Timings, directory: string | undefined) {
   if (!directory) {
     console.error("usage: test-plan.ts refresh <junit directory>")
     process.exit(2)
   }
-  const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) => /(^|[\\/])(linux|windows)-core-\d+\.xml$/.test(file))
+  const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) =>
+    /(^|[\\/])(linux|windows)-core-\d+(-watcher)?\.xml$/.test(file),
+  )
   if (reports.length === 0) {
     console.error(`no core JUnit report under ${directory}`)
     process.exit(1)

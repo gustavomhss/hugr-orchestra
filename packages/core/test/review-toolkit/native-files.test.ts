@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { constants } from "node:fs"
+import { mkdtempSync, realpathSync, rmSync } from "node:fs"
 import { chmod, lstat, mkdir, realpath, symlink, writeFile } from "node:fs/promises"
 import { tmpdir as osTmpdir } from "node:os"
 import path from "node:path"
@@ -10,6 +10,55 @@ import { tmpdir } from "../fixture/tmpdir"
 
 const run = (root: string, files: ReadonlyArray<string>, extensions: ReadonlyArray<string> = [".py"]) =>
   Effect.runPromise(ReviewNativeFiles.select({ root, files, extensions }))
+
+function denyWindowsTraverse(root: string) {
+  const denied = Bun.spawnSync([
+    "icacls", root, "/inheritance:r",
+    "/deny", "*S-1-1-0:(OI)(CI)(F)",
+    "/deny", "*S-1-5-32-544:(OI)(CI)(F)",
+  ])
+  if (denied.exitCode !== 0) throw new Error(`native-files-unreadable-root-unproven: ${denied.stderr.toString()} ${denied.stdout.toString()}`)
+  return denied
+}
+
+function restoreWindowsTraverse(root: string, denied: ReturnType<typeof Bun.spawnSync>) {
+  if (denied.exitCode !== 0) return
+  const restored = Bun.spawnSync([
+    "icacls", root, "/remove:d", "*S-1-1-0",
+    "/remove:d", "*S-1-5-32-544",
+    "/grant:r", "*S-1-5-32-544:(OI)(CI)(F)",
+  ])
+  if (restored.exitCode !== 0) throw new Error(`native-files-unreadable-root-unproven: ${restored.stderr.toString()}`)
+}
+
+function windowsDeniesTraverse() {
+  if (process.platform !== "win32") return false
+  const root = mkdtempSync(path.join(osTmpdir(), "native-files-deny-"))
+  const denied = Bun.spawnSync([
+    "icacls", root, "/inheritance:r",
+    "/deny", "*S-1-1-0:(OI)(CI)(F)",
+    "/deny", "*S-1-5-32-544:(OI)(CI)(F)",
+  ])
+  try {
+    if (denied.exitCode !== 0) return false
+    try {
+      realpathSync(root)
+      return false
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error ? error.code : undefined
+      return code === "EPERM" || code === "EACCES"
+    }
+  } finally {
+    restoreWindowsTraverse(root, denied)
+    rmSync(root, { recursive: true, force: true })
+  }
+}
+
+const windowsDenies = windowsDeniesTraverse()
+
+function readRoot(root: string) {
+  return run(root, ["a.py"])
+}
 
 test("lexical refusals do not touch the filesystem", async () => {
   const missing = path.resolve(osTmpdir(), "no-such-native-files", `${Date.now()}`)
@@ -104,14 +153,44 @@ test("projected canonical arguments are bounded before missing candidates are st
   })
 })
 
-test.skipIf(process.platform === "win32")("an unreadable root fails named", async () => {
+test.skipIf(process.platform === "win32" && !windowsDenies)("an unreadable root fails named", async () => {
   if (process.getuid?.() === 0) throw new Error("native-files-unreadable-root-unproven")
   await using dir = await tmpdir()
-  await writeFile(path.join(dir.path, "a.py"), "a\n")
-  await chmod(dir.path, 0)
+  const root = path.join(dir.path, "sealed")
+  await mkdir(root)
+  await writeFile(path.join(root, "a.py"), "a\n")
+  const result = process.platform === "win32" ? await deniedWindows(root) : await deniedPosix(root)
+  expect(result).toEqual({ status: "not-run", reason: "unreadable" })
+})
+
+test.skipIf(process.platform !== "win32" || windowsDenies)("Windows runner still traverses after a deny ACE", async () => {
+  await using dir = await tmpdir()
+  const root = path.join(dir.path, "sealed")
+  await mkdir(root)
+  await writeFile(path.join(root, "a.py"), "a\n")
+  const denied = denyWindowsTraverse(root)
   try {
-    expect(await run(dir.path, ["a.py"])).toEqual({ status: "not-run", reason: "unreadable" })
+    const error = await realpath(root).then(() => undefined, (error: NodeJS.ErrnoException) => error)
+    expect(error).toBeUndefined()
   } finally {
-    await chmod(dir.path, constants.S_IRWXU)
+    restoreWindowsTraverse(root, denied)
   }
 })
+
+async function deniedPosix(root: string) {
+  await chmod(root, 0)
+  try {
+    return await readRoot(root)
+  } finally {
+    await chmod(root, 0o700)
+  }
+}
+
+async function deniedWindows(root: string) {
+  const denied = denyWindowsTraverse(root)
+  try {
+    return await readRoot(root)
+  } finally {
+    restoreWindowsTraverse(root, denied)
+  }
+}

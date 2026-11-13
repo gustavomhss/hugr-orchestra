@@ -21,7 +21,7 @@ const live = jail ? it.live : it.live.skip
 const BROKEN = `export const n: number = "x"\n`
 const FIXED = `export const n: number = 1\n`
 
-/** A git repository with a planted type error in HEAD, the project's own typescript, and a fixed worktree. */
+/** A git repository with a planted type error in HEAD, typescript copied inside the repo, and a fixed worktree. */
 const repo = Effect.acquireRelease(Effect.promise(async () => {
   const dir = await tmpdir()
   const root = dir.path

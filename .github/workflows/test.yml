@@ -246,7 +246,9 @@ jobs:
         # user namespace (run 40263348230), so every LIVE sandbox test failed. Move once the sandbox supports it.
         include: ${{ fromJSON(needs.plan.outputs.unit) }}
     runs-on: ${{ matrix.host }}
-    # ten minutes inclusive of setup; the Windows libs lane ("other packages") carries a per-lane budget of 15.
+    # Ten minutes inclusive of setup. The Windows libs lane carries 15. A core shard does not compile
+    # @orchestra/plugin inside its test step: --only below. A prior build did not share that task's hash
+    # (run 43110315940, 161d38d05015607a then 5024d037fae2f9ef) and tsc ate the 8 minutes again.
     timeout-minutes: ${{ matrix.budget || 10 }}
     defaults:
       run:
@@ -282,11 +284,32 @@ jobs:
           fi
           # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          if command -v bwrap >/dev/null && command -v socat >/dev/null; then
+            echo "sandbox tools already installed"
+            exit 0
+          fi
+          # The image points apt at azure.archive.ubuntu.com through apt-mirrors.txt. That name, and
+          # archive.ubuntu.com, stop resolving. A public resolver is the fallback, not a skipped install.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's/azure\.archive\.ubuntu\.com/archive.ubuntu.com/g' /etc/apt/apt-mirrors.txt
+          fi
+          sudo find /etc/apt -type f \( -name '*.sources' -o -name '*.list' -o -name 'sources.list' \) -exec sed -i 's/azure\.archive\.ubuntu\.com/archive.ubuntu.com/g' {} +
+          for attempt in 1 2 3; do
+            sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat && exit 0
+            echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf >/dev/null
+            [ "$attempt" = 3 ] && exit 1
+            sleep 5
+          done
 
 
       - name: Linux Electron dependencies
         if: matrix.electron
-        run: sudo apt-get install -y -qq xvfb xauth libgtk-3-0 libnss3 libasound2t64
+        run: |
+          for attempt in 1 2 3; do
+            sudo apt-get install -y -qq xvfb xauth libgtk-3-0 libnss3 libasound2t64 && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep 20
+          done
 
       - name: Native test binaries
         uses: ./.github/actions/omni-binaries
@@ -395,15 +418,64 @@ jobs:
             if [ -n "$PACKAGES" ] && ! tr ', ' '\n\n' <<< "$PACKAGES" | grep -qx '@orchestra/core'; then echo "shard $PART has no package of this lane"; exit 0; fi
             mapfile -t files < <(bun packages/script/src/test-plan.ts shard packages/core "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${SHARD%/*}" "${SHARD#*/}")
             [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no test file"; exit 1; }
+            # Windows core 5/7 segfaulted twice in watcher.node inside the 85-file process (run 43066731722).
+            # The same file passes alone (test-ci 43109694032). Keep it out of that process.
+            # tool-write.test.ts is measured at 0.4s and still held this step until the 8-minute timeout, twice
+            # (runs 43156203910 and 43217078756). Same split: own process, same step, no longer timeout.
+            # tool-safety-loopback.test.ts prints its Windows proof and then does not return (runs 43232120353
+            # and 43237306628). It exits itself. Leaving it in the shard would skip every file after that exit.
+            # dependency-shadow.test.ts started and did not finish before this step died (run 43307894859).
+            alone=()
+            if [ "$RUNNER_OS" = "Windows" ]; then
+              kept=()
+              for file in "${files[@]}"; do
+                if [ "$file" = "test/filesystem/watcher.test.ts" ] || [ "$file" = "test/tool-write.test.ts" ] || [ "$file" = "test/tool-safety-loopback.test.ts" ] || [ "$file" = "test/tool-safety-sandbox-repairs.test.ts" ] || [ "$file" = "test/review-toolkit/dependency-shadow.test.ts" ]; then
+                  alone+=("$file")
+                else
+                  kept+=("$file")
+                fi
+              done
+              files=("${kept[@]}")
+            fi
             echo "shard $PART runs ${#files[@]} files"
+            printf '%s\n' "${files[@]}" >&2
             # A cold run also writes a JUnit report; its per-file times refresh packages/script/src/test-timings.json.
             report=()
             if [ "$COLD" = "true" ]; then
               mkdir -p "$RUNNER_TEMP/junit"
               report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
             fi
+            # Alone files share this step's clock. Starting them after the shard left dependency-shadow
+            # still running when the step died, 5m43s into that process (run 43319710781). Start them
+            # with the shard so a slow file gets the same 8 minutes.
+            alone_pids=()
+            if [ -n "${alone[0]:-}" ]; then
+              for alone_file in "${alone[@]}"; do
+                echo "shard $PART runs $alone_file in its own process" >&2
+                # declared: a file that does not spawn (tool-write) must not fail the suite-wide omni control
+                # (run 43242689800). A file that declares a spawn still has to make one.
+                (cd packages/core && GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 --only-failures --preload ./test/file-start.ts "$alone_file") &
+                alone_pids+=($!)
+              done
+            fi
             # Through turbo, so each shard keeps its own cache entry: the file list is part of the task hash.
-            GITHUB_ACTIONS=false exec bun turbo test --filter=@orchestra/core -- "${files[@]}" "${report[@]}"
+            # Not exec: the watcher file, when this shard has it, runs in its own process above.
+            if [ -n "${files[0]:-}" ]; then
+              # --only: core imports plugin and http-recorder from source. ^build would run plugin tsc, and that
+              # compile does not finish inside this step on Windows (run 43110315940).
+              # --only-failures prints no file header until a test fails. A hang before that left this step
+              # with no file name (run 43258630212, windows core 3/9). The preload writes the path to fd 2
+              # when bun resolves the file, which a pipe shows immediately.
+              GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/core --only --log-order=stream -- --preload ./test/file-start.ts "${files[@]}" "${report[@]}"
+            fi
+            # One file per process. A second turbo exited 1 after a green watcher run (run 43150681461).
+            # "${alone_pids[@]:-}" is one empty word when the array is empty, and `wait ""` fails the step.
+            if [ -n "${alone_pids[0]:-}" ]; then
+              for pid in "${alone_pids[@]}"; do
+                wait "$pid"
+              done
+            fi
+            exit 0
           fi
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
           # when sharing the runner with another runtime suite. Keep every package and per-test budget.
@@ -411,7 +483,13 @@ jobs:
           # Turbo stops scheduling at the first failed task by default, so one red package hid every package after it
           # (run 38157434225: core failed and the CLI suite never started). Each package runs once its dependencies
           # pass; any failure still fails the step.
-          GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" --continue=dependencies-successful "${filters[@]}"
+          # App tests import @orchestra/ui from source. ^build runs its tsc, which does not finish inside this
+          # step on Windows (run 43225486925). Other lanes still build their dependencies.
+          only=()
+          if printf '%s\n' "${filters[@]}" | grep -qx -- '--filter=@orchestra/app'; then
+            only=(--only)
+          fi
+          GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" --continue=dependencies-successful "${only[@]}" "${filters[@]}"
         env:
           FILTERS: ${{ matrix.filters }}
           PART: ${{ matrix.part }}
@@ -590,6 +668,22 @@ jobs:
           fi
           # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          if command -v bwrap >/dev/null && command -v socat >/dev/null; then
+            echo "sandbox tools already installed"
+            exit 0
+          fi
+          # The image points apt at azure.archive.ubuntu.com through apt-mirrors.txt. That name, and
+          # archive.ubuntu.com, stop resolving. A public resolver is the fallback, not a skipped install.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's/azure\.archive\.ubuntu\.com/archive.ubuntu.com/g' /etc/apt/apt-mirrors.txt
+          fi
+          sudo find /etc/apt -type f \( -name '*.sources' -o -name '*.list' -o -name 'sources.list' \) -exec sed -i 's/azure\.archive\.ubuntu\.com/archive.ubuntu.com/g' {} +
+          for attempt in 1 2 3; do
+            sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat && exit 0
+            echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf >/dev/null
+            [ "$attempt" = 3 ] && exit 1
+            sleep 5
+          done
 
 
       - name: Read Playwright version

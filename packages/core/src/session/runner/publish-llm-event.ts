@@ -87,9 +87,14 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
   // Blocks a retract blanked: what the superseded attempt still streams for them is dropped.
   const retracted = new Set<string>()
 
+  let snapshotRead: Effect.Effect<string | undefined> | undefined
+  const readSnapshot = () => {
+    snapshotRead ??= input.snapshotReady ?? Effect.succeed(input.snapshot)
+    return snapshotRead
+  }
   const startAssistant = Effect.fnUntraced(function* () {
     if (assistantMessageID !== undefined) return assistantMessageID
-    const snapshot = yield* (input.snapshotReady ?? Effect.succeed(input.snapshot))
+    const snapshot = yield* readSnapshot()
     assistantMessageID = SessionMessage.ID.create()
     assistantActive = true
     yield* events.publish(SessionEvent.Step.Started, {

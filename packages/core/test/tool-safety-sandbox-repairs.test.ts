@@ -17,7 +17,12 @@ import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
 import { jail, sandboxHost } from "./lib/sandbox-host"
 
-const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
+// The last test exits the process on Windows so a stuck scope release cannot hold the step.
+// onFailure runs when that promise rejects, including a scope release outside the user effect.
+let failed = false
+const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])), () => {
+  failed = true
+})
 // Unsupported/unavailable hosts measure HOLD separately, never count it as confinement conformance.
 // These probes run node, which Windows' AppContainer jail does not take (pwsh and cmd only, tool-safety-appcontainer.test.ts).
 const confined = sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer" ? it.live : it.live.skip
@@ -556,48 +561,6 @@ const listen = (endpoint: string | number) => Effect.acquireRelease(
   (server) => Effect.promise(() => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))),
 )
 
-it.live("exact Unix socket grant uses native placement; unsupported enforcement HOLD even with fallback", () =>
-  Effect.gen(function* () {
-    const f = yield* fixture
-    const one = path.join(f.directory, "one.sock")
-    const two = path.join(f.directory, "two.sock")
-    const profile = { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, unconfinedFallback: true,
-      allowedUnixSockets: [{ directory: f.directory, path: one }] } } satisfies ToolSafety.Profile
-    if (process.platform === "win32") {
-      const held = yield* Effect.flip(f.wrap("", profile))
-      expect(held.reason).toBe("sandbox-unix-socket-platform-unsupported")
-      console.info("Windows: exact Unix socket enforcement unsupported; HOLD measured, no conformance claim")
-      return
-    }
-    yield* listen(one)
-    yield* listen(two)
-    const tcp = yield* listen(0)
-    const address = tcp.address()
-    if (!address || typeof address === "string") throw new Error("TCP positive control unavailable")
-    const script = `Promise.all(${JSON.stringify([one, two, { host: "127.0.0.1", port: address.port }])}.map(p=>new Promise(r=>{const c=require('net').connect(p);let out='';c.on('data',d=>out+=d);c.on('end',()=>r(out));c.on('error',e=>r(e.code));c.setTimeout(1000,()=>{c.destroy();r('TIMEOUT')})}))).then(r=>console.log(JSON.stringify(r)))`
-    const baseline = yield* f.processes.run(yield* f.wrap(script), { timeout: "5 seconds" })
-    expect(baseline.exitCode).toBe(0)
-    expect(JSON.parse(baseline.stdout.toString())).toEqual(["one.sock", "two.sock", "tcp"])
-    if (process.platform === "linux") {
-      const held = yield* Effect.flip(f.wrap(script, profile))
-      expect(held.reason).toBe("sandbox-unix-socket-exact-policy-unsupported")
-      console.info("Linux SRT 0.0.78: exact Unix socket paths unsupported; working socket/TCP controls and HOLD measured")
-      return
-    }
-    const command = yield* f.wrap(script, profile)
-    profile.sandbox.allowedUnixSockets[0].path = two
-    const allowed = yield* f.processes.run(command, { timeout: "5 seconds" })
-    expect(allowed.exitCode).toBe(0)
-    expect(JSON.parse(allowed.stdout.toString())).toEqual(["one.sock", "EPERM", "EPERM"])
-    const elsewhere = path.join(f.directory, "elsewhere")
-    yield* f.fs.makeDirectory(elsewhere)
-    const mismatch = yield* f.processes.run(yield* f.wrap(script, profile, elsewhere, f.directory), { timeout: "5 seconds" })
-    expect(JSON.parse(mismatch.stdout.toString())).toEqual(["EPERM", "EPERM", "EPERM"])
-    const denied = yield* f.processes.run(yield* f.wrap(script, { requireSandbox: true, writeRoots: [] }), { timeout: "5 seconds" })
-    expect(JSON.parse(denied.stdout.toString())).toEqual(["EPERM", "EPERM", "EPERM"])
-  }), 30_000,
-)
-
 it.live("invalid Unix socket grants HOLD before preparing output parents or unconfined fallback", () =>
   Effect.gen(function* () {
     const f = yield* fixture
@@ -757,4 +720,48 @@ confined("real Go downloads and builds in removable scoped scratch, preserving o
       expect(yield* f.fs.readFileString(path.join(directory, "sentinel"))).toBe("owner")
     }), { discard: true })
   }), 150_000,
+)
+
+// Last in the file. On Windows, cleanup after this proof does not return (run 43242689800). The exit
+// is after every other test in the file, and the file runs alone, so it skips no other proof.
+it.live("exact Unix socket grant uses native placement; unsupported enforcement HOLD even with fallback", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const one = path.join(f.directory, "one.sock")
+    const two = path.join(f.directory, "two.sock")
+    const profile = { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, unconfinedFallback: true,
+      allowedUnixSockets: [{ directory: f.directory, path: one }] } } satisfies ToolSafety.Profile
+    if (process.platform === "win32") {
+      const held = yield* Effect.flip(f.wrap("", profile))
+      expect(held.reason).toBe("sandbox-unix-socket-platform-unsupported")
+      console.info("Windows: exact Unix socket enforcement unsupported; HOLD measured, no conformance claim")
+      process.exit(failed ? 1 : 0)
+    }
+    yield* listen(one)
+    yield* listen(two)
+    const tcp = yield* listen(0)
+    const address = tcp.address()
+    if (!address || typeof address === "string") throw new Error("TCP positive control unavailable")
+    const script = `Promise.all(${JSON.stringify([one, two, { host: "127.0.0.1", port: address.port }])}.map(p=>new Promise(r=>{const c=require('net').connect(p);let out='';c.on('data',d=>out+=d);c.on('end',()=>r(out));c.on('error',e=>r(e.code));c.setTimeout(1000,()=>{c.destroy();r('TIMEOUT')})}))).then(r=>console.log(JSON.stringify(r)))`
+    const baseline = yield* f.processes.run(yield* f.wrap(script), { timeout: "5 seconds" })
+    expect(baseline.exitCode).toBe(0)
+    expect(JSON.parse(baseline.stdout.toString())).toEqual(["one.sock", "two.sock", "tcp"])
+    if (process.platform === "linux") {
+      const held = yield* Effect.flip(f.wrap(script, profile))
+      expect(held.reason).toBe("sandbox-unix-socket-exact-policy-unsupported")
+      console.info("Linux SRT 0.0.78: exact Unix socket paths unsupported; working socket/TCP controls and HOLD measured")
+      return
+    }
+    const command = yield* f.wrap(script, profile)
+    profile.sandbox.allowedUnixSockets[0].path = two
+    const allowed = yield* f.processes.run(command, { timeout: "5 seconds" })
+    expect(allowed.exitCode).toBe(0)
+    expect(JSON.parse(allowed.stdout.toString())).toEqual(["one.sock", "EPERM", "EPERM"])
+    const elsewhere = path.join(f.directory, "elsewhere")
+    yield* f.fs.makeDirectory(elsewhere)
+    const mismatch = yield* f.processes.run(yield* f.wrap(script, profile, elsewhere, f.directory), { timeout: "5 seconds" })
+    expect(JSON.parse(mismatch.stdout.toString())).toEqual(["EPERM", "EPERM", "EPERM"])
+    const denied = yield* f.processes.run(yield* f.wrap(script, { requireSandbox: true, writeRoots: [] }), { timeout: "5 seconds" })
+    expect(JSON.parse(denied.stdout.toString())).toEqual(["EPERM", "EPERM", "EPERM"])
+  }), 30_000,
 )
