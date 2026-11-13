@@ -82,7 +82,7 @@ class CallerSpecificationOnly(unittest.TestCase):
   from native_caller_check import verify_capture
   self.verify_capture=verify_capture
   self.payload="abc€".encode()
-  self.grant={'state':'COURIER_ONE_RESPONSE_AUTHORIZED','response_sha256':H(self.payload),'response_bytes':len(self.payload)}
+  self.grant={'state':'COURIER_ONE_RESPONSE_AUTHORIZED','case':'S3-C5','sequence':7,'response_sha256':H(self.payload),'response_bytes':len(self.payload)}
   # Preserve these exact bytes; deliberately non-canonical JSON whitespace proves
   # that the checker hashes the received grant, not a re-serialized object.
   self.grant_bytes=json.dumps(self.grant,indent=2).encode()
