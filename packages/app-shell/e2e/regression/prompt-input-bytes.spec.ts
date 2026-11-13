@@ -53,7 +53,7 @@ const cases = [
 // Execution requests are captured and aborted, never replaced by model or Agent frames.
 for (const scenario of cases) {
   test(`prompt bytes: V2 ${scenario.mode}`, async ({ page, context }, info) => {
-    const transport = scenario.mode === "fill" ? await installSseTransport(page, { server }) : undefined
+    const transport = await installSseTransport(page, { server })
     try {
       const sessionID = `ses_prompt_bytes_${randomUUID().replaceAll("-", "")}`
       await mockOrchestraServer(page, {
@@ -319,7 +319,7 @@ for (const scenario of cases) {
       expect(executions).toHaveLength(0)
       const pending = page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === endpoint)
       const failed = page.waitForEvent("requestfailed", { predicate: async (candidate) => candidate === await pending })
-      if (transport) expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
         .toEqual([{ path: "/api/event", endedAt: undefined }])
       await editor.press("Enter")
       const request = await pending
@@ -360,10 +360,10 @@ for (const scenario of cases) {
       expect(selections.at(-1)).toEqual({ model: { providerID: "orchestra", id: "claude-opus-4-6" } })
       expect(text).toBe(scenario.text)
       expect(receipt(text)).toEqual(receipt(scenario.text))
-      if (transport) expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
         .toEqual([{ path: "/api/event", endedAt: undefined }])
     } finally {
-      if (transport) await transport.close()
+      await transport.close()
     }
   })
 }
