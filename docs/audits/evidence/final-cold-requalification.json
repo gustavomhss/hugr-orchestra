@@ -3,7 +3,7 @@
   "run": 43453802489,
   "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43453802489",
   "source": "9ab7680cc512bfc6f4e44a77f7056eb723e2b74e",
-  "status": "in-progress",
+  "status": "completed",
   "inputs": {
     "packages": "",
     "cold": true,
@@ -33,5 +33,84 @@
     "command": "GOMAXPROCS=2 bun typecheck",
     "directory": "packages/core",
     "exit": 0
-  }
+  },
+  "conclusion": "failure",
+  "job_conclusions": {
+    "success": 49,
+    "failure": 11,
+    "cancelled": 3
+  },
+  "non_success_jobs": [
+    {
+      "name": "e2e (linux 6/8)",
+      "id": 131982693795,
+      "conclusion": "failure"
+    },
+    {
+      "name": "e2e (linux 4/8)",
+      "id": 131982693839,
+      "conclusion": "failure"
+    },
+    {
+      "name": "e2e (linux 8/8)",
+      "id": 131982693931,
+      "conclusion": "failure"
+    },
+    {
+      "name": "e2e (linux 2/8)",
+      "id": 131982693935,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux core 8/15)",
+      "id": 131983346542,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux core 11/15)",
+      "id": 131983346559,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux core 6/15)",
+      "id": 131983346682,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (windows core 9/12)",
+      "id": 131983349805,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux app)",
+      "id": 131983349841,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux desktop Bun 3/3)",
+      "id": 131983352472,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (windows atlas boundary, process query, rollback)",
+      "id": 131983355190,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "unit (windows cli, server, clients)",
+      "id": 131983355266,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "unit (windows app)",
+      "id": 131983355517,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "unit (windows desktop Bun 3/3)",
+      "id": 131983355565,
+      "conclusion": "failure"
+    }
+  ],
+  "followup": "Corrections and hosted qualification continue; next complete run not dispatched. No aggregate green or ledger closure."
 }

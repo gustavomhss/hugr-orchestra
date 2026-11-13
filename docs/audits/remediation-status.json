@@ -4001,8 +4001,8 @@
   "dev_sync_pending": {
     "state": "Merge complete; final qualification in progress, no source conflict pending.",
     "dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
-    "generation": "Upstream changed bun.lock (toml dependency); refresh official Client and Atlas generation receipts even if bytes stay identical.",
-    "full_epic": "Not dispatched yet; wait for scoped and generation jobs before the one final cold epic run."
+    "generation": "Official Client/Atlas/configuration artifacts verified for their recorded source scopes; no manual generated-source edits.",
+    "full_epic": "43427741510 and43453802489 completed with failure. Current integration repairs and focused hosted qualification continue; no full-suite green or closure of E10/M13."
   },
   "integration_history": [
     {
