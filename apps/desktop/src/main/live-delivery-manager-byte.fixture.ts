@@ -18,7 +18,10 @@ export async function writeByteOverflow(response: ServerResponse, limit: number,
     let settled = false
     const finish = (completed: boolean, error?: NodeJS.ErrnoException | null) => {
       const unexpected = error && (!response.destroyed || !["ECONNRESET", "EPIPE", "ERR_STREAM_PREMATURE_CLOSE", "ERR_STREAM_DESTROYED"].includes(error.code ?? ""))
-      if (unexpected) failures.push(error)
+      if (unexpected) {
+        console.error(JSON.stringify({ kind: "live-delivery-fixture-write-error", name: error.name.slice(0, 128), code: error.code?.slice(0, 128) ?? null, message: error.message.slice(0, 128), responseDestroyed: response.destroyed, writableEnded: response.writableEnded, writableFinished: response.writableFinished, socketDestroyed: socket?.destroyed ?? null, closed: observation.closed, writeCompleted: observation.writeCompleted, bodyBytesWritten: observation.bodyBytesWritten }))
+        failures.push(error)
+      }
       if (settled) return
       settled = true; response.off("close", closed)
       if (unexpected) { reject(error); return }
