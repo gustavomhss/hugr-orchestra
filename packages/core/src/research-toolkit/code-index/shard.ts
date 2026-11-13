@@ -67,6 +67,9 @@ export const live = (root: string) =>
     } satisfies Git
   })
 
+/** Private-wave scaffold: source implementation follows the frozen readonly code contract. */
+export const captured = (root: string, commit: string): Effect.Effect<Git, Research.Error, AppProcess.Service> => live(root)
+
 /** As modules/maestro/arsenal/src/engine/process.ts: the caller environment minus anything that redirects git. */
 export function environment(source: NodeJS.ProcessEnv = process.env): Record<string, string> {
   return {
