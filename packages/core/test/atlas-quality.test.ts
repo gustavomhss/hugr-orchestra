@@ -28,11 +28,12 @@ test.skipIf(!selected(request))("hosted standalone Atlas quality lane", async ()
   const started = performance.now()
   await Effect.runPromise(Effect.gen(function* () {
     const proc = yield* AppProcess.Service
+    const failures: string[] = []
     const temporary = yield* Effect.acquireRelease(
       Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "atlas-quality-"))),
       (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
     )
-    const command = (stage: string, program: string, args: readonly string[], cwd: string, maximumMs = 120_000, env: Record<string, string> = {}) =>
+    const command = (stage: string, program: string, args: readonly string[], cwd: string, maximumMs = 120_000, env: Record<string, string> = {}, required = true) =>
       Effect.gen(function* () {
         const remaining = Math.min(maximumMs, 870_000 - (performance.now() - started))
         if (remaining <= 0) return yield* Effect.die(new Error("Atlas qualification budget exhausted"))
@@ -46,7 +47,8 @@ test.skipIf(!selected(request))("hosted standalone Atlas quality lane", async ()
         expect(result.stdoutTruncated, stage).toBe(false)
         expect(result.stderrTruncated, stage).toBe(false)
         expect(result.outputTruncated ?? false, stage).toBe(false)
-        expect(result.exitCode, stage).toBe(0)
+        if (required) expect(result.exitCode, stage).toBe(0)
+        if (!required && result.exitCode !== 0) failures.push(stage)
         return result.stdout.toString("utf8")
       })
     expect((yield* command("snapshot", "git", ["rev-parse", "HEAD"], root, 15_000)).trim()).toBe(snapshot)
@@ -66,8 +68,9 @@ test.skipIf(!selected(request))("hosted standalone Atlas quality lane", async ()
       "command-doc-guard", "wiring-guard", "adr-citation-guard", "req-clause-guard", "ears-coamend-guard",
       "doc-transcript-guard", "service-gate-guard", "own-snapshot-guard",
     ], (guard) => command(guard, "npm", ["run", guard], atlas, 60_000,
-      guard === "ears-coamend-guard" ? { EARS_COAMEND_BASE: base } : {}), { concurrency: 1, discard: true })
-    yield* command("vitest", "npm", ["run", "test", "--", "--reporter=dot"], atlas, 480_000)
+      guard === "ears-coamend-guard" ? { EARS_COAMEND_BASE: base } : {}, false), { concurrency: 1, discard: true })
+    yield* command("vitest", "npm", ["run", "test", "--", "--reporter=dot"], atlas, 480_000, {}, false)
+    expect(failures, "Atlas guards and Vitest must all pass").toEqual([])
   }).pipe(Effect.scoped, Effect.provide(AppNodeBuilder.build(AppProcess.node))))
   expect(performance.now() - started).toBeLessThan(900_000)
 }, 900_000)
