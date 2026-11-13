@@ -1,0 +1,31 @@
+name: genesis-source-export
+on:
+  push:
+    branches: [genesis-source-export-s3]
+    paths:
+      - .github/workflows/genesis-source-export.yml
+      - .github/scripts/genesis-source-export.py
+permissions:
+  contents: read
+concurrency:
+  group: genesis-source-export-s3
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: Export fixed public source objects and manifests
+        run: python3 .github/scripts/genesis-source-export.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-s3-public-source-${{ github.sha }}
+          path: genesis-source-export.zip
+          if-no-files-found: error
+          retention-days: 7
