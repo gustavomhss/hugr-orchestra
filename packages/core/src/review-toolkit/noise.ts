@@ -21,6 +21,8 @@ export type Range = { start: number; end: number }
 export type AddedSuppression = { path: string; line: number; endLine?: number; rule: string; snippet: string }
 
 export type Input = {
+  /** Host-captured exact repository file names; omission keeps diff and new-only behavior. */
+  repositoryFiles?: ReadonlyArray<string>
   head: readonly ReviewSarif.Entry[]
   base?: readonly ReviewSarif.Entry[]
   changed: Readonly<Record<string, ReadonlyArray<Range>>>
@@ -40,6 +42,7 @@ export type Result = {
 type Flow = { item: ReviewItem.ToolItem; suppressed: boolean }
 
 export function pipeline(input: Input): Result {
+  if (input.repositoryFiles !== undefined) return repositoryPipeline(input)
   const cap = itemsPerLens(input.catalog, input.tier)
   // Dropped rules do not run; an entry that still carries one is kept out before any step sees it.
   const head = normalize(input.head, input.changed)
@@ -64,6 +67,18 @@ export function pipeline(input: Input): Result {
   )
   const kept = suppress(dedup(located), input.addedSuppressions ?? [])
   return { ...capPerLens(kept.toSorted(compare), cap), debt: split.debt }
+}
+
+// Whole-source observation: exact listed paths only. Base, blast, added suppressions and accidental changed lines do not apply.
+function repositoryPipeline(input: Input): Result {
+  const allowed = new Set(input.repositoryFiles)
+  const kept = dedup(
+    normalize(
+      input.head.filter((entry) => allowed.has(entry.item.path)),
+      {},
+    ).filter((flow) => !flow.suppressed),
+  ).map((flow) => flow.item)
+  return { ...capPerLens(kept.toSorted(compare), itemsPerLens(input.catalog, input.tier)), debt: [] }
 }
 
 // Step 1. The fingerprint (pack, rule, path, snippet digest) already survives line shifts; this sets `onChangedLine`
