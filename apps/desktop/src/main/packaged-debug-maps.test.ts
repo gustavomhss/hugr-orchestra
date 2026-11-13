@@ -67,6 +67,6 @@ test("the actual packager excludes JS/CSS debug maps from the app and dependency
     await writeFile(file, "fixture")
     expect(filter(file, await stat(file)), relative).toBe(expected)
   }
-  expect("electronLanguages" in config).toBe(false)
+  expect(config.electronLanguages).toEqual(["en", "en-US", "pt-BR", "pt-PT"])
   expect(config.extraResources).toContainEqual({ from: "resources/cli", to: "cli" })
 })

@@ -112,7 +112,7 @@ Nenhuma lente achou um corte que deixe o produto inteiro 75% mais rápido ou 75%
 ## O que fazer, em ordem
 
 1. Apagar cópias velhas do CLI e teto no cache do Chromium. Único corte já medido acima de 75%, e é da pasta de dados.
-2. Tirar mapa, fonte `.ts` e a cópia morta de tree-sitter do asar. Mais os 48 MB de idioma do Electron. Disco do instalador, não velocidade de conversa.
+2. Tirar mapas de depuração JS/CSS e idiomas do Electron fora de inglês e português. Disco do instalador, não velocidade de conversa. Após integrar `dev`, o epic 43363506010 mostrou que os globs amplos também removiam entrypoints `.ts` e recursos que o contrato de empacotamento preserva; esse corte amplo foi retirado. Fontes de runtime, recursos nativos e outros formatos de mapa ficam. O número anterior de economia precisa ser medido novamente no pacote resultante.
 3. Snapshot de git: não esperar a árvore inteira antes de o modelo falar, ou só capturar quando houve escrita. Precisa de medida antes de chamar de 75%.
 4. Não reler o JSON inteiro da conversa a cada passo. Não montar a jaula do zero em todo comando confinado. Não guardar três cópias sem teto na tela.
 
