@@ -31,10 +31,11 @@ export const start = Effect.fn("MoveSessionWriter.start")(function* (source: str
         await fs.writeFile(path.join(control, "release.tmp"), "MOVED", { flag: "wx" })
         await fs.rename(path.join(control, "release.tmp"), path.join(control, "release"))
       })
+      // Successful exit follows the actor's atomic ACK publication; surface child failures before reading its proof.
+      const result = yield* Fiber.join(child).pipe(Effect.timeout("20 seconds"), Effect.flatMap(AppProcess.requireSuccess))
       const ack = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({
         pid: Schema.Number, writes: Schema.Literal(5), descriptorClosed: Schema.Literal(true),
-      })))(yield* waitForFile(path.join(control, "ACK")))
-      const result = yield* Fiber.join(child).pipe(Effect.flatMap(AppProcess.requireSuccess))
+      })))(yield* Effect.promise(() => fs.readFile(path.join(control, "ACK"), "utf8")))
       return { ack, exitCode: result.exitCode }
     }),
   }
