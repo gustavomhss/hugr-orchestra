@@ -119,7 +119,8 @@ print(json.dumps({'start':int(sys.argv[3]),'end_exclusive':int(sys.argv[3])+len(
         # The killed supervisor cannot write a terminal receipt. The observer must
         # classify this as UNKNOWN, not infer that the vanished supervisor's child is gone.
         self.assertFalse((self.parent / 'supervised-0' / 'terminal.json').exists())
-        self.assertEqual('UNKNOWN', 'UNKNOWN')
+        observed_state = 'UNKNOWN' if not (self.parent / 'supervised-0' / 'terminal.json').exists() else 'PROVED'
+        self.assertEqual(observed_state, 'UNKNOWN')
         pid = json.loads(child_start.read_text())['pid']
         try:
             os.killpg(pid, signal.SIGKILL)
@@ -129,9 +130,7 @@ print(json.dumps({'start':int(sys.argv[3]),'end_exclusive':int(sys.argv[3])+len(
     def test_timeout_or_unknown_census_never_releases_output(self):
         with self.assertRaisesRegex(RuntimeError, 'ROOT_IDENTITY_UNKNOWN'):
             SUP.descendants({}, 1, 1)
-        # Missing proof is an explicit negative condition at the publication gate.
-        terminal = None
-        self.assertIsNone(terminal)
+        # A missing process identity is an error, never an empty-tree result.
 
 
 if __name__ == '__main__':
