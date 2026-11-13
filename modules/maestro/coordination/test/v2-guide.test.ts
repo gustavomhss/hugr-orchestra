@@ -29,7 +29,7 @@ function units() {
         if (children.some((child) => child.isFile() && child.name !== ".DS_Store")) return [dir]
         return children.filter((child) => child.isDirectory()).map((child) => path.join(dir, child.name))
       }),
-  )
+  ).map((unit) => unit.replaceAll(path.sep, "/"))
 }
 
 function covers(text: string) {
