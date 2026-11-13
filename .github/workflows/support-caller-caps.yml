@@ -1,0 +1,20 @@
+name: support-caller-caps
+on:
+  push:
+    branches: [genesis-support-05-caller-caps]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-caps:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: modules/atlas
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - run: npm ci
+      - run: npm run build
+      - name: Caller cumulative cap integration tests
+        run: npx vitest run packages/adapter-io/test/evaluation-maintenance-caller.integration.test.ts packages/adapter-io/test/evaluation-maintenance-caller-caps.integration.test.ts
