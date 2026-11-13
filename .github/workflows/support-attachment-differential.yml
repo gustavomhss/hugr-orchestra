@@ -1,0 +1,41 @@
+name: support-attachment-differential
+
+on:
+  push:
+    branches:
+      - genesis-support-03-attachment-differential
+    paths:
+      - "modules/atlas/packages/adapter-io/test/evaluation-attachment-differential.test.ts"
+      - "modules/atlas/packages/adapter-io/src/evaluation-admission-read.ts"
+      - "modules/atlas/packages/adapter-io/src/ownership-attachment.ts"
+      - "modules/atlas/packages/knowledge/**"
+      - ".github/workflows/support-attachment-differential.yml"
+  pull_request:
+    paths:
+      - "modules/atlas/packages/adapter-io/test/evaluation-attachment-differential.test.ts"
+      - "modules/atlas/packages/adapter-io/src/evaluation-admission-read.ts"
+      - "modules/atlas/packages/adapter-io/src/ownership-attachment.ts"
+      - "modules/atlas/packages/knowledge/**"
+      - ".github/workflows/support-attachment-differential.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  differential:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.1.2
+        with:
+          bun-version: 1.3.14
+      - name: Install Atlas workspace
+        working-directory: modules/atlas
+        run: npm ci
+      - name: Build adapter-io
+        working-directory: modules/atlas
+        run: bun run --filter @atlas/adapter-io build
+      - name: Run focused differential tests
+        working-directory: modules/atlas
+        run: bun run vitest run packages/adapter-io/test/evaluation-attachment-differential.test.ts
