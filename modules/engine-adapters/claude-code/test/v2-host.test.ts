@@ -302,8 +302,8 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
   }))
 
   expect(asked).toEqual([
-    { callID: "tu-1", tool: "Edit", action: "edit", resources: [path.join("src", "a.ts")], safety: { tool: "edit", args: { filePath: "/project/src/a.ts" } } },
-    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], safety: { tool: "bash", args: { command: "rm -rf /" } } },
+    { callID: "tu-1", tool: "Edit", action: "edit", resources: [path.join("src", "a.ts")], filesystem: { kind: "file", path: "/project/src/a.ts", resource: "path" }, safety: { tool: "edit", args: { filePath: "/project/src/a.ts" } } },
+    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], filesystem: undefined, safety: { tool: "bash", args: { command: "rm -rf /" } } },
   ])
   expect(decisions).toEqual([
     { behavior: "allow", updatedInput: { file_path: "/project/src/a.ts" } },
@@ -459,9 +459,9 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   }))
 
   expect(asked).toEqual([
-    { callID: "tu-1", tool: "Write", action: "edit", resources: ["a.ts"], safety: { tool: "write", args: { filePath: "/project/a.ts" } } },
-    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], safety: { tool: "bash", args: { command: "rm -rf /" } } },
-    { callID: "tu-3", tool: "Grep", action: "grep", resources: ["boom"], safety: { tool: "grep", args: { pattern: "boom" } } },
+    { callID: "tu-1", tool: "Write", action: "edit", resources: ["a.ts"], filesystem: { kind: "file", path: "/project/a.ts", resource: "path" }, safety: { tool: "write", args: { filePath: "/project/a.ts" } } },
+    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], filesystem: undefined, safety: { tool: "bash", args: { command: "rm -rf /" } } },
+    { callID: "tu-3", tool: "Grep", action: "grep", resources: ["boom"], filesystem: { kind: "directory", path: ".", resource: "pattern" }, safety: { tool: "grep", args: { pattern: "boom" } } },
   ])
   expect(decisions).toEqual([
     allowed,
