@@ -1,0 +1,15 @@
+{
+  "schema": "omni-remote-checkpoint-verification/v1",
+  "commit": "678088829ffee0d76dc81453337aa1093baea360",
+  "parent": "60255df6d8167e63d11150b9a10ec22eeb67f32d",
+  "tree": "481ba61116200302eb2f4ef0628210c10ad64efd",
+  "branch": "genesis-external-omni-393",
+  "source_baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "verified_at": "2026-11-13T16:26:22.306321+00:00",
+  "remote_blobs_compared_to_local": 120,
+  "full_compare_changed_files": 120,
+  "full_compare_commits_ahead": 5,
+  "all_changes_under": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/",
+  "errors": [],
+  "method": "GitHub MCP branch, commit, baseline comparison, prefix contents and recursive subtree reads; local Git blob recomputation."
+}

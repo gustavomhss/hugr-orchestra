@@ -36,7 +36,7 @@
   "physical_provider_attempts": "UNKNOWN",
   "billed_cost": "UNKNOWN",
   "layers": {
-    "L1": "393 source records produced;11 current records accepted by both persistent judges;382 remain pending.",
+    "L1": "393 source records produced; 19 current records accepted by both persistent judges; 374 remain pending.",
     "L2": "Authored drafts only; revalidation/release awaits accepted L1",
     "L3": "NOT_PRODUCED",
     "L4": "NOT_PRODUCED"

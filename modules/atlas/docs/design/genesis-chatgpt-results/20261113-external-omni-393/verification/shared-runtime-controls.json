@@ -308,8 +308,13 @@
       "CI on genesis-external-omni-393",
       "branch-protection enforcement",
       "semantic acceptance of our 393 records",
-      "our artifact archive download or local replay of shared tests",
-      "global Genesis PASS"
+      "global Genesis PASS",
+      "local replay of shared tests"
     ]
+  },
+  "archive_verification": {
+    "path": "verification/shared-runtime-artifact-verification.json",
+    "sha256": "dd04d326eb76c6702b90b1e5dd60989a534d8cc3b5af28c6890b005e9968ee80",
+    "verified_at": "2026-11-13T16:29:02.305469+00:00"
   }
 }

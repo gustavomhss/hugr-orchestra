@@ -1,0 +1,15 @@
+{
+  "schema": "omni-consumer-direct-use-freeze/v1",
+  "frozen_at": "2026-11-13T16:36:23.083509+00:00",
+  "oracle_sha256": "40583679f18fa683408e84cebc2940cfefe28b755cffb60916dd0f24615c12b7",
+  "oracle_public": false,
+  "original_case_commitment": "9bcd0b2abc40c249963a774a3bc644337cec7735f714cc91f5b32f0bce80da1c",
+  "episodes": 4,
+  "original_reserved_cases": 7,
+  "required_intermediate_artifacts": 9,
+  "profile": "Three fresh domain episodes with explicit within-episode context reuse, plus one fresh shallow scope episode. Real Atlas ports only; complete returned bytes count.",
+  "timing": "Before formal L2/L3/L4 authoring and any independent consumer execution; after initial L1 source-record production.",
+  "limits_ref": "verification/consumer-limits-freeze.json",
+  "status": "FROZEN_NOT_RUN",
+  "visibility": "Questions and expected-outcome pointers remain private. Final public evidence will summarize actual observations and limitations, not expose reserved case material."
+}

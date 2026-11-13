@@ -1,7 +1,7 @@
 {
   "schema": "omni-acceptance-matrix/v1",
   "state": "PROVISIONAL_NOT_FINAL_ACCEPTANCE",
-  "updated_at": "2026-11-13T16:24:36.573402+00:00",
+  "updated_at": "2026-11-13T16:40:43.949061+00:00",
   "normative_source": {
     "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
     "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
@@ -15,7 +15,7 @@
       "normative_source_line": 52,
       "normative_text": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |",
       "local_status": "HOLD",
-      "observed": "393 source-specific L1 records exist; 11 accepted by both judges.",
+      "observed": "393 source-specific L1 records exist; 19 current records accepted by both judges.",
       "remaining_local": "Complete review, L2–L4 and independent maintenance consumption.",
       "evidence": [
         "manifest.json",
@@ -268,7 +268,7 @@
       "normative_source_line": 127,
       "normative_text": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |",
       "local_status": "HOLD",
-      "observed": "Mechanical completeness is explicitly separated from partial semantic acceptance.",
+      "observed": "Mechanical completeness is separated from 19 of 393 current records accepted by both judges; no whole layer released.",
       "remaining_local": "Final layer/package decisions from both persistent judges.",
       "evidence": [
         "work.md",
@@ -340,7 +340,7 @@
       "normative_source_line": 141,
       "normative_text": "| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |",
       "local_status": "HOLD",
-      "observed": "Three actual authors produced the 393 records; 11 records passed both semantic judges.",
+      "observed": "Three actual authors produced the 393 records; 19 current records passed both semantic judges. A separately approved six-record pilot was actually prepared, published and read through Atlas.",
       "remaining_local": "Remaining source/authority review and applicable native import/refusal evidence.",
       "evidence": [
         "provenance/production.json",

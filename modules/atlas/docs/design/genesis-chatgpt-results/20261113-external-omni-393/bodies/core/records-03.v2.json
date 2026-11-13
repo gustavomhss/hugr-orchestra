@@ -1,0 +1,350 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+    "git_blob_sha": "fed89a565b9cd50ce8c5136106c1a256b5fec733",
+    "source_sha256": "802334de8e41783596f092fbf6dcbc6b7592b8f91b1714e6122a78c81b95e88b",
+    "source_bytes": 9246,
+    "line_count": 256,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Exercises host-channel request correlation, reserved cleanup admission and recovery after congestion.",
+    "behavior": [
+      "Maps each SpawnFailed code to the matching public error without killing a healthy generation.",
+      "Floods 20 trees with 1000 Lists while four concurrent threads each make 25 sequential blocking spawn_on calls (100 Spawn operations total during the flood); reverses List replies and asserts correct per-caller identity.",
+      "Fills normal admission, checks cleanup still enters, drains via a marker, then fills all 8192 slots to require generation death; a roughly 950 KB Spawn plus resizes must drain and allow another spawn."
+    ],
+    "contracts": [
+      "Assertions target correlation, queue capacity and recovery, not an OS child workload."
+    ],
+    "dependencies": [
+      "client/tests/mod.rs provides a controlled protocol peer; client/channel.rs and start.rs are exercised."
+    ],
+    "failures_or_limits": [
+      "Artificial peer controls replies; source coverage is not an execution result."
+    ],
+    "evidence": [
+      {
+        "start_line": 157,
+        "end_line": 170,
+        "quote": "/// R1: normal requests stop at their limit, cleanup keeps its reserved room, and a supervisor that does\n/// not drain even that is declared dead.\n#[test]\nfn admission_keeps_room_for_cleanup() {\n    let (sup, mut peer, spawned) = with_tree();\n    let tree = spawned.tree;\n    for _ in 0..ADMIT_NORMAL {\n        tree.resize(80, 24).expect(\"admitted\");\n    }\n    assert_io(tree.resize(80, 24), \"the limit is 1024\");\n    let id = tree.id;\n    let release = move |req| Msg::Release { req, id };\n    sup.tell(Want::Release, id, Class::Cleanup, release)\n        .expect(\"cleanup is still admitted\");"
+      },
+      {
+        "start_line": 195,
+        "end_line": 203,
+        "quote": "    tree.resize(80, 24).expect(\"normal requests are admitted again\");\n    // Now the peer stops reading: cleanup fills its reserved room, then the generation is declared dead.\n    let admitted = (0..=ADMIT_ALL).take_while(|_| sup.tell(Want::Release, id, Class::Cleanup, release).is_ok());\n    assert_eq!(admitted.count(), ADMIT_ALL - 1, \"one resize is still waiting\");\n    assert!(!sup.alive());\n    assert_io(\n        tree.resize(80, 24),\n        \"it stopped draining its channel (8192 requests waiting)\",\n    );"
+      },
+      {
+        "start_line": 248,
+        "end_line": 255,
+        "quote": "    assert_eq!(caller.join().unwrap().unwrap().tree.id, 2);\n    let caller = std::thread::spawn(move || spawn_on(&sup, &spec(false)));\n    assert!(\n        matches!(peer.recv(), Msg::Release { id: 2, .. }),\n        \"the big tree was dropped\"\n    );\n    peer.spawned(3);\n    assert_eq!(caller.join().unwrap().unwrap().tree.id, 3);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/deadlines.rs",
+    "git_blob_sha": "c6b797697729f7e99f953bf2b63fe6b50151854a",
+    "source_sha256": "dadb1af38ae78b592891eb2ed58af8e03941db1c78f715eb5931146b1b681c13",
+    "source_bytes": 3715,
+    "line_count": 96,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Checks asynchronous request deadlines and shared failure of concurrent bootstrap callers.",
+    "behavior": [
+      "Silent Stop gets bound plus 200 ms grace and must fail after 1200 ms with Io; silent List and detached Resize expire at 1000 ms.",
+      "Five barrier-synchronized callers share one silent Ready attempt; open counter must equal one and elapsed time must be below twice the bound."
+    ],
+    "contracts": [
+      "A detached request deadline must wake a waiting tree exit observer and kill the generation."
+    ],
+    "dependencies": [
+      "client/start::Registry and client/channel deadline watcher are exercised with test peers."
+    ],
+    "failures_or_limits": [
+      "Timing assertions allow bounded scheduling slack but still require complete observations; tests were not run."
+    ],
+    "evidence": [
+      {
+        "start_line": 31,
+        "end_line": 47,
+        "quote": "/// A `Stop` alone, sent to a peer that stays connected and never answers, fails with `Io` at its deadline\n/// (its grace on top of the bound); the generation is dead.\n#[test]\nfn a_stop_alone_times_out_against_a_silent_peer() {\n    let (sup, mut peer, spawned) = tree_within(BOUND);\n    let reader = thread::spawn(move || {\n        assert!(matches!(peer.recv(), Msg::Stop { grace_ms: 200, .. }));\n        peer // kept connected, never answering\n    });\n    let stop = move || block(spawned.tree.stop(Duration::from_millis(200)));\n    fails_at(\n        BOUND + Duration::from_millis(200),\n        \"did not answer a Stop request within 1200 ms\",\n        stop,\n    );\n    assert!(!sup.alive());\n    drop(reader.join().unwrap());"
+      },
+      {
+        "start_line": 87,
+        "end_line": 95,
+        "quote": "    for caller in callers {\n        assert_io(caller.join().unwrap(), \"did not say Ready within 1000 ms\");\n    }\n    let took = t0.elapsed();\n    assert_eq!(opens.load(Ordering::Relaxed), 1, \"every caller ran its own start\");\n    assert!(\n        took >= bound && took < bound * 2,\n        \"took {took:?}: the callers were serialized\"\n    );"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/frames.rs",
+    "git_blob_sha": "af507947c919bdc62125fb5cc6c24741ed066af3",
+    "source_sha256": "d1ac04f4c86e7b349bf8b993335df4a90a312436c9420a9b0e20992d7e7048f6",
+    "source_bytes": 5417,
+    "line_count": 170,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Tests fragmented frames, protocol violations, tree correlation and binary candidate precedence.",
+    "behavior": [
+      "Byte-by-byte Spawned is reconstructed; channel closure halfway through the next frame must yield Io and generation death.",
+      "Rejects unsolicited request IDs, wrong reply kind, malformed frame, duplicate Ready, host-only messages, mismatched terminal ends and protocol version.",
+      "Rejects another tree ID, duplicate Exited and reused live tree ID; lookup prefers environment then module then executable, treating empty environment as unset."
+    ],
+    "contracts": [
+      "Protocol violations fail the waiting operation instead of silently dropping it."
+    ],
+    "dependencies": [
+      "channel/route.rs validates frames; start::pick resolves supplied candidate directories."
+    ],
+    "failures_or_limits": [
+      "Lookup test uses placeholder files and does not prove executability or launch."
+    ],
+    "evidence": [
+      {
+        "start_line": 67,
+        "end_line": 86,
+        "quote": "    let cases: [(&str, Bad); 6] = [\n        (\"which is not waiting\", |req| {\n            frame(Msg::Ack {\n                req: req + 1,\n                id: 0,\n                result: Ack::Ok,\n            })\n        }),\n        (\"with the wrong message\", |req| frame(Msg::Stopped { req, id: 1 })),\n        (\"malformed frame\", |_| vec![0, 0, 0, 0]),\n        (\"Ready twice\", |_| frame(READY)),\n        (\"only a host may send\", |req| frame(Msg::Go { req, id: 1 })),\n        (\"terminal ends\", |req| {\n            frame(Msg::Spawned {\n                req,\n                id: 1,\n                pid: 1,\n                pty_ends: [3, 3],\n            })\n        }),"
+      },
+      {
+        "start_line": 122,
+        "end_line": 143,
+        "quote": "    peer.send(&Msg::Processes {\n        req,\n        id: 2,\n        list: Vec::new(),\n    });\n    assert_io(lister.join().unwrap(), \"for tree 2 a request about tree 1\");\n    assert!(!sup.alive());\n\n    let (_sup, mut peer, spawned) = with_tree();\n    for _ in 0..2 {\n        peer.send(&Msg::Exited {\n            id: 1,\n            exit: Exit::Code(0),\n        });\n    }\n    // Answered by `die` whether the request goes out before or after the second exit is read.\n    assert_io(block(spawned.tree.processes()), \"the exit of tree 1 twice\");\n\n    let (sup, mut peer, _first) = with_tree();\n    let caller = std::thread::spawn(move || spawn_on(&sup, &spec(false)));\n    peer.spawned(1);\n    assert_io(caller.join().unwrap(), \"reused tree id 1\");"
+      },
+      {
+        "start_line": 155,
+        "end_line": 169,
+        "quote": "    assert_eq!(\n        pick(Some(\"/x/sup\".into()), &dirs).unwrap(),\n        std::path::PathBuf::from(\"/x/sup\")\n    );\n    assert_eq!(pick(None, &dirs).unwrap(), exe.join(EXE));\n    std::fs::write(module.join(EXE), b\"\").unwrap();\n    assert_eq!(\n        pick(Some(\"\".into()), &dirs).unwrap(),\n        module.join(EXE),\n        \"an empty variable is unset\"\n    );\n    for d in [&module, &exe] {\n        std::fs::remove_dir_all(d).unwrap();\n    }\n    assert_io(pick(None, &dirs), \"was not found\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/go.rs",
+    "git_blob_sha": "7116f6e23fa8dd15045b44a1337da0a07537d41b",
+    "source_sha256": "e58f501deb3fc8cbcd226f6f0efdf833ab91cc94fcc2867a6960b418be970af2",
+    "source_bytes": 3330,
+    "line_count": 105,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Verifies exactly one Unix PTY Go outcome and retry after pre-send admission refusal.",
+    "behavior": [
+      "Two callers share one exec-failure reply and later calls return the same NotFound; next frame must be Release, not another Go.",
+      "After 1024 resizes deny Go admission, draining replies through a marker permits a later Go and successful Ack."
+    ],
+    "contracts": [
+      "A refused unsent Go leaves the terminal root held."
+    ],
+    "dependencies": [
+      "client/hold.rs stores the handshake; tests/unix::pty_spawn supplies terminal handles."
+    ],
+    "failures_or_limits": [
+      "Uses synthetic supervisor replies, so exec behavior itself is outside these assertions."
+    ],
+    "evidence": [
+      {
+        "start_line": 44,
+        "end_line": 57,
+        "quote": "    for caller in [first, second] {\n        assert_eq!(caller.join().unwrap().unwrap_err().code(), ErrorCode::NotFound);\n    }\n    assert_eq!(\n        tree.go().unwrap_err().code(),\n        ErrorCode::NotFound,\n        \"a later call gets it too\"\n    );\n    drop(Arc::into_inner(tree));\n    assert!(\n        matches!(peer.recv(), Msg::Release { id: 1, .. }),\n        \"a second Go frame was sent\"\n    );\n    assert!(sup.alive());"
+      },
+      {
+        "start_line": 60,
+        "end_line": 68,
+        "quote": "/// A `Go` refused by admission was never sent: the root stays held, and a later `go` releases it.\n#[test]\nfn a_go_refused_by_admission_stays_held() {\n    let (sup, mut peer) = pair(BOUND);\n    let (spawned, _master) = pty_spawn(&sup, &mut peer, 1);\n    for _ in 0..ADMIT_NORMAL {\n        spawned.tree.resize(80, 24).unwrap();\n    }\n    assert_io(spawned.tree.go(), \"the limit is 1024\");"
+      },
+      {
+        "start_line": 94,
+        "end_line": 104,
+        "quote": "    marker.join().unwrap().unwrap();\n    let go = thread::spawn(move || spawned.tree.go());\n    let Msg::Go { req, id: 1 } = peer.recv() else {\n        panic!(\"the root was not held any more\")\n    };\n    peer.send(&Msg::Ack {\n        req,\n        id: 1,\n        result: Ack::Ok,\n    });\n    go.join().unwrap().unwrap();"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/identity.rs",
+    "git_blob_sha": "be113fedf9b3fe91a1cca39e215a80ce9d98a3d3",
+    "source_sha256": "c00804adc671797af318e4bab5fae53639b251d8b21b628e3f5e5e124e65a1cc",
+    "source_bytes": 7684,
+    "line_count": 189,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Challenges Unix supervisor termination identities using controlled stand-ins and surviving sentinels.",
+    "behavior": [
+      "Positive control requires a captured identity to SIGKILL its own child; after externally reaping it, a substituted sentinel PID must survive.",
+      "Missing pidfd/start time yields Abandoned and the generation error names abandonment.",
+      "An orphan that is not this host child must never arm termination; macOS additionally tests a failing exit watch with start-time fallback."
+    ],
+    "contracts": [
+      "PID substitution simulates reuse; it does not force actual kernel PID reuse."
+    ],
+    "dependencies": [
+      "client/keeper::Ident and Watch implement identity capture and kill."
+    ],
+    "failures_or_limits": [
+      "Unix process and signal tests require authorized execution elsewhere; none ran here."
+    ],
+    "evidence": [
+      {
+        "start_line": 44,
+        "end_line": 58,
+        "quote": "/// The supervisor exits and someone else reaps it; its number then names a sentinel. The kill must not\n/// signal anything, and the sentinel survives.\n#[test]\nfn an_identity_never_signals_a_reaped_and_reused_number() {\n    let mut sup = stand_in();\n    let mut sentinel = stand_in();\n    let mut ident = Ident::adopt(Prepared::new().unwrap(), sup.id());\n    // The external reaper: the supervisor dies and is reaped by someone other than its keeper.\n    sup.kill().unwrap();\n    sup.wait().unwrap();\n    ident.pid = pid(&sentinel); // simulated reuse: the old number now names the sentinel\n    assert_eq!(ident.kill(), Kill::Gone);\n    assert!(running(&mut sentinel), \"the sentinel was signalled\");\n    sentinel.kill().unwrap();\n    sentinel.wait().unwrap();"
+      },
+      {
+        "start_line": 85,
+        "end_line": 110,
+        "quote": "/// Where the identity cannot be checked (Linux without pidfd; macOS without a start time), nothing is\n/// signalled: the supervisor is abandoned, and the generation's error says so.\n#[test]\nfn an_unverifiable_supervisor_is_abandoned_and_named() {\n    let mut sup = stand_in();\n    #[cfg(target_os = \"linux\")]\n    let blind = Ident {\n        pid: pid(&sup),\n        pidfd: None,\n    };\n    #[cfg(not(target_os = \"linux\"))]\n    let blind = {\n        let mut ident = Ident::adopt(Prepared::new().unwrap(), sup.id());\n        ident.start = None;\n        ident\n    };\n    let watch = Watch::from(blind);\n    assert_eq!(watch.kill(), Kill::Abandoned);\n    assert!(running(&mut sup), \"an unverifiable process was signalled\");\n    let (host, mut peer) = UnixStream::pair().unwrap();\n    let mut ready = Vec::new();\n    omni_proto::encode(&READY, &mut ready).unwrap();\n    std::io::Write::write_all(&mut peer, &ready).unwrap();\n    let channel = Gen::start(rt(), 1, BOUND, move || Chan::new(host, Some(watch))).unwrap();\n    channel.die(\"the test declared it stuck\".into());\n    super::assert_io(Err::<(), _>(channel.gone()), \"it is abandoned\");"
+      },
+      {
+        "start_line": 172,
+        "end_line": 188,
+        "quote": "/// r3: an identity taken of a live process that is not our child is never armed (Linux: the pidfd fails\n/// the ppid check; macOS: no start time is recorded). The kill is refused and the sentinel survives.\n#[test]\nfn an_identity_of_a_process_that_is_not_our_child_is_never_armed() {\n    let sentinel = orphan();\n    assert!(alive(sentinel), \"the sentinel must be running before the check\");\n    let ident = Ident::adopt(Prepared::new().unwrap(), u32::try_from(sentinel).unwrap());\n    let kill = ident.kill();\n    let survived = alive(sentinel);\n    // SAFETY: ends our own sentinel (its new parent reaps it).\n    unsafe { libc::kill(sentinel, libc::SIGKILL) };\n    assert_eq!(\n        kill,\n        Kill::Abandoned,\n        \"the kill was armed for a process that is not our child\"\n    );\n    assert!(survived, \"the sentinel was signalled\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/ledger.rs",
+    "git_blob_sha": "6d833c8b89e95eb67fc9dd3925e66fd6ca58661e",
+    "source_sha256": "050f3ee5eed754e937b2172cb449b87fe28f72d393eb36959aaaaa27e9abdaf0",
+    "source_bytes": 11199,
+    "line_count": 241,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Runs an isolated resource ledger for Unix startup failures and stuck-supervisor cleanup.",
+    "behavior": [
+      "Ignored inner ledger is launched explicitly by an outer test with one test thread; outer asserts process success and one passed test.",
+      "Impossible thread stack and constrained descriptor limit must prevent supervisor creation; repeated oversized, refused and disconnected spawns must restore descriptor counts.",
+      "A SIGSTOP stand-in must receive its cooperative window, then be killed by identity and reaped; thread and descriptor totals must return to baseline."
+    ],
+    "contracts": [
+      "Incomplete observations fail at LIMIT; macOS also injects a broken exit-watch descriptor."
+    ],
+    "dependencies": [
+      "client/unix::start and keeper precreation ordering are exercised."
+    ],
+    "failures_or_limits": [
+      "Resource counting requires process isolation and platform facilities; merely reading this file does not establish leak freedom."
+    ],
+    "evidence": [
+      {
+        "start_line": 70,
+        "end_line": 85,
+        "quote": "    // Finding 5: no reaper thread, no supervisor. A failing thread builder (an impossible stack) is the\n    // injected creation failure; `sleep` would be started if the order were wrong.\n    let impossible = thread::Builder::new().stack_size(1 << 50);\n    let started = start(rt, 1, BOUND, Path::new(\"/bin/sleep\"), impossible);\n    assert_io(started, \"its reaper or exit watch failed\");\n    assert!(!has_children(), \"a supervisor was started without its reaper\");\n    no_start_without_descriptors();\n\n    descriptors();\n    stuck_supervisor_is_killed(|| Prepared::new().unwrap());\n    // r2 finding 2 (macOS): an exit watch whose every kevent fails is \"unknown\", never \"exited\": the\n    // suspended supervisor is still ended (by its start time) and every resource comes back.\n    #[cfg(not(target_os = \"linux\"))]\n    stuck_supervisor_is_killed(|| Prepared {\n        exits: OwnedFd::from(std::io::pipe().unwrap().0),\n    });"
+      },
+      {
+        "start_line": 187,
+        "end_line": 198,
+        "quote": "    let t0 = Instant::now();\n    sup.die(\"the test declared it stuck\".into());\n    let gone = || {\n        // SAFETY: signal 0 sends nothing; ESRCH means no process, not even a zombie, has the pid any more.\n        let r = unsafe { libc::kill(pid, 0) };\n        r == -1 && std::io::Error::last_os_error().raw_os_error() == Some(libc::ESRCH)\n    };\n    eventually(\"the stuck supervisor was neither killed nor reaped\", gone);\n    assert!(t0.elapsed() >= window, \"killed before its cooperative window\");\n    eventually(\"the reaper thread is still alive\", || threads() == base_threads);\n    drop((sup, peer));\n    eventually(\"a descriptor of the dead generation leaked\", || open_fds() == base_fds);"
+      },
+      {
+        "start_line": 231,
+        "end_line": 240,
+        "quote": "#[test]\nfn every_error_path_returns_fds_threads_and_processes() {\n    let ledger = \"client::tests::ledger::ledger\";\n    let out = Command::new(std::env::current_exe().unwrap())\n        .args([ledger, \"--exact\", \"--ignored\", \"--test-threads=1\"])\n        .output()\n        .unwrap();\n    let stdout = String::from_utf8_lossy(&out.stdout);\n    assert!(out.status.success(), \"{stdout}{}\", String::from_utf8_lossy(&out.stderr));\n    assert!(stdout.contains(\"1 passed\"), \"the ledger did not run: {stdout}\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/lifetime.rs",
+    "git_blob_sha": "f1176ec3eb6f06b3626766319f7843c161af65b3",
+    "source_sha256": "d6a43bb40e5427c3e04a57145d3403d4fe4a96183d1ee674ddd512dd2422adba",
+    "source_bytes": 7035,
+    "line_count": 200,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Checks generation lifetime under unknown exits, stalled peers and concurrent waiters.",
+    "behavior": [
+      "Sends 100000 unknown exits and requires a subsequent List to complete while generation remains alive.",
+      "Silent Spawn expires at its bound and closes the channel; six Stop requests and three exit waiters must receive the correct shared tree facts.",
+      "Ten operations fail on peer death; next registry lookup is generation 2 while the old Tree still fails against generation 1."
+    ],
+    "contracts": [
+      "Gone trees answer stop and inventory locally without a further frame."
+    ],
+    "dependencies": [
+      "client/channel.rs and client/start::Registry are exercised through synthetic protocol peers."
+    ],
+    "failures_or_limits": [
+      "Tests verify host state transitions; they do not execute actual supervisor shutdown."
+    ],
+    "evidence": [
+      {
+        "start_line": 120,
+        "end_line": 127,
+        "quote": "    block(tree.stop(Duration::ZERO)).expect(\"gone: at once\");\n    assert!(block(tree.processes()).unwrap().is_empty());\n    tree.stop_detached(Duration::ZERO);\n    drop(Arc::into_inner(tree));\n    assert!(\n        matches!(peer.recv(), Msg::Release { id: 1, .. }),\n        \"no frame may precede the Release\"\n    );"
+      },
+      {
+        "start_line": 179,
+        "end_line": 199,
+        "quote": "    let mut all: Vec<_> = spawners.into_iter().map(|t| t.join().unwrap()).collect();\n    all.extend(results);\n    assert_eq!(all.len(), 10);\n    for r in all {\n        assert_io(r, \"it closed the channel\");\n    }\n    let mut second = None;\n    let next = registry\n        .get(|num| {\n            let (sup, peer) = connect(num, BOUND, &READY);\n            second = Some(peer);\n            sup\n        })\n        .unwrap();\n    assert_eq!((next.num, Arc::ptr_eq(&sup, &next)), (2, false), \"a new generation\");\n    let mut peer = second.take().unwrap();\n    assert_io(block(tree.stop(Duration::ZERO)), \"generation 1\");\n    assert_io(tree.resize(80, 24), \"generation 1\");\n    let caller = std::thread::spawn(move || spawn_on(&next, &spec(false)));\n    peer.spawned(7); // the first frame of generation 2 is this Spawn: nothing of the old tree reached it\n    assert_eq!(caller.join().unwrap().unwrap().tree.id, 7);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/lookup.rs",
+    "git_blob_sha": "9e6a9c0c652feb940deb1573679129ece6008a46",
+    "source_sha256": "be493983913ebce1dce8bf22f7dac77e6c6a7d09788721aec8948b00641147a8",
+    "source_bytes": 3337,
+    "line_count": 79,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Pins configured supervisor path, Unix trust checks and symlink candidate lookup.",
+    "behavior": [
+      "Configuration may change before first startup, same-path retry remains valid after start, and a different late or empty path is InvalidArgument without replacing state.",
+      "Unix candidate tests accept an owned directory and binary at 0755 (owner write allowed), reject modes granting group or other write access (binary 0777; directories 0777, 0775 and 01777), and reject missing directories.",
+      "Symlinked executable lookup yields both apparent and canonical directories without duplicating a plain executable directory."
+    ],
+    "contracts": [
+      "Tests use a private Mutex slot so global process configuration is not changed."
+    ],
+    "dependencies": [
+      "client/start::{configure_in,trusted,exe_dirs} implement the behaviors."
+    ],
+    "failures_or_limits": [
+      "No Windows ACL trust test exists here; only configuration assertions are cross-platform."
+    ],
+    "evidence": [
+      {
+        "start_line": 20,
+        "end_line": 32,
+        "quote": "fn a_configured_supervisor_is_set_before_the_start_and_never_changed_after_it() {\n    let slot = Mutex::new(None);\n    let (a, b) = (PathBuf::from(\"/opt/a/sup\"), PathBuf::from(\"/opt/b/sup\"));\n    configure_in(&slot, a.clone(), false).unwrap();\n    configure_in(&slot, b.clone(), false).unwrap(); // not started yet: the last one wins\n    assert_eq!(slot.lock().unwrap().clone(), Some(b.clone()));\n    configure_in(&slot, b.clone(), true).unwrap(); // the same path again after the start is fine\n    let late = configure_in(&slot, a, true).unwrap_err();\n    assert_eq!(late.code(), ErrorCode::InvalidArgument, \"{late}\");\n    assert!(late.to_string().contains(\"before the first run() or spawn()\"), \"{late}\");\n    assert_eq!(slot.lock().unwrap().clone(), Some(b));\n    let empty = configure_in(&slot, PathBuf::new(), false).unwrap_err();\n    assert_eq!(empty.code(), ErrorCode::InvalidArgument, \"{empty}\");"
+      },
+      {
+        "start_line": 43,
+        "end_line": 54,
+        "quote": "    assert!(trusted(&d), \"an own directory, 0755, with no supervisor in it\");\n    std::fs::write(d.join(EXE), b\"\").unwrap();\n    set(&d.join(EXE), 0o755);\n    assert!(trusted(&d), \"an own directory and binary, both 0755\");\n    set(&d.join(EXE), 0o777);\n    assert!(!trusted(&d), \"a binary anybody can overwrite\");\n    set(&d.join(EXE), 0o755);\n    for mode in [0o777, 0o775, 0o1777] {\n        set(&d, mode);\n        assert!(!trusted(&d), \"a directory with mode {mode:o}\");\n    }\n    assert!(!trusted(&d.join(\"missing\")), \"a directory that does not exist\");"
+      },
+      {
+        "start_line": 66,
+        "end_line": 75,
+        "quote": "    let [raw, canonical] = exe_dirs(Some(link.join(\"app\")));\n    assert_eq!(raw, Some(link.clone()));\n    assert_eq!(canonical, Some(std::fs::canonicalize(&real).unwrap()));\n    // A plain file: one candidate, not the same directory twice.\n    let plain = std::fs::canonicalize(&real).unwrap().join(\"app\");\n    assert_eq!(\n        exe_dirs(Some(plain)),\n        [Some(std::fs::canonicalize(&real).unwrap()), None]\n    );\n    assert_eq!(exe_dirs(None), [None, None]);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

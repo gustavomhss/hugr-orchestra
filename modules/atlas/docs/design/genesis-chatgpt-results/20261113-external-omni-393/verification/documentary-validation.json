@@ -20,9 +20,9 @@
       "entries": 5
     },
     {
-      "path": "authors/core/records-03.json",
-      "sha256": "105e2b697e6670d5f211b0be98e9a9ae56c5f7524217b022a95fb7539b3283ab",
-      "bytes": 26761,
+      "path": "authors/core/records-03.v2.json",
+      "sha256": "8ab72d5a47eeac42eaca7bfc0b2a43af3d4a466c07f90fd35c71048f299f6b4e",
+      "bytes": 26992,
       "entries": 8
     },
     {
@@ -360,7 +360,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 0,
       "owner": "core",
       "git_blob_sha": "fed89a565b9cd50ce8c5136106c1a256b5fec733",
@@ -371,7 +371,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/deadlines.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 1,
       "owner": "core",
       "git_blob_sha": "c6b797697729f7e99f953bf2b63fe6b50151854a",
@@ -382,7 +382,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/frames.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 2,
       "owner": "core",
       "git_blob_sha": "af507947c919bdc62125fb5cc6c24741ed066af3",
@@ -393,7 +393,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/go.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 3,
       "owner": "core",
       "git_blob_sha": "7116f6e23fa8dd15045b44a1337da0a07537d41b",
@@ -404,7 +404,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/identity.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 4,
       "owner": "core",
       "git_blob_sha": "be113fedf9b3fe91a1cca39e215a80ce9d98a3d3",
@@ -415,7 +415,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/ledger.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 5,
       "owner": "core",
       "git_blob_sha": "6d833c8b89e95eb67fc9dd3925e66fd6ca58661e",
@@ -426,7 +426,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/lifetime.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 6,
       "owner": "core",
       "git_blob_sha": "f1176ec3eb6f06b3626766319f7843c161af65b3",
@@ -437,7 +437,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/lookup.rs",
-      "record_file": "authors/core/records-03.json",
+      "record_file": "authors/core/records-03.v2.json",
       "index": 7,
       "owner": "core",
       "git_blob_sha": "9e6a9c0c652feb940deb1573679129ece6008a46",
@@ -4561,6 +4561,5 @@
       "evidence_excerpts": 5
     }
   ],
-  "scope": "Byte/source binding, excerpt accuracy, schema and exact population only; not semantic or runtime proof.",
-  "line_numbering": "LF-delimited; CRLF normalized only for displayed quotes; Unicode separators inside a line are retained."
+  "scope": "Byte/source binding, excerpt accuracy, schema and exact population only; not semantic or runtime proof."
 }

@@ -1,0 +1,215 @@
+{
+  "source": "records-03.json",
+  "source_sha256": "105e2b697e6670d5f211b0be98e9a9ae56c5f7524217b022a95fb7539b3283ab",
+  "source_bytes": 26761,
+  "replacement": "records-03.v2.json",
+  "replacement_sha256": "8ab72d5a47eeac42eaca7bfc0b2a43af3d4a466c07f90fd35c71048f299f6b4e",
+  "replacement_bytes": 26992,
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "review_request": "Parent-delivered mandatory C03 J2 findings F1 and F2. Original author correction only; no acceptance review and no private evaluation material accessed.",
+  "changes": [
+    {
+      "finding": "C03 F1: total Spawn operations versus concurrent blocking callers",
+      "record_index": 0,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+      "field": "behavior[1]",
+      "before": "Floods 20 trees with 1000 Lists plus 100 concurrent spawns, reverses List replies, and asserts correct per-caller identity.",
+      "after": "Floods 20 trees with 1000 Lists while four concurrent threads each make 25 sequential blocking spawn_on calls (100 Spawn operations total during the flood); reverses List replies and asserts correct per-caller identity.",
+      "reason": "The flood configures four threads and 25 calls per thread. Each thread sequentially collects synchronous spawn_on results; spawn_on invokes Gen::call, which waits with recv_timeout. The total is 100 additional Spawn operations during the flood, not an assertion of 100 simultaneously pending Spawn requests.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fed89a565b9cd50ce8c5136106c1a256b5fec733",
+          "source_sha256": "802334de8e41783596f092fbf6dcbc6b7592b8f91b1714e6122a78c81b95e88b",
+          "source_bytes": 9246,
+          "line_count": 256,
+          "start_line": 52,
+          "end_line": 55,
+          "quote": "    const TREES: u64 = 20;\n    const LISTS_PER_TREE: u64 = 50;\n    const SPAWNS_PER_THREAD: u64 = 25;\n    const THREADS: u64 = 4;"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fed89a565b9cd50ce8c5136106c1a256b5fec733",
+          "source_sha256": "802334de8e41783596f092fbf6dcbc6b7592b8f91b1714e6122a78c81b95e88b",
+          "source_bytes": 9246,
+          "line_count": 256,
+          "start_line": 68,
+          "end_line": 83,
+          "quote": "    let server = std::thread::spawn(move || {\n        let (mut lists, mut next_id) = (Vec::new(), 1000);\n        let total = TREES * LISTS_PER_TREE + THREADS * SPAWNS_PER_THREAD;\n        let mut seen = 0;\n        while seen < total {\n            match peer.recv() {\n                Msg::List { req, id } => lists.push((req, id)),\n                Msg::Spawn(s) => {\n                    next_id += 1;\n                    let pid = u32::try_from(next_id).unwrap() + 1000;\n                    peer.send(&Msg::Spawned {\n                        req: s.req,\n                        id: next_id,\n                        pid,\n                        pty_ends: [0, 0],\n                    });"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fed89a565b9cd50ce8c5136106c1a256b5fec733",
+          "source_sha256": "802334de8e41783596f092fbf6dcbc6b7592b8f91b1714e6122a78c81b95e88b",
+          "source_bytes": 9246,
+          "line_count": 256,
+          "start_line": 97,
+          "end_line": 107,
+          "quote": "        for (req, id) in lists.into_iter().rev() {\n            let pid = u32::try_from(id).unwrap();\n            peer.send(&Msg::Processes {\n                req,\n                id,\n                list: vec![ProcEntry {\n                    pid,\n                    ppid: None,\n                    name: None,\n                }],\n            });"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fed89a565b9cd50ce8c5136106c1a256b5fec733",
+          "source_sha256": "802334de8e41783596f092fbf6dcbc6b7592b8f91b1714e6122a78c81b95e88b",
+          "source_bytes": 9246,
+          "line_count": 256,
+          "start_line": 111,
+          "end_line": 151,
+          "quote": "    let spawners: Vec<_> = (0..THREADS)\n        .map(|_| {\n            let sup = sup.clone();\n            std::thread::spawn(move || {\n                (0..SPAWNS_PER_THREAD)\n                    .map(|_| {\n                        let s = spawn_on(&sup, &spec(false)).unwrap();\n                        assert_eq!(u64::from(s.pid), s.tree.id + 1000, \"a Spawned reached the wrong caller\");\n                        s.tree.id\n                    })\n                    .collect::<Vec<_>>()\n            })\n        })\n        .collect();\n    let answered = block(async {\n        let mut set = JoinSet::new();\n        for tree in &trees {\n            for _ in 0..LISTS_PER_TREE {\n                let tree = tree.clone();\n                set.spawn(async move { (tree.id, tree.processes().await) });\n            }\n        }\n        let mut n = 0;\n        while let Some(done) = set.join_next().await {\n            let (id, list) = done.unwrap();\n            assert_eq!(\n                list.unwrap()[0].pid,\n                u32::try_from(id).unwrap(),\n                \"a reply reached another tree's waiter\"\n            );\n            n += 1;\n        }\n        n\n    });\n    assert_eq!(answered, TREES * LISTS_PER_TREE);\n    let ids: Vec<u64> = spawners.into_iter().flat_map(|t| t.join().unwrap()).collect();\n    assert_eq!(\n        ids.iter().collect::<HashSet<_>>().len(),\n        ids.len(),\n        \"two callers got the same tree\"\n    );"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "start_line": 142,
+          "end_line": 152,
+          "quote": "    let answer = sup\n        .call(Want::Spawn { pty: pty.is_some() }, 0, frame, fds)\n        .inspect_err(|_| {\n            // An error with the generation alive means nothing was sent (too big, admission): take the ends back.\n            if sup.alive() {\n                sup.chan().reclaim(handles);\n            }\n        });\n    let program = spec.program.display().to_string();\n    let (id, pid, ends, life) = match answer? {\n        Answer::Spawned { id, pid, ends, life } => (id, pid, ends, life),"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/channel.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+          "source_sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
+          "source_bytes": 13324,
+          "line_count": 386,
+          "start_line": 233,
+          "end_line": 247,
+          "quote": "    /// A blocking round trip, bounded by `bound` from when the request is written or queued: past it the\n    /// supervisor counts as stuck and the generation dies.\n    pub(super) fn call(&self, want: Want, id: u64, msg: impl FnOnce(u64) -> Msg, fds: Vec<Pipe>) -> Reply {\n        let (tx, rx) = mpsc::sync_channel(1);\n        self.request(want, id, Class::Normal, Waiter::Sync(tx), msg, fds)?;\n        match rx.recv_timeout(self.bound) {\n            Ok(reply) => reply,\n            Err(mpsc::RecvTimeoutError::Timeout) => {\n                let ms = self.bound.as_millis();\n                self.die(format!(\"it did not answer a {} request within {ms} ms\", want.name()));\n                Err(self.gone())\n            }\n            Err(mpsc::RecvTimeoutError::Disconnected) => Err(self.gone()),\n        }\n    }"
+        }
+      ]
+    },
+    {
+      "finding": "C03 F2: group/other write access versus owner write permission",
+      "record_index": 7,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/lookup.rs",
+      "field": "behavior[1]",
+      "before": "Unix candidate tests reject writable binary/directory modes and missing directories.",
+      "after": "Unix candidate tests accept an owned directory and binary at 0755 (owner write allowed), reject modes granting group or other write access (binary 0777; directories 0777, 0775 and 01777), and reject missing directories.",
+      "reason": "The test accepts an owned directory and binary at 0755, rejects a 0777 binary and directory modes 0777/0775/01777, and still rejects a missing directory. trusted checks permission mask 0o022, which targets group and other write bits, not owner write.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/lookup.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/lookup.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9e6a9c0c652feb940deb1573679129ece6008a46",
+          "source_sha256": "be493983913ebce1dce8bf22f7dac77e6c6a7d09788721aec8948b00641147a8",
+          "source_bytes": 3337,
+          "line_count": 79,
+          "start_line": 40,
+          "end_line": 54,
+          "quote": "    let set = |p: &PathBuf, mode: u32| std::fs::set_permissions(p, std::fs::Permissions::from_mode(mode)).unwrap();\n    let d = dir(\"trust\");\n    set(&d, 0o755);\n    assert!(trusted(&d), \"an own directory, 0755, with no supervisor in it\");\n    std::fs::write(d.join(EXE), b\"\").unwrap();\n    set(&d.join(EXE), 0o755);\n    assert!(trusted(&d), \"an own directory and binary, both 0755\");\n    set(&d.join(EXE), 0o777);\n    assert!(!trusted(&d), \"a binary anybody can overwrite\");\n    set(&d.join(EXE), 0o755);\n    for mode in [0o777, 0o775, 0o1777] {\n        set(&d, mode);\n        assert!(!trusted(&d), \"a directory with mode {mode:o}\");\n    }\n    assert!(!trusted(&d.join(\"missing\")), \"a directory that does not exist\");"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "start_line": 264,
+          "end_line": 277,
+          "quote": "/// supervisor. Trusted: the directory, and the supervisor in it if present, belong to this user or to root and are\n/// writable by neither group nor others. Root counts as an owner because a system-wide install (`sudo npm i -g`) is\n/// owned by root, and only root could plant a binary there.\n#[cfg(unix)]\npub(super) fn trusted(dir: &Path) -> bool {\n    use std::os::unix::fs::MetadataExt;\n    // SAFETY: geteuid has no preconditions and cannot fail.\n    let me = unsafe { libc::geteuid() };\n    let safe = |p: &Path| match std::fs::metadata(p) {\n        Ok(m) => (m.uid() == me || m.uid() == 0) && m.mode() & 0o022 == 0,\n        Err(e) => e.kind() == std::io::ErrorKind::NotFound && p != dir,\n    };\n    safe(dir) && safe(&dir.join(EXE))\n}"
+        }
+      ]
+    }
+  ],
+  "additional_baseline_inputs_by_record": [
+    {
+      "record_index": 0,
+      "record_path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "used_for": "spawn_on lines 142–152 calls Gen::call and consumes the reply before returning; supports the blocking sequential call characterization."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/channel.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+          "source_sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
+          "source_bytes": 13324,
+          "line_count": 386,
+          "used_for": "Gen::call lines 233–247 is a blocking round trip and waits through recv_timeout; supports the blocking characterization of each per-thread spawn_on call."
+        }
+      ]
+    },
+    {
+      "record_index": 7,
+      "record_path": "native/omni/crates/hugr-omni/src/client/tests/lookup.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "used_for": "trusted lines 264–277 checks mode mask 0o022 and treats a missing directory differently from an absent candidate binary; supports group/other write scope and missing-directory rejection."
+        }
+      ]
+    }
+  ],
+  "cross_reference_check": {
+    "scope": "Searched CORE Markdown/JSON outputs for the two disputed claims and closely related wording; read l2-notes.md in full.",
+    "active_record_files_checked": [
+      "records-01.v2.json",
+      "records-02.v3.json",
+      "records-03.json",
+      "records-04.json",
+      "records-05.json",
+      "records-06.json",
+      "records-07.json",
+      "records-08.json",
+      "records-09.v2.json",
+      "records-10.json",
+      "records-11.v2.json",
+      "records-12.json",
+      "records-13.json",
+      "records-14.json",
+      "records-15.json",
+      "records-16.json",
+      "records-17.json",
+      "records-18.json"
+    ],
+    "repeated_disputed_claims_outside_original_batch": [],
+    "l2_drafts_modified": [],
+    "l2_notes_sha256_preserved": "71b3dd5e454625a8cbe79141b1b8d91bce82ebf4a460f337b2555fbf2aaba6c8",
+    "l2_status": "Candidate synopsis remains unaccepted; no L2 acceptance review performed."
+  },
+  "original_preserved": true,
+  "unchanged_record_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "strict_change_scope": "Only behavior[1] in indices 0 and 7 changed. All other record fields, including existing evidence arrays, are unchanged; correction evidence is carried in this delta.",
+  "delivery_before_sha256": "f69ffe6b484716efa97066d5c36fdebd144cf7a8d9b5ba1f2d8379436da7359b",
+  "delivery_after_sha256": "991521815e0583a9cb5f77a5a75ca1a96c45d8773a2f22670a6824136b509b60",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; this author correction does not declare acceptance."
+}

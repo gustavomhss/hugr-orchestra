@@ -1,0 +1,66 @@
+{
+  "schema": "omni-public-interim-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C03",
+  "artifact": "authors/core/records-03.json",
+  "public_artifact_at_review": "bodies/core/records-03.json",
+  "body_sha256": "105e2b697e6670d5f211b0be98e9a9ae56c5f7524217b022a95fb7539b3283ab",
+  "body_bytes": 26761,
+  "covered_records": 8,
+  "population": 393,
+  "judges": {
+    "J1": {
+      "identity": "/root/omni_review_courier/omni_j1",
+      "per_record_verdicts": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "private_opinion_sha256": "4e37a96e1b891cb88e6e05970dcd78537b8f2329506ee6fd676849e86bf736b0"
+    },
+    "J2": {
+      "identity": "/root/omni_review_courier/omni_j2",
+      "per_record_verdicts": [
+        "FIX-FIRST",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "FIX-FIRST"
+      ],
+      "private_opinion_sha256": "8135cfd334ebf462c6c36c873486a7daa42623c80073ad49c6b73da3c32b399f"
+    }
+  },
+  "status": "FIX_FIRST_AUTHOR_CORRECTION_PENDING",
+  "mandatory_findings": [
+    {
+      "id": "C03-F1",
+      "judge": "J2",
+      "index": 0,
+      "field": "behavior[1]",
+      "finding": "Distinguish 100 total spawn operations from four concurrent threads, each with 25 sequential blocking calls. J1 classified the precision suggestion as optional."
+    },
+    {
+      "id": "C03-F2",
+      "judge": "J2",
+      "index": 7,
+      "field": "behavior[1]",
+      "finding": "Specify group/other write permissions; owner-writable 0755 is accepted. Retain missing-directory rejection."
+    }
+  ],
+  "missing_evidence": [],
+  "observed_transport_errata": [],
+  "limitations": [
+    "The complete body is not accepted by both; six per-record PASS intersections remain within the unreleased body.",
+    "Both judges must reassess corrected bytes; no author/source quote discrepancy was identified.",
+    "Documentary source review only; no current product test, runtime import or layer release.",
+    "Private-opinion digest covers retained UTF-8 text with final LF; no authenticated host-envelope or transport claim."
+  ]
+}

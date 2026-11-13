@@ -1,0 +1,112 @@
+{
+  "schema": "omni-public-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C03v2",
+  "layer": "L1",
+  "judge_identity": "/root/omni_review_courier/omni_j2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact": {
+    "author_path": "authors/core/records-03.v2.json",
+    "public_path": "bodies/core/records-03.v2.json",
+    "sha256": "8ab72d5a47eeac42eaca7bfc0b2a43af3d4a466c07f90fd35c71048f299f6b4e",
+    "bytes": 26992
+  },
+  "verdict": "PASS",
+  "covered_records": 8,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/deadlines.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/frames.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/go.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/identity.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/ledger.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 6,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/lifetime.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 7,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/lookup.rs",
+      "verdict": "PASS"
+    }
+  ],
+  "criteria": {
+    "C1": {
+      "label": "Every covered path has an actual read-based, file-specific useful disposition",
+      "verdict": "PASS"
+    },
+    "C2": {
+      "label": "Assertions distinguish implementation, documentation/declaration, inference and gaps",
+      "verdict": "PASS"
+    },
+    "C3": {
+      "label": "Source identities, paths and exact quote evidence support claims",
+      "verdict": "PASS"
+    },
+    "C4": {
+      "label": "Contracts, failures, relations and maintenance implications are useful at L1",
+      "verdict": "PASS"
+    },
+    "C5": {
+      "label": "Test source, old reviews and docs are never current execution",
+      "verdict": "PASS"
+    },
+    "C6": {
+      "label": "Ownership/exclusions and authorized external scope preserved",
+      "verdict": "PASS"
+    },
+    "C7": {
+      "label": "No secrets/private evaluation/session material in candidate",
+      "verdict": "PASS"
+    }
+  },
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "private_opinion_sha256": "da637aa2aa267415179ae699bbf26de0a7f188539e42fa0bb63efdbdb6b37f5e",
+  "private_opinion_digest_scope": "SHA256 of the privately retained UTF-8 opinion text with final LF; not a host-message envelope or authenticated transport receipt",
+  "transport_note": "Both reviewers assessed complete replacement objects 0 and 7 together with the exact unchanged objects 1–6 previously read in C03. The privately retained literal-message copies reconstruct the complete current body byte for byte. No transport or source discrepancy remained in either final opinion. These manually preserved argument copies are not an authenticated host-message export.",
+  "limitations": [
+    "Documentary semantic review only; judge used no tools or execution.",
+    "Acceptance covers eight L1 records only and does not release complete L1 or later layers.",
+    "No runtime-import binding, platform test result, release or global integration acceptance is established.",
+    "Original private exchanges and reserved evaluation material are withheld; no public reproducibility of those withheld materials is claimed."
+  ],
+  "resolved_findings": [
+    {
+      "id": "C03-F1",
+      "record_index": 0,
+      "resolution": "Describes 100 total spawn operations across four concurrent threads, each making 25 sequential blocking calls. J2 mandatory finding and J1 optional precision note resolved."
+    },
+    {
+      "id": "C03-F2",
+      "record_index": 7,
+      "resolution": "Distinguishes permitted owner write access from tested group/other-write rejection and retains missing-directory rejection."
+    }
+  ]
+}

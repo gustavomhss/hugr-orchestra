@@ -1,0 +1,340 @@
+{
+  "schema": "omni-shared-runtime-artifact-verification/v1",
+  "verified_at": "2026-11-13T16:29:02.305469+00:00",
+  "origin": "GitHub MCP download_workflow_artifact, then local ZIP/JSON/hash verification; no shared tests replayed locally",
+  "run_id": 43077975153,
+  "job_id": 130722742703,
+  "artifact_id": 13883635728,
+  "artifact_bytes": 431413,
+  "artifact_sha256": "cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd",
+  "runtime_candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "tests": {
+    "numTotalTests": 220,
+    "numPassedTests": 220,
+    "numFailedTests": 0,
+    "json_report_sha256": "8b064f56547c555e60cf2138f83a3ee0bb59236ca2fd26c7e38b241d10ef0f0f",
+    "assertions_individually_verified": 220,
+    "test_result_files": 23
+  },
+  "mutation_controls": [
+    {
+      "probe": "update-affected-order",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-24 an unchanged prerequisite cannot delay lexicographic selection among affected artifacts"
+      ],
+      "probe_report_sha256": "f6915eb6d6e465a8bcb4ea7d924aae7e4adf89e4ff8bf6c01419612bbd6c0ad6",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "update-input",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+      ],
+      "probe_report_sha256": "1121c118f7c9bab9166a4928c40b8459951921fda6b79564321ed83b41cc4a3e",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "update-dependency",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+      ],
+      "probe_report_sha256": "6f709c974d9b08d8d1c47ccd81cbfdfe2047c1f8c1522b6c4ddbe4eab687cedd",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "update-frontier",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite"
+      ],
+      "probe_report_sha256": "457bee0c58850ab3a288774dfbc5d31d377454be50b81da9baaeeae1be23dca0",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "update-unavailable",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist"
+      ],
+      "probe_report_sha256": "3b3a5e78ab9d6b14b62cfcc231cf621d46e820e503f1fdf8a007e3f381cdb536",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "need-root",
+      "exitCode": 1,
+      "namedFailures": [
+        "ownership accepted closure reader RP-1 refuses a need root bound to an artifact declaring another need"
+      ],
+      "probe_report_sha256": "31e231c2296a47863190132946b36823871ed714145ff7750844214381b4b4b9",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "current-input",
+      "exitCode": 1,
+      "namedFailures": [
+        "ownership accepted closure reader IFIT-4 holds a changed required source, never falls back to a prior accepted body"
+      ],
+      "probe_report_sha256": "8abcc38a18765efc6cb5c2fdaf9384914aa8fb920ac18c5d58e52944e3dd237e",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "composed-ratify",
+      "exitCode": 1,
+      "namedFailures": [
+        "KNOW-18 — the fast path does not apply to a write the door derived as `promoted` IFIT-2 a composed ownership publication also requires ratification without inventing contention"
+      ],
+      "probe_report_sha256": "c3df6878f84e538a3e7f96914303021480d359c063ed1688a8a73a2ff71389e6",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "worker-ast",
+      "exitCode": 1,
+      "namedFailures": [
+        "S26 — the symbol arm is REACHED through the proposer pool, and arm FILE is untouched THE GUARD: every `::` site is visited and seeded when the run goes through worker threads"
+      ],
+      "probe_report_sha256": "4c57b830a1914556dd14acceadc51bd3daf6ad14d499e67636a79dedc9257e1c",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "observer-error-as-absent",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 host observer HO-04 read errors never become absence"
+      ],
+      "probe_report_sha256": "5367fd3b3552adaf7192df13968a75a65cf338c53a17111adca08e970060a26a",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "observer-members-index-only",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 host observer HO-08 unstaged deletion and eligible recreation change members"
+      ],
+      "probe_report_sha256": "8d2b7ab321ff22c0c5bf1ffbc173f7ccc383d05bf3e0ed9ae63f3edb148e4390",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "observer-accept-partial-git",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 host observer HO-10 incomplete Git enumeration is unavailable"
+      ],
+      "probe_report_sha256": "f6ad2e874fea73525f783cc6cc4300fd150adee6eb8fc8a9608297139b9b1277",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-every-affected",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-08 equal result renews receipt and stops downstream calls"
+      ],
+      "probe_report_sha256": "313aa71232213f6669114a18dab9c6c996ec87231f8e0ad1ae520f82f49eceb7",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-return-old-result",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure"
+      ],
+      "probe_report_sha256": "2f445296bc4ddeb34d2e540266ee3a9bd8e3d08903f6b20ea3e1cbc5564e33f6",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-body-only-stop",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-12 full result identity controls propagation"
+      ],
+      "probe_report_sha256": "7b9b8d95ad101c15a0f679a2075fc09dc4fb59018abf1644ae545526d127b20a",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-ignore-direct-child-change",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-10 parent equality cannot hide a direct child change"
+      ],
+      "probe_report_sha256": "c2b3bdc8111c205e3bd539c66ca7811bde813aee1fe4f1d3fcc5a39e64f0ae5b",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-omit-input",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-14 an omitted declared input prevents successful rebuild"
+      ],
+      "probe_report_sha256": "143c1ce84551add8ff44f31881b1c611d7f0ccf22d239600e4c7688cfe2b86a3",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-omit-required-edge",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-15 an omitted required edge prevents successful rebuild"
+      ],
+      "probe_report_sha256": "9fa70de5ef7ad3d434dd0612e06564c06f58b5e197f3dbce2b287ca8514260b5",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-accept-stale-review",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-13 rejected or unbound revalidation cannot renew a receipt"
+      ],
+      "probe_report_sha256": "79d98a4322844c61c6b506452e511db862886a14a501e71bc51e5d244540cf2b",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-skip-preflight",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 concurrency TC-01 drift before first dispatch invalidates the plan"
+      ],
+      "probe_report_sha256": "c281548279cc96dc161c4dafbd5e514462416f3a406edffa9d8d918a2cc3c491",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-skip-final-sweep",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 concurrency TC-03 drift in a reused artifact fails the final sweep"
+      ],
+      "probe_report_sha256": "98bcdcbca2c4de4a7263a1f87624cc462db3d5229b6dcfe22e65d8dd41548f71",
+      "named_failures_verified_in_report": true
+    },
+    {
+      "probe": "rebuild-read-live-path",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.2 concurrency TC-05 ABA cannot change the bytes consumed by the recipe"
+      ],
+      "probe_report_sha256": "b75d1f212891f784e4f5192e57fa78ddfc1a4c66bae7a443fa0a652e7171000a",
+      "named_failures_verified_in_report": true
+    }
+  ],
+  "generated_parity": [
+    {
+      "path": "modules/atlas/boundary/src/generated/context.d.ts",
+      "bytes": 2463,
+      "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.js",
+      "bytes": 22119,
+      "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.d.ts",
+      "bytes": 4454,
+      "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.js",
+      "bytes": 32016,
+      "sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.d.ts",
+      "bytes": 14800,
+      "sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.js",
+      "bytes": 22099,
+      "sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.d.ts",
+      "bytes": 968,
+      "sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "bytes": 397156,
+      "sha256": "baaf70640cd293a0dd1d299348bbbb1093c91c6bfd383439336b1d105bf8c010",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.d.ts",
+      "bytes": 9534,
+      "sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.js",
+      "bytes": 47046,
+      "sha256": "40d34b651f88affdde4ba592c00ae31ef10b93ae92cba6b66d875f3021575dc1",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.d.ts",
+      "bytes": 24443,
+      "sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.js",
+      "bytes": 49122,
+      "sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.d.ts",
+      "bytes": 7449,
+      "sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.js",
+      "bytes": 27684,
+      "sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.d.ts",
+      "bytes": 9784,
+      "sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.js",
+      "bytes": 8035,
+      "sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "bytes": 21840,
+      "sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31",
+      "equals_captured_runtime_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "bytes": 562296,
+      "sha256": "ca8a653fe7fd5dd0d157a272c481fd18dc6b7def97716d2a2d551416c366e204",
+      "equals_captured_runtime_candidate": true
+    }
+  ],
+  "guards": {
+    "command": "bun run check:guards --base origin/dev",
+    "exitCode": 0,
+    "candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+  },
+  "limits": [
+    "These are reused S4 controls on its pinned runtime, not Omni product tests or CI on our external branch.",
+    "Verifying the downloaded archive and report consistency is not a new execution of the 220 tests or 22 controls.",
+    "The live signed download URL and archive session reference are not published.",
+    "The local semantic review, own binding/consumer cases and maintenance obligations remain separate."
+  ]
+}
