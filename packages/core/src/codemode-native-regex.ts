@@ -1,13 +1,53 @@
 export * as CodeModeNativeRegex from "./codemode-native-regex"
 
-import { Effect, Layer } from "effect"
+import { mkdtemp, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import path from "node:path"
+import { Effect, Layer, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
 import { NativeRegex } from "@orchestra/codemode"
 import { AppProcess } from "./process"
+import { Flag } from "./flag/flag"
+import { script } from "./codemode-native-regex-script"
 
-// Contract scaffold. Each run will own its child Scope; callers provide the Layer around execute.
-export const make = Effect.map(AppProcess.Service, () => ({
-  run: (_request: NativeRegex.Request, _remainingMs: number): Effect.Effect<NativeRegex.Reply, unknown> =>
-    Effect.fail(new Error("Isolated native regex executor is not implemented")),
+export const make = Effect.map(AppProcess.Service, (processes): NativeRegex.Provider => ({
+  run: (input, remainingMs) => Effect.suspend(() => {
+    if (!Number.isFinite(remainingMs) || remainingMs <= 0)
+      return Effect.fail(new Error("Native regex requires a finite positive remaining budget"))
+    if (!process.versions.bun)
+      return Effect.fail(new Error("Native regex unavailable: qualified Bun runtime required"))
+    if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")
+      return Effect.fail(new Error("Native regex unavailable: Omni is off"))
+    return Effect.gen(function* () {
+      const request = yield* Effect.try(() => Schema.decodeUnknownSync(NativeRegex.Request, { onExcessProperty: "error" })(input))
+      return yield* Effect.acquireUseRelease(
+        Effect.tryPromise(() => mkdtemp(path.join(tmpdir(), "orchestra-native-regex-"))),
+        (root) => Effect.gen(function* () {
+          const config = path.join(root, "empty.toml")
+          yield* Effect.tryPromise(() => Bun.write(config, ""))
+          const result = yield* processes.run(ChildProcess.make(process.execPath, [
+            "--no-env-file", `--config=${config}`, "-e", script,
+          ], {
+            cwd: root, shell: false, extendEnv: false,
+            env: {
+              ...Object.fromEntries(Object.entries(process.env).filter(([name, value]) =>
+                value !== undefined && process.platform === "win32" && ["SYSTEMROOT", "WINDIR"].includes(name.toUpperCase()))),
+              BUN_BE_BUN: "1",
+            },
+            stdin: "pipe", stdout: "pipe", stderr: "pipe",
+          }), { stdin: JSON.stringify(request), maxErrorBytes: 16 * 1024 })
+          yield* AppProcess.requireSuccess(result)
+          if (result.stdoutTruncated || result.stderrTruncated)
+            return yield* Effect.fail(new Error("Native regex helper output was truncated"))
+          return yield* Effect.try(() => NativeRegex.decodeReply(request,
+            Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(result.stdout.toString("utf8")),
+          ))
+        }),
+        // Finalizer defects combine with the original cause; cleanup failure cannot replace a native/infrastructure failure.
+        (root) => Effect.tryPromise(() => rm(root, { recursive: true, force: true })).pipe(Effect.orDie),
+      )
+    }).pipe(Effect.scoped, Effect.timeout(remainingMs))
+  }),
 }))
 
 export const layer = Layer.effect(NativeRegex.Executor, make)
