@@ -1,0 +1,264 @@
+{
+  "schema": "genesis-external-integration-static-verification/v1",
+  "audit_id": "20261113-external-integration-static",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "prompts_revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+  "scope": "Public static audit of S1–S5 boundaries and integration requirements only.",
+  "author": "external-audit-orchestrator",
+  "frozen_before_deliverable_authorship": true,
+  "reserved_oracles": {
+    "access": "NOT_REQUESTED",
+    "publication": "PROHIBITED",
+    "replacement": "Public verification criteria frozen independently by the orchestrator; no private answers reconstructed."
+  },
+  "campaign_criteria_ids": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "common": [
+    {
+      "id": "V-01",
+      "requirement": "Pin code and tree to source_revision; pin protocol and S1–S5 prompts separately. No moving-head code inference."
+    },
+    {
+      "id": "V-02",
+      "requirement": "Every cited source has repository path, revision, Git object SHA observed from MCP (or UNKNOWN) and actual read scope. Tree metadata is not content evidence."
+    },
+    {
+      "id": "V-03",
+      "requirement": "Claims distinguish source observation, normative intent, static inference, hypothesis and UNKNOWN. Static evidence never establishes runtime execution or success."
+    },
+    {
+      "id": "V-04",
+      "requirement": "All remote writes are orchestrator-only under the authorized output prefix on the explicit baseline-derived branch; leases and force:false protect publication."
+    },
+    {
+      "id": "V-05",
+      "requirement": "No product/protocol/workflow modifications; no tests, CI dispatch, Atlas/native product tools, consumers, merges, deployment, private-state reconstruction or other-session result reads."
+    },
+    {
+      "id": "V-06",
+      "requirement": "No reserved oracle, full private review, ledger, capture, secret or local filesystem path is published. Public findings may identify the affected public artifact and correction."
+    },
+    {
+      "id": "V-07",
+      "requirement": "Hashes are source-provided or deterministically calculated over specified bytes. Unobservable identities/measurements remain UNKNOWN; absent evidence is not zero."
+    },
+    {
+      "id": "V-08",
+      "requirement": "Three disjoint producers A/B/C create the candidate; separate fresh reviewer identities with fork_turns:none evaluate all applicable frozen criteria against the same exact package. Authors never judge their own work."
+    },
+    {
+      "id": "V-09",
+      "requirement": "Material findings are corrected and reevaluated by the same reviewers or remain explicitly open. No third vote or replacement to bypass a veto."
+    },
+    {
+      "id": "V-10",
+      "requirement": "Final publication binds a prior payload commit, confirms branch SHA and preserves a recovery path. Result remains a static candidate for coordination, never global PASS, integration completion or owner acceptance."
+    }
+  ],
+  "inventory": [
+    {
+      "id": "A-01",
+      "requirement": "Verify baseline commit→root tree through MCP."
+    },
+    {
+      "id": "A-02",
+      "requirement": "Enumerate all descendants with complete non-truncated tree responses; document decomposition and failures without treating transport failure as Git truncation."
+    },
+    {
+      "id": "A-03",
+      "requirement": "Report tree/blob/commit types, modes, symlinks, gitlinks and counts separately."
+    },
+    {
+      "id": "A-04",
+      "requirement": "Reconcile tracked leaf population with 14442; directories are separately visible; report any difference and verified cause or UNKNOWN."
+    },
+    {
+      "id": "A-05",
+      "requirement": "Apply exact_file > longest_directory_prefix > fallback with slash boundaries; compare S1–S5 counts, top-level counts and fallback counts."
+    },
+    {
+      "id": "A-06",
+      "requirement": "Report duplicate paths, competing rule matches, unresolved ownership, missing exact rules, empty prefixes and all exclusions."
+    },
+    {
+      "id": "A-07",
+      "requirement": "Recompute both global and shard digests using exact UTF-8 byte sorting and LF record encoding, or mark unavailable calculations UNKNOWN."
+    },
+    {
+      "id": "A-08",
+      "requirement": "Persist complete enumerated metadata with deterministic ordering and sufficient object identity for independent reconstruction."
+    },
+    {
+      "id": "A-09",
+      "requirement": "Use source references actually read, distinguishing enumerated blob metadata from content inspection."
+    },
+    {
+      "id": "A-10",
+      "requirement": "Inventory reconciliation does not assert semantic coverage, extraction of reserved Omni/Platform slices, runtime support or acceptance."
+    }
+  ],
+  "contracts": [
+    {
+      "id": "B-01",
+      "requirement": "Each evidence source records path, pin, Git blob SHA and complete/partial read scope."
+    },
+    {
+      "id": "B-02",
+      "requirement": "Assign node owners with the partition resolver, not labels alone."
+    },
+    {
+      "id": "B-03",
+      "requirement": "Separate navigation, build and impact relations; state direction and mechanism for each edge."
+    },
+    {
+      "id": "B-04",
+      "requirement": "Investigate CLI→core/API, seat→Maestro/Relay and client→API/knowledge; retain UNKNOWN when evidence cannot close a chain."
+    },
+    {
+      "id": "B-05",
+      "requirement": "Imports/declarations do not prove execution; impact is a bounded static inference unless stronger observed evidence exists."
+    },
+    {
+      "id": "B-06",
+      "requirement": "Each edge cites decisive source and destination evidence actually read, with claim scope matching available excerpts."
+    },
+    {
+      "id": "B-07",
+      "requirement": "Do not promote hypotheses/gaps into verified edges or add unsupported edges to complete a visual graph."
+    },
+    {
+      "id": "B-08",
+      "requirement": "Expose limitations and remaining integration controls without running or claiming them."
+    }
+  ],
+  "criteria": [
+    {
+      "id": "C-01",
+      "requirement": "Preserve exactly the 50 registry IDs and their sequence; no omission, duplicate or renumbering."
+    },
+    {
+      "id": "C-02",
+      "requirement": "Preserve each referenced normative source line literally; keep mapping and explanatory interpretation separate."
+    },
+    {
+      "id": "C-03",
+      "requirement": "Each criterion identifies local owners, S4 common responsibilities and ROOT/global complement with references; distinguish normative assignment from derived planning allocation."
+    },
+    {
+      "id": "C-04",
+      "requirement": "Decisive evidence is an explicit future evidence requirement, never an invented observed result."
+    },
+    {
+      "id": "C-05",
+      "requirement": "Describe reusable evidence and compatibility conditions for exact candidate, contract, inputs and scope; unknown available evidence remains UNKNOWN."
+    },
+    {
+      "id": "C-06",
+      "requirement": "Every ID has pending gates/dependencies or justified static disposition; lack of proof is not NOT_APPLICABLE."
+    },
+    {
+      "id": "C-07",
+      "requirement": "The minimal integration control plan is NOT_RUN, includes dependencies and avoids repeated common S4 work without suppressing domain-specific cases."
+    },
+    {
+      "id": "C-08",
+      "requirement": "The source manifest lists only actual reads, including the normative source at its exact baseline blob."
+    },
+    {
+      "id": "C-09",
+      "requirement": "No private oracle, complete private review, ledger, secret, local path, acceptance or runtime verdict is published."
+    }
+  ],
+  "ownership": {
+    "A": {
+      "agent": "/root/inventory",
+      "files": [
+        "inventory.json",
+        "inventory.md",
+        "tree-inventory.tsv",
+        "sources-A.json",
+        "gaps-A.json"
+      ]
+    },
+    "B": {
+      "agent": "/root/contracts",
+      "files": [
+        "contracts.json",
+        "contracts.md",
+        "sources-B.json",
+        "gaps-B.json"
+      ]
+    },
+    "C": {
+      "agent": "/root/criteria",
+      "files": [
+        "criteria-matrix.json",
+        "criteria-matrix.md",
+        "verification-plan.json",
+        "verification-plan.md",
+        "sources-C.json",
+        "gaps-C.json"
+      ]
+    }
+  },
+  "review_protocol": {
+    "scope": "Independent static candidate review only; not the coordination integration pair.",
+    "fresh_reviewers": 2,
+    "each_covers": "V-01..10, A-01..10, B-01..08, C-01..09",
+    "reviewer_tools": "PROHIBITED",
+    "delivery": "Exact public artifact bodies and decisive source excerpts; public findings summary only.",
+    "final_integration_owner": "Coordination's independent integration pair"
+  }
+}
