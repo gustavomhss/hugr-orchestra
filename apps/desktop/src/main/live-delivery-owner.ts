@@ -189,7 +189,7 @@ export function createLiveDeliveryOwner(options: LiveDeliveryOwnerOptions): Live
       return job
     } catch (error) { return Promise.resolve(failure(deliveryReason(error))) }
   }
-  function shutdown(): Promise<void> {
+  function shutdown(beforeStop?: () => Promise<void>): Promise<void> {
     if (shutdownJob) return shutdownJob
     const completion = Promise.withResolvers<void>()
     shutdownJob = completion.promise
@@ -198,6 +198,7 @@ export function createLiveDeliveryOwner(options: LiveDeliveryOwnerOptions): Live
     const pendingRotation = rotation
     const job = (async () => {
       const failures: unknown[] = []
+      try { await beforeStop?.() } catch (error) { failures.push(error) }
       const prior = await Promise.allSettled([pendingRotation])
       prior.forEach((outcome) => { if (outcome.status === "rejected") failures.push(outcome.reason) })
       try { await options.stopCapture("quit") } catch (error) { failures.push(error) }
