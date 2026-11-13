@@ -90,6 +90,8 @@ class ReaderErrorRedaction(unittest.TestCase):
                 out.flush();err.flush()
                 evidence = broker.preserve_failure_evidence(run, out, err,
                     KeyboardInterrupt("private signal detail"), {"state": "UNKNOWN"})
+                self.assertFalse(evidence["outputs"]["stdout_anonymous"]["complete"])
+                self.assertFalse(evidence["outputs"]["stderr_anonymous"]["complete"])
                 self.assertEqual(evidence["outputs"]["stdout_anonymous"]["sha256"],
                     hashlib.sha256(b"partial stdout " + secret).hexdigest())
                 self.assertEqual(evidence["outputs"]["stderr_anonymous"]["sha256"],
