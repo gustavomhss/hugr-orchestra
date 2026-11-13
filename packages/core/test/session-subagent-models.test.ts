@@ -588,6 +588,7 @@ resolverTests.effect(
             }
             model.time.released = 10 - index
             model.enabled = true
+            if (ref === b) model.variants.push({ id: ModelV2.VariantID.make("default"), headers: {}, body: {} })
           }),
         )
         draft.model.default.set(a.providerID, a.id)
