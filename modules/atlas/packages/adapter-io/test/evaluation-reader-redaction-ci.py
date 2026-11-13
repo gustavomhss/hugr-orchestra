@@ -50,34 +50,74 @@ class ReaderErrorRedaction(unittest.TestCase):
                 self.assertEqual(diagnostic, expected)
                 self.assertNotIn(sentinel, diagnostic)
 
-    def test_failure_after_persisted_capture_keeps_forensic_digests(self):
-        sentinel = "SYNTHETIC_PRIVATE_PAYLOAD_08"
+    def _assert_private_capture_retained(self, run, stdout, stderr, response, sentinel, outcome):
+        (run / "stdout.json").write_bytes(stdout)
+        (run / "stderr.txt").write_bytes(stderr)
+        (run / "response.json").write_bytes(response)
+        (run / "process-start.json").write_text('{"identity":"synthetic"}')
+        evidence = broker.preserve_failure_evidence(
+            run, None, None, RuntimeError(sentinel), outcome)
+        stored = json.loads((run / "failure-evidence.json").read_text())
+        self.assertEqual(evidence, stored)
+        self.assertEqual(stored["status"], "UNKNOWN")
+        self.assertTrue(stored["payload_retained"])
+        self.assertEqual(stored["payload_retention"]["state"], "RETAINED_RESTRICTED")
+        private = run / "private-failure-evidence"
+        self.assertEqual(private.stat().st_mode & 0o777, 0o700)
+        for name, payload in (("stdout.json", stdout), ("stderr.txt", stderr), ("response.json", response)):
+            retained = private / name
+            self.assertEqual(retained.read_bytes(), payload)
+            self.assertEqual(retained.stat().st_mode & 0o777, 0o600)
+            self.assertFalse((run / name).exists())
+        manifest = (run / "failure-evidence.json").read_text()
+        self.assertNotIn(sentinel, manifest)
+        self.assertEqual(stored["outputs"]["stdout_persisted"]["sha256"], hashlib.sha256(stdout).hexdigest())
+        self.assertEqual(stored["outputs"]["stderr_persisted"]["sha256"], hashlib.sha256(stderr).hexdigest())
+        self.assertEqual(stored["outputs"]["response_persisted"]["sha256"], hashlib.sha256(response).hexdigest())
+        self.assertTrue(stored["lifecycle_records"]["process-start.json"])
+        return stored
+
+    def test_failure_after_persisted_capture_retains_payload_restricted(self):
+        sentinel = "SYNTHETIC_PRIVATE_PAYLOAD_08B_UNKNOWN"
         stdout = json.dumps({"body": sentinel, "evaluation": {"phase": "evaluation"}}).encode()
         stderr = ("diagnostic " + sentinel).encode()
-        response = stdout
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp)
-            (run / "stdout.json").write_bytes(stdout)
-            (run / "stderr.txt").write_bytes(stderr)
-            (run / "response.json").write_bytes(response)
-            (run / "process-start.json").write_text('{"identity":"synthetic"}')
-            error = RuntimeError(sentinel)
-            evidence = broker.preserve_failure_evidence(run, None, None, error,
+            stored = self._assert_private_capture_retained(
+                run, stdout, stderr, stdout, sentinel,
                 {"lifecycle_state": "POSSIBLY_STARTED_TERMINATION_UNKNOWN", "state": "UNKNOWN"})
-            stored = json.loads((run / "failure-evidence.json").read_text())
-            self.assertEqual(evidence, stored)
-            self.assertEqual(stored["status"], "UNKNOWN")
-            self.assertEqual(stored["outputs"]["stdout_persisted"],
-                {"present": True, "bytes": len(stdout), "sha256": hashlib.sha256(stdout).hexdigest()})
-            self.assertEqual(stored["outputs"]["stderr_persisted"]["sha256"], hashlib.sha256(stderr).hexdigest())
-            self.assertEqual(stored["outputs"]["response_persisted"]["sha256"], hashlib.sha256(response).hexdigest())
-            self.assertTrue(stored["lifecycle_records"]["process-start.json"])
-            self.assertFalse(stored["payload_retained"])
+            self.assertFalse(stored["outputs"]["stdout_anonymous"]["complete"])
             self.assertEqual(stored["capture_completeness"], "INCOMPLETE_UNKNOWN")
-            for name in ("stdout.json", "stderr.txt", "response.json"):
-                self.assertEqual((run / name).read_bytes(), b"")
-            self.assertNotIn(sentinel, (run / "failure-evidence.json").read_text())
             self.assertEqual(stored["process_outcome"]["state"], "UNKNOWN")
+
+    def test_failure_after_valid_capture_and_exit_proof_retains_complete_payload(self):
+        sentinel = "SYNTHETIC_PRIVATE_PAYLOAD_08B_AFTER_CAPTURE"
+        stdout = json.dumps({"body": sentinel, "evaluation": {"phase": "evaluation"}}).encode()
+        stderr = ("diagnostic " + sentinel).encode()
+        anchor = {"pid": 41, "pgid": 41, "sid": 41, "starttime": 900,
+                  "pid_namespace": "pid:[synthetic]", "boot_id": "synthetic"}
+        outcome = {"lifecycle_state": "TERMINATION_PROVEN", "group_absent": True,
+                   "kernel_probe": "killpg-zero-ESRCH", "members": [], "anchor": anchor}
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            stored = self._assert_private_capture_retained(
+                run, stdout, stderr, stdout, sentinel, outcome)
+            self.assertEqual(stored["capture_completeness"], "COMPLETE_AFTER_TERMINATION_PROOF")
+            self.assertEqual(stored["process_outcome"], outcome)
+
+    def test_restricted_retention_failure_never_truncates_only_copy(self):
+        sentinel = b"SYNTHETIC_RETAIN_BLOCKED_08B"
+        payload = b'{"body":"' + sentinel + b'"}'
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            (run / "stdout.json").write_bytes(payload)
+            with mock.patch.object(broker.os, "open", side_effect=PermissionError("synthetic")):
+                evidence = broker.preserve_failure_evidence(
+                    run, None, None, RuntimeError(sentinel.decode()), {"state": "UNKNOWN"})
+            self.assertEqual(evidence["payload_retention"]["state"], "BLOCKED_NOT_PURGED")
+            self.assertFalse(evidence["payload_retained"])
+            self.assertEqual((run / "stdout.json").read_bytes(), payload)
+            self.assertNotIn(sentinel.decode(), (run / "failure-evidence.json").read_text())
 
     def test_anonymous_output_streams_are_hashed_without_payload_retention(self):
         secret = b"SYNTHETIC_ANONYMOUS_STDERR_08"
