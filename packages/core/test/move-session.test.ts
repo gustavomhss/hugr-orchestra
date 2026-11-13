@@ -245,6 +245,26 @@ describe("MoveSession", () => {
     process.platform === "win32" ? 30_000 : 5_000,
   )
 
+  it.live("reports the real writer failure before READY when its descriptor source is missing", () =>
+    Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const source = yield* Effect.acquireRelease(
+        Effect.promise(() => tmpdir()),
+        (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+      )
+      const control = yield* Effect.acquireRelease(
+        Effect.promise(() => tmpdir()),
+        (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+      )
+      const error = yield* MoveSessionWriter.start(source.path, control.path).pipe(Effect.flip)
+      expect(error).toBeInstanceOf(AppProcess.AppProcessError)
+      expect(error.exitCode).toBeDefined()
+      expect(error.exitCode).not.toBe(0)
+      expect(error.stderr).toContain("ENOENT")
+      expect(error.stderr).toContain("open-fd.txt")
+    }),
+  )
+
   it.live("retains every independent writer byte acknowledged before Session Moved commits, including an already-open descriptor", () =>
     Effect.gen(function* () {
       expectSpawn(import.meta.path)

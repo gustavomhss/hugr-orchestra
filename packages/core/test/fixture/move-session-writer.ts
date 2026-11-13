@@ -23,7 +23,11 @@ export const start = Effect.fn("MoveSessionWriter.start")(function* (source: str
     { stdin: "ignore", stdout: "pipe", stderr: "pipe" }), { timeout: "30 seconds" }).pipe(Effect.forkScoped)
   const ready = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({
     pid: Schema.Number, descriptorOpen: Schema.Literal(true),
-  })))(yield* waitForFile(path.join(control, "READY")))
+  })))(yield* Effect.raceFirst(
+    waitForFile(path.join(control, "READY")),
+    Fiber.join(child).pipe(Effect.flatMap(AppProcess.requireSuccess),
+      Effect.andThen(Effect.die(new Error("Writer exited before READY")))),
+  ))
   return {
     ready,
     release: Effect.gen(function* () {
