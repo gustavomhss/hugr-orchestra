@@ -5,7 +5,8 @@ import { SAMPLE_RATE, echoGate, interleave, levelMeter } from "./live-audio"
 import { startCapture } from "./live-capture"
 import { captureFrame } from "./live-frame"
 import { readTranscriptionKey } from "./live-key"
-import { meetingClient, type MeetingServer } from "./live-meeting-client"
+import type { MeetingServer } from "./live-meeting-client"
+import type { LiveDeliveryManager } from "./live-delivery-contract"
 import { readPermissions, requestMicrophone, type SensePermissions, type SenseStatus } from "./live-permissions"
 import { segmenter, type Caption, type Segment } from "./live-segmenter"
 import { createTranscriber } from "./live-transcriber"
@@ -25,6 +26,7 @@ export type LiveSensesEvent =
         | ({ kind: "permission" } & SensePermissions)
         | { kind: "stt"; attempt: number; retryInSeconds: number; closeCode: number; reason: string; watermarkMs: number }
         | { kind: "network"; offlineMs: number }
+        | { kind: "storage"; reason: "storage" | "quota"; incomplete: true }
     }
   | { kind: "recovered"; source: "stt" | "network" }
 
@@ -35,8 +37,11 @@ export async function startSenses(options: {
   runtime?: {
     readKey?: typeof readTranscriptionKey
     microphone?: typeof requestMicrophone
+    capture?: typeof startCapture
+    transcriber?: typeof createTranscriber
   }
-  server: MeetingServer
+  delivery: LiveDeliveryManager
+  server?: MeetingServer
   sessionID: string
   title: string
   logDirectory: string
@@ -48,18 +53,16 @@ export async function startSenses(options: {
   onLevels?: (levels: { microphone: number; "system-audio": number }) => void
   onEvent: (event: LiveSensesEvent) => void
 }) {
-  options.signal?.throwIfAborted()
+  const signal = options.signal ?? new AbortController().signal
+  signal.throwIfAborted()
   const want = options.sources ?? { microphone: true, systemAudio: true }
   const key = (options.runtime?.readKey ?? readTranscriptionKey)()
   if (!key) throw new Error("No speech-to-text key is set for the live seat.")
   const senses = {
-    microphone: !want.microphone || (await (options.runtime?.microphone ?? requestMicrophone)()) ? "granted" : "denied",
+    microphone: !want.microphone || await microphonePermission(signal, options.runtime?.microphone ?? requestMicrophone) ? "granted" : "denied",
     systemAudio: "on-request",
-  } as {
-    microphone: SenseStatus
-    systemAudio: SenseStatus
-  }
-  options.signal?.throwIfAborted()
+  } as { microphone: SenseStatus; systemAudio: SenseStatus }
+  signal.throwIfAborted()
   const report = () => {
     const permissions = { ...readPermissions(senses.systemAudio), microphone: senses.microphone }
     options.onEvent({ kind: "permissions", permissions })
@@ -68,112 +71,176 @@ export async function startSenses(options: {
   }
   report()
 
-  const client = meetingClient(options.server, {
-    failed(reason, pending, offlineMs) {
-      log.write({ event: "append-failed", reason, pending })
-      options.onEvent({ kind: "error", error: { kind: "network", offlineMs } })
-    },
-    recovered() {
-      options.onEvent({ kind: "recovered", source: "network" })
-    },
-  })
-  const meeting = await client.start(options.sessionID, options.title)
-  if (options.signal?.aborted) {
-    await client.stop(meeting.id)
-    options.signal.throwIfAborted()
+  const producer = await options.delivery.start({ sessionID: options.sessionID, title: options.title }, signal)
+  const meeting = options.delivery.snapshot().items.find((item) => item.id === producer.localID)?.meeting
+  if (!meeting) {
+    producer.abandon()
+    throw new Error("Live durable meeting metadata is unavailable")
   }
-  const log = transportLog(options.logDirectory, meeting.id)
+  const log = transportLog(options.logDirectory, producer.meetingID)
+  const installed = Promise.withResolvers<void>()
+  const state = {
+    capture: undefined as Awaited<ReturnType<typeof startCapture>> | undefined,
+    acquisition: undefined as Promise<Awaited<ReturnType<typeof startCapture>>> | undefined,
+    transcriber: undefined as ReturnType<typeof createTranscriber> | undefined,
+    stopping: undefined as Promise<{ unsent: number }> | undefined,
+    started: false, finished: false, incomplete: false, installed: false,
+    failures: [] as unknown[],
+    warning: undefined as "storage" | "quota" | undefined,
+  }
   const clock = { ms: 0 }
   const gate = echoGate()
   const meter = levelMeter((levels) => options.onLevels?.(levels))
-
+  const pending = () => options.delivery.snapshot().items.find((item) => item.id === producer.localID)?.pendingCount ?? 0
+  const warn = () => {
+    state.incomplete = true
+    const reason = options.delivery.snapshot().items.find((item) => item.id === producer.localID)?.reason === "quota" ? "quota" : "storage"
+    if (state.warning === reason) return
+    state.warning = reason
+    try { options.onEvent({ kind: "error", error: { kind: "storage", reason, incomplete: true } }) }
+    catch (error) { state.failures.push(error) }
+  }
   const cutter = segmenter({
     endOfSpeech: true,
     onCaption: (line) => options.onEvent({ kind: "caption", line }),
     onSegment(segment) {
-      log.write({
-        event: "segment",
-        track: segment.track,
-        startMs: segment.startMs,
-        endMs: segment.endMs,
-        latencyMs: Date.now() - (meeting.timeStarted + segment.endMs),
-      })
-      client.append(meeting.id, { id: randomUUID(), ...segment })
+      log.write({ event: "segment", track: segment.track, startMs: segment.startMs, endMs: segment.endMs,
+        latencyMs: Date.now() - (meeting.timeStarted + segment.endMs) })
+      if (producer.append({ id: randomUUID(), ...segment }) === "refused") {
+        warn()
+        void stop().catch((error: unknown) => log.write({ event: "senses-stop-failed", reason: String(error) }))
+        return
+      }
       options.onEvent({ kind: "segment", segment })
     },
   })
-  const language = options.language === "auto" ? "multi" : options.language
-  const transcriber = createTranscriber({ engine: "deepgram", model: options.model ?? DEFAULT_MODEL, key, language }, (event) => {
-    if (event.kind === "piece") return cutter.piece(event.piece, clock.ms)
-    if (event.kind === "speech-end") return cutter.speechEnd(event.track)
-    if (event.kind === "open") {
-      log.write({ event: "open", attempt: event.attempt, replayFromMs: event.replayFromMs })
-      if (event.attempt > 1) options.onEvent({ kind: "recovered", source: "stt" })
-      return
-    }
-    log.write({
-      event: "close",
-      attempt: event.attempt,
-      code: event.code,
-      reason: event.reason,
-      retryInSeconds: event.retryInSeconds,
-      watermarkMs: event.watermarkMs,
-    })
-    options.onEvent({
-      kind: "error",
-      error: {
-        kind: "stt",
-        attempt: event.attempt,
-        retryInSeconds: event.retryInSeconds,
-        closeCode: event.code,
-        reason: event.reason,
-        watermarkMs: event.watermarkMs,
-      },
-    })
-  })
-
-  const capture = await startCapture({
-    audio(me, them) {
-      // Loopback delivers silence until the system grants the audio tap, so the first sound is the proof.
-      if (senses.systemAudio === "on-request" && them.some((sample) => sample !== 0)) {
-        senses.systemAudio = "granted"
-        report()
+  function stop() {
+    if (state.stopping) return state.stopping
+    // Publish before requestClose, capture.stop, abort listeners or final callbacks can synchronously reenter.
+    const completion = Promise.withResolvers<{ unsent: number }>()
+    state.stopping = completion.promise
+    const job = (async () => {
+      const failures = state.failures
+      try { if (!producer.requestClose().ok) warn() } catch (error) { failures.push(error); warn() }
+      if (!state.installed) await installed.promise
+      if (!state.capture && state.acquisition) {
+        try { state.capture = await state.acquisition } catch { state.incomplete = true }
       }
-      meter(me, them, Date.now())
-      const startMs = clock.ms
-      const pcm = interleave(me, them, startMs, gate)
-      clock.ms += ((pcm.length / 2) * 1000) / SAMPLE_RATE
-      transcriber.send(startMs, pcm)
-    },
-    status(sense, status) {
-      if (senses[sense] === status) return
-      senses[sense] = status
-      report()
-    },
-    state(state, reason) {
-      log.write({ event: "capture", state, reason })
-    },
-  }, want, options.signal).catch(async (error) => {
-    await transcriber.stop()
-    await client.stop(meeting.id).catch(() => undefined)
-    throw error
-  })
-
-  return {
-    meetingID: meeting.id,
-    look(exclude: BrowserWindow[]) {
-      return captureFrame(exclude)
-    },
-    // Ends capture first so no audio arrives after the engine's final flush, then closes the open segments and the
-    // meeting. `unsent` counts segments that never reached the record.
-    async stop() {
-      await capture.stop()
+      try { await state.capture?.stop() } catch (error) { failures.push(error); warn() }
+      try { await state.transcriber?.stop() } catch (error) { failures.push(error); warn() }
+      try { cutter.flush() } catch (error) { failures.push(error); warn() }
+      // These listeners must not interpret seal's normal producer-signal abort as another capture failure.
+      signal.removeEventListener("abort", abort)
+      producer.signal.removeEventListener("abort", refused)
+      state.finished = true
+      try {
+        if (state.incomplete || failures.length) producer.abandon()
+        else if (!producer.seal().ok) { warn(); producer.abandon() }
+      } catch (error) {
+        failures.push(error)
+        warn()
+        try { producer.abandon() } catch (cleanup) { failures.push(cleanup) }
+      }
       log.write({ event: "capture", state: "stopped" })
-      await transcriber.stop()
-      cutter.flush()
-      const result = await client.stop(meeting.id)
       await log.flush()
-      return result
-    },
+      if (failures.length) throw new AggregateError(failures, "Live capture cleanup failed; recent audio may be missing")
+      return { unsent: pending() }
+    })()
+    job.then(completion.resolve, completion.reject)
+    return completion.promise
   }
+  function abort() {
+    if (state.stopping) return
+    if (!state.started) state.incomplete = true
+    void stop().catch((error: unknown) => log.write({ event: "senses-stop-failed", reason: String(error) }))
+  }
+  function refused() {
+    if (state.stopping) return
+    warn()
+    void stop().catch((error: unknown) => log.write({ event: "senses-stop-failed", reason: String(error) }))
+  }
+  signal.addEventListener("abort", abort, { once: true })
+  producer.signal.addEventListener("abort", refused, { once: true })
+  try {
+    signal.throwIfAborted()
+    producer.signal.throwIfAborted()
+    state.transcriber = (options.runtime?.transcriber ?? createTranscriber)(
+      { engine: "deepgram", model: options.model ?? DEFAULT_MODEL, key, language: options.language === "auto" ? "multi" : options.language },
+      (event) => {
+        if (state.finished) return
+        if (event.kind === "piece") return cutter.piece(event.piece, clock.ms)
+        if (event.kind === "speech-end") return cutter.speechEnd(event.track)
+        if (event.kind === "open") {
+          log.write({ event: "open", attempt: event.attempt, replayFromMs: event.replayFromMs })
+          if (event.attempt > 1) options.onEvent({ kind: "recovered", source: "stt" })
+          return
+        }
+        log.write({ event: "close", attempt: event.attempt, code: event.code, reason: event.reason,
+          retryInSeconds: event.retryInSeconds, watermarkMs: event.watermarkMs })
+        options.onEvent({ kind: "error", error: { kind: "stt", attempt: event.attempt,
+          retryInSeconds: event.retryInSeconds, closeCode: event.code, reason: event.reason, watermarkMs: event.watermarkMs } })
+      },
+    )
+    // Publish the acquisition promise before invoking a boundary that can synchronously emit callbacks.
+    state.acquisition = Promise.resolve().then(() => {
+      signal.throwIfAborted()
+      producer.signal.throwIfAborted()
+      return (options.runtime?.capture ?? startCapture)({
+        audio(me, them) {
+          if (state.finished) return
+          if (senses.systemAudio === "on-request" && them.some((sample) => sample !== 0)) {
+            senses.systemAudio = "granted"
+            report()
+          }
+          meter(me, them, Date.now())
+          const startMs = clock.ms
+          const pcm = interleave(me, them, startMs, gate)
+          clock.ms += ((pcm.length / 2) * 1000) / SAMPLE_RATE
+          state.transcriber?.send(startMs, pcm)
+        },
+        status(sense, status) {
+          if (state.finished || senses[sense] === status) return
+          senses[sense] = status
+          report()
+        },
+        state(state, reason) { log.write({ event: "capture", state, reason }) },
+      }, want, AbortSignal.any([signal, producer.signal]))
+    })
+    state.installed = true
+    installed.resolve()
+    state.capture = await state.acquisition
+    signal.throwIfAborted()
+    producer.signal.throwIfAborted()
+    state.started = true
+    return { localID: producer.localID, meetingID: producer.meetingID,
+      look(exclude: BrowserWindow[]) { return captureFrame(exclude) }, stop }
+  } catch (error) {
+    state.incomplete = true
+    state.installed = true
+    installed.resolve()
+    const cleanup = await Promise.allSettled([stop()])
+    const failures = cleanup.flatMap((outcome) => outcome.status === "rejected" ? [outcome.reason] : [])
+    if (failures.length) throw new AggregateError([error, ...failures], "Live capture startup and cleanup failed")
+    throw error
+  }
+}
+
+// A permission dialog transfers no capture resource. Stop observes its late outcome but never waits for the OS UI.
+function microphonePermission(signal: AbortSignal, request: typeof requestMicrophone) {
+  if (signal.aborted) return Promise.reject(signal.reason)
+  return new Promise<boolean>((resolve, reject) => {
+    let settled = false
+    const finish = (value: boolean | undefined, error?: unknown) => {
+      if (settled) return
+      settled = true
+      signal.removeEventListener("abort", abort)
+      if (error !== undefined) reject(error)
+      else resolve(value === true)
+    }
+    const abort = () => finish(undefined, signal.reason)
+    signal.addEventListener("abort", abort, { once: true })
+    if (signal.aborted) { abort(); return }
+    try { request().then((value) => finish(value), (error: unknown) => finish(undefined, error)) }
+    catch (error) { finish(undefined, error) }
+  })
 }
