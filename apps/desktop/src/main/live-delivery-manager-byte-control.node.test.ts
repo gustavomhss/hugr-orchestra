@@ -1,28 +1,14 @@
 import assert from "node:assert/strict"
+import { writeByteOverflow } from "./live-delivery-manager-byte.fixture.ts"
 import { test } from "node:test"
 import { gate, info, location, peer, until } from "./live-delivery-manager-test.fixture.ts"
 
 test("control: native Node fetch consumes the exact chunked UTF8 producer beyond128MiB", { timeout: 10000 }, async (t) => {
   const remote = await peer(t), limit = 128 * 1024 * 1024
-  const observation = { bodyBytesWritten: 0, lastWrite: 0, drain: 0, closed: false, bytesWritten: () => 0, fetchStarted: false, headersResolved: false, status: 0, readCalls: 0, readSettled: 0, bytesRead: 0, lastRead: 0, abortRequested: false, readerJoinSettled: false }
-  // Verbatim real transport fixture from byte acceptance; this control exercises no delivery policy.
+  const observation = { bodyBytesWritten: 0, lastWrite: 0, writeCompleted: 0, closed: false, bytesWritten: () => 0, fetchStarted: false, headersResolved: false, status: 0, readCalls: 0, readSettled: 0, bytesRead: 0, lastRead: 0, abortRequested: false, readerJoinSettled: false }
+  // Same real transport fixture as byte acceptance; this control exercises no delivery policy.
   remote.handlers.set("GET /api/meeting", async (_, response) => {
-      const socket = response.socket
-      observation.bytesWritten = () => socket?.bytesWritten ?? 0
-      response.once("close", () => { observation.closed = true })
-      response.writeHead(200, { "content-type": "application/json" }); response.write('{"padding":"')
-      observation.bodyBytesWritten += Buffer.byteLength('{"padding":"')
-      const chunk = "é".repeat(32 * 1024)
-      for (let bytes = 0; bytes <= limit && !response.destroyed; bytes += Buffer.byteLength(chunk)) {
-        const ready = response.write(chunk)
-        observation.bodyBytesWritten += Buffer.byteLength(chunk); observation.lastWrite = Date.now()
-        if (!ready) await new Promise<void>((resolve) => {
-          const drained = () => { observation.drain++; finish() }
-          const finish = () => { response.off("drain", drained); response.off("close", finish); resolve() }
-          response.once("drain", drained); response.once("close", finish)
-        })
-      }
-      // Intentionally leave this valid JSON prefix open: only byte-cap enforcement can block before10s.
+    await writeByteOverflow(response, limit, observation, remote.state.failures)
   })
   const url = new URL("/api/meeting", remote.url), abort = new AbortController()
   url.searchParams.set("location[directory]", location.directory)
