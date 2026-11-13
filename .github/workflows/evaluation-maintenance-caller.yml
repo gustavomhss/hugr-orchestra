@@ -44,17 +44,17 @@ jobs:
           files=(packages/adapter-io/dist/src/evaluation-maintenance-host.js packages/adapter-io/dist/src/evaluation-maintenance-host.d.ts packages/adapter-io/dist/src/evaluation-maintenance-caller.js packages/adapter-io/dist/src/evaluation-maintenance-caller.d.ts)
           for file in "${files[@]}"; do
             if [[ ! -f "$file" || ! -s "$file" || -L "$file" ]]; then
-              printf 'Missing, empty or symlink output: %s\\n' "$file" >&2
+              printf 'Missing, empty or symlink output: %s\n' "$file" >&2
               exit 1
             fi
           done
           {
-            printf 'schema=maintenance-caller-overlay/v1\\nkind=overlay-not-standalone\\n'
-            printf 'base_commit=%s\\nrepository=%s\\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY"
-            printf 'requires=complete-built-modules-atlas-tree-at-base_commit\\n'
-            printf 'source_family=host-v3-plus-evaluation-implementation-v6\\n'
-            printf 'host_source_commit=3aa3bd492f852cbf3711b7b6fb4647316560d0ec\\n'
-            printf '\\n[sha256-relative-to-modules-atlas]\\n'
+            printf 'schema=maintenance-caller-overlay/v1\nkind=overlay-not-standalone\n'
+            printf 'base_commit=%s\nrepository=%s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY"
+            printf 'requires=complete-built-modules-atlas-tree-at-base_commit\n'
+            printf 'source_family=host-v3-plus-evaluation-implementation-v6\n'
+            printf 'host_source_commit=3aa3bd492f852cbf3711b7b6fb4647316560d0ec\n'
+            printf '\n[sha256-relative-to-modules-atlas]\n'
             sha256sum "${files[@]}" packages/adapter-io/src/evaluation-maintenance-host.ts packages/adapter-io/src/evaluation-maintenance-caller.ts packages/adapter-io/src/evaluation-rebuild.ts packages/adapter-io/src/ownership-rebuild.ts package.json package-lock.json
           } > maintenance-caller-overlay-manifest.txt
       - name: Export external host and caller overlay, not standalone package
