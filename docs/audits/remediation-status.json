@@ -677,7 +677,7 @@
       "id": "E10",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
       "commits": [
         "fa4edeb7b0",
@@ -757,7 +757,7 @@
           "kind": "source_cpu_gate_incomplete",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
           "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
-          "result": "Linux six cases reach valid CPU marks256–307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51–52ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79–5.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
+          "result": "Linux six cases reach valid CPU marks256\u2013307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51\u201352ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79\u20135.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
         },
         {
           "kind": "rejected_full_source_gate",
@@ -769,7 +769,7 @@
           "kind": "rejected_cpu_source_gate",
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
           "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
-          "result": "Windows all6 have valid marks421–637ms<750, warmup/ready true,106–109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
+          "result": "Windows all6 have valid marks421\u2013637ms<750, warmup/ready true,106\u2013109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
         },
         {
           "kind": "native_cpu_termination_diagnostic",
@@ -807,7 +807,7 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43330836910",
           "snapshot": "f835f546d8e583714f5d40f0349ebed76d045b1b",
           "source": "2fe953b51bf73dcc9b072ce876d0dc158e0779df",
-          "result": "Both OS5pass/0fail177assertions/Omni5, wrappers/cleanup0. Source/compiled eval, normal-entry sentinel and native CPU cases pass. Full owned Scope settlement plus independent OS PID absence at about1.509–1.515s; pidPolls0 all10, no CPU_DONE/outer containment/config canary execution. Earlier Linux pre-Scope PID sample retained as evidence, not called a zombie. Root independently fetched jobs/raw/snapshot blobs; two files and entire Core tree match typed source at integration4e4beaab61. Capability only: no production parser/codec/interpreter wiring, Mac/Electron qualification or product timeout closure."
+          "result": "Both OS5pass/0fail177assertions/Omni5, wrappers/cleanup0. Source/compiled eval, normal-entry sentinel and native CPU cases pass. Full owned Scope settlement plus independent OS PID absence at about1.509\u20131.515s; pidPolls0 all10, no CPU_DONE/outer containment/config canary execution. Earlier Linux pre-Scope PID sample retained as evidence, not called a zombie. Root independently fetched jobs/raw/snapshot blobs; two files and entire Core tree match typed source at integration4e4beaab61. Capability only: no production parser/codec/interpreter wiring, Mac/Electron qualification or product timeout closure."
         },
         {
           "kind": "absolute_deadline_preparatory_stage_qualified_controls_and_red",
@@ -834,7 +834,7 @@
             "81fadc842f9e6314b5ec6e88a3252ccc1bfa2d68",
             "fd87bae09e51a27ceb542ddb0a4a488473c3a606"
           ],
-          "result": "Both actual macOS architectures5pass/0fail177assertions/Omni5, wrappers/cleanup0; child Bun1.3.14. Source and compiled CPU helper kill/fullScope/independent PID absence about1.518–1.534s, pidPolls0, no CPU_DONE/watchdog/canaries. Root independently downloaded alljobs/raw and checked2 exact blobs per snapshot plus all11 structured records perOS. Intel architecture is bound by the executed unique compileTarget branch and manifest, not nominal runner label; direct request.json echo is not retained in normal Core jobs. Earlier ARM macos14 unsupported runner failure preserved, never product RED. Evidence/e10-macos-capability.json records provenance."
+          "result": "Both actual macOS architectures5pass/0fail177assertions/Omni5, wrappers/cleanup0; child Bun1.3.14. Source and compiled CPU helper kill/fullScope/independent PID absence about1.518\u20131.534s, pidPolls0, no CPU_DONE/watchdog/canaries. Root independently downloaded alljobs/raw and checked2 exact blobs per snapshot plus all11 structured records perOS. Intel architecture is bound by the executed unique compileTarget branch and manifest, not nominal runner label; direct request.json echo is not retained in normal Core jobs. Earlier ARM macos14 unsupported runner failure preserved, never product RED. Evidence/e10-macos-capability.json records provenance."
         },
         {
           "kind": "isolated_runtime_integrated_green_final_epic_pending",
@@ -851,9 +851,15 @@
           "kind": "explicit_driver_export_final_green",
           "run": "43416806305",
           "result": "Both OS3pass0fail19assertions6Omni0delegated, cleanup success. Architecture ownership assigned to existing Core process domain, explicit package subpath replaces cross-package relative test import; runtime and oracles unchanged. Independent source review APPROVE."
+        },
+        {
+          "kind": "integrated_cold_epic_terminal_green_with_bounded_retry",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43492035272",
+          "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+          "result": "70-job all-package cold workflow success on attempt2: first68success2failure; only failed CoreLinux13 and WindowsCLI rerun, actual cache-miss execution486P/287P. All original failure evidence retained. E2E570P1flaky3skip; later observer4P zero retry in43496472513. See evidence/fourth-cold-requalification.json."
         }
       ],
-      "remaining": "Implementation and independent source review complete. Final47-case Linux/Windows runtime pack including all six original CPU cases, fullCodeMode419-case pack,18-case provider packs on macOS ARM/Intel and explicit-export driver3-case pack per OS passed. Final cold epic remains pending. No general parent CPU preemption claim."
+      "remaining": "Closed for isolated native-regex/parser execution and explicit export driver with source/compiled CPU, provider and CodeMode controls. No general parent CPU preemption or automatic host selection claim."
     },
     {
       "id": "E11",
@@ -2918,7 +2924,7 @@
       "id": "M13",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
       "commits": [
         "c56655e891",
@@ -3071,9 +3077,15 @@
             "43416804061"
           ],
           "result": "Independent exact-source vectors distinguish pre-purefix integratedNode47 from finalBun27 and focusedNodeIPC16 on current production source. All runs both OS success with cleanup; Main actual hardware behavior remains source-reviewed only."
+        },
+        {
+          "kind": "integrated_cold_epic_terminal_green_with_bounded_retry",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43492035272",
+          "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+          "result": "70-job all-package cold workflow success on attempt2: first68success2failure; only failed CoreLinux13 and WindowsCLI rerun, actual cache-miss execution486P/287P. All original failure evidence retained. E2E570P1flaky3skip; later observer4P zero retry in43496472513. See evidence/fourth-cold-requalification.json."
         }
       ],
-      "remaining": "Production wiring implemented and independently reviewed. IntegratedNode47, recoveryUI34, repairedBun27 and current-productionIPC Node16 passed per OS. Final cold epic remains pending; physical hardware capture and native permission dialogs are outside this controlled-boundary proof."
+      "remaining": "Closed for durable controlled capture/STT/Store, recovery, manager ownership and production wiring. Controlled Node/Electron boundaries and source review do not prove physical hardware capture, native permission dialogs or full Main bootstrap."
     },
     {
       "id": "M14",
@@ -3815,9 +3827,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 62,
+    "new_fixes_verified": 64,
     "already_fixed_verified": 1,
-    "remaining": 2,
+    "remaining": 0,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "c9861968b9",
@@ -3862,7 +3874,7 @@
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
     "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
     "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
-    "scope": "WAL/DELETE × commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
   },
   "integrated_checks": {
     "guards": {
@@ -4026,5 +4038,31 @@
         "next_frozen_dev": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b"
       }
     }
-  ]
+  ],
+  "final_qualification": {
+    "date": "2026-11-13",
+    "closed": 65,
+    "total": 65,
+    "workflow": 43492035272,
+    "attempt": 2,
+    "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+    "later_test_only_delta": {
+      "commits": [
+        "6e6c6bcce2",
+        "9f8c96e1e7"
+      ],
+      "run": 43496472513,
+      "passed": 4,
+      "retries": 0
+    },
+    "core_typecheck_hosted": 43494850470,
+    "core_typecheck_local_exit": 0,
+    "e2e_typecheck_local_exit": 0,
+    "guards_exit": 0,
+    "boundaries_exit": 0,
+    "spawn_imports_exit": 0,
+    "godfile_exit": 0,
+    "evidence": "evidence/fourth-cold-requalification.json",
+    "limits": "First-attempt failures, E2E flake/skips, benchmark regression observations and bounded native/runtime proof remain explicit. No merge or release."
+  }
 }

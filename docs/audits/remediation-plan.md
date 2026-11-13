@@ -152,3 +152,9 @@ O binder completo e o replay causal estão qualificados: Linux38 casos; Windows3
 ## Sincronização final com dev
 
 A base atual é22d326d58f6cbb9fdc46b55620194c5d434a7444, integrada por2117a6d498. Foram53 arquivos upstream; os quatro cruzamentos (.github/workflows/test-ci.yml, bun.lock, server-session.ts e Core package.json) foram combinados automaticamente. A qualificação anterior continua histórica; o lock alterado exige recibos finais de geração, e o novo harness Core entra no epic final. A canonical permanece intocada. Nenhum conflito ou merge de PR está pendente.
+
+## Fechamento da campanha original
+
+Os65 achados originais estão encerrados:64 corrigidos e um já corrigido na base. O cold43492035272, source46530d548a6a7713231d9f30bc9bd1bc0321c01f, concluiu verde na segunda tentativa. A primeira teve68 jobs verdes e dois falhos; apenas esses dois foram repetidos, com execução real, sem alterar código, limites ou assertions. As causas originais do HOLD de aquisição do proxy e do EBUSY Windows permanecem desconhecidas e registradas. E2E teve570 pass, um flaky e três skips. A única alteração de código após esse snapshot foi o observador de permission reply, qualificado por quatro testes sem retry no43496472513 e typecheck E2E0; seu blob atual confere com o snapshot hospedado. Não se afirma full green no HEAD documental posterior.
+
+E10 e M13 fecham dentro dos contratos e limites já definidos: não se reivindica preempção geral de CPU parental, captura física, diálogos nativos ou bootstrap completo de Main. O benchmark registra53/54 medianas maiores no lote AFTER, sem atribuição causal. A única PR1463 segue para revisão, sem merge ou release. Evidências consolidadas em evidence/fourth-cold-requalification.json e remediation-status.json.

@@ -389,8 +389,52 @@
     }
   ],
   "attempt2": {
-    "status": "in_progress",
-    "scope": "One bounded rerun of failed jobs only, on identical source, preserving all assertions and timeouts; original failure evidence retained."
+    "status": "completed",
+    "scope": "One bounded rerun of failed jobs only, on identical source, preserving all assertions and timeouts; original failure evidence retained.",
+    "coreLinux13": {
+      "job": 132136307234,
+      "conclusion": "success",
+      "passed": 486,
+      "failed": 0,
+      "skipped": 1,
+      "assertions": 3912,
+      "files": 55,
+      "seconds": 91.37,
+      "omniSpawns": 642,
+      "delegated": 0,
+      "actualExecution": "Turbo cache miss c10968d09d7d878c; zero cached tasks",
+      "targetCase": {
+        "passed": true,
+        "seconds": 13.337539,
+        "assertions": 18,
+        "junitArtifact": 14072123128
+      },
+      "rawSHA256": "b204969b8f8e14591e979cfc8fbabf28e191e905848ba345ec3fde6075a2cc55",
+      "junitZIP_SHA256": "322c0d6fd29a60919cd772da766658cc62d8ee50c97f949fce15c567ab44d4c9",
+      "limit": "No mechanism established for first-attempt HOLD; original failure retained. Identical source, all deadlines and refusal behavior preserved."
+    },
+    "conclusion": "success",
+    "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+    "windowsCLI": {
+      "job": 132136307279,
+      "conclusion": "success",
+      "passed": 287,
+      "skipped": 52,
+      "failed": 0,
+      "assertions": 2556,
+      "files": 51,
+      "seconds": 168.51,
+      "omniSpawns": 12,
+      "delegated": 0,
+      "actualExecution": "Turbo cache miss d4e261db480cf308; zero cached tasks",
+      "formerlyFailingCase": {
+        "name": "compiled native CLI exposes owned help/version and isolated service/serve lifecycle",
+        "passed": true,
+        "milliseconds": 20795.1
+      },
+      "rawSHA256": "22a60a54fcd3f4a741167bd93974dd7cad95f34128e8981e308d5644fd9bb66b",
+      "limit": "Actual first-attempt EBUSY handle holder remains unknown; original failure retained."
+    }
   },
   "e2e": {
     "run": "43492035272",
@@ -485,7 +529,9 @@
     "reason": "Original permission observer accepted any POST and captured /api/model/execution, a metadata read. Exclude exactly that read; all unexpected writes remain observable and exact reply assertions stay unchanged. Original full attempt needed one configured retry for this case.",
     "focusedRun": 43496472513,
     "snapshot": "a1c86317d7b84a0dc3fc959aadd4671cc05339d3",
-    "result": "4 passed; one worker, zero retries. Full suite source remains46530, not the later fixture snapshot."
+    "result": "4 passed; one worker, zero retries. Full suite source remains46530, not the later fixture snapshot.",
+    "blob": "23dcf64e6475376ae24579da7e8e14bcd7a11cfb",
+    "blobIdentityVerified": "Current worktree hash-object equals GitHub snapshot blob."
   },
   "typechecks": {
     "coreLocal": {
@@ -505,14 +551,11 @@
     }
   },
   "ledger": {
-    "closed": 63,
+    "closed": 65,
     "total": 65,
-    "pending": [
-      "E10",
-      "M13"
-    ]
+    "pending": []
   },
-  "scope": "No full green or closure claim while retry is pending. Runtime/Core/Protocol/Schema/Server/Client sources equal the fourth full snapshot; later delta is one E2E observer only.",
+  "scope": "Complete workflow concluded success on attempt2, identical46530 source. First attempt68success2failure; only the two failed jobs reran. One E2E flaky and three skips remain explicit. Final code delta is the separately qualified permission observer; no full final-HEAD claim.",
   "staticChecks": {
     "guards": {
       "command": "bun run check:guards --base origin/dev",
@@ -538,5 +581,6 @@
     "godfile": {
       "exit": 0
     }
-  }
+  },
+  "leadVerdict": "APPROVE original65 bounded findings; all runtime sources are the integrated fourth snapshot, later observer is independently scoped green. No merge/release authorization inferred."
 }

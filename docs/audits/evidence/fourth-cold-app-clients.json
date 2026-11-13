@@ -174,7 +174,7 @@
       "skipped": 52,
       "failed": 1,
       "job": 132116390204,
-      "result": "EBUSY on executable rename; bounded exact-source retry pending"
+      "result": "First-attempt EBUSY preserved; exact-source attempt2 job132136307279 passed287 tests,52skip,2556assert,12ownOmni0delegated, zero cached tasks. Actual handle holder remains unknown."
     }
   },
   "raws": [
@@ -211,5 +211,5 @@
       "sha256": "c925e0b4e019b3a131d32fe37e40cc42d65c7af51116b2209ce570fb59159f2b"
     }
   ],
-  "scope": "Actual fourth-run scoped receipts. One CLI failure prevents global green; all original failures retained."
+  "scope": "Fourth-run scoped receipts. Original CLI failure preserved; complete aggregate later succeeded on bounded failed-jobs retry. See fourth-cold-requalification.json."
 }
