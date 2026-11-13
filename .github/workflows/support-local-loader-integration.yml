@@ -1,0 +1,39 @@
+name: support-local-loader-integration
+on:
+  push:
+    branches: [genesis-local-loader-integration-ci]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: modules/atlas
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Verify checkout and record version
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --version
+      - run: npm ci
+      - run: npm run build
+      - name: Strict parser synthetic tests
+        run: |
+          set -o pipefail
+          node --test scripts/maintenance-descriptor-loader.test.mjs 2>&1 | tee loader-parser.log
+      - name: Caller and real loader integration synthetic tests
+        run: |
+          set -o pipefail
+          npx vitest run packages/adapter-io/test/evaluation-maintenance-caller.test.ts packages/adapter-io/test/evaluation-maintenance-caller.integration.test.ts packages/adapter-io/test/evaluation-maintenance-loader.integration.test.ts 2>&1 | tee loader-integration.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: local-loader-integration-${{ github.sha }}
+          path: |
+            modules/atlas/loader-parser.log
+            modules/atlas/loader-integration.log
+          if-no-files-found: error
