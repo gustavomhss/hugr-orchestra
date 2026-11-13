@@ -145,6 +145,8 @@ const mentions: Record<string, string> = {
   "packages/core/test/distribution-bundle-workflow.test.ts": "pins the native workflow's positive suite value and declared steps",
   "packages/core/test/fixture/distribution-bundle.ts": "records the scope a bundle run saw in its evidence",
   "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
+  "packages/core/test/fixture/omni-control-isolate.ts": "actual negative and positive isolated child preload controls use declared scope",
+  "packages/script/test/test-plan.test.ts": "asserts Desktop shards do not override suite scope with declared",
   "native/omni/campaign/package.json": "the campaign package's test script declares the control, as its tests spawn through omni",
   "AGENTS.md": "documents the control",
 }
