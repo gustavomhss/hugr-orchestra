@@ -1,0 +1,54 @@
+name: Evaluation attachment integral batch
+on:
+  push:
+    branches: [genesis-evaluation-attachment-batch-ci]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: modules/atlas
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: modules/atlas/package-lock.json
+      - name: Install locked dependencies
+        run: set -o pipefail; npm ci 2>&1 | tee attachment-install.log
+      - name: Build and typecheck workspace
+        run: set -o pipefail; npm run build 2>&1 | tee attachment-build.log
+      - name: Synthetic attachment and governed evaluation regression
+        run: |
+          set -o pipefail
+          npx --no-install vitest run \
+            packages/adapter-io/test/evaluation-attachment-batch.test.ts \
+            packages/adapter-io/test/evaluation-attachment-coverage.test.ts \
+            packages/adapter-io/test/evaluation-admission-read.test.ts \
+            packages/adapter-io/test/genesis-evaluation.test.ts \
+            packages/adapter-io/test/evaluation-boundaries.test.ts \
+            packages/adapter-io/test/evaluation-rebuild.test.ts \
+            --reporter=default --reporter=json --outputFile=attachment-results.json 2>&1 | tee attachment-tests.log
+      - name: Pin public sources
+        if: always()
+        run: |
+          printf 'commit=%s\nrun=%s\nattempt=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > attachment-pins.txt
+          sha256sum packages/adapter-io/src/ownership-attachment.ts packages/adapter-io/src/evaluation-admission-read.ts packages/knowledge/src/ownership/read.ts packages/adapter-io/test/evaluation-attachment-batch.test.ts packages/adapter-io/test/evaluation-attachment-coverage.test.ts ../../.github/workflows/evaluation-attachment-batch.yml >> attachment-pins.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation-attachment-batch-public-evidence
+          path: |
+            modules/atlas/attachment-*.log
+            modules/atlas/attachment-results.json
+            modules/atlas/attachment-pins.txt
+            modules/atlas/packages/adapter-io/src/ownership-attachment.ts
+            modules/atlas/packages/adapter-io/test/evaluation-attachment-batch.test.ts
+            modules/atlas/packages/adapter-io/test/evaluation-attachment-coverage.test.ts
+          if-no-files-found: error

@@ -1,3 +1,4 @@
+import { readEvaluationAdmission } from "./evaluation-admission-read.js"
 import { assertEvaluationComposition } from "./ownership-evaluation-policy.js"
 import { evaluationManifestRefusal } from "./evaluation-manifest-binding.js"
 import type { Hash } from "@atlas/contracts"
@@ -24,9 +25,14 @@ export function ownershipAttachmentRefusal(
     if (!isEvaluationOwnershipManifest(manifest) || id(manifest) !== node.ownership) return "evaluation-manifest-unverifiable"
     const binding = evaluationManifestRefusal(store, node.ownership, evaluation, current)
     if (binding !== undefined) return binding
-    for (const entry of manifest.entries) {
-      const read = readOwnership(store, node.ownership, { scope: node.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, current, evaluation.context)
+    // One fresh integral traversal at EACH attachment gate. Never reuse check results in emit.
+    try {
+      const read = readEvaluationAdmission(store, node.ownership, node.scope, manifest.entries.map((entry) => entry.key), current, evaluation.context)
       if (read.kind === "hold") return `evaluation-attachment: ${read.reason}`
+    } catch (error) {
+      // Normalize only the helper's documented coverage rejection; preserve unexpected failures.
+      if (error instanceof Error && error.message === "evaluation-admission-coverage") return "evaluation-attachment-coverage"
+      throw error
     }
     return undefined
   }
