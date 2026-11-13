@@ -9,10 +9,10 @@
     "inventoried": 200,
     "produced": 200,
     "reviewed_by_both": 122,
-    "documentary_pair_accepted": 110,
-    "reviewed_with_material_findings": 12,
+    "documentary_pair_accepted": 122,
+    "reviewed_with_material_findings": 0,
     "awaiting_initial_pair_review": 78,
-    "pending_acceptance": 90
+    "pending_acceptance": 78
   },
   "accepted_units": [
     {
@@ -176,6 +176,37 @@
       "optional_open": []
     },
     {
+      "id": "B-03",
+      "body": {
+        "path": "bodies/b-03.md",
+        "sha256": "da129131222a1f111877c1c9eedc8ce130c9373d4f5251b4075f8d35281005d4",
+        "byte_length": 22051
+      },
+      "source_ids": [
+        "P138",
+        "P174",
+        "P175",
+        "P181",
+        "P183",
+        "P184",
+        "P185",
+        "P186",
+        "P190",
+        "P191",
+        "P145",
+        "P195"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Casos de inventário separados; assertions seletivas distinguidas de resolução da árvore pela implementação.",
+        "Identificador exportMissing corrigido no corpo e em dois campos correlatos de cobertura."
+      ],
+      "optional_open": []
+    },
+    {
       "id": "C-01",
       "body": {
         "path": "bodies/c-01.md",
@@ -308,7 +339,6 @@
   "pending_units": [
     "A-05",
     "A-06",
-    "B-03",
     "B-04",
     "B-05",
     "B-06",
@@ -325,28 +355,11 @@
     "No global PASS. Private original judgments are not published here."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-720a2dca401081919a454ae2fb4bd084_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-11d3446a1e508191bb7d852a4d0e6bc9_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "400a8d51ae61a0cec3bd119257a0712b3b3c3787dff0c417c4b062741bbc6b70",
-    "scope": "Originals through ten accepted units (110 unique sources), plus B03 initial opinions and unaccepted candidate delta; no final closure."
+    "sha256": "c0253078b7d887057c7cf24dba76d7eb2aa8fa2dfde0b02201b42a1de40b20cd",
+    "scope": "Visible originals and source/artifact records through eleven accepted units (122 unique sources), with pending transports and reviews explicitly distinguished; no final closure."
   },
-  "reviewed_pending_units": [
-    {
-      "id": "B-03",
-      "reviewed_body_sha256": "13ce583952395c4b8b770d575fe408af8a7de13b25a05dd43901eae39590578d",
-      "source_count": 12,
-      "state": "FIX_FIRST_DELTA_PENDING_PAIR",
-      "findings": [
-        {
-          "id": "B03-F1",
-          "summary": "Separar os dois casos de teste de inventário e atribuir a ordem de validação à evidência correta."
-        },
-        {
-          "id": "B03-J1-F2",
-          "summary": "Alinhar o identificador documentado a exportMissing."
-        }
-      ]
-    }
-  ],
-  "counting_note": "Revisadas por ambos inclui B03 na versão inicial com correções obrigatórias; aceitas pela dupla usa somente os hashes atuais listados. Apoios não são recontados."
+  "reviewed_pending_units": [],
+  "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes."
 }

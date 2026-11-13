@@ -80,3 +80,10 @@ Custódia privada confirmada dos registros deste checkpoint: `libfile_fde3_f-720
 ## Checkpoint do delta B-03
 
 O corpo B-03 foi corrigido em cinco linhas e o mapa B em dois campos: os casos de readers esparsos e revisão inválida foram separados, a ordem de validação foi atribuída à implementação e o identificador foi alinhado a `exportMissing`. O corpo corrente tem SHA-256 `da129131222a1f111877c1c9eedc8ce130c9373d4f5251b4075f8d35281005d4`. O primeiro juiz aceitou o delta e o segundo está em avaliação; este checkpoint ainda mantém 110 fontes aceitas pela dupla. A versão anterior e seus pareceres permanecem preservados.
+
+
+## Checkpoint de revisão: 122 fontes
+
+A mesma dupla aceitou o delta de B-03 e os dois campos de cobertura correspondentes. Os achados obrigatórios e opcionais dessa unidade foram encerrados, sem alterar a população nem executar produto. São 122 fontes aceitas nos corpos atuais; 78 aguardam aceite da dupla. A tentativa interrompida de um juiz não recebeu resultado presumido: o mesmo contexto foi retomado e emitiu o parecer efetivo. A retransmissão de texto após compactação é registrada separadamente da leitura das fontes e da decisão semântica.
+
+Custódia privada real: referência opaca `libfile_fde3_f-11d3446a1e508191bb7d852a4d0e6bc9_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `c0253078b7d887057c7cf24dba76d7eb2aa8fa2dfde0b02201b42a1de40b20cd`. Ela preserva os registros visíveis disponíveis e distingue conclusões de atividades ainda pendentes; não é recibo assinado do provedor, prova de runtime ou conclusão global.
