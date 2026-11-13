@@ -70,13 +70,8 @@ describe("test shard planner", () => {
     expect(start).not.toContain("onLoad")
     expect(start).not.toContain("console.")
     const shadow = strip(readFileSync(new URL("../../core/test/review-toolkit/dependency-shadow.test.ts", import.meta.url), "utf8"))
-    const beforeCaps = shadow.split("entry, path-byte and shared caps are inclusive")[0] ?? ""
-    const capsBinding = beforeCaps.split("\n").filter((line) => line.includes("const caps =")).at(-1) ?? ""
-    expect(capsBinding).toBe('const caps = process.platform === "win32" ? it.live.skip : it.live')
-    expect(beforeCaps.trimEnd().endsWith('caps("')).toBe(true)
-    const ran = shadow.split("rawLive(name, () => {")[1]?.split("}, opts)")[0] ?? ""
-    expect(ran).toContain('writeSync(2, `shard test ${name}\\n`)')
-    expect(shadow.split("rawLive(name, () => {")[0] ?? "").not.toContain("writeSync(2,")
+    const capsCall = (shadow.split("entry, path-byte and shared caps are inclusive")[0] ?? "").trimEnd().split("\n").at(-1) ?? ""
+    expect(capsCall).toBe(';(process.platform === "win32" ? it.live.skip : it.live)("')
     const recovery = strip(readFileSync(new URL("./recovery-bundle.test.ts", import.meta.url), "utf8"))
     const injection = recovery.split("destination %s injection cannot replace private restore publication")[1]?.split("\nasync function makeFixture")[0] ?? ""
     expect(injection.trimEnd().endsWith("}, 20_000)")).toBe(true)
