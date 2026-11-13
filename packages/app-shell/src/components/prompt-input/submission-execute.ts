@@ -19,7 +19,7 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
-import { Worktree as WorktreeState } from "@/utils/worktree"
+import { Worktree } from "@/utils/worktree"
 import { defaultCopyParent, repositoryProject, WORKTREE_STRATEGY } from "@/orchestra/chapters/workspaces-model"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError, hookRefusal } from "@/utils/server-errors"
@@ -243,7 +243,7 @@ export function createSubmissionExecutor(environment: Environment) {
         sessionDirectory = createdWorktree.directory
         admission.directory = sessionDirectory
         if (!ownsSource() || signal.aborted) return false
-        WorktreeState.ready(directorySDK.scope, sessionDirectory)
+        Worktree.ready(directorySDK.scope, sessionDirectory)
       }
 
       if (!admission.directory && worktreeSelection !== "main" && worktreeSelection !== "create") {
