@@ -87,3 +87,10 @@ O corpo B-03 foi corrigido em cinco linhas e o mapa B em dois campos: os casos d
 A mesma dupla aceitou o delta de B-03 e os dois campos de cobertura correspondentes. Os achados obrigatórios e opcionais dessa unidade foram encerrados, sem alterar a população nem executar produto. São 122 fontes aceitas nos corpos atuais; 78 aguardam aceite da dupla. A tentativa interrompida de um juiz não recebeu resultado presumido: o mesmo contexto foi retomado e emitiu o parecer efetivo. A retransmissão de texto após compactação é registrada separadamente da leitura das fontes e da decisão semântica.
 
 Custódia privada real: referência opaca `libfile_fde3_f-11d3446a1e508191bb7d852a4d0e6bc9_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `c0253078b7d887057c7cf24dba76d7eb2aa8fa2dfde0b02201b42a1de40b20cd`. Ela preserva os registros visíveis disponíveis e distingue conclusões de atividades ainda pendentes; não é recibo assinado do provedor, prova de runtime ou conclusão global.
+
+
+## Checkpoint de revisão: 153 fontes
+
+Os mesmos dois juízes aceitaram A-05, A-06, B-04 e C-05, além das onze unidades já aceitas. O total vigente é 153 fontes distintas aceitas, em quinze corpos L2; 47 fontes permanecem em seis unidades pendentes. Em A-06, a alternativa de completion sem system foi incluída e as fronteiras das comparações/erros foram delimitadas. Em B-04, a direção do replay first-parent foi corrigida para ancestral→descendente. Os deltas foram reavaliados pela mesma dupla e os achados obrigatórios dessas unidades estão encerrados. Cinco observações opcionais permanecem registradas em três unidades, sem ampliar a barra de aceite.
+
+Custódia privada real dos registros disponíveis: `libfile_fde3_f-2a7935e2614c819189ceab2bba744e79_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `4c801a4a2a887424d0bf96d6e3c73a1f868b0a4e83c47287a0baa3a1a10cb716`. Os originais distinguem leitura da autora, conferência mecânica e exame dos juízes, incluindo retransmissões e continuidade literal. O manifesto L1 tem transporte em preparação/revisão; L3–L4 continuam sem liberação. Nenhum teste, ferramenta ou código do produto, CI ou consumidor foi executado.

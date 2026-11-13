@@ -8,11 +8,11 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 122,
-    "documentary_pair_accepted": 122,
+    "reviewed_by_both": 153,
+    "documentary_pair_accepted": 153,
     "reviewed_with_material_findings": 0,
-    "awaiting_initial_pair_review": 78,
-    "pending_acceptance": 78
+    "awaiting_initial_pair_review": 47,
+    "pending_acceptance": 47
   },
   "accepted_units": [
     {
@@ -100,10 +100,6 @@
     },
     {
       "id": "A-04",
-      "resolved_findings": [
-        "Condição GITHUB_ACTIONS separada de autenticação; trap limitado ao estado Git final; stripping/ELF descritos com seu alcance específico."
-      ],
-      "optional_open": [],
       "body": {
         "path": "bodies/a-04.md",
         "sha256": "ce0b80571ed5985df188996f604dfb5fe8cea91e128fe1c6fa9257fc0f8c271d",
@@ -122,7 +118,67 @@
       "judges": {
         "J1": "DOCUMENTARY_LOCAL_PASS",
         "J2": "DOCUMENTARY_LOCAL_PASS"
-      }
+      },
+      "resolved_findings": [
+        "Condição GITHUB_ACTIONS separada de autenticação; trap limitado ao estado Git final; stripping/ELF descritos com seu alcance específico."
+      ],
+      "optional_open": []
+    },
+    {
+      "id": "A-05",
+      "body": {
+        "path": "bodies/a-05.md",
+        "sha256": "09a1ad18a45f4c4d23f7c03d05839cd48860f98370af6e6624fd2ec0df771993",
+        "byte_length": 14098
+      },
+      "source_ids": [
+        "P114",
+        "P117",
+        "P118",
+        "P119",
+        "P120",
+        "P123",
+        "P124",
+        "P125",
+        "P127",
+        "P128",
+        "P129"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Texto literal retransmitido após compactação; a mesma dupla aceitou o corpo inalterado."
+      ],
+      "optional_open": [
+        "Skip limita-se às consultas isDirectory selecionadas; o readdir inicial de bunRoot ainda pode falhar.",
+        "A seleção de owners verifica o endereço inicial da seção dentro de PT_LOAD gravável, não toda a extensão da seção."
+      ]
+    },
+    {
+      "id": "A-06",
+      "body": {
+        "path": "bodies/a-06.md",
+        "sha256": "da137d618577bc50764ce6a168bf9c05ae03f5bfbcd3836b90acaa3d3db1f079",
+        "byte_length": 11721
+      },
+      "source_ids": [
+        "P113",
+        "P115",
+        "P116",
+        "P121",
+        "P122",
+        "P126"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Admissão de completion sem system incluída; comparações de ambiente, dependencyInputs e alcance do handler JSON delimitados."
+      ],
+      "optional_open": []
     },
     {
       "id": "B-01",
@@ -207,6 +263,39 @@
       "optional_open": []
     },
     {
+      "id": "B-04",
+      "body": {
+        "path": "bodies/b-04.md",
+        "sha256": "3ff6b3065e3e73a7500ecd60781ac8bee401dcd898c106183d7a596f6faf1429",
+        "byte_length": 20052
+      },
+      "source_ids": [
+        "P133",
+        "P146",
+        "P147",
+        "P148",
+        "P149",
+        "P176",
+        "P182",
+        "P192",
+        "P193",
+        "P194",
+        "P196",
+        "P198"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Direção do replay first-parent corrigida para ancestral→descendente; código e envelope original preservados."
+      ],
+      "optional_open": [
+        "A dispensa Windows é inferida dos targets textuais dos builds, não do sistema operacional do runner.",
+        "Resolve-Path exige paths resolvidos; não há filtro explícito de arquivo regular no predicado local."
+      ]
+    },
+    {
       "id": "C-01",
       "body": {
         "path": "bodies/c-01.md",
@@ -281,8 +370,6 @@
     },
     {
       "id": "C-03",
-      "resolved_findings": [],
-      "optional_open": [],
       "body": {
         "path": "bodies/c-03.md",
         "sha256": "ba2d13b34111d4b32922c3177e80032c9d39e274d19634015a7e4455b1cfdd30",
@@ -302,14 +389,12 @@
       "judges": {
         "J1": "DOCUMENTARY_LOCAL_PASS",
         "J2": "DOCUMENTARY_LOCAL_PASS"
-      }
+      },
+      "resolved_findings": [],
+      "optional_open": []
     },
     {
       "id": "C-04",
-      "resolved_findings": [],
-      "optional_open": [
-        "Diferença não bloqueante de rótulos: o guia conserva Actions e o changelog registra Checks, anteriormente Actions; considerar na navegação integrada."
-      ],
       "body": {
         "path": "bodies/c-04.md",
         "sha256": "87458bdd131efcec6e3f0fdc2d7bc7fdeafb00aa9222abd305f5f5049efbebc8",
@@ -332,18 +417,36 @@
       "judges": {
         "J1": "DOCUMENTARY_LOCAL_PASS",
         "J2": "DOCUMENTARY_LOCAL_PASS"
-      }
+      },
+      "resolved_findings": [],
+      "optional_open": [
+        "Actions in guide versus Checks (formerly Actions) in changelog; optional integrated-navigation precision; existing source summaries faithful."
+      ]
+    },
+    {
+      "id": "C-05",
+      "body": {
+        "path": "bodies/c-05.md",
+        "sha256": "3595ff75ad69dc68897e40852d68b7eee70422f847818f32235a1042bbe2ecf2",
+        "byte_length": 19835
+      },
+      "source_ids": [
+        "P075",
+        "P092"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [],
+      "optional_open": []
     }
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [
-    "A-05",
-    "A-06",
-    "B-04",
     "B-05",
     "B-06",
     "B-07",
-    "C-05",
     "C-06",
     "C-07",
     "C-08"
@@ -355,10 +458,10 @@
     "No global PASS. Private original judgments are not published here."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-11d3446a1e508191bb7d852a4d0e6bc9_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-2a7935e2614c819189ceab2bba744e79_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "c0253078b7d887057c7cf24dba76d7eb2aa8fa2dfde0b02201b42a1de40b20cd",
-    "scope": "Visible originals and source/artifact records through eleven accepted units (122 unique sources), with pending transports and reviews explicitly distinguished; no final closure."
+    "sha256": "4c801a4a2a887424d0bf96d6e3c73a1f868b0a4e83c47287a0baa3a1a10cb716",
+    "scope": "Visible originals and source/artifact records through 15 accepted L2 units (153 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
   },
   "reviewed_pending_units": [],
   "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes."
