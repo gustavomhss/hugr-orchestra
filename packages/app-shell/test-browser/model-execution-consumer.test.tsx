@@ -1,6 +1,9 @@
 import { registerSubmitHarnessLifecycle } from "@/components/prompt-input/submit-harness"
 import { beforeAll, expect, test } from "bun:test"
 import { Schema } from "effect"
+import { createRoot, createSignal } from "solid-js"
+import type { UserMessage } from "@/v2-wire"
+import { followSessionModel } from "@/pages/session/session-model-helpers"
 import { unwrap } from "solid-js/store"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
@@ -605,4 +608,162 @@ test("E6 App rendered selector keeps NEW A after A to B to A and a late old A re
     expect(view.rows().find((row) => row.textContent?.includes("Consumer model"))?.getAttribute("aria-disabled")).not.toBe("true")
     expect(owner.models.list().some((item) => item.id === "blocked"), "the catalog still contains B; only the canonical context changed").toBe(true)
   } finally { release.resolve(); view.dispose(); owner.dispose() }
+})
+
+// Real Local and Session follower; transport outcomes are controlled UI receipts, not Core admission proof.
+function firstUser(id: string, model: UserMessage["model"] = { providerID: ref.providerID, modelID: ref.id }): UserMessage {
+  return { id, sessionID: "session-1", role: "user", agent: "maestro", model, time: { created: 1 } }
+}
+function firstSendOwner(options: { variant?: string; value?: string;
+  input?: (source: ReturnType<typeof selection>) => NonNullable<Parameters<typeof composer>[1]> } = {}) {
+  state.params.id = "session-1"
+  const calls = transport({ reply: async (request) => {
+    const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.clone().json())
+    return json({ location: { directory: calls.directory }, data: decision("ready", input.model?.variant) })
+  } })
+  const source = selection(calls, "session-1")
+  if (options.variant !== undefined) source.setMetadata("agent", (agents) => agents.map((agent) => agent.id === "maestro"
+    ? { ...agent, model: { providerID: ref.providerID, modelID: ref.id }, variant: options.variant } : agent))
+  state.localOverride = source.local
+  const follower = createRoot((dispose) => {
+    const [last, setLast] = createSignal<UserMessage>()
+    const [remote, setRemote] = createSignal<{ providerID: string; id: string }>()
+    followSessionModel(source.local, { lastUserMessage: last, model: remote, sessionID: () => "session-1" })
+    return { dispose, last, setLast, setRemote }
+  })
+  const editor = composer(options.value ?? "first Send", options.input?.(source))
+  return { calls, source, follower, editor,
+    observe(value: (typeof optimistic)[number]) {
+      expect(optimistic.at(-1)).toBe(value)
+      expect(value.sessionID).toBe("session-1")
+      follower.setLast(firstUser(value.message.id, value.message.model))
+    },
+    dispose() { state.optimisticObserved = () => {}; state.localOverride = undefined; editor.dispose(); follower.dispose(); source.dispose() },
+  }
+}
+
+// Undefined resolution pins explicit model default null; configured inheritance retains the exact high string.
+test.each([undefined, "high"])("E1 real Local first Send pins resolved variant %s before its own optimistic echo and HTTP", async (variant) => {
+  const owner = firstSendOwner({ variant })
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "implicit Local canonical selection ready")
+    expect(owner.source.saved.session["session-1"]).toBeUndefined()
+    const pinned = { model: { providerID: ref.providerID, modelID: ref.id }, variant: variant ?? null }
+    state.optimisticObserved = (value) => { expect(owner.source.saved.session["session-1"]).toMatchObject({ agent: "maestro", ...pinned }); owner.observe(value) }
+    owner.calls.control.before = async (path) => { if (path.endsWith("/prompt")) expect(owner.source.saved.session["session-1"]).toMatchObject({ agent: "maestro", ...pinned }) }
+    expect(await send(owner.editor)).toBe(true)
+    expect(owner.calls.admissions()).toHaveLength(1)
+    expect(owner.source.local.model.intent()).toMatchObject(pinned)
+    expect(owner.follower.last()?.id).toBe(optimistic[0]?.message.id)
+    expect(promptInputs).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test("E1 real Local canonical first-user echo before a lost ACK retains the identical first-Send request", async () => {
+  const owner = firstSendOwner()
+  const projected = { observed: false }
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "implicit Local ready for lost ACK")
+    expect(owner.source.saved.session["session-1"]).toBeUndefined()
+    state.optimisticObserved = owner.observe
+    owner.calls.control.after = async (path) => {
+      if (!path.endsWith("/prompt") || owner.calls.admissions().length !== 1) return
+      const own = owner.follower.last()
+      if (!own) throw new Error("Own optimistic first user unavailable before ACK")
+      owner.follower.setLast({ ...own, time: { created: 2 } })
+      await Promise.resolve()
+      expect(owner.follower.last()?.id).toBe(own.id)
+      expect(owner.source.local.model.intent()).toMatchObject({ model: { providerID: ref.providerID, modelID: ref.id }, variant: null })
+      projected.observed = true
+      throw new TypeError("Canonical first user projected before lost ACK")
+    }
+    expect(await send(owner.editor)).toBe(false)
+    expect(projected.observed).toBe(true)
+    expect(owner.calls.admissions()).toHaveLength(1)
+    const original = structuredClone(owner.calls.admissions()[0]!.body)
+    const parts = structuredClone(unwrap(optimistic[0]!.parts))
+    expect(owner.editor.prompt.current()).toEqual(text("first Send"))
+    owner.follower.setLast(firstUser("late-history", { providerID: ref.providerID, modelID: "blocked" }))
+    await Promise.resolve()
+    expect(owner.source.local.model.intent().model?.modelID).toBe(ref.id)
+    expect(await send(owner.editor)).toBe(true)
+    expect(owner.calls.admissions()).toHaveLength(2)
+    expect(owner.calls.admissions()[1]!.body).toEqual(original)
+    expect(optimistic.at(-1)?.message.id).toBe(optimistic[0]!.message.id)
+    expect(optimistic.at(-1)?.parts).toEqual(parts)
+  } finally { owner.dispose() }
+})
+
+test("E1 a genuine human model change after first-Send pin still fences prompt HTTP", async () => {
+  const owner = firstSendOwner()
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "Local ready before human change")
+    state.optimisticObserved = (value) => {
+      expect(owner.source.saved.session["session-1"]?.model?.modelID).toBe(ref.id)
+      owner.observe(value)
+      owner.source.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
+    }
+    expect(await send(owner.editor)).toBe(false)
+    expect(optimistic).toHaveLength(1)
+    expect(owner.source.local.model.intent().model?.modelID).toBe("blocked")
+    expect(owner.calls.admissions()).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test("E1 real Session follower still restores loaded history and follows a remote model switch", async () => {
+  const owner = firstSendOwner()
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "Local ready before loaded history")
+    owner.follower.setLast(firstUser("historical-user", { providerID: ref.providerID, modelID: ref.id, variant: "high" }))
+    await wait(() => owner.source.local.model.intent().variant === "high", "actual follower restored history")
+    expect(owner.source.saved.session["session-1"]).toMatchObject({ agent: "maestro", model: { modelID: ref.id }, variant: "high" })
+    owner.follower.setRemote(ref)
+    await Promise.resolve()
+    owner.follower.setRemote({ ...ref, id: "blocked" })
+    await wait(() => owner.source.local.model.intent().model?.modelID === "blocked", "actual follower applied remote Session model")
+    expect(owner.calls.admissions()).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test.each(["blank Stop", "shell", "local queue", "known command", "custom model", "not ready"] as const)(
+  "E1 excluded %s does not materialize real Local intent", async (kind) => {
+    const queued: FollowupDraft[] = []
+    const observed = { aborts: 0 }
+    const owner = firstSendOwner({ value: kind === "blank Stop" ? "" : kind === "known command" ? "/fixture-known" : "excluded action",
+      input: (source) => ({ mode: () => kind === "shell" ? "shell" : "normal", working: () => kind === "blank Stop",
+        shouldQueue: () => kind === "local queue", onQueue: (draft) => queued.push(draft), onAbort: () => { observed.aborts++ },
+        ...(kind === "custom model" ? { model: { ...source.local.model } } : {}) }),
+    })
+    try {
+      await wait(() => owner.source.local.model.execution.ready(), "Local ready before exclusion")
+      if (kind === "known command") commands.push({ name: "fixture-known" })
+      if (kind === "not ready") owner.source.setReady(false)
+      const initial = structuredClone(unwrap(owner.source.local.model.intent()))
+      await send(owner.editor)
+      expect(owner.source.saved.session["session-1"]).toBeUndefined()
+      expect(owner.source.local.model.intent()).toEqual(initial)
+      if (kind === "local queue") expect(queued).toHaveLength(1)
+      if (kind === "blank Stop") {
+        expect(observed.aborts).toBe(1)
+        await wait(() => owner.calls.calls.some((call) => call.path.endsWith("/active")), "Stop reached its real status readback")
+      }
+      if (kind === "shell") expect(owner.calls.calls.filter((call) => call.path.endsWith("/shell"))).toHaveLength(1)
+      if (kind === "known command") expect(owner.calls.calls.filter((call) => call.path.endsWith("/command"))).toHaveLength(1)
+      if (kind === "custom model") expect(owner.calls.admissions()).toHaveLength(1)
+      if (kind === "not ready") expect(owner.calls.admissions()).toEqual([])
+    } finally { owner.dispose() }
+  },
+)
+
+
+test("E1 an unknown slash remains an ordinary first prompt with real Local", async () => {
+  const owner = firstSendOwner({ value: "/fixture-unknown raw" })
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "Local ready for unknown slash")
+    state.optimisticObserved = owner.observe
+    expect(await send(owner.editor)).toBe(true)
+    expect(owner.calls.admissions()).toHaveLength(1)
+    expect(owner.calls.admissions()[0]?.body).toMatchObject({ prompt: { text: "/fixture-unknown raw" } })
+    expect(owner.calls.calls.filter((call) => call.path.endsWith("/command"))).toEqual([])
+  } finally { owner.dispose() }
 })

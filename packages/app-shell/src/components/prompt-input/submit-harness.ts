@@ -126,6 +126,8 @@ export const state = {
   rulesStarted: Promise.withResolvers<void>(),
   worktreeCreates: 0,
   sdkOverride: undefined as unknown,
+  localOverride: undefined as ReturnType<typeof import("@/context/local").createLocal> | undefined,
+  optimisticObserved: (_value: (typeof optimistic)[number]) => {},
   serverOverride: undefined as unknown,
   createStarted: Promise.withResolvers<void>(),
   waiting: 0,
@@ -346,7 +348,7 @@ beforeAll(async () => {
   }))
 
   mock.module("@/context/local", () => ({
-    useLocal: () => ({
+    useLocal: () => state.localOverride ?? ({
       model: {
         execution: { context: () => "controlled-submit-fixture-metadata",
           input: () => ({ model: { providerID: "provider", id: state.modelID, variant: state.variant ?? undefined } }) },
@@ -432,6 +434,7 @@ beforeAll(async () => {
         optimistic: {
           add: (value: (typeof optimistic)[number]) => {
             optimistic.push(value)
+            state.optimisticObserved(value)
             optimisticSeeded.push(
               !!value.directory &&
                 !!value.sessionID &&
@@ -563,6 +566,8 @@ function resetSubmitHarness() {
   savedPolicies.length = 0
   state.worktreeCreates = 0
   state.sdkOverride = undefined
+  state.localOverride = undefined
+  state.optimisticObserved = () => {}
   state.serverOverride = undefined
   state.createStarted = Promise.withResolvers<void>()
   interrupts.length = 0
