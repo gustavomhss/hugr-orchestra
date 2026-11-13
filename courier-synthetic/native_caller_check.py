@@ -81,6 +81,8 @@ def verify_capture(
         payload = b"".join(payload_parts)
         if sha256(payload) != terminal["chunk"]["chunk_sha256"]:
             return failure
+        if terminal.get("stdout_sha256") != sha256(payload):
+            return failure
 
         if terminal.get("state") != "CHILD_EXIT0_CHUNK_DURABLE":
             return failure
