@@ -3,6 +3,7 @@
   "globalDependencies": [
     "script/test-omni-control.ts",
     "script/test-browser.ts",
+    "packages/core/script/test-browser.ts",
     ".github/actions/omni-binaries/action.yml",
     "script/module-registry.json",
     "script/toolchain-registry.json",
