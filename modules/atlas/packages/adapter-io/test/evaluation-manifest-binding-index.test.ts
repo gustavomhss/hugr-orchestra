@@ -24,12 +24,13 @@ function fixture(options: { duplicate?: boolean; missing?: boolean; changed?: bo
     kind: "ownership-receipt", version: 2, evaluation, evaluationCandidate: candidateId,
     contract: receiptContract, inputs, dependencies, reviews: [],
   } satisfies EvaluationOwnershipReceipt)
+  let candidateKeyReads = 0
   const candidateEntries = [{
-    key, contract, inputs, dependencies,
+    get key() { candidateKeyReads++; return key }, contract, inputs, dependencies,
     artifact: { key, scope, title: "first", layer: 1 as const, need: "entry" as const, result, navigation: [] as string[] },
   }]
   if (options.duplicate) candidateEntries.push({
-    key, contract, inputs, dependencies,
+    get key() { candidateKeyReads++; return key }, contract, inputs, dependencies,
     artifact: { key, scope, title: "second", layer: 1 as const, need: "entry" as const, result, navigation: [] as string[] },
   })
   if (options.missing) candidateEntries.splice(0, candidateEntries.length)
@@ -55,16 +56,18 @@ function fixture(options: { duplicate?: boolean; missing?: boolean; changed?: bo
   }
   const manifestId = store.put(manifest)
   const context: OwnershipEvaluationContext = { evaluation, evaluationCandidate: candidateId, generation }
-  return { store, manifestId, context, candidateId, candidate }
+  return { store, manifestId, context, candidateId, candidate, get candidateKeyReads() { return candidateKeyReads }, resetCandidateKeyReads() { candidateKeyReads = 0 } }
 }
 
 describe("evaluation manifest candidate entry index", () => {
   it("preserves first-occurrence semantics for duplicate candidate keys", () => {
     const f = fixture({ duplicate: true })
     f.store.put(f.candidate)
+    f.resetCandidateKeyReads()
     expect(evaluationManifestRefusal(f.store, f.manifestId, {
       scope: "synthetic.scope", root: "/synthetic", context: f.context,
     } as never, () => "v1")).toBeUndefined()
+    expect(f.candidateKeyReads).toBe(2)
   })
 
   it("refuses a missing candidate entry", () => {
