@@ -77,36 +77,76 @@ class Synthetic(unittest.TestCase):
   self.assertNotEqual(r.returncode,0);self.assertEqual(r.stdout,b'');run=self.parent/'supervised-0';self.assertFalse((run/'terminal.json').exists());stop=json.loads((run/'STOP.json').read_text());self.assertIsNotNone(stop['direct_child_returncode']);self.assertFalse(stop['retry']);self.assertNotEqual(self.run_case().returncode,0)
 
 class CallerSpecificationOnly(unittest.TestCase):
- def verify(self,events,descriptor,release,attempt,grant,terminal,expected,start=0):
-  # Small reference checker for procedure only; not production caller or backend end-to-end.
-  try:
-   sid=None;fragments=[];done=False
-   for e in events:
-    assert not done and not any(e.get(k) for k in ['error','truncated','lost','save_failed'])
-    if e.get('session'):
-     assert sid is None or sid==e['session'];sid=e['session']
-    fragments.append(e.get('output',''))
-    if 'exit' in e:assert e['exit']==0;done=True
-   assert done and terminal and terminal['state']=='CHILD_EXIT0_CHUNK_DURABLE' and terminal['direct_child_returncode']==0
-   for k in ['case','sequence','offset','grant_sha256']:assert descriptor[k]==release[k]==attempt[k]
-   assert descriptor['grant_sha256']==H(json.dumps(grant,sort_keys=True).encode())
-   m=terminal['chunk'];assert start==m['start']==attempt['offset'];assert m['end_exclusive']-start==len(expected);assert m['response_sha256']==grant['response_sha256'];assert m['total_bytes']==grant['response_bytes'];assert m['chunk_sha256']==H(expected)
-   text=''.join(fragments);mark='META:'+json.dumps(m,sort_keys=True)+'\n';assert text.count(mark)==1;payload=text.replace(mark,'',1).encode();assert payload==expected and H(payload)==terminal['stdout_sha256']
-   return {'advance':m['end_exclusive'],'ack_allowed':False,'chunk_verified':True}
-  except (AssertionError,KeyError,TypeError):return {'advance':None,'ack_allowed':False,'chunk_verified':False}
- def fixture(self):
-  payload='abc€'.encode();grant={'response_sha256':H(payload),'response_bytes':len(payload)};d={'case':'SYNTHETIC','sequence':1,'offset':0,'grant_sha256':H(json.dumps(grant,sort_keys=True).encode())};m={'start':0,'end_exclusive':len(payload),'total_bytes':len(payload),'response_sha256':H(payload),'chunk_sha256':H(payload)};t={'state':'CHILD_EXIT0_CHUNK_DURABLE','direct_child_returncode':0,'chunk':m,'stdout_sha256':H(payload)};text='META:'+json.dumps(m,sort_keys=True)+'\n'+payload.decode();events=[{'session':4,'output':text[:11]},{'session':4,'output':text[11:-2]},{'exit':0,'output':text[-2:]}];return events,d,dict(d),dict(d),grant,t,payload
- def test_fragmented_success_and_no_autoACK(self):
-  self.assertEqual(self.verify(*self.fixture()),{'advance':6,'ack_allowed':False,'chunk_verified':True})
- def test_incompatible_bindings_and_missing_proofs(self):
-  for index,key,value in [(1,'sequence',2),(2,'offset',1),(3,'case','OTHER')]:
-   args=list(self.fixture());args[index][key]=value;self.assertFalse(self.verify(*args)['chunk_verified'])
-  args=list(self.fixture());args[5]=None;self.assertFalse(self.verify(*args)['chunk_verified'])
-  args=list(self.fixture());args[0][-1].pop('exit');self.assertFalse(self.verify(*args)['chunk_verified'])
- def test_unknown_truncation_loss_gap_overlap(self):
-  for event in [{'error':'Unknown process id'},{'truncated':True},{'lost':True},{'save_failed':True},{'session':99}]:
-   args=list(self.fixture());args[0].insert(1,event);r=self.verify(*args);self.assertIsNone(r['advance']);self.assertFalse(r['ack_allowed'])
-  for bad in ['ab','abc€abc€']:
-   args=list(self.fixture());args[0][-1]['output']=bad;r=self.verify(*args);self.assertFalse(r['chunk_verified'])
-  args=list(self.fixture());self.assertFalse(self.verify(*args,start=1)['chunk_verified'])
+ def setUp(self):
+  from native_caller_check import verify_capture
+  self.verify_capture=verify_capture
+  self.payload="abc€".encode()
+  self.grant={'state':'COURIER_ONE_RESPONSE_AUTHORIZED','response_sha256':H(self.payload),'response_bytes':len(self.payload)}
+  # Preserve these exact bytes; deliberately non-canonical JSON whitespace proves
+  # that the checker hashes the received grant, not a re-serialized object.
+  self.grant_bytes=json.dumps(self.grant,indent=2).encode()
+  self.tuple={'case':'S3-C5','sequence':7,'offset':0,'grant_sha256':H(self.grant_bytes)}
+  self.descriptor=dict(self.tuple);self.release=dict(self.tuple);self.attempt=dict(self.tuple)
+  self.chunk={'start':0,'end_exclusive':len(self.payload),'total_bytes':len(self.payload),
+              'response_sha256':H(self.payload),'chunk_sha256':H(self.payload)}
+  self.terminal={'state':'CHILD_EXIT0_CHUNK_DURABLE','direct_child_returncode':0,
+                 'chunk':self.chunk,'stdout_sha256':H(self.payload)}
+  self.fragments=[{'offset':0,'data':self.payload[:2]},
+                  {'offset':2,'data':self.payload[2:4]},
+                  {'offset':4,'data':self.payload[4:]}]
+ def verify(self,**overrides):
+  args={'descriptor':self.descriptor,'release':self.release,'attempt':self.attempt,
+        'grant_bytes':self.grant_bytes,'fragments':self.fragments,
+        'terminal':self.terminal,'terminal_binding':self.tuple,'complete':True}
+  args.update(overrides)
+  return self.verify_capture(**args)
+ def test_fragmented_raw_bytes_and_terminal_tuple(self):
+  result=self.verify()
+  self.assertEqual(result,{'advance':len(self.payload),'ack_allowed':False,'chunk_verified':True})
+ def test_utf8_codepoint_may_cross_fragment_boundary(self):
+  euro='€'.encode()
+  self.fragments=[{'offset':0,'data':b'abc'+euro[:1]},
+                  {'offset':4,'data':euro[1:]}]
+  self.chunk.update({'end_exclusive':6,'chunk_sha256':H(self.payload)})
+  self.terminal['stdout_sha256']=H(self.payload)
+  self.assertTrue(self.verify()['chunk_verified'])
+ def test_gap_overlap_reorder_and_duplicate_fragments_rejected(self):
+  for fragments in [
+   [{'offset':0,'data':b'ab'},{'offset':3,'data':self.payload[2:]}],
+   [{'offset':0,'data':b'abc'},{'offset':2,'data':self.payload[2:]}],
+   list(reversed(self.fragments)),
+   self.fragments+[dict(self.fragments[-1])],
+  ]:
+   self.assertFalse(self.verify(fragments=fragments)['chunk_verified'])
+   self.assertIsNone(self.verify(fragments=fragments)['advance'])
+ def test_truncation_or_incomplete_capture_rejected(self):
+  self.assertFalse(self.verify(complete=False)['chunk_verified'])
+  self.assertFalse(self.verify(fragments=self.fragments[:-1])['chunk_verified'])
+  self.assertFalse(self.verify(terminal=None)['chunk_verified'])
+ def test_terminal_tuple_mismatch_rejected(self):
+  for key,value in [('case','S3-C6'),('sequence',8),('offset',1),('grant_sha256','0'*64)]:
+   binding=dict(self.tuple);binding[key]=value
+   self.assertFalse(self.verify(terminal_binding=binding)['chunk_verified'])
+  self.assertFalse(self.verify(terminal_binding=None)['chunk_verified'])
+ def test_descriptor_release_attempt_all_bound_to_raw_grant(self):
+  for name in ('descriptor','release','attempt'):
+   changed=dict(getattr(self,name));changed['grant_sha256']='0'*64
+   self.assertFalse(self.verify(**{name:changed})['chunk_verified'])
+  # Same semantic JSON with different bytes is not the grant named by the tuple.
+  self.assertFalse(self.verify(grant_bytes=json.dumps(self.grant,separators=(',',':')).encode())['chunk_verified'])
+ def test_terminal_receipt_mismatch_and_absence_rejected(self):
+  self.assertFalse(self.verify(terminal=None)['chunk_verified'])
+  bad=dict(self.terminal);bad['direct_child_returncode']=7
+  self.assertFalse(self.verify(terminal=bad)['chunk_verified'])
+  bad=dict(self.terminal);bad['state']='FAILED'
+  self.assertFalse(self.verify(terminal=bad)['chunk_verified'])
+  bad=dict(self.terminal);bad['stdout_sha256']='0'*64
+  self.assertFalse(self.verify(terminal=bad)['chunk_verified'])
+ def test_chunk_hash_and_extent_mismatch_rejected(self):
+  bad=dict(self.terminal);bad['chunk']=dict(self.chunk,chunk_sha256='0'*64)
+  self.assertFalse(self.verify(terminal=bad)['chunk_verified'])
+  bad=dict(self.terminal);bad['chunk']=dict(self.chunk,end_exclusive=len(self.payload)+1)
+  self.assertFalse(self.verify(terminal=bad)['chunk_verified'])
+  bad=dict(self.terminal);bad['chunk']=dict(self.chunk,response_sha256='0'*64)
+  self.assertFalse(self.verify(terminal=bad)['chunk_verified'])
 if __name__=='__main__':unittest.main(verbosity=2)
