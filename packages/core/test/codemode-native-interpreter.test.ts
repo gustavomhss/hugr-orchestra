@@ -33,6 +33,17 @@ const cases = [
     expected: { match: ["a", "a", true, 2, "a"], global: ["a", "a"], all: [[2, true, "a"], [4, true, "a"]], search: 2, split: ["a", ",", true] },
   },
   {
+    name: "implicit string patterns and split ToUint32 limits stay native-compatible",
+    code: String.raw`const match = "a12".match("(\\d+)");
+      const all = "a1b22".matchAll("\\d+");
+      return [match[0], match[1], match.index, all.map((item) => [item[0], item.index]),
+        "😀7".search("\\d"), "a,b".split(/(,)|(x)/, -1),
+        "a,b".split(/(,)|(x)/, 2.9), "a,b".split(/(,)|(x)/, NaN),
+        "a,b".split(/(,)|(x)/, undefined)];`,
+    expected: ["12", "12", 1, [["1", 1], ["22", 3]], 2,
+      ["a", ",", null, "b"], ["a", ","], [], ["a", ",", null, "b"]],
+  },
+  {
     name: "String replace and replaceAll retain native replacement syntax",
     code: String.raw`return ["😀a a".replace(/(a)/, "[$1]"), "😀a a".replaceAll(/(a)/g, "[$1]")];`,
     expected: ["😀[a] a", "😀[a] [a]"],
