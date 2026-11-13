@@ -4,6 +4,7 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Deciding a Memory proposal now publishes the decision and indexed rule together, so a failed second append cannot leave a discarded proposal active.
 - Stopping a meeting during startup now cancels pending capture and closes resources that arrive after Stop.
 - Live session output now accepts events containing uploaded attachments instead of stopping at a 1 MiB event.
 - Replaying knowledge no longer replaces a later commit with an earlier one that was logged afterwards. The later commit stays.
