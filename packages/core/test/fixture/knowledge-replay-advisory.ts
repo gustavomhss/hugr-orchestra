@@ -16,10 +16,10 @@ export type Mode = typeof modes[number]
 const Row = Schema.Record(Schema.String, Schema.Json)
 export const Proof = Schema.Struct({
   pid: Schema.Number, mode: Schema.String, factIDs: Schema.Array(Schema.String), key: Schema.String,
-  claims: Schema.Array(Schema.String), source: Row, candidate: Row,
+  claims: Schema.Array(Schema.String), source: Row, candidate: Row, supportCandidate: Schema.optionalKey(Row),
   sourceReverified: Schema.Number, callerReceipts: Schema.Boolean,
   snapshots: Schema.Array(Schema.Struct({
-    current: Schema.Number, staging: Schema.Number, row: Schema.optionalKey(Row), generations: Schema.Array(Schema.String),
+    current: Schema.Number, staging: Schema.Number, row: Schema.optionalKey(Row), rows: Schema.Array(Row), generations: Schema.Array(Schema.String),
   })),
   currentBlobPresent: Schema.Boolean, historicalBlobPresent: Schema.Boolean, childCleanup: Schema.Boolean,
 })
@@ -231,6 +231,12 @@ function run() {
       ...(mode === "local-noop" ? { claims: [...row.claims, "uncertified locally held claim"],
         sameAs: ["local-peer"], sameAsRetracted: ["local-peer"], answerRef: "c".repeat(64) } : {}),
     };
+    const supportFact = mode === "history-scope" ? { ...facts[0], scope: "other" } : facts[0];
+    const supportCandidate = mode === "history-scope" || mode === "history-key" ? {
+      ...semantic(read.lines[0].row), ...(mode === "history-scope" ? {
+        scope: "other", contentHash: String(api.id(supportFact)),
+      } : { nodeKey: "incompatible-history-key" }),
+    } : undefined;
     const destination = api.makeFixRepo();
     cleanups.push(destination.cleanup);
     allocated.push(destination.repoPath);
@@ -245,11 +251,8 @@ function run() {
     if (!intact) {
       if (mode === "history-scope" || mode === "history-key") {
         const prior = read.lines[0];
-        const support = mode === "history-scope" ? { ...facts[0], scope: "other" } : facts[0];
-        const supportRow = { ...semantic(prior.row), ...(mode === "history-scope" ? {
-          scope: "other", contentHash: String(api.id(support)),
-        } : { nodeKey: "incompatible-history-key" }) };
-        api.appendKnowledge(destination.repoPath, { ...prior, row: supportRow, at: "9998-01-01T00:00:00.000Z" }, support);
+        assert.ok(supportCandidate);
+        api.appendKnowledge(destination.repoPath, { ...prior, row: supportCandidate, at: "9998-01-01T00:00:00.000Z" }, supportFact);
       }
       api.appendKnowledge(destination.repoPath, { ...read.rows.get(key), row: candidate, at: "9999-01-01T00:00:00.000Z" }, mutatedFact);
     }
@@ -285,18 +288,22 @@ function run() {
       const staging = destinationDisk.commitStaging((projection) => ({ out: projection }));
       assert.equal(staging.settled, true);
       assert.equal(current.current.size, active ? 1 : 0);
-      assert.equal(staging.out.current.size, active || absent ? 0 : 1);
+      assert.equal(staging.out.current.size, active || absent ? 0 : mode === "history-key" ? 2 : 1);
       const selected = active ? current : staging.out;
       const held = selected.current.get(candidate.nodeKey);
       if (!absent) {
         assert.ok(held);
         assert.deepEqual(semantic(held), candidate);
       }
+      const rows = [...selected.current.values()].map(semantic).sort((a, b) => a.nodeKey.localeCompare(b.nodeKey));
+      assert.deepEqual(rows, absent ? [] : mode === "history-key"
+        ? [candidate, supportCandidate].sort((a, b) => a.nodeKey.localeCompare(b.nodeKey)) : [candidate]);
+      if (mode === "history-key") assert.equal(selected.cas.size, 2);
       if (active && mode !== "local-noop") verify(runtime);
       assert.deepEqual(runtime.relations("src/app.ts", "out"), []);
       const generations = readdirSync(api.atlasDir(destination.repoPath)).filter((name) => /^(?:staging|projection)(?:\.[0-9]+)?\.json$/.test(name)).sort();
       files.push(generations.map((name) => [name, readFileSync(path.join(api.atlasDir(destination.repoPath), name), "utf8")]));
-      return { current: current.current.size, staging: staging.out.current.size, ...(held ? { row: semantic(held) } : {}), generations };
+      return { current: current.current.size, staging: staging.out.current.size, ...(held ? { row: semantic(held) } : {}), rows, generations };
     }
     const snapshots = [boot(), boot()];
     assert.deepEqual(snapshots[1], snapshots[0]);
@@ -304,7 +311,8 @@ function run() {
     shards.forEach(([file, bytes]) => assert.equal(readFileSync(file, "utf8"), bytes, "Original committed log must remain immutable"));
     facts.forEach((fact) => assert.deepEqual(disk.get(String(api.id(fact))), fact));
     return { pid: process.pid, mode, factIDs: facts.map((fact) => fact.id), key, claims: row.claims,
-      source: semantic(row), candidate, sourceReverified, callerReceipts, snapshots, currentBlobPresent, historicalBlobPresent };
+      source: semantic(row), candidate, ...(supportCandidate ? { supportCandidate } : {}),
+      sourceReverified, callerReceipts, snapshots, currentBlobPresent, historicalBlobPresent };
   } catch (error) {
     originalFailure.push(error);
     throw error;

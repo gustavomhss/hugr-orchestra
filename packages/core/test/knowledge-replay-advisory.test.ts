@@ -49,20 +49,28 @@ for (const mode of KnowledgeReplayAdvisory.modes) {
         expect(proof.snapshots).toHaveLength(2)
         proof.snapshots.forEach((snapshot) => {
           expect(snapshot.current).toBe(active ? 1 : 0)
-          expect(snapshot.staging).toBe(active || absent ? 0 : 1)
+          expect(snapshot.staging).toBe(active || absent ? 0 : mode === "history-key" ? 2 : 1)
           if (!absent) expect(snapshot.row).toEqual(proof.candidate)
           if (absent) expect(snapshot.row).toBeUndefined()
+          if (mode === "history-key") {
+            const support = proof.supportCandidate
+            if (support === undefined) throw new Error("History-key proof is missing its separate support candidate")
+            expect(snapshot.rows).toEqual([proof.candidate, support]
+              .sort((a, b) => String(a.nodeKey).localeCompare(String(b.nodeKey))))
+          }
+          if (mode !== "history-key") expect(snapshot.rows).toEqual(absent ? [] : [proof.candidate])
         })
         expect(proof.snapshots[1]).toEqual(proof.snapshots[0])
         expect(proof.currentBlobPresent).toBe(mode !== "current-missing")
         if (mode === "history-missing-blob") expect(proof.historicalBlobPresent).toBe(false)
-        if (mode === "current-missing" || mode === "structural-invalid") {
+        if (mode === "history-missing-blob" || mode === "current-missing" || mode === "structural-invalid") {
           const reports = run.stderr.toString("utf8").split("\n")
             .filter((line) => line.startsWith("atlas: knowledge replay "))
             .map((line) => Schema.decodeUnknownSync(Schema.fromJsonString(ReplayReport))(line.slice("atlas: knowledge replay ".length)))
-          expect(reports).toHaveLength(2)
+          expect(reports).toHaveLength(mode === "history-missing-blob" ? 1 : 2)
           reports.forEach((report) => expect(report).toEqual({
-            applied: 0, staged: 0, missing: mode === "current-missing" ? 1 : 0, rejected: mode === "structural-invalid" ? 1 : 0,
+            applied: 0, staged: mode === "history-missing-blob" ? 1 : 0,
+            missing: mode === "current-missing" ? 1 : 0, rejected: mode === "structural-invalid" ? 1 : 0,
           }))
         }
         expect(proof.childCleanup).toBe(true)
