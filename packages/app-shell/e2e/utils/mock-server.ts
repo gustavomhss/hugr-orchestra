@@ -130,6 +130,20 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       return json(route, await config.fileList(url.searchParams.get("path") ?? ""))
     if (path === "/file/content" && config.fileContent)
       return json(route, await config.fileContent(url.searchParams.get("path") ?? ""))
+    if (path === "/api/fs/find" && config.findFiles) {
+      const type = url.searchParams.get("type") ?? "file"
+      const paths = await config.findFiles({
+        query: url.searchParams.get("query") ?? "",
+        dirs: type === "directory" ? "true" : undefined,
+        limit: url.searchParams.has("limit") ? Number(url.searchParams.get("limit")) : undefined,
+      })
+      if (!Array.isArray(paths) || paths.some((path) => typeof path !== "string"))
+        throw new Error("mock findFiles must return an array of paths")
+      return json(route, {
+        location: location(config),
+        data: paths.map((path: string) => ({ path, type })),
+      })
+    }
     if (path === "/find/file" && config.findFiles)
       return json(
         route,
