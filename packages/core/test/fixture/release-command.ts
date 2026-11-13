@@ -182,7 +182,8 @@ if (tool === "npm") {
   } else throw new Error(`FIXTURE_NPM_UNSUPPORTED:${JSON.stringify(args)}`)
 } else if (tool === "gh" && args[0] === "api") {
   const method = value("--method") ?? value("-X") ?? "GET"
-  const path = positionals()[1]
+  const endpoint = positionals()[1]
+  const path = endpoint?.startsWith("https://api.github.com/") ? endpoint.slice("https://api.github.com/".length) : endpoint
   const prefix = `repos/${state.repository}/`
   if (!path?.startsWith(prefix)) throw new Error(`FIXTURE_REPOSITORY_UNSUPPORTED:${path}`)
   const resource = path.slice(prefix.length)
@@ -262,6 +263,7 @@ if (tool === "npm") {
       await operation(`release.read:${tag}`, false, () => {
         const release = getRelease(tag)
         const result = {
+          apiUrl: `https://api.github.com/repos/${state.repository}/releases/${release.id}`,
           body: release.body,
           isDraft: release.draft,
           tagName: release.tag_name,
