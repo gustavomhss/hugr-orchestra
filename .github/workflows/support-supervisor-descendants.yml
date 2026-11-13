@@ -20,5 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Descendant lifecycle fixtures only
+      - name: Courier regression suite (synthetic only)
+        run: python -I -S -B courier-synthetic/test_courier.py
+      - name: Descendant lifecycle fixtures (synthetic only)
         run: python -I -S -B courier-synthetic/test_supervisor_descendants.py
