@@ -135,5 +135,36 @@ print(json.dumps({'start':int(sys.argv[3]),'end_exclusive':int(sys.argv[3])+len(
         # A missing process identity is an error, never an empty-tree result.
 
 
+    def test_child_timeout_is_bounded_and_never_releases_output(self):
+        self.grant['mode'] = 'timeout'
+        (self.parent / 'grant.json').write_text(json.dumps(self.grant))
+        started = time.monotonic()
+        result = self.run_case(timeout=5)
+        self.assertLess(time.monotonic() - started, 4)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, b'')
+        run = self.parent / 'supervised-0'
+        self.assertFalse((run / 'terminal.json').exists())
+        stop = json.loads((run / 'STOP.json').read_text())
+        self.assertEqual(stop['state'], 'UNKNOWN')
+        self.assertFalse(stop['stdout_released'])
+        self.assertFalse(stop['retry'])
+
+    def test_timeout_with_orphaned_descendant_is_bounded(self):
+        self.grant['mode'] = 'descendant-timeout'
+        (self.parent / 'grant.json').write_text(json.dumps(self.grant))
+        started = time.monotonic()
+        result = self.run_case(timeout=5)
+        self.assertLess(time.monotonic() - started, 4)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, b'')
+        run = self.parent / 'supervised-0'
+        self.assertFalse((run / 'terminal.json').exists())
+        stop = json.loads((run / 'STOP.json').read_text())
+        self.assertEqual(stop['state'], 'UNKNOWN')
+        self.assertFalse(stop['stdout_released'])
+        self.assertFalse(stop['retry'])
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
