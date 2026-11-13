@@ -14,25 +14,48 @@ export class SandboxDate {
 }
 
 export class SandboxRegExp {
-  readonly regex: RegExp
-  constructor(pattern: string, flags: string, _metadata?: State) {
-    this.regex = new RegExp(pattern, flags)
+  declare readonly regex: RegExp
+  #metadata: State
+  #native: RegExp | undefined
+
+  constructor(pattern: string, flags: string, metadata?: State) {
+    Object.defineProperty(this, "regex", { enumerable: true, get: () => {
+      if (!this.#native) throw new Error("Metadata-only regular expressions require explicit native execution")
+      return this.#native
+    } })
+    if (metadata) {
+      this.#metadata = { ...metadata }
+      return
+    }
+    this.#native = new RegExp(pattern, flags)
+    this.#metadata = { source: this.#native.source, flags: this.#native.flags, lastIndex: 0 }
   }
 
   // Metadata seam: finite execution will construct only from a validated isolated reply.
-  static fromState(_state: State): SandboxRegExp {
-    throw new Error("Metadata-only regular expressions are not implemented")
+  static fromState(state: State): SandboxRegExp {
+    return new SandboxRegExp(state.source, state.flags, state)
   }
 
-  get source() { return this.regex.source }
-  get flags() { return this.regex.flags }
-  get lastIndex() { return this.regex.lastIndex }
+  get source() { return this.#metadata.source }
+  get flags() { return this.#metadata.flags }
+  get lastIndex() { return this.#native ? this.#native.lastIndex : this.#metadata.lastIndex }
 
   /** Explicit untimed native path. Finite evaluation must never call this method. */
-  native(): RegExp { return this.regex }
+  native(): RegExp {
+    if (this.#native) return this.#native
+    const native = new RegExp(this.source, this.flags)
+    native.lastIndex = this.#metadata.lastIndex
+    this.#native = native
+    return native
+  }
 
   state(): State { return { source: this.source, flags: this.flags, lastIndex: this.lastIndex } }
-  updateState(state: State): void { this.regex.lastIndex = state.lastIndex }
+  updateState(state: State): void {
+    if (state.source !== this.source || state.flags !== this.flags)
+      throw new Error("Regular expression state cannot change source or flags")
+    this.#metadata = { ...state }
+    if (this.#native) this.#native.lastIndex = state.lastIndex
+  }
 
   read(name: string): string | number | boolean | undefined {
     if (name === "source") return this.source

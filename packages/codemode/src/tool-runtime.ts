@@ -225,7 +225,7 @@ const copyBounded = (
     // Host instances cannot normally reach an intra-sandbox checkpoint (tool results cross
     // the boundary first), but wrap them defensively rather than degrading to JSON forms.
     if (value instanceof Date) return new SandboxDate(value.getTime())
-    if (value instanceof RegExp) return new SandboxRegExp(value.source, value.flags)
+    if (value instanceof RegExp) return SandboxRegExp.fromState({ source: value.source, flags: value.flags, lastIndex: 0 })
     if (value instanceof Map) {
       const wrapped = new SandboxMap()
       for (const [key, item] of value.entries()) {
