@@ -201,6 +201,10 @@ def main():
     root_start = None
     try:
         enable_subreaper()
+        own = proc_snapshot().get(os.getpid())
+        if own is None:
+            raise RuntimeError('SUPERVISOR_IDENTITY_UNKNOWN')
+        root_start = own[3]
         with (run / 'stdout.raw').open('xb') as out, (run / 'stderr.raw').open('xb') as err:
             proc = subprocess.Popen([PYTHON, '-I', '-S', '-B', str(P / 'courier.py'),
                  str(grant), grantsha, offset], env=ENV, cwd=P,
@@ -209,14 +213,14 @@ def main():
             row = snap.get(proc.pid)
             if row is None:
                 raise RuntimeError('CHILD_IDENTITY_UNKNOWN')
-            root_start = row[3]
-            emit(run / 'child-start.json', {'pid': proc.pid, 'starttime': root_start,
+            child_start = row[3]
+            emit(run / 'child-start.json', {'pid': proc.pid, 'starttime': child_start,
                  'session': row[2], 'scope': 'subreaper ancestry census'})
             try:
                 code = proc.wait(timeout=120)
             except subprocess.TimeoutExpired:
                 code = None
-            proof = terminate_tree(proc.pid, root_start, proc)
+            proof = terminate_tree(os.getpid(), root_start, proc)
             if code is None:
                 code = proc.wait(timeout=1)
                 raise RuntimeError('CHILD_TIMEOUT')
@@ -251,7 +255,7 @@ def main():
         # caller must classify the missing terminal proof as UNKNOWN.
         if proc is not None and root_start is not None:
             try:
-                terminate_tree(proc.pid, root_start, proc)
+                terminate_tree(os.getpid(), root_start, proc)
             except BaseException:
                 pass
         try:
