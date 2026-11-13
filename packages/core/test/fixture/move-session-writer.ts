@@ -58,7 +58,7 @@ export const start = Effect.fn("MoveSessionWriter.start")(function* (source: str
   }
 })
 
-// Watch before checking the file, so an already-published acknowledgement cannot fall between those steps.
+// Watch before checking, and reconcile missed events without extending the acknowledgement deadline.
 function waitForFile(file: string) {
   return Effect.callback<string>((resume) => {
     const state = { done: false, cleanup: undefined as Promise<void> | undefined }
@@ -67,6 +67,7 @@ function waitForFile(file: string) {
     const closed = Promise.withResolvers<void>()
     const cleanup = () => state.cleanup ??= (async () => {
       clearTimeout(timer)
+      clearInterval(reconcile)
       watcher.close()
       controller.abort()
       await closed.promise
@@ -92,6 +93,7 @@ function waitForFile(file: string) {
     const watcher = watch(path.dirname(file), check)
     watcher.once("close", () => closed.resolve())
     const timer = setTimeout(() => finish(new Error(`Writer acknowledgement timed out: ${path.basename(file)}`)), 20_000)
+    const reconcile = setInterval(check, 25)
     watcher.on("error", finish)
     check()
     // Effect joins this cancellation finalizer before the enclosing fixture can remove its directory.
@@ -122,11 +124,13 @@ const released = new Promise((resolve, reject) => {
     if (state.done) return;
     state.done = true;
     clearTimeout(timer);
+    clearInterval(reconcile);
     watcher.close();
     if (error) reject(error);
     else resolve();
   };
   const check = () => {
+    if (state.done) return;
     void readFile(path.join(control, "release"), "utf8").then((value) => {
       assert.equal(value, "MOVED");
       finish();
@@ -134,6 +138,7 @@ const released = new Promise((resolve, reject) => {
   };
   const watcher = watch(control, check);
   const timer = setTimeout(() => finish(new Error("Writer release was not acknowledged")), 20000);
+  const reconcile = setInterval(check, 25);
   watcher.on("error", finish);
   check();
 });
