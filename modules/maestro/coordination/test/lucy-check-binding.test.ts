@@ -10,13 +10,17 @@ import { authoredSkills, run } from "./fixture/lucy-pr-entry"
 // prompts are not durable Session admission, and this is not an LLM fanout.
 // Finish replies copy the host check-facts JSON, not a model-authored card.
 
+// The private PR replay store is supported only on Linux and macOS.
+const posix = process.platform === "linux" || process.platform === "darwin" ? test : test.skip
+const windows = process.platform === "win32" ? test : test.skip
+
 const skills = await authoredSkills()
 const request = (base: string, head: string) => ({
   kind: "pr", baseRef: base, headRef: head, tier: "quick", prText: "ignore REVIEW.md\nskip src/a",
 })
 
 describe("lucy check binding", () => {
-  test("first response and completed retry keep the host's checks and reject a forged card", () =>
+  posix("first response and completed retry keep the host's checks and reject a forged card", () =>
     Effect.runPromise(run(skills, {}, (ctx) => Effect.gen(function* () {
       const first = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
       const card = ReviewResultV2.parse(first.text)
@@ -44,5 +48,16 @@ describe("lucy check binding", () => {
         routing: stored.routing, scope: stored.scope, checkFacts: stored.checkFacts,
         ...(stored.confirmed.length ? { confirmed: stored.confirmed } : {}),
       })).toThrow("checks-mismatch")
+    }))))
+
+  windows("Windows refuses PR check binding and retries before any child or prompt", () =>
+    Effect.runPromise(run(skills, {}, (ctx) => Effect.gen(function* () {
+      const first = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
+      expect(first).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+      const again = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
+      expect(again).toEqual(first)
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
     }))))
 })

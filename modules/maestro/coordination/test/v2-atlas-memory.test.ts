@@ -50,10 +50,30 @@ async function worktree() {
       )
     }).pipe(Effect.provide(AppNodeBuilder.build(GitCli.node) as Layer.Layer<GitCli.Service>)),
   )
-  // The clean fake scanner: Atlas pipes each record to it and treats exit 0 as clean.
-  const scanner = path.join(await fs.mkdtemp(path.join(os.tmpdir(), "maestro-atlas-scanner-")), "gitleaks")
-  await fs.writeFile(scanner, "#!/bin/sh\n/bin/cat >/dev/null\nexit 0\n")
-  await fs.chmod(scanner, 0o755)
+  // The clean fake scanner exercises stdin transport, not secret detection. Windows needs a native executable.
+  const scanner = path.join(await fs.mkdtemp(path.join(os.tmpdir(), "maestro-atlas-scanner-")),
+    process.platform === "win32" ? "gitleaks.exe" : "gitleaks")
+  if (process.platform === "win32") {
+    const entry = scanner + ".ts"
+    await fs.writeFile(entry, `
+const args = process.argv.slice(2)
+if (args.length === 1 && args[0] === "--version") process.exit(0)
+if (JSON.stringify(args) !== JSON.stringify(["stdin", "--report-format", "json", "--exit-code", "1"])) process.exit(2)
+if (!(await Bun.stdin.text()).length) process.exit(2)
+process.exit(0)
+`)
+    const built = await Bun.build({
+      entrypoints: [entry], target: "bun",
+      compile: {
+        outfile: scanner,
+        autoloadBunfig: false, autoloadDotenv: false, autoloadTsconfig: false, autoloadPackageJson: false,
+      },
+    })
+    expect(built.success, `Native memory scanner fixture: ${built.logs.join("\n")}`).toBe(true)
+  } else {
+    await fs.writeFile(scanner, "#!/bin/sh\n/bin/cat >/dev/null\nexit 0\n")
+    await fs.chmod(scanner, 0o755)
+  }
   return { directory, scanner }
 }
 
