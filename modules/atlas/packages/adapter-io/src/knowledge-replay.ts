@@ -3,9 +3,9 @@
 // A committed line is a CLAIM that some seat applied a row, never authority to apply it here: anyone with push
 // access can write a line. So replay re-runs the one check a line cannot forge, and holds everything else:
 //
-//   applied  the fact's bytes carry `seal:'proven'`, its seat is in the row's scope (`actorInScope`), and it
-//            RE-PROVES now against this checkout's index (`reproven`, the same oracle `atlas verify-store`
-//            rides). One batched `commitProjection`, through the raw store, so a replayed row is not logged twice.
+//   applied  the complete row binds to its proven fact and independently re-proven claim support; each seat
+//            is authorized against the fact's validated scope and anchor. Reproof uses this checkout's index
+//            (`reproven`, the same oracle `atlas verify-store` rides). One raw `commitProjection`, never re-logged.
 //   staged   every other line: a candidate in the staging sidecar (ADR-0008), held for ratify like any mined
 //            candidate. There is no merged-PR check; the ratify door is where a person decides.
 //   missing  the row's bytes are not under `.atlas/blobs/`, or they do not hash to the row's `contentHash`.
@@ -21,7 +21,9 @@ import type { CurrentNode, GroundedFact, StoreProjection } from "@atlas/knowledg
 import { blobPath } from "./layout.js"
 import { knowledgeRegresses, readKnowledge } from "./knowledge-log.js"
 import type { KnowledgeEntry } from "./knowledge-log.js"
-import { actorInScope } from "./policy.js"
+import { describeReplayFact, validReplayRow, sameReplayRow, bindReplayRow } from "./knowledge-replay-binding.js"
+import type { ReplayFact } from "./knowledge-replay-binding.js"
+import { actorInScope, scopeOwnsAnchor } from "./policy.js"
 import type { AtlasPolicy } from "./policy.js"
 import type { CommitRefusal } from "./sidecar.js"
 import type { DiskStore } from "./store.js"
@@ -31,7 +33,7 @@ export interface KnowledgeReplay {
   readonly applied: number
   readonly staged: number
   readonly missing: number
-  /** Log lines that did not verify (torn, edited, or under another seat's folder). */
+  /** Log lines that did not verify, including structurally malformed accepted rows. */
   readonly rejected: number
   /** A knowledge folder or file could not be read, so some rows may not have been replayed. */
   readonly unreadable?: true
@@ -45,24 +47,67 @@ export function replayKnowledge(
   reproven: (node: CurrentNode, fact: GroundedFact) => boolean,
 ): KnowledgeReplay {
   const read = readKnowledge(repoPath)
+  // Folded winners are references to accepted lines. Validate both surfaces once, without falling back to an
+  // older valid generation when its winning row is malformed.
+  const accepted = [...new Set([...read.lines, ...read.rows.values()])]
+  const valid = new Set(accepted.filter((entry) => validReplayRow(entry.row)))
+  const history = read.lines.filter((entry) => valid.has(entry))
   const projection = rehydrateProjection(disk)
   const pending = [...read.rows.values()].filter((entry) => {
+    if (!valid.has(entry)) return false
     const held = projection.current.get(entry.row.nodeKey)
-    if (sameRow(held, entry.row)) return false
-    return held === undefined || !knowledgeRegresses(held, entry.row, read.lines)
+    // Exact local preservation is not new activation or certification of previously held assertions.
+    if (sameReplayRow(held, entry.row)) return false
+    return held === undefined || !knowledgeRegresses(held, entry.row, history)
   })
+  const restored = new Map<string, CasObject | undefined>()
+  const descriptions = new Map<string, ReplayFact | undefined>()
+  const proofs = new Map<string, boolean>()
+  const restore = (entry: KnowledgeEntry) => {
+    if (!restored.has(entry.row.contentHash)) restored.set(entry.row.contentHash, restoreBlob(repoPath, disk, entry))
+    return restored.get(entry.row.contentHash)
+  }
+  const describe = (entry: KnowledgeEntry, fact: CasObject) => {
+    if (!descriptions.has(entry.row.contentHash))
+      descriptions.set(entry.row.contentHash, describeReplayFact(fact, entry.row.contentHash))
+    return descriptions.get(entry.row.contentHash)
+  }
+  const verify = (entry: KnowledgeEntry, description: ReplayFact) => {
+    if (!actorInScope(policy, entry.seat, description.scope) ||
+      !scopeOwnsAnchor(policy, description.scope, description.anchor)) return false
+    if (!proofs.has(description.row.contentHash))
+      proofs.set(description.row.contentHash, reproven(description.row, description.fact))
+    return proofs.get(description.row.contentHash) === true
+  }
   const resolved = pending.flatMap((entry) => {
-    const fact = restoreBlob(repoPath, disk, entry)
-    // Capture the validated read, so absence cannot fall through into either proven or staging candidates.
-    return fact === undefined ? [] : [{ entry, fact: fact as GroundedFact }]
+    const fact = restore(entry)
+    // Capture the guarded read. Missing historical support never contributes to this current-body count.
+    return fact === undefined ? [] : [{ entry, fact }]
   })
-  const proven = resolved.filter(
-    (item) =>
-      item.fact.seal === "proven" &&
-      actorInScope(policy, item.entry.seat, item.entry.row.scope) &&
-      boundToFact(item.entry.row, item.fact) &&
-      reproven(item.entry.row, item.fact),
-  )
+  const proven = resolved.filter((item) => {
+    const current = describe(item.entry, item.fact)
+    if (current === undefined || !verify(item.entry, current)) return false
+    const support = new Map<string, readonly ReplayFact[]>([[current.claim, [current]]])
+    if (bindReplayRow(item.entry.row, current, support)) return true
+    if (!item.entry.row.claims.some((claim) => claim !== current.claim) &&
+      item.entry.row.provenanceByClaim === undefined) return false
+    const claims = new Set(item.entry.row.claims)
+    // A supporting fact proves only its own canonical claim. Its historical row is never recursively activated,
+    // and copied claims cannot turn another fact into evidence for a statement that fact did not make.
+    history.forEach((entry) => {
+      if (entry.row.nodeKey !== current.row.nodeKey || entry.row.scope !== current.scope || entry.row.tier !== "T2") return
+      if (!entry.row.claims.some((claim) => claims.has(claim))) return
+      const fact = restore(entry)
+      if (fact === undefined) return
+      const description = describe(entry, fact)
+      if (description === undefined || description.row.nodeKey !== entry.row.nodeKey ||
+        description.row.contentHash !== entry.row.contentHash || description.scope !== entry.row.scope ||
+        description.row.tier !== entry.row.tier || !claims.has(description.claim) ||
+        !entry.row.claims.includes(description.claim) || !verify(entry, description)) return
+      support.set(description.claim, [...(support.get(description.claim) ?? []), description])
+    })
+    return bindReplayRow(item.entry.row, current, support)
+  })
   const candidates = resolved.filter((item) => !proven.includes(item))
   const applied =
     proven.length === 0
@@ -71,7 +116,10 @@ export function replayKnowledge(
           out: proven.length,
           next: withRows(
             p,
-            proven.map((item) => item.entry),
+            proven.map((item) => {
+              const { derivedAt: _incoming, ...row } = item.entry.row
+              return { ...item.entry, row }
+            }),
           ),
         }))
   const staged =
@@ -79,7 +127,7 @@ export function replayKnowledge(
       ? undefined
       : disk.commitStaging((p) => {
           const fresh = candidates.filter(
-            (item) => p.current.get(item.entry.row.nodeKey)?.contentHash !== item.entry.row.contentHash,
+            (item) => !sameReplayRow(p.current.get(item.entry.row.nodeKey), item.entry.row),
           )
           return fresh.length === 0
             ? { out: 0 }
@@ -96,7 +144,7 @@ export function replayKnowledge(
     applied: applied?.settled === true ? applied.out : 0,
     staged: staged?.settled === true ? staged.out : 0,
     missing: pending.length - resolved.length,
-    rejected: read.rejected,
+    rejected: read.rejected + accepted.length - valid.size,
     ...(read.unreadable === true ? { unreadable: true as const } : {}),
   }
   const result = refusal === undefined ? counts : { ...counts, refusal }
@@ -121,25 +169,6 @@ function restoreBlob(repoPath: string, disk: DiskStore, entry: KnowledgeEntry): 
   } catch {
     return undefined
   }
-}
-
-/**
- * The store stamps `derivedAt` on a row it publishes (`freshness-watermark.ts`), after the log took the row from the
- * decision, so the clone that wrote a row holds it with a stamp its own log line lacks. That row is already here.
- */
-function sameRow(held: CurrentNode | undefined, logged: CurrentNode): boolean {
-  if (held === undefined) return false
-  const { derivedAt: _held, ...heldRest } = held
-  const { derivedAt: _logged, ...loggedRest } = logged
-  return JSON.stringify(heldRest) === JSON.stringify(loggedRest)
-}
-
-// Imported row restriction; canonical-family compatibility remains under audit.
-function boundToFact(row: CurrentNode, fact: GroundedFact) {
-  if (!Array.isArray(row.claims)) return false
-  if (typeof fact.id !== "string" || row.nodeKey !== fact.id) return false
-  const sentence = "claimNorm" in fact && typeof fact.claimNorm === "string" ? fact.claimNorm : undefined
-  return row.claims.every((claim) => claim === sentence)
 }
 
 const withRows = (p: StoreProjection, entries: readonly KnowledgeEntry[]): StoreProjection => ({
