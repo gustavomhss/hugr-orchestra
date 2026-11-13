@@ -495,6 +495,12 @@ linux("release fixture refuses unknown gh npm operations and carries only fictit
     expect(result.exitCode).not.toBe(0)
     expect(result.stderr.toString()).toContain("FIXTURE_")
   }
+  for (const command of ["sleep", "sleep 2", "sleep 3 3"]) {
+    const result = await fixture.shell(command, env)
+    expect(result.exitCode).not.toBe(0)
+    expect(result.stderr.toString()).toContain("FIXTURE_SLEEP_UNSUPPORTED")
+  }
+  expect((await fixture.read()).log).toEqual([])
   expect(mutations(await fixture.read())).toEqual([])
 })
 
