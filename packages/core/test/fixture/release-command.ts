@@ -124,6 +124,13 @@ const output = (result: unknown) => {
     process.stdout.write(result.assets.map((item: { name: string }) => item.name).join("\n") + "\n")
     return
   }
+  if (query === ".object.sha") {
+    if (!result || typeof result !== "object" || !("object" in result) || !result.object ||
+        typeof result.object !== "object" || !("sha" in result.object) || typeof result.object.sha !== "string")
+      throw new Error("FIXTURE_QUERY_SHAPE")
+    process.stdout.write(`${result.object.sha}\n`)
+    return
+  }
   if (query) {
     if (!/^\.[A-Za-z_]+$/.test(query) || !result || typeof result !== "object")
       throw new Error(`FIXTURE_QUERY_UNSUPPORTED:${query}`)
@@ -180,7 +187,11 @@ if (tool === "npm") {
   if (!path?.startsWith(prefix)) throw new Error(`FIXTURE_REPOSITORY_UNSUPPORTED:${path}`)
   const resource = path.slice(prefix.length)
   const input = fields()
-  if (method === "GET" && resource.startsWith("compare/"))
+  if (method === "GET" && resource === `git/ref/heads/release-${state.version}`)
+    output(await operation(`branch.read:release-${state.version}`, false, () => ({
+      object: { type: "commit", sha: state.frozenBranchSHA ?? state.sourceSha },
+    })))
+  else if (method === "GET" && resource.startsWith("compare/"))
     output(await operation(`compare:${resource}`, false, () => ({ status: "identical" })))
   else if (method === "GET" && resource.startsWith("actions/runs/")) {
     const id = Number(resource.slice("actions/runs/".length))

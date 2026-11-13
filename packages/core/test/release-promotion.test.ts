@@ -130,6 +130,35 @@ for (const name of ["release-cli", "release-desktop"]) {
   })
 }
 
+linux("release promotion refuses a frozen branch with different source before any producer or mutation", async () => {
+  expectSpawn(import.meta.path)
+  await using tmp = await tmpdir()
+  const fixture = await releaseFixture(join(tmp.path, "frozen-source-mismatch"))
+  await fixture.save({ ...(await fixture.read()), frozenBranchSHA: "b".repeat(40) })
+  const step = (await workflow("release-promote")).jobs.promote.steps?.find((step) => step.name === "Bind the cut to reviewed source and successful producers")
+  expect(step?.run).toBeString()
+  const result = await fixture.shell(step!.run!, await fixture.environment())
+  expect(result.exitCode).not.toBe(0)
+  expect(result.stderr.toString()).not.toContain("unbound variable")
+  const state = await fixture.read()
+  expect(state.log.map((entry) => entry.operation)).toEqual([`branch.read:release-${fixture.version}`])
+  expect(mutations(state)).toEqual([])
+})
+
+linux("release promotion from dev requires explicit reviewed source before any remote operation", async () => {
+  expectSpawn(import.meta.path)
+  await using tmp = await tmpdir()
+  const fixture = await releaseFixture(join(tmp.path, "dev-source-missing"))
+  const step = (await workflow("release-promote")).jobs.promote.steps?.find((step) => step.name === "Bind the cut to reviewed source and successful producers")
+  expect(step?.run).toBeString()
+  const result = await fixture.shell(step!.run!, {
+    ...(await fixture.environment()), GITHUB_REF: "refs/heads/dev", GITHUB_REF_NAME: "dev", GITHUB_SHA: "b".repeat(40),
+  })
+  expect(result.exitCode).not.toBe(0)
+  expect(result.stderr.toString()).not.toContain("unbound variable")
+  expect((await fixture.read()).log).toEqual([])
+})
+
 linux(
   "release fixture positive control executes the actual full promotion shell with original byte identities",
   async () => {

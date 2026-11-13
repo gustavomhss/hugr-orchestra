@@ -12,6 +12,7 @@ export type Release = { id: number; tag_name: string; body: string; draft: boole
 export type State = {
   version: string
   sourceSha: string
+  frozenBranchSHA?: string
   repository: string
   tags: Record<string, { type: "tag" | "commit"; sha: string }>
   objects: Record<string, { tag: string; object: { type: string; sha: string }; message: string }>
@@ -190,6 +191,8 @@ export async function releaseFixture(directory: string, version = "0.3.6") {
       RELEASE_FIXTURE_ROOT: directory,
       VERSION: version,
       GITHUB_SHA: sourceSha,
+      SOURCE_SHA: sourceSha,
+      REQUESTED_SOURCE: "",
       GITHUB_REPOSITORY: repository,
       GITHUB_REF: `refs/heads/release-${version}`,
       GITHUB_REF_NAME: `release-${version}`,
