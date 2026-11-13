@@ -16,8 +16,15 @@ export async function writeByteOverflow(response: ServerResponse, limit: number,
   const write = (text: string) => new Promise<boolean>((resolve, reject) => {
     if (response.destroyed) { resolve(false); return }
     let settled = false
+    let pendingCode: string | undefined
     const finish = (completed: boolean, error?: NodeJS.ErrnoException | null) => {
-      const unexpected = error && (!response.destroyed || !["ECONNRESET", "EPIPE", "ERR_STREAM_PREMATURE_CLOSE", "ERR_STREAM_DESTROYED"].includes(error.code ?? ""))
+      const expected = error && ["ECONNRESET", "EPIPE", "ERR_STREAM_PREMATURE_CLOSE", "ERR_STREAM_DESTROYED"].includes(error.code ?? "")
+      if (expected && !response.destroyed && !observation.closed) {
+        pendingCode = error.code
+        console.log(JSON.stringify({ kind: "live-delivery-fixture-expected-close", phase: "reset-before-close", code: pendingCode, bodyBytesWritten: observation.bodyBytesWritten, writeCompleted: observation.writeCompleted, closed: observation.closed, responseDestroyed: response.destroyed }))
+        return
+      }
+      const unexpected = error && !expected
       if (unexpected) {
         console.error(JSON.stringify({ kind: "live-delivery-fixture-write-error", name: error.name.slice(0, 128), code: error.code?.slice(0, 128) ?? null, message: error.message.slice(0, 128), responseDestroyed: response.destroyed, writableEnded: response.writableEnded, writableFinished: response.writableFinished, socketDestroyed: socket?.destroyed ?? null, closed: observation.closed, writeCompleted: observation.writeCompleted, bodyBytesWritten: observation.bodyBytesWritten }))
         failures.push(error)
@@ -27,7 +34,10 @@ export async function writeByteOverflow(response: ServerResponse, limit: number,
       if (unexpected) { reject(error); return }
       resolve(completed)
     }
-    const closed = () => finish(false)
+    const closed = () => {
+      if (pendingCode) console.log(JSON.stringify({ kind: "live-delivery-fixture-expected-close", phase: "actual-close", code: pendingCode, bodyBytesWritten: observation.bodyBytesWritten, writeCompleted: observation.writeCompleted, closed: observation.closed, responseDestroyed: response.destroyed }))
+      finish(false)
+    }
     response.once("close", closed)
     observation.bodyBytesWritten += Buffer.byteLength(text); observation.lastWrite = Date.now()
     try {
