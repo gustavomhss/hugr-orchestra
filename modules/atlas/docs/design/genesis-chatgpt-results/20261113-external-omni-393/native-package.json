@@ -4884,10 +4884,10 @@
       "layer": 1,
       "need": "evidence",
       "body": {
-        "path": "bodies/core/records-08.json",
+        "path": "bodies/core/records-08.v2.json",
         "encoding": "utf-8",
-        "byte_length": 44316,
-        "sha256": "8674ea3f7227ce47cbefef5aaa26144cdf9fa09c47fd2281684e8b26460223d9"
+        "byte_length": 44509,
+        "sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c"
       },
       "authority": {
         "scope": "native/omni",
@@ -4995,8 +4995,8 @@
         "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-08.json",
-        "sha256": "8674ea3f7227ce47cbefef5aaa26144cdf9fa09c47fd2281684e8b26460223d9"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-08.v2.json",
+        "sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c"
       },
       "semantic_review_refs": [],
       "runtime_receipt_refs": []

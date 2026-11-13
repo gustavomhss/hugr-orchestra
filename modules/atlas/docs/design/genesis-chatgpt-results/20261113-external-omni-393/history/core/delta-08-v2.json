@@ -1,0 +1,322 @@
+{
+  "source": "records-08.json",
+  "source_sha256": "8674ea3f7227ce47cbefef5aaa26144cdf9fa09c47fd2281684e8b26460223d9",
+  "source_bytes": 44316,
+  "replacement": "records-08.v2.json",
+  "replacement_sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c",
+  "replacement_bytes": 44509,
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "public_request": {
+    "path": "control/C08-author-corrections-v2.md",
+    "sha256": "9780438330e4717ac45096a0649043c9221254f90288f070a162553f8774b08e",
+    "bytes": 2850
+  },
+  "author_role": "CORE original producer correction; no acceptance review performed.",
+  "changes": [
+    {
+      "finding": "C08 pending product failures versus all test-completion gates",
+      "record_index": 10,
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "json_pointer": "/10/behavior/2",
+      "field": "behavior[2]",
+      "before": "Only suite errors fail the test; expected product failures in the pending ledger may remain pending.",
+      "after": "Ledger-listed product failures may remain pending without entering sum.errors. Successful test completion also requires setup and required-binary checks, fixture warm-up, ledger/runtime initialization, complete scenario accounting (sum.ran + sum.other == sum.files), and sum.errors.is_empty().",
+      "reason": "The module comment describes suite-result reporting but is not a complete inventory of failure paths. contract invokes supervisor setup and required-binary lookup, requires successful fixture warm-up, reads the pending ledger, constructs the runtime, checks complete scenario accounting, and requires an empty suite error list. Ledger-listed product failures may still be pending without entering sum.errors; that does not bypass the other required steps.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/contract.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+          "source_sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4",
+          "source_bytes": 3414,
+          "line_count": 76,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 1,
+          "end_line": 3,
+          "quote": "//! The contract suite (C-RS-02): every scenario of `conformance/scenarios` meant for this OS and for Rust,\n//! run through the public Rust API. One line per scenario, then `contract: N passed, M pending, K failed`; only\n//! K > 0 fails. Items listed in `conformance/pending.txt` cannot pass yet: their product failures are `pending`."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/contract.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+          "source_sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4",
+          "source_bytes": 3414,
+          "line_count": 76,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 12,
+          "end_line": 22,
+          "quote": "fn contract() {\n    use_supervisor();\n    let fixture = binary(\"omni-fixture\", \"omni-fixture\");\n    // Warm-up, not synchronization: an OS may validate a freshly built executable on its first exec (seconds on\n    // macOS under load), which must not eat into the first scenario's step timeout.\n    let warm = std::process::Command::new(&fixture).status();\n    assert!(\n        warm.as_ref().is_ok_and(|s| s.success()),\n        \"{} does not run: {warm:?}\",\n        fixture.display()\n    );"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/contract.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+          "source_sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4",
+          "source_bytes": 3414,
+          "line_count": 76,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 23,
+          "end_line": 48,
+          "quote": "    let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../conformance\");\n    let ledger_path = root.join(\"pending.txt\");\n    let ledger = std::fs::read_to_string(&ledger_path).unwrap_or_else(|e| panic!(\"{}: {e}\", ledger_path.display()));\n    let runtime = tokio::runtime::Builder::new_multi_thread()\n        .worker_threads(4)\n        .enable_all()\n        .build()\n        .expect(\"tokio runtime\");\n    let sum = runtime.block_on(runner::suite(&root.join(\"scenarios\"), &ledger, &fixture));\n    println!(\n        \"contract: {} passed, {} pending, {} failed ({} scenarios run on {}/rust; {} files, {} for other OSes or \\\n         languages)\",\n        sum.passed,\n        sum.pending,\n        sum.errors.len(),\n        sum.ran,\n        runner::os::OS,\n        sum.files,\n        sum.other\n    );\n    assert_eq!(\n        sum.ran + sum.other,\n        sum.files,\n        \"every scenario file is run or not meant for this OS/language\"\n    );\n    assert!(sum.errors.is_empty(), \"{} contract failures\", sum.errors.len());"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/contract.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+          "source_sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4",
+          "source_bytes": 3414,
+          "line_count": 76,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 51,
+          "end_line": 63,
+          "quote": "/// Binary `name` of workspace package `package`, from this test's own target dir (`target/<profile>/deps/..`).\n/// A missing binary fails the suite; it is never skipped.\nfn binary(package: &str, name: &str) -> PathBuf {\n    let exe = std::env::current_exe().expect(\"current_exe\");\n    let dir = exe.parent().and_then(Path::parent).expect(\"target/<profile>\");\n    let path = dir.join(format!(\"{name}{}\", std::env::consts::EXE_SUFFIX));\n    assert!(\n        path.is_file(),\n        \"{} is missing: build it first: cargo build -p {package}\",\n        path.display()\n    );\n    path\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/contract.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+          "source_sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4",
+          "source_bytes": 3414,
+          "line_count": 76,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 65,
+          "end_line": 76,
+          "quote": "/// Points the library at this target dir's supervisor (`target/<profile>/hugr-omni-supervisor`) unless\n/// `HUGR_OMNI_SUPERVISOR` is set: a test binary lives in `target/<profile>/deps`, where the library does not look.\nfn use_supervisor() {\n    if std::env::var_os(\"HUGR_OMNI_SUPERVISOR\").is_some() {\n        return;\n    }\n    let path = binary(\"omni-supervisor\", \"hugr-omni-supervisor\");\n    // SAFETY: called first in `contract`, the only test of this binary, before the runtime or any other thread of\n    // the runner exists; libtest's main thread only waits for that test. No other thread reads or writes the\n    // environment, which is what `set_var` requires (AGENTS.md allows this one call).\n    unsafe { std::env::set_var(\"HUGR_OMNI_SUPERVISOR\", path) };\n}"
+        }
+      ]
+    }
+  ],
+  "retained_record_decisions": [
+    {
+      "record_index": 0,
+      "path": "native/omni/crates/hugr-omni/src/spawn/env.rs",
+      "git_blob_sha": "c224657c7d68c04bf64836f08e727ec0d3d3ed00",
+      "source_sha256": "e1a692ac4d9eb10c28784b1b110c5cfc0dc93c7dca27d9fd86dc90a7114d05c6",
+      "source_bytes": 4145,
+      "line_count": 106,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 1,
+      "path": "native/omni/crates/hugr-omni/src/spawn/mod.rs",
+      "git_blob_sha": "5c7e7994bed61341cc6f409f8b0ac96eee22a04a",
+      "source_sha256": "c32798524c01df631f5b1519e9747fa096fe10565e409ff1591291de19dbed46",
+      "source_bytes": 4112,
+      "line_count": 127,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 2,
+      "path": "native/omni/crates/hugr-omni/src/spawn/path.rs",
+      "git_blob_sha": "7d4ed15c224b9574b8e6d3a4e9d0bd11daf0dfb4",
+      "source_sha256": "0ff0ad8ce508531076aab4af782e4dd515f81374c7d444fc3f3e84d49ae3f343",
+      "source_bytes": 5365,
+      "line_count": 144,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 3,
+      "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+      "git_blob_sha": "13896901c9cd416be3dc2d320ce9060cd58d990e",
+      "source_sha256": "15ee82093eb3c3dee7b3e5950c87b1a67ef5931675e261edecb3a15dbd1ad0d4",
+      "source_bytes": 5964,
+      "line_count": 143,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 4,
+      "path": "native/omni/crates/hugr-omni/src/spawn/sys.rs",
+      "git_blob_sha": "5b49379272c7a9cff8264ca78768f6636193ee74",
+      "source_sha256": "d3c6208ef9c14ebeb7ce779f86010d4471c87cb5f00d7bf5fb9c822084debedf",
+      "source_bytes": 2125,
+      "line_count": 42,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 5,
+      "path": "native/omni/crates/hugr-omni/src/spawn/tests.rs",
+      "git_blob_sha": "1d024312048d457dc072ca8d8ab864379a110b71",
+      "source_sha256": "81ab6f59abe62985b5e2090ac952b284b7600f3fa088b538b3197548fe12562b",
+      "source_bytes": 14012,
+      "line_count": 361,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 6,
+      "path": "native/omni/crates/hugr-omni/src/spawn/tests/resolve.rs",
+      "git_blob_sha": "bc5f1b03d05b638314944cc6f279433efc851651",
+      "source_sha256": "ee601172ade26f24925084a71381acc925ef49a79fde6f21332cff658f54c889",
+      "source_bytes": 8537,
+      "line_count": 208,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 7,
+      "path": "native/omni/crates/hugr-omni/src/spawn/tests/verbatim.rs",
+      "git_blob_sha": "bcccabb2f0be801a2f6161f5516d88ce7197d2e4",
+      "source_sha256": "745b316eba21f55ca281bcaabac92fc1a9a331e29884b1145b94bece5abda229",
+      "source_bytes": 2253,
+      "line_count": 73,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 8,
+      "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+      "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+      "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+      "source_bytes": 5830,
+      "line_count": 157,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 9,
+      "path": "native/omni/crates/hugr-omni/src/types.rs",
+      "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+      "source_sha256": "628de2e6808a85d1ea6d006eac2f80ac8d105a8f1b057b7e792ddb41ef1fa3f0",
+      "source_bytes": 4649,
+      "line_count": 155,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 10,
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+      "source_sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4",
+      "source_bytes": 3414,
+      "line_count": 76,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": false,
+      "changed_fields": [
+        "behavior[2]"
+      ],
+      "runtime_status": "NOT_RUN"
+    }
+  ],
+  "unchanged_record_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "additional_baseline_inputs_by_record": [
+    {
+      "record_index": 10,
+      "record_path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "additional_inputs": [],
+      "scope_note": "All new correction evidence comes from the complete contract.rs baseline blob. Existing pending-product-failure treatment is retained; no additional source evidence or runtime execution was used."
+    }
+  ],
+  "cross_reference_check": {
+    "active_record_files_checked": [
+      "records-01.v2.json",
+      "records-02.v3.json",
+      "records-03.v2.json",
+      "records-04.v2.json",
+      "records-05.json",
+      "records-06.v2.json",
+      "records-07.v2.json",
+      "records-08.json",
+      "records-09.v2.json",
+      "records-10.json",
+      "records-11.v2.json",
+      "records-12.json",
+      "records-13.json",
+      "records-14.json",
+      "records-15.json",
+      "records-16.json",
+      "records-17.json",
+      "records-18.json"
+    ],
+    "method": "Searched suite-error exclusivity, pending-failure, accounting and warm-up wording in CORE outputs; inspected matching semantic fields and the relevant L2 paragraph.",
+    "related_claims_retained": [
+      {
+        "file": "l2-notes.md",
+        "line": 70,
+        "reason": "The paragraph describes Harness/Product classification, pending eligibility and stale ledger entries. It makes no claim that sum.errors is the complete inventory of contract() failure conditions."
+      },
+      {
+        "file": "records-10.json",
+        "record_index": 1,
+        "fields": [
+          "behavior[1]",
+          "behavior[2]",
+          "contracts[0]"
+        ],
+        "reason": "These describe suite aggregation, ledger errors and harness failures, rather than excluding setup/warm-up/accounting failures in the separate contract() test."
+      }
+    ],
+    "dependent_changes": [],
+    "l2_drafts_modified": [],
+    "l2_notes_sha256_preserved": "71b3dd5e454625a8cbe79141b1b8d91bce82ebf4a460f337b2555fbf2aaba6c8",
+    "l2_status": "Candidate synopsis remains unaccepted; no formal L2/L3/L4 authoring or acceptance review performed."
+  },
+  "original_preserved": true,
+  "strict_change_scope": "Only /10/behavior/2 changed. All eleven paths, source identities, evidence quotations, dispositions and every other field are unchanged.",
+  "delivery_before_sha256": "524070245f6581fac7d15a51a33fd235d2ae13799b0b107438e6722656a2b1ac",
+  "delivery_after_sha256": "10778468d0c6230b9c90a672a562a12934d85f66e2d1ed3f0419b9b8d7aaee06",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; the original author does not self-approve."
+}

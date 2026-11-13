@@ -1,0 +1,68 @@
+{
+  "schema": "omni-author-delta-verification/v1",
+  "recorded_at": "2026-11-13T18:00:00.773931+00:00",
+  "delta": "authors/core/delta-08-v2.json",
+  "delta_sha256": "aaa83df257d87e341fbd309b1f8ef73279807d58fa73e78d08c93ccfa6146cc9",
+  "old_body_sha256": "8674ea3f7227ce47cbefef5aaa26144cdf9fa09c47fd2281684e8b26460223d9",
+  "new_body_sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c",
+  "record_count": 11,
+  "unchanged_record_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "field_changes": [
+    {
+      "pointer": "/10/behavior/2",
+      "before": "Only suite errors fail the test; expected product failures in the pending ledger may remain pending.",
+      "after": "Ledger-listed product failures may remain pending without entering sum.errors. Successful test completion also requires setup and required-binary checks, fixture warm-up, ledger/runtime initialization, complete scenario accounting (sum.ran + sum.other == sum.files), and sum.errors.is_empty()."
+    }
+  ],
+  "source_evidence_occurrences": 5,
+  "distinct_sources": [
+    "native/omni/crates/hugr-omni/tests/contract.rs"
+  ],
+  "excerpts": [
+    {
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "start_line": 1,
+      "end_line": 3,
+      "quote_sha256": "91a0173a2a3c4993cc03511597756372bcc7cf80e9ffae53cb0a937b5779dbf4"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "start_line": 12,
+      "end_line": 22,
+      "quote_sha256": "153ebf36645684b5f62454959220a1f81dc6c4c2c978a6342370c0082f299be9"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "start_line": 23,
+      "end_line": 48,
+      "quote_sha256": "150048e597123f2e737318416bbf7f10c9d1bb903ffcafb5711f008a46cb83a0"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "start_line": 51,
+      "end_line": 63,
+      "quote_sha256": "db2316a8c682c602f80119dcb9fcb78ab0a972b893431421e71c9d10aaab4ea4"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "start_line": 65,
+      "end_line": 76,
+      "quote_sha256": "3f352142a5bd801380c7091a858156b6f9dc03fc52312c566f3a08bf1e8f344d"
+    }
+  ],
+  "result": "PASS",
+  "limits": [
+    "Documentary identity, exact field-diff and source-quote checks only; no semantic decision or runtime result is inferred."
+  ]
+}

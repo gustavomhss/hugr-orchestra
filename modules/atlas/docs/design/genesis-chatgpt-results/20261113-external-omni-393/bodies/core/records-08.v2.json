@@ -1,0 +1,476 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/env.rs",
+    "git_blob_sha": "c224657c7d68c04bf64836f08e727ec0d3d3ed00",
+    "source_sha256": "e1a692ac4d9eb10c28784b1b110c5cfc0dc93c7dca27d9fd86dc90a7114d05c6",
+    "source_bytes": 4145,
+    "line_count": 106,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Builds the final child environment with ordered overrides and platform name rules.",
+    "behavior": [
+      "Inherited values are copied unless disabled; clean Windows environment retains one normalized SystemRoot before caller overrides/removals.",
+      "Each override removes every equivalent name then optionally inserts its new value; no interpolation is performed.",
+      "Unix names compare exactly; Windows folds individual UTF-16 units using one-to-one BMP uppercase, preserving surrogates and expansion-only case mappings."
+    ],
+    "contracts": [
+      "Environment lookup uses the same name-equivalence function as merge."
+    ],
+    "dependencies": [
+      "spawn::prepare uses build; resolve reads child PATH/PATHEXT from the resulting vector."
+    ],
+    "failures_or_limits": [
+      "Windows ordinal behavior is emulated through Rust Unicode casing rather than calling CompareStringOrdinal; exact equivalence across all OS Unicode table versions is not established here."
+    ],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 38,
+        "quote": "/// The rule behind `build`, with the host's environment as input. Without `inherit` the start is empty, except\n/// that Windows keeps the host's `SystemRoot` (contract §3: many programs cannot start without it). Each override\n/// then replaces every variable of the same name, or removes it (`None`). Nothing is expanded.\npub(super) fn merge(\n    host: impl IntoIterator<Item = (OsString, OsString)>,\n    overrides: &[(OsString, Option<OsString>)],\n    inherit: bool,\n    os: Os,\n) -> Vec<(OsString, OsString)> {\n    let mut env: Vec<(OsString, OsString)> = match (inherit, os) {\n        (true, _) => host.into_iter().collect(),\n        (false, Os::Windows) => host\n            .into_iter()\n            .filter(|(name, _)| os.same_name(name, OsStr::new(\"SystemRoot\")))\n            .take(1)\n            // The host may spell it `SYSTEMROOT` (an MSYS shell does); the child gets the usual spelling.\n            .map(|(_, value)| (OsString::from(\"SystemRoot\"), value))\n            .collect(),\n        (false, Os::Unix) => Vec::new(),\n    };\n    for (name, value) in overrides {\n        env.retain(|(n, _)| !os.same_name(n, name));\n        if let Some(value) = value {\n            env.push((name.clone(), value.clone()));\n        }\n    }\n    env"
+      },
+      {
+        "start_line": 48,
+        "end_line": 73,
+        "quote": "impl Os {\n    /// Unix compares names exactly. Windows compares them by ordinal ignoring case over the whole UTF-16 sequence,\n    /// like `CompareStringOrdinal(.., TRUE)`: unit against unit, each through `fold`.\n    fn same_name(self, a: &OsStr, b: &OsStr) -> bool {\n        match self {\n            Os::Unix => a == b,\n            Os::Windows => {\n                let (a, b) = (utf16(a), utf16(b));\n                a.len() == b.len() && a.iter().zip(&b).all(|(&x, &y)| fold(x) == fold(y))\n            }\n        }\n    }\n}\n\n/// A UTF-16 unit through its simple upper case when it is a non-surrogate BMP character whose upper case is\n/// exactly one BMP character; any other unit, surrogates included, unchanged (Windows' table works this way:\n/// `ß` stays `ß`).\nfn fold(unit: u16) -> u16 {\n    let Some(c) = char::from_u32(u32::from(unit)) else {\n        return unit;\n    };\n    let mut upper = c.to_uppercase();\n    match (upper.next(), upper.next()) {\n        (Some(u), None) => u16::try_from(u32::from(u)).unwrap_or(unit),\n        _ => unit,\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/mod.rs",
+    "git_blob_sha": "5c7e7994bed61341cc6f409f8b0ac96eee22a04a",
+    "source_sha256": "c32798524c01df631f5b1519e9747fa096fe10565e409ff1591291de19dbed46",
+    "source_bytes": 4112,
+    "line_count": 127,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Defines unchecked requests and resolved launch specifications plus preparation order.",
+    "behavior": [
+      "Request defaults to inherited environment, pipes, closed stdin, separate stderr, two-second grace and no timeout/RSS/verbatim options.",
+      "prepare validates fields, merges environment, validates absolute cwd, resolves executable on final child PATH, then rejects verbatim batch targets.",
+      "Spec keeps resolved executable separately from literal caller argv[0] and carries fully materialized environment and cwd to the supervisor."
+    ],
+    "contracts": [
+      "Preparation starts no process; timeout and memory enforcement belong to process layer."
+    ],
+    "dependencies": [
+      "spawn/env, validate and resolve implement the three transformations; client/start encodes Spec."
+    ],
+    "failures_or_limits": [
+      "The module calls environment/filesystem queries despite its pure/no-execution description; it is not referentially pure."
+    ],
+    "evidence": [
+      {
+        "start_line": 64,
+        "end_line": 79,
+        "quote": "impl Request {\n    pub(crate) fn new(program: OsString) -> Request {\n        Request {\n            program,\n            args: Vec::new(),\n            cwd: None,\n            env: Vec::new(),\n            inherit_env: true,\n            mode: Mode::Pipe,\n            stdin: Stdin::Closed,\n            merge_stderr: false,\n            grace: DEFAULT_GRACE,\n            timeout: None,\n            max_rss_bytes: None,\n            verbatim: None,\n        }"
+      },
+      {
+        "start_line": 104,
+        "end_line": 126,
+        "quote": "/// Validates `req` per contract §3 (InvalidArgument / InvalidCwd), builds the final environment and resolves the program\n/// against the child's final PATH (NotFound / NotExecutable). Never starts or executes anything.\npub(crate) fn prepare(req: &Request) -> Result<Spec, Error> {\n    validate::check(req, HOST)?;\n    let env = env::build(req);\n    let cwd = validate::cwd(req)?;\n    let program = resolve::program(&req.program, &env, &cwd)?;\n    if req.verbatim.is_some() {\n        validate::verbatim_program(&req.program, &program, HOST)?;\n    }\n    Ok(Spec {\n        program,\n        argv: std::iter::once(req.program.clone())\n            .chain(req.args.iter().cloned())\n            .collect(),\n        env,\n        cwd,\n        mode: req.mode,\n        stdin: req.stdin,\n        merge_stderr: req.merge_stderr,\n        grace: req.grace,\n        verbatim: req.verbatim.clone(),\n    })"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/path.rs",
+    "git_blob_sha": "7d4ed15c224b9574b8e6d3a4e9d0bd11daf0dfb4",
+    "source_sha256": "0ff0ad8ce508531076aab4af782e4dd515f81374c7d444fc3f3e84d49ae3f343",
+    "source_bytes": 5365,
+    "line_count": 144,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Implements OS-parameterized path classification, joining and PATH splitting.",
+    "behavior": [
+      "Distinguishes absolute, root-relative, drive-relative and relative Windows paths; drive-relative joins return None.",
+      "Root-relative Windows paths reuse the base drive; normal relatives append a separator while verbatim bases use platform Path joining.",
+      "PATH drops empty entries; Windows uses semicolons with removable double quotes, Unix colons; extension detection examines the last component."
+    ],
+    "contracts": [
+      "No implicit current directory is introduced by empty PATH components."
+    ],
+    "dependencies": [
+      "resolve uses join/split/extension; validate uses kind for cwd and command refusal."
+    ],
+    "failures_or_limits": [
+      "UNC/verbatim-base fallback uses host Path semantics and is exact only on Windows for those cases. Unbalanced PATH quotes are tolerated by the splitter."
+    ],
+    "evidence": [
+      {
+        "start_line": 41,
+        "end_line": 62,
+        "quote": "/// `path` made absolute against the absolute directory `base`; `None` for a Windows drive-relative `path`.\npub(super) fn join(base: &Path, path: &OsStr, os: Os) -> Option<PathBuf> {\n    match (os, kind(path, os)) {\n        (Os::Unix, _) => Some(base.join(path)),\n        (Os::Windows, Kind::DriveRelative) => None,\n        (Os::Windows, Kind::Absolute) => Some(PathBuf::from(path)),\n        (Os::Windows, Kind::RootRelative) => Some(match drive(base.as_os_str().as_encoded_bytes()) {\n            Some(letter) => concat(&format!(\"{letter}:\"), path),\n            // A UNC or `\\\\?\\` base: std's rule, which is Windows' own on the only host that has such bases.\n            None => base.join(path),\n        }),\n        // A `\\\\?\\` base takes no `/` and no `.`: std normalizes `path` into it.\n        (Os::Windows, Kind::Relative) if is_verbatim(base) => Some(base.join(path)),\n        (Os::Windows, Kind::Relative) => {\n            let mut joined = base.as_os_str().to_os_string();\n            if !joined.as_encoded_bytes().last().is_some_and(|&b| is_sep(b, os)) {\n                joined.push(\"\\\\\");\n            }\n            joined.push(path);\n            Some(PathBuf::from(joined))\n        }\n    }"
+      },
+      {
+        "start_line": 65,
+        "end_line": 85,
+        "quote": "/// The directories of a PATH value, empty ones dropped: `:`-separated on Unix; `;`-separated on Windows, where\n/// double quotes protect a `;` and are removed (std's rule).\npub(super) fn split_path(value: &OsStr, os: Os) -> Vec<PathBuf> {\n    let (sep, quotes) = match os {\n        Os::Unix => (b':', false),\n        Os::Windows => (b';', true),\n    };\n    split_os(value, sep, quotes).into_iter().map(PathBuf::from).collect()\n}\n\n/// Windows: the extension of the last component (after its last `.`, which must not be its first byte).\npub(super) fn extension(path: &OsStr) -> Option<&[u8]> {\n    let bytes = path.as_encoded_bytes();\n    let name = match bytes.iter().rposition(|&b| is_sep(b, Os::Windows)) {\n        Some(at) => bytes.get(at + 1..).unwrap_or_default(),\n        None => bytes,\n    };\n    match name.iter().rposition(|&b| b == b'.') {\n        None | Some(0) => None,\n        Some(at) => name.get(at + 1..),\n    }"
+      },
+      {
+        "start_line": 129,
+        "end_line": 143,
+        "quote": "/// `units` cut at every unquoted `sep`; quotes removed; empty pieces dropped.\nfn split<T: Copy + PartialEq + From<u8>>(units: &[T], sep: u8, quotes: bool) -> Vec<Vec<T>> {\n    let mut pieces = vec![Vec::new()];\n    let mut quoted = false;\n    for &unit in units {\n        if quotes && unit == T::from(b'\"') {\n            quoted = !quoted;\n        } else if !quoted && unit == T::from(sep) {\n            pieces.push(Vec::new());\n        } else if let Some(piece) = pieces.last_mut() {\n            piece.push(unit);\n        }\n    }\n    pieces.retain(|piece| !piece.is_empty());\n    pieces"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+    "git_blob_sha": "13896901c9cd416be3dc2d320ce9060cd58d990e",
+    "source_sha256": "15ee82093eb3c3dee7b3e5950c87b1a67ef5931675e261edecb3a15dbd1ad0d4",
+    "source_bytes": 5964,
+    "line_count": 143,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Resolves commands using final child environment and classified filesystem outcomes.",
+    "behavior": [
+      "Bare names search child PATH in order; separator paths resolve against child cwd and skip PATH. Empty and drive-relative PATH entries do not imply cwd.",
+      "Windows uses PATHEXT or .COM;.EXE;.BAT;.CMD, tries an explicit extension first, and accepts only exe/com/bat/cmd as startable.",
+      "Missing/non-directory candidates are skipped, inaccessible/nonexecutable candidates are remembered, and unrelated filesystem failures immediately become Io."
+    ],
+    "contracts": [
+      "Returns first runnable candidate; if none, first concrete execution refusal outranks NotFound."
+    ],
+    "dependencies": [
+      "env name lookup and path rules provide platform semantics; spawn/sys checks Unix execute permission."
+    ],
+    "failures_or_limits": [
+      "Metadata and execution are separate, so later changes still require supervisor exec failure handling."
+    ],
+    "evidence": [
+      {
+        "start_line": 47,
+        "end_line": 83,
+        "quote": "    let exts = extensions(env, os);\n    let (bases, path) = if path::has_separator(program, os) || path::kind(program, os) == Kind::DriveRelative {\n        let base = path::join(cwd, program, os).ok_or_else(|| Error::drive_relative_command(program))?;\n        (vec![base], None)\n    } else {\n        let path = env::get(env, \"PATH\", os).ok_or_else(|| Error::no_path(program, None))?;\n        let bases: Vec<PathBuf> = path::split_path(path, os)\n            .iter()\n            .filter_map(|dir| path::join(cwd, dir.as_os_str(), os))\n            .filter_map(|dir| path::join(&dir, program, os))\n            .collect();\n        if bases.is_empty() {\n            return Err(Error::no_path(program, Some(path)));\n        }\n        (bases, Some(path))\n    };\n    let mut skipped = None;\n    for candidate in bases.iter().flat_map(|base| candidates(base, &exts, os)) {\n        let refusal: fn(&OsStr, &Path) -> Error = match probe(&candidate) {\n            Err(err) if matches!(err.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => continue,\n            Err(err) if err.kind() == io::ErrorKind::PermissionDenied => Error::access_denied,\n            Err(err) => return Err(Error::lookup_failed(program, &candidate, &err)),\n            Ok(Entry::Dir) => Error::is_directory,\n            Ok(Entry::File { executable }) => match os {\n                Os::Unix if executable => return Ok(candidate),\n                Os::Unix => Error::no_execute_permission,\n                Os::Windows if startable(&candidate) => return Ok(candidate),\n                Os::Windows => Error::not_startable,\n            },\n        };\n        skipped.get_or_insert((candidate, refusal));\n    }\n    Err(match (skipped, path) {\n        (Some((candidate, refusal)), _) => refusal(program, &candidate),\n        (None, Some(path)) => Error::not_on_path(program, path, &exts),\n        (None, None) => Error::no_such_program(program, bases.first().map_or(cwd, PathBuf::as_path), &exts),\n    })"
+      },
+      {
+        "start_line": 107,
+        "end_line": 119,
+        "quote": "/// Windows: the child's PATHEXT, lower-cased (as files are usually named). Elsewhere: none.\nfn extensions(env: &[(OsString, OsString)], os: Os) -> Vec<String> {\n    if os == Os::Unix {\n        return Vec::new();\n    }\n    let parse = |list: &str| -> Vec<String> {\n        list.split(';')\n            .filter(|ext| !ext.is_empty())\n            .map(str::to_ascii_lowercase)\n            .collect()\n    };\n    let exts = env::get(env, \"PATHEXT\", os).map_or_else(Vec::new, |v| parse(&v.to_string_lossy()));\n    if exts.is_empty() { parse(DEFAULT_PATHEXT) } else { exts }"
+      },
+      {
+        "start_line": 136,
+        "end_line": 142,
+        "quote": "/// Windows starts these without a shell (`.bat`/`.cmd` through `cmd.exe`, C-SPAWN-02); anything else is refused.\nfn startable(path: &Path) -> bool {\n    path::extension(path.as_os_str()).is_some_and(|ext| {\n        [b\"exe\", b\"com\", b\"bat\", b\"cmd\"]\n            .iter()\n            .any(|s| ext.eq_ignore_ascii_case(*s))\n    })"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/sys.rs",
+    "git_blob_sha": "5b49379272c7a9cff8264ca78768f6636193ee74",
+    "source_sha256": "d3c6208ef9c14ebeb7ce779f86010d4471c87cb5f00d7bf5fb9c822084debedf",
+    "source_bytes": 2125,
+    "line_count": 42,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Performs Unix executable-access checks while avoiding libc paths that can fork the host.",
+    "behavior": [
+      "Normal equal real/effective IDs use faccessat X_OK with flags zero; EACCES becomes false, other errors propagate.",
+      "For differing IDs, checks only regular-file status and any execute bit, leaving actual permission decision to supervisor execve."
+    ],
+    "contracts": [
+      "Deliberately avoids AT_EACCESS because musl can fork a helper for that mode."
+    ],
+    "dependencies": [
+      "spawn/resolve::probe calls can_execute after path resolution; libc provides identity/access syscalls."
+    ],
+    "failures_or_limits": [
+      "Setuid/setgid preflight is intentionally approximate; successful preflight does not guarantee exec success."
+    ],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 35,
+        "quote": "/// Whether the effective user may execute `path`, by the kernel's own rule: the owner needs the owner's execute\n/// bit even when others have one; root needs any. `Ok(false)` is a refusal (`EACCES`); other errors come back as\n/// they are.\n///\n/// Never `AT_EACCESS`: musl implements it, when the real and effective ids differ, by forking a helper process\n/// (`src/unistd/faccessat.c`), and the host never forks (ADR-0005 §9). With equal ids (every normal host) the\n/// plain `faccessat(X_OK, 0)` is the same check, and no libc forks for it. A setuid/setgid host skips the\n/// host-side check: a regular file with any execute bit is accepted, and `execve` in the supervisor decides.\npub(super) fn can_execute(path: &Path) -> io::Result<bool> {\n    if !same_ids() {\n        let meta = std::fs::metadata(path)?;\n        return Ok(meta.is_file() && meta.permissions().mode() & 0o111 != 0);\n    }\n    // Validation rejects NUL in every string a path is built from, so this fails only if that rule breaks.\n    let path = CString::new(path.as_os_str().as_bytes()).map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))?;\n    // SAFETY: `path` is a valid NUL-terminated C string that lives across the call, and `faccessat` only reads it.\n    // `AT_FDCWD` never matters: resolution makes every candidate absolute.\n    let status = unsafe { libc::faccessat(libc::AT_FDCWD, path.as_ptr(), libc::X_OK, 0) };\n    if status == 0 {\n        return Ok(true);\n    }\n    let err = io::Error::last_os_error();\n    if err.kind() == io::ErrorKind::PermissionDenied {\n        Ok(false)\n    } else {\n        Err(err)\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/tests.rs",
+    "git_blob_sha": "1d024312048d457dc072ca8d8ab864379a110b71",
+    "source_sha256": "81ab6f59abe62985b5e2090ac952b284b7600f3fa088b538b3197548fe12562b",
+    "source_bytes": 14012,
+    "line_count": 361,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Tests environment and validation rules under both OS models plus real preparation filesystem checks.",
+    "behavior": [
+      "Verifies ordered override/removal, clean-env SystemRoot retention, case-sensitive Unix versus UTF-16-unit Windows names including lone surrogates and nonexpanding folds.",
+      "Invalid NUL/key/size/duration inputs must name fields, hide secret-bearing values and precede missing-cwd/program errors.",
+      "Cwd tests cover relative, absolute, UNC/root-relative and rejected drive-relative paths; real Unix permission search skips owner-denied files and Windows resolves npm.cmd over extensionless npm."
+    ],
+    "contracts": [
+      "Nothing is executed by these tests; files and directories serve as resolution inputs."
+    ],
+    "dependencies": [
+      "spawn/env, validate, sys and prepare are implementation targets."
+    ],
+    "failures_or_limits": [
+      "Windows-specific preparation checks run only on Windows; parameterized rules alone do not establish native execution."
+    ],
+    "evidence": [
+      {
+        "start_line": 122,
+        "end_line": 136,
+        "quote": "#[test]\nfn windows_names_ignore_case_over_the_whole_utf16_even_with_lone_surrogates() {\n    let (upper, lower, other) = (wide(&[0xC4, 0xD800]), wide(&[0xE4, 0xD800]), wide(&[0xC4, 0xD801]));\n    let host = vec![(upper, os(\"1\")), (other.clone(), os(\"2\"))];\n    // \"ÄD800\" and \"äD800\" are one name; \"ÄD801\" is another.\n    let replaced = merge(host.clone(), &[(lower.clone(), Some(os(\"x\")))], true, Os::Windows);\n    assert_eq!(replaced, [(other.clone(), os(\"2\")), (lower.clone(), os(\"x\"))]);\n    let removed = merge(host, &[(lower, None)], true, Os::Windows);\n    assert_eq!(removed, [(other, os(\"2\"))]);\n    // Only one-to-one BMP upper cases fold: ß stays ß, and 𐐨 (upper case 𐐀, outside the BMP) stays 𐐨.\n    let kept = vars(&[(\"ß\", \"1\"), (\"𐐨\", \"2\")]);\n    assert_eq!(\n        merge(kept.clone(), &[(os(\"SS\"), None), (os(\"𐐀\"), None)], true, Os::Windows),\n        kept\n    );"
+      },
+      {
+        "start_line": 166,
+        "end_line": 168,
+        "quote": "    for (req, parts) in cases {\n        let text = expect_err(check(&req, Os::Unix), ErrorCode::InvalidArgument, parts);\n        assert!(!text.contains(\"1234\"), \"a secret leaked: {text}\");"
+      },
+      {
+        "start_line": 215,
+        "end_line": 222,
+        "quote": "#[test]\nfn invalid_input_is_reported_before_anything_is_looked_up() {\n    let req = request(|r| {\n        r.program = os(\"surely-not-a-program\");\n        r.cwd = Some(PathBuf::from(\"surely/not/a/dir\"));\n        r.args = vec![os(\"a\\0\")];\n    });\n    expect_err(prepare(&req), ErrorCode::InvalidArgument, &[\"args[0]\"]);"
+      },
+      {
+        "start_line": 337,
+        "end_line": 340,
+        "quote": "    // The kernel's rule: the owner needs the owner's execute bit; root needs any execute bit.\n    let as_root = std::fs::metadata(&root).unwrap().uid() == 0;\n    let expected = root.join(if as_root { \"a\" } else { \"b\" }).join(\"npm\");\n    assert_eq!(prepare(&req).unwrap().program, expected, \"as root: {as_root}\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/tests/resolve.rs",
+    "git_blob_sha": "bc5f1b03d05b638314944cc6f279433efc851651",
+    "source_sha256": "ee601172ade26f24925084a71381acc925ef49a79fde6f21332cff658f54c889",
+    "source_bytes": 8537,
+    "line_count": 208,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Exercises resolution precedence and filesystem error classification with injected probe results.",
+    "behavior": [
+      "First runnable PATH candidate wins; earlier directories/nonexecutables/permission failures are skipped but reported if no later executable exists.",
+      "No PATH, empty PATH and missing candidates yield precise NotFound messages; unexpected probe error is Io rather than missing.",
+      "Windows cases honor PATHEXT, refuse nonstartable extensions, resolve root-relative names against child drive, skip drive-relative PATH entries and preserve quoted semicolons."
+    ],
+    "contracts": [
+      "Drive-relative commands fail before the probe is invoked."
+    ],
+    "dependencies": [
+      "spawn/resolve::find receives a fake filesystem and both OS rule sets."
+    ],
+    "failures_or_limits": [
+      "This verifies algorithm decisions and probe order, not real filesystem permissions or Windows process startup."
+    ],
+    "evidence": [
+      {
+        "start_line": 105,
+        "end_line": 131,
+        "quote": "fn file_system_errors_are_refusals_or_io_never_missing() {\n    let (a, b) = (Path::new(\"/a\"), Path::new(\"/b\"));\n    let env = vars(&[(\"PATH\", \"/a:/b\")]);\n    let probe = fs(&[\n        (a.join(\"tool\"), Err(ErrorKind::PermissionDenied)),\n        (b.join(\"tool\"), EXE),\n        (a.join(\"locked\"), Err(ErrorKind::PermissionDenied)),\n        (a.join(\"sub\"), Err(ErrorKind::NotADirectory)),\n        (b.join(\"sub\"), EXE),\n        (a.join(\"broken\"), Err(ErrorKind::InvalidData)),\n        (b.join(\"broken\"), EXE),\n    ]);\n    // Permission denied is skipped like execvp's EACCES, and is the answer when nothing runs.\n    assert_eq!(unix(\"tool\", &env, &probe).unwrap(), b.join(\"tool\"));\n    let locked = a.join(\"locked\").display().to_string();\n    let parts = [\n        locked.as_str(),\n        \"could not be accessed (permission denied)\",\n        \"Give the host's user access\",\n    ];\n    expect_err(unix(\"locked\", &env, &probe), ErrorCode::NotExecutable, &parts);\n    // A PATH entry that is a file is passed over, as by execvp.\n    assert_eq!(unix(\"sub\", &env, &probe).unwrap(), b.join(\"sub\"));\n    // Any other error ends the lookup, naming the path and the error.\n    let broken = a.join(\"broken\").display().to_string();\n    let parts = [\"\\\"broken\\\" could not be looked up\", broken.as_str(), \"invalid data\"];\n    expect_err(unix(\"broken\", &env, &probe), ErrorCode::Io, &parts);"
+      },
+      {
+        "start_line": 142,
+        "end_line": 153,
+        "quote": "    // PATH and PATHEXT under any case; without PATHEXT the default list applies.\n    let npm = Path::new(r\"C:\\nodejs\\npm.cmd\");\n    assert_eq!(windows(\"npm\", &vars(&[(\"Path\", r\"C:\\nodejs\")]), &probe).unwrap(), npm);\n    let pathext = vars(&[(\"Path\", r\"C:\\nodejs\"), (\"PathExt\", \".EXE;.CMD\")]);\n    assert_eq!(windows(\"npm\", &pathext, &probe).unwrap(), npm);\n    // PATHEXT is honored, not assumed: without .CMD there is no npm.\n    let exe_only = vars(&[(\"PATH\", r\"C:\\nodejs\"), (\"PATHEXT\", \".EXE\")]);\n    let parts = [\"\\\"npm\\\"\", r#\"PATH (\"C:\\nodejs\")\"#, \"PATHEXT extensions .exe\"];\n    expect_err(windows(\"npm\", &exe_only, &probe), ErrorCode::NotFound, &parts);\n    // A name with an extension is tried as written.\n    let node = windows(\"node.exe\", &vars(&[(\"PATH\", r\"C:\\nodejs\")]), &probe).unwrap();\n    assert_eq!(node, Path::new(r\"C:\\nodejs\\node.exe\"));"
+      },
+      {
+        "start_line": 192,
+        "end_line": 207,
+        "quote": "    // Drive-relative: refused before the file system is asked anything.\n    asked.borrow_mut().clear();\n    for command in [r\"C:bin\\tool.exe\", \"C:tool.exe\"] {\n        let parts = [command, \"drive's current directory\", \"full path\"];\n        expect_err(windows(command, &[], probe), ErrorCode::InvalidArgument, &parts);\n    }\n    assert!(asked.borrow().is_empty());\n    // PATH: quotes protect a `;`, a drive-relative entry is skipped, the others resolve against the child's cwd.\n    let env = vars(&[(\"PATH\", r#\"C:rel;\"D:\\a;b\";\\shared;tools\"#)]);\n    expect_err(windows(\"x\", &env, probe), ErrorCode::NotFound, &[\"\\\"x\\\"\"]);\n    let bases = [r\"D:\\a;b\\x\", r\"D:\\shared\\x\", r\"D:\\proj\\tools\\x\"];\n    let expected: Vec<String> = bases\n        .iter()\n        .flat_map(|base| [\".com\", \".exe\", \".bat\", \".cmd\"].map(|ext| format!(\"{base}{ext}\")))\n        .collect();\n    assert_eq!(*asked.borrow(), expected);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/tests/verbatim.rs",
+    "git_blob_sha": "bcccabb2f0be801a2f6161f5516d88ce7197d2e4",
+    "source_sha256": "745b316eba21f55ca281bcaabac92fc1a9a331e29884b1145b94bece5abda229",
+    "source_bytes": 2253,
+    "line_count": 73,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Pins verbatim-tail refusal rules, batch normalization and secret-safe diagnostics.",
+    "behavior": [
+      "Windows accepts an empty or arbitrary non-NUL tail alone; Unix and simultaneous argv reject InvalidArgument.",
+      "NUL-tail error must identify byte seven without echoing the supplied token.",
+      "Batch checks cover case, trailing dots/spaces, verbatim prefixes and slash variants, while explicit cmd.exe and similarly named nonbatch targets remain eligible."
+    ],
+    "contracts": [
+      "Unix prepare refuses verbatim before trying to resolve a nonexistent executable."
+    ],
+    "dependencies": [
+      "spawn/validate::{check,verbatim_program} implement the rules."
+    ],
+    "failures_or_limits": [
+      "Passing validation does not assert arbitrary cmd.exe syntax is safe or portable."
+    ],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 35,
+        "quote": "fn verbatim_is_windows_only_alone_and_without_nul() {\n    let tail = |t: &str| request(|r| r.verbatim = Some(os(t)));\n    check(&tail(r#\"/d /s /c \"echo a&echo b\"\"#), Os::Windows).unwrap();\n    check(&tail(\"\"), Os::Windows).unwrap();\n    expect_err(\n        check(&tail(\"x\"), Os::Unix),\n        ErrorCode::InvalidArgument,\n        &[\"windowsVerbatimArgs\", \"not Windows\"],\n    );\n    let with_args = request(|r| {\n        r.verbatim = Some(os(\"x\"));\n        r.args = vec![os(\"a\"), os(\"b\")];\n    });\n    expect_err(\n        check(&with_args, Os::Windows),\n        ErrorCode::InvalidArgument,\n        &[\"windowsVerbatimArgs\", \"2 args\"],\n    );\n    let text = expect_err(\n        check(&tail(\"hunter2\\0x\"), Os::Windows),\n        ErrorCode::InvalidArgument,\n        &[\"windowsVerbatimArgs\", \"NUL\", \"byte 7\"],\n    );\n    assert!(!text.contains(\"hunter2\"), \"the text is never echoed: {text}\");"
+      },
+      {
+        "start_line": 39,
+        "end_line": 62,
+        "quote": "fn verbatim_never_reaches_a_batch_file() {\n    for batch in [\n        r\"C:\\t\\tool.cmd\",\n        r\"C:\\t\\TOOL.BAT\",\n        r\"C:\\t\\tool.Cmd. . \",\n        r\"\\\\?\\C:\\t\\tool.bat\",\n        \"C:/t/tool.cmd\",\n    ] {\n        expect_err(\n            verbatim_program(&os(\"tool\"), Path::new(batch), Os::Windows),\n            ErrorCode::InvalidArgument,\n            &[\"batch file\", \"cmd.exe\", \"\\\"tool\\\"\"],\n        );\n    }\n    for program in [\n        r\"C:\\Windows\\System32\\cmd.exe\",\n        r\"C:\\t.cmd\\tool.exe\",\n        r\"C:\\t\\tool\",\n        r\"C:\\t\\cmd\",\n        r\"C:\\t\\x.cmdx\",\n    ] {\n        verbatim_program(&os(\"x\"), Path::new(program), Os::Windows).unwrap();\n    }\n    verbatim_program(&os(\"x\"), Path::new(\"/t/tool.cmd\"), Os::Unix).unwrap();"
+      },
+      {
+        "start_line": 67,
+        "end_line": 72,
+        "quote": "fn prepare_refuses_verbatim_on_unix_before_resolving() {\n    let req = request(|r| {\n        r.program = os(\"no-such-program-anywhere\");\n        r.verbatim = Some(os(\"x\"));\n    });\n    expect_err(super::prepare(&req), ErrorCode::InvalidArgument, &[\"not Windows\"]);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+    "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+    "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+    "source_bytes": 5830,
+    "line_count": 157,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Validates launch fields before resolution and establishes an accessible directory.",
+    "behavior": [
+      "Checks empty/NUL command, drive-relative Windows program, NUL argv/cwd/env, malformed env names, verbatim conflicts, PTY range and duration range in deterministic order.",
+      "Verbatim batch refusal strips trailing dots/spaces from final component before case-insensitive bat/cmd detection.",
+      "Absolute cwd bypasses host-cwd lookup; relative/root-relative uses host cwd, drive-relative is rejected; metadata distinguishes missing/nondirectory/inaccessible."
+    ],
+    "contracts": [
+      "Timeout/grace validation rounds fractional milliseconds upward for bounds, but does not rewrite Request durations."
+    ],
+    "dependencies": [
+      "spawn/path determines path kind; error/messages/w03 and wp8b produce errors."
+    ],
+    "failures_or_limits": [
+      "The header says before any syscall, but cwd/directory helpers perform filesystem calls after syntactic check. Grace wire conversion elsewhere should be checked for fractional-duration consistency."
+    ],
+    "evidence": [
+      {
+        "start_line": 33,
+        "end_line": 70,
+        "quote": "    if let Some(tail) = &req.verbatim {\n        if os != Os::Windows {\n            return Err(Error::verbatim_not_windows());\n        }\n        if !req.args.is_empty() {\n            return Err(Error::verbatim_with_args(req.args.len()));\n        }\n        if let Some(at) = nul(tail) {\n            return Err(Error::nul_in_verbatim(at));\n        }\n    }\n    if let Some(cwd) = &req.cwd\n        && let Some(at) = nul(cwd.as_os_str())\n    {\n        return Err(Error::nul_in_cwd(cwd, at));\n    }\n    for (name, value) in &req.env {\n        if name.is_empty() {\n            return Err(Error::empty_env_name());\n        }\n        if let Some(at) = nul(name) {\n            return Err(Error::nul_in_env_name(name, at));\n        }\n        if name.as_encoded_bytes().contains(&b'=') {\n            return Err(Error::equals_in_env_name(name));\n        }\n        if let Some(at) = value.as_deref().and_then(nul) {\n            return Err(Error::nul_in_env_value(name, at));\n        }\n    }\n    if let Mode::Pty(size) = req.mode {\n        cells(\"pty.cols\", size.cols)?;\n        cells(\"pty.rows\", size.rows)?;\n    }\n    if let Some(timeout) = req.timeout {\n        millis(\"timeoutMs\", timeout)?;\n    }\n    millis(\"graceMs\", req.grace)"
+      },
+      {
+        "start_line": 73,
+        "end_line": 95,
+        "quote": "/// A verbatim command line (amendment WP8b) never reaches a batch file: Windows would run it through `cmd.exe` with\n/// the caller's tail unescaped, so the caller must name `cmd.exe` itself. `resolved` is the program as resolved; its\n/// last component is compared the way Windows opens it (trailing dots and spaces dropped, any case).\npub(super) fn verbatim_program(command: &OsStr, resolved: &Path, os: Os) -> Result<(), Error> {\n    let bytes = resolved.as_os_str().as_encoded_bytes();\n    let name = match bytes.iter().rposition(|&b| path::is_sep(b, os)) {\n        Some(at) => bytes.get(at + 1..).unwrap_or_default(),\n        None => bytes,\n    };\n    let end = name\n        .iter()\n        .rposition(|&b| b != b'.' && b != b' ')\n        .map_or(0, |last| last + 1);\n    let name = name.get(..end).unwrap_or_default();\n    let ext = name\n        .len()\n        .checked_sub(4)\n        .and_then(|at| name.get(at..))\n        .unwrap_or_default();\n    if os == Os::Windows && (ext.eq_ignore_ascii_case(b\".bat\") || ext.eq_ignore_ascii_case(b\".cmd\")) {\n        return Err(Error::verbatim_batch(command, resolved));\n    }\n    Ok(())"
+      },
+      {
+        "start_line": 124,
+        "end_line": 156,
+        "quote": "/// `dir` checked to be a directory (symlinks followed). `given` is the cwd as passed, for the message.\npub(super) fn directory(given: Option<&Path>, dir: PathBuf) -> Result<PathBuf, Error> {\n    match std::fs::metadata(&dir) {\n        Ok(meta) if meta.is_dir() => Ok(dir),\n        Ok(_) => Err(Error::cwd_not_directory(given, &dir)),\n        Err(err) if matches!(err.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => {\n            Err(Error::cwd_missing(given, &dir))\n        }\n        Err(err) => Err(Error::cwd_inaccessible(given, &dir, &err)),\n    }\n}\n\n/// Byte offset of the first NUL (in the OS encoding: bytes on Unix, WTF-8 on Windows; NUL is one byte in both).\nfn nul(s: &OsStr) -> Option<usize> {\n    s.as_encoded_bytes().iter().position(|&b| b == 0)\n}\n\nfn cells(field: &str, value: u16) -> Result<(), Error> {\n    if (1..=MAX_CELLS).contains(&value) {\n        Ok(())\n    } else {\n        Err(Error::bad_pty_size(field, value))\n    }\n}\n\n/// A fraction of a millisecond rounds up (contract §3).\nfn millis(field: &str, value: Duration) -> Result<(), Error> {\n    let ms = value.as_nanos().div_ceil(1_000_000);\n    if ms <= MAX_MS {\n        Ok(())\n    } else {\n        Err(Error::duration_out_of_range(field, ms))\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/types.rs",
+    "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+    "source_sha256": "628de2e6808a85d1ea6d006eac2f80ac8d105a8f1b057b7e792ddb41ef1fa3f0",
+    "source_bytes": 4649,
+    "line_count": 155,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Defines dependency-light public values shared across every host layer.",
+    "behavior": [
+      "Stdin defaults Closed; PtySize defaults 80x24; Data distinguishes replacement-decoded text from raw bytes, although Display decodes bytes lossily.",
+      "Chunk/Line attach per-stream loss metadata; Line continues marks all but last piece over 1 MiB; PTY drops count as stdout.",
+      "Exit carries unsigned native code, optional Unix signal and explicit reason including MemoryExceeded; success requires ordinary Exit code zero. ProcessInfo only links parents inside the same list."
+    ],
+    "contracts": [
+      "Nonexhaustive structs permit future fields; Windows codes remain nonnegative u32 and signals are absent."
+    ],
+    "dependencies": [
+      "api reexports these values; error result and process/io modules consume them."
+    ],
+    "failures_or_limits": [
+      "RunOutput complete-output wording also appears in partial error results; callers must inspect the enclosing Result/error contract."
+    ],
+    "evidence": [
+      {
+        "start_line": 42,
+        "end_line": 57,
+        "quote": "/// Output data: text with `text(true)` (the default), raw bytes with `text(false)`.\n#[derive(Debug, Clone, PartialEq, Eq)]\npub enum Data {\n    /// UTF-8 text, decoded across chunks; invalid bytes become U+FFFD.\n    Text(String),\n    /// Raw bytes, lossless.\n    Bytes(Vec<u8>),\n}\n\nimpl fmt::Display for Data {\n    /// Text as is; bytes decoded lossily.\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        match self {\n            Data::Text(s) => f.write_str(s),\n            Data::Bytes(b) => f.write_str(&String::from_utf8_lossy(b)),\n        }"
+      },
+      {
+        "start_line": 96,
+        "end_line": 130,
+        "quote": "/// Why the root process ended (contract §7). The cause is committed when the library acts.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub enum Reason {\n    /// It exited on its own.\n    Exit,\n    /// A signal ended it, not sent by this library (Unix only).\n    Signal,\n    /// `stop()` or dropping the child ended it.\n    Killed,\n    /// The timeout ended it.\n    Timeout,\n    /// Cancellation ended it.\n    Aborted,\n    /// The resident memory of the whole tree went over `max_rss_bytes`, and the tree was killed.\n    MemoryExceeded,\n}\n\n/// How the root process ended.\n#[derive(Debug, Clone, PartialEq, Eq)]\n#[non_exhaustive]\npub struct Exit {\n    /// The exit code; `None` only when a Unix process was ended by a signal. Windows codes are reported as\n    /// non-negative integers (e.g. `0xC000013A`).\n    pub code: Option<u32>,\n    /// The Unix signal name (e.g. `\"SIGTERM\"`); always `None` on Windows.\n    pub signal: Option<String>,\n    /// Why it ended.\n    pub reason: Reason,\n}\n\nimpl Exit {\n    /// `reason` is `Exit` and the code is 0.\n    pub fn success(&self) -> bool {\n        self.reason == Reason::Exit && self.code == Some(0)\n    }"
+      },
+      {
+        "start_line": 145,
+        "end_line": 154,
+        "quote": "/// One live process of a child's tree (contract §5, `processes()`).\n#[derive(Debug, Clone, PartialEq, Eq)]\n#[non_exhaustive]\npub struct ProcessInfo {\n    /// Process id.\n    pub pid: u32,\n    /// The parent's pid when the parent is in the same list; `None` otherwise (e.g. the root).\n    pub parent_pid: Option<u32>,\n    /// The executable's file name without directory (`node`, `node.exe`); `None` when the OS does not tell.\n    pub name: Option<String>,"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+    "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+    "source_sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4",
+    "source_bytes": 3414,
+    "line_count": 76,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Runs all applicable JSON conformance scenarios through the Rust public API with explicit pending accounting.",
+    "behavior": [
+      "Requires built fixture/supervisor binaries, warms the fixture, reads pending.txt and drives runner::suite on a four-worker runtime.",
+      "Prints passed/pending/failed totals and requires ran+other to equal all scenario files.",
+      "Ledger-listed product failures may remain pending without entering sum.errors. Successful test completion also requires setup and required-binary checks, fixture warm-up, ledger/runtime initialization, complete scenario accounting (sum.ran + sum.other == sum.files), and sum.errors.is_empty()."
+    ],
+    "contracts": [
+      "Missing binaries fail rather than skip; supervisor environment override is set before runner threads."
+    ],
+    "dependencies": [
+      "tests/runner implements scenario selection/classification; conformance/scenarios and pending.txt define inputs."
+    ],
+    "failures_or_limits": [
+      "A successful suite can still contain pending product failures; no current execution totals are claimed here."
+    ],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 48,
+        "quote": "    let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../conformance\");\n    let ledger_path = root.join(\"pending.txt\");\n    let ledger = std::fs::read_to_string(&ledger_path).unwrap_or_else(|e| panic!(\"{}: {e}\", ledger_path.display()));\n    let runtime = tokio::runtime::Builder::new_multi_thread()\n        .worker_threads(4)\n        .enable_all()\n        .build()\n        .expect(\"tokio runtime\");\n    let sum = runtime.block_on(runner::suite(&root.join(\"scenarios\"), &ledger, &fixture));\n    println!(\n        \"contract: {} passed, {} pending, {} failed ({} scenarios run on {}/rust; {} files, {} for other OSes or \\\n         languages)\",\n        sum.passed,\n        sum.pending,\n        sum.errors.len(),\n        sum.ran,\n        runner::os::OS,\n        sum.files,\n        sum.other\n    );\n    assert_eq!(\n        sum.ran + sum.other,\n        sum.files,\n        \"every scenario file is run or not meant for this OS/language\"\n    );\n    assert!(sum.errors.is_empty(), \"{} contract failures\", sum.errors.len());"
+      },
+      {
+        "start_line": 65,
+        "end_line": 75,
+        "quote": "/// Points the library at this target dir's supervisor (`target/<profile>/hugr-omni-supervisor`) unless\n/// `HUGR_OMNI_SUPERVISOR` is set: a test binary lives in `target/<profile>/deps`, where the library does not look.\nfn use_supervisor() {\n    if std::env::var_os(\"HUGR_OMNI_SUPERVISOR\").is_some() {\n        return;\n    }\n    let path = binary(\"omni-supervisor\", \"hugr-omni-supervisor\");\n    // SAFETY: called first in `contract`, the only test of this binary, before the runtime or any other thread of\n    // the runner exists; libtest's main thread only waits for that test. No other thread reads or writes the\n    // environment, which is what `set_var` requires (AGENTS.md allows this one call).\n    unsafe { std::env::set_var(\"HUGR_OMNI_SUPERVISOR\", path) };"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

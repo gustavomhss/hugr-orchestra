@@ -1,7 +1,7 @@
 {
   "schema": "omni-acceptance-matrix/v1",
   "state": "PROVISIONAL_NOT_FINAL_ACCEPTANCE",
-  "updated_at": "2026-11-13T17:57:20.949250+00:00",
+  "updated_at": "2026-11-13T18:06:05.565575+00:00",
   "normative_source": {
     "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
     "path": "modules/atlas/docs/design/genesis-ownership-plan.md",

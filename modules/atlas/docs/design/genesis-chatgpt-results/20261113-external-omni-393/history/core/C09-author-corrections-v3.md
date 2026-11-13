@@ -1,0 +1,20 @@
+# C09 — original-author correction request v3
+
+Execution: `b5970766-80d8-4664-a9a8-1db37d6485af` (local execution identifier).
+Source baseline: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+Current candidate: `authors/core/records-09.v2.json`, 41,900 bytes, SHA256 `8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf`, nine records.
+Original author: `/root/omni_core_author`. Both persistent reviewers evaluated the full candidate. This request conveys the union of their mandatory findings, without reserved consumer cases or answers. Neither production nor this request grants acceptance.
+
+## Mandatory findings
+
+1. **Duration conversion — record 0, `tests/runner/command.rs`.** Correct `/0/behavior/1` and append one precise limit to `/0/failures_or_limits`, preserving its existing entry. The conversion has two branches: values represented as `u64` milliseconds use `Duration::from_millis`; other values go through `as_f64`, a finite/nonnegative check, and then `Duration::from_secs_f64(ms / 1000.0)`. The finite/nonnegative check does not bound the representable Duration range. A sufficiently large finite floating-point value can reach the panicking conversion instead of returning the adapter's `Err`. Describe the guarded and unguarded boundaries, without implying all finite nonnegative numbers are safely converted. `schema.rs` accepts numeric option values and does not supply the missing upper bound. Decisive baseline locations: `command.rs:84–92` and `schema.rs:142–173`. This is J1's mandatory finding; J2 did not require an additional correction to this record. State it as a source/API boundary, not an executed panic observation.
+
+2. **Outcome classification — record 1, `tests/runner/expect.rs`, `/1/behavior/1`.** The current statement that malformed or missing expected fields are all harness failures is too broad. An absent ordinary field in the returned field map takes the string-to-`Fail::Harness` path. In contrast, an expected partial `result` with no `Error::result()` explicitly returns `Fail::Product`; it is therefore eligible for pending classification under the suite's other conditions. Distinguish that outcome mismatch from malformed scenario/expectation validation. Both judges require this correction. J2 additionally requested the literal `schema::expect`, pieces/entries validation and invocation evidence to substantiate where malformed expectations are rejected; the courier supplies this evidence to the same pair. Read the full relevant baseline functions and bind any new explanation to their actual call chain. Do not assert that the outcome comparator alone rejects every malformed shape.
+
+## Versioning and evidence
+
+Preserve C09v1, C09v2 and every previous delta. Write `authors/core/records-09.v3.json` and `authors/core/delta-09-v3.json`. Keep the nine paths, source identities and quotations unchanged. Expected changes are `/0/behavior/1`, the append to `/0/failures_or_limits`, and `/1/behavior/1`; preserve all unrelated fields and the seven unchanged record objects. Explain any additional necessary dependency correction rather than silently expanding the edit.
+
+The delta must bind old/new full-body hashes and byte counts, include before/after and exact JSON pointers, identify retained objects by identity, and provide literal decisive baseline excerpts with path, Git blob, SHA256, byte count and LF-based coordinates. Review the L2 draft for affected statements and either version a necessary correction or record why it remains accurate. Update delivery without erasing history.
+
+Optional wording suggestions about captured values or polling intervals are not part of the mandatory request. Do not make unrelated changes. Do not access `private/`, reserved cases or judge captures; do not change product sources, public staging, protocols, workflows or GitHub, and do not execute product tests. Return concrete files, hashes, changed fields, evidence and limits. Root will verify the actual bytes and submit the delta to the same two reviewers.
