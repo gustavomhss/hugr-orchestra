@@ -72,6 +72,7 @@ async function exercise(directory: string, scenario: typeof scenarios[number]) {
     }
     const expected = known.find((candidate) => candidate.id === value.id)
     expect(expected).toBeDefined()
+    if (!expected) throw new Error("Actual JSON read returned an unknown record id")
     expect(value).toEqual(expected)
   })
   const last = final[0]
