@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test"
+import { afterAll, expect, test } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -82,24 +82,28 @@ function assertSetup(report: Report, cpu = false) {
 const run = <A, E>(body: Effect.Effect<A, E, AppProcess.Service | Scope.Scope>) =>
   Effect.runPromise(body.pipe(Effect.scoped, Effect.provide(layer)))
 
-const compiled = Effect.gen(function* () {
-  const directory = yield* Effect.acquireRelease(
-    Effect.promise(() => mkdtemp(path.join(tmpdir(), "codemode-deadline-build-"))),
-    (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
-  )
+const artifact = { build: undefined as Promise<string> | undefined, directory: undefined as string | undefined }
+afterAll(async () => {
+  if (artifact.build) await Promise.allSettled([artifact.build])
+  if (artifact.directory) await rm(artifact.directory, { recursive: true, force: true })
+})
+
+const compiled = Effect.promise(() => artifact.build ??= (async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "codemode-deadline-build-"))
+  artifact.directory = directory
   const worker = path.join(source, "worker-entry.js")
-  const workerExists = yield* Effect.promise(() => Bun.file(worker).exists())
-  const build = yield* Effect.promise(() => Bun.build({
+  const workerExists = await Bun.file(worker).exists()
+  const build = await Bun.build({
     entrypoints: [path.join(source, "index.ts"), ...(workerExists ? [worker] : [])],
     root: source, naming: { entry: "[name].js" }, outdir: directory, target: "bun", splitting: false,
-  }))
+  })
   expect(build.success).toBe(true)
   expect(build.logs.filter((entry) => entry.level === "error")).toEqual([])
-  expect(yield* Effect.promise(() => Bun.file(path.join(directory, "index.js")).exists())).toBe(true)
+  expect(await Bun.file(path.join(directory, "index.js")).exists()).toBe(true)
   if (workerExists)
-    expect(yield* Effect.promise(() => Bun.file(path.join(directory, "worker-entry.js")).exists())).toBe(true)
+    expect(await Bun.file(path.join(directory, "worker-entry.js")).exists()).toBe(true)
   return path.join(directory, "index.js")
-})
+})())
 
 const ordinary = {
   literal: true, dynamic: ["ABB", "A", "BB"], state: ["abb", 0, 3, "abbb", 4, 8],
