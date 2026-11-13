@@ -156,7 +156,7 @@ for (const placement of ["root", "atlas-module"] as const) {
     const merged = yield* MemoryDecisionProcess.git(proc, root, ["merge", "--no-edit", "right"])
     expect(merged.exitCode).toBe(1)
     const unmerged = yield* git(["diff", "--name-only", "--diff-filter=U"])
-    expect(unmerged.stdout.toString().trim()).toBe(path.relative(root, receipt))
+    expect(unmerged.stdout.toString().trim()).toBe(path.relative(root, receipt).split(path.sep).join("/"))
     const bytes = readFileSync(receipt, "utf8")
     expect(bytes).toContain("<<<<<<<")
     expect(bytes).toContain(">>>>>>>")

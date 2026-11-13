@@ -1,7 +1,7 @@
 export * as MemoryDecisionProcess from "./memory-decision-process"
 
 import { expect } from "bun:test"
-import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { copyFile } from "node:fs/promises"
 import path from "node:path"
@@ -69,7 +69,7 @@ writeFileSync(input.result, JSON.stringify({pid:process.pid,result,review,memory
 `)
   return { root, source, api, bundle, actor,
     async fresh() {
-      const repo = mkdtempSync(path.join(root, "repo-"))
+      const repo = realpathSync(mkdtempSync(path.join(root, "repo-"))).replaceAll("\\", "/")
       const control = mkdtempSync(path.join(root, "control-"))
       const base = await scanner(control, "proposal", false, scannerExecutable)
       const binding = bindingOf(repo, base)
