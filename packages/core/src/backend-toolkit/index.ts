@@ -231,7 +231,13 @@ const acquire = Effect.fnUntraced(function* (root: string, engine: Engine, runti
   const work =
     "runtime" in engine
       ? hosted(root, engine, runtimes, directory, target, host)
-      : PinnedArtifact.install(directory, [engine.targets[target].artifact, ...notices]).pipe(
+      : PinnedArtifact.install(directory, [engine.targets[target].artifact, ...notices], (stage) =>
+          noticeReadiness(stage, engine.notices, noticeLayout(engine, target)).pipe(
+            Effect.flatMap((reason) =>
+              reason === undefined ? Effect.void : Effect.fail(new PinnedArtifact.Failed({ cause: reason })),
+            ),
+          ),
+        ).pipe(
           Effect.andThen(
             host
               ? shim(root, engine.id, launchText(root, engine, runtimes, directory, target))

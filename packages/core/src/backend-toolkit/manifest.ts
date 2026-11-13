@@ -120,10 +120,16 @@ export type NativeEngine<Id extends string = string> = {
   readonly targets: Readonly<
     Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>
   >
-  /** Exact raw notice downloads installed at `notices/<filename>` in the same atomic stage. Absent means none. */
+  /** Pinned notice files installed at `notices/<filename>` atomically, from raw downloads or exact archive members. */
   readonly notices?: ReadonlyArray<{
     readonly url: string
     readonly integrity: `sha256-${string}`
     readonly filename: string
+    /** Archive digest and the exact member; integrity above still hashes the installed notice bytes. */
+    readonly archive?: {
+      readonly format: "tar.gz" | "zip"
+      readonly integrity: `sha256-${string}`
+      readonly member: string
+    }
   }>
 }
