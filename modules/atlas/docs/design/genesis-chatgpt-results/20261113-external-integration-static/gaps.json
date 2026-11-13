@@ -478,8 +478,17 @@
     }
   ],
   "static_review": {
-    "status": "PENDING",
-    "material_findings": []
+    "status": "STATIC_CONTENT_AND_PROCESS_REVIEWED",
+    "public_summary": "review-summary.json",
+    "material_findings": [],
+    "fronts": {
+      "A": "Both independent reviewers completed static review",
+      "B": "Both independent reviewers completed correction review",
+      "C": "Both independent reviewers completed static review"
+    },
+    "common_criteria": "V-01..V-09 reviewed by the same pair",
+    "seal_verification_at_payload": "PENDING_SEAL_AND_READBACK; later public delivery receipt may reference the verified seal",
+    "not_a_campaign_acceptance": true
   },
   "integration": {
     "status": "NOT_PERFORMED",

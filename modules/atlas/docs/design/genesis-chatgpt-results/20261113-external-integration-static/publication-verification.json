@@ -1,0 +1,226 @@
+{
+  "schema": "genesis-external-static-publication-evidence/v1",
+  "audit_id": "20261113-external-integration-static",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-external-integration-static",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "scope": "Observed checkpoint Git evidence through the recorded commit. Final payload and seal are identified by handoff.json; this file does not invent its own future commit.",
+  "recorded_through_commit": "e358e0c9547fd244d67b7b3b06e0621bdceaf16f",
+  "branch_creation": {
+    "observed_before": "NOT_FOUND",
+    "created_from": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "baseline_ref_readback_confirmed": true,
+    "force_used": false
+  },
+  "writer": "external-audit-orchestrator only, through GitHub MCP",
+  "checkpoints": [
+    {
+      "purpose": "Freeze independent static verification before authorship",
+      "commit": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+      "parent": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "tree": "289bf0e026378e0daec34799e87ee02b6c3b21dd",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/3d9a515f264a7938c764d37532bc42ad6005fc47",
+      "ref_readback_confirmed": true
+    },
+    {
+      "purpose": "Inventory and independent metadata checkpoint",
+      "commit": "bb1195d94b4cf97305438912aefa56bf805701fc",
+      "parent": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+      "tree": "9dc6142da965155d5b2b6ce3157a16e8442ae743",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/bb1195d94b4cf97305438912aefa56bf805701fc",
+      "ref_readback_confirmed": true
+    },
+    {
+      "purpose": "Complete A/B/C candidate",
+      "commit": "cae78076213244757d87f86bf7a7ed29bf7fdfa1",
+      "parent": "bb1195d94b4cf97305438912aefa56bf805701fc",
+      "tree": "601e763f8c0cf009609d6d90e83f848f5815c263",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/cae78076213244757d87f86bf7a7ed29bf7fdfa1",
+      "ref_readback_confirmed": true
+    },
+    {
+      "purpose": "Independent review evidence supplements and E04 correction",
+      "commit": "e358e0c9547fd244d67b7b3b06e0621bdceaf16f",
+      "parent": "cae78076213244757d87f86bf7a7ed29bf7fdfa1",
+      "tree": "4b116cc04742825435c68efb248613bf45433d3a",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/e358e0c9547fd244d67b7b3b06e0621bdceaf16f",
+      "ref_readback_confirmed": true
+    }
+  ],
+  "remote_compare": {
+    "base": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "head": "e358e0c9547fd244d67b7b3b06e0621bdceaf16f",
+    "status": "ahead",
+    "ahead_by": 4,
+    "behind_by": 0,
+    "total_commits": 4,
+    "merge_base": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "file_count": 21,
+    "all_added": true,
+    "all_paths_within_authorized_prefix": true,
+    "outside_prefix": [],
+    "files": [
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/contracts.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/contracts.md",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/criteria-matrix.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/criteria-matrix.md",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/evidence-excerpts-B.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps-A.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps-B.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps-C.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/inventory.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/inventory.md",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/review-delta-B1.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/source-manifest.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/sources-A.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/sources-B.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/sources-C.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/static-verification.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/tree-inventory.tsv",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-plan.json",
+        "status": "added"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-plan.md",
+        "status": "added"
+      }
+    ]
+  },
+  "corrected_checkpoint_readbacks": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/contracts.json",
+      "git_blob_sha": "39156527970e9837b8e94779b05c7a93bd081e47",
+      "exact_text_equal": true,
+      "method": "GitHub MCP fetch_file at recorded_through_commit"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/contracts.md",
+      "git_blob_sha": "eea8ad43fca8a05c839efa70cca2793c60a9c5af",
+      "exact_text_equal": true,
+      "method": "GitHub MCP fetch_file at recorded_through_commit"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/sources-B.json",
+      "git_blob_sha": "952182886eb01c453da97db84dc1c1c58bda2e0a",
+      "exact_text_equal": true,
+      "method": "GitHub MCP fetch_file at recorded_through_commit"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/evidence-excerpts-B.json",
+      "git_blob_sha": "b0573dd8d33d97905f29d7feb9a6be4690338ad9",
+      "exact_text_equal": true,
+      "method": "GitHub MCP fetch_file at recorded_through_commit"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/review-delta-B1.json",
+      "git_blob_sha": "f4ea5dc74acdb1f459f47c3b9e7c2ae5a41cc092",
+      "exact_text_equal": true,
+      "method": "GitHub MCP fetch_file at recorded_through_commit"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/static-verification.json",
+      "git_blob_sha": "a841bd28a1039e4170be048df732a3aff80daca1",
+      "exact_text_equal": true,
+      "method": "GitHub MCP fetch_file at recorded_through_commit"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/source-manifest.json",
+      "git_blob_sha": "0c30e47fd2d168e41fb4fbc5e58c6688c000d802",
+      "exact_text_equal": true,
+      "method": "GitHub MCP fetch_file at recorded_through_commit"
+    }
+  ],
+  "large_inventory_readback": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/tree-inventory.tsv",
+    "git_blob_sha": "e55c52312283c7babfe6ddd5bd52e42642cc6215",
+    "byte_length": 2828263,
+    "sha256": "243af8f4c2ea35ac4ede30d7ed8dc42ab52adb710fe29163d12c6c5c8fa0a8a8",
+    "full_body_exact": true,
+    "method": "fetch_file returned metadata without a body; GitHub MCP fetch_blob recovered the full body and exact equality was checked."
+  },
+  "publication_rule": {
+    "expected_sha": "Observed prior head for each update",
+    "force": false,
+    "recovery": "If the lease fails, reread branch and reconcile the actual delta. Do not reset, overwrite or force-push."
+  },
+  "execution_boundaries": {
+    "product_tests": "NOT_RUN",
+    "ci_dispatch": "NOT_RUN",
+    "atlas_or_native_product_tools": "NOT_RUN",
+    "consumers": "NOT_RUN",
+    "final_integration": "NOT_PERFORMED",
+    "merge": "NOT_PERFORMED",
+    "deployment": "NOT_PERFORMED",
+    "activation": "NOT_PERFORMED",
+    "private_coordination_state": "NOT_ACCESSED",
+    "reserved_slices": "Omni 393 and Platform 200 not produced or changed"
+  },
+  "deterministic_operations": "Repository artifact serialization, Git metadata reconstruction and hash/JSON/text comparison using standard-library arithmetic. These are not product execution or runtime acceptance.",
+  "host_telemetry": {
+    "tokens": "UNKNOWN",
+    "financial_cost": "UNKNOWN",
+    "historical_usage": "UNKNOWN",
+    "note": "No private ledger was read or reconstructed; no missing usage is reported as zero."
+  }
+}

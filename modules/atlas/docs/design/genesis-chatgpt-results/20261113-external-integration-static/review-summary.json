@@ -1,0 +1,287 @@
+{
+  "schema": "genesis-external-static-public-review-summary/v1",
+  "audit_id": "20261113-external-integration-static",
+  "scope": "Public findings and dispositions only. This is not either full reviewer report, a private oracle, a ledger, a binding review or the coordination integration verdict.",
+  "verification_freeze": {
+    "commit": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+    "git_blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b",
+    "before_deliverable_authorship": true,
+    "author": "external-audit-orchestrator; separate from the three front authors",
+    "bar_changed_after_authorship": false
+  },
+  "producer_ownership": [
+    {
+      "front": "A",
+      "host_task_id": "/root/inventory",
+      "files": [
+        "inventory.json",
+        "inventory.md",
+        "tree-inventory.tsv",
+        "sources-A.json",
+        "gaps-A.json"
+      ]
+    },
+    {
+      "front": "B",
+      "host_task_id": "/root/contracts",
+      "files": [
+        "contracts.json",
+        "contracts.md",
+        "sources-B.json",
+        "evidence-excerpts-B.json",
+        "gaps-B.json",
+        "review-delta-B1.json"
+      ]
+    },
+    {
+      "front": "C",
+      "host_task_id": "/root/criteria",
+      "files": [
+        "criteria-matrix.json",
+        "criteria-matrix.md",
+        "verification-plan.json",
+        "verification-plan.md",
+        "sources-C.json",
+        "gaps-C.json"
+      ]
+    }
+  ],
+  "ownership_note": "B-specific evidence supplements remain under B ownership. No producer edited another front. The orchestrator assembled shared indexes, verification, public dispositions and handoff.",
+  "identity_note": "Strings beginning /root/ in actor fields are host collaboration task identifiers, not local filesystem paths.",
+  "reviewers": [
+    {
+      "host_task_id": "/root/static_judge_1",
+      "fork_turns": "none",
+      "author_of_reviewed_fronts": false,
+      "tools_used": false,
+      "covers": [
+        "V-01..V-10",
+        "A-01..A-10",
+        "B-01..B-08",
+        "C-01..C-09"
+      ],
+      "front_dispositions": {
+        "A": "PASS_STATIC_ONLY",
+        "B": "PASS_STATIC_ONLY",
+        "C": "PASS_STATIC_ONLY"
+      },
+      "open_front_requests": []
+    },
+    {
+      "host_task_id": "/root/static_judge_2",
+      "fork_turns": "none",
+      "author_of_reviewed_fronts": false,
+      "tools_used": false,
+      "covers": [
+        "V-01..V-10",
+        "A-01..A-10",
+        "B-01..B-08",
+        "C-01..C-09"
+      ],
+      "front_dispositions": {
+        "A": "PASS_STATIC_ONLY",
+        "B": "PASS_STATIC_ONLY",
+        "C": "PASS_STATIC_ONLY"
+      },
+      "open_front_requests": []
+    }
+  ],
+  "review_packet": {
+    "corrected_candidate_commit": "e358e0c9547fd244d67b7b3b06e0621bdceaf16f",
+    "delivery": "Actual public artifact content in bounded projections, literal normative rows, decisive source bodies, metadata and exact artifact identities; not links alone.",
+    "same_package_for_both": true,
+    "transcription_corrections": "QS-3 ('ou' -> 'or') was corrected only in the transmission to J2; J1 had the correct normative text. B-S07 range end (31 -> 32) was corrected only in the transmission to J1; J2 had 32. Both effective packets match; repository bytes were unchanged.",
+    "artifact_bindings": [
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/inventory.json",
+        "sha256": "a0acba308238bb81df73012edaf9590c062150c255cbf812ca65d9973b2be61c",
+        "git_blob_sha": "de7d5566f85c5ee5a876a5a40c88f99e2a4921b1"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/inventory.md",
+        "sha256": "929de2ed72d953510d48b38573b8267787350a637287f64f4412ba38e6b8d636",
+        "git_blob_sha": "20b32ca34bba34fe3472a3b62d3ba15494c4890b"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/tree-inventory.tsv",
+        "sha256": "243af8f4c2ea35ac4ede30d7ed8dc42ab52adb710fe29163d12c6c5c8fa0a8a8",
+        "git_blob_sha": "e55c52312283c7babfe6ddd5bd52e42642cc6215"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/sources-A.json",
+        "sha256": "7e26e67364947f37778e514ab7efa3d0e828042f5f72966e4579e016f34731f6",
+        "git_blob_sha": "1d8448add05569884e8bdab1fd29b57981007759"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps-A.json",
+        "sha256": "f8823a0422a2b6f474e105553ab6eeb444a0e8935889f05ee46fb3f1b26cbdd2",
+        "git_blob_sha": "78a5449d4c6652d645711662d3301cdd9c01e567"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/contracts.json",
+        "sha256": "c7f545a5ad1152af2ac364fce5d6f8db56e6e1eb455be47e3a3eeabf7d1f82a9",
+        "git_blob_sha": "39156527970e9837b8e94779b05c7a93bd081e47"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/contracts.md",
+        "sha256": "c933f671a5235787d46c1469282ab61d2a3c98a1eaa94fac2b2a524a842c326d",
+        "git_blob_sha": "eea8ad43fca8a05c839efa70cca2793c60a9c5af"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/sources-B.json",
+        "sha256": "6136810ea8420dbd95e6c93ab9b9c39c2ed130b44bc4cccff7831b84ad3db95a",
+        "git_blob_sha": "952182886eb01c453da97db84dc1c1c58bda2e0a"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/evidence-excerpts-B.json",
+        "sha256": "1e502808f13571bdef08c11c6fab4d36c603ab86fbb73ba83c72100e58001b42",
+        "git_blob_sha": "b0573dd8d33d97905f29d7feb9a6be4690338ad9"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps-B.json",
+        "sha256": "169d1b10ea1215e866ebb999263c95f04093d9c5803ef918cc3eb05f88a8e9ad",
+        "git_blob_sha": "bfbf2cd388685174cbef6951aa0529a0c1ec3e3a"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/review-delta-B1.json",
+        "sha256": "266970a282971edd955a97ca094fb09614f4dbaac69a4e79b47ed8ee261bd5c9",
+        "git_blob_sha": "f4ea5dc74acdb1f459f47c3b9e7c2ae5a41cc092"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/criteria-matrix.json",
+        "sha256": "d397dda6dbc35e1eb0d0e3a075d7af602a707bae3567328c095647b94bfaaaca",
+        "git_blob_sha": "c561ac103e80186eab2b4fb020006c31465a16e8"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/criteria-matrix.md",
+        "sha256": "4bd744ee1bd7e895e38e520b32de643e323b66044d898aa3ca854886fd60e013",
+        "git_blob_sha": "a728ecd5d3071af6fa2c3288a6c54898795b0af0"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-plan.json",
+        "sha256": "c482788a52330f3b07879fc744ab78a6d3ff6bebaa395371d5acb34729db274c",
+        "git_blob_sha": "4d3bdfb14bdc11525588a9d2b9324a389e699cb5"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-plan.md",
+        "sha256": "fbaf32f88dd20e2865e33eb8063ffd91da825e5d5a12754b6e9075707807541b",
+        "git_blob_sha": "937c2735b395163f0ad300e6d4132c8d2a15a313"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/sources-C.json",
+        "sha256": "932fe56f54c2165b7175b93f70101c993bfa42020a0b7323756ff74c259fa0e1",
+        "git_blob_sha": "aae5fa64dea6fc81f61d5b4dbff5041f9c3ecdc2"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps-C.json",
+        "sha256": "a96e7e419876c4313b605f431fe76ae4fe4d2df4f03dd76cff8c027fe9c2bc27",
+        "git_blob_sha": "e0cd0cc04b6938a36e27833321a3e3973850ae8a"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "STATIC-R01",
+      "reviewer_requests": [
+        "J1-A-E01",
+        "J2-A-REQ02"
+      ],
+      "finding": "The review packet did not independently demonstrate physical TSV ordering.",
+      "disposition": "RESOLVED_BY_EVIDENCE",
+      "resolution": "All 16710 persisted data rows compared with unsigned UTF-8 path order: zero adjacent inversions and zero positional mismatches.",
+      "evidence": "static-verification.json#persisted_tsv_order"
+    },
+    {
+      "id": "STATIC-R02",
+      "reviewer_requests": [
+        "J1-A-E02",
+        "J2-A-REQ01",
+        "J2-A-REQ03"
+      ],
+      "finding": "The review packet required the complete source provenance and per-shard top-level count maps.",
+      "disposition": "RESOLVED_BY_EVIDENCE",
+      "resolution": "Source records and all five exact expected/observed maps were supplied to both reviewers; maps match.",
+      "evidence": "sources-A.json; static-verification.json#top_level_counts"
+    },
+    {
+      "id": "STATIC-R03",
+      "reviewer_requests": [
+        "J1-B-E01",
+        "J2-B-REQ-01"
+      ],
+      "finding": "The hosts() value flow into createRoutes needed explicit source evidence.",
+      "disposition": "RESOLVED_BY_EVIDENCE",
+      "resolution": "serve.ts:93 and 113–135 show hosts() -> listen(host) -> bind(host) -> createRoutes({host}).",
+      "evidence": "review-delta-B1.json#read_augmentations"
+    },
+    {
+      "id": "STATIC-R04",
+      "reviewer_requests": [
+        "J1-B-E02"
+      ],
+      "finding": "The Host import and export-map binding needed explicit provenance.",
+      "disposition": "RESOLVED_BY_EVIDENCE",
+      "resolution": "routes.ts:16 imports @orchestra/core/host; core/package.json:178 resolves ./host to ./src/host.ts.",
+      "evidence": "review-delta-B1.json#read_augmentations"
+    },
+    {
+      "id": "STATIC-R05",
+      "reviewer_requests": [
+        "J1-B-E03",
+        "J2-B-REQ-02"
+      ],
+      "finding": "B-E04 attributed contributions to S4 without the necessary origin chain.",
+      "disposition": "CORRECTED_AND_REVIEWED",
+      "resolution": "Removed the S4 attribution. B-E04 now identifies S1 Server -> S1 Core and the demonstrated application composition S5 -> S3 through E02/E03.",
+      "evidence": "contracts.json#B-E04; review-delta-B1.json#boundary_replacement"
+    },
+    {
+      "id": "STATIC-R06",
+      "reviewer_requests": [
+        "J1-B-E04",
+        "J2-B-REQ-03"
+      ],
+      "finding": "The transmitted review packet lacked individual records from the 53-source catalog; one contextual partial-read record lacked ranges.",
+      "disposition": "RESOLVED_BY_EVIDENCE",
+      "resolution": "All 53 records were supplied to both reviewers. B-X06 partial ranges were documented by pinned reread; no graph assertion or full-read claim was added.",
+      "evidence": "sources-B.json; review-delta-B1.json#provenance_supplements"
+    }
+  ],
+  "material_static_findings_open": [],
+  "same_reviewers_reassessed": true,
+  "third_reviewer_used": false,
+  "common_review": {
+    "status": "V01_TO_V09_REVIEWED_STATIC_ONLY",
+    "reviewer_dispositions": [
+      {
+        "host_task_id": "/root/static_judge_1",
+        "criteria": "V-01..V-09",
+        "disposition": "PASS_STATIC_ONLY"
+      },
+      {
+        "host_task_id": "/root/static_judge_2",
+        "criteria": "V-01..V-09",
+        "disposition": "PASS_STATIC_ONLY"
+      }
+    ],
+    "v10_status_at_payload": "PENDING_SEAL_AND_READBACK",
+    "publication_evidence": "publication-verification.json",
+    "seal_requirement": "Prior payload P, distinct handoff H, leased branch update, MCP readback of H and all artifact bodies at P.",
+    "later_public_record": "After actual seal/readback and review, a later delivery-verification.json may reference P/H. This payload does not assert completion of its own future publication.",
+    "open_common_evidence_requests": [],
+    "transcription_clarification": {
+      "request": "J1-V-E01",
+      "disposition": "RESOLVED",
+      "resolution": "J1 received the correct QS-3 text initially; only J2's transmission required 'ou' -> 'or'. J1 reevaluated and closed V-08."
+    }
+  },
+  "limits": {
+    "campaign_requirement_satisfaction": "UNKNOWN for all 50 IDs",
+    "integration_controls": "All 13 NOT_RUN",
+    "integration_pair": "Separate future pair owned by the primary coordination",
+    "global_acceptance": "NOT_CLAIMED",
+    "owner_acceptance": "NOT_CLAIMED",
+    "runtime_success": "NOT_CLAIMED"
+  }
+}
