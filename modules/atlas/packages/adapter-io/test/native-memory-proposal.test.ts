@@ -183,7 +183,7 @@ describe("decideProjectRule", () => {
     expect(decideProjectRule(binding(), { proposalId: id, verdict: "indexed", by: "gus" }, T3)).toEqual({
       ok: false,
       refusal: "proposal-not-open",
-      reason: `no open memory proposal has id '${id}'`,
+      reason: "the memory proposal is no longer open for this decision",
     })
     expect(rules()).toEqual([])
   })
