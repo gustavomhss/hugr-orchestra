@@ -101,6 +101,24 @@ class ReaderErrorRedaction(unittest.TestCase):
                 out.close();err.close()
 
 
+    def test_anonymous_stream_hash_is_complete_only_after_absence_proof(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            out = tempfile.TemporaryFile()
+            err = tempfile.TemporaryFile()
+            try:
+                out.write(b"safe-output");err.write(b"safe-diagnostic")
+                out.flush();err.flush()
+                outcome = {"lifecycle_state": "TERMINATION_PROVEN", "group_absent": True,
+                           "kernel_probe": "killpg-zero-ESRCH", "members": []}
+                evidence = broker.preserve_failure_evidence(run, out, err,
+                    RuntimeError("synthetic"), outcome)
+                self.assertEqual(evidence["capture_completeness"], "COMPLETE_AFTER_TERMINATION_PROOF")
+                self.assertTrue(evidence["outputs"]["stdout_anonymous"]["complete"])
+                self.assertTrue(evidence["outputs"]["stderr_anonymous"]["complete"])
+            finally:
+                out.close();err.close()
+
     def test_failure_after_exit_proof_reuses_proof_without_resignaling(self):
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp)
