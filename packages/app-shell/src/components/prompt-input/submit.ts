@@ -296,7 +296,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const owner = captured.owner
     const controller = new AbortController()
     admission.abort = controller
-    const signal = AbortSignal.any([controller.signal, captured.owner.signal, captured.choiceOwner.signal])
+    const baseSignal = AbortSignal.any([controller.signal, captured.owner.signal])
+    const signal = AbortSignal.any([baseSignal, captured.choiceOwner.signal])
     const submission = captured.submission
     const currentPrompt = submission.prompt
     const context = submission.context
@@ -310,11 +311,12 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
 
     const modelSelection = captured.modelSelection
+    const confirmed = !captured.sessionID && admission.request?.admitted === true
     const retained = admission.request?.selection
     const currentModel = retained ? { id: retained.model.modelID, provider: { id: retained.model.providerID } } : captured.currentModel
     const currentAgent = retained ? { id: retained.agent, name: retained.agent } : captured.currentAgent
     const variant = retained ? retained.variant : captured.variant
-    if (mode !== "shell" && !(admission.request?.kind === "prompt" && admission.request.admissionAttempted) && modelSelection.ready?.() === false)
+    if (!confirmed && mode !== "shell" && !(admission.request?.kind === "prompt" && admission.request.admissionAttempted) && modelSelection.ready?.() === false)
       return false
     if (!currentModel || !currentAgent) {
       // On a first run there is no model to choose yet; the toast leads to where one is connected.
@@ -369,8 +371,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       cleanup: () => {},
     }) : undefined
     if (untrackEarly) admission.cleanup = untrackEarly
-    const reportPolicyError = (err: unknown) => {
-      if (!signal.aborted && ownsSource()) showToast({
+    const reportPolicyError = (err: unknown, current = ownsSource, active = signal) => {
+      if (!active.aborted && current()) showToast({
         title: language.t("common.requestFailed"),
         description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
       })
@@ -471,7 +473,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         return false
       }
     }
-    if (!ownsSource() || signal.aborted) return false
+    if (confirmed ? !ownsBinding() || baseSignal.aborted : !ownsSource() || signal.aborted) return false
 
     if (!session && isNewSession) {
       const created = await api
@@ -494,7 +496,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         session = created
       }
     }
-    if (!ownsSource() || signal.aborted) return false
+    if (confirmed ? !ownsBinding() || baseSignal.aborted : !ownsSource() || signal.aborted) return false
     if (!session) {
       showToast({
         title: language.t("prompt.toast.promptSendFailed.title"),
@@ -663,7 +665,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         : isNewSession || admission.request?.kind === "prompt" ? waitPolicy() : policy.wait(active),
     }
     if (isNewSession && admission.session) seed(serverState, sessionDirectory, admission.session)
-    if (!(await waitPolicy()) || !ownsSource()) return false
 
     const selectRequest = () => {
       if (admission.request?.key !== actionKey || admission.request.revision !== receipt.revision) {
@@ -706,23 +707,44 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           })
           if (sent === false) continue
           request.admitted = true
+          // Save the original admitted selection only after a positive ACK; it can recover handoff, not eligibility.
+          request.selection = { agent, model, variant, delivery, policyVersion: captured.policyVersion }
         }
         return true
       }
       return false
     }
     const promote = async () => {
-      if (!isNewSession || !admission.request?.admitted || admission.promoted || !ownsSource()) return
-      // Subagent models picked while the prompt was in flight are acknowledged on its Session before the handoff.
-      if (pendingSnapshot(rulesKey).revision !== admission.request.revision && !(await waitPolicy())) return
+      const current = () => ownsBinding() && !baseSignal.aborted
+      const request = admission.request
+      if (!isNewSession || !request?.admitted || request.revision === undefined || admission.promoted || !current()) return
+      // A confirmed receipt no longer depends on the unsent choice or its metadata generation.
+      const handoffPolicy = createSubmissionPolicy({
+        key: rulesKey, sessionID: session.id,
+        management: server.sessionManagement, admission, current,
+        initialPolicy: { mode: "inherit" }, failedMessage: language.t("common.requestFailed"),
+      })
+      const handoffError = (err: unknown) => {
+        reportPolicyError(err, current, baseSignal)
+        return false as const
+      }
+      receipt.revision ??= request.revision
+      while (current()) {
+        if (pendingSnapshot(rulesKey).revision !== receipt.revision) {
+          const acknowledged = await handoffPolicy.acknowledge(baseSignal).catch(handoffError)
+          if (!acknowledged || !current()) return
+          receipt.revision = acknowledged.revision
+        }
+        if (!(await handoffPolicy.wait(baseSignal).catch(handoffError)) || !current()) return
+        if (pendingSnapshot(rulesKey).revision === receipt.revision) break
+      }
       await startTransition(() => {
-        if (!ownsSource() || signal.aborted || admission.promoted) return
-        const request = admission.request
-        if (!request?.admitted || request.revision === undefined) return
+        if (!current() || admission.promoted || admission.request !== request ||
+          pendingSnapshot(rulesKey).revision !== receipt.revision) return
         // An admitted prompt always hands the draft off to its Session, so Enter on the draft can never post it again.
         // Edits made during the send (text, context, model, agent) move into the Session composer unsent.
         clearPending(rulesKey, receipt.revision ?? request.revision)
-        const selectedModel = modelSelection.current()
+        const selected = modelSelection.intent()
         const selectedAgent = local.agent.current()
         const next = prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id })
         handoffAdmission(next, draftSessionKey(directorySDK.scope, sessionDirectory), sourceAdmission(target, rulesKey).source)
@@ -734,18 +756,18 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           input.setPopover(null)
           input.onNewSessionWorktreeReset?.()
           input.onSubmit?.()
-          local.session.promote(sessionDirectory, session.id, selectedModel && selectedAgent ? {
-            agent: agentKey(selectedAgent),
-            model: { modelID: selectedModel.id, providerID: selectedModel.provider.id },
-            variant: modelSelection.variant.current() ?? null,
-          } : { agent, model, variant: variant ?? null })
+          local.session.promote(sessionDirectory, session.id, {
+            agent: selectedAgent ? agentKey(selectedAgent) : local.agent.key?.(),
+            model: selected.model,
+            variant: selected.variant,
+          })
           layout.handoff.setTabs(base64Encode(sessionDirectory), session.id)
           if (draftID && draftServer) tabs.promoteDraft(draftID, { server: draftServer, sessionId: session.id })
           if (!draftID) navigate(`/${base64Encode(sessionDirectory)}/session/${session.id}`)
         })
       })
     }
-    if (isNewSession && selectRequest().admitted) {
+    if (isNewSession && admission.request?.admitted) {
       await promote()
       return true
     }
@@ -822,6 +844,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       preflight: () => ownsSource() && captured.policyVersion === captured.readPolicyVersion() &&
         (!isNewSession || phase.value?.current() === true && phase.value.ready && pendingSnapshot(rulesKey).revision === receipt.revision),
       signalForAdmission: () => phase.value ? AbortSignal.any([signal, phase.value.signal]) : signal,
+      admissionSignal: isNewSession ? baseSignal : undefined,
     })
       .then(async (sent) => {
         if (!sent) restoreInput()

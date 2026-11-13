@@ -54,6 +54,7 @@ export type FollowupSendInput = {
   preflight?: () => boolean
   onUnavailable?: (reason?: ModelExecution.Reason) => void
   signalForAdmission?: () => AbortSignal
+  admissionSignal?: AbortSignal
   currentSource?: {
     serverScopeKey: ServerScope
     directory: string

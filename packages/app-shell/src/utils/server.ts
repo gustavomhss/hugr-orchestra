@@ -112,7 +112,7 @@ function buildServerApi(input: {
               delivery: value.delivery,
               resume: value.resume,
             },
-            requestOptions,
+            options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
           )
           .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.prompt>>) => ({
             admittedSeq: admitted.admittedSeq,
@@ -145,7 +145,7 @@ function buildServerApi(input: {
               delivery: value.delivery,
               resume: value.resume,
             },
-            requestOptions,
+            options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
           )
           .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.command>>) => ({
             admittedSeq: admitted.admittedSeq,

@@ -8,6 +8,7 @@ import { isServer } from "solid-js/web"
 import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
 import { queuedPromptSources } from "./queued-prompt"
+import { inheritSessionModelExecution } from "@/utils/session-model-execution"
 import {
   commands,
   createPromptSubmit,
@@ -65,6 +66,7 @@ test("HTTP prompt success remains admitted after the captured owner departs", as
     await gate.promise
     return admitted
   } }
+  inheritSessionModelExecution(api, runtime.api)
   const sent = sendFollowupDraft(followupInput(draft))
   await entered.promise
   policyFixture.server = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("departed")))

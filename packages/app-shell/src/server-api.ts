@@ -52,7 +52,7 @@ export type ClientOutput<G extends keyof Client, M extends keyof Client[G]> = Cl
   : never
 
 export type RequestOptions = { signal?: AbortSignal; headers?: HeadersInit }
-export type AdmissionOptions = RequestOptions & { beforeAdmission?: () => void }
+export type AdmissionOptions = RequestOptions & { beforeAdmission?: () => void; admissionSignal?: AbortSignal }
 
 /** A file or directory entry. */
 export type FileEntry = { path: string; name?: string; type: "file" | "directory" }

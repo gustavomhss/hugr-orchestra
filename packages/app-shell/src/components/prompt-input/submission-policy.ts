@@ -256,9 +256,9 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
           files,
         }
         if (request) request.command = command
-        if (request && request.kind !== "command") setBusy()
+        if (input.dispatch) setBusy()
         if (!ready()) return Promise.resolve(false)
-        return input.api.command(command, { signal: input.signalForAdmission?.() ?? input.signal, beforeAdmission: () => {
+        return input.api.command(command, { signal: input.signalForAdmission?.() ?? input.signal, admissionSignal: input.admissionSignal, beforeAdmission: () => {
           if (!ready() || !current()) throw new DOMException("", "AbortError")
           if (request) request.admissionAttempted = true
         } })
@@ -395,7 +395,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
               ]
             : [],
         ),
-      }, { signal: input.signalForAdmission?.() ?? input.signal, beforeAdmission: () => {
+      }, { signal: input.signalForAdmission?.() ?? input.signal, admissionSignal: input.admissionSignal, beforeAdmission: () => {
         if (!ready() || !current()) throw new DOMException("", "AbortError")
         if (request) request.admissionAttempted = true
       } })
