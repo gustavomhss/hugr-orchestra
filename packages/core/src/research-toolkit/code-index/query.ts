@@ -29,6 +29,8 @@ export type Overlay = (input: {
 }) => Effect.Effect<ReadonlyArray<{ readonly path: string; readonly lines: number; readonly symbols: ReadonlyArray<OverlaySymbol> }>, Research.Error>
 
 export type Context = CodeIndexBuild.Input & {
+  /** Exact prepared cache only; implementation follows the frozen acceptance suite. */
+  readonly readOnly?: boolean
   readonly overlay: Overlay
   /** When present, a query that finds shards missing starts their build in the background. */
   readonly extract?: CodeIndexBuild.Extract
@@ -186,6 +188,7 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
     }))
     const choices = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
       if (yield* CodeIndexStore.exists(plan.dir, planned.key)) return { planned, key: planned.key } satisfies Ready
+      if (ctx.readOnly) return yield* new Research.Error({ code: "index_unavailable", message: "Index has not been built for this commit" })
       const previous = records.flatMap((record) => record.shards
         .filter((shard) => shard.id === planned.shard.id && shard.key !== planned.key)
         .map((shard) => ({ commit: record.commit, key: shard.key })))
