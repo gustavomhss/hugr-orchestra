@@ -1,7 +1,16 @@
-import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
+import { appendKnowledge } from "../src/knowledge-log.js"
+import { replayKnowledge } from "../src/knowledge-replay.js"
+import { createGovernedPromote } from "../src/governed-promote.js"
+import { createGovernedLink } from "../src/governed-link.js"
+import { createGovernedEmit } from "../src/governed-emit.js"
+import { loadPolicy } from "../src/policy.js"
+import type { GroundedFact } from "@atlas/knowledge"
+import { assembleHandler } from "../src/wire.js"
+import { mkdirSync, lstatSync, readlinkSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
-import { asHash, id } from "@atlas/kernel"
+import { asHash, asNodeKey, id } from "@atlas/kernel"
 import { prepareNativePackage, publishNativePackage } from "../src/genesis-native.js"
 import type { PreparedNativePackage } from "../src/genesis-native.js"
 import { validateNativeBinding } from "../src/genesis-native-binding.js"
@@ -109,7 +118,7 @@ describe("isolated evaluation composed admission, synthetic CI only", () => {
       criteria: origin.candidate.criteria, normative_refs: [ref("native/protocol.md")], oracle_refs: [ref("native/oracle.md")], status: "PENDING_FINAL_EVIDENCE" })
     write("native/evaluation-plan.json", { schema: "genesis-evaluation-plan/v1", package_path: "native/native-package.json", original_prepared: ref("native/original.json"), obligations: ref("native/obligations.json"),
       entries: origin.candidate.entries.map((e) => ({ key: e.key, semantic_refs: [ref("native/semantic-a.md"), ref("native/semantic-b.md")], applicability: "synthetic semantic unit only", limits: "not campaign acceptance" })),
-      consumer_ids: ["synthetic-case"], consumer_modes: { "synthetic-case": "routine" }, read_limits: { routine: { index_calls: 2, read_calls: 2, body_bytes_total: 4096 } },
+      consumer_ids: ["synthetic-case"], consumer_modes: { "synthetic-case": "routine" }, read_limits: { routine: { index_calls: 2, read_calls: 3, body_bytes_total: 4096 } },
       maintenance: { mode: "synthetic-not-run" }, implementation: { "native/recipe.md": ref("native/recipe.md").sha256 }, isolation: { root, original_root: original.repoPath } })
     const prepared = prepareEvaluation(root, "native/evaluation-plan.json"), generation = id({ generation: "synthetic-evaluation" })
     initializeEvaluationStore(root, prepared.candidate_id, generation)
@@ -118,6 +127,71 @@ describe("isolated evaluation composed admission, synthetic CI only", () => {
     write(".atlas/policy.json", readFileSync(join(original.repoPath, ".atlas/policy.json"), "utf8"))
     const policy = { schema: "ownership-evaluation-policy/v1", root, ...prepared.candidate.evaluation, evaluationCandidate: prepared.candidate_id, generation, scope: "core", actor: "alice", operations: ["admit"], consumer: null }
     const { phase: _phase, ...operatorPolicy } = policy
+    // The same ordinary advisory succeeds on an operational store, but not on initialized evaluation state.
+    const { ownership: _unusedOwnership, ...ordinaryBase } = original.carrier(id({ synthetic: "unused" }))
+    const ordinary = { ...ordinaryBase, claimNorm: "Synthetic ordinary operational control" }
+    expect(createGovernedEmit({ store: original.store, policy: loadPolicy(original.repoPath), actor: "alice", gate: { gateHolds: () => "HOLDS" } })
+      .emit(ordinary, id({ at: "ordinary-control" }))).toMatchObject({ emitted: true })
+    const snapshot = (directory: string): string => JSON.stringify(readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))
+      .map((entry): unknown => entry.isSymbolicLink() ? [entry.name, readlinkSync(join(directory, entry.name))] : entry.isDirectory() ? [entry.name, snapshot(join(directory, entry.name))] : [entry.name, lstatSync(join(directory, entry.name)).ino, lstatSync(join(directory, entry.name)).mtimeMs, lstatSync(join(directory, entry.name)).ctimeMs, nativeSha256(readFileSync(join(directory, entry.name)))]))
+    const beforeDirect = snapshot(join(root, ".atlas"))
+    for (let restart = 0; restart < 2; restart++) {
+      const freshStore = createDiskStore(nativeCasDirectory(root)), policy = loadPolicy(root)
+      expect(freshStore.loadProjection()).toBeUndefined()
+      expect(createGovernedEmit({ store: freshStore, policy, actor: "alice", gate: { gateHolds: () => "HOLDS" } })
+        .emit(ordinary, id({ at: "must-refuse" }))).toEqual({ emitted: false, rejected: "evaluation-operation-denied" })
+      expect(createGovernedEmit({ store: { ...freshStore }, policy, actor: "alice", gate: { gateHolds: () => "HOLDS" } })
+        .emit(ordinary, id({ at: "spread-must-refuse" }))).toEqual({ emitted: false, rejected: "evaluation-operation-denied" })
+      expect(createGovernedLink({ store: freshStore, policy, actor: "alice" }).link("a", "b"))
+        .toEqual({ linked: false, rejected: "evaluation-operation-denied" })
+      const emit = createGovernedEmit({ store: freshStore, policy, actor: "alice", gate: { gateHolds: () => "HOLDS" } })
+      expect(() => createGovernedPromote({ store: freshStore, emit: emit.emit }).promote(id({ at: "promote-refuse" }))).toThrow("evaluation-operational-store-refused")
+      expect(snapshot(join(root, ".atlas"))).toBe(beforeDirect)
+    }
+    write(".atlas/evaluation-policy.json", operatorPolicy)
+    // A CAS-only alias must not combine E's CAS/capability with O's projection/staging.
+    const aliasRoot = mkdtempSync(join(tmpdir(), "atlas-cas-only-alias-"))
+    cleanups.push(() => rmSync(aliasRoot, { recursive: true, force: true }))
+    mkdirSync(join(aliasRoot, ".atlas"))
+    symlinkSync(join(root, ".atlas/cas"), join(aliasRoot, ".atlas/cas"), "dir")
+    writeFileSync(join(aliasRoot, ".atlas/policy.json"), readFileSync(join(original.repoPath, ".atlas/policy.json")))
+    const aliasBefore = snapshot(join(aliasRoot, ".atlas")), evaluationBefore = snapshot(join(root, ".atlas"))
+    for (let restart = 0; restart < 2; restart++) {
+      const aliasedStore = createDiskStore(nativeCasDirectory(aliasRoot))
+      for (const evaluation of [undefined]) {
+        const result = createGovernedEmit({ store: aliasedStore, policy: loadPolicy(aliasRoot), actor: "alice",
+          gate: { gateHolds: () => "HOLDS" }, ...(evaluation === undefined ? {} : { evaluation }) })
+          .emit(ordinary, id({ alias: restart }))
+        expect(result).toEqual({ emitted: false, rejected: "evaluation-operation-denied" })
+        expect(snapshot(join(aliasRoot, ".atlas"))).toBe(aliasBefore)
+        expect(snapshot(join(root, ".atlas"))).toBe(evaluationBefore)
+      }
+    }
+    const ordinaryRow = [...original.store.loadProjection()!.current.values()][0]!
+    const ordinaryBlob = original.store.get(ordinaryRow.contentHash as import("@atlas/contracts").Hash) as Record<string, unknown>
+    for (const proven of [true, false]) {
+      const logRoot = mkdtempSync(join(tmpdir(), "atlas-ordinary-replay-control-"))
+      cleanups.push(() => rmSync(logRoot, { recursive: true, force: true }))
+      const logStore = createDiskStore(nativeCasDirectory(logRoot))
+      const blob = { ...ordinaryBlob, ...(proven ? { seal: "proven" } : {}) }
+      const contentHash = logStore.put(blob)
+      const row = { ...ordinaryRow, nodeKey: asNodeKey(id({ replay: proven })), contentHash }
+      appendKnowledge(logRoot, { seat: "alice", row, at: "2026-11-13T00:00:00.000Z", source: { migrated: true } }, blob)
+      // Valid ordinary logs retain their legacy proven/staging behavior outside evaluation.
+      expect(replayKnowledge(logRoot, logStore, loadPolicy(original.repoPath), () => true))
+        .toMatchObject(proven ? { applied: 1, staged: 0 } : { applied: 0, staged: 1 })
+      for (const dir of ["members", "blobs"]) cpSync(join(logRoot, ".atlas", dir), join(root, ".atlas", dir), { recursive: true })
+      write(".atlas/evaluation-policy.json", { ...operatorPolicy, operations: ["read", "index"], consumer: { id: "synthetic-case", mode: "routine" } })
+      const beforeReplay = snapshot(join(root, ".atlas"))
+      for (let restart = 0; restart < 2; restart++) {
+        const access = loadEvaluationAccess(root)
+        expect(() => composeRuntime(root, access)).toThrow("evaluation-operational-replay-refused")
+        expect(() => replayKnowledge(root, createDiskStore(nativeCasDirectory(root)), loadPolicy(root), () => true))
+          .toThrow("evaluation-operational-store-refused")
+        expect(snapshot(join(root, ".atlas"))).toBe(beforeReplay)
+      }
+      for (const dir of ["members", "blobs"]) rmSync(join(root, ".atlas", dir), { recursive: true, force: true })
+    }
     write(".atlas/evaluation-policy.json", operatorPolicy)
     write("native/evaluation-request.json", prepared)
     const reviewers = ["synthetic-evaluation-a", "synthetic-evaluation-b"]
@@ -133,6 +207,67 @@ describe("isolated evaluation composed admission, synthetic CI only", () => {
     const admitted = await admitEvaluation(root, prepared, "native/evaluation-approval.json")
     expect(admitted).toMatchObject({ kind: "evaluation-admission-attempt", phase: "evaluation", emission: { ok: true, data: { emitted: true } } })
     if (admitted.kind === "hold") throw new Error("synthetic initial admission failed")
+    // Reuse the exact carrier that just passed real synthetic evaluation admission as the second positive control.
+    const admittedStore = createDiskStore(nativeCasDirectory(root))
+    const admittedRow = [...admittedStore.loadProjection()!.current.values()][0]!
+    const admittedPayload = admittedStore.get(admittedRow.contentHash as import("@atlas/contracts").Hash) as GroundedFact
+    const admittedBefore = snapshot(join(root, ".atlas"))
+    for (let reopen = 0; reopen < 2; reopen++) {
+      const aliasedStore = createDiskStore(nativeCasDirectory(aliasRoot)), evaluation = loadEvaluationAccess(root)
+      expect(createGovernedEmit({ store: aliasedStore, policy: loadPolicy(aliasRoot), actor: "alice", evaluation,
+        gate: { gateHolds: () => "HOLDS" } }).emit(admittedPayload, id({ aliasEvaluation: reopen })))
+        .toEqual({ emitted: false, rejected: "evaluation-operation-denied" })
+      expect(snapshot(join(aliasRoot, ".atlas"))).toBe(aliasBefore)
+      expect(snapshot(join(root, ".atlas"))).toBe(admittedBefore)
+    }
+    // Actual fresh processes reload persisted policy/store and exercise both writer modes.
+    const moduleUrl = (name: string) => new URL(`../dist/src/${name}.js`, import.meta.url).href
+    const childScript = `
+      import assert from "node:assert/strict";
+      import { createDiskStore } from ${JSON.stringify(moduleUrl("store"))};
+      import { createGovernedEmit } from ${JSON.stringify(moduleUrl("governed-emit"))};
+      import { loadPolicy } from ${JSON.stringify(moduleUrl("policy"))};
+      import { loadEvaluationAccess } from ${JSON.stringify(moduleUrl("ownership-evaluation-policy"))};
+      const [root, alias, ordinary, at] = process.argv.slice(1).map(JSON.parse);
+      const real = createDiskStore(root + "/.atlas/cas");
+      const row = [...real.loadProjection().current.values()][0];
+      for (const evaluation of [undefined, loadEvaluationAccess(root)]) {
+        const store = createDiskStore(alias + "/.atlas/cas");
+        const emit = createGovernedEmit({ store, policy: loadPolicy(alias), actor: "alice",
+          gate: { gateHolds: () => "HOLDS" }, ...(evaluation ? { evaluation } : {}) });
+        assert.deepEqual(emit.emit(evaluation ? real.get(row.contentHash) : ordinary, at),
+          { emitted: false, rejected: "evaluation-operation-denied" });
+      }
+      console.log(JSON.stringify({ pid: process.pid, refused: 2 }));
+    `
+    for (let restart = 0; restart < 2; restart++) {
+      const result = JSON.parse(execFileSync(process.execPath, ["--input-type=module", "-e", childScript,
+        ...[root, aliasRoot, ordinary, id({ processRestart: restart })].map((value) => JSON.stringify(value))],
+        { encoding: "utf8", timeout: 30000 }))
+      expect(result.refused).toBe(2)
+      expect(result.pid).not.toBe(process.pid)
+      expect(snapshot(join(aliasRoot, ".atlas"))).toBe(aliasBefore)
+      expect(snapshot(join(root, ".atlas"))).toBe(admittedBefore)
+    }
+    const copiedRoot = mkdtempSync(join(tmpdir(), "atlas-evaluation-copied-"))
+    cleanups.push(() => rmSync(copiedRoot, { recursive: true, force: true }))
+    for (const dir of ["src", ".atlas"]) cpSync(join(root, dir), join(copiedRoot, dir), { recursive: true })
+    rmSync(join(copiedRoot, ".atlas/evaluation-store.json"))
+    rmSync(join(copiedRoot, ".atlas/evaluation-policy.json"))
+    const direct = assembleHandler({ repoPath: copiedRoot, casPath: nativeCasDirectory(copiedRoot), scipPath: join(copiedRoot, ".atlas/index.scip"),
+      seams: { heuristic: { isCandidate: () => false }, gate: { gateHolds: () => "HOLDS" },
+        classifier: { reconcile: () => ({ mechanical: [], semantic: [], reauthorCount: 0, exitCode: 0 }) }, driftFacts: [], resolveAnchorAt: () => undefined } })
+    const copiedStore = createDiskStore(nativeCasDirectory(copiedRoot)), copiedPolicy = loadPolicy(copiedRoot)
+    expect(createGovernedLink({ store: copiedStore, policy: copiedPolicy, actor: "alice" }).link("a", "b"))
+      .toEqual({ linked: false, rejected: "evaluation-operation-denied" })
+    expect(createGovernedEmit({ store: copiedStore, policy: copiedPolicy, actor: "alice", gate: { gateHolds: () => "HOLDS" } })
+      .emit({ kind: "negation" } as GroundedFact, id({ at: "copied-negative" })))
+      .toEqual({ emitted: false, rejected: "evaluation-operation-denied" })
+    for (const handler of [direct, composeRuntime(copiedRoot).handler]) {
+      const query = JSON.stringify(handler.handle("atlas-query", { scope: "core" }))
+      expect(query).not.toContain("Evaluation-only ownership manifest")
+      expect(query).not.toContain(prepared.candidate_id)
+    }
     // Exercise the distinct fresh-target host route with a complete unchanged graph.
     const targetRoot = mkdtempSync(join(tmpdir(), "atlas-evaluation-target-"))
     cleanups.push(() => rmSync(targetRoot, { recursive: true, force: true }))
@@ -172,6 +307,7 @@ describe("isolated evaluation composed admission, synthetic CI only", () => {
     write(".atlas/evaluation-policy.json", { ...operatorPolicy, operations: ["read", "index"], consumer: { id: "synthetic-case", mode: "routine" } })
     const runtime = () => composeRuntime(root, loadEvaluationAccess(root))
     expect(runtime().ownership.index("core", "entry")).toMatchObject({ kind: "index", evaluation: { phase: "evaluation", evaluationCandidate: prepared.candidate_id } })
+    expect(runtime().ownership.read({ scope: "core", key: "does-not-exist", maxBytes: 4096 })).toMatchObject({ kind: "hold", reason: "ownership-selection", evaluation: { evaluationCandidate: prepared.candidate_id } })
     expect(runtime().ownership.read({ scope: "core", need: "entry", maxBytes: 4096 })).toMatchObject({ kind: "ready", evaluation: { phase: "evaluation" }, body: readFileSync(join(root, "native/bodies/entry.md"), "utf8") })
     expect(runtime().ownership.index("core", "entry").kind).toBe("index")
     expect(runtime().ownership.index("core", "entry").kind).toBe("hold")

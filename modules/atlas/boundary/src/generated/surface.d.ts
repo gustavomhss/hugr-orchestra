@@ -551,7 +551,7 @@ export interface AtlasSurface {
 	readonly memoryDecide: (input: AtlasMemoryDecideInput) => AtlasReviewWriteResult;
 	readonly territory: (input: AtlasTerritoryInput) => AtlasReviewWriteResult;
 }
-/** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it reads nothing. */
+/** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it checks phase markers; methods recheck them on every call. */
 export declare function openSurface(repoPath: string): AtlasSurface;
 
 export {};

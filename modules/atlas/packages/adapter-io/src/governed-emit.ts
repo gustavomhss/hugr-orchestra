@@ -1,3 +1,6 @@
+import { assertOperationalDiskStore, assertEvaluationDiskStore } from "./store-evaluation-identity.js"
+import { isEvaluationPayload } from "./okf-store.js"
+import { assertEvaluationComposition } from "./ownership-evaluation-policy.js"
 import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/governed-emit.ts  (COMPOSE-A: the governed durable emit leg)
 //
@@ -172,8 +175,23 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
   readonly emit: (node: GroundedFact, at: Hash, opts?: GovernedEmitOptions) => EmitOut
 } {
   const emit = (input: GroundedFact, at: Hash, opts?: GovernedEmitOptions): EmitOut => {
+    try {
+      if (deps.evaluation === undefined) assertOperationalDiskStore(deps.store)
+      else assertEvaluationDiskStore(deps.store, deps.evaluation.root)
+    } catch { return { emitted: false, rejected: "evaluation-operation-denied" } }
     if (typeof input !== "object" || input === null || Array.isArray(input))
       return { emitted: false, rejected: REJECTED_MALFORMED_TIER }
+    if (deps.evaluation !== undefined) {
+      try {
+        assertEvaluationComposition(deps.evaluation.root, deps.evaluation)
+        deps.evaluation.assert("admit")
+      } catch { return { emitted: false, rejected: "evaluation-operation-denied" } }
+      if (input.kind !== "advisory" || !("ownership" in input))
+        return { emitted: false, rejected: "evaluation-only-ownership-admission" }
+    }
+    if (deps.evaluation === undefined && [...(deps.store.loadProjection()?.current.values() ?? [])]
+      .some((row) => isEvaluationPayload(row) || isEvaluationPayload(deps.store.get(row.contentHash as Hash))))
+      return { emitted: false, rejected: "evaluation-operation-denied" }
     const raw = stripClaimReceipt(input)
     const origin = deps.origin
     const claimReceipt = origin === "promoted" ? opts?.claimReceipt : undefined
@@ -284,6 +302,10 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
         // ARCH-9: the class the RESOURCE carries. Absent on a CREATE (nothing to derive from — ARCH-D3b, the
         // OPEN owner DEFINE) and on a refusal (the write does not reach `route` at all).
         const derivedTier = authzVerdict.derivedTier
+        try {
+          if (deps.evaluation === undefined) assertOperationalDiskStore(deps.store)
+          else assertEvaluationDiskStore(deps.store, deps.evaluation.root)
+        } catch { return { out: { emitted: false, rejected: "evaluation-operation-denied" } } }
         const ownershipRefusal = ownershipAttachmentRefusal(node, deps.store, deps.ownershipInput, deps.evaluation)
         if (ownershipRefusal !== undefined) return { out: { emitted: false, rejected: ownershipRefusal } }
 

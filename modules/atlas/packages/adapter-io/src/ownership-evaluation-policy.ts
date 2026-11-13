@@ -1,10 +1,12 @@
+import type { ComposedRuntime } from "./compose-runtime.js"
+import { readEvaluationStateFile } from "./evaluation-state-io.js"
 import { chargeEvaluationRead } from "./evaluation-read-budget.js"
 import type { EvaluationReadBudget } from "./evaluation-read-budget.js"
 import { existsSync, lstatSync, readdirSync, realpathSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import type { Hash } from "@atlas/contracts"
 import type { OwnershipEvaluationContext } from "@atlas/knowledge"
-import { nativeRoot, readNativeFile, decodeNativeUtf8, nativeCasDirectory } from "./genesis-native-io.js"
+import { nativeRoot, decodeNativeUtf8, nativeCasDirectory } from "./genesis-native-io.js"
 import { nativeRecord, nativeKeys, nativeDigest, nativeText, nativeStrings } from "./genesis-native-format.js"
 import { createDiskStore } from "./store.js"
 import type { DiskStore } from "./store.js"
@@ -26,9 +28,9 @@ const issued = new WeakSet<EvaluationAccess>()
 export function loadEvaluationAccess(repoPath: string): EvaluationAccess {
   const root = nativeRoot(repoPath)
   const capture = () => {
-    const state = nativeRecord(JSON.parse(decodeNativeUtf8(readNativeFile(root, marker, 16384))), "evaluation store")
+    const state = nativeRecord(JSON.parse(decodeNativeUtf8(readEvaluationStateFile(root, "evaluation-store.json"))), "evaluation store")
     nativeKeys(state, ["schema", "root", "device", "inode", "evaluationPlan", "obligationSet", "evaluationCandidate", "generation", "scope", "original_root", "initialized_cas_only"], "evaluation store")
-    const policy = nativeRecord(JSON.parse(decodeNativeUtf8(readNativeFile(root, policyFile, 16384))), "evaluation policy")
+    const policy = nativeRecord(JSON.parse(decodeNativeUtf8(readEvaluationStateFile(root, "evaluation-policy.json"))), "evaluation policy")
     nativeKeys(policy, ["schema", "root", "evaluationPlan", "obligationSet", "evaluationCandidate", "generation", "scope", "actor", "operations", "consumer"], "evaluation policy")
     if (state.schema !== "ownership-evaluation-store/v1" || policy.schema !== "ownership-evaluation-policy/v1") throw new Error("evaluation-policy-version")
     if (state.initialized_cas_only !== true || typeof state.original_root !== "string" || state.original_root === root || root.startsWith(state.original_root + "/") || state.original_root.startsWith(root + "/")) throw new Error("evaluation-bootstrap-root")
@@ -141,4 +143,32 @@ export function initializeEvaluationStore(repoPath: string, candidateHash: Hash,
   const descriptor = { schema: "ownership-evaluation-store/v1", root, device: stat.dev, inode: stat.ino, evaluationPlan: evaluation.evaluationPlan, obligationSet: evaluation.obligationSet,
     evaluationCandidate: candidateHash, generation, scope: candidate.scope, original_root: isolation.original_root, initialized_cas_only: true }
   writeFileSync(join(root, marker), JSON.stringify(descriptor) + "\n", { flag: "wx" })
+}
+
+/** Closed evaluation operation surface; no inherited operational capabilities. */
+export function constrainEvaluationRuntime(runtime: ComposedRuntime, repoPath: string, evaluation?: EvaluationAccess): ComposedRuntime {
+  if (evaluation === undefined) return runtime
+  // Evaluation grants only its budgeted ownership port and governed admission/check path.
+  // Future operational methods are denied by default, not silently inherited by evaluation consumers.
+  const facade = Object.create(null) as ComposedRuntime
+  Object.defineProperties(facade, {
+    ownership: { enumerable: true, get: () => { assertEvaluationComposition(repoPath, evaluation); return runtime.ownership } },
+    handler: { enumerable: true, get: () => { assertEvaluationComposition(repoPath, evaluation); return runtime.handler } },
+    check: { enumerable: true, get: () => (...args: Parameters<ComposedRuntime["check"]>) => {
+      assertEvaluationComposition(repoPath, evaluation)
+      evaluation.assert("admit")
+      return runtime.check(...args)
+    } },
+  })
+  Object.preventExtensions(facade)
+  return new Proxy(facade, {
+    get(target, property, receiver) {
+      if (!Object.hasOwn(target, property)) throw new Error("evaluation-operation-denied")
+      return Reflect.get(target, property, receiver)
+    },
+    set() { throw new Error("evaluation-operation-denied") },
+    defineProperty() { throw new Error("evaluation-operation-denied") },
+    deleteProperty() { throw new Error("evaluation-operation-denied") },
+    setPrototypeOf() { throw new Error("evaluation-operation-denied") },
+  })
 }

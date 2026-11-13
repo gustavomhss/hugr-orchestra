@@ -1,3 +1,6 @@
+import { assertOperationalStateDirectory, assertOperationalDiskStore, assertEvaluationDiskStore } from "./store-evaluation-identity.js"
+import { assertEvaluationComposition } from "./ownership-evaluation-policy.js"
+import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/knowledge-log.ts  (the committed knowledge logs, `.atlas/members/<seat>/knowledge/`)
 //
 // The projection sidecar and the CAS stay local and untracked (`store-provenance.ts`): a committed projection would
@@ -46,7 +49,15 @@ export interface KnowledgeRead {
 }
 
 /** Append one applied row to its seat's shard, and copy the row's CAS object once. `blob` is that object. */
-export function appendKnowledge(repoPath: string, entry: KnowledgeEntry, blob: unknown): void {
+export function appendKnowledge(repoPath: string, entry: KnowledgeEntry, blob: unknown, evaluation?: EvaluationAccess): void {
+  if (evaluation === undefined) assertOperationalStateDirectory(join(repoPath, ".atlas"))
+  else {
+    assertEvaluationComposition(repoPath, evaluation)
+    evaluation.assert("admit")
+    const claim = `Evaluation-only ownership manifest for ${evaluation.scope}: ${evaluation.context.evaluationCandidate}`
+    if (entry.row.claims.length !== 1 || entry.row.claims[0] !== claim || blob === null || typeof blob !== "object" ||
+      !("claimNorm" in blob) || blob.claimNorm !== claim || !("ownership" in blob)) throw new Error("evaluation-log-authority")
+  }
   const event: Omit<Event, "id"> = {
     seq: 0,
     nodeKey: entry.row.nodeKey as NonNullable<Event["nodeKey"]>,
@@ -90,7 +101,7 @@ export function readKnowledge(repoPath: string): KnowledgeRead {
  */
 export function withKnowledgeLog(
   store: DiskStore,
-  opts: { readonly repoPath: string; readonly seat: string; readonly source?: KnowledgeSource; readonly now?: () => string },
+  opts: { readonly repoPath: string; readonly seat: string; readonly source?: KnowledgeSource; readonly now?: () => string; readonly evaluation?: EvaluationAccess },
 ): DiskStore {
   // The card and attempt come from the host, through `ATLAS_CARD` and `ATLAS_ATTEMPT`, unless the caller names them.
   const source = opts.source ?? {
@@ -100,8 +111,14 @@ export function withKnowledgeLog(
   return {
     ...store,
     commitProjection(decide) {
+      const checkPhase = () => {
+        if (opts.evaluation === undefined) assertOperationalDiskStore(store)
+        else { assertEvaluationComposition(opts.repoPath, opts.evaluation); opts.evaluation.assert("admit"); assertEvaluationDiskStore(store, opts.evaluation.root) }
+      }
+      checkPhase()
       const seen: { before?: StoreProjection; next?: StoreProjection | undefined } = {}
       const result = store.commitProjection((projection) => {
+        checkPhase()
         const decision = decide(projection)
         seen.before = projection
         seen.next = decision.next
@@ -113,7 +130,7 @@ export function withKnowledgeLog(
       ;[...seen.next.current.values()]
         .filter((row) => JSON.stringify(before.current.get(row.nodeKey)) !== JSON.stringify(row))
         .forEach((row) =>
-          appendKnowledge(opts.repoPath, { seat: opts.seat, row, at, source }, store.get(row.contentHash as Hash)),
+          appendKnowledge(opts.repoPath, { seat: opts.seat, row, at, source }, store.get(row.contentHash as Hash), opts.evaluation),
         )
       return result
     },

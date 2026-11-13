@@ -1,4 +1,4 @@
-import { genericOwnershipVisible } from "./ownership-evaluation-policy.js"
+import { genericOwnershipVisible, assertEvaluationComposition, phaseFilteredStore } from "./ownership-evaluation-policy.js"
 import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/wire.ts  (WIRE-1: the ONE shared handler assembly)
 //
@@ -257,6 +257,7 @@ export interface WireConfig {
  * `reconcile(mergeBase, options)`/`link(a,b)`).
  */
 export function assembleHandler(config: WireConfig): WiredHandler {
+  assertEvaluationComposition(config.repoPath, config.evaluation)
   // The index-backing adapter (satisfies both frozen tools ports: MoveInIndex + QueryIndex) over the
   // frozen FS + SCIP outputs, driving @atlas/index. `nodeHashOfPath` is the sealed-kernel path→node keying
   // (= build's keying, `id({file})`) — the exact IndexAdapterDeps shape (cf s01 / index-adapter.test).
@@ -324,7 +325,7 @@ export function assembleHandler(config: WireConfig): WiredHandler {
   // never re-decided here. ABSENT (a bare WIRE fake assembly, no composition root) ⇒ falls back to `store`,
   // the EXACT prior behaviour every wire-only test relies on. WRITES always ride `store` — this split never
   // touches the write path.
-  const readStore = config.readStore ?? store
+  const readStore = phaseFilteredStore(config.readStore ?? store)
 
   // ADR-0016 M2b — the TWO v2 negation closure legs, built ONCE off the SAME `scipPath`/`repoPath`/`rawTree`
   // as the other emit-leg deps. Both-or-neither (a half-gate is never run): if either cannot be built SOUNDLY
@@ -533,6 +534,10 @@ export function assembleHandler(config: WireConfig): WiredHandler {
       // EXACTLY 64 lowercase hex; anything else (a `../` traversal to an unbounded file like /dev/zero) is a
       // MISS — rejected BEFORE any filesystem read, so it can never hang/OOM. Defense-in-depth: `store.get`
       // re-applies the same charset + sandbox guard (store.ts). READ-ONLY: no write path (TOOLS-1).
+      if (config.evaluation !== undefined) {
+        assertEvaluationComposition(config.repoPath, config.evaluation)
+        return undefined
+      }
       const addr = String(nodeAddr)
       if (!/^[0-9a-f]{64}$/.test(addr)) return undefined
       const value = readStore.get(addr as unknown as Hash)
@@ -542,5 +547,10 @@ export function assembleHandler(config: WireConfig): WiredHandler {
   }
 
   // ONE handler over the five legs + the read-only per-node source — no per-entrypoint copy (WIRE-1).
+  if (config.evaluation !== undefined) {
+    // Evaluation consumers use only the budgeted ownership reader; no other tool is granted.
+    for (const name of Object.keys(legs)) if (name !== "atlas-emit")
+      (legs as Record<string, ToolLeg>)[name] = () => { throw new Error("evaluation-operation-denied") }
+  }
   return createHandler(legs, nodes)
 }

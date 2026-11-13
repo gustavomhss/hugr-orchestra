@@ -25,13 +25,14 @@
 // and `goal` reads as empty until one exists. Inventing a file convention for it would be authoring the
 // artifact rather than reading it, which is the inversion this campaign has already refused once.
 
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import type { Hash } from "@atlas/contracts"
 import type { Event, EventLog } from "@atlas/kernel"
 import { orient, orientEvent } from "@atlas/memory"
 import { id as objectId } from "@atlas/kernel"
 import type { Orientation, OrientChannel } from "@atlas/memory"
 import { createDurableLog, readDurableLogs } from "./durable-log.js"
-import { legacyLogPath, projectLogPath } from "./layout.js"
+import { atlasDir, legacyLogPath, projectLogPath } from "./layout.js"
 
 /** The tracked log's path under a repo root. The legacy `.atlas/orientation.jsonl` is still read, first. */
 export const orientationLogPath = (repoPath: string): string => projectLogPath(repoPath, "orientation")
@@ -70,6 +71,7 @@ export function createDurableOrientation(repoPath: string): DurableOrientation {
     path: log.path,
     read,
     append(channel: OrientChannel, label: string, supersedes: readonly Hash[] = []): void {
+      assertOperationalStateDirectory(atlasDir(repoPath))
       log.append(orientEvent(channel, label, supersedes))
     },
     orientation(define?: unknown): Orientation {

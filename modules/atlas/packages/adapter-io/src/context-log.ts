@@ -16,9 +16,10 @@
 //
 // Every line is a kernel `Event` (`durable-log.ts`) keyed by `eventId`. A line that names another session is rejected.
 
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
-import { dirname } from "node:path"
+import { dirname, join } from "node:path"
 import { eventId, id } from "@atlas/kernel"
 import type { Event } from "@atlas/kernel"
 import { scrub } from "@atlas/persist"
@@ -69,6 +70,7 @@ export function exportContext(
   archive: ContextArchive,
   opts: { readonly commit: boolean; readonly at: string },
 ): { readonly appended: number } {
+  assertOperationalStateDirectory(join(repoPath, ".atlas"))
   const bad = archive.references.find((ref) => sha256(ref.markdown) !== ref.id)
   if (bad !== undefined) throw new Error(`context chunk ${bad.id} does not match its hash`)
   const path = contextLogPath(repoPath, seat, session)

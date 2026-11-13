@@ -134,12 +134,16 @@ export type {
 } from "./types-review.js"
 
 const EMPTY: AtlasEmpty = { state: "empty" }
-/** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it reads nothing. */
+/** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it checks phase markers; methods recheck them on every call. */
 export function openSurface(repoPath: string): AtlasSurface {
-  const absent = () => !existsSync(join(repoPath, ".atlas"))
+  readStoreFiles(repoPath)
+  const absent = () => {
+    readStoreFiles(repoPath)
+    return !existsSync(join(repoPath, ".atlas"))
+  }
   return {
     snapshot: () => (absent() ? EMPTY : snapshot(repoPath)),
-    install: () => install(repoPath),
+    install: () => { readStoreFiles(repoPath); return install(repoPath) },
     reasoning: (id) => (absent() ? EMPTY : readReasoning(readStoreFiles(repoPath), id)),
     own: (scope) => (absent() ? EMPTY : own(repoPath, scope)),
     health: () => (absent() ? EMPTY : health(repoPath)),

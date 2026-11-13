@@ -1,4 +1,4 @@
-import { assertEvaluationComposition, phaseFilteredStore } from "./ownership-evaluation-policy.js"
+import { assertEvaluationComposition, phaseFilteredStore, constrainEvaluationRuntime } from "./ownership-evaluation-policy.js"
 import type { EvaluationAccess } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/compose.ts  (COMPOSE-A: the runtime composition root + the real seams)
 //
@@ -55,7 +55,7 @@ import { reverifyStore, makeScopeHasDocs, driftPairsOf, danglingOf, type DocExis
 import { createDiskStore } from "./store.js"
 import { HITS_REL, storeHits } from "./hits-log.js"
 import { withKnowledgeLog } from "./knowledge-log.js"
-import { replayKnowledge } from "./knowledge-replay.js"
+import { replayKnowledge, assertNoOperationalEvaluationReplay } from "./knowledge-replay.js"
 import { gitStoreProvenance, type SidecarTrust } from "./store-provenance.js"
 import { buildReadAccess, trackedProvableAdvisory } from "./read-access.js"
 import { assembleHandler, bindFreshnessOracle, edgeModelVersion } from "./wire.js"
@@ -163,6 +163,7 @@ export function gitUserEmail(repoPath: string): string | undefined {
  */
 export function composeRuntime(repoPath: string, evaluation?: EvaluationAccess): ComposedRuntime {
   assertEvaluationComposition(repoPath, evaluation)
+  if (evaluation !== undefined) assertNoOperationalEvaluationReplay(repoPath)
   // Resolve the KNOW-11 write actor at the composition root: ATLAS_ACTOR (env) wins; else the LOCAL git
   // identity (`git config user.email`); else empty (fail-closed ⇒ every write denied). Passed EXPLICITLY to
   // the assembler below (no global env write).
@@ -236,7 +237,7 @@ export function composeRuntime(repoPath: string, evaluation?: EvaluationAccess):
   const provenance = gitStoreProvenance(repoPath)
   const trusted: SidecarTrust = () => provenance() === "trusted"
   const disk = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), trusted)
-  const store = withKnowledgeLog(disk, { repoPath, seat: actor })
+  const store = withKnowledgeLog(disk, { repoPath, seat: actor, ...(evaluation === undefined ? {} : { evaluation }) })
   // THE `draft` + `draftSupersede` COMPOSITION PLANNERS (WP-10.A2-a/b / ADR-0004, AUTHOR-6/7/9/10/13) — over
   // the SAME `groundingComputer` `anchors` rides (AUTHOR-1: one grounding seam), so a drafted fact's
   // `subtreeHash` is exactly the value the emit truth-gate will re-derive against, PLUS the `IncumbentPort`
@@ -260,7 +261,7 @@ export function composeRuntime(repoPath: string, evaluation?: EvaluationAccess):
   // serve re-prove proven test-vacuities (#249); reused below so producer + BOTH replay sites scan ONE `testUnitsOf` (#186/N10).
   const tvFeed = buildTestVacuityFeed(rawTree, axes)
   // A clone REPLAYS the logged commits of `store` here (`knowledge-replay.ts`): trusted store only, before drift.
-  if (provenance() === "trusted")
+  if (evaluation === undefined && provenance() === "trusted")
     replayKnowledge(repoPath, disk, policy, (node, fact) =>
       reverifyStore([{ node, fact }], verifyFactLeg, docExists, scopeHasDocs, tvFeed.replay).reProven === 1)
   // `driftPairs` carries each fact ALONGSIDE its own `CurrentNode` (`reverify` needs `node.primaryAnchor` for
@@ -495,7 +496,7 @@ export function composeRuntime(repoPath: string, evaluation?: EvaluationAccess):
   // `tracked-provable` serve filter already re-proved over). Producer rides `relationEmit`; `replay` feeds `reverify`.
   const tvLegs = buildTestVacuityLegs(tvFeed, readAccess.store, relationEmit, asHash(headSha(repoPath) ?? ""))
 
-  return {
+  const runtime: ComposedRuntime = {
     handler: assembleHandler(config),
     doctorSource,
     promote: promoteLeg.promote,
@@ -589,4 +590,5 @@ export function composeRuntime(repoPath: string, evaluation?: EvaluationAccess):
     ...(readRefusal !== undefined ? { readRefusal } : {}),
     ...(readAdvisory !== undefined ? { readAdvisory } : {}),
   }
+  return constrainEvaluationRuntime(runtime, repoPath, evaluation)
 }

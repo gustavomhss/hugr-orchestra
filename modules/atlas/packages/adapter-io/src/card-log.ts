@@ -12,8 +12,9 @@
 // text, and an attempt keeps its model, timings and hashes but not its spend. The caller decides `redact` from the
 // remote host (`repo-visibility.ts`); these writers only apply it.
 
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import { readdirSync } from "node:fs"
-import { dirname } from "node:path"
+import { dirname, join } from "node:path"
 import { eventId, id } from "@atlas/kernel"
 import type { Event } from "@atlas/kernel"
 import type { Hash } from "@atlas/contracts"
@@ -62,6 +63,7 @@ export interface AttemptRead {
 }
 
 export function appendCardEvent(repoPath: string, card: string, input: CardEventInput, opts: { readonly redact: boolean }): void {
+  assertOperationalStateDirectory(join(repoPath, ".atlas"))
   // The kernel hash drops every `status` key (KERNEL-8), so a status move is stored under `state`: kept as `status`,
   // an edited status would still match its line's id.
   const event =
@@ -81,6 +83,7 @@ export function appendAttempt(
   metering: AttemptMetering,
   opts: { readonly redact: boolean; readonly at: string },
 ): void {
+  assertOperationalStateDirectory(join(repoPath, ".atlas"))
   const kept = opts.redact ? withoutSpend(metering) : metering
   append(attemptPath(repoPath, card, n), card, { card, n, at: opts.at, metering: kept })
 }

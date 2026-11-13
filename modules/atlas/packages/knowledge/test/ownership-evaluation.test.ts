@@ -35,6 +35,12 @@ function fixture(options: { reviewCount?: number; duplicateReviewer?: boolean; h
 }
 
 describe("evaluation ownership authority, synthetic CI only", () => {
+  it("returns labelled HOLD for a missing explicit key rather than throwing", () => {
+    const f = fixture()
+    expect(readOwnership(f.store, f.ref, { ...f.query, key: "does-not-exist" }, () => "v1", f.context))
+      .toMatchObject({ kind: "hold", reason: "ownership-selection", evaluation: { evaluationCandidate: f.context.evaluationCandidate } })
+  })
+
   it("uses the same resolver, labels reads/index/plans and retains final-obligation reference", () => {
     const f = fixture()
     const read = readOwnership(f.store, f.ref, f.query, () => "v1", f.context)

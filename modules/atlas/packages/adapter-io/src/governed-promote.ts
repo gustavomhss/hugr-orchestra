@@ -1,3 +1,4 @@
+import { assertOperationalDiskStore } from "./store-evaluation-identity.js"
 // @atlas/adapter-io — src/governed-promote.ts  (KNOW-8: the governed PROMOTION door, staging → knowledge)
 //
 // `atlas mine` writes candidates to the STAGING sidecar (ADR-0008). Until this module existed NOTHING read
@@ -147,6 +148,7 @@ export function createGovernedPromote(deps: GovernedPromoteDeps): {
   readonly promote: (at: Hash, select?: PromoteSelect) => PromoteOut
 } {
   const promote = (at: Hash, select?: PromoteSelect): PromoteOut => {
+    assertOperationalDiskStore(deps.store) // Before even the staging read/lock; evaluation has its own exact admission route.
     // 1. READ STAGING — the store's own documented read-only decision. A decision with no `next` publishes
     //    nothing (`sidecar-commit.ts` returns before the CAS put), so this is a read that cannot write.
     const staged = deps.store.commitStaging<StoreProjection>((p) => ({ out: p }))

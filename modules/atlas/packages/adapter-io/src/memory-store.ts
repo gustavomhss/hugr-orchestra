@@ -15,11 +15,12 @@
 // branches that touch different units never touch the same file. A read folds the legacy single file first,
 // then every member file in sorted order.
 
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import type { EventLog } from "@atlas/kernel"
 import { respawnFromRecord, versioned } from "@atlas/memory"
 import type { MemoryRecord, MemoryStore } from "@atlas/memory"
 import { createDurableLog, jsonlFiles, readDurableLogs } from "./durable-log.js"
-import { legacyLogPath, memberMemoryPath, membersDir } from "./layout.js"
+import { atlasDir, legacyLogPath, memberMemoryPath, membersDir } from "./layout.js"
 
 /** What a read found — the folded store, the log it folded, and the lines the log refused. */
 export interface MemoryRead {
@@ -60,6 +61,7 @@ export function createDurableMemory(repoPath: string): DurableMemory {
       return raw.unreadable === true || files.unreadable === true ? { ...base, unreadable: true } : base
     },
     append(record: MemoryRecord): void {
+      assertOperationalStateDirectory(atlasDir(repoPath))
       // The record is versioned through `@atlas/memory` rather than event-shaped here, so the identity seam
       // stays the sealed kernel one and this adapter mints no ids of its own.
       const [ev] = [...versioned([record]).values()]
@@ -67,6 +69,7 @@ export function createDurableMemory(repoPath: string): DurableMemory {
       // `seq` is a local ordering hint outside the event id (KERNEL-9a), so stamping it keeps the id and the
       // dedup by id; it is what lets a read recover append order across the per-seat files.
       const head = Math.max(0, ...[...durable.read().log.values()].map((e) => e.seq))
+      assertOperationalStateDirectory(atlasDir(repoPath))
       createDurableLog(memberMemoryPath(repoPath, record)).append({ ...ev, seq: head + 1 })
     },
   }

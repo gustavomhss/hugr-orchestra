@@ -1,3 +1,4 @@
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 // @atlas/adapter-io — src/hits-log.ts  (the durable KNOW-17 hits ledger and the decay pass `atlas decay` runs)
 //
 // KNOW-17 / GEN-16: a served fact accrues a `hit` each time it is served; a served fact with ZERO hits across
@@ -162,6 +163,7 @@ export function durableHits(path: string, deps: HitsDeps): ServedHits {
   }
 
   const append = (event: HitsEvent) => {
+    assertOperationalStateDirectory(dirname(path))
     const line = `${JSON.stringify(event)}\n`
     mkdirSync(dirname(path), { recursive: true })
     appendFileSync(path, line)

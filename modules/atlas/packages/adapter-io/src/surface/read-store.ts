@@ -12,6 +12,7 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import type { CurrentNode } from "@atlas/knowledge"
+import { assertOperationalCas, isEvaluationPayload, readCas } from "../okf-store.js"
 import { loadPolicy } from "../policy.js"
 import { mirrorPath } from "../sidecar.js"
 import type { WireProjection } from "../sidecar.js"
@@ -66,6 +67,7 @@ const CAS_NAME = /^[0-9a-f]{3,}$/
 /** Read the projection and staging mirrors of the store at `<repoPath>/.atlas`. */
 export function readStoreFiles(repoPath: string): StoreFiles {
   const atlasDir = join(repoPath, ".atlas")
+  readCas(join(atlasDir, "cas")) // Bulk preflight also catches evaluation graphs with unlabelled referenced bodies.
   return {
     atlasDir,
     projection: readWire(mirrorPath(atlasDir, "projection")),
@@ -78,6 +80,7 @@ export function pendingFacts(files: StoreFiles): {
   readonly facts: readonly PendingFact[]
   readonly candidates: readonly PendingFact[]
 } {
+  assertSurfaceFiles(files)
   const answers = new Map(files.staging.current.map(([key, row]) => [key, row.answerRef]))
   const promoted = new Set(files.projection.current.map(([key]) => key))
   const entry = (key: string, row: CurrentNode, isPromoted: boolean, builtAt: string | undefined) =>
@@ -92,6 +95,8 @@ export function pendingFacts(files: StoreFiles): {
 
 /** The snapshot fields read from the store files, the policy and the CAS directory. */
 export function storeSummary(repoPath: string, files: StoreFiles): StoreSummary {
+  assertSurfaceFiles(files)
+  assertOperationalCas(join(repoPath, ".atlas", "cas"))
   const policy = loadPolicy(repoPath)
   const present = casNames(files.atlasDir)
   return {
@@ -114,12 +119,24 @@ export function storeSummary(repoPath: string, files: StoreFiles): StoreSummary 
 
 /** The CAS value a staging row's `answerRef` names, found by the 12-character prefix `AtlasFact.why` carries. */
 export function readReasoning(files: StoreFiles, id: string): AtlasReasoningResult {
+  assertSurfaceFiles(files)
   const ref = files.staging.current
     .map(([, row]) => row.answerRef)
     .find((answer): answer is string => typeof answer === "string" && answer.length > 0 && answer.slice(0, 12) === id)
-  const value = ref === undefined ? undefined : readCas(files.atlasDir, ref)
+  const value = ref === undefined ? undefined : readSurfaceCas(files.atlasDir, ref)
   if (value === undefined) return { state: "missing", id }
   return { state: "ok", id, text: typeof value === "string" ? value : JSON.stringify(value) }
+}
+
+/** Recheck externally supplied/cached StoreFiles, not only the public factory. Refuse
+ * the whole read instead of silently returning a filtered snapshot labelled complete. */
+function assertSurfaceFiles(files: StoreFiles): void {
+  readCas(join(files.atlasDir, "cas"))
+  if (isEvaluationPayload(files.projection) || isEvaluationPayload(files.staging)) throw new Error("evaluation-operational-surface-refused")
+  for (const wire of [files.projection, files.staging]) for (const [, row] of wire.current) {
+    readSurfaceCas(files.atlasDir, row.contentHash)
+    if (typeof row.answerRef === "string") readSurfaceCas(files.atlasDir, row.answerRef)
+  }
 }
 
 function factRow(
@@ -130,7 +147,9 @@ function factRow(
   promoted: boolean,
   rev: string,
 ): PendingFact {
-  const obj = casFact(readCas(atlasDir, row.contentHash))
+  assertOperationalCas(join(atlasDir, "cas"))
+  if (isEvaluationPayload(row)) throw new Error("evaluation-operational-surface-refused")
+  const obj = casFact(readSurfaceCas(atlasDir, row.contentHash))
   const anchor = obj?.grounding?.entries?.[0]?.anchor
   return {
     rev,
@@ -179,9 +198,12 @@ function casNames(atlasDir: string): readonly string[] {
     .flatMap((dir) => listNames(join(root, dir)).filter((name) => !name.startsWith(".")))
 }
 
-function readCas(atlasDir: string, hash: string): unknown {
+function readSurfaceCas(atlasDir: string, hash: string): unknown {
+  assertOperationalCas(join(atlasDir, "cas"))
   if (!CAS_NAME.test(hash)) return undefined
-  return readJson(join(atlasDir, "cas", hash.slice(0, 2), hash))
+  const value = readJson(join(atlasDir, "cas", hash.slice(0, 2), hash))
+  if (isEvaluationPayload(value) || (typeof value === "object" && value !== null && "kind" in value && typeof value.kind === "string" && value.kind.startsWith("ownership-"))) throw new Error("evaluation-operational-surface-refused")
+  return value
 }
 
 function casFact(value: unknown): CasFact | undefined {
@@ -190,6 +212,7 @@ function casFact(value: unknown): CasFact | undefined {
 
 function readWire(path: string): WireProjection {
   const raw = readJson(path)
+  if (isEvaluationPayload(raw)) throw new Error("evaluation-operational-surface-refused")
   if (typeof raw !== "object" || raw === null) return EMPTY_WIRE
   const wire = raw as WireProjection
   if (!Array.isArray(wire.current) || !Array.isArray(wire.cas)) return EMPTY_WIRE

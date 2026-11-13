@@ -66,7 +66,7 @@ import type {
 import type { Hash } from "@atlas/contracts"
 import { createDurableMemory } from "./memory-store.js"
 import type { DurableMemory, MemoryRead } from "./memory-store.js"
-import { createMemoryEmit } from "./memory-emit.js"
+import { createMemoryEmit, memoryPhaseRefusal, assertOperationalMemoryRoot } from "./memory-emit.js"
 import type { MemoryRejected } from "./memory-emit.js"
 import { createMemoryRead } from "./memory-read.js"
 import { appendReview, foldReview, readReview, reviewLogPath } from "./review-log.js"
@@ -362,6 +362,8 @@ export function readBoundHeader(input: HeaderBinding): BoundHeader {
  */
 export function proposeProjectRule(input: AtlasBinding, entry: unknown, at: string): ProposalVerdict {
   const binding = freezeBinding(input)
+  const phase = memoryPhaseRefusal(binding.storage.root)
+  if (phase !== undefined) return phase
   if (typeof at !== "string" || at === "") throw new Error("native-memory: proposeProjectRule needs the host's ISO time `at`")
   const owner = binding.memoryOwner
   const root = binding.storage.root
@@ -384,6 +386,8 @@ export function proposeProjectRule(input: AtlasBinding, entry: unknown, at: stri
   const blocked = scanProposal(binding, put("memory", complete, owner))
   if (blocked !== undefined) return blocked
   const body = { kind: "memory-proposal", member: owner, rule: complete.rule, scope: complete.scope } as const
+  const writePhase = memoryPhaseRefusal(root)
+  if (writePhase !== undefined) return writePhase
   return { ok: true, proposalId: appendReview(root, { ...body, at, by: owner }).id }
 }
 
@@ -400,6 +404,8 @@ export type ProjectRuleDecision = { readonly proposalId: string; readonly verdic
  *  storage root and the scanner; its `memoryOwner` never writes. */
 export function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict {
   const binding = freezeBinding(input)
+  const phase = memoryPhaseRefusal(binding.storage.root)
+  if (phase !== undefined) return phase
   const root = binding.storage.root
   const read = readReview(root)
   if (read.unreadable === true || read.rejected > 0) {
@@ -408,9 +414,11 @@ export function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDeci
   }
   const proposal = foldReview(read.records).openMemoryProposals.find((p) => p.id === decision.proposalId)
   if (proposal === undefined) return { ok: false, refusal: "proposal-not-open", reason: `no open memory proposal has id '${decision.proposalId}'` }
-  const decided = (verdict: "indexed" | "discarded") =>
-    appendReview(root, { kind: "memory-decision", proposalId: proposal.id, verdict, ...(decision.rule ? { rule: decision.rule } : {}),
+  const decided = (verdict: "indexed" | "discarded") => {
+    assertOperationalMemoryRoot(root)
+    return appendReview(root, { kind: "memory-decision", proposalId: proposal.id, verdict, ...(decision.rule ? { rule: decision.rule } : {}),
       ...(decision.scope ? { scope: decision.scope } : {}), at, by: decision.by }).id
+  }
   if (decision.verdict === "discarded") return { ok: true, decisionId: decided("discarded") }
   const member = { storage: binding.storage, source: binding.source, memoryOwner: proposal.member, execution: binding.execution }
   const entry = { rule: decision.rule || proposal.rule, scope: decision.scope || proposal.scope }

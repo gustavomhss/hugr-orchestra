@@ -1,3 +1,4 @@
+import { atlasDir } from "./layout.js"
 // @atlas/adapter-io — src/memory-emit.ts  (the GOVERNED MEMORY WRITE DOOR — CAMPAIGN-11 W4)
 //
 // ── CALLERS ──────────────────────────────────────────────────────────────────────────────────────────
@@ -44,6 +45,8 @@
 // carry. So every throw is caught here and turned into a named refusal with its receipt — the over-cap one
 // carries `tokens` and `cap`, the scanner one carries the scanner's NAME, so a block is attributable.
 
+import { dirname } from "node:path"
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import {
   KindConflationError,
   UndeterminedKindError,
@@ -74,6 +77,7 @@ export type MemoryRefusal =
   | "scanner-unavailable"
   | "store-partial"
   | "store-unavailable"
+  | "evaluation-phase"
 
 /** A refused write: the gate that declined, why, and the receipt that gate owes the caller. */
 export interface MemoryRejected {
@@ -121,6 +125,9 @@ const reject = (refusal: MemoryRefusal, reason: string, extra: Partial<MemoryRej
 
 export function createMemoryEmit(deps: MemoryEmitDeps): MemoryEmit {
   function emit(entry: MemoryEntry): MemoryVerdict {
+    try { assertOperationalStateDirectory(dirname(deps.store.path)); assertOperationalStateDirectory(deps.store.path) } catch (error) {
+      return reject("evaluation-phase", error instanceof Error ? error.message : String(error))
+    }
     // 1 — the kind is DERIVED. `memoryKindOf` throws on no match and on a TIE; both are the same refusal
     // to a caller, because both mean "this entry does not name exactly one template".
     let kind
@@ -252,9 +259,22 @@ export function createMemoryEmit(deps: MemoryEmitDeps): MemoryEmit {
     }
 
     // 7 — one append. Append-only, so a refusal above left nothing to unwind.
+    try { assertOperationalStateDirectory(dirname(deps.store.path)); assertOperationalStateDirectory(deps.store.path) } catch (error) {
+      return reject("evaluation-phase", error instanceof Error ? error.message : String(error))
+    }
     deps.store.append(record)
     return { ok: true, record }
   }
 
   return { emit }
+}
+
+/** Shared project-rule/memory phase boundary, before any durable review or memory append. */
+export function assertOperationalMemoryRoot(root: string): void {
+  assertOperationalStateDirectory(atlasDir(root))
+}
+export function memoryPhaseRefusal(root: string): MemoryRejected | undefined {
+  try { assertOperationalMemoryRoot(root); return undefined } catch (error) {
+    return reject("evaluation-phase", error instanceof Error ? error.message : String(error))
+  }
 }

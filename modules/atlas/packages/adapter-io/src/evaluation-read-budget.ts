@@ -1,4 +1,5 @@
-import { readNativeFile, decodeNativeUtf8 } from "./genesis-native-io.js"
+import { readEvaluationStateFile } from "./evaluation-state-io.js"
+import { decodeNativeUtf8 } from "./genesis-native-io.js"
 import { existsSync, mkdirSync, renameSync, rmdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { id } from "@atlas/kernel"
@@ -15,7 +16,7 @@ export function chargeEvaluationRead(root: string, candidate: string, generation
   const file = join(root, ".atlas", `evaluation-budget-${key}.json`), lock = `${file}.lock`, next = `${file}.next`
   mkdirSync(lock)
   try {
-    const value = existsSync(file) ? JSON.parse(decodeNativeUtf8(readNativeFile(root, `.atlas/evaluation-budget-${key}.json`, 16384))) : { schema: "evaluation-read-budget/v1", candidate, generation, consumer: consumer.id, mode: consumer.mode, index_calls: 0, read_calls: 0, body_bytes_total: 0 }
+    const value = existsSync(file) ? JSON.parse(decodeNativeUtf8(readEvaluationStateFile(root, `evaluation-budget-${key}.json`))) : { schema: "evaluation-read-budget/v1", candidate, generation, consumer: consumer.id, mode: consumer.mode, index_calls: 0, read_calls: 0, body_bytes_total: 0 }
     const budget = nativeRecord(value, "budget")
     nativeKeys(budget, ["schema", "candidate", "generation", "consumer", "mode", "index_calls", "read_calls", "body_bytes_total"], "budget")
     if (budget.schema !== "evaluation-read-budget/v1" || budget.candidate !== candidate || budget.generation !== generation || budget.consumer !== consumer.id || budget.mode !== consumer.mode) throw new Error("evaluation-budget-identity")

@@ -369,7 +369,7 @@ interface TurnHeader {
 	readonly rules: readonly ProjectMemoryEntry[];
 }
 /** The named refusals. A caller distinguishes them; none is a generic failure. */
-export type MemoryRefusal = "undetermined-kind" | "template-invalid" | "kind-conflation" | "unowned" | "logbook-duplicate" | "logbook-unauthorized" | "over-cap" | "scanner-blocked" | "scanner-unavailable" | "store-partial" | "store-unavailable";
+export type MemoryRefusal = "undetermined-kind" | "template-invalid" | "kind-conflation" | "unowned" | "logbook-duplicate" | "logbook-unauthorized" | "over-cap" | "scanner-blocked" | "scanner-unavailable" | "store-partial" | "store-unavailable" | "evaluation-phase";
 /** A refused write: the gate that declined, why, and the receipt that gate owes the caller. */
 export interface MemoryRejected {
 	readonly ok: false;

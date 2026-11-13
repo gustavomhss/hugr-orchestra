@@ -1,3 +1,4 @@
+import { join } from "node:path"
 // @atlas/adapter-io — src/review-log.ts  (D14: the shared review log, `.atlas/project/review.jsonl`)
 //
 // One append-only, content-keyed log for every human review act the Atlas screen and CLI record: a curator holding
@@ -14,6 +15,7 @@
 // so the same act repeated later is a second record and the fold decides by `at` (file order breaks a tie). Never
 // name a record field `status`, `grounding` or `freshness`: the kernel hash drops those keys (KERNEL-8).
 
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import { eventId, id } from "@atlas/kernel"
 import type { Event } from "@atlas/kernel"
 import { createDurableLog, readDurableLogs } from "./durable-log.js"
@@ -87,6 +89,7 @@ export const reviewLogPath = (repoPath: string): string => projectLogPath(repoPa
  * writing a line this module's own reader would reject would be a silent black hole.
  */
 export function appendReview(repoPath: string, input: ReviewInput): ReviewRecord {
+  assertOperationalStateDirectory(join(repoPath, ".atlas"))
   const body = parseInput(input)
   if (body === undefined) {
     throw new Error(`review-log: refusing to append a malformed '${String((input as { kind?: unknown }).kind)}' record`)

@@ -51,6 +51,7 @@ function resolveOwnership(
   const selected = query.key ?? manifest.value.roots[query.need!]
   if (!selected) return hold("ownership-selection", [query.need ?? ""])
   const entries = new Map(manifest.value.entries.map((entry) => [entry.key, entry.artifact]))
+  if (context !== undefined && !entries.has(selected)) return hold("ownership-selection", [selected])
   const visiting = new Set<string>()
   type Checked = { artifact: OwnershipArtifact | EvaluationOwnershipArtifact; result: OwnershipResult; ref: Hash; body: string; dependencies: OwnershipReceipt["dependencies"] }
   const checked = new Map<string, Checked>()

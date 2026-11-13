@@ -1,3 +1,4 @@
+import { registerDiskStoreIdentity } from "./store-evaluation-identity.js"
 // @atlas/adapter-io — src/store.ts  (ADAPT-STORE-1/3: disk-backed CAS + projection rehydration)
 //
 // The raw store adapter: a disk-backed realization of the frozen `StoreApi` (@atlas/kernel) and the
@@ -325,6 +326,7 @@ export function createDiskStore(
       return readSidecarSet(sidecarDir(casPath), PROJECTION_BASE, trusted).projection
     },
   }
+  registerDiskStoreIdentity(store, casPath)
   return store
 }
 

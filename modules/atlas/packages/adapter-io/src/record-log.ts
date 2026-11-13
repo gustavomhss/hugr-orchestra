@@ -1,3 +1,4 @@
+import { join } from "node:path"
 // @atlas/adapter-io — src/record-log.ts  (what the host writes in a bundle's record commit)
 //
 // The merge queue lands each bundle with one record commit (merge-queue spec §4.7, repo-layout design §4): the
@@ -10,6 +11,7 @@
 // here keeps ids, links, timings and hashes but drops free text when it is set. The milestone writer builds its label
 // from ids, so it has no free text to drop.
 
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import { eventId, id } from "@atlas/kernel"
 import type { Event } from "@atlas/kernel"
 import type { Hash } from "@atlas/contracts"
@@ -52,6 +54,7 @@ export interface BoardRead {
 export const boardLogPath = (repoPath: string): string => projectLogPath(repoPath, "board")
 
 export function appendBoardEvent(repoPath: string, input: BoardEventInput, opts: { readonly redact: boolean }): void {
+  assertOperationalStateDirectory(join(repoPath, ".atlas"))
   // `before` and `after` are stored as JSON text: the kernel hash drops `status` keys at every depth and refuses
   // floats (KERNEL-8), and a board row has both, so as objects an edited status would keep its line's id.
   const { text, before, after, ...rest } = input
@@ -95,6 +98,9 @@ export function readBoard(repoPath: string): BoardRead {
  * public repository the five prose sections are written empty and `textHash` names them.
  */
 export function appendLogbookEntry(repoPath: string, entry: LogbookEntry, opts: { readonly redact: boolean }): LogbookVerdict {
+  try { assertOperationalStateDirectory(join(repoPath, ".atlas")) } catch (error) {
+    return { valid: false, reasons: [error instanceof Error ? error.message : String(error)] }
+  }
   const verdict = validateLogbookEntry(entry)
   if (!verdict.valid) return verdict
   const memory = createDurableMemory(repoPath)
@@ -112,6 +118,7 @@ export function appendLogbookEntry(repoPath: string, entry: LogbookEntry, opts: 
 
 /** Append the Orientation `milestone` event for a card that landed in `pr`. The label is ids only. */
 export function appendMilestone(repoPath: string, landed: { readonly card: string; readonly pr: number }): void {
+  assertOperationalStateDirectory(join(repoPath, ".atlas"))
   createDurableOrientation(repoPath).append("milestone", `${landed.card} landed in #${landed.pr}`)
 }
 

@@ -7,6 +7,7 @@
 // `publishTerritoryCatalog`, the Atlas-owned definition, validation and versioning. Who may write is the CLI's
 // question (`atlas territory` requires a ratify token: a territory's tier is human-ratified).
 
+import { assertOperationalStateDirectory } from "./store-evaluation-identity.js"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import type { Territory, Tier } from "@atlas/contracts"
@@ -30,6 +31,9 @@ export type TerritoryWrite =
 
 /** Add or replace one territory and rewrite the catalog. Writes nothing on any refusal. Total: never throws. */
 export function declareTerritory(repoPath: string, input: TerritoryDeclaration): TerritoryWrite {
+  try { assertOperationalStateDirectory(join(repoPath, ".atlas")) } catch (error) {
+    return { ok: false, reason: error instanceof Error ? error.message : String(error) }
+  }
   const path = join(repoPath, TERRITORY_CATALOG_FILE)
   const current = readCatalog(path)
   if ("reason" in current) return { ok: false, reason: current.reason }

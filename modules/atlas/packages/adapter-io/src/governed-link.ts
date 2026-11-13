@@ -1,3 +1,5 @@
+import { assertOperationalDiskStore } from "./store-evaluation-identity.js"
+import { isEvaluationPayload } from "./okf-store.js"
 // @atlas/adapter-io — src/governed-link.ts  (WP-SAMEAS: the governed sameAs write door)
 //
 // The runtime composition-root's SECOND governed write door (mirrors `governed-emit.ts`). `atlas-link`
@@ -238,6 +240,7 @@ export function createGovernedLink(deps: GovernedLinkDeps): {
    * exactly the same lines, that asserting it did. An unratified actor cannot undo a ratified merge.
    */
   const link = (a: string, b: string, retract = false): LinkOut => {
+    try { assertOperationalDiskStore(deps.store) } catch { return { linked: false, rejected: "evaluation-operation-denied" } }
     // 1. DISTINCT — a node never names itself (and there is no self-edge to withdraw either).
     if (a === b) return { linked: false, rejected: REJECTED_SAME }
 
@@ -254,6 +257,10 @@ export function createGovernedLink(deps: GovernedLinkDeps): {
     // member) and the ratify tier (`strictestTier` over every member's bytes), so re-publishing the old
     // `linkSameAs` would merge a class nobody was ever authorized over.
     const committed = deps.store.commitProjection<LinkOut>((proj) => {
+      try { assertOperationalDiskStore(deps.store) } catch { return { out: { linked: false, rejected: "evaluation-operation-denied" } } }
+      if ([...proj.current.values()].some((row) => isEvaluationPayload(row) || isEvaluationPayload(deps.store.get(row.contentHash as Hash))))
+        return { out: { linked: false, rejected: "evaluation-operation-denied" } }
+
       // 2+3. AUTHORIZED ENDPOINTS (KNOW-11), FIRST LEG — ONE gate, ONE refusal [task #144]. Existence and
       //    authority are decided together and answered with the SAME bytes, because they cannot honestly be
       //    told apart to a caller: authority is carried by the ROW, so an endpoint with no row has no scope

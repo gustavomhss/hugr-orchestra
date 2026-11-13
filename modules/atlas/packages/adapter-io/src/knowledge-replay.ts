@@ -1,3 +1,5 @@
+import { assertOperationalDiskStore, assertOperationalStateDirectory } from "./store-evaluation-identity.js"
+import { join } from "node:path"
 import { genericOwnershipVisible } from "./ownership-evaluation-policy.js"
 // @atlas/adapter-io — src/knowledge-replay.ts  (rebuild the local projection from the committed knowledge logs)
 //
@@ -45,6 +47,8 @@ export function replayKnowledge(
   policy: AtlasPolicy,
   reproven: (node: CurrentNode, fact: GroundedFact) => boolean,
 ): KnowledgeReplay {
+  assertOperationalStateDirectory(join(repoPath, ".atlas"))
+  assertOperationalDiskStore(disk)
   const read = readKnowledge(repoPath)
   const projection = rehydrateProjection(disk)
   const pending = [...read.rows.values()].filter(
@@ -106,3 +110,11 @@ const withRows = (p: StoreProjection, entries: readonly KnowledgeEntry[]): Store
   current: new Map([...p.current, ...entries.map((e) => [e.row.nodeKey, e.row] as const)]),
   cas: new Set([...p.cas, ...entries.map((e) => e.row.contentHash)]),
 })
+
+/** Evaluation never replays operational logs; reject pending ordinary rows before any compose effects. */
+export function assertNoOperationalEvaluationReplay(repoPath: string): void {
+  const read = readKnowledge(repoPath)
+  if (read.unreadable || read.rejected !== 0 || [...read.rows.values()].some((entry) =>
+    entry.row.claims.length === 0 || entry.row.claims.some((claim) => !claim.startsWith("Evaluation-only ownership manifest for "))))
+    throw new Error("evaluation-operational-replay-refused")
+}
