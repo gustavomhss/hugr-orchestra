@@ -107,7 +107,7 @@ jobs:
           bun-version-file: package.json
       - name: Verify the exact bytes approved by installed-app validation
         run: |
-          bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.RUNNER_TEMP+"/validated"; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:process.env.VERSION,sourceSha:process.env.SOURCE_SHA,cliRunId:Number(process.env.CLI_RUN_ID),desktopRunId:Number(process.env.DESKTOP_RUN_ID),qualificationRunId:Number(process.env.QUALIFICATION_RUN_ID)});'
+          bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.RUNNER_TEMP+"/validated"; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:process.env.VERSION,sourceSha:process.env.SOURCE_SHA,repository:process.env.GITHUB_REPOSITORY,cliRunId:Number(process.env.CLI_RUN_ID),desktopRunId:Number(process.env.DESKTOP_RUN_ID),qualificationRunId:Number(process.env.QUALIFICATION_RUN_ID)});'
       - name: Refuse newer or ambiguous desktop feed state before mutation
         run: |
           set -euo pipefail
