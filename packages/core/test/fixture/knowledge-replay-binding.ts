@@ -3,6 +3,7 @@ export * as KnowledgeReplayBinding from "./knowledge-replay-binding"
 import { mkdtempSync, realpathSync, rmSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 import { Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 
@@ -42,11 +43,11 @@ async function build(root: string) {
     throw new Error("Actual boundary parser must be web-tree-sitter@0.23.2 with main tree-sitter.js")
   const parser = realpathSync(path.join(boundary, "node_modules/web-tree-sitter/tree-sitter.js"))
   if (!statSync(parser).isFile()) throw new Error("Actual pinned parser entry is not a regular file")
+  const parserURL = pathToFileURL(parser).href
   const manifest = { parser: { resolved: parser, version: metadata.version, package: metadataPath,
     packageSha256: new Bun.CryptoHasher("sha256").update(metadataBytes).digest("hex"),
     entrySha256: new Bun.CryptoHasher("sha256").update(await Bun.file(parser).arrayBuffer()).digest("hex"),
   }, astWarmup: false, scip: "controlled serialized protobuf" }
-  await Bun.write(Bun.stdout, `L4 replay setup: ${JSON.stringify(manifest)}\n`)
   const entry = path.join(root, "entry.ts")
   await Bun.write(entry, [
     `export { composeRuntime } from ${JSON.stringify(path.join(packages, "adapter-io/src/compose.ts"))}`,
@@ -59,7 +60,7 @@ async function build(root: string) {
     `export { id } from ${JSON.stringify(path.join(packages, "kernel/src/index.ts"))}`,
   ].join("\n"))
   const built = await Bun.build({
-    entrypoints: [entry], target: "node", format: "esm",
+    entrypoints: [entry], target: "node", format: "esm", external: [parserURL],
     plugins: [{ name: "canonical-actual-knowledge-replay", setup(builder) {
       builder.onResolve({ filter: /^@atlas\// }, (args) => ({
         path: path.join(packages, args.path.slice("@atlas/".length), "src/index.ts"),
@@ -67,17 +68,29 @@ async function build(root: string) {
       builder.onResolve({ filter: /^@noble\/hashes\// }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@bufbuild\/protobuf(\/.*)?$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@c4312\/scip$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
-      // Same pinned external as the official builder, made absolute for this owned OS-temp output.
-      builder.onResolve({ filter: /^web-tree-sitter$/ }, () => ({ path: parser, external: true }))
+      // The bridge's literal external is already absolute; no bare external rewrite is assumed.
+      builder.onResolve({ filter: /^web-tree-sitter$/ }, () => ({ path: "parser", namespace: "atlas-pinned-parser" }))
+      builder.onLoad({ filter: /.*/, namespace: "atlas-pinned-parser" }, () => ({
+        contents: `import Parser from ${JSON.stringify(parserURL)}; export default Parser;`, loader: "js",
+      }))
     } }],
   })
   if (!built.success || built.outputs.length !== 1 || built.outputs[0] === undefined)
     throw new Error(`Actual compose fixture build failed: ${built.logs.join("\n")}`)
+  const output = await built.outputs[0].text()
+  if (!output.includes(parserURL) || /\b(?:from|import)\s*["']web-tree-sitter["']/.test(output))
+    throw new Error("Actual compose fixture must emit the pinned parser URL without a bare static parser import")
+  const setup = { ...manifest, emitted: { parserURL,
+    outputSha256: new Bun.CryptoHasher("sha256").update(output).digest("hex"),
+    imports: output.split("\n").filter((line) => /\b(?:import|from)\b/.test(line) && line.includes(parserURL))
+      .slice(0, 10).map((line) => line.slice(0, 500)),
+  } }
+  await Bun.write(Bun.stdout, `L4 replay setup: ${JSON.stringify(setup)}\n`)
   const bundle = path.join(root, "actual-atlas.mjs")
-  await Bun.write(bundle, built.outputs[0])
+  await Bun.write(bundle, output)
   const actor = path.join(root, "actor.mjs")
   await Bun.write(actor, actorSource)
-  await Bun.write(path.join(root, "manifest.json"), JSON.stringify(manifest))
+  await Bun.write(path.join(root, "manifest.json"), JSON.stringify(setup))
   return { root, manifest,
     command: ChildProcess.make(process.execPath, [actor, bundle, root], { cwd: source }),
     dispose: () => rmSync(root, { recursive: true, force: true }),
@@ -165,7 +178,7 @@ function run() {
     assert.equal(derived.rows[0].key, key);
     assert.equal(derived.rows[0].id, row.contentHash);
     edges(runtime, key);
-    const sourceVerified = verify(runtime);
+    const sourceVerified = verify(api.composeRuntime(source.repoPath));
     const sourceLog = api.readKnowledge(source.repoPath);
     assert.equal(sourceLog.rejected, 0);
     assert.equal(sourceLog.rows.size, 1);
