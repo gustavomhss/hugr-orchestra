@@ -15,15 +15,15 @@ COUNTS=['index_calls','read_calls','body_bytes_total']
 sha=lambda b:hashlib.sha256(b).hexdigest()
 now=lambda:datetime.datetime.now(datetime.timezone.utc).isoformat()
 def fail(s):raise RuntimeError(s)
-def _stream_evidence(stream):
- if stream is None:return {'present':False,'bytes':0,'sha256':None}
- stream.flush();position=stream.tell();stream.seek(0);digest=hashlib.sha256();size=0
- while True:
-  chunk=stream.read(65536)
+def _stream_evidence(stream,complete):
+ if stream is None:return {'present':False,'bytes':0,'sha256':None,'complete':False}
+ # pread avoids changing the shared file offset inherited by the child as stdout/stderr.
+ size=os.fstat(stream.fileno()).st_size;digest=hashlib.sha256();offset=0
+ while offset<size:
+  chunk=os.pread(stream.fileno(),min(65536,size-offset),offset)
   if not chunk:break
-  digest.update(chunk);size+=len(chunk)
- stream.seek(position)
- return {'present':True,'bytes':size,'sha256':digest.hexdigest()}
+  digest.update(chunk);offset+=len(chunk)
+ return {'present':True,'bytes':offset,'sha256':digest.hexdigest(),'complete':bool(complete and offset==size)}
 
 def _file_evidence(path):
  if not path.exists():return {'present':False,'bytes':0,'sha256':None}
@@ -33,14 +33,14 @@ def _file_evidence(path):
 def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
  if run is None:return None
  outputs={
-  'stdout_anonymous':_stream_evidence(out_stream),
-  'stderr_anonymous':_stream_evidence(err_stream),
+  'stdout_anonymous':_stream_evidence(out_stream,complete),
+  'stderr_anonymous':_stream_evidence(err_stream,complete),
   'stdout_persisted':_file_evidence(run/'stdout.json'),
   'stderr_persisted':_file_evidence(run/'stderr.txt'),
   'response_persisted':_file_evidence(run/'response.json'),
  }
  lifecycle={name:(run/name).is_file() for name in ('process-start.json','process-release.json','process-exit.json','process-spawn-stop.json','process-spawn-uncertain.json')}
- complete=(process_outcome.get('lifecycle_state')=='TERMINATION_PROVEN' and process_outcome.get('group_absent') is True and process_outcome.get('kernel_probe')=='killpg-zero-ESRCH')
+ complete=(process_outcome.get('lifecycle_state')=='TERMINATION_PROVEN' and process_outcome.get('group_absent') is True and process_outcome.get('kernel_probe')=='killpg-zero-ESRCH' and process_outcome.get('members')==[])
  evidence={'schema':'reader-failure-evidence/v1','status':'UNKNOWN',
   'diagnostic':safe_error_diagnostic(error),'outputs':outputs,'lifecycle_records':lifecycle,
   'capture_completeness':'COMPLETE_AFTER_TERMINATION_PROOF' if complete else 'INCOMPLETE_UNKNOWN',
