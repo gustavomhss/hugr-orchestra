@@ -3,7 +3,7 @@ import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
 import os from "os"
 import path from "path"
-import { existsSync, statSync } from "fs"
+import { existsSync, statSync, writeSync } from "fs"
 import { chmod, lstat, mkdir, mkdtemp, readFile, readlink, readdir, realpath, rm, stat, symlink, writeFile } from "fs/promises"
 import { Effect } from "effect"
 import { LayerNode } from "../../src/effect/layer-node"
@@ -19,6 +19,17 @@ import { git } from "../fixture/git"
 import { tmpdir } from "../fixture/tmpdir"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([AppProcess.node])))
+// --only-failures prints nothing until a test fails. This file was still running when the
+// 8-minute step died, with no test name (run 43333229249). writeSync is not that buffer.
+const rawLive = it.live
+it.live = Object.assign(
+  (name: string, body: Parameters<typeof rawLive>[1], opts?: Parameters<typeof rawLive>[2]) =>
+    rawLive(name, () => {
+      writeSync(2, `shard test ${name}\n`)
+      return typeof body === "function" ? body() : body
+    }, opts),
+  { only: rawLive.only, skip: rawLive.skip, skipIf: rawLive.skipIf },
+)
 
 const BASE = "base-value"
 const HEAD = "head-value"
@@ -534,7 +545,10 @@ it.live("escapes, cycles, link depth and sibling prefixes are named refusals and
   }), 180_000,
 )
 
-it.live("entry, path-byte and shared caps are inclusive, and an alias does not reset or double-count the budget", () =>
+// About 100,000 files and a 10-minute budget. That cannot finish inside the 8-minute Windows
+// step; the file was still running when the step died (run 43333229249). Linux still runs it.
+const caps = process.platform === "win32" ? it.live.skip : it.live
+caps("entry, path-byte and shared caps are inclusive, and an alias does not reset or double-count the budget", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const dir = yield* owned()
