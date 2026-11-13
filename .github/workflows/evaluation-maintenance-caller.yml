@@ -16,6 +16,16 @@ jobs:
         working-directory: modules/atlas
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Verify exact source overlay base
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sha256sum --check <<'PINS'
+          1286f756209fa5e5abb6af0ec4794d6a57c979c3ba3dd97aa0d10ee22dd33a3b  packages/adapter-io/src/evaluation-maintenance-host.ts
+          1e511bd090ab303f0ee9cb8c69c1d6289a5a5c5cabbe5cd96c56833ad6a52a9e  packages/adapter-io/src/evaluation-rebuild.ts
+          4f38223d0d513b38fdd489aa7fea5a3cc818b1cc37a180973167f732f2494a18  packages/adapter-io/src/ownership-rebuild.ts
+          PINS
       - name: Set up Node.js 22
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -32,6 +42,7 @@ jobs:
         run: |
           set -o pipefail
           npx vitest run packages/adapter-io/test/evaluation-maintenance-caller.test.ts packages/adapter-io/test/evaluation-maintenance-caller.integration.test.ts 2>&1 | tee maintenance-caller.log
+          { printf '\\n[toolchain]\nnode='; node --version; printf 'npm='; npm --version; } >> maintenance-caller.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
