@@ -5,6 +5,8 @@ import type { Prompt, PromptStore } from "@/context/prompt"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, type ServerApi } from "@/utils/server"
+import type { AdmissionOptions } from "@/server-api"
+import { inheritSessionModelExecution, registerSessionModelExecution } from "@/utils/session-model-execution"
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import { draftSessionKey } from "./draft-session"
 import { clearPending, pendingSnapshot } from "../draft-subagent-models"
@@ -32,6 +34,7 @@ type FixtureServer = {
   }
 }
 type FixtureSDK = {
+  modelExecutionEpoch: () => number
   scope: ServerScope
   directory: string
   api: ServerApi
@@ -41,7 +44,7 @@ type ReactiveOwner = { read?: () => { sdk: FixtureSDK; server: FixtureServer } }
 export const canonicalPolicies = new Map<string, SubagentModelPolicy>()
 const policyVersions = new Map<string, number>()
 const roots: VoidFunction[] = []
-afterEach(() => roots.splice(0).forEach((dispose) => dispose()))
+const disposeSubmitHarness = () => roots.splice(0).forEach((dispose) => dispose())
 export const [reactiveOwner, setReactiveOwner]: [Store<ReactiveOwner>, SetStoreFunction<ReactiveOwner>] = createStore<ReactiveOwner>({})
 export const policyFixture: { server: FixtureServer; sdk: FixtureSDK } = {
   server: undefined as unknown as FixtureServer,
@@ -73,6 +76,8 @@ export const optimisticSeeded: boolean[] = []
 export const storedSessions: Record<string, Array<{ id: string; title?: string }>> = {}
 export const promoted: Array<{ directory: string; sessionID: string }> = []
 export const promotedAgents: Array<string | undefined> = []
+export const promotedSelections: Array<{ agent?: string; model?: { providerID: string; modelID: string }; variant?: string | null }> = []
+export const modelExecutionInputs: unknown[] = []
 export const sentShell: Array<{ sessionID: string; id?: string; command: string }> = []
 export const syncedDirectories: string[] = []
 export const promotedDrafts: Array<{ draftID: string; server: string; sessionId: string }> = []
@@ -113,7 +118,7 @@ export const state = {
   workspaceDirectories: ["/repo/worktree-a", "/repo/worktree-b"],
   workspaceLookupFailure: false,
   workspaceLookups: [] as { projectID: string }[],
-  variant: undefined as string | undefined,
+  variant: undefined as string | null | undefined,
   permissionServer: "server-a",
   createSessionGate: undefined as Promise<void> | undefined,
   rulesFailure: false,
@@ -135,7 +140,9 @@ export const state = {
   sendHook: async (_input: unknown) => {},
   statusObserved: (_args: unknown[]) => {},
   modelID: "model",
+  currentModelMissing: false,
   agentID: "backend",
+  agentConfig: undefined as { model?: { providerID: string; modelID: string }; variant?: string } | undefined,
 }
 
 const [promptStore, setPromptStore] = createStore<PromptStore>({
@@ -204,13 +211,15 @@ export const clientFor = (directory: string) => {
           location: { directory: location },
         }
       },
-      prompt: async (input: unknown) => {
+      prompt: async (input: unknown, options?: AdmissionOptions) => {
+        options?.beforeAdmission?.()
         sentPrompts.push(directory)
         promptInputs.push(input)
         await state.sendHook(input)
         return { data: undefined }
       },
-      command: async (input: unknown) => {
+      command: async (input: unknown, options?: AdmissionOptions) => {
+        options?.beforeAdmission?.()
         sentCommands.push(input)
         await state.sendHook(input)
       },
@@ -231,14 +240,25 @@ export const clientFor = (directory: string) => {
       },
     },
   }
+  // Explicit contract response for the fake admission hooks above; never a production eligibility fallback.
+  registerSessionModelExecution(api.session, async (input) => {
+    modelExecutionInputs.push(structuredClone(input))
+    if (!input.model) throw new Error("Fake admission fixture requires an exact model candidate")
+    const directory = input.location?.directory ?? "/repo/main"
+    return {
+      location: { directory, project: { id: "project", directory } },
+      data: { models: [], selection: { status: "ready", ref: input.model, engine: "orchestra" } },
+    }
+  })
   return { api }
 }
 
 export function serverFor(scope = ServerScope.local): FixtureServer {
   const current = createApiForServer({ server: { url: "http://fixture.invalid" } })
+  const fixture = clientFor("/repo/main").api.session
   const api = {
     ...current,
-    session: { ...current.session, ...clientFor("/repo/main").api.session },
+    session: { ...current.session, ...fixture },
     message: {
       list: async () => {
         if (state.messageCount === undefined) throw new Error("server unreachable")
@@ -264,6 +284,8 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
       },
     },
   } as unknown as ServerApi
+  // The shallow fixture composition owns a new adapter object; retain the explicit fake client association.
+  inheritSessionModelExecution(fixture, api.session)
   return {
     scope, ready: Promise.resolve(),
     isReady: () => true,
@@ -289,7 +311,7 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
 }
 
 export function sdkFor(directory: string, server: FixtureServer): FixtureSDK {
-  return { scope: server.scope, directory, api: server.currentApi, url: "http://fixture.invalid" }
+  return { scope: server.scope, directory, api: server.currentApi, url: "http://fixture.invalid", modelExecutionEpoch: () => 0 }
 }
 
 function promoteRoute(directory: string, id: string) {
@@ -326,15 +348,19 @@ beforeAll(async () => {
   mock.module("@/context/local", () => ({
     useLocal: () => ({
       model: {
-        current: () => ({ id: state.modelID, provider: { id: "provider" } }),
-        variant: { current: () => state.variant },
+        execution: { context: () => "controlled-submit-fixture-metadata",
+          input: () => ({ model: { providerID: "provider", id: state.modelID, variant: state.variant ?? undefined } }) },
+        intent: () => ({ model: { providerID: "provider", modelID: state.modelID }, variant: state.variant }),
+        current: () => state.currentModelMissing ? undefined : ({ id: state.modelID, provider: { id: "provider" } }),
+        variant: { current: () => state.variant ?? undefined },
       },
       agent: {
         // A seat renamed from its default label: payloads must carry the stable id, never the label.
-        current: () => ({ id: state.agentID, name: "Pikachu" }),
+        current: () => ({ id: state.agentID, name: "Pikachu", ...state.agentConfig }),
       },
       session: {
-        promote(directory: string, sessionID: string, selection: { agent?: string }) {
+        promote(directory: string, sessionID: string, selection: (typeof promotedSelections)[number]) {
+          promotedSelections.push(structuredClone(selection))
           promoted.push({ directory, sessionID })
           state.promoteProbe?.()
           state.promoteStarted.resolve()
@@ -501,7 +527,7 @@ beforeAll(async () => {
   acknowledgeDraftPolicy = mod.acknowledgeDraftPolicy
 })
 
-beforeEach(() => {
+function resetSubmitHarness() {
   createdSessions.length = 0
   worktreeCreateInputs.length = 0
   sessionCreateInputs.length = 0
@@ -512,6 +538,8 @@ beforeEach(() => {
   optimisticSeeded.length = 0
   promoted.length = 0
   promotedAgents.length = 0
+  promotedSelections.length = 0
+  modelExecutionInputs.length = 0
   promotedDrafts.length = 0
   sentPrompts.length = 0
   promptInputs.length = 0
@@ -556,7 +584,9 @@ beforeEach(() => {
   state.sendHook = async () => {}
   state.statusObserved = () => {}
   state.modelID = "model"
+  state.currentModelMissing = false
   state.agentID = "backend"
+  state.agentConfig = undefined
   policyWrites.length = 0
   toasts.length = 0
   canonicalPolicies.clear()
@@ -567,4 +597,10 @@ beforeEach(() => {
   ;[draftSessionKey(ServerScope.local, "/repo/main"), draftSessionKey(ServerScope.local, "/repo/main", "draft-1")]
     .forEach((key) => clearPending(key, pendingSnapshot(key).revision))
   for (const key of Object.keys(storedSessions)) delete storedSessions[key]
-})
+}
+
+// Register at the actual discovered file/isolated suite boundary, never only the first importer.
+export function registerSubmitHarnessLifecycle() {
+  beforeEach(resetSubmitHarness)
+  afterEach(disposeSubmitHarness)
+}

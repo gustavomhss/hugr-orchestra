@@ -9,17 +9,18 @@ import {
   type Renderable,
 } from "@opentui/core"
 import type { CommandContext } from "@opentui/keymap"
-import { createEffect, createMemo, onMount, createSignal, onCleanup, on, Show, Switch, Match } from "solid-js"
+import { createComputed, createEffect, createMemo, onMount, createSignal, onCleanup, on, Show, Switch, Match } from "solid-js"
 import { registerOrchestraSpinner } from "../register-spinner"
 import path from "path"
 import { fileURLToPath } from "url"
-import { useLocal } from "../../context/local"
+import { modelExecutionReason, useLocal } from "../../context/local"
 import { tint, useTheme } from "../../context/theme"
 import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
 import { Spinner } from "../spinner"
 import { useSDK } from "../../context/sdk"
+import { makeModelExecutionQuery } from "@orchestra/client"
 import { useRoute } from "../../context/route"
 import { useProject } from "../../context/project"
 import { useSync } from "../../context/sync"
@@ -916,6 +917,24 @@ export function Prompt(props: PromptProps) {
     }
   })
 
+  const admissionLifetime = { disposed: false }
+  const admissionQueries = new Set<ReturnType<typeof makeModelExecutionQuery>>()
+  onCleanup(() => { admissionLifetime.disposed = true; admissionQueries.forEach((query) => query.dispose()); admissionQueries.clear() })
+  const admissionOwner = createMemo(() => {
+    const binding = sdk.binding()
+    return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data,
+      intent: local.model.intent(), agent: local.agent.current()?.id,
+      context: local.model.execution.context(),
+      epoch: sdk.connectionEpoch(), directory: binding.directory, url: binding.url,
+      headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch }
+  }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch })
+  createComputed(() => {
+    admissionOwner()
+    // A genuine owner departure cancels this Prompt's admission work, independently of visual queries.
+    const previous = [...admissionQueries]
+    admissionQueries.clear()
+    previous.forEach((query) => query.dispose())
+  })
   let submitting = false
   async function submit() {
     // Prevent overlapping invocations (e.g. a double-pressed Enter, or the
@@ -947,23 +966,68 @@ export function Prompt(props: PromptProps) {
     if (!store.prompt.input) return false
     const agent = local.agent.current()
     if (!agent) return false
+    if (store.mode !== "shell" && !local.model.ready) return false
     const trimmed = store.prompt.input.trim()
     if (trimmed === "exit" || trimmed === "quit" || trimmed === ":q") {
       void exit()
       return true
     }
-    const selectedModel = local.model.current()
+    const effective = local.model.execution.input().model
+    const selectedModel = local.model.intent().model ?? local.model.current() ??
+      (effective && { providerID: effective.providerID, modelID: effective.id })
     if (!selectedModel) {
       void promptModelWarning()
       return false
     }
 
-    const variant = local.model.variant.current()
+    const variant = effective?.variant
+    const promptVersion = JSON.stringify(store.prompt)
+    const inputText = expandTrackedPastedText(
+      store.prompt.input,
+      input.extmarks.getAllForTypeId(promptPartTypeId).flatMap((extmark) => {
+        const partIndex = store.extmarkToPartIndex.get(extmark.id)
+        const part = partIndex === undefined ? undefined : store.prompt.parts[partIndex]
+        if (part?.type !== "text") return []
+        return [{ start: extmark.start, end: extmark.end, text: part.text }]
+      }),
+    )
+    const nonTextParts = store.prompt.parts.filter((part) => part.type !== "text")
+    const currentMode = store.mode
+    const knownCommand = currentMode === "normal" && inputText.startsWith("/") &&
+      sync.data.command.some((command) => command.name === inputText.split("\n")[0].split(" ")[0].slice(1))
+    const captured = admissionOwner()
+    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && admissionOwner() === captured
+    const current = () => ownerCurrent() &&
+      JSON.stringify(store.prompt) === promptVersion && store.mode === currentMode
+    const guard = () => { if (!current()) throw new DOMException("", "AbortError") }
     let sessionID = props.sessionID
     let finishMoveProgress = false
+    const directory = sessionID == null ? await move.getDirectory(store.prompt.input) : sdk.directory
+    if (!current() || (sessionID == null && move.pending() && !directory)) return false
+    if (store.mode !== "shell") {
+      const query = makeModelExecutionQuery({ execute: sdk.api.models.execution })
+      admissionQueries.add(query)
+      const response = await query.load(captured, {
+        location: { directory: directory ?? sdk.directory },
+        context: sessionID ? { type: "session", sessionID, agentID: agentKey(agent) }
+          : { type: "draft", agentID: agentKey(agent) },
+        model: { providerID: selectedModel.providerID, id: selectedModel.modelID, variant },
+      })
+      query.dispose()
+      admissionQueries.delete(query)
+      const selection = response?.data.selection
+      if (!current()) return false
+      if (selection?.status !== "ready" || selection.ref.providerID !== selectedModel.providerID ||
+        selection.ref.id !== selectedModel.modelID || selection.ref.variant !== variant) {
+        const entry = response?.data.models.find((item) => item.model.providerID === selectedModel.providerID && item.model.id === selectedModel.modelID)
+        const reason = selection?.ref.providerID === selectedModel.providerID && selection.ref.id === selectedModel.modelID &&
+          selection.ref.variant === variant && selection.status !== "ready" ? selection.reason
+          : entry && entry.status !== "ready" ? entry.reason : undefined
+        toast.show({ message: modelExecutionReason(reason), variant: "warning" })
+        return false
+      }
+    }
     if (sessionID == null) {
-      const directory = await move.getDirectory(store.prompt.input)
-      if (move.pending() && !directory) return false
       finishMoveProgress = Boolean(move.progress())
 
       const created = await sdk.actions
@@ -973,6 +1037,7 @@ export function Prompt(props: PromptProps) {
           directory,
         })
         .catch((error: unknown) => {
+          if (!current()) return undefined
           if (finishMoveProgress) move.finishSubmit()
           console.log("Creating a session failed:", error)
 
@@ -983,25 +1048,11 @@ export function Prompt(props: PromptProps) {
           return undefined
         })
       if (!created) return true
+      if (!current()) return false
 
       sessionID = created.id
     }
 
-    const inputText = expandTrackedPastedText(
-      store.prompt.input,
-      input.extmarks.getAllForTypeId(promptPartTypeId).flatMap((extmark) => {
-        const partIndex = store.extmarkToPartIndex.get(extmark.id)
-        const part = partIndex === undefined ? undefined : store.prompt.parts[partIndex]
-        if (part?.type !== "text") return []
-        return [{ start: extmark.start, end: extmark.end, text: part.text }]
-      }),
-    )
-
-    // Filter out text parts (pasted content) since they're now expanded inline
-    const nonTextParts = store.prompt.parts.filter((part) => part.type !== "text")
-
-    // Capture mode before it gets reset
-    const currentMode = store.mode
     const editorSelection = editorContext()
     const editorText =
       editorSelection && editor.labelState() === "pending" ? formatEditorContext(editorSelection) : undefined
@@ -1020,13 +1071,11 @@ export function Prompt(props: PromptProps) {
     } else if (store.mode === "shell") {
       move.startSubmit()
       void sdk.actions.shell({ sessionID, command: inputText }).catch((error) => {
+        if (!ownerCurrent()) return
         toast.show({ title: "Failed to run shell command", message: errorMessage(error), variant: "error" })
       })
       setStore("mode", "normal")
-    } else if (
-      inputText.startsWith("/") &&
-      sync.data.command.some((x) => x.name === inputText.split("\n")[0].split(" ")[0].slice(1))
-    ) {
+    } else if (knownCommand) {
       move.startSubmit()
       // Parse command from first line, preserve multi-line content in arguments
       const firstLineEnd = inputText.indexOf("\n")
@@ -1035,7 +1084,7 @@ export function Prompt(props: PromptProps) {
       const restOfInput = firstLineEnd === -1 ? "" : inputText.slice(firstLineEnd + 1)
       const args = firstLineArgs.join(" ") + (restOfInput ? "\n" + restOfInput : "")
 
-      void sdk.actions
+      const sent = await sdk.actions
         .command({
           sessionID,
           command: command.slice(1),
@@ -1043,13 +1092,17 @@ export function Prompt(props: PromptProps) {
           agent: agentKey(agent),
           model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
           files: nonTextParts.filter((x) => x.type === "file"),
-        })
+        }, guard)
+        .then(() => true)
         .catch((error) => {
+          if (!current()) return false
           toast.show({ title: "Failed to run command", message: errorMessage(error), variant: "error" })
+          return false
         })
+      if (!sent || !current()) return false
     } else {
       move.startSubmit()
-      sdk.actions
+      const sent = await sdk.actions
         .prompt({
           sessionID,
           text: inputText,
@@ -1058,14 +1111,18 @@ export function Prompt(props: PromptProps) {
           model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
           files: nonTextParts.filter((part) => part.type === "file"),
           agents: nonTextParts.filter((part) => part.type === "agent"),
-        })
+        }, guard)
+        .then(() => true)
         .catch((error) => {
+          if (!current()) return false
           toast.show({
             title: "Failed to send prompt",
             message: errorMessage(error),
             variant: "error",
           })
+          return false
         })
+      if (!sent || !current()) return false
       if (editorText) editor.markSelectionSent()
     }
     history.append({

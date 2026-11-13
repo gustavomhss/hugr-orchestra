@@ -1,3 +1,4 @@
+import { registerSubmitHarnessLifecycle } from "@/components/prompt-input/submit-harness"
 import { expect, spyOn, test } from "bun:test"
 import { mkdtemp, mkdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
@@ -11,6 +12,10 @@ import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
+import { SessionInput } from "@orchestra/schema/session-input"
+import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
+import { clearPending, pendingSnapshot, togglePending } from "@/components/draft-subagent-models"
+import { draftSessionKey } from "@/components/prompt-input/draft-session"
 import { createPromptState, type ImageAttachmentPart } from "@/context/prompt-state"
 import { createApiForServer } from "@/utils/server"
 import { createSessionManagementForServer } from "@/utils/session-management"
@@ -18,8 +23,10 @@ import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
 import {
   commands, createPromptSubmit, createdSessions, optimistic, optimisticRemovals, policyFixture, promptInputs,
-  sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, submitInput, toasts,
+  promoted, promotedSelections, sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, submitInput, toasts,
 } from "@/components/prompt-input/submit-harness"
+
+registerSubmitHarnessLifecycle()
 
 // These tests exercise the existing composer API. The shared harness stubs UI services, not admission semantics.
 // Only the final two native-child cases claim real HTTP/Core/SQLite evidence.
@@ -506,7 +513,13 @@ const Rows = Schema.Struct({
   admissions: Schema.Array(Schema.Struct({ type: Schema.String, data: Schema.Unknown })),
   messages: Schema.Array(Schema.Unknown),
 })
-type NativeServer = typeof Ready.Type & { inspect: () => Promise<typeof Rows.Type> }
+const HeldAck = Schema.Struct({ status: Schema.Number, sessionID: Schema.String, messageID: Schema.String })
+type NativeServer = typeof Ready.Type & {
+  inspect: (sessionID?: string) => Promise<typeof Rows.Type>
+  armPromptAck: () => Promise<void>
+  waitPromptAck: () => Promise<typeof HeldAck.Type>
+  releasePromptAck: () => Promise<void>
+}
 
 async function nativeServer(run: (server: NativeServer) => Promise<void>) {
   const scratch = await mkdtemp(path.join(tmpdir(), "orchestra-prompt-retry-"))
@@ -540,10 +553,22 @@ async function nativeServer(run: (server: NativeServer) => Promise<void>) {
         return yield* Effect.die(new Error(`Native fixture exited before readiness (${code}): ${stdout.buffer.toString()}${stderr.buffer.toString()}`))
       }))))
       yield* Effect.promise(async () => {
-        const server = { ...host, inspect: async () => {
-          const response = await Bun.fetch(`${host.url}/__fixture/inspect`, { signal: AbortSignal.timeout(10_000) })
+        const server = { ...host, inspect: async (sessionID?: string) => {
+          const url = new URL("/__fixture/inspect", host.url)
+          if (sessionID !== undefined) url.searchParams.set("sessionID", sessionID)
+          const response = await Bun.fetch(url, { signal: AbortSignal.timeout(10_000) })
           expect(response.status).toBe(200)
           return Schema.decodeUnknownSync(Rows)(await response.json())
+        }, armPromptAck: async () => {
+          const response = await Bun.fetch(`${host.url}/__fixture/prompt-ack/arm`, { method: "POST", signal: AbortSignal.timeout(10_000) })
+          expect(response.status).toBe(200)
+        }, waitPromptAck: async () => {
+          const response = await Bun.fetch(`${host.url}/__fixture/prompt-ack/entered`, { signal: AbortSignal.timeout(10_000) })
+          expect(response.status).toBe(200)
+          return Schema.decodeUnknownSync(HeldAck)(await response.json())
+        }, releasePromptAck: async () => {
+          const response = await Bun.fetch(`${host.url}/__fixture/prompt-ack/release`, { method: "POST", signal: AbortSignal.timeout(10_000) })
+          expect(response.status).toBe(200)
         } }
         try { await run(server) }
         finally {
@@ -570,6 +595,25 @@ function bindNative(host: NativeServer, transport: typeof fetch) {
   return composer("durable retry", { info: () => ({ id: host.sessionID }), delivery: () => "queue" })
 }
 
+function bindNativeDraft(host: NativeServer, transport: typeof fetch) {
+  const api = createApiForServer({ server: { url: host.url }, fetch: transport })
+  const base = serverFor()
+  const server = { ...base, api, currentApi: api, server: { type: "http" as const, http: { url: host.url } },
+    sessionManagement: createSessionManagementForServer({ server: { url: host.url }, fetch: transport, ready: Promise.resolve() }) }
+  const source = { server, sdk: { ...sdkFor(host.directory, server), api, url: host.url } }
+  state.serverOverride = server
+  state.sdkOverride = source.sdk
+  state.params.id = undefined
+  state.selected = "main"
+  setReactiveOwner("read", () => () => source)
+  return createRoot((dispose) => {
+    const prompt = createPromptState({ prompt: "native draft held ACK" })
+    return { dispose, prompt, server, source, submit: createPromptSubmit({ ...submitInput(), prompt,
+      info: () => state.params.id ? { id: state.params.id } : undefined,
+      newSessionWorktree: () => "main" }) }
+  })
+}
+
 test("CONTROL E1 native HTTP admission and same text after ACK create two distinct durable rows", async () => {
   expectSpawn(import.meta.path)
   await nativeServer(async (host) => {
@@ -582,8 +626,8 @@ test("CONTROL E1 native HTTP admission and same text after ACK create two distin
       const response = await Bun.fetch(request)
       // Only this private fixture's synthetic HTTP data; cap diagnostic output and never log headers/env/settings.
       responses.push({ stage, status: response.status, body: (await response.clone().text()).slice(0, 512) })
-      expect(["agent", "model", "prompt"]).toContain(stage)
-      expect(response.status).toBe(stage === "prompt" ? 200 : 204)
+      expect(["execution", "agent", "model", "prompt"]).toContain(stage)
+      expect(response.status).toBe(stage === "execution" || stage === "prompt" ? 200 : 204)
       return response
     }, { preconnect: Bun.fetch.preconnect })
     const owner = bindNative(host, transport)
@@ -601,7 +645,7 @@ test("CONTROL E1 native HTTP admission and same text after ACK create two distin
       expect(second.inputs).toHaveLength(2)
       expect(second.admissions).toHaveLength(2)
       expect(second.inputs[0]?.id).not.toBe(second.inputs[1]?.id)
-      expect(calls).toEqual(["agent", "model", "prompt", "agent", "model", "prompt"])
+      expect(calls).toEqual(["execution", "agent", "model", "prompt", "execution", "agent", "model", "prompt"])
       expect(promptInputs, "the mocked harness transport must not service this test").toEqual([])
     } finally { owner.dispose() }
   })
@@ -652,5 +696,137 @@ test("E1 real HTTP 200 and SQL commit followed by lost ACK retry one exact durab
       expect(optimistic[1]?.parts).toEqual(parts)
       expect(promptInputs).toEqual([])
     } finally { owner.dispose() }
+  })
+}, 75_000)
+
+
+test("E6 native new draft receives its held SQL-committed ACK after raw choice and policy edits, then hands off once", async () => {
+  expectSpawn(import.meta.path)
+  await nativeServer(async (host) => {
+    const creates: string[] = []
+    const queries: unknown[] = []
+    const selections: string[] = []
+    const posts: Array<{ request: Request; body: Record<string, unknown>; settled: boolean }> = []
+    const acknowledgements: SessionInput.Admitted[] = []
+    const policies: Array<{ sessionID: string; policy: SessionSubagentModels.Policy }> = []
+    const atPromotion: { policies?: typeof policies; version?: number } = {}
+    const transport: typeof fetch = Object.assign(async (...args: Parameters<typeof fetch>) => {
+      const request = new Request(...args)
+      const pathname = new URL(request.url).pathname
+      if (pathname === "/api/model/execution") queries.push(await request.clone().json())
+      if (request.method === "POST" && /\/(agent|model)$/.test(pathname)) selections.push(pathname)
+      const post = request.method === "POST" && pathname.endsWith("/prompt")
+        ? { request, body: Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(await request.clone().json()), settled: false } : undefined
+      if (post) posts.push(post)
+      const response = await Bun.fetch(request).then((value) => {
+        if (post) post.settled = true
+        return value
+      }, (error: unknown) => {
+        if (post) post.settled = true
+        throw error
+      })
+      if (request.method === "POST" && pathname === "/api/session") {
+        expect(response.status).toBe(200)
+        creates.push(Schema.decodeUnknownSync(Schema.Struct({ data: Schema.Struct({ id: Schema.String }) }))(await response.clone().json()).data.id)
+      }
+      if (post) {
+        expect(response.status).toBe(200)
+        acknowledgements.push(Schema.decodeUnknownSync(Schema.Struct({ data: SessionInput.Admitted }))(await response.clone().json()).data)
+      }
+      if (request.method === "POST" && pathname.endsWith("/subagent-models")) {
+        expect(response.status).toBe(200)
+        const body = Schema.decodeUnknownSync(Schema.Struct({ data: SessionSubagentModels.Policy }))(await response.clone().json())
+        policies.push({ sessionID: pathname.split("/").at(-2)!, policy: body.data })
+      }
+      return response
+    }, { preconnect: Bun.fetch.preconnect })
+    await host.armPromptAck()
+    const owner = bindNativeDraft(host, transport)
+    const key = draftSessionKey(owner.server.scope, host.directory)
+    state.promoteProbe = () => {
+      atPromotion.policies = structuredClone(policies)
+      atPromotion.version = owner.server.sessionManagement.subagentModelsWriteVersion(creates[0]!)
+    }
+    expect(state.params.id, "true draft has no Session ID before actual create").toBeUndefined()
+    const sending = send(owner.submit)
+    const outcome = { failed: false, error: undefined as unknown }
+    try {
+      const held = await host.waitPromptAck()
+      expect(held.status).toBe(200)
+      expect(creates).toEqual([held.sessionID])
+      expect(held.sessionID).not.toBe(host.sessionID)
+      expect(state.params.id, "real Session exists but handoff is still pending").toBeUndefined()
+      expect(posts).toHaveLength(1)
+      const original = clone(posts[0]!.body)
+      const committed = await host.inspect(held.sessionID)
+      expect(committed.inputs).toHaveLength(1)
+      expect(committed.admissions).toHaveLength(1)
+      expect(committed.inputs[0]).toMatchObject({ id: held.messageID, session_id: held.sessionID,
+        delivery: "steer", prompt: { text: "native draft held ACK" } })
+      expect(original).toMatchObject({ id: held.messageID, prompt: { text: "native draft held ACK" } })
+      expect(Object.hasOwn(original, "delivery")).toBe(false)
+      expect(posts[0]?.settled).toBe(false)
+      expect(acknowledgements).toEqual([])
+      expect(queries).toContainEqual(expect.objectContaining({ context: { type: "draft", agentID: "backend" },
+        model: { providerID: "provider", id: "model" } }))
+      expect(queries).toContainEqual(expect.objectContaining({ context: { type: "session", sessionID: held.sessionID, agentID: "backend" },
+        model: { providerID: "provider", id: "model" } }))
+      const beforeQueries = queries.length
+      const beforeSelections = selections.slice()
+      const beforeVersion = owner.server.sessionManagement.subagentModelsWriteVersion(held.sessionID)
+      state.modelID = "model-next"
+      state.variant = "default"
+      togglePending(key, "provider", "model-next", true)
+      const pending = pendingSnapshot(key)
+      setReactiveOwner("read", () => () => ({ ...owner.source }))
+      await Promise.resolve()
+      expect(posts[0]?.request.signal.aborted, "unsent raw choice must not abort the actual admitted POST's receipt").toBe(false)
+      expect(posts[0]?.settled).toBe(false)
+      expect(acknowledgements).toEqual([])
+      expect(promoted).toEqual([])
+      await host.releasePromptAck()
+      expect(await sending).toBe(true)
+      expect(acknowledgements).toHaveLength(1)
+      expect(acknowledgements[0]).toMatchObject({ id: held.messageID, sessionID: held.sessionID,
+        delivery: "steer", prompt: { text: "native draft held ACK" } })
+      expect(atPromotion.policies?.at(-1)).toEqual({ sessionID: held.sessionID, policy: pending.policy })
+      expect(atPromotion.version).toBeDefined()
+      expect(atPromotion.version!).toBeGreaterThan(beforeVersion)
+      expect(pendingSnapshot(key).revision).toBe(0)
+      expect(promoted).toEqual([{ directory: host.directory, sessionID: held.sessionID }])
+      expect(promotedSelections).toEqual([{ agent: "backend", model: { providerID: "provider", modelID: "model-next" }, variant: "default" }])
+      expect(state.params.id).toBe(held.sessionID)
+      expect(state.modelID).toBe("model-next")
+      expect(state.variant).toBe("default")
+      expect(owner.prompt.current()).toEqual(text(""))
+      expect(queries).toHaveLength(beforeQueries)
+      expect(selections).toEqual(beforeSelections)
+      expect(posts).toHaveLength(1)
+      expect(posts[0]?.body).toEqual(original)
+      expect(promptInputs, "all Session admissions used actual native TCP, not fake hooks").toEqual([])
+      await send(owner.submit)
+      expect(creates).toEqual([held.sessionID])
+      expect(posts).toHaveLength(1)
+      expect(promoted).toHaveLength(1)
+      expect(queries).toHaveLength(beforeQueries)
+      expect(selections).toEqual(beforeSelections)
+      const final = await host.inspect(held.sessionID)
+      expect(final.inputs).toEqual(committed.inputs)
+      expect(final.admissions).toEqual(committed.admissions)
+      expect(final.messages).toEqual([])
+    } catch (error) {
+      outcome.failed = true
+      outcome.error = error
+      throw error
+    } finally {
+      const released = await Promise.allSettled([within(host.releasePromptAck(), "native held Response released during cleanup")])
+      // Disposal cancels this live owner's jobs before joining them, including on a failed fixture barrier.
+      const disposed = await Promise.allSettled([Promise.resolve().then(() => owner.dispose())])
+      const joined = await Promise.allSettled([within(sending, "native owned submission settled after disposal")])
+      const cleared = await Promise.allSettled([Promise.resolve().then(() => clearPending(key))])
+      const failures = [...released, ...disposed, ...joined, ...cleared].flatMap((result) => result.status === "rejected" ? [result.reason] : [])
+      if (failures.length) throw new AggregateError(outcome.failed ? [outcome.error, ...failures] : failures,
+        "Native held-ACK acceptance cleanup failed")
+    }
   })
 }, 75_000)

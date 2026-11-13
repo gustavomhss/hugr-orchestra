@@ -12,6 +12,7 @@ import { useLocal } from "@/context/local"
 import { popularProviders } from "@/hooks/use-providers"
 import { createGroupedVirtualizer } from "./grouped-virtualizer"
 import { ModelTooltip } from "./model-tooltip"
+import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
 type ModelItem = ReturnType<ModelState["list"]>[number]
@@ -51,6 +52,7 @@ export function ModelList(props: {
     return value ? modelKey(value) : undefined
   }
   const select = (item: ModelItem | undefined) => {
+    if (item && !model.execution.allows({ modelID: item.id, providerID: item.provider.id })) return
     model.set(item ? { modelID: item.id, providerID: item.provider.id } : undefined, { recent: true })
     props.onSelect()
   }
@@ -129,6 +131,9 @@ export function ModelList(props: {
       data-component="list"
       class={`flex-1 px-3 min-h-0 [&_[data-slot=list-scroll]]:flex-1 [&_[data-slot=list-scroll]]:min-h-0 ${props.class ?? ""}`}
     >
+      <Show when={!model.current() && model.intent().model}>{(key) =>
+        <div class="px-3 py-2" title={language.t("model.execution.unavailable")}>{key().modelID}</div>
+      }</Show>
       <div data-slot="list-search-wrapper">
         <div
           data-slot="list-search"
@@ -222,6 +227,8 @@ export function ModelList(props: {
                                     }
                                   >
                                     <button
+                                      disabled={!model.execution.allows({ modelID: item().id, providerID: item().provider.id })}
+                                      title={!model.execution.allows({ modelID: item().id, providerID: item().provider.id }) ? language.t(modelExecutionReasonKey(model.execution.reason({ modelID: item().id, providerID: item().provider.id }))) : undefined}
                                       data-slot="list-item"
                                       data-key={key}
                                       data-active={key === list.active()}

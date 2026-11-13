@@ -27,7 +27,7 @@ import { createMediaQuery } from "@solid-primitives/media"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { useLocal } from "@/context/local"
 import { FileProvider, selectionFromLines, useFile, type FileSelection, type SelectedLineRange } from "@/context/file"
-import { createStore } from "solid-js/store"
+import { createStore, unwrap } from "solid-js/store"
 import type { SessionReviewLineComment } from "@orchestra/session-ui/session-review"
 import { ResizeHandle } from "@orchestra/ui/resize-handle"
 import { Select } from "@orchestra/ui/select"
@@ -64,6 +64,7 @@ import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
 import { type FollowupDraft, sendFollowupDraft } from "@/components/prompt-input/submit"
+import { createSubmissionOwner } from "@/components/prompt-input/submission-policy"
 import { type QueuedPrompt, createQueuedPromptStore, queuedPromptPayload, queuedPromptSources } from "@/components/prompt-input/queued-prompt"
 import {
   createEvidenceComposerActions,
@@ -96,6 +97,7 @@ import { Identifier } from "@/utils/id"
 import { diffs as list } from "@/utils/diffs"
 import { extractPromptFromParts } from "@/utils/prompt"
 import { formatServerError } from "@/utils/server-errors"
+import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
@@ -523,6 +525,42 @@ export default function Page() {
 
   const followupOwner = { serverScopeKey: serverSDK().scope, directory: sdk().directory }
   const [followup, setFollowup] = createQueuedPromptStore(followupOwner)
+  const followupBaseOwnership = createSubmissionOwner(() => ({
+    server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
+    scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
+    active: serverSDK().transportCurrent?.() !== false && sdk().transportCurrent?.() !== false,
+  }))
+  const followupOwnership = createSubmissionOwner(() => ({
+    server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
+    scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
+    epoch: serverSDK().connectionEpoch?.() ?? 0,
+    context: local.model.execution.context(),
+    policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
+  }))
+  const queuedItemOwner = (() => {
+    const entries = new Map<string, { item: QueuedPrompt; fingerprint: string; token: AbortController }>()
+    onCleanup(() => {
+      const tokens = [...entries.values()].map((entry) => entry.token)
+      entries.clear()
+      tokens.forEach((token) => token.abort())
+    })
+    return createMemo(() => {
+      const present = new Set<string>()
+      Object.entries(followup.items).forEach(([sessionID, items]) => items?.forEach((item) => {
+        const key = JSON.stringify([sessionID, item.id])
+        present.add(key)
+        const fingerprint = JSON.stringify(item)
+        const previous = entries.get(key)
+        if (previous?.item === item && previous.fingerprint === fingerprint) return
+        entries.set(key, { item, fingerprint, token: new AbortController() })
+        previous?.token.abort()
+      }))
+      entries.forEach((value, key) => { if (!present.has(key)) { entries.delete(key); value.token.abort() } })
+      return entries
+    })
+  })()
+  // Observe intermediate edit/removal generations even when the eventual payload returns to the same text.
+  createComputed(queuedItemOwner)
 
   createComputed((prev) => {
     const key = sessionKey()
@@ -1591,16 +1629,30 @@ export default function Page() {
   const followupMutation = useMutation(() => ({
     mutationFn: async (input: { sessionID: string; id: string; manual?: boolean }) => {
       const owner = sessionOwnership.capture()
+      const base = followupBaseOwnership.capture()
+      const binding = followupOwnership.capture()
       const directorySDK = sdk()
       const server = serverSDK()
       const directorySync = sync()
       const state = serverSync()
       const sessionID = params.id
       const credentials = JSON.stringify(server.server.http)
-      const current = () => owner.current() && serverSDK() === server && sdk().scope === directorySDK.scope &&
-        sdk().directory === directorySDK.directory && params.id === sessionID && JSON.stringify(server.server.http) === credentials
       const item = (followup.items[input.sessionID] ?? []).find((entry) => entry.id === input.id)
       if (!item) return
+      const capturedItem = unwrap(item)
+      const draft = structuredClone(capturedItem)
+      const identity = JSON.stringify([input.sessionID, input.id])
+      const itemOwner = queuedItemOwner().get(identity)?.token
+      if (!itemOwner) return
+      const policyVersion = server.sessionManagement.subagentModelsWriteVersion?.(input.sessionID) ?? 0
+      const baseCurrent = () => owner.current() && base.current() &&
+        serverSDK() === server && sdk().scope === directorySDK.scope && server.transportCurrent?.() !== false &&
+        directorySDK.transportCurrent?.() !== false && sdk().directory === directorySDK.directory && params.id === sessionID &&
+        sdk().orchestra === directorySDK.orchestra && sdk().api === directorySDK.api &&
+        JSON.stringify(server.server.http) === credentials
+      const itemCurrent = () => queuedItemOwner().get(identity)?.token === itemOwner
+      const current = () => baseCurrent() && binding.current() && itemCurrent() &&
+        (server.sessionManagement.subagentModelsWriteVersion?.(input.sessionID) ?? 0) === policyVersion
 
       if (input.manual) setFollowup("paused", input.sessionID, undefined)
       setFollowup("failed", input.sessionID, undefined)
@@ -1609,7 +1661,9 @@ export default function Page() {
         api: directorySDK.api.session,
         sync: directorySync,
         serverSync: state,
-        draft: item,
+        draft,
+        signal: AbortSignal.any([binding.signal, itemOwner.signal]),
+        onUnavailable: (reason) => showToast({ title: language.t(modelExecutionReasonKey(reason)) }),
         optimisticBusy: item.sessionDirectory === directorySDK.directory,
         deliberate: input.manual === true,
         currentSource: {
@@ -1625,8 +1679,10 @@ export default function Page() {
       if (ok === false && current()) setFollowup("failed", input.sessionID, input.id)
       if (!ok) return
 
-      if (item.source) queuedPromptSources.release(item.source)
-      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry.id !== input.id))
+      if (!baseCurrent() || !itemCurrent()) return
+      if (draft.source) queuedPromptSources.release(draft.source)
+      if (!baseCurrent() || !itemCurrent()) return
+      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry !== capturedItem))
       if (input.manual) owner.run(resumeScroll)
     },
   }))

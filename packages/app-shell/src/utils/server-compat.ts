@@ -1,6 +1,7 @@
 import type { ServerApi } from "./server"
 import type { SessionCommandInput, SessionCompactInput, SessionPromptInput } from "@/server-api"
 import type { SessionCommandOutput, SessionCompactOutput, SessionPromptOutput, SessionShellInput, SessionShellOutput } from "@/v2-wire"
+import { inheritSessionModelExecution } from "./session-model-execution"
 
 type RequestOptions = NonNullable<Parameters<ServerApi["session"]["prompt"]>[1]>
 export type CompatibleSessionApi = Omit<
@@ -46,7 +47,7 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
       current: fromLocation,
     },
   }
-  return {
+  const api = {
     ...current,
     session: {
       ...current.session,
@@ -54,4 +55,6 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
         current.session.move({ sessionID: input.sessionID, location: { directory: input.directory ?? "" } }, options),
     },
   } as unknown as CompatibleApi
+  inheritSessionModelExecution(input.current.session, api.session)
+  return api
 }
