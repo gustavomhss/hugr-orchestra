@@ -292,7 +292,11 @@ function uncontrolled(base: string, tracked: string[]) {
       return []
     const top = file.slice(pkg.length).split("/")[0]
     const scripts = Object.values((JSON.parse(readFileSync(path.join(base, `${pkg}package.json`), "utf8")) as { scripts?: Record<string, string> }).scripts ?? {})
-    const covered = scripts.some((script) => /\bbun test\b/.test(script) &&
+    const covered = scripts.some((script) =>
+      (pkg === "packages/app-shell/" && top === "test-browser" &&
+        script === "bun run ../../script/test-browser.ts ./test-browser" &&
+        set.has("script/test-browser.ts") && set.has("packages/core/script/test-browser.ts")) ||
+      /\bbun test\b/.test(script) &&
       /--preload\s+(?:\.\.\/)+script\/test-omni-control\.ts(?:\s|$)/.test(script) && script.split(/\s+/).includes(`./${top}`))
     return covered ? [] : [`${file} calls expectSpawn but ${pkg} does not preload script/test-omni-control.ts for it`]
   })
@@ -334,6 +338,47 @@ test("teeth: a declaring test file in a package without the control fails by nam
   } finally {
     await rm(base, { recursive: true, force: true })
   }
+})
+
+// The actual browser CLI controls qualify this exact runner; this planted-tree check proves wiring only.
+test("teeth: only the audited App browser runner with both tracked files covers declaring tests", async () => {
+  const base = await mkdtemp(path.join(tmpdir(), "omni-browser-wiring-"))
+  try {
+    const script = "bun run ../../script/test-browser.ts ./test-browser"
+    const declares = 'import { expectSpawn } from "x"\ntest("a", () => { expectSpawn(import.meta.path) })\n'
+    const pkg = "packages/app-shell/package.json"
+    const file = "packages/app-shell/test-browser/app.test.ts"
+    const files: Record<string, string> = {
+      [pkg]: JSON.stringify({ scripts: { "test:browser": script } }),
+      [file]: declares,
+      "script/test-browser.ts": readFileSync(path.join(root, "script/test-browser.ts"), "utf8"),
+      "packages/core/script/test-browser.ts": readFileSync(path.join(root, "packages/core/script/test-browser.ts"), "utf8"),
+      "packages/another/package.json": JSON.stringify({ scripts: { "test:browser": script } }),
+      "packages/another/test-browser/other.test.ts": declares,
+      "packages/app-shell/src/app.test.ts": declares,
+    }
+    await Promise.all(Object.entries(files).map(async ([name, body]) => {
+      await mkdir(path.dirname(path.join(base, name)), { recursive: true })
+      await Bun.write(path.join(base, name), body)
+    }))
+    const tracked = Object.keys(files).filter((name) => name !== "packages/another/test-browser/other.test.ts" && name !== "packages/app-shell/src/app.test.ts")
+    const problem = `${file} calls expectSpawn but packages/app-shell/ does not preload script/test-omni-control.ts for it`
+    expect(uncontrolled(base, tracked)).toEqual([])
+    for (const missing of ["script/test-browser.ts", "packages/core/script/test-browser.ts"])
+      expect(uncontrolled(base, tracked.filter((name) => name !== missing))).toEqual([problem])
+    for (const command of ["bun run ../../script/other-browser.ts ./test-browser", `${script} && echo bypass`,
+      "bun run ../../script/test-browser.ts ./src"]) {
+      await Bun.write(path.join(base, pkg), JSON.stringify({ scripts: { "test:browser": command } }))
+      expect(uncontrolled(base, tracked)).toEqual([problem])
+    }
+    await Bun.write(path.join(base, pkg), files[pkg]!)
+    expect(uncontrolled(base, [...tracked, "packages/another/test-browser/other.test.ts"])).toEqual([
+      "packages/another/test-browser/other.test.ts calls expectSpawn but packages/another/ does not preload script/test-omni-control.ts for it",
+    ])
+    expect(uncontrolled(base, [...tracked, "packages/app-shell/src/app.test.ts"])).toEqual([
+      "packages/app-shell/src/app.test.ts calls expectSpawn but packages/app-shell/ does not preload script/test-omni-control.ts for it",
+    ])
+  } finally { await rm(base, { recursive: true, force: true }) }
 })
 
 test("the ledger's files exist", () => {
