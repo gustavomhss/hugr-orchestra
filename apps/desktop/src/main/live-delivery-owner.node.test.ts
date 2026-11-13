@@ -4,6 +4,7 @@ import { join } from "node:path"
 import { test } from "node:test"
 import { DatabaseSync } from "node:sqlite"
 import type { DeliveryExport, LiveDeliveryCompletion, LiveDeliveryProducer } from "./live-delivery-contract.ts"
+import { openLiveOutbox } from "./live-outbox.ts"
 import { bounded, ownerFixture } from "./live-delivery-owner-test.fixture.ts"
 import { envelope, gate, input, json, location, segment, until } from "./live-delivery-manager-test.fixture.ts"
 
@@ -178,6 +179,12 @@ test("owner: quit waits capture final append and seal before closing actual SQLi
   await bounded(Promise.all([shutdown, latePublication]), "quit did not join final callback/publication")
   assert.equal(owner.manager.export(producer.localID).kind, "storage-unavailable")
   assert.equal(owner.canStart(), false)
+  const reopened = openLiveOutbox(f.root)
+  try {
+    assert.deepEqual(reopened.export(producer.localID).segments, [segment(71)])
+    assert.equal(reopened.summary(producer.localID).closeRequested, true)
+    assert.equal(reopened.summary(producer.localID).sealed, true)
+  } finally { reopened.close() }
 })
 
 test("owner: recovery export resolves opaque ID in Main and aborts/joins export on quit", { timeout: 8000 }, async (t) => {
