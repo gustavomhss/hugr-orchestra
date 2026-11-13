@@ -6,7 +6,7 @@ Autorização do owner: delegar simples em quatro partes; planejar complexos ant
 
 A única entrega externa continua sendo a [PR draft1463](https://github.com/gustavomhss/hugr-orchestra/pull/1463), para `dev`. O ledger registra **63/65 encerrados** (62 resolvidos nesta campanha e um controle de correção existente); **2 permanecem abertos**: E10 e M13. Consulte [remediation-status.json](remediation-status.json) para a disposição por ID e [remediation-complex-contracts.md](remediation-complex-contracts.md) para decisões, recusas e limites de prova. Esta é uma execução em andamento, sem aprovação de merge ou suíte épica verde.
 
-As quatro frentes atuais são consumo de modelos App/TUI, isolamento CodeMode, autoridade de schedules e entrega durável desktop. Evidência de setup não é RED de produto; source/typecheck/revisão estática não é runtime GREEN. O CodeMode341 teve seu gate rejeitado por travamento ordinário e somente o nosso run amplo foi cancelado, documentadamente; a reprodução original permanece separada. Contratos de store/outbox, causas e publicação de Memory foram planejados antes de qualquer implementação dependente. A canonical continua preservada.
+As quatro frentes Sol executaram os pacotes simples e agora concluem isolamento CodeMode, captura/Loop, IPC/export e interface/evidências de recuperação. Evidência de setup não é RED de produto; source/typecheck/revisão estática não é runtime GREEN. O CodeMode341 teve seu gate rejeitado por travamento ordinário e somente o nosso run amplo foi cancelado, documentadamente; a reprodução original permanece separada. Contratos de store/outbox, causas e publicação de Memory foram planejados antes de qualquer implementação dependente. A canonical continua preservada.
 
 ## Fluxo e limites
 
@@ -142,3 +142,7 @@ Regressão nova execution-isolation.test.ts usa ferramentas reais descritas por 
 ## Fechamento L4/L5: source, runtime e distribuição
 
 O binder completo e o replay causal estão qualificados: Linux38 casos; Windows34 mais quatro focados, com a mesma produção (não uma execução única Windows38). CAS7 casos/144 assertions por sistema. Atlas isolado43402056638 passou em tipos, 13 guards e Vitest4529 casos; 17 skips e 3 TODO existentes continuam explícitos. A geração oficial43402139621 produziu duas vezes os mesmos18 outputs, com354 inputs e dois locks conferidos independentemente; Root recuperou os bytes exatos do artefato14025502919. A extração coesa de binding resolveu o limite de603 linhas; duas expectativas antigas de mensagem foram alinhadas sem mudar as recusas. O histórico Git completo restaurou a prova de ancestralidade Own no harness isolado. Falhas anteriores não foram apagadas. E10 e M13 continuam abertos, e o epic final ainda não rodou.
+
+## Sincronização final com dev
+
+A base atual é22d326d58f6cbb9fdc46b55620194c5d434a7444, integrada por2117a6d498. Foram53 arquivos upstream; os quatro cruzamentos (.github/workflows/test-ci.yml, bun.lock, server-session.ts e Core package.json) foram combinados automaticamente. A qualificação anterior continua histórica; o lock alterado exige recibos finais de geração, e o novo harness Core entra no epic final. A canonical permanece intocada. Nenhum conflito ou merge de PR está pendente.

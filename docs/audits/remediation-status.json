@@ -3508,8 +3508,8 @@
     "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1463",
     "draft": true
   },
-  "integration_dev": "ca3f2e60937e5a154df8a4505b03605d2da1e729",
-  "integration_sync_commit": "78b8e1a46b",
+  "integration_dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+  "integration_sync_commit": "2117a6d4989492367899fad6f33e723d3343f1a1",
   "recovery": "Server restart: preserved worktrees and hosted runs; final local checkers restarted with durable log and exit receipts when old pipes lost status.",
   "cold_blob_checks": [
     {
@@ -3818,10 +3818,10 @@
     "comparison": "before_current_dev; descriptive measurements in remediation-benchmark.json, no causal speed claim"
   },
   "dev_sync": {
-    "commit": "015d034153",
-    "dev": "7c8b9d4f66899cdff5f335aed8dd99892b21d0aa",
-    "result": "merged without conflicts",
-    "boundary_findings": "Two inherited R5 imports were already corrected by this upstream; owned-serve test import corrected through existing package export."
+    "commit": "2117a6d4989492367899fad6f33e723d3343f1a1",
+    "dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+    "previous_frozen_dev": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b",
+    "result": "Merged53 upstream files; four overlapping files auto-merged. Hidden Client qualification upload, direct CodeMode dependency/export and model-consumer changes retained. Post-sync package types, current generated provenance and final epic remain required."
   },
   "migration_viability": {
     "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
@@ -3964,14 +3964,32 @@
     }
   },
   "dev_sync_pending": {
-    "parent": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
-    "dev": "04026786c46d8e6b3e7a66e75e03d545459d632d",
-    "state": "First142commit sync244299816d committed; next3commit sync in progress. Core/App/Server/Engine/Desktop/Client package typechecks passed on recorded phase trees. Newly combined scoped hosted/generation gates remain pending.",
-    "generated": "One whole previously qualified Atlas surface retained temporarily; official hosted generation required for source union.",
-    "last_seam_gate": {
-      "run": "43365618269",
-      "result": "Both OS64pass/11fail/567assertions,75tests9files. Root independently checked raw/jobs and cleanup success. Epoch deletion contradicted rebase; old exclusive-boundary fixtures and in-transaction removal barriers reconciled after cold review; rerun pending."
-    },
-    "next_frozen_dev": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b"
-  }
+    "state": "Merge complete; final qualification in progress, no source conflict pending.",
+    "dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+    "generation": "Upstream changed bun.lock (toml dependency); refresh official Client and Atlas generation receipts even if bytes stay identical.",
+    "full_epic": "Not dispatched yet; wait for scoped and generation jobs before the one final cold epic run."
+  },
+  "integration_history": [
+    {
+      "integration_dev": "ca3f2e60937e5a154df8a4505b03605d2da1e729",
+      "integration_sync_commit": "78b8e1a46b",
+      "dev_sync": {
+        "commit": "015d034153",
+        "dev": "7c8b9d4f66899cdff5f335aed8dd99892b21d0aa",
+        "result": "merged without conflicts",
+        "boundary_findings": "Two inherited R5 imports were already corrected by this upstream; owned-serve test import corrected through existing package export."
+      },
+      "dev_sync_pending": {
+        "parent": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
+        "dev": "04026786c46d8e6b3e7a66e75e03d545459d632d",
+        "state": "First142commit sync244299816d committed; next3commit sync in progress. Core/App/Server/Engine/Desktop/Client package typechecks passed on recorded phase trees. Newly combined scoped hosted/generation gates remain pending.",
+        "generated": "One whole previously qualified Atlas surface retained temporarily; official hosted generation required for source union.",
+        "last_seam_gate": {
+          "run": "43365618269",
+          "result": "Both OS64pass/11fail/567assertions,75tests9files. Root independently checked raw/jobs and cleanup success. Epoch deletion contradicted rebase; old exclusive-boundary fixtures and in-transaction removal barriers reconciled after cold review; rerun pending."
+        },
+        "next_frozen_dev": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b"
+      }
+    }
+  ]
 }
