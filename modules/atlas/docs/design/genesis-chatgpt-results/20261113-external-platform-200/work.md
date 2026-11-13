@@ -94,3 +94,11 @@ Custódia privada real: referência opaca `libfile_fde3_f-11d3446a1e508191bb7d85
 Os mesmos dois juízes aceitaram A-05, A-06, B-04 e C-05, além das onze unidades já aceitas. O total vigente é 153 fontes distintas aceitas, em quinze corpos L2; 47 fontes permanecem em seis unidades pendentes. Em A-06, a alternativa de completion sem system foi incluída e as fronteiras das comparações/erros foram delimitadas. Em B-04, a direção do replay first-parent foi corrigida para ancestral→descendente. Os deltas foram reavaliados pela mesma dupla e os achados obrigatórios dessas unidades estão encerrados. Cinco observações opcionais permanecem registradas em três unidades, sem ampliar a barra de aceite.
 
 Custódia privada real dos registros disponíveis: `libfile_fde3_f-2a7935e2614c819189ceab2bba744e79_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `4c801a4a2a887424d0bf96d6e3c73a1f868b0a4e83c47287a0baa3a1a10cb716`. Os originais distinguem leitura da autora, conferência mecânica e exame dos juízes, incluindo retransmissões e continuidade literal. O manifesto L1 tem transporte em preparação/revisão; L3–L4 continuam sem liberação. Nenhum teste, ferramenta ou código do produto, CI ou consumidor foi executado.
+
+## Checkpoint: 164 fontes e manifesto L1
+
+A dupla fixa concluiu B-05 sem alteração de corpo; são 16 unidades L2 e 164 fontes primárias aceitas documentalmente. O manifesto L1 também recebeu os dois pareceres, sem acrescentar fontes à contagem. Permanecem B-06, B-07, C-06, C-07 e C-08 antes da liberação da síntese final L3–L4.
+
+B-07 recebeu suporte literal complementar do bloco patchedDependencies de bun.lock, com 19 entradas e sem vínculo para o patch standard-openapi. Um juiz encerrou essa pendência; a unidade ainda aguarda a dupla. Em B-06, o segundo juiz informou indisponibilidade literal das mensagens apesar de retornos de envio sem erro; a retransmissão usa confirmação por parte. Esses estados não foram contados como aprovação.
+
+A observação estática de ownership-input.ts, no baseline, identifica limite de 256.000 bytes para leitura de arquivo. bun.lock tem 489.909 bytes e continua no escopo de 200: seu transporte a esse observador permanece uma lacuna de integração, sem prova de remoção nem tentativa operacional nesta sessão. A fonte de apoio não é entrada adicional da fatia.

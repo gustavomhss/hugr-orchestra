@@ -8,11 +8,11 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 153,
-    "documentary_pair_accepted": 153,
+    "reviewed_by_both": 164,
+    "documentary_pair_accepted": 164,
     "reviewed_with_material_findings": 0,
-    "awaiting_initial_pair_review": 47,
-    "pending_acceptance": 47
+    "awaiting_initial_pair_review": 36,
+    "pending_acceptance": 36
   },
   "accepted_units": [
     {
@@ -296,6 +296,36 @@
       ]
     },
     {
+      "id": "B-05",
+      "body": {
+        "path": "bodies/b-05.md",
+        "sha256": "b64091ecd3f1a90507a46ebb3d6597d6a7f88695ca42ea8b69b3f171cc9b1246",
+        "byte_length": 14622
+      },
+      "source_ids": [
+        "P134",
+        "P139",
+        "P140",
+        "P141",
+        "P142",
+        "P143",
+        "P150",
+        "P151",
+        "P179",
+        "P180",
+        "P197"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [],
+      "optional_open": [
+        "O caso pré-importação usa commit sintético sem pai e sem domínio; a fixture não prova cronologia/ancestralidade.",
+        "A assertion verifica round-trip JSON em memória e baseUrl absoluto; não grava configuração em diretório externo."
+      ]
+    },
+    {
       "id": "C-01",
       "body": {
         "path": "bodies/c-01.md",
@@ -444,7 +474,6 @@
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [
-    "B-05",
     "B-06",
     "B-07",
     "C-06",
@@ -458,10 +487,10 @@
     "No global PASS. Private original judgments are not published here."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-2a7935e2614c819189ceab2bba744e79_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-6ce2d5dd67108191906ca29fdc78d60e_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "4c801a4a2a887424d0bf96d6e3c73a1f868b0a4e83c47287a0baa3a1a10cb716",
-    "scope": "Visible originals and source/artifact records through 15 accepted L2 units (153 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
+    "sha256": "94908b864d0c6d480d682da0c6ab2bd3e1d3591c09f0c992f3a7071b9b908740",
+    "scope": "Visible originals and source/artifact records through 16 accepted L2 units (164 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
   },
   "reviewed_pending_units": [],
   "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes."
