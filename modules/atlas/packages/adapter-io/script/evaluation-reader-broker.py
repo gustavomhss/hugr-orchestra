@@ -30,7 +30,7 @@ def _file_evidence(path):
  data=path.read_bytes()
  return {'present':True,'bytes':len(data),'sha256':sha(data)}
 
-def retain_private_payloads(run,names):
+def retain_private_payloads(run,names,streams=None):
  # Restricted forensic copy is durable and verified BEFORE public names are unlinked.
  private=run/'private-failure-evidence'
  os.mkdir(private,0o700)
@@ -70,6 +70,40 @@ def retain_private_payloads(run,names):
    if (before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)!=(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns):
     fail('private-evidence-source-drift')
    copied.append(name)
+  stream_copies={}
+  for label,stream in (streams or {}).items():
+   if stream is None:
+    stream_copies[label]={'present':False,'bytes':0,'sha256':None,'complete':False}
+    continue
+   source_fd=stream.fileno();before=os.fstat(source_fd);size=before.st_size
+   fd=os.open(label+'.bin',os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)
+   digest=hashlib.sha256();offset=0
+   try:
+    fst=os.fstat(fd)
+    if fst.st_uid!=os.getuid() or fst.st_mode&0o777!=0o600:
+     fail('private-stream-permissions')
+    while offset<size:
+     chunk=os.pread(source_fd,min(65536,size-offset),offset)
+     if not chunk:break
+     view=memoryview(chunk)
+     while view:
+      written=os.write(fd,view)
+      if written<=0:fail('private-stream-short-write')
+      view=view[written:]
+     digest.update(chunk);offset+=len(chunk)
+    os.fsync(fd)
+    os.lseek(fd,0,os.SEEK_SET);check=hashlib.sha256();checked=0
+    while True:
+     chunk=os.read(fd,65536)
+     if not chunk:break
+     check.update(chunk);checked+=len(chunk)
+    if checked!=offset or check.hexdigest()!=digest.hexdigest():
+     fail('private-stream-readback')
+   finally:os.close(fd)
+   after=os.fstat(source_fd)
+   stream_copies[label]={'present':True,'bytes':offset,'sha256':digest.hexdigest(),
+                         'complete':bool(offset==size and after.st_size==size and
+                                          after.st_mtime_ns==before.st_mtime_ns)}
   os.fsync(dfd)
   # Verify every private copy before removing any original public-path payload.
   for name in copied:
@@ -88,7 +122,7 @@ def retain_private_payloads(run,names):
   try:os.fsync(rfd)
   finally:os.close(rfd)
   return {'state':'RETAINED_RESTRICTED','directory':'private-failure-evidence',
-          'files':copied,'directory_mode':'0700','file_mode':'0600'}
+          'files':copied,'streams':stream_copies,'directory_mode':'0700','file_mode':'0600'}
  finally:os.close(dfd)
 
 def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
@@ -104,7 +138,7 @@ def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
  }
  lifecycle={name:(run/name).is_file() for name in ('process-start.json','process-release.json','process-exit.json','process-spawn-stop.json','process-spawn-uncertain.json')}
  try:
-  retention=retain_private_payloads(run,payload_names)
+  retention=retain_private_payloads(run,payload_names,{'stdout-anonymous':out_stream,'stderr-anonymous':err_stream})
  except BaseException:
   # Fail closed: never truncate or unlink the only surviving forensic copy.
   retention={'state':'BLOCKED_NOT_PURGED','directory':None,'files':[],
