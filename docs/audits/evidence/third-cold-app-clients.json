@@ -1,0 +1,115 @@
+{
+  "kind": "selected third-cold App and clients qualification",
+  "run": {
+    "id": 43479893813,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43479893813",
+    "source": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+    "conclusion": "failure",
+    "jobs": {"success": 63,"failure": 7,"cancelled": 0}
+  },
+  "limits": [
+    "Selected job evidence only; neither whole App nor full run qualified.",
+    "Windows browser union is separate from the failed unit lanes.",
+    "CLI package results do not qualify native distribution or installer behavior.",
+    "Nested child summaries are reported separately and are not added to outer Bun counts."
+  ],
+  "appUnit": {
+    "linux": {"job": 132074162214,"pass": 2453,"fail": 1,"skip": 0,"tests": 2454,"files": 282,"assertions": 14630,"browser": "not reached after unit failure"},
+    "windows": {"job": 132074166934,"pass": 2428,"fail": 1,"skip": 1,"tests": 2430,"files": 282,"assertions": 14586}
+  },
+  "appUnitFailure": {
+    "test": "session regression tests are plain browser test files and the lane keeps its conditions",
+    "path": "packages/app-shell/src/context/session-regression-lanes.test.ts:11",
+    "expected": "manifest test:browser contains --conditions=browser",
+    "actual": "bun run ../../script/test-browser.ts ./test-browser",
+    "classification": "static wrapper wiring expectation; same failure on both OS"
+  },
+  "windowsBrowserBins": [
+    {
+      "bin": 1,
+      "job": 132074168054,
+      "pass": 222,
+      "fail": 0,
+      "files": 33,
+      "assertions": 1298,
+      "omni": {"outerVerdict": "pass","childSpawns": 1,"delegated": 0},
+      "nestedChildren": [{"pass": 5,"fail": 0,"assertions": 59},{"pass": 1,"fail": 0,"assertions": 11},{"pass": 1,"fail": 0,"assertions": 21},{"pass": 1,"fail": 0,"assertions": 58}]
+    },
+    {"bin": 2,"job": 132074168179,"pass": 152,"fail": 0,"files": 33,"assertions": 11413,"omni": {"outerVerdict": "pass","childSpawns": 3,"delegated": 0},"nestedChildren": []},
+    {
+      "bin": 3,
+      "job": 132074168376,
+      "pass": 282,
+      "fail": 0,
+      "files": 33,
+      "assertions": 2095,
+      "omni": {"outerVerdict": "pass","childSpawns": 5,"delegated": 0},
+      "nestedChildren": [{"pass": 5,"fail": 0,"assertions": 27},{"pass": 5,"fail": 0,"assertions": 65},{"pass": 7,"fail": 0,"assertions": 63}]
+    }
+  ],
+  "windowsBrowserUnion": {
+    "pass": 656,
+    "fail": 0,
+    "files": 99,
+    "expectedTrackedTestFilesAtSource": 99,
+    "duplicates": 0,
+    "missing": [],
+    "extra": [],
+    "selectedSortedPathsSHA256": "3e1f9751f41fb197c8502e6bd24bf66cf9f31c4e1fdb5eeee1d279ccb991abd0",
+    "proofSHA256": "2e2aedc350691efa52910abbd2e885184dc49ac041068273348784b25ed74de5",
+    "anchors": ["test-browser/lean-chapter-route.test.ts","test-browser/model-execution-consumer.test.tsx","test-browser/prompt-retry.test.ts"],
+    "method": "Exact selected path lines from three raw jobs compared with git ls-tree source test-browser/*.test.ts[x]; all anchor paths selected."
+  },
+  "linuxShared": {
+    "job": 132074162430,
+    "conclusion": "success",
+    "client": {"pass": 108,"fail": 0,"files": 12,"assertions": 523},
+    "tui": {"pass": 331,"fail": 0,"files": 61,"snapshots": 8,"assertions": 3658},
+    "sessionUI": {"pass": 112,"fail": 0,"files": 17,"assertions": 253},
+    "sdkNext": {"main": {"pass": 33,"skip": 1,"fail": 0,"files": 8,"assertions": 332},"generatedChild": {"pass": 4,"fail": 0,"files": 1,"assertions": 492},"omniSpawns": 1,"delegated": 0},
+    "server": {"pass": 205,"fail": 0,"files": 46,"assertions": 2717,"nestedChildPassCounts": [2,1,1,4,2],"omniSpawns": 1125,"delegated": 0},
+    "cli": {"pass": 333,"skip": 2,"fail": 0,"files": 52,"assertions": 9516,"omniSpawns": 2,"delegated": 0}
+  },
+  "windowsShared": {
+    "clientsJob": 132074168438,
+    "client": {"pass": 108,"fail": 0,"files": 12,"assertions": 523},
+    "tui": {"pass": 331,"fail": 0,"files": 61,"snapshots": 8,"assertions": 14467},
+    "sessionUI": {"pass": 112,"fail": 0,"files": 17,"assertions": 253},
+    "sdkNext": {
+      "main": {"pass": 32,"skip": 2,"fail": 0,"files": 8,"assertions": 327},
+      "generatedChild": {"pass": 4,"fail": 0,"files": 1,"assertions": 492},
+      "omniSpawns": 18,
+      "delegated": 0
+    },
+    "server": {"job": 132074168225,"pass": 205,"fail": 0,"files": 46,"assertions": 2718,"nestedChildPassCounts": [1,2,1,2,4],"omniSpawns": 1291,"delegated": 0},
+    "cli": {"job": 132074168245,"pass": 287,"skip": 52,"fail": 0,"files": 51,"assertions": 2540,"omniSpawns": 12,"delegated": 0}
+  },
+  "skipContexts": {
+    "linuxSDK": ["alternate-case B pre-SQLite, platform condition"],
+    "windowsSDK": ["dangling symlink targets","symlink loops"],
+    "linuxCLI": ["Windows raw drive-relative/device/stream paths","case-alias overlap requires deterministic case-insensitive volume"],
+    "windowsCLI": "52 original platform/environment skips including POSIX installer unavailable, POSIX password-file permissions, and case-alias prerequisites; skips are not passed native-distribution proof."
+  },
+  "laterStaticWiringGate": {
+    "run": 43485311529,
+    "source": "00e6edd93981564a6e03a1ac603963a7c9f781c6",
+    "conclusion": "success",
+    "selection": "packages/app-shell/src/context/session-regression-lanes.test.ts",
+    "linux": {"job": 132092078561,"pass": 1,"fail": 0,"assertions": 9},
+    "windows": {"job": 132092079045,"pass": 1,"fail": 0,"assertions": 9},
+    "limits": "Only corrected static lane wiring; does not retroactively make third-cold App aggregate green."
+  },
+  "rawEvidenceSHA256": {
+    "root-third-ui-app-linux.log": "025754d6c49c7c8dc0409286f9c202507e8547a5828cb2458238798a74a121f2",
+    "root-third-ui-app-windows-unit.log": "1d41876dff32e6b7ef54a951a2fa78601946c3b2f1869087dd6e0f371f300f1c",
+    "root-third-ui-windows-app-browser1.log": "e81b58ec1d545898300f48bbc603fefaaf4ce967629670de10beb3b7a2a5fa06",
+    "root-third-ui-windows-app-browser2.log": "a8f2c6a87f0b9f633de5779b629429cee5f7b4f2d02ca0bef51eaf45b9116ba2",
+    "root-third-ui-windows-app-browser3.log": "ce811cc99cc02e217ff940f1d6b4d65c8a1deb66d0b3ac47af3271e49426759f",
+    "root-third-ui-windows-clients.log": "af0e119a0ef4e9f839a306aa4988e4208b1c20e3214559e27dfd58ff4321c5f3",
+    "root-third-ui-windows-server.log": "96a4b42a578635eab4988e1e76c26a8ad47f3e1074cd6d7bf628654eafbcdd5e",
+    "root-third-ui-windows-cli.log": "8295740d8a0d6c688f0d2d88e83a7769ded3743baf9d586607e280c2b117d13c",
+    "root-third-ui-linux-shared.log": "469a51f5f5780ba6deaf59bf197201258d7905fadb14d2a50cace2ced1453599",
+    "root-third-ui-wiring-linux.log": "a5405ff340319a337e1756e757662d47e1d8d838a7f0b79790fa2767616b3917",
+    "root-third-ui-wiring-windows.log": "a40cc96b4aa4802135c03571a40e2e0e5cd1e69e963403545e49f99e9f82b8eb"
+  }
+}
