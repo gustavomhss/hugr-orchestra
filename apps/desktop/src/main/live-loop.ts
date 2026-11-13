@@ -5,6 +5,7 @@ import type { LiveRunState, LiveSource } from "@orchestra/app/live"
 import { isNoAnswer, LIVE_PROMPTS, NO_ANSWER, parseAnswer, parseStopSummary, worthSuggesting } from "./live-answer"
 import { readTranscriptionKey } from "./live-key"
 import { renameMeeting, type MeetingServer } from "./live-meeting-client"
+import type { LiveDeliveryOwner } from "./live-delivery-owner-contract"
 import type { LiveOverlay } from "./live-overlay"
 import type { LiveOverlayError, LiveOverlaySource, LiveOverlayView } from "./live-overlay-state"
 import { PANES, sourcePermissions, systemAudioAvailable } from "./live-readiness"
@@ -39,6 +40,14 @@ type Meeting = {
   log: ReturnType<typeof transportLog>
   abort: AbortController
   meetingID?: string
+  localID?: string
+  localClosed: boolean
+  completed: boolean
+  summarySent: boolean
+  suppressSummary: boolean
+  stopping?: Promise<void>
+  closing?: Promise<void>
+  tasks: Set<Promise<unknown>>
   sources: Record<LiveSource, boolean>
   title: string
   startedAt: number
@@ -52,7 +61,8 @@ export type LiveLoop = ReturnType<typeof registerLiveLoop>
 
 export function registerLiveLoop(options: {
   overlay: LiveOverlay
-  server: () => Promise<MeetingServer>
+  delivery: Pick<LiveDeliveryOwner, "manager" | "canStart" | "connection" | "onComplete">
+  server: (signal?: AbortSignal) => Promise<MeetingServer>
   logDirectory: string
   openSettings: () => void
   runtime?: {
@@ -63,7 +73,15 @@ export function registerLiveLoop(options: {
   }
 }) {
   const overlay = options.overlay
-  const state = { meeting: undefined as Meeting | undefined, starting: undefined as AbortController | undefined }
+  const state = {
+    meeting: undefined as Meeting | undefined,
+    starting: undefined as AbortController | undefined,
+    startup: undefined as Promise<{ ok: boolean }> | undefined,
+    startupStop: undefined as Promise<void> | undefined,
+    barrier: undefined as Promise<void> | undefined,
+    quitting: false,
+  }
+  const renames = new Set<{ abort: AbortController; done: Promise<void> }>()
   const settings = options.runtime?.settings ?? liveSettings()
   const runListeners = new Set<(state: LiveRunState) => void>()
   const levelListeners = new Set<(levels: Record<LiveSource, number>) => void>()
@@ -75,11 +93,41 @@ export function registerLiveLoop(options: {
   }
   const emitRunState = () => runListeners.forEach((listener) => listener(runState()))
 
+  const own = <A>(meeting: Meeting, task: Promise<A>) => {
+    const owned: Promise<A> = task.finally(() => meeting.tasks.delete(owned))
+    meeting.tasks.add(owned)
+    return owned
+  }
+  const join = async (meeting: Meeting) => {
+    while (meeting.tasks.size) await Promise.allSettled([...meeting.tasks])
+  }
+  const joinRenames = async () => {
+    while (renames.size) await Promise.allSettled([...renames].map((rename) => rename.done))
+  }
+  const suppress = (meeting: Meeting) => {
+    meeting.suppressSummary = true
+    meeting.abort.abort()
+  }
+  const maybeSummary = (meeting: Meeting) => {
+    if (state.meeting !== meeting || !meeting.localClosed || !meeting.completed || meeting.summarySent || meeting.suppressSummary || meeting.abort.signal.aborted) return
+    meeting.summarySent = true
+    meeting.request = undefined
+    void send(meeting, { kind: "stop", source: "memory" }, { text: LIVE_PROMPTS.stop })
+  }
+  const unsubscribe = options.delivery.onComplete((completion) => {
+    const meeting = state.meeting
+    if (!meeting || meeting.suppressSummary || meeting.abort.signal.aborted || meeting.localID !== completion.localID || meeting.sessionID !== completion.sessionID || meeting.meetingID !== completion.meetingID) return
+    meeting.completed = true
+    maybeSummary(meeting)
+  })
+
   const send = async (meeting: Meeting, request: Omit<Request, "sentAt" | "text">, prompt: LivePrompt, queue = false) => {
-    if (meeting.request && request.kind !== "notice") return
-    meeting.request = { ...request, sentAt: Date.now(), text: "" }
+    if (meeting.abort.signal.aborted || state.meeting !== meeting || (meeting.request && request.kind !== "notice")) return
+    const pending = { ...request, sentAt: Date.now(), text: "" }
+    meeting.request = pending
     if (overlay.state().error?.kind === "answer") overlay.setError(undefined)
-    await meeting.client.prompt(meeting.sessionID, prompt, queue ? "queue" : "steer").catch((error) => {
+    await own(meeting, meeting.client.prompt(meeting.sessionID, prompt, queue ? "queue" : "steer")).catch((error) => {
+      if (meeting.abort.signal.aborted || state.meeting !== meeting || meeting.request !== pending) return
       meeting.log.write({ event: "prompt-failed", kind: request.kind, reason: String(error) })
       meeting.request = undefined
       // A transport, permission or hotkey note already explains more; the answer note never covers one.
@@ -184,12 +232,14 @@ export function registerLiveLoop(options: {
 
   const capture = async (meeting: Meeting, question?: string) => {
     // The overlay controller keeps its window private; the overlay is the only window loading the live page.
-    const frame = await meeting.senses
-      ?.look(BrowserWindow.getAllWindows().filter((win) => win.webContents.getURL().includes("/live/")))
+    const senses = meeting.senses
+    if (!senses || meeting.abort.signal.aborted || state.meeting !== meeting) return
+    const frame = await own(meeting, senses.look(BrowserWindow.getAllWindows().filter((win) => win.webContents.getURL().includes("/live/"))))
       .catch((error) => {
         meeting.log.write({ event: "look-failed", reason: String(error) })
         return undefined
       })
+    if (meeting.abort.signal.aborted || state.meeting !== meeting) return
     if (!frame) return
     return {
       text: question ? `${LIVE_PROMPTS.look}\n${question}` : LIVE_PROMPTS.look,
@@ -213,7 +263,7 @@ export function registerLiveLoop(options: {
     const prompt = await capture(meeting, question)
     const admitted =
       prompt &&
-      (await meeting.client.prompt(meeting.sessionID, prompt, "steer").then(
+      (await own(meeting, meeting.client.prompt(meeting.sessionID, prompt, "steer")).then(
         () => true,
         (error) => {
           meeting.log.write({ event: "prompt-failed", kind: request.kind, reason: String(error) })
@@ -221,28 +271,70 @@ export function registerLiveLoop(options: {
         },
       ))
     // Admitted frames clear the look when they reach the history, which may already have happened.
-    if (meeting.request !== request || !request.look || admitted) return
+    if (meeting.abort.signal.aborted || state.meeting !== meeting || meeting.request !== request || !request.look || admitted) return
     const idled = request.look.idled
     request.look = undefined
     if (idled) settle(meeting)
   }
 
-  const stop = async (meeting: Meeting) => {
-    overlay.stop()
-    overlay.setView({ kind: "stop-pending", title: meeting.title, durationMs: Date.now() - meeting.startedAt })
-    const result = await meeting.senses?.stop().catch((error) => {
-      meeting.log.write({ event: "senses-stop-failed", reason: String(error) })
-      return undefined
+  const stopMeeting = (meeting: Meeting, reason: "user" | "rotation" | "quit") => {
+    // Suppression is synchronous and precedes memo lookup: rotation may arrive during an existing user stop.
+    if (reason !== "user") suppress(meeting)
+    meeting.stopping ??= Promise.resolve().then(async () => {
+      overlay.stop()
+      overlay.setView({ kind: "stop-pending", title: meeting.title, durationMs: Date.now() - meeting.startedAt })
+      const result = await meeting.senses?.stop().catch((error) => {
+        meeting.log.write({ event: "senses-stop-failed", reason: String(error) })
+        return undefined
+      })
+      meeting.log.write({ event: "stopped", unsent: result?.unsent })
+      meeting.localClosed = result !== undefined
+      meeting.senses = undefined
+      meeting.request = undefined
+      emitRunState()
+      maybeSummary(meeting)
     })
-    meeting.log.write({ event: "stopped", unsent: result?.unsent })
-    meeting.senses = undefined
-    emitRunState()
-    // The stop summary outranks whatever was still being answered.
-    meeting.request = undefined
-    await send(meeting, { kind: "stop", source: "memory" }, { text: LIVE_PROMPTS.stop })
+    if (reason === "user") return meeting.stopping
+    meeting.closing ??= Promise.resolve().then(async () => {
+      await meeting.stopping
+      await join(meeting)
+      await joinRenames()
+    })
+    return meeting.closing
+  }
+
+  const stop = (reason: "user" | "rotation" | "quit" = "user") => {
+    if (reason !== "user") {
+      if (reason === "quit") state.quitting = true
+      renames.forEach((rename) => rename.abort.abort())
+      if (state.meeting) suppress(state.meeting)
+    }
+    const closing = (() => {
+      if (state.starting) {
+        state.starting.abort()
+        overlay.stop()
+        const startup = state.startup
+        const meeting = state.meeting
+        state.startupStop ??= Promise.resolve().then(async () => {
+          await startup
+          if (meeting) await join(meeting)
+          await joinRenames()
+        })
+        return state.startupStop
+      }
+      if (state.meeting) return stopMeeting(state.meeting, reason)
+      return joinRenames()
+    })()
+    if (reason === "user") return closing
+    const barrier: Promise<void> = closing.finally(() => {
+      if (state.barrier === barrier) state.barrier = undefined
+    })
+    state.barrier = barrier
+    return barrier
   }
 
   const handle = (meeting: Meeting, action: Parameters<Parameters<LiveOverlay["onAction"]>[0]>[0]) => {
+    if (meeting.abort.signal.aborted || state.meeting !== meeting) return
     const running = meeting.senses !== undefined
     if (action.kind === "ask" && running) {
       const question = action.question?.trim() || undefined
@@ -270,7 +362,7 @@ export function registerLiveLoop(options: {
       if (meeting.captions) return showCaptions(meeting)
       return overlay.setView(overlay.state().answers.length ? { kind: "answer" } : { kind: "idle" })
     }
-    if (action.kind === "stop" && running) return stop(meeting)
+    if (action.kind === "stop" && running) return stop()
     if (action.kind === "send-open-items") {
       const view = overlay.state().view
       if (view.kind === "stop-ready") overlay.setView({ ...view, openItems: [] } satisfies LiveOverlayView)
@@ -284,8 +376,7 @@ export function registerLiveLoop(options: {
 
   overlay.onAction((action) => {
     if (action.kind === "stop" && state.starting) {
-      state.starting.abort()
-      overlay.stop()
+      void stop()
       return
     }
     const meeting = state.meeting
@@ -308,18 +399,28 @@ export function registerLiveLoop(options: {
       const meeting = state.meeting
       if (meeting?.senses) void handle(meeting, { kind: "toggle-captions" })
     },
-    async rename(meetingID: string, title: string) {
+    rename(meetingID: string, title: string) {
       const next = title.trim()
-      if (!next) return
-      const saved = await renameMeeting(await options.server(), meetingID, next).catch((error) => {
-        transportLog(options.logDirectory, meetingID).write({ event: "rename-failed", reason: String(error) })
-        throw error
-      })
-      if (state.meeting?.meetingID !== meetingID) return
-      state.meeting.title = saved
-      emitRunState()
+      if (state.quitting || state.barrier || state.starting || !options.delivery.canStart()) return Promise.reject(new Error("Live delivery is unavailable"))
+      if (!next) return Promise.resolve()
+      const abort = new AbortController()
+      const done: Promise<void> = Promise.resolve().then(async () => {
+        const server = await options.server(abort.signal)
+        abort.signal.throwIfAborted()
+        const saved = await renameMeeting(server, meetingID, next, abort.signal).catch((error) => {
+          transportLog(options.logDirectory, meetingID).write({ event: "rename-failed", reason: String(error) })
+          throw error
+        })
+        if (abort.signal.aborted || state.meeting?.meetingID !== meetingID) return
+        state.meeting.title = saved
+        emitRunState()
+      }).finally(() => renames.delete(owned))
+      const owned = { abort, done }
+      renames.add(owned)
+      return done
     },
     async start(title?: string) {
+      if (state.quitting || state.barrier || !options.delivery.canStart()) return { ok: false as const, reason: "server" as const }
       if (state.starting || state.meeting?.senses) return { ok: false as const, reason: "running" as const }
       if (!(options.runtime?.readKey ?? readTranscriptionKey)()) return { ok: false as const, reason: "no-key" as const }
       const wanted = settings.get()
@@ -337,27 +438,35 @@ export function registerLiveLoop(options: {
       if (!sources.microphone && !sources["system-audio"]) return { ok: false as const, reason: "capture" as const }
       const attempt = new AbortController()
       state.starting = attempt
-      // The previous meeting's stream stays open until the next start, so its summary and open items can still land.
-      state.meeting?.abort.abort()
+      state.startupStop = undefined
+      const previous = state.meeting
+      if (previous) suppress(previous)
+      renames.forEach((rename) => rename.abort.abort())
       state.meeting = undefined
-      const result = await begin(title?.trim() || defaultTitle(), sources, wanted, attempt).finally(() => {
+      const startup = Promise.resolve().then(async () => {
+        if (previous) await stopMeeting(previous, "rotation")
+        await joinRenames()
+        if (attempt.signal.aborted || !options.delivery.canStart()) return { ok: false as const, reason: "server" as const }
+        return begin(title?.trim() || defaultTitle(), sources, wanted, attempt)
+      }).catch(async (error) => {
+        const meeting = state.meeting
+        if (meeting?.abort === attempt) {
+          await stopMeeting(meeting, "rotation")
+          if (state.meeting === meeting) state.meeting = undefined
+        }
+        transportLog(options.logDirectory, "session").write({ event: "session-failed", reason: String(error) })
+        return { ok: false as const, reason: "server" as const }
+      }).finally(() => {
         if (state.starting === attempt) state.starting = undefined
+        if (state.startup === startup) state.startup = undefined
       })
-      return result
+      state.startup = startup
+      return startup
     },
-    async stop() {
-      if (state.starting) {
-        state.starting.abort()
-        overlay.stop()
-        return
-      }
-      const meeting = state.meeting
-      if (meeting?.senses) await stop(meeting)
-    },
+    stop,
     destroy() {
-      state.starting?.abort()
-      state.meeting?.abort.abort()
-      void state.meeting?.senses?.stop()
+      unsubscribe()
+      void stop("quit").catch(() => undefined)
     },
   }
 
@@ -367,14 +476,14 @@ export function registerLiveLoop(options: {
     wanted: ReturnType<typeof settings.get>,
     attempt: AbortController,
   ) {
-    const server = await options.server()
-    if (attempt.signal.aborted) return { ok: false as const, reason: "capture" as const }
-    const client = sessionClient(server)
+    const server = await options.server(attempt.signal)
+    if (attempt.signal.aborted || !options.delivery.canStart()) return { ok: false as const, reason: "capture" as const }
+    const client = sessionClient(server, attempt.signal)
     const sessionID = await client.create(modelRef(wanted.answerModel)).catch((error) => {
       transportLog(options.logDirectory, "session").write({ event: "session-failed", reason: String(error) })
       return undefined
     })
-    if (attempt.signal.aborted) return { ok: false as const, reason: "capture" as const }
+    if (attempt.signal.aborted || !options.delivery.canStart()) return { ok: false as const, reason: "capture" as const }
     if (!sessionID) return { ok: false as const, reason: "server" as const }
     const meeting: Meeting = {
       sessionID,
@@ -386,15 +495,17 @@ export function registerLiveLoop(options: {
       startedAt: Date.now(),
       captions: false,
       lines: [],
+      localClosed: false, completed: false, summarySent: false, suppressSummary: false, tasks: new Set(),
     }
     state.meeting = meeting
-    void client.follow(sessionID, (event) => onSession(meeting, event), meeting.abort.signal)
+    void own(meeting, client.follow(sessionID, (event) => onSession(meeting, event), meeting.abort.signal)).catch(() => undefined)
     // The indicator shows before capture starts, so the permission notes the senses raise while starting are seen.
     overlay.start(meeting.startedAt, wanted.suggestions)
     if (wanted.sources["system-audio"] && !sources["system-audio"])
       meeting.log.write({ event: "sources", microphone: sources.microphone, systemAudio: false })
     const senses = await (options.runtime?.senses ?? startSenses)({
       signal: attempt.signal,
+      delivery: options.delivery.manager,
       server,
       sessionID,
       title,
@@ -409,15 +520,19 @@ export function registerLiveLoop(options: {
       meeting.log.write({ event: "senses-failed", reason: String(error) })
       return undefined
     })
-    if (attempt.signal.aborted && senses) await senses.stop()
+    if (attempt.signal.aborted && senses) await senses.stop().catch((error) => {
+      meeting.log.write({ event: "senses-stop-failed", reason: String(error) })
+    })
     if (!senses || attempt.signal.aborted) {
       overlay.stop()
       meeting.abort.abort()
-      state.meeting = undefined
+      await join(meeting)
+      if (state.meeting === meeting) state.meeting = undefined
       return { ok: false as const, reason: "capture" as const }
     }
     meeting.senses = senses
     meeting.meetingID = senses.meetingID
+    meeting.localID = senses.localID
     // Subscribers can synchronously Stop from this notification: it must now take the running cleanup path.
     if (state.starting === attempt) state.starting = undefined
     emitRunState()

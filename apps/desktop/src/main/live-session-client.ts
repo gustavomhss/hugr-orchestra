@@ -1,6 +1,8 @@
 import { Option, Schema } from "effect"
 
+import { setTimeout } from "node:timers/promises"
 import { liveRequest, type MeetingServer } from "./live-meeting-client"
+import { liveSessionHeaders, liveSessionRequest } from "./live-session-request"
 
 // The live seat's session from main: create it, admit prompts, and follow its answer stream. Text deltas and status
 // are live-only, so they come from the server-wide event stream (`/api/event`), filtered to this session; the
@@ -21,46 +23,53 @@ export type LivePrompt = { text: string; files?: { uri: string; name?: string }[
 
 const RECONNECT_MS = 1000
 
-export function sessionClient(server: MeetingServer) {
+export function sessionClient(server: MeetingServer, owner?: AbortSignal) {
   const request = liveRequest(server)
   return {
     async create(model?: { providerID: string; id: string }) {
-      const body: { data: { id: string } } = await (await request.post("/api/session", { agent: "live", model })).json()
-      return body.data.id
+      return liveSessionRequest(request, "/api/session", {
+        method: "POST", body: JSON.stringify({ agent: "live", model }),
+      }, owner, async (response) => {
+        const body: { data: { id: string } } = await response.json()
+        return body.data.id
+      })
     },
     async prompt(sessionID: string, prompt: LivePrompt, delivery: "steer" | "queue") {
-      await request.post(`/api/session/${sessionID}/prompt`, { prompt, delivery })
+      await liveSessionRequest(request, `/api/session/${sessionID}/prompt`, {
+        method: "POST", body: JSON.stringify({ prompt, delivery }),
+      }, owner, async (response) => { await response.arrayBuffer() })
     },
-    // Follows the stream until `signal` aborts, reconnecting after a drop. Events of other sessions are skipped.
-    async follow(sessionID: string, onEvent: (event: LiveSessionEvent) => void, signal: AbortSignal) {
+    async follow(sessionID: string, onEvent: (event: LiveSessionEvent) => void, follow: AbortSignal) {
+      const signal = owner ? AbortSignal.any([owner, follow]) : follow
       while (!signal.aborted) {
         await read(request, sessionID, onEvent, signal).catch(() => undefined)
-        if (!signal.aborted) await new Promise((resolve) => setTimeout(resolve, RECONNECT_MS))
+        if (!signal.aborted) await setTimeout(RECONNECT_MS, undefined, { signal }).catch(() => undefined)
       }
     },
   }
 }
 
-async function read(
-  request: ReturnType<typeof liveRequest>,
-  sessionID: string,
-  onEvent: (event: LiveSessionEvent) => void,
-  signal: AbortSignal,
-) {
-  const response = await fetch(request.endpoint("/api/event"), {
-    headers: { authorization: request.headers.get("authorization") ?? "", accept: "text/event-stream" },
-    signal,
-  })
-  if (!response.ok || !response.body) throw new Error(`/api/event answered ${response.status}`)
+async function read(request: ReturnType<typeof liveRequest>, sessionID: string, onEvent: (event: LiveSessionEvent) => void, signal: AbortSignal) {
+  const response = await liveSessionHeaders(request, "/api/event", signal)
+  if (!response.body) throw new Error("/api/event answered without a body")
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
   const buffer = { text: "" }
-  for await (const chunk of response.body.pipeThrough(new TextDecoderStream())) {
-    buffer.text += chunk
-    const frames = buffer.text.split("\n\n")
-    buffer.text = frames.pop() ?? ""
-    frames.forEach((frame) => {
-      const event = parseFrame(frame, sessionID)
-      if (event) onEvent(event)
-    })
+  try {
+    while (!signal.aborted) {
+      const chunk = await reader.read()
+      if (chunk.done) return
+      buffer.text += chunk.value
+      const frames = buffer.text.split("\n\n")
+      buffer.text = frames.pop() ?? ""
+      frames.forEach((frame) => {
+        if (signal.aborted) return
+        const event = parseFrame(frame, sessionID)
+        if (event) onEvent(event)
+      })
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined)
+    reader.releaseLock()
   }
 }
 
