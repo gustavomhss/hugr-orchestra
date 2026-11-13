@@ -2,7 +2,10 @@
 Only explicit reviewed recovery may remove a sticky lock/STOP after uncertainty.
 """
 from pathlib import Path
-import sys,json,os,hashlib,subprocess,datetime,signal,re
+import sys,json,os,hashlib,subprocess,datetime,signal,re,importlib.util
+_lifecycle_path=Path(__file__).with_name("evaluation-reader-lifecycle.py")
+_spec=importlib.util.spec_from_file_location("evaluation_reader_lifecycle",_lifecycle_path)
+_lifecycle=importlib.util.module_from_spec(_spec);_spec.loader.exec_module(_lifecycle)
 # Operator supplies immutable configuration; consumer-facing launcher fixes this path.
 SETTINGS_PATH=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path('/nonexistent-config')
 SETTINGS=None
@@ -36,6 +39,7 @@ def configure():
  for key in ['root','policy_directory','cases_file','authorization_file','logs','cwd']:
   if not Path(SETTINGS[key]).is_absolute():fail('configuration-relative-path')
  ROOT=Path(SETTINGS['root']);PLAN=Path(SETTINGS['policy_directory']);CASEFILE=Path(SETTINGS['cases_file']);AUTH=Path(SETTINGS['authorization_file']);LOGS=Path(SETTINGS['logs'])
+ if SETTINGS['driver_files'].get('lifecycle')!=str(_lifecycle_path.resolve()):fail('lifecycle-driver-not-pinned')
  if not isinstance(SETTINGS['reader_argv'],list) or not SETTINGS['reader_argv'] or not all(isinstance(x,str) for x in SETTINGS['reader_argv']):fail('configuration-command')
  if not 0<SETTINGS['timeout_seconds']<=120:fail('configuration-timeout')
 
@@ -119,15 +123,19 @@ def history(case_logs,c,cfg,live):
  previous_hash=None;previous_after={'path':live['path'],'exists':False,'sha256':None,'value':None}
  for number,d in enumerate(entries,1):
   if d.name!=f'{number:04d}':fail('history-sequence')
-  if {p.name for p in d.iterdir()}!={'attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json','receipt.json','receipt.sha256','consumer-ack.json'}:fail('history-incomplete-or-extra')
+  if {p.name for p in d.iterdir()}!={'attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json','receipt.json','receipt.sha256','consumer-ack.json','process-start.json','process-release.json','process-exit.json'}:fail('history-incomplete-or-extra')
   rb=filebytes(d/'receipt.json');receipt=json.loads(rb)
   if filebytes(d/'receipt.sha256').decode().strip()!=sha(rb):fail('receipt-hash')
   if receipt['identity']!=identity(c,cfg) or receipt['sequence']!=number or receipt['previous_receipt_sha256']!=previous_hash:fail('history-identity-chain')
   if receipt['conclusion']!='CAPTURE_COMMITTED' or not receipt['governed_result_validated_and_charged'] or receipt['exit_code']!=0 or not receipt['process_exit_confirmed']:fail('history-not-confirmed')
   for name,expected in receipt['capture_files'].items():
-   if name not in ['attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json'] or sha(filebytes(d/name))!=expected:fail('capture-integrity')
-  if set(receipt['capture_files'])!={'attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json'}:fail('capture-coverage')
+   if name not in ['attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json','process-start.json','process-release.json','process-exit.json'] or sha(filebytes(d/name))!=expected:fail('capture-integrity')
+  if set(receipt['capture_files'])!={'attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json','process-start.json','process-release.json','process-exit.json'}:fail('capture-coverage')
+  start=read(d/'process-start.json');release=read(d/'process-release.json');ended=read(d/'process-exit.json')
+  if start['identity']!=release['identity'] or ended.get('anchor')!=start['identity'] or ended.get('group_absent') is not True or ended.get('kernel_probe')!='killpg-zero-ESRCH' or ended.get('members')!=[]:fail('history-process-lifecycle')
+  if receipt.get('process_identity')!=start['identity']:fail('history-process-identity')
   attempt=read(d/'attempt.json')
+  if start['native_argv']!=attempt['argv'] or release['native_argv']!=attempt['argv'] or release.get('attempt_registered') is not True or release.get('release_intent') is not True:fail('history-native-release')
   if attempt['identity']!=identity(c,cfg) or attempt['sequence']!=number or attempt['ledger_before']!=previous_after:fail('attempt-chain')
   if receipt['ledger_before']!=previous_after:fail('ledger-history-gap')
   validate_request(attempt['request'],c)
@@ -162,19 +170,19 @@ def main():
  if len(sys.argv)!=4:fail('usage CONFIG CASE_ID ONE_JSON_REQUEST')
  configure()
  case_id=sys.argv[2];req=json.loads(sys.argv[3]);a,c,cfg,authhash=authorization(case_id);validate_request(req,c)
- LOGS.mkdir(parents=True,exist_ok=True);lock=LOGS/'active.lock';lock.mkdir() # sticky if any uncertainty
- safe_release=False;run=None;proc=None
- signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGHUP,interrupted)
+ _lifecycle.durable_directory(LOGS);lock=LOGS/'active.lock';_lifecycle.durable_directory(lock,exclusive=True) # sticky if any uncertainty
+ safe_release=False;run=None;proc=None;anchor=None
+ signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGHUP,interrupted);signal.signal(signal.SIGINT,interrupted)
  try:
   # Authorization MUST be reread after acquiring the global lock.
   a,c,cfg,lockedhash=authorization(case_id)
   if lockedhash!=authhash:fail('authorization-changed-before-lock')
   validate_request(req,c);policycheck(c,cfg)
-  case_logs=LOGS/case_id;case_logs.mkdir(exist_ok=True)
+  case_logs=LOGS/case_id;_lifecycle.durable_directory(case_logs)
   if case_logs.is_symlink():fail('case-history-alias')
   live=ledger(c,cfg,a['ledger_name']);seq,prevhash=history(case_logs,c,cfg,live)
   precheck_budget(req,c,live,a)
-  run=case_logs/f'{seq+1:04d}';run.mkdir(exist_ok=False)
+  run=case_logs/f'{seq+1:04d}';_lifecycle.durable_directory(run,exclusive=True)
   before=snapshot();write(run/'before.json',before)
   envelope={'request':req,'candidate':cfg['candidate_id'],'generation':cfg['generation'],'consumer':case_id,'mode':c['mode'],'ledgerName':a['ledger_name'],'root':str(ROOT),'actor':cfg['actor'],'scope':cfg['scope'],'runtime':SETTINGS['runtime']}
   argv=SETTINGS['reader_argv']+[json.dumps(envelope,separators=(',',':'))]
@@ -184,13 +192,12 @@ def main():
   if authorization(case_id)[3]!=authhash:fail('authorization-drift-before-spawn')
   policycheck(c,cfg)
   with (run/'stdout.json').open('xb') as out,(run/'stderr.txt').open('xb') as err:
-   proc=subprocess.Popen(argv,cwd=cwd,env=env,stdout=out,stderr=err,start_new_session=True)
+   proc,anchor=_lifecycle.gated_spawn(argv,cwd,env,out,err,run,SETTINGS['timeout_seconds'])
    # On timeout/interruption the BaseException path kills and reaps the process group, but still retains sticky lock.
-   code=proc.wait(timeout=SETTINGS['timeout_seconds'])
+   _lifecycle.wait_unreaped(proc,SETTINGS['timeout_seconds'])
    out.flush();err.flush();os.fsync(out.fileno());os.fsync(err.fileno())
-  try:os.killpg(proc.pid,0)
-  except ProcessLookupError:pass
-  else:fail('process-group-still-alive-after-leader-exit')
+  code,absence=_lifecycle.finish_group(proc,anchor)
+  write(run/'process-exit.json',absence)
   raw=filebytes(run/'stdout.json');result=json.loads(raw) if code==0 else None
   current=ledger(c,cfg,a['ledger_name']);after=snapshot();write(run/'after.json',after)
   changes={k for k in set(before)|set(after) if before.get(k)!=after.get(k)}
@@ -207,22 +214,20 @@ def main():
   # Persist the COMPLETE response BEFORE describing it as persisted. Delivery remains UNKNOWN.
   durable(run/'response.json',raw)
   if filebytes(run/'response.json')!=raw:fail('response-write-verification')
-  capture={name:sha(filebytes(run/name)) for name in ['attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json']}
-  receipt={'identity':identity(c,cfg),'sequence':seq+1,'previous_receipt_sha256':prevhash,'conclusion':'CAPTURE_COMMITTED','governed_result_validated_and_charged':True,'process_exit_confirmed':True,'exit_code':code,'pid':proc.pid,'operation':req['operation'],'arguments':req['args'],'raw_body_bytes':body,'body_bytes_charged':body,'envelope_bytes':len(raw),'ledger_before':live,'ledger_after':current,'capture_files':capture,'response':{'path':'response.json','bytes':len(raw),'sha256':sha(raw),'persisted':True},'consumer_delivery_ack':'UNKNOWN_PENDING_LITERAL_CONSUMER_CONFIRMATION','finished':now()}
+  capture={name:sha(filebytes(run/name)) for name in ['attempt.json','before.json','stdout.json','stderr.txt','after.json','response.json','process-start.json','process-release.json','process-exit.json']}
+  receipt={'identity':identity(c,cfg),'sequence':seq+1,'previous_receipt_sha256':prevhash,'conclusion':'CAPTURE_COMMITTED','governed_result_validated_and_charged':True,'process_exit_confirmed':True,'exit_code':code,'pid':proc.pid,'process_identity':anchor,'operation':req['operation'],'arguments':req['args'],'raw_body_bytes':body,'body_bytes_charged':body,'envelope_bytes':len(raw),'ledger_before':live,'ledger_after':current,'capture_files':capture,'response':{'path':'response.json','bytes':len(raw),'sha256':sha(raw),'persisted':True},'consumer_delivery_ack':'UNKNOWN_PENDING_LITERAL_CONSUMER_CONFIRMATION','finished':now()}
   write(run/'receipt.json',receipt);durable(run/'receipt.sha256',(sha(filebytes(run/'receipt.json'))+'\n').encode())
   print(json.dumps({'case':case_id,'call':run.name,'response_file':str(run/'response.json'),'response_bytes':len(raw),'response_sha256':sha(raw),'ledger_after':current['value'],'consumer_delivery_ack':'UNKNOWN','ack_required_literal':f"I received the complete response for {case_id} call {run.name}: {len(raw)} bytes, SHA256 {sha(raw)}."}),flush=True)
   safe_release=True
  except BaseException as error:
   safe_release=False
-  # SIGKILL leaves lock on disk; next invocation refuses. Catchable interrupts explicitly stop/reap the group.
-  outcome='not-started'
+  # Repeated catchable signals cannot interrupt conservative cleanup.
+  for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP):signal.signal(sig,signal.SIG_IGN)
+  outcome={'lifecycle_state':'GATE_OR_RELEASE_STATE_SEE_DURABLE_RECORDS','state':'no-handle-returned','registration':str(run/'process-start.json') if run else None}
   if proc is not None:
-   try:
-    os.killpg(proc.pid,signal.SIGKILL)
-   except ProcessLookupError:pass
-   except BaseException:pass
-   try:proc.wait(timeout=10);outcome='leader-exit-confirmed-group-kill-requested'
-   except BaseException:outcome='possibly-alive-or-unreaped'
+   try:outcome=_lifecycle.stop_group(proc,anchor)
+   except BaseException as cleanup:outcome={'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','state':'UNCERTAIN','error':str(cleanup),'identity':anchor}
+  # No retry, refund, ledger mutation or lock release on any failure.
   try:write(lock/'STOP.json',{'case':case_id,'attempt':str(run) if run else None,'error':str(error),'process':outcome,'recovery':'EXPLICIT_REVIEW_REQUIRED; no release, retry, ledger reset or automatic rollback'})
   except BaseException:pass
   raise
