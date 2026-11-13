@@ -30,6 +30,7 @@ export function createLiveDeliveryOwner(options: LiveDeliveryOwnerOptions): Live
       return createLiveDeliveryManager({ store, connection, onComplete(completion) {
         if (closing || rotating) return
         for (const listener of [...listeners]) {
+          if (closing || rotating) break
           try { listener({ ...completion }) } catch { console.warn("Live delivery completion observer failed") }
         }
       } })
