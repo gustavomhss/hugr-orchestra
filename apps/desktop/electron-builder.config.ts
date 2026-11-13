@@ -8,6 +8,7 @@ import { promisify } from "node:util"
 import { packagedDebugMapExclusions } from "./src/main/packaged-debug-maps"
 
 import type { AfterPackContext, Configuration } from "electron-builder"
+import { packagedElectronLanguages } from "./src/main/packaged-weight"
 
 const execFileAsync = promisify(execFile)
 const packageDir = path.dirname(fileURLToPath(import.meta.url))
@@ -150,20 +151,12 @@ const getBase = (appId: string): Configuration => ({
     "!resources/claude-code{,/**/*}",
     ...packagedDebugMapExclusions,
   ],
+  electronLanguages: packagedElectronLanguages,
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { verifyClaudeAsset } = await import("./scripts/stage-claude")
     const { Arch } = await import("electron-builder")
-    const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
-    // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
-    // build or refuse them before electron-builder copies them.
-    // A universal macOS app is packed per architecture first, and each of those passes is checked.
-    if (Arch[context.arch] !== "universal")
-      prepareTreeSitterPrebuilds({
-        root: rootDir,
-        os: context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName,
-        arch: Arch[context.arch],
-      })
+    // The CLI copy of tree-sitter beside the binary is checked by verifyPackagedCli.
     await verifyPackagedCli(
       path.join(packageDir, "resources/cli"),
       context.electronPlatformName,

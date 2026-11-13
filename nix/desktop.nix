@@ -58,8 +58,8 @@ stdenv.mkDerivation (finalAttrs: {
     # Desktop prebuild also signs admitted CLI resources before app packaging.
     darwin.sigtool
     sysctl
-    # gyp on Darwin needs xcodebuild/xcrun: repair-host-prebuilds.py below and electron-builder's
-    # beforePack (prepareTreeSitterPrebuilds builds the core tree-sitter binding) both run node-gyp.
+    # gyp on Darwin needs xcodebuild/xcrun: repair-host-prebuilds.py below runs node-gyp.
+    # beforePack no longer builds the asar tree-sitter binding.
     xcbuild
     # node-gyp's static archive step on Darwin calls libtool.
     cctools
@@ -85,7 +85,8 @@ stdenv.mkDerivation (finalAttrs: {
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
     ORCHESTRA_CLI_PREBUILT_DIR = orchestra.cliArtifacts;
     CSC_IDENTITY_AUTO_DISCOVERY = "false";
-    # beforePack compiles the core tree-sitter binding with the lockfile node-gyp against these headers.
+    # repair-host-prebuilds.py compiles native bindings with the lockfile node-gyp against these headers.
+    # beforePack does not.
     npm_config_nodedir = "${nodejs}";
   };
 

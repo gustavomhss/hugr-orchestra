@@ -19,7 +19,8 @@ export type CaptureHandlers = {
 }
 
 // `want` picks the tracks: a source left out is never opened, so no permission prompt or indicator appears for it.
-export async function startCapture(handlers: CaptureHandlers, want = { microphone: true, systemAudio: true }) {
+export async function startCapture(handlers: CaptureHandlers, want = { microphone: true, systemAudio: true }, signal?: AbortSignal) {
+  signal?.throwIfAborted()
   const captureSession = session.fromPartition(PARTITION)
   const win = new BrowserWindow({
     show: false,
@@ -33,6 +34,11 @@ export async function startCapture(handlers: CaptureHandlers, want = { microphon
     },
   })
   const contents = win.webContents
+  // Abort owns the hidden window even while load/media permission promises are still outstanding.
+  const abort = () => {
+    if (!win.isDestroyed()) win.destroy()
+  }
+  signal?.addEventListener("abort", abort, { once: true })
   if (!captureSession.protocol.isProtocolHandled("oc"))
     captureSession.protocol.handle("oc", () => new Response(PAGE, { headers: { "content-type": "text/html" } }))
   captureSession.setPermissionRequestHandler((source, permission, callback) =>
@@ -51,19 +57,38 @@ export async function startCapture(handlers: CaptureHandlers, want = { microphon
   )
   contents.setWindowOpenHandler(() => ({ action: "deny" }))
   contents.on("will-navigate", (event) => event.preventDefault())
-  contents.ipc.on("live-capture:audio", (_, me: Float32Array, them: Float32Array) => handlers.audio(me, them))
-  contents.ipc.on("live-capture:status", (_, sense, status, reason) => handlers.status(sense, status, String(reason)))
-  contents.ipc.on("live-capture:state", (_, state, reason) => handlers.state(state, String(reason)))
+  contents.ipc.on("live-capture:audio", (_, me: Float32Array, them: Float32Array) => {
+    if (!signal?.aborted) handlers.audio(me, them)
+  })
+  contents.ipc.on("live-capture:status", (_, sense, status, reason) => {
+    if (!signal?.aborted) handlers.status(sense, status, String(reason))
+  })
+  contents.ipc.on("live-capture:state", (_, state, reason) => {
+    if (!signal?.aborted) handlers.state(state, String(reason))
+  })
   // A restart opens display media again, which needs the same main-side gesture as the first start.
-  contents.ipc.on("live-capture:restart", () =>
-    contents.executeJavaScript("start(true)", true).catch((error) => handlers.state("failed", String(error))),
-  )
-  await win.loadURL(PAGE_URL)
-  await contents.executeJavaScript(`globalThis.want = ${JSON.stringify(want)}`, true)
-  // getDisplayMedia needs a user gesture; the explicit meeting start is that gesture.
-  await contents.executeJavaScript("start()", true)
+  contents.ipc.on("live-capture:restart", () => {
+    if (signal?.aborted || win.isDestroyed()) return
+    return contents.executeJavaScript("start(true)", true).catch((error) => {
+      if (!signal?.aborted && !win.isDestroyed()) handlers.state("failed", String(error))
+    })
+  })
+  try {
+    await win.loadURL(PAGE_URL)
+    signal?.throwIfAborted()
+    await contents.executeJavaScript(`globalThis.want = ${JSON.stringify(want)}`, true)
+    signal?.throwIfAborted()
+    // getDisplayMedia needs a user gesture; the explicit meeting start is that gesture.
+    await contents.executeJavaScript("start()", true)
+    signal?.throwIfAborted()
+  } catch (error) {
+    signal?.removeEventListener("abort", abort)
+    abort()
+    throw error
+  }
   return {
     async stop() {
+      signal?.removeEventListener("abort", abort)
       if (win.isDestroyed()) return
       await contents.executeJavaScript("stop()").catch(() => undefined)
       win.destroy()

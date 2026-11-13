@@ -205,6 +205,8 @@ test.each(["symlink", "empty-present", "empty-absent", "pre-claim-symlink"] as c
     ).finally(() => { observed.settled = true })
     // The loop exits as soon as the swap lands or the restore settles. This bound only caps a restore that
     // never creates its scratch directory, and fails the test by the `observed.swapped` check below.
+    // The package timeout is 5s including setup, so this poll never got its 5s on a loaded Windows runner
+    // (run 43333229249, empty-present). The per-test timeout below is what lets the bound elapse.
     const deadline = Date.now() + 5000
     while (!observed.swapped && !observed.settled && Date.now() < deadline) {
       const scratch = (await readdir(fixture.root)).find((name) => name.startsWith(".orchestra-recovery-"))
@@ -254,7 +256,7 @@ test.each(["symlink", "empty-present", "empty-absent", "pre-claim-symlink"] as c
   } finally {
     await rm(fixture.root, { recursive: true, force: true })
   }
-})
+}, 20_000)
 
 async function makeFixture() {
   const root = await mkdtemp(path.join(tmpdir(), "recovery-bundle-"))
