@@ -711,6 +711,7 @@ export const make = <R>(
   maxToolCalls: number | undefined,
   searchIndex: ReadonlyArray<SearchEntry>,
   hooks?: ToolCallHooks<R>,
+  guard: Effect.Effect<void> = Effect.void,
 ): ToolRuntime<R> => {
   const calls: Array<ToolCall> = []
   const callableTools = {
