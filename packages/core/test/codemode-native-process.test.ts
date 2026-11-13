@@ -307,7 +307,9 @@ function compileTarget(): Bun.Build.CompileTarget {
   if (process.platform === "linux" && process.arch === "arm64") return "bun-linux-arm64"
   if (process.platform === "win32" && process.arch === "x64") return "bun-windows-x64"
   if (process.platform === "win32" && process.arch === "arm64") return "bun-windows-arm64"
-  throw new Error("SETUP: this capability gate supports hosted Linux/Windows only")
+  if (process.platform === "darwin" && process.arch === "x64") return "bun-darwin-x64"
+  if (process.platform === "darwin" && process.arch === "arm64") return "bun-darwin-arm64"
+  throw new Error("SETUP: this capability gate supports hosted Linux/Windows/macOS only")
 }
 
 function waitUntil(deadline: number): Effect.Effect<void> {
