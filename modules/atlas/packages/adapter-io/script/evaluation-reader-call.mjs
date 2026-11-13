@@ -11,5 +11,6 @@ const {composeRuntime}=await import(pathToFileURL(join(e.runtime.adapter,'compos
 const access=loadEvaluationAccess(e.root);access.verify();
 if(access.context.evaluationCandidate!==e.candidate||access.context.generation!==e.generation||access.scope!==e.scope)throw new Error('reader-binding');
 const runtime=composeRuntime(e.root,access);
-const result=request.operation==='index'?runtime.ownership.index(e.scope,request.args.need):runtime.ownership.read({scope:e.scope,...request.args});
+const {depth:_brokerDepth,...nativeArgs}=request.args;
+const result=request.operation==='index'?runtime.ownership.index(e.scope,request.args.need):runtime.ownership.read({scope:e.scope,...nativeArgs});
 process.stdout.write(JSON.stringify(result)+'\n');

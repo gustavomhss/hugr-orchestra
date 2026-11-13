@@ -22,7 +22,7 @@ if mode=='barrier':
 root=Path(e['root']);path=root/'.atlas'/e['ledgerName']
 v=json.loads(path.read_text()) if path.exists() else dict(schema='evaluation-read-budget/v1',candidate=e['candidate'],generation=e['generation'],consumer=e['consumer'],mode=e['mode'],index_calls=0,read_calls=0,body_bytes_total=0)
 v[e['request']['operation']+'_calls']+=1
-body='síntese' if e['request']['operation']=='read' else None
+body=('x' if mode=='tiny' else 'síntese') if e['request']['operation']=='read' else None
 if body is not None:v['body_bytes_total']+=len(body.encode())
 path.write_text(json.dumps(v)+'\n')
 if mode=='other-change':(root/'.atlas'/('evaluation-budget-'+'b'*64+'.json')).write_text('{}')
@@ -106,4 +106,77 @@ class BrokerCI(unittest.TestCase):
   p=self.start_barrier('barrier');a=get(self.auth);a['active_case']='other';put(self.auth,a);(self.control/'continue').write_text('go');p.communicate(timeout=8);self.assertNotEqual(p.returncode,0);self.assertTrue((self.logs/'active.lock').exists())
  def test_hold_preserves_charge_and_stops(self):
   (self.control/'mode').write_text('hold');self.assertNotEqual(self.call().returncode,0);self.assertEqual(get(self.atlas/self.name)['index_calls'],1);self.assertTrue((self.logs/'active.lock').exists())
+ def setcaps(self,index,reads,total,**extra):
+  v=get(self.casefile);v['cases'][0]['limits']={'index_calls':index,'read_calls':reads,'body_bytes_total':total};v['cases'][0].update(extra);put(self.casefile,v);self.authorize()
+ def depth(self,value):
+  a=get(self.auth);a['read_depth']=value;put(self.auth,a)
+ def rawcall(self,operation,args):
+  command=self.command();command[-1]=json.dumps({'operation':operation,'args':args});return subprocess.run(command,capture_output=True,text=True,timeout=12)
+ def test_read_count_precheck(self):
+  self.setcaps(2,1,16000);self.assertEqual(self.call('read').returncode,0);self.ack();before=(self.atlas/self.name).read_bytes();p=self.call('read');self.assertNotEqual(p.returncode,0);self.assertEqual(self.count(),1);self.assertEqual((self.atlas/self.name).read_bytes(),before)
+ def test_maxbytes_remaining_precheck(self):
+  self.setcaps(2,3,10);self.assertEqual(self.rawcall('read',{'key':'synthetic','maxBytes':10}).returncode,0);self.ack();remaining=10-len('síntese'.encode());before=(self.atlas/self.name).read_bytes();p=self.rawcall('read',{'key':'synthetic','maxBytes':remaining+1});self.assertNotEqual(p.returncode,0);self.assertEqual(self.count(),1);self.assertEqual((self.atlas/self.name).read_bytes(),before)
+ def test_exact_remaining_boundary(self):
+  self.setcaps(2,3,2);(self.control/'mode').write_text('tiny')
+  self.assertEqual(self.rawcall('read',{'key':'synthetic','maxBytes':2}).returncode,0);self.ack();self.assertEqual(self.rawcall('read',{'key':'synthetic','maxBytes':1}).returncode,0);self.ack(2)
+  self.assertEqual(get(self.atlas/self.name)['body_bytes_total'],2);self.assertNotEqual(self.rawcall('read',{'key':'synthetic','maxBytes':1}).returncode,0);self.assertEqual(self.count(),2)
+ def test_s4_per_read_precheck(self):
+  self.setcaps(2,12,62000,per_read_max_bytes=18000,shallow_max_bytes=6000)
+  self.depth('deep');self.assertNotEqual(self.rawcall('read',{'key':'synthetic','maxBytes':18001,'depth':'deep'}).returncode,0);self.assertEqual(self.count(),0);self.assertFalse((self.atlas/self.name).exists())
+ def test_s4_shallow_precheck(self):
+  self.setcaps(2,12,62000,per_read_max_bytes=18000,shallow_max_bytes=6000)
+  self.depth('shallow');self.assertNotEqual(self.rawcall('read',{'key':'synthetic','maxBytes':6001,'depth':'shallow'}).returncode,0);self.assertEqual(self.count(),0)
+ def test_s4_shallow_and_deep_share_ledger(self):
+  self.setcaps(2,12,62000,per_read_max_bytes=18000,shallow_max_bytes=6000)
+  self.depth('shallow');self.assertEqual(self.rawcall('read',{'key':'synthetic','maxBytes':6000,'depth':'shallow'}).returncode,0);self.ack();self.depth('deep');self.assertEqual(self.rawcall('read',{'key':'synthetic','maxBytes':18000,'depth':'deep'}).returncode,0);self.assertEqual(get(self.atlas/self.name)['read_calls'],2);self.assertEqual(get(self.atlas/self.name)['body_bytes_total'],2*len('síntese'.encode()))
+ def test_shallow_cannot_self_upgrade(self):
+  self.setcaps(2,12,62000,per_read_max_bytes=18000,shallow_max_bytes=6000);self.depth('shallow')
+  self.assertNotEqual(self.rawcall('read',{'key':'synthetic','maxBytes':18000,'depth':'deep'}).returncode,0);self.assertEqual(self.count(),0)
+ def test_caps_cannot_expand_declared_native(self):
+  self.setcaps(3,2,10000,native_limits={'index_calls':2,'read_calls':2,'body_bytes_total':16000})
+  self.assertNotEqual(self.call().returncode,0);self.assertEqual(self.count(),0)
+ def test_shallow_is_not_native_mode(self):
+  v=get(self.casefile);v['cases'][0]['mode']='shallow';put(self.casefile,v);self.authorize();self.assertNotEqual(self.call().returncode,0);self.assertEqual(self.count(),0)
+
+
+ def entrycaps(self):
+  self.setcaps(2,12,62000,per_read_max_bytes=18000,shallow_max_bytes=6000,shallow_entry_key='synthetic')
+ def test_entry_gate_denies_wrong_shallow_key(self):
+  self.entrycaps();self.depth('shallow')
+  self.assertNotEqual(self.rawcall('read',{'key':'other','maxBytes':6000,'depth':'shallow'}).returncode,0);self.assertEqual(self.count(),0)
+ def test_entry_gate_denies_need_selection(self):
+  self.entrycaps();self.depth('shallow')
+  self.assertNotEqual(self.rawcall('read',{'need':'entry','maxBytes':6000,'depth':'shallow'}).returncode,0);self.assertEqual(self.count(),0)
+ def test_entry_gate_denies_deep_first(self):
+  self.entrycaps();self.depth('deep')
+  self.assertNotEqual(self.rawcall('read',{'key':'synthetic','maxBytes':18000,'depth':'deep'}).returncode,0);self.assertEqual(self.count(),0)
+ def test_entry_gate_denies_second_shallow(self):
+  self.entrycaps();self.depth('shallow')
+  self.assertEqual(self.rawcall('read',{'key':'synthetic','maxBytes':6000,'depth':'shallow'}).returncode,0);self.ack()
+  before=(self.atlas/self.name).read_bytes()
+  self.assertNotEqual(self.rawcall('read',{'key':'synthetic','maxBytes':6000,'depth':'shallow'}).returncode,0);self.assertEqual(self.count(),1);self.assertEqual((self.atlas/self.name).read_bytes(),before)
+ def test_entry_gate_positive_shared_transition(self):
+  self.entrycaps();self.depth('shallow')
+  self.assertEqual(self.rawcall('read',{'key':'synthetic','maxBytes':6000,'depth':'shallow'}).returncode,0);self.ack()
+  self.depth('deep');self.assertEqual(self.rawcall('read',{'key':'intermediate','maxBytes':18000,'depth':'deep'}).returncode,0);self.assertEqual(self.count(),2);self.assertEqual(get(self.atlas/self.name)['read_calls'],2)
+ def test_entry_gate_invalid_config(self):
+  self.setcaps(2,12,62000,shallow_entry_key='synthetic')
+  self.assertNotEqual(self.call().returncode,0);self.assertEqual(self.count(),0)
+ def test_s4_missing_depth_denied(self):
+  self.entrycaps();self.depth('shallow')
+  self.assertNotEqual(self.rawcall('read',{'key':'synthetic','maxBytes':6000}).returncode,0);self.assertEqual(self.count(),0)
+ def test_s4_native_boolean_limit_denied(self):
+  self.setcaps(True,12,62000)
+  self.assertNotEqual(self.call().returncode,0);self.assertEqual(self.count(),0)
+
+# Every S3 cap is exercised through the real broker until its own index quota.
+def s3_cap_test(index,reads,total):
+ def test(self):
+  self.setcaps(index,reads,total)
+  for n in range(1,index+1):
+   p=self.call();self.assertEqual(p.returncode,0,p.stderr);self.ack(n)
+  before=(self.atlas/self.name).read_bytes();self.assertNotEqual(self.call().returncode,0);self.assertEqual(self.count(),index);self.assertEqual((self.atlas/self.name).read_bytes(),before)
+ return test
+for number,caps in enumerate([(3,2,10000),(4,4,28000),(5,5,36000),(4,4,30000),(4,4,28000),(3,3,16000),(3,3,18000)],1):
+ setattr(BrokerCI,f'test_s3_case_{number}_cap',s3_cap_test(*caps))
 if __name__=='__main__':unittest.main(verbosity=2)

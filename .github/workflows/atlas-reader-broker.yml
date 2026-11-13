@@ -2,7 +2,7 @@ name: atlas-reader-broker
 on:
   workflow_dispatch:
   push:
-    branches: [genesis-reader-broker-v3]
+    branches: [genesis-reader-broker-v4-precheck]
     paths:
       - .github/workflows/atlas-reader-broker.yml
       - modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py

@@ -69,14 +69,44 @@ def ledger(c,cfg,name):
  if any(type(v[k])is not int or v[k]<0 or v[k]>c['limits'][k] for k in COUNTS):fail('ledger-values')
  return {'path':name,'exists':True,'sha256':sha(b),'value':v}
 def counts(l):return {k:l['value'][k] if l['exists'] else 0 for k in COUNTS}
+def validate_case_limits(c):
+ # Broker caps may only restrict an operator-declared native ceiling, never expand it.
+ for source in ['limits']+(['native_limits'] if 'native_limits'in c else []):
+  if set(c[source])!=set(COUNTS) or any(type(c[source][k])is not int or c[source][k]<1 for k in COUNTS):fail('case-limit-schema')
+ if 'native_limits'in c and any(c['limits'][k]>c['native_limits'][k] for k in COUNTS):fail('case-limit-exceeds-native')
+ for name in ['per_read_max_bytes','shallow_max_bytes']:
+  if name in c and (type(c[name])is not int or c[name]<1 or c[name]>c['limits']['body_bytes_total']):fail('per-read-cap-schema')
+ if c.get('shallow_max_bytes',0)>c.get('per_read_max_bytes',c['limits']['body_bytes_total']):fail('shallow-exceeds-per-read')
+ if 'shallow_entry_key'in c and (not isinstance(c['shallow_entry_key'],str) or not c['shallow_entry_key'] or len(c['shallow_entry_key'])>4096 or 'shallow_max_bytes' not in c):fail('shallow-entry-schema')
+ if c['mode'] not in ['routine','deep']:fail('unsupported-native-mode')
+
+def precheck_budget(req,c,live,authorization):
+ # Called only after exact history reconciliation, inside the shared lock, BEFORE spawn.
+ used=counts(live);operation=req['operation']
+ if used[operation+'_calls']>=c['limits'][operation+'_calls']:fail('broker-call-budget-exhausted')
+ if operation=='read':
+  if 'shallow_max_bytes'in c and (authorization.get('read_depth') not in ['shallow','deep'] or req['args'].get('depth')!=authorization['read_depth']):fail('read-depth-not-authorized')
+  if 'shallow_entry_key'in c:
+   # One shallow entry body, then deep reads in the SAME identity/ledger.
+   # Answer freezing is a separate trusted dispatch gate, not inferred here.
+   if req['args'].get('depth')=='shallow':
+    if used['read_calls']!=0 or req['args'].get('key')!=c['shallow_entry_key'] or 'need'in req['args']:fail('shallow-entry-only-first-read')
+   elif used['read_calls']<1:fail('deep-before-shallow-entry')
+  remaining=c['limits']['body_bytes_total']-used['body_bytes_total']
+  ceiling=min(remaining,c.get('per_read_max_bytes',c['limits']['body_bytes_total']))
+  if req['args'].get('depth')=='shallow':ceiling=min(ceiling,c.get('shallow_max_bytes',ceiling))
+  if req['args']['maxBytes']>ceiling:fail('broker-read-budget-before-spawn')
+
 def validate_request(req,c):
+ validate_case_limits(c)
  if not isinstance(req,dict) or set(req)!={'operation','args'} or not isinstance(req['args'],dict):fail('request-schema')
  a=req['args']
  if req['operation']=='index':
   if set(a)!={'need'} or a['need'] not in NEEDS:fail('index-args')
  elif req['operation']=='read':
-  if not set(a)<={'need','key','section','maxBytes'} or ('need'in a)==('key'in a):fail('read-selection')
+  if not set(a)<={'need','key','section','maxBytes','depth'} or ('need'in a)==('key'in a):fail('read-selection')
   if 'need'in a and a['need'] not in NEEDS:fail('read-need')
+  if 'depth'in a and (a['depth'] not in ['shallow','deep'] or 'shallow_max_bytes' not in c):fail('read-depth-schema')
   for k in ['key','section']:
    if k in a and (not isinstance(a[k],str) or not a[k] or len(a[k])>4096):fail('read-string')
   if type(a.get('maxBytes'))is not int or not 0<a['maxBytes']<=c['limits']['body_bytes_total']:fail('read-limit')
@@ -101,6 +131,8 @@ def history(case_logs,c,cfg,live):
   if attempt['identity']!=identity(c,cfg) or attempt['sequence']!=number or attempt['ledger_before']!=previous_after:fail('attempt-chain')
   if receipt['ledger_before']!=previous_after:fail('ledger-history-gap')
   validate_request(attempt['request'],c)
+  if attempt['request']['operation']=='read' and 'shallow_max_bytes'in c and attempt['request']['args'].get('depth')!=attempt['authorized_read_depth']:fail('history-depth-authority')
+  precheck_budget(attempt['request'],c,receipt['ledger_before'],{'read_depth':attempt.get('authorized_read_depth')})
   if receipt['operation']!=attempt['request']['operation'] or receipt['arguments']!=attempt['request']['args']:fail('history-request-mismatch')
   old=counts(receipt['ledger_before']);new=counts(receipt['ledger_after'])
   old[receipt['operation']+'_calls']+=1;old['body_bytes_total']+=receipt['body_bytes_charged']
@@ -141,13 +173,14 @@ def main():
   case_logs=LOGS/case_id;case_logs.mkdir(exist_ok=True)
   if case_logs.is_symlink():fail('case-history-alias')
   live=ledger(c,cfg,a['ledger_name']);seq,prevhash=history(case_logs,c,cfg,live)
+  precheck_budget(req,c,live,a)
   run=case_logs/f'{seq+1:04d}';run.mkdir(exist_ok=False)
   before=snapshot();write(run/'before.json',before)
   envelope={'request':req,'candidate':cfg['candidate_id'],'generation':cfg['generation'],'consumer':case_id,'mode':c['mode'],'ledgerName':a['ledger_name'],'root':str(ROOT),'actor':cfg['actor'],'scope':cfg['scope'],'runtime':SETTINGS['runtime']}
   argv=SETTINGS['reader_argv']+[json.dumps(envelope,separators=(',',':'))]
   cwd=Path(SETTINGS['cwd'])
   env=os.environ.copy();env.pop('ATLAS_RATIFY_TOKEN',None);env.pop('NODE_OPTIONS',None);env.pop('BUN_OPTIONS',None);env['ATLAS_ACTOR']=cfg['actor']
-  write(run/'attempt.json',{'identity':identity(c,cfg),'sequence':seq+1,'ledger_before':live,'authorization_sha256':authhash,'policy_sha256':c['policy_sha256'],'argv':argv,'cwd':str(cwd),'request':req,'started':now()})
+  write(run/'attempt.json',{'identity':identity(c,cfg),'sequence':seq+1,'ledger_before':live,'authorization_sha256':authhash,'policy_sha256':c['policy_sha256'],'argv':argv,'cwd':str(cwd),'request':req,'authorized_read_depth':a.get('read_depth'),'started':now()})
   if authorization(case_id)[3]!=authhash:fail('authorization-drift-before-spawn')
   policycheck(c,cfg)
   with (run/'stdout.json').open('xb') as out,(run/'stderr.txt').open('xb') as err:
