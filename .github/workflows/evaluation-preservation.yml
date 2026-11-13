@@ -1,0 +1,33 @@
+name: Evaluation preservation synthetic controls
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - modules/atlas/packages/adapter-io/script/evaluation-preservation.py
+      - modules/atlas/packages/adapter-io/test/evaluation-preservation-ci.py
+      - .github/workflows/evaluation-preservation.yml
+permissions:
+  contents: read
+jobs:
+  preservation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact helper tests, synthetic only
+        shell: bash
+        run: |
+          set -o pipefail
+          python -I -S -B modules/atlas/packages/adapter-io/test/evaluation-preservation-ci.py 2>&1 | tee preservation-ci.log
+          sha256sum modules/atlas/packages/adapter-io/script/evaluation-preservation.py modules/atlas/packages/adapter-io/test/evaluation-preservation-ci.py > preservation-pins.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation-preservation-${{ github.run_id }}
+          path: |
+            preservation-ci.log
+            preservation-pins.txt
+          if-no-files-found: error
