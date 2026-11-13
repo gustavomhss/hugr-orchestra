@@ -42,6 +42,7 @@ export const Pack = Schema.Struct({
   tiers: Ids,
   output: Schema.Union([
     Schema.Struct({ format: Schema.Literal("sarif") }),
+    Schema.Struct({ format: Schema.Literal("check") }),
     Schema.Struct({ format: Schema.Literal("json"), parser: Id }),
   ]),
   cost: Cost,
