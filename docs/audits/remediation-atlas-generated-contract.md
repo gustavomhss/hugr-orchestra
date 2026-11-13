@@ -12,6 +12,8 @@ bun run test:ci core test/atlas-generated-artifact.test.ts --timeout 900000 --os
 
 The existing request reader may emit one additional boolean output only when the normalized request is exactly package `core`, directory `packages/core`, runner `bun`, and args `["test/atlas-generated-artifact.test.ts", "--timeout", "900000"]`. No substring/filter, alternate timeout, extra selector, env switch or automatic generator dispatch is accepted as this qualification request. Ordinary tests and other workflows retain their behavior.
 
+The predicate also requires empty request env and absent config/benchmark options; default is false. The artifact name includes run ID, attempt and snapshot SHA. These are explicit conditions accepted after independent review.
+
 Add one pinned `upload-artifact` step after Run tests, gated on that boolean and Linux. Use `always()` to preserve failure evidence, the existing upload action SHA `ea165f8d65b6e75b540449e92b4886f43607fa02`, retention seven days and `if-no-files-found: error`. Its only path is the dedicated `test-ci-evidence/atlas-generated/` directory. No credentials, dependency trees or unrelated workspace files enter it. No new workflow, runner type, package or CLI option is needed.
 
 ## Producer test
@@ -22,10 +24,14 @@ From `modules/atlas/boundary`, run `bun run generate`; hash the exact 18 generat
 
 Copy only the 18 actual output files into the dedicated artifact directory, preserving their boundary-relative names. Capture a provenance JSON with the hosted snapshot SHA, run ID/attempt, OS/arch, actual Bun and Node versions, request, generator SHA256, root and nested lock SHA256, actual source-file hash manifest, pre-generation hashes, both generated manifests, generated diff identity and command outcomes. Create a failure-stage receipt as work progresses; failed or partial output must never be labeled qualified. Include no process environment dump. Root independently verifies artifact paths and hashes before recovering the producer's exact bytes into the integration branch; generated source is never hand-edited.
 
+Set `qualified: true` only after all generation, equality, check and installed witnesses succeed. Distinguish Bun's Node compatibility version from an actual Node CLI version when recording runtimes. A canonical sorted before/after hash-vector digest suffices as generated diff identity. Three generator commands each use a four-minute child budget within the 15-minute test budget; truncation of command output is a qualification failure, never silently accepted.
+
 ## Installed product witness
 
 After official generation, import the actual package export `@orchestra/atlas-boundary/native-memory`, not a source bundle or test-specific re-export. Reuse only the controlled POSIX scanner and binding setup from the existing fixture; do not invoke its source-bundling `make` function. Use actual durable files in an owned temporary repository.
 
 At minimum, verify public `reconcile({rule, scope})` is absent before proposal; propose and decide indexed; require a single immutable receipt; reopen using a fresh public `createNativeMemory(binding)` and require `reconcile` returns present with the exact decision ref. Then retry the same decision, require identical ref/receipt bytes, and verify a scanner-induced refusal produces neither an active rule nor a decision receipt for that refused proposal. Read files only as witnesses; never duplicate the production projection algorithm. Preserve the public scanner gate and actual source65 tests unchanged.
+
+Import the package runtime only after generation and assert its resolved path is the actual `src/generated/native-memory.js` export. For the refusal witness, first propose the second rule with the scanner accepting, then block that scanner before the indexed decision. Missing import/runtime/scanner setup is a setup failure, not a new behavioral RED for L11.
 
 The installed witness and provenance require full Root and independent review before serial typechecking and the one hosted request. A passing run qualifies only that snapshot's generated Linux boundary; full Atlas/Vitest/Own and final aggregate CI remain separate gates. Later Atlas source changes invalidate the generated qualification and justify regeneration.
