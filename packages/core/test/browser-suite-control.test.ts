@@ -10,7 +10,7 @@ import { AppProcess } from "../src/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { expectSpawn } from "./fixture/omni-expect"
 import { testEffect } from "./lib/effect"
-import { validateBrowserSuite } from "../../../script/test-browser"
+import { validateBrowserSuite } from "../script/test-browser"
 
 const it = testEffect(LayerNode.compile(AppProcess.node))
 const nonce = "0123456789abcdef0123456789abcdef"
