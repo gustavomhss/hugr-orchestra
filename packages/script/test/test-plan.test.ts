@@ -53,13 +53,17 @@ describe("test shard planner", () => {
   })
 
   test("a platform's overhead scales its total before the shard count", () => {
+    const measured = Object.fromEntries(weigh("packages/core", {}, 0).map((entry) => [entry.name, 1]))
+    // Isolate overhead from estimation and the per-file floor as the repository grows.
+    expect(Object.keys(measured).length).toBeGreaterThan(0)
+    expect(Object.keys(measured).length).toBeLessThan(9000)
     const timings: Timings = {
-      target: { linux: 300, windows: 300, e2e: 300 },
+      target: { linux: 3000, windows: 3000, e2e: 300 },
       overhead: { linux: 1, windows: 1.6 },
       margin: 1,
       budget: { limit: 20, fixed: 4 },
-      files: {},
-      totals: { "packages/core": { linux: 900, windows: 900 } },
+      files: { "packages/core:linux": measured, "packages/core:windows": measured },
+      totals: { "packages/core": { linux: 9000, windows: 9000 } },
     }
     expect(packageShards(timings, "packages/core", "linux")).toBe(3)
     expect(packageShards(timings, "packages/core", "windows")).toBe(5)
