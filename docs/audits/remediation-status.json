@@ -441,6 +441,13 @@
             "71c08b7d9ccb80a0d8aaf9645a3c4015ebb50606"
           ],
           "result": "Both OS A114pass/0fail849assertions/5Omni; B outer11pass34assertions plus browser3pass15assertions, both isolated real children exit0. Existing wrapper hides successful child stdout:90/110 are static registrations, not independently emitted runtime counts. Actual draft HTTP200+SQL durable admission, later model/policy edits, original POST preserved, current policy ACK and raw handoff/no second POST pass. Root independently downloaded alljobs/raw and compared52 owned path blobs across both snapshots (104 exact comparisons). App and SharedUI package types0. Six original TUI key/frame witnesses and Windows real atomic-file EPERM remain unresolved; context14 separately green. No AFTER benchmark or aggregate UI integration claimed."
+        },
+        {
+          "kind": "combined_tui76_green_before_dev_integration",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43366810851",
+          "source": "f914f19c8042f8f1f6544d6254a4fb91702d7bec",
+          "snapshot": "8020cedd286a87abe4ce92bfcbe5a827d65ecf70",
+          "result": "Both OS76pass/0fail/8files, all six original variant cases and four actual atomic I/O cases executed. Root independently checked both jobs/raw and snapshot diff only .ci-run.json. TUI type0. Previous43364979791 actual76 failed Linux74/2/1error and Windows73/3 because real preference writes raced fixture removal; owner-local bootstrap/write flush and joined teardown fixed lifetime without changing oracles. One GitHub422 before dispatch preserved, followed by exactly one authorized official retry. Final dev integration/App aggregate/AFTER benchmark pending; E6 remains open."
         }
       ],
       "remaining": "Core/host/API and literal variant identity are integrated and verified in scoped hosted gates. Consumer correction freeze/cold review, Client/SessionUI/App/TUI types, full consumer/E1/owner regressions and production AFTER benchmark remain required. Whole E6 stays open. Historical stored default strings are preserved literally; ambiguous old aliases are not rewritten."
@@ -3827,7 +3834,12 @@
   "dev_sync_pending": {
     "parent": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
     "dev": "04026786c46d8e6b3e7a66e75e03d545459d632d",
-    "state": "13 conflicts resolved; Core typecheck passed; further affected-package and hosted seam qualification pending",
-    "generated": "One whole previously qualified Atlas surface retained temporarily; official hosted generation required for source union."
+    "state": "First142commit sync244299816d committed; next3commit sync in progress. Core/App/Server/Engine/Desktop/Client package typechecks passed on recorded phase trees. Newly combined scoped hosted/generation gates remain pending.",
+    "generated": "One whole previously qualified Atlas surface retained temporarily; official hosted generation required for source union.",
+    "last_seam_gate": {
+      "run": "43365618269",
+      "result": "Both OS64pass/11fail/567assertions,75tests9files. Root independently checked raw/jobs and cleanup success. Epoch deletion contradicted rebase; old exclusive-boundary fixtures and in-transaction removal barriers reconciled after cold review; rerun pending."
+    },
+    "next_frozen_dev": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b"
   }
 }

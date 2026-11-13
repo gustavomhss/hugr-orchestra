@@ -32,6 +32,9 @@ see what is missing before you start.
 
 The recording indicator stays visible while a meeting runs.
 
+Stop also cancels a meeting that is still starting. If a system permission prompt is already open, answering it does
+not restart the cancelled meeting. Any capture acquired by that attempt is closed instead of becoming a running meeting.
+
 ## During the meeting
 
 | Action | Overlay name | Default hotkey |

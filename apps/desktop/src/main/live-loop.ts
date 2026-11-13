@@ -55,10 +55,16 @@ export function registerLiveLoop(options: {
   server: () => Promise<MeetingServer>
   logDirectory: string
   openSettings: () => void
+  runtime?: {
+    settings?: ReturnType<typeof liveSettings>
+    readKey?: typeof readTranscriptionKey
+    permissions?: typeof sourcePermissions
+    senses?: typeof startSenses
+  }
 }) {
   const overlay = options.overlay
-  const state = { meeting: undefined as Meeting | undefined, starting: false }
-  const settings = liveSettings()
+  const state = { meeting: undefined as Meeting | undefined, starting: undefined as AbortController | undefined }
+  const settings = options.runtime?.settings ?? liveSettings()
   const runListeners = new Set<(state: LiveRunState) => void>()
   const levelListeners = new Set<(levels: Record<LiveSource, number>) => void>()
 
@@ -119,6 +125,7 @@ export function registerLiveLoop(options: {
   }
 
   const onSession = (meeting: Meeting, event: LiveSessionEvent) => {
+    if (meeting.abort.signal.aborted || state.meeting !== meeting) return
     const request = meeting.request
     if (event.kind === "look") {
       void (request ? lookFor(meeting, request, event.question) : look(meeting, event.question))
@@ -156,6 +163,7 @@ export function registerLiveLoop(options: {
   }
 
   const onSenses = (meeting: Meeting, event: Parameters<Parameters<typeof startSenses>[0]["onEvent"]>[0]) => {
+    if (meeting.abort.signal.aborted || state.meeting !== meeting) return
     if (event.kind === "caption") {
       // Speech from the other side before the answer starts makes a suggestion stale.
       if (event.line.track === "them" && meeting.request?.kind === "suggestion" && !meeting.request.firstAt)
@@ -275,13 +283,18 @@ export function registerLiveLoop(options: {
   }
 
   overlay.onAction((action) => {
+    if (action.kind === "stop" && state.starting) {
+      state.starting.abort()
+      overlay.stop()
+      return
+    }
     const meeting = state.meeting
     if (meeting) void handle(meeting, action)
   })
 
   return {
     settings,
-    running: () => state.starting || state.meeting?.senses !== undefined,
+    running: () => (state.starting !== undefined && !state.starting.signal.aborted) || state.meeting?.senses !== undefined,
     runState,
     onRunState: (listener: (state: LiveRunState) => void) => {
       runListeners.add(listener)
@@ -308,9 +321,9 @@ export function registerLiveLoop(options: {
     },
     async start(title?: string) {
       if (state.starting || state.meeting?.senses) return { ok: false as const, reason: "running" as const }
-      if (!readTranscriptionKey()) return { ok: false as const, reason: "no-key" as const }
+      if (!(options.runtime?.readKey ?? readTranscriptionKey)()) return { ok: false as const, reason: "no-key" as const }
       const wanted = settings.get()
-      const permissions = sourcePermissions()
+      const permissions = (options.runtime?.permissions ?? sourcePermissions)()
       if (wanted.sources.microphone && permissions.microphone === "denied")
         return { ok: false as const, reason: "permission" as const }
       // Denied or unavailable system audio does not stop the meeting: it runs on the microphone alone.
@@ -322,38 +335,52 @@ export function registerLiveLoop(options: {
           systemAudioAvailable(process.platform, release()),
       }
       if (!sources.microphone && !sources["system-audio"]) return { ok: false as const, reason: "capture" as const }
-      state.starting = true
+      const attempt = new AbortController()
+      state.starting = attempt
       // The previous meeting's stream stays open until the next start, so its summary and open items can still land.
       state.meeting?.abort.abort()
       state.meeting = undefined
-      const result = await begin(title?.trim() || defaultTitle(), sources, wanted).finally(() => {
-        state.starting = false
+      const result = await begin(title?.trim() || defaultTitle(), sources, wanted, attempt).finally(() => {
+        if (state.starting === attempt) state.starting = undefined
       })
       return result
     },
     async stop() {
+      if (state.starting) {
+        state.starting.abort()
+        overlay.stop()
+        return
+      }
       const meeting = state.meeting
       if (meeting?.senses) await stop(meeting)
     },
     destroy() {
+      state.starting?.abort()
       state.meeting?.abort.abort()
       void state.meeting?.senses?.stop()
     },
   }
 
-  async function begin(title: string, sources: Record<LiveSource, boolean>, wanted: ReturnType<typeof settings.get>) {
+  async function begin(
+    title: string,
+    sources: Record<LiveSource, boolean>,
+    wanted: ReturnType<typeof settings.get>,
+    attempt: AbortController,
+  ) {
     const server = await options.server()
+    if (attempt.signal.aborted) return { ok: false as const, reason: "capture" as const }
     const client = sessionClient(server)
     const sessionID = await client.create(modelRef(wanted.answerModel)).catch((error) => {
       transportLog(options.logDirectory, "session").write({ event: "session-failed", reason: String(error) })
       return undefined
     })
+    if (attempt.signal.aborted) return { ok: false as const, reason: "capture" as const }
     if (!sessionID) return { ok: false as const, reason: "server" as const }
     const meeting: Meeting = {
       sessionID,
       client,
       log: transportLog(options.logDirectory, sessionID),
-      abort: new AbortController(),
+      abort: attempt,
       sources,
       title,
       startedAt: Date.now(),
@@ -366,20 +393,24 @@ export function registerLiveLoop(options: {
     overlay.start(meeting.startedAt, wanted.suggestions)
     if (wanted.sources["system-audio"] && !sources["system-audio"])
       meeting.log.write({ event: "sources", microphone: sources.microphone, systemAudio: false })
-    const senses = await startSenses({
+    const senses = await (options.runtime?.senses ?? startSenses)({
+      signal: attempt.signal,
       server,
       sessionID,
       title,
       logDirectory: options.logDirectory,
       language: wanted.language,
       sources: { microphone: sources.microphone, systemAudio: sources["system-audio"] },
-      onLevels: (levels) => levelListeners.forEach((listener) => listener(levels)),
+      onLevels: (levels) => {
+        if (!attempt.signal.aborted) levelListeners.forEach((listener) => listener(levels))
+      },
       onEvent: (event) => onSenses(meeting, event),
     }).catch((error) => {
       meeting.log.write({ event: "senses-failed", reason: String(error) })
       return undefined
     })
-    if (!senses) {
+    if (attempt.signal.aborted && senses) await senses.stop()
+    if (!senses || attempt.signal.aborted) {
       overlay.stop()
       meeting.abort.abort()
       state.meeting = undefined
@@ -387,6 +418,8 @@ export function registerLiveLoop(options: {
     }
     meeting.senses = senses
     meeting.meetingID = senses.meetingID
+    // Subscribers can synchronously Stop from this notification: it must now take the running cleanup path.
+    if (state.starting === attempt) state.starting = undefined
     emitRunState()
     return { ok: true as const, meetingID: senses.meetingID }
   }

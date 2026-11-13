@@ -31,6 +31,11 @@ export type LiveSensesEvent =
 const DEFAULT_MODEL = "nova-3"
 
 export async function startSenses(options: {
+  signal?: AbortSignal
+  runtime?: {
+    readKey?: typeof readTranscriptionKey
+    microphone?: typeof requestMicrophone
+  }
   server: MeetingServer
   sessionID: string
   title: string
@@ -43,16 +48,18 @@ export async function startSenses(options: {
   onLevels?: (levels: { microphone: number; "system-audio": number }) => void
   onEvent: (event: LiveSensesEvent) => void
 }) {
+  options.signal?.throwIfAborted()
   const want = options.sources ?? { microphone: true, systemAudio: true }
-  const key = readTranscriptionKey()
+  const key = (options.runtime?.readKey ?? readTranscriptionKey)()
   if (!key) throw new Error("No speech-to-text key is set for the live seat.")
   const senses = {
-    microphone: !want.microphone || (await requestMicrophone()) ? "granted" : "denied",
+    microphone: !want.microphone || (await (options.runtime?.microphone ?? requestMicrophone)()) ? "granted" : "denied",
     systemAudio: "on-request",
   } as {
     microphone: SenseStatus
     systemAudio: SenseStatus
   }
+  options.signal?.throwIfAborted()
   const report = () => {
     const permissions = { ...readPermissions(senses.systemAudio), microphone: senses.microphone }
     options.onEvent({ kind: "permissions", permissions })
@@ -71,6 +78,10 @@ export async function startSenses(options: {
     },
   })
   const meeting = await client.start(options.sessionID, options.title)
+  if (options.signal?.aborted) {
+    await client.stop(meeting.id)
+    options.signal.throwIfAborted()
+  }
   const log = transportLog(options.logDirectory, meeting.id)
   const clock = { ms: 0 }
   const gate = echoGate()
@@ -142,7 +153,7 @@ export async function startSenses(options: {
     state(state, reason) {
       log.write({ event: "capture", state, reason })
     },
-  }, want).catch(async (error) => {
+  }, want, options.signal).catch(async (error) => {
     await transcriber.stop()
     await client.stop(meeting.id).catch(() => undefined)
     throw error
