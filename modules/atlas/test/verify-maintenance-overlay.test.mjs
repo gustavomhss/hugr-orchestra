@@ -20,4 +20,5 @@ it("rejects traversal and duplicate manifest paths",async()=>{const f=await fx()
 it("rejects symlink and tampered output",async()=>{const f=await fx();await writeFile(path.join(f.o,O[0]),"tamper");await assert.rejects(verify(args(f)),/output tamper/);await rm(path.join(f.o,O[0]));await symlink(O[1],path.join(f.o,O[0]));await assert.rejects(verify(args(f)),/symlink/);});
 it("rejects duplicate manifest identity fields",async()=>{const f=await fx(),s=await readFile(f.m,"utf8");await writeFile(f.m,s.replace("kind=overlay-not-standalone","kind=overlay-not-standalone\nkind=overlay-not-standalone"));await assert.rejects(verify(args(f)),/duplicate field/);});
 it("rejects a mismatched base source hash",async()=>{const f=await fx();await writeFile(path.join(f.b,S[1]),"changed");await assert.rejects(verify(args(f)),/base source mismatch/);});
+it("enforces immutable source SHA pins independently of the manifest",async()=>{const f=await fx();const a={...args(f),sourcePins:{"packages/adapter-io/src/evaluation-maintenance-host.ts":"f".repeat(64)}};await assert.rejects(verify(a),/source pin mismatch/);});
 });
