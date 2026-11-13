@@ -74,7 +74,7 @@ describe("caller to real host and core, synthetic fifteen-entry fixture", () => 
     expect(out.accounting.externalProductionUsage).toBe("UNKNOWN")
     expect(out.result.kind).toBe("prepared-evaluation-update")
     if (out.result.kind !== "prepared-evaluation-update") throw Error(JSON.stringify(out.result))
-    expect(out.result.prepared.candidate.entries.map(entry => entry.key)).toEqual([...f.keys].sort())
+    expect(out.result.prepared.candidate.entries.map(entry => entry.key)).toEqual(f.keys)
     expect(out.result.prepared.candidate.entries.map(entry => entry.artifact.result)).toEqual(f.ports.baseline.candidate.entries.map(entry => entry.artifact.result))
     expect(out.result.prepared.candidate.repo_root).toBe(f.envelope.targetRoot)
   })
