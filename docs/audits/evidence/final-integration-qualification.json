@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "checkpoint": "final-cold-epic-pending",
+  "source_sha": "5231e0c9c78bb653abb5740d92566b269b79b275",
+  "integration_dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+  "single_pr": 1463,
+  "local_gates": [
+    {
+      "name": "root-post-dev-core-type",
+      "exit_code": 0,
+      "log_sha256": "368609d37ae0ea32fe1c45cef55339149f0b5238b9e3bc8cae19f9d04765179d",
+      "tail": [
+        "$ tsgo --noEmit",
+        "/usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor"
+      ]
+    },
+    {
+      "name": "root-post-dev-app-type",
+      "exit_code": 0,
+      "log_sha256": "34b7cede8f74705cbce36352b44932ec408902547603ac3980415cae8a8f9f03",
+      "tail": [
+        "$ tsgo -b",
+        "/usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor"
+      ]
+    },
+    {
+      "name": "root-post-dev-desktop-type",
+      "exit_code": 0,
+      "log_sha256": "34b7cede8f74705cbce36352b44932ec408902547603ac3980415cae8a8f9f03",
+      "tail": [
+        "$ tsgo -b",
+        "/usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor"
+      ]
+    },
+    {
+      "name": "root-final-core-export-type",
+      "exit_code": 0,
+      "log_sha256": "368609d37ae0ea32fe1c45cef55339149f0b5238b9e3bc8cae19f9d04765179d",
+      "tail": [
+        "$ tsgo --noEmit",
+        "/usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor"
+      ]
+    },
+    {
+      "name": "root-final-guards",
+      "exit_code": 0,
+      "log_sha256": "be420c6d0907a4296aaa92bb235ad221c1506b1756e962c207c1a8169a5b58a6",
+      "tail": [
+        "WARN modules/atlas/packages/adapter-io/src/knowledge-replay-binding.ts:52 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.",
+        "guards: 78 rules, 635 changed paths, 0 gate and 25 warn findings, 0 errors."
+      ]
+    },
+    {
+      "name": "root-final-boundaries",
+      "exit_code": 0,
+      "log_sha256": "0e5ecc41bac51b22a696c3cc575addc4b53de88a720d363b42ac2b84d4affbe5",
+      "tail": [
+        "/usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor",
+        "module-boundaries: 5883 files parsed, 5527 cross-package edges, 91 violations (91 ledgered), 0 new, 0 stale"
+      ]
+    },
+    {
+      "name": "root-final-spawn",
+      "exit_code": 0,
+      "log_sha256": "4d9a668bb5c26ea7fb707f6044197f4a87a052981d32faf2d4a83c8bf9b278cf",
+      "tail": [
+        "/usr/local/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): Bad file descriptor",
+        "spawn-imports: 4121 files checked, 66 allow-listed sites"
+      ]
+    }
+  ],
+  "independent_source_reviews": [
+    {
+      "reviewer": "ui_recovery",
+      "source_sha": "9add986fc1",
+      "verdict": "APPROVE",
+      "scope": "E10 and M13 integration seams; source-only, no physical capture/runtime qualification"
+    },
+    {
+      "reviewer": "memory_recovery",
+      "source_sha": "6f977bbe1b",
+      "verdict": "APPROVE",
+      "scope": "CodeMode explicit driver export, test import and Core process ownership; no runtime changes"
+    }
+  ],
+  "hosted_tests_only": true,
+  "final_epic": {
+    "status": "not_dispatched"
+  },
+  "limitations": [
+    "No local test, build or generator execution. Atlas types were hosted.",
+    "Guard warnings are advice, not bypassed gates; no approval label or ignore added.",
+    "Boundary checker reports91 pre-existing ledgered violations, zero new and zero stale.",
+    "Controlled capture and STT ports do not prove physical hardware capture or native permission dialogs."
+  ]
+}
