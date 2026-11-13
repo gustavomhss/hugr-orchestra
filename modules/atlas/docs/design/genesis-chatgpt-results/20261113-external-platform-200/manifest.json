@@ -20,7 +20,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3411,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "a1a3d0622dcd5a57011ebec7ed8457cf447e3df076fffb16a9e232283c743918",
+      "line_count": 53
     },
     {
       "id": "P002",
@@ -29,7 +31,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8015,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "d29ad617cc588fbe77ebb6970b612befb8486d5592d29c81031d2c1f94591aa6",
+      "line_count": 108
     },
     {
       "id": "P003",
@@ -38,7 +42,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 749,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "485537b08e8fef3877023e01b0d593fad376f559a98982fb2ede82de05db0c78",
+      "line_count": 12
     },
     {
       "id": "P004",
@@ -47,7 +53,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1258,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "ed09a4ee1b8429cd593a6a54af0b4c032769ccdbea0b83bf7ab743aa9db1f6ad",
+      "line_count": 29
     },
     {
       "id": "P005",
@@ -56,7 +64,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1404,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "3007e92a6b4bc5d44b99cfa3fe642874ec56f2da8f4a0f993f6d9cac3206c978",
+      "line_count": 26
     },
     {
       "id": "P006",
@@ -65,7 +75,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1365,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "dc4abcb889218c4baf583c7b0de6d941da0745fcfea8272cb5685fdd5d3099ef",
+      "line_count": 24
     },
     {
       "id": "P007",
@@ -74,7 +86,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 466,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "8523fb311879cf3523fe4fc7eaa758126c633f33036eda6e1a1d6ca7d268c22f",
+      "line_count": 4
     },
     {
       "id": "P008",
@@ -83,7 +97,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 557,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "3f889e8ad8bd4f78d5a5060993e4eb0f1894c093cb1e35814946e734e7cf586d",
+      "line_count": 9
     },
     {
       "id": "P009",
@@ -92,7 +108,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1373,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "d3ffcca4f1fa64b7a8ca6593dd50a016f554d84b0bb273f2d63235d350d0bc05",
+      "line_count": 31
     },
     {
       "id": "P010",
@@ -101,7 +119,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 262,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "e764c7d328cd85da4c5ee5324ff6a93ee9d38f25cab7f040ea0863341eba58ef",
+      "line_count": 8
     },
     {
       "id": "P011",
@@ -110,7 +130,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 117,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "8a37d5d6b60366d54a7ff7185345cbf739835bd7eaf46778068959b3f2115fcc",
+      "line_count": 12
     },
     {
       "id": "P012",
@@ -119,7 +141,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 136,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "25c8697d37ab1e8bcd34528e5458f32adfe98433a290166e4355f833aeb5c5c3",
+      "line_count": 9
     },
     {
       "id": "P013",
@@ -128,7 +152,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3680,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "093bdb56bf7251861f44460f5e0debf2456b7bdc4cdf7a2780921838abdec589",
+      "line_count": 48
     },
     {
       "id": "P014",
@@ -137,7 +163,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 211,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "88fed0a09de411d53ce63f57e2fc772b2c5d4ce5a17c791e3d02d5ef69bebee1",
+      "line_count": 22
     },
     {
       "id": "P015",
@@ -146,7 +174,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2948,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "f53df3530853661d24c3bc8427e02b5e2aeb09fa96bc07bd581a325e38212c7c",
+      "line_count": 54
     },
     {
       "id": "P016",
@@ -155,7 +185,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3348,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "e6d6497a7120640230592ede93920cb5f1b194ea416e443ece7f843e42b61369",
+      "line_count": 71
     },
     {
       "id": "P017",
@@ -164,7 +196,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1987,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "b5c2da3ac7822f5441ad9e416ef7188607c0475bb3dedc7721664f2b441e390b",
+      "line_count": 42
     },
     {
       "id": "P018",
@@ -173,7 +207,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 5600,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "fd6939048ad9b8c1865124cbfd614830317646d3435eb8a74f64c086e6e08152",
+      "line_count": 117
     },
     {
       "id": "P019",
@@ -182,7 +218,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 6665,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "953b03f7962743a1d3d510a576f1b005c832a0d39801ad1509200c9482a3387d",
+      "line_count": 145
     },
     {
       "id": "P020",
@@ -191,7 +229,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 508,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "c78d78bdb9c5e0dda58749105ff10191b6d48190d114859c58404c7a7248d055",
+      "line_count": 20
     },
     {
       "id": "P021",
@@ -200,7 +240,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 846,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "5514aa7d3586f04229441b71c9b33a25531b6c8eafd3b540a72cafc62057b9c0",
+      "line_count": 29
     },
     {
       "id": "P022",
@@ -209,7 +251,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 5490,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "7d0315b9c1e839715501206bd32fcc9f29f1b9fac0df17f56590dce8e7e4a359",
+      "line_count": 137
     },
     {
       "id": "P023",
@@ -218,7 +262,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3836,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "862d461f1ebce0e519f6e742ea9dbcba3d92ac0aa674018d87e27a19f2204437",
+      "line_count": 113
     },
     {
       "id": "P024",
@@ -227,7 +273,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 823,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "5df73d87bda3e0379ad7e919f6a4abd593509cfd28cbcc8b0237567808a57ea7",
+      "line_count": 30
     },
     {
       "id": "P025",
@@ -236,7 +284,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 15079,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "054ff6a76f76a8400000d03900838a0a5bc4fee993b939f5e0554d0b91a882af",
+      "line_count": 267
     },
     {
       "id": "P026",
@@ -245,7 +295,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 9409,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "789f667f05c13750d796c0b4f51014bf889f6accdcd052e0cfd4caa723471308",
+      "line_count": 216
     },
     {
       "id": "P027",
@@ -254,7 +306,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 11138,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "154af13402f19e62993ea6531413f9915adf97e226f6280b417c411e5f5dcb78",
+      "line_count": 211
     },
     {
       "id": "P028",
@@ -263,7 +317,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3233,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "5f10e4cf40ffdc846e7df03289ad1a17788c44540fa8eb9e323a037b62c1250f",
+      "line_count": 97
     },
     {
       "id": "P029",
@@ -272,7 +328,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 384,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "077193235d1a5af14357883699c906e69f2cbddc0ea954902ade6ed8273093be",
+      "line_count": 17
     },
     {
       "id": "P030",
@@ -281,7 +339,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 6019,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "050cbf038385e8b5870d76d7a2732d217e1366a92902c50beccb905f66ee90d2",
+      "line_count": 145
     },
     {
       "id": "P031",
@@ -290,7 +350,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8188,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "501705d3e9b4d8f2d22a175ed64e3f35d4073a8485cd8c762378d92ef1c54f68",
+      "line_count": 162
     },
     {
       "id": "P032",
@@ -299,7 +361,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3557,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "2843d121f8f609ec86028c0549aad290637c561b962d92599e403d0011f6834d",
+      "line_count": 79
     },
     {
       "id": "P033",
@@ -308,7 +372,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8715,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "dc6f2c9f20a28db9cab97313b008b72b2b53f6e148785398a0aa64957a20d395",
+      "line_count": 194
     },
     {
       "id": "P034",
@@ -317,7 +383,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3202,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "93070c992f231fda6c0148dc4eaf7855c788a30f89fd4fd9ed2a99bc9db95404",
+      "line_count": 76
     },
     {
       "id": "P035",
@@ -326,7 +394,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2735,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "59299d515c91aa41316ee76b59e53160d6b3f19d9fcdba6de8373b430df22973",
+      "line_count": 80
     },
     {
       "id": "P036",
@@ -335,7 +405,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 19743,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "f3f190c160b884c57e38451792de676f53e9d01f970f4ae8ad59cfe0d8428a4f",
+      "line_count": 387
     },
     {
       "id": "P037",
@@ -344,7 +416,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 25337,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "115804c310894777d39bd8c13bbb13a019f51e3b5baa46d3bb5814b78f3cfb22",
+      "line_count": 493
     },
     {
       "id": "P038",
@@ -353,7 +427,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 11947,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "beead62c5f1476437d8b8ce1fa83dc5d6731bb86063332dbe9ee1070c48094cd",
+      "line_count": 233
     },
     {
       "id": "P039",
@@ -362,7 +438,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 27871,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "1e3fefd36d891f4cb6949ff01615974782e578fb29ab7ab4e066e65f0015b16f",
+      "line_count": 557
     },
     {
       "id": "P040",
@@ -371,7 +449,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8778,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "39178d1136df4cc6babf96165211cf95daec4cc4bd62961b4720c9779e0ec6ca",
+      "line_count": 173
     },
     {
       "id": "P041",
@@ -380,7 +460,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3106,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "8f45cf714aab41913c11d4a283a8167add3529c59e34ca31178e02a1c95f090f",
+      "line_count": 71
     },
     {
       "id": "P042",
@@ -389,7 +471,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1918,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "9099a7b7178c13fcfa862188ff88e2b1a17ffc34b107bb45df125661033f900d",
+      "line_count": 49
     },
     {
       "id": "P043",
@@ -398,7 +482,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1037,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "dd0aa40ba5e0fb4ec231c24b60b1c20beaf872910abbb8bc00be485af3ffa99b",
+      "line_count": 53
     },
     {
       "id": "P044",
@@ -407,7 +493,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 506,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "73d99e5b8e5b36f1c6aa545f7c84c1bfb4e70037c0443b227842ec6161f96c3e",
+      "line_count": 5
     },
     {
       "id": "P045",
@@ -416,7 +504,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 82,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "8f90f82092551404760d0a02ea996f2c711dbb03adf6949dd0ed3152223415bf",
+      "line_count": 7
     },
     {
       "id": "P046",
@@ -425,7 +515,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 635,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "43a2aaaf4d732fbf4f1b182a6a355d01da45d0116eaed47bb8c88a27921dd197",
+      "line_count": 22
     },
     {
       "id": "P047",
@@ -434,7 +526,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1029,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "bfa6b27ae7d46a8a307c2b1251bf2f521775423687397d46ed7f47ba7571951f",
+      "line_count": 24
     },
     {
       "id": "P048",
@@ -443,7 +537,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 547,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "9cbfad4c187cadd23bb93985a8dcff38807e18ced8bce399535c568b8ad3cab2",
+      "line_count": 35
     },
     {
       "id": "P049",
@@ -452,7 +548,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1628,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "891675a8519c637290b675f6671c451e30e14ac3a50e6759bd513c414e50cd22",
+      "line_count": 42
     },
     {
       "id": "P050",
@@ -461,7 +559,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 576,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "066e981569517dc46dc34360e17bc40a02e4790ebbc75c4a360ce0745c377c64",
+      "line_count": 15
     },
     {
       "id": "P051",
@@ -470,7 +570,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 204,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "680b0616829f8710065c23cb089b042ef51691bfdb664028f718dfeff783a372",
+      "line_count": 5
     },
     {
       "id": "P052",
@@ -479,7 +581,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 773,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "b96ad105ff0255dafe60c61dfa91c3656476cc4192507def1c795e070ac4bdfe",
+      "line_count": 13
     },
     {
       "id": "P053",
@@ -488,7 +592,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 76,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "e6db1326fc512cd3a8fa595f9556a1ba46969618be710403ec28339b3e1a2d1b",
+      "line_count": 4
     },
     {
       "id": "P054",
@@ -497,7 +603,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 469,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "32220d1fb5853ddab38feb3fe95537f47f3c122ab394428c7086d390069c66d4",
+      "line_count": 16
     },
     {
       "id": "P055",
@@ -506,7 +614,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4278,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "18a68ad360ebbe182b207d6a29d7cc9fff3b5d2ce7324b97b8863f5322b81500",
+      "line_count": 222
     },
     {
       "id": "P056",
@@ -515,7 +625,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 31255,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "1b6099c920893d7b1cecfbe72049607b485901f6485b78474d5b2ee0853b0bdd",
+      "line_count": 1019
     },
     {
       "id": "P057",
@@ -524,7 +636,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2267,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "29a9ad70d992a5863c87a086482219fc35c0b6fa4c747bd928a1d810aaf5c139",
+      "line_count": 21
     },
     {
       "id": "P058",
@@ -533,7 +647,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3339,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "1d9332dd2ab5515c0daae1ca267e04ca33bd4b399cdade622c9dd0dc50ed8564",
+      "line_count": 29
     },
     {
       "id": "P059",
@@ -542,7 +658,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2077,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "047ffb42ce8d09e184665fa351dfe23de695582a853789b13fd5358bb0a053a6",
+      "line_count": 53
     },
     {
       "id": "P060",
@@ -551,7 +669,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 679,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "b172f99ca72de2c3bc208665d9a4a976069c8ad7474273bef9542237878192d1",
+      "line_count": 14
     },
     {
       "id": "P061",
@@ -560,7 +680,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 0,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "line_count": 0
     },
     {
       "id": "P062",
@@ -569,7 +691,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 184,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "56dd5d3112824b8ca533238d8060e7849fdf80c26c03d6972fe2ae050da5da83",
+      "line_count": 11
     },
     {
       "id": "P063",
@@ -578,7 +702,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 53,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "6ed27f58dc0c3773a1379d043ddb22c7256cd23d132744df5131e1ead1de84a9",
+      "line_count": 5
     },
     {
       "id": "P064",
@@ -587,7 +713,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 169,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "409f3baae05f69dc873181a7a4d9d7729363bd4431a9bd83f997842860f501e5",
+      "line_count": 9
     },
     {
       "id": "P065",
@@ -596,7 +724,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7536,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "c2c94f3c88baef065adb45d1e657c1029c1992c92110df4a528524adea5fc1d4",
+      "line_count": 97
     },
     {
       "id": "P066",
@@ -605,7 +735,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 32758,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "fd0ba787590e9e93454bcc4e47a31c9f718e140ce2b9a60f6682f6019c23058b",
+      "line_count": 227
     },
     {
       "id": "P067",
@@ -614,7 +746,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 11324,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "250f3ac7ca930b6166ba520c2e6989d44731aa8175247178c2b8434128d62870",
+      "line_count": 275
     },
     {
       "id": "P068",
@@ -623,7 +757,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1111,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "245741b1bae133888ab77f43868ff7b26db8fbb1c0618141da4bd304e9e4fcfb",
+      "line_count": 22
     },
     {
       "id": "P069",
@@ -632,7 +768,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 267,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "5728280a1e169fe5b0b2a7553797141d8501ff559422ff71638c6df93e2e0563",
+      "line_count": 6
     },
     {
       "id": "P070",
@@ -641,7 +779,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8555,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "46831bd9b919fea2164f6177e079f157b79027aba62731dd006b3c91d5bd48c4",
+      "line_count": 138
     },
     {
       "id": "P071",
@@ -650,7 +790,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3900,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "96f6b1218dfe5595fdb06b4f59047fcc0f10fecbebec2a23b7a47f991c6a6c5a",
+      "line_count": 47
     },
     {
       "id": "P072",
@@ -659,7 +801,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 489909,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "3c9f495decea1e38eab1517118e21bf87214e9e46bf3fff1b7ce397f6770be67",
+      "line_count": 4807
     },
     {
       "id": "P073",
@@ -668,7 +812,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1024,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "ed50f5745fbcb845251debe79cc464a2142c62cf17a013c2a29de38bf248f158",
+      "line_count": 8
     },
     {
       "id": "P074",
@@ -677,7 +823,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1954,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "058b1315b1791753ab75274e9284b53d267ccb0e20c6473f68faadc9cfced997",
+      "line_count": 29
     },
     {
       "id": "P075",
@@ -686,7 +834,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 33949,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "2a1e13bea704373ed1e0e14030162488973d4e2c173144f675a34a53d311ddd6",
+      "line_count": 310
     },
     {
       "id": "P076",
@@ -695,7 +845,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 94781,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "b0f071c219e24019bf933b1a2592438ab796901a6f6ef8e058c3477a8080b96b",
+      "line_count": 629
     },
     {
       "id": "P077",
@@ -704,7 +856,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4317,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "d8caa2d82a84669f417585850e15eddaebddb6b3458bd2a691df069765e5bd90",
+      "line_count": 75
     },
     {
       "id": "P078",
@@ -713,7 +867,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 5190,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "3e4ce679dce115b9a181e4683d111f25a4bb62b9e4141bf6a5a7383ed1651160",
+      "line_count": 87
     },
     {
       "id": "P079",
@@ -722,7 +878,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4805,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "e080170bb35be49525bbdf8fd92e4c9cea1708c36bd266403c994648d4b0ef6b",
+      "line_count": 103
     },
     {
       "id": "P080",
@@ -731,7 +889,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1650,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "2b1a911b6de3d0e3f8b22b60395d143e12f6ca3c26640e531866b437a0468f86",
+      "line_count": 44
     },
     {
       "id": "P081",
@@ -740,7 +900,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4924,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "811259c8158d0b8eb37bd13219ee8df98cd6edd5f5e5a4a4970018dd14ffc03a",
+      "line_count": 94
     },
     {
       "id": "P082",
@@ -749,7 +911,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4995,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "1a8eb3549b47093be64cd0db527f553c971a63f31a021e3d4d6176ef462b4d04",
+      "line_count": 111
     },
     {
       "id": "P083",
@@ -758,7 +922,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 78527,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "768202bec8e3ac8c61347f619b5b1de7ad9aa9a8727e2837b89944fa65d54d12",
+      "line_count": 756
     },
     {
       "id": "P084",
@@ -767,7 +933,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2760,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "d5c88fad37b035913ba8c49914ee0cad5968871ecf5bfa273d963d5d3f0c8626",
+      "line_count": 60
     },
     {
       "id": "P085",
@@ -776,7 +944,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 45774,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "7544670d352e3db9aa9e3fdbd6fc770c88d8c85dff4dad7d97edff0ceb170f71",
+      "line_count": 371
     },
     {
       "id": "P086",
@@ -785,7 +955,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 61558,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "774a983be83e2bf83524c85fc7b34718cf3145f09380c74fd79c87252a103601",
+      "line_count": 702
     },
     {
       "id": "P087",
@@ -794,7 +966,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7932,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "15ff154300c47e45bf8aa5c80cd96c037c1d3dccf47ed7994947fcdc0bdae5ee",
+      "line_count": 102
     },
     {
       "id": "P088",
@@ -803,7 +977,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 6058,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "f45b7c778e3581277214253829cfd0fd0555a2b174b37b8d05eaf5bd949afdb5",
+      "line_count": 64
     },
     {
       "id": "P089",
@@ -812,7 +988,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2523,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "3ebd31c9f46baadae986921ed3350e7d31067d4bc2f0636cae1d0c9536bb20ad",
+      "line_count": 31
     },
     {
       "id": "P090",
@@ -821,7 +999,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 67328,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "7af365d5e8c5e76950c0b49120e2cb6ac758101413f34355e470cbc5074194f9",
+      "line_count": 784
     },
     {
       "id": "P091",
@@ -830,7 +1010,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 40725,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "b60ad869785ebd762bc9a14dc08eec034e018cce91861c6ffdbe4ef7c858c2a8",
+      "line_count": 460
     },
     {
       "id": "P092",
@@ -839,7 +1021,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 116246,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "fc3e43ce4f29a9b8f601513a30cca58f9ef0653aae5f816017960dbb6fa0394d",
+      "line_count": 871
     },
     {
       "id": "P093",
@@ -848,7 +1032,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3608,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "b92ae89dec71c04a5f3a650cf9096eed079606d51468831c7ff715c9d25a4da8",
+      "line_count": 40
     },
     {
       "id": "P094",
@@ -857,7 +1043,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 983,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "84e467b2dee72543317fdb731065f8acec3be45279edb0c233af339d8a0be514",
+      "line_count": 33
     },
     {
       "id": "P095",
@@ -866,7 +1054,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1004,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "22c00a65a516617a4bf5901cead900a7d08bb78102219407cdc5b146666f14b7",
+      "line_count": 33
     },
     {
       "id": "P096",
@@ -875,7 +1065,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1137,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "d93878a17e256a0b07541c4fb15e585594a2dee56c8a81f5a0f59dd40f0449db",
+      "line_count": 33
     },
     {
       "id": "P097",
@@ -884,7 +1076,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1578,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "4ce947e1cb42e88cca4999f7982914b411b5f60674dd6b001d815e2412403164",
+      "line_count": 41
     },
     {
       "id": "P098",
@@ -893,7 +1087,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2448,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "e015b6b2c8613b83b6370e749c37db869ec27df4318adafbbc1b326c6dd55404",
+      "line_count": 54
     },
     {
       "id": "P099",
@@ -902,7 +1098,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7371,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "0933179f0f34753b37573280032aec5a71a3bb5ccc4ed3a4db11506b6a6593e3",
+      "line_count": 93
     },
     {
       "id": "P100",
@@ -911,7 +1109,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3239,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "9890ee2bca81d3af403470297432c5a71d29278b632f4e47f194290d21279226",
+      "line_count": 41
     },
     {
       "id": "P101",
@@ -920,7 +1120,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3711,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "68024913aab9877e72e808bf827c63109a5420f3711b97e5b7bfec3216dadc5a",
+      "line_count": 57
     },
     {
       "id": "P102",
@@ -929,7 +1131,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4217,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "93df09ea8bb621e04dd84c10cda99906776e85ff9a90cd4a8ce162c069753996",
+      "line_count": 46
     },
     {
       "id": "P103",
@@ -938,7 +1142,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2820,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "83a0298e1833967d9405d2ddf9e00deb2dc8d0f8f5f9f3485ef61e561835a900",
+      "line_count": 45
     },
     {
       "id": "P104",
@@ -947,7 +1153,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7348,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "43ad307c8dd001b94f3c5af968d321ff0fd8f613a0402e3c5c509e3bd093ee3c",
+      "line_count": 33
     },
     {
       "id": "P105",
@@ -956,7 +1164,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 26264,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "bc4decf28f8e40072b760ba3791e0f3eb449bd400fd1c3086ea506a314d9f18d",
+      "line_count": 137
     },
     {
       "id": "P106",
@@ -965,7 +1175,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 6271,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "fcb743d538b161cecdbab6dd6035b18d6957631aa57e3db12f7b37093f1fd7f1",
+      "line_count": 58
     },
     {
       "id": "P107",
@@ -974,7 +1186,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 20042,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "17a67faf7be0e659c523de1d6bc4b13c3765065b9319071f3ddeb8ddcbb8084b",
+      "line_count": 412
     },
     {
       "id": "P108",
@@ -983,7 +1197,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 15471,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "8b7cdbd854c8c0158138120b49651121527e417f71c60b6ee0fa4bb895a192cd",
+      "line_count": 249
     },
     {
       "id": "P109",
@@ -992,7 +1208,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 9490,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "527602fb74eddd1f5fcf72a6022792b56da16262b606cbd5c55936f05776a6c2",
+      "line_count": 143
     },
     {
       "id": "P110",
@@ -1001,7 +1219,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8614,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "138572c92aab1602a03d078529bba9e035ab19174f623bbbb31c07f552a816d9",
+      "line_count": 227
     },
     {
       "id": "P111",
@@ -1010,7 +1230,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 330,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "59bb9707893010ab3f4016b52ed0499d26b0ec50c3d9ba5abbde011d3dd7d1c8",
+      "line_count": 8
     },
     {
       "id": "P112",
@@ -1019,7 +1241,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 10338,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "6e3ebe8c82c9067b7cc8013ad9901eb8ac3d6e6bfd316bfca2f33187a6ac0070",
+      "line_count": 219
     },
     {
       "id": "P113",
@@ -1028,7 +1252,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3793,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "65f0dd8c97e7219fca3fb1f453befb1856c31fb3274bddffc160f35cc973a96d",
+      "line_count": 85
     },
     {
       "id": "P114",
@@ -1037,7 +1263,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2738,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "9a6f1b83bce9eef9b60ff44cb87c5da86e9751dbd9229274b01381b994aeb398",
+      "line_count": 101
     },
     {
       "id": "P115",
@@ -1046,7 +1274,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 19359,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "e4328a4e8753b7121c377d9398ba372a51c762c5594ab923c1e59f51c5ae7676",
+      "line_count": 271
     },
     {
       "id": "P116",
@@ -1055,7 +1285,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1115,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "7b90e8d0c77b77c6ce448a0d38d146e9e9d21f3992aaac851436370e1b13ba29",
+      "line_count": 20
     },
     {
       "id": "P117",
@@ -1064,7 +1296,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 16826,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "aac251592301758dc7ac3770f5e78df30866ae65f31663a14358eb004ee4b02a",
+      "line_count": 281
     },
     {
       "id": "P118",
@@ -1073,7 +1307,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3370,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "87932670521393a415d28a4abb02209dc10713e8214df0516455b6730dd072ee",
+      "line_count": 130
     },
     {
       "id": "P119",
@@ -1082,7 +1318,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3229,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "0584fcc95fa041f96927b0ff9eafed7f8fb9d673bb5b5c88ad37b5b9328a0cfa",
+      "line_count": 53
     },
     {
       "id": "P120",
@@ -1091,7 +1329,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 17302,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "b97842515be779ac158ea5ea709de9bbc13a04f2cf9d8b73a56ebeb8d30fcc89",
+      "line_count": 200
     },
     {
       "id": "P121",
@@ -1100,7 +1340,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 13446,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "3e02f1ed986907db5315ade3a24ee0c58e4b87fda4e5a431a7f9e02c7c40d14a",
+      "line_count": 211
     },
     {
       "id": "P122",
@@ -1109,7 +1351,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 13631,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "9e91480e646f87e356e8a4d6dcc4e4d5a22eb10be0500eb55cae5e99ce644263",
+      "line_count": 245
     },
     {
       "id": "P123",
@@ -1118,7 +1362,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3655,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "04544f243e90f56f8da57056acc257079193f2d79717ae2cf11e7ed6c159698a",
+      "line_count": 70
     },
     {
       "id": "P124",
@@ -1127,7 +1373,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2259,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "39f361e111511ce544b4cfef227d45c4fa068f0e43ba26a079b08a135e3e6364",
+      "line_count": 59
     },
     {
       "id": "P125",
@@ -1136,7 +1384,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 6717,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "d46e0d6fdcbb901f0d13ef6dd67c5886e87b5bfa8e1dc1690d83f3eb51ee6381",
+      "line_count": 133
     },
     {
       "id": "P126",
@@ -1145,7 +1395,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 20376,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "5d9e0a5a8cc3ffc72192987042ae351987ee63adf2648e7e0ef59d9930ac5b1b",
+      "line_count": 324
     },
     {
       "id": "P127",
@@ -1154,7 +1406,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3994,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "2df5115f6c8895f4980c020491a877859e73abe707b5653a4e29675261f13d67",
+      "line_count": 73
     },
     {
       "id": "P128",
@@ -1163,7 +1417,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 189,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "2c124fd8ab66944d1e3a1e842374e84ec492ca6caad2e89ad316545e426ef5ad",
+      "line_count": 9
     },
     {
       "id": "P129",
@@ -1172,7 +1428,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4680,
-      "batch": "A"
+      "batch": "A",
+      "sha256": "5f2a947ee5f1495496ac8ec05d80f62e46d2bbb22a01c71e32016bd08f4a8ac0",
+      "line_count": 70
     },
     {
       "id": "P130",
@@ -1181,7 +1439,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 48,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "78a787dd4ae3dc250d3cfb1db5adf9943156ecfd7401cc5005047bbf159907e4",
+      "line_count": 2
     },
     {
       "id": "P131",
@@ -1190,7 +1450,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7051,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "71149bbc3da3d40522d1a78915f8e7ff1bda0925695281cbb5adc07e7a34cedb",
+      "line_count": 148
     },
     {
       "id": "P132",
@@ -1199,7 +1461,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2953,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "7d53e9a29d415682eabde76c2a02ca672e1a37097d67d40b184629f9ddd990e0",
+      "line_count": 81
     },
     {
       "id": "P133",
@@ -1208,7 +1472,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7549,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "06607e0a8dd0d6397d9d461d20369c3712c436b3fe71c4fa28b304602a42e7aa",
+      "line_count": 122
     },
     {
       "id": "P134",
@@ -1217,7 +1483,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1803,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "4b4fa2b46452e29f601555d4f297c0aae366414c3f4d03d02e5733ec6dac26e9",
+      "line_count": 35
     },
     {
       "id": "P135",
@@ -1226,7 +1494,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1069,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "d785c0b9586d32d6d46bfafcb605e1fe4c21e58ba0ca445fee4394552a77ba30",
+      "line_count": 16
     },
     {
       "id": "P136",
@@ -1235,7 +1505,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 24657,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "574e06f6d5f5129e41c7939cc7ac4351003ff672ac9cf3d3d919f0dff75f8417",
+      "line_count": 461
     },
     {
       "id": "P137",
@@ -1244,7 +1516,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 21162,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "1669ad83facf4caa49f22ce5f5e1fd9ae3f2ddd432f50478c115a01ccfb6854c",
+      "line_count": 383
     },
     {
       "id": "P138",
@@ -1253,7 +1527,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4356,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "fa0af709af61eeb8ceb3c04cdbef10efea7c14d0f336defa3d3415cd9eba082b",
+      "line_count": 70
     },
     {
       "id": "P139",
@@ -1262,7 +1538,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3388,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "7534344c604661c67c17cf0e07ee61e497ab8f44c558543cb637d3d36d37139f",
+      "line_count": 59
     },
     {
       "id": "P140",
@@ -1271,7 +1549,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3693,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "d01b6b6ceedc96cf96a40c78736b180b3153af2f2978b38644aa008f8821ce5b",
+      "line_count": 64
     },
     {
       "id": "P141",
@@ -1280,7 +1560,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1377,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "92a231ff52825d5ca560836e1a217c9f21d04a62eed8d6c9c50699c467c02583",
+      "line_count": 20
     },
     {
       "id": "P142",
@@ -1289,7 +1571,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1831,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "24b9b53ce4470e16633991fb030d68714667a2ffadfda0f43746dd4513818f80",
+      "line_count": 31
     },
     {
       "id": "P143",
@@ -1298,7 +1582,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 6628,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "85c415377b6c1c254725a0362328657c56a5fc9b2cc2875393b86052988498cc",
+      "line_count": 105
     },
     {
       "id": "P144",
@@ -1307,7 +1593,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 30714,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "b6f7150fdc7e6aa1f66e4023787514124920bdd5bd459ec7670f0adcc83be427",
+      "line_count": 554
     },
     {
       "id": "P145",
@@ -1316,7 +1604,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 11904,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "05ca5ced5e8f51dadbb6e2c6f468d6ffd33917ac9faf0ae06019dda699030436",
+      "line_count": 250
     },
     {
       "id": "P146",
@@ -1325,7 +1615,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 5814,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "fcd87a0a203357f82ee9152638dd729308d085a9c268062aad3568a30d61d60d",
+      "line_count": 133
     },
     {
       "id": "P147",
@@ -1334,7 +1626,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2649,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "9662bc5b7ffb6b333482f5bd98f6d7a98f58475ee1e2e14b1609e71e807530f2",
+      "line_count": 45
     },
     {
       "id": "P148",
@@ -1343,7 +1637,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8584,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "20459484eb41730977a0ce69bc41859f1e94141a3c9457ad55e37761ed8accd9",
+      "line_count": 134
     },
     {
       "id": "P149",
@@ -1352,7 +1648,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 17977,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "54bd37b932b72083148c61b8ab5c1b8c90a56280ec668ce6c6138b2227a79999",
+      "line_count": 277
     },
     {
       "id": "P150",
@@ -1361,7 +1659,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2557,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "70dff76578ce6374d73b9925263fc991141f1298ee5c5a8090e3524344a5b72b",
+      "line_count": 51
     },
     {
       "id": "P151",
@@ -1370,7 +1670,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4543,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "7f9537a9ab897ae387fa8d629c1b6644fea8f82bb0e8d567333d19a29e9f59c5",
+      "line_count": 77
     },
     {
       "id": "P152",
@@ -1379,7 +1681,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 626,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "bf4c5e1ed3dcad8e2df8fdba6935239e69b309620ee7b3d3b8f204f9620a9586",
+      "line_count": 22
     },
     {
       "id": "P153",
@@ -1388,7 +1692,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7458,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "10bcbb01d0d8c1f6c0506dc2694772ef23655add8b95a480246d4d0e3b26d79f",
+      "line_count": 164
     },
     {
       "id": "P154",
@@ -1397,7 +1703,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 28016,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "59c3f4385f1928fef317875580778bd99ca0b2e74a543d51497fddbf45677088",
+      "line_count": 528
     },
     {
       "id": "P155",
@@ -1406,7 +1714,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2763,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "891e385c92e0bbda8172dc495bba7ca5c7f33a33a117e2c453354fce483dc682",
+      "line_count": 69
     },
     {
       "id": "P156",
@@ -1415,7 +1725,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3302,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "48e8e5bce0315e7ef187f546b2de4d88d68581c9d69a4dfe4a74b1097fa3b941",
+      "line_count": 79
     },
     {
       "id": "P157",
@@ -1424,7 +1736,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 27768,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "cf63a25afbf5bf83bc6add8883f5ae4356a3ffdfc476d7afa5a625b6b749c1bf",
+      "line_count": 714
     },
     {
       "id": "P158",
@@ -1433,7 +1747,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1768,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "b26cf35cfbeb627144c9d03eb1cd3f101022970e8e011071aae5d3e65d353acb",
+      "line_count": 39
     },
     {
       "id": "P159",
@@ -1442,7 +1758,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 13285,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "b4607fb3e8dbffb4f56e71fbf692208fc7ecbe7094c4bb0f9c1acfec991e6ee6",
+      "line_count": 282
     },
     {
       "id": "P160",
@@ -1451,7 +1769,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 724,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "d5def8da059568be2116dfbae14c0671a7db12b19cdb8b5462860ec1ea9c4c26",
+      "line_count": 40
     },
     {
       "id": "P161",
@@ -1460,7 +1780,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 32450,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "dc20e7f79af1627fb02879259477d1eb2cb0ecc8e6cafd4d586311be6f5d606f",
+      "line_count": 640
     },
     {
       "id": "P162",
@@ -1469,7 +1791,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 418,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "6c3354fde497bc6a310b15e87b3c5675f066b738235ebffa82e0da90e2cfff84",
+      "line_count": 13
     },
     {
       "id": "P163",
@@ -1478,7 +1802,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 8250,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "d3a8a1d5992f3b490d6b9b8e322cefd80b277d94c911c8c02fdb51b63d2372d5",
+      "line_count": 165
     },
     {
       "id": "P164",
@@ -1487,7 +1813,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 5108,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "9288191ef74b71771dc9299d822c0a3751ca743a88ab92987650e6a4f89d45e4",
+      "line_count": 107
     },
     {
       "id": "P165",
@@ -1496,7 +1824,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 12220,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "f6f62aeead663c243e4ad00235ffb7b552d20887ed94a1ccf673ef7f06de7016",
+      "line_count": 285
     },
     {
       "id": "P166",
@@ -1505,7 +1835,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 696,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "4c6248f000365bd4af943a672532d6bdeb179f46e6831d05d4f2f1ecc4d6e439",
+      "line_count": 16
     },
     {
       "id": "P167",
@@ -1514,7 +1846,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4717,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "655ebdb731fbf0d53b3c11027108d92aa95e49c77bf4c3feaaadf819444a8fee",
+      "line_count": 108
     },
     {
       "id": "P168",
@@ -1523,7 +1857,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 6535,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "cc48e1e4a3347f523f4fbf0cce9c77fa9313b2ac5e4788853c280ed079b1c57f",
+      "line_count": 135
     },
     {
       "id": "P169",
@@ -1532,7 +1868,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 625,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "a5801ed5ab632cbdd21cc91628f1bd9cc6b37eaabb840c769e074f46d87bdf4b",
+      "line_count": 14
     },
     {
       "id": "P170",
@@ -1541,7 +1879,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 896,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "1f854145bfe24bc2cd91e6092e36dbf9b6f398de5ade3e5b7bac315c5669e0f8",
+      "line_count": 18
     },
     {
       "id": "P171",
@@ -1550,7 +1890,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7438,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "39237cb3d5579f537af78343c7d77e3e441a205372030bb742e03c87ada72cdf",
+      "line_count": 194
     },
     {
       "id": "P172",
@@ -1559,7 +1901,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 910,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "581e1c376edeabe3d25b64ea7bac59e14cc731627b17b97acccf0cce1dd051cb",
+      "line_count": 29
     },
     {
       "id": "P173",
@@ -1568,7 +1912,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 20313,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "28849ec6bf1a56c8b6598cba2e456e0b8240eadd4fd915c25b599d27694db6df",
+      "line_count": 145
     },
     {
       "id": "P174",
@@ -1577,7 +1923,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4370,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "1952dff4cb801c16cd91d85488628b7aec2cdf92073094bed35a2744cbe57630",
+      "line_count": 62
     },
     {
       "id": "P175",
@@ -1586,7 +1934,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 433,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "1d14a7b4e5c8864847015390efe4d61072dc60ea9300aff7144921af6836a527",
+      "line_count": 14
     },
     {
       "id": "P176",
@@ -1595,7 +1945,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 1706,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "56cedbf33f0baba96ddcdbf41aadd36f41b264dc4d125544b655978a1da5d86e",
+      "line_count": 27
     },
     {
       "id": "P177",
@@ -1604,7 +1956,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 22495,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "a6abf54528dadfea073eb47b31c95cb70943f4c38ce33cf5422b92c7c5b730a3",
+      "line_count": 568
     },
     {
       "id": "P178",
@@ -1613,7 +1967,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 35707,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "2bac9089ce7a13ee323339811c94e7952aed0afee1b40580ee35fa40ecd6ae8b",
+      "line_count": 554
     },
     {
       "id": "P179",
@@ -1622,7 +1978,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2970,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "eaefbb94956812b9848d95a4d61fe0f1db5cb65583ede9df0ae88be9c8933264",
+      "line_count": 58
     },
     {
       "id": "P180",
@@ -1631,7 +1989,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3571,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "b94046534c4d26ad5a30ad10117863bc9b3226ea7cc2a11610441f8501cf0691",
+      "line_count": 72
     },
     {
       "id": "P181",
@@ -1640,7 +2000,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3716,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "4021305a22c2481a7c4a3fb604bd130b6e3b5d2198cbffb2c06a18e136d250fa",
+      "line_count": 73
     },
     {
       "id": "P182",
@@ -1649,7 +2011,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7160,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "b0e746665b564605cb86d2afac22fcffa7c9e636aff79591969df01c1899c3bc",
+      "line_count": 111
     },
     {
       "id": "P183",
@@ -1658,7 +2022,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7214,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "d712033d0882beb9018ff583a5a1ac051c17741b2802114b37ee3f14038a4e83",
+      "line_count": 117
     },
     {
       "id": "P184",
@@ -1667,7 +2033,9 @@
       "mode": "100755",
       "object_type": "blob",
       "byte_length": 98,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "f8f74171be553022f31aee0bce71005b8c677cb785a531da23f403ebe108be62",
+      "line_count": 5
     },
     {
       "id": "P185",
@@ -1676,7 +2044,9 @@
       "mode": "100755",
       "object_type": "blob",
       "byte_length": 123,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "684ad505cfc47a847565c642926089994c5674503c9cb8bc238089394c8804ae",
+      "line_count": 7
     },
     {
       "id": "P186",
@@ -1685,7 +2055,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7661,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "cc8ec50f955f1ff5ac4767dd5a154774c5d686f83b0c3df4cb056d7242838c1a",
+      "line_count": 223
     },
     {
       "id": "P187",
@@ -1694,7 +2066,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 23032,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "a28d5f20bf184b6b9f4e876978caa033e72f7748ef004a2038c02649d5e8ce1a",
+      "line_count": 535
     },
     {
       "id": "P188",
@@ -1703,7 +2077,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 17877,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "36c07f182dc31952a00cd692b47e06f7d3c837172a98302f56a3c88143c1d120",
+      "line_count": 291
     },
     {
       "id": "P189",
@@ -1712,7 +2088,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2182,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "551489255af2ddc1d46399802426d6d97a3d1c0f14ed37b8262e256d7e3ee0a5",
+      "line_count": 43
     },
     {
       "id": "P190",
@@ -1721,7 +2099,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 17068,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "878869cdf69391b89155db6fd3154789cb172d79151b65cda3aa0348a5822740",
+      "line_count": 283
     },
     {
       "id": "P191",
@@ -1730,7 +2110,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 15843,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "a019538d7fe363ec9a442772d4b31626aee0ffc3fc3fa86e5e01f933a12e9f9d",
+      "line_count": 252
     },
     {
       "id": "P192",
@@ -1739,7 +2121,9 @@
       "mode": "100755",
       "object_type": "blob",
       "byte_length": 6219,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "b3d7e37a0a8b158cea5aa6f1b5460b0f9078098906bea97c9ff663448e4ed8dd",
+      "line_count": 131
     },
     {
       "id": "P193",
@@ -1748,7 +2132,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 16553,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "377020e28197c3cdd4a7dab6dff561144bd56426c1b11a2193769fef966f0c6a",
+      "line_count": 278
     },
     {
       "id": "P194",
@@ -1757,7 +2143,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 3111,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "d4a4719124a246d226428d0589b24ea3ccaaccc689f8ed326b839eaf3be7d9e8",
+      "line_count": 66
     },
     {
       "id": "P195",
@@ -1766,7 +2154,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 24256,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "a4bb5d9e85621cf116750f9fbaf4164d2c10781e529adf6ce5c75670b41f0dc0",
+      "line_count": 315
     },
     {
       "id": "P196",
@@ -1775,7 +2165,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 2753,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "bd5f960821b7446ed69bc0703bc75dce8d29f3ca1982dd96b0e7eb8e0942f03f",
+      "line_count": 76
     },
     {
       "id": "P197",
@@ -1784,7 +2176,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 4984,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "2131adbaf9b4d012543c3e5cbd6c112397cb86a876d30ba6b83f1215cf898278",
+      "line_count": 71
     },
     {
       "id": "P198",
@@ -1793,7 +2187,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 5751,
-      "batch": "B"
+      "batch": "B",
+      "sha256": "1e01c8b7ae925c1a4e02243b8e5186c3f8db2d77b4c3adc754dccd76315dce30",
+      "line_count": 192
     },
     {
       "id": "P199",
@@ -1802,7 +2198,9 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 126,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "3566d273bac7985b182fde3fc49e3d9a6b8d1451c122c31a4f87877faa9ae7aa",
+      "line_count": 5
     },
     {
       "id": "P200",
@@ -1811,8 +2209,19 @@
       "mode": "100644",
       "object_type": "blob",
       "byte_length": 7461,
-      "batch": "C"
+      "batch": "C",
+      "sha256": "fbe803ff0db57acdd0c1272f4bc09beee0f4778bc270e4bc7c6dc1b68e822fa1",
+      "line_count": 200
     }
-  ]
+  ],
+  "capture": {
+    "status": "ALL_BYTES_VERIFIED",
+    "method": "GitHub MCP at immutable baseline; raw Git blob SHA-1 and byte size recalculated for all sources; SHA-256 calculated for transport",
+    "semantic_reading": "Tracked separately in the per-source coverage; capture alone is not semantic completion"
+  },
+  "population_digests": {
+    "encoding": "UTF-8, bytewise path order, LF after each record",
+    "paths_sha256": "87b27e391d91a7371e5266ecbda370576032b7e125467d0a744b0585dea40e6f",
+    "tree_records_sha256": "49d641fae826831e1af5c9f162df8a1d0b2564ba16f07825142088de9f39a1c0"
+  }
 }
-

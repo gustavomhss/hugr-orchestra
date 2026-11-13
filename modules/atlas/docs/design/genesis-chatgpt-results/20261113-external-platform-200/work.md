@@ -15,7 +15,7 @@ Os 200 caminhos foram resolvidos em árvores Git completas, sem truncamento. Há
 
 | Lote | População | Responsabilidade | Estado |
 | --- | ---: | --- | --- |
-| A | 54 | Distribuição, Nix, CI e contratos de distribuição | AUTORIA_EM_CURSO |
+| A | 54 | Distribuição, Nix, CI e contratos de distribuição | PRODUZIDO; REVISÃO PENDENTE |
 | B | 69 | Tooling, scripts, patches e lockfile | AUTORIA_EM_CURSO |
 | C | 77 | Arquitetura, guias, configs e visual QA | AUTORIA_EM_CURSO |
 
@@ -35,3 +35,7 @@ L1–L2 precedem a aceitação de L3–L4. O candidato final deve manter lacunas
 
 Uso de tokens, custo e tentativas físicas internas do provedor: UNKNOWN. A publicação observará HEAD/parent/tree reais e lease sem força, com conferência remota. O estado atual é IN_PROGRESS; este checkpoint não é conclusão.
 
+
+## Checkpoint de autoria A
+
+Os seis corpos `bodies/a-01.md` a `bodies/a-06.md` contêm seções para 54/54 fontes de A, lidas integralmente pelo autor. Os bytes capturados foram conferidos independentemente pela principal. Os corpos ainda não têm aceite do par de juízes. B e C continuam em autoria; o mapa consolidado de cobertura e os vínculos de revisão serão incorporados ao pacote final.
