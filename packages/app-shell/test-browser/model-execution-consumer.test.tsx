@@ -322,6 +322,7 @@ test("E6 App one canonical context query disables an unsupported rendered row wi
   const view = await selectorDOM(owner)
   const afterSelector = snapshot()
   try {
+    await wait(() => owner.local.model.execution.read().status === "ready", "actual selector canonical response applied")
     const row = view.rows().find((item) => item.textContent?.includes("Blocked model"))
     expect(row, "real selector must retain the catalog entry").toBeDefined()
     expect(calls.queries()).toHaveLength(1)
