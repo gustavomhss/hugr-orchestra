@@ -25,3 +25,12 @@ jobs:
         with:
           name: maintenance-host-${{ github.sha }}
           path: modules/atlas/maintenance-host.log
+      - name: Export exact compiled public host only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: maintenance-host-dist-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            modules/atlas/packages/adapter-io/dist/src/evaluation-maintenance-host.js
+            modules/atlas/packages/adapter-io/dist/src/evaluation-maintenance-host.d.ts
