@@ -25,16 +25,19 @@ it.each(["indexed", "discarded"] as const)("publishes one complete %s receipt an
   if (decision === undefined) throw new Error("Expected a decision")
   const record = put("memory", { rule: proposal.rule, scope: proposal.scope, frecency: 1 }, proposal.member)
   const event = [...versioned([record]).values()][0]!
-  const indexed = verdict === "indexed" ? {
+  const candidate = {
     record, ref: { contentHash: event.contentHash, eventId: event.id }, sequence: 1,
-  } : undefined
+  }
+  const indexed = verdict === "indexed" ? candidate : undefined
   expect(prepareMemoryDecision(readMemoryDecisionReceipts(repo), decision)).toEqual({ proposal })
   const first = publishMemoryDecisionReceipt(repo, proposal, decision, readRawReview(repo), indexed)
   expect(first.ok).toBe(true)
   const filepath = join(memoryDecisionsDir(repo), `${proposal.id}.jsonl`)
   const bytes = readFileSync(filepath, "utf8")
-  expect(prepareMemoryDecision(readMemoryDecisionReceipts(repo), { ...decision, at })).toEqual(first)
-  expect(publishMemoryDecisionReceipt(repo, proposal, decision, readRawReview(repo), indexed)).toEqual(first)
+  const retry = memoryDecisionInput({ proposalId: proposal.id, verdict, by: "owner" }, at)!
+  expect(retry.id).not.toBe(decision.id)
+  expect(prepareMemoryDecision(readMemoryDecisionReceipts(repo), retry)).toEqual(first)
+  expect(publishMemoryDecisionReceipt(repo, proposal, retry, readRawReview(repo), indexed)).toEqual(first)
   expect(readFileSync(filepath, "utf8")).toBe(bytes)
   const read = readMemoryDecisionReceipts(repo)
   expect(read.rejected).toBe(0)
@@ -43,6 +46,8 @@ it.each(["indexed", "discarded"] as const)("publishes one complete %s receipt an
   if (verdict === "indexed") expect([...read.log.values()][0]?.payload).toEqual(record)
   const competing = memoryDecisionInput({ proposalId: proposal.id, verdict: verdict === "indexed" ? "discarded" : "indexed", by: "owner" }, at)!
   expect(prepareMemoryDecision(read, competing)).toMatchObject({ ok: false, refusal: "proposal-not-open" })
+  expect(publishMemoryDecisionReceipt(repo, proposal, competing, readRawReview(repo),
+    competing.verdict === "indexed" ? candidate : undefined)).toMatchObject({ ok: false, refusal: "proposal-not-open" })
   expect(readFileSync(filepath, "utf8")).toBe(bytes)
   // A coherent filename is insufficient: corruption must taint both projections, not expose either half.
   writeFileSync(filepath, bytes.replace('"version":1', '"version":2'))
