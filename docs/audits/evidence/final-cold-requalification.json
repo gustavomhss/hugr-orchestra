@@ -196,5 +196,12 @@
         "limit": "Actual full selected cohort now passes with bounded startup diagnostics; this does not establish the cause of the original silent READY timeout or qualify the complete Core suite."
       }
     }
+  },
+  "fourthCold": {
+    "run": 43492035272,
+    "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+    "attempt1": "68 success, 2 failure, 0 cancelled; 70 jobs",
+    "attempt2": "Bounded failed-jobs rerun in progress, unchanged source",
+    "evidence": "fourth-cold-requalification.json"
   }
 }
