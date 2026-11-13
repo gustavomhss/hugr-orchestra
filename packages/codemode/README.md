@@ -36,6 +36,18 @@ const result = yield* runtime.execute(`return await tools.orders.lookup({ id: "o
 
 Three optional limits, none set by default (the host decides): `timeoutMs`, `maxToolCalls`, `maxOutputBytes`. Output over `maxOutputBytes` is truncated and marked, never failed.
 
+With `timeoutMs` set, regular expressions require an explicitly supplied isolated native executor. Without one,
+regex operations return an `ExecutionFailure` diagnostic saying the executor is unavailable. Untimed programs retain
+the existing native path. `NativeRegex` exports the provider reference and strict data protocol; CodeMode does not
+depend on Core or Server.
+
+An Orchestra host can provide `CodeModeNativeRegex.layer` from `@orchestra/core/codemode-native-regex`, backed by its
+actual `AppProcess` service. Keep that Layer alive around `execute`; constructing it in a parent process does not
+configure a child process. Each finite execution serializes its native operations, owns and joins each helper, and
+rechecks its absolute deadline before delivering a result or admitting another tool. Replacement callbacks run in
+the caller's Effect services and Scope. A timeout does not claim general preemption of synchronous parsing, copying
+or serialization in the parent, and it does not introduce a default output or memory cap.
+
 The supported language is documented in the runtime `instructions()`; [`codemode.md`](./codemode.md) holds the design notes. It excludes `eval`, modules, classes, generators, timers, `new Promise` and `.then` chaining.
 
 ## Authority
