@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "run": 43453802489,
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43453802489",
+  "source": "9ab7680cc512bfc6f4e44a77f7056eb723e2b74e",
+  "status": "in-progress",
+  "inputs": {
+    "packages": "",
+    "cold": true,
+    "windows_e2e": false
+  },
+  "priorFailedEpic": 43427741510,
+  "scope": "Complete repository test workflow; normal package selections and existing dedicated native-lane exclusions preserved. No full green or ledger closure yet.",
+  "focusedPrerequisites": {
+    "codeModeBoth": 43450026982,
+    "coreE10Both": 43450029623,
+    "plannerBoth": 43449907397,
+    "boundaryBoth": 43446942835,
+    "memoryPhysicalBoth": 43451586669,
+    "browserConsumerBoth": 43452732952,
+    "browserE2E2SpecsLinux": 43452475375,
+    "cliSchemaBoth": 43452472712
+  },
+  "ledger": {
+    "closed": 63,
+    "total": 65,
+    "stillOpen": [
+      "E10",
+      "M13"
+    ]
+  },
+  "rootCoreFinalTypecheck": {
+    "command": "GOMAXPROCS=2 bun typecheck",
+    "directory": "packages/core",
+    "exit": 0
+  }
+}
