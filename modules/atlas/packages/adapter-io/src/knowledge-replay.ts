@@ -14,15 +14,16 @@
 //   missing  the row's bytes are not under `.atlas/blobs/`, or they do not hash to the row's `contentHash`.
 //
 // A line is considered only when its row differs from the projection's row at that key (ignoring the store's `derivedAt` stamp), so a replay after a
-// replay does nothing. Known limit: a staged candidate that ratify rejected is staged again on a later boot,
-// because nothing records the rejection in the logs yet.
+// replay does nothing. A logged row that an already-held row was built on is not applied: that is a regression,
+// not a clone catching up. An empty projection still receives the folded winner. Known limit: a staged candidate
+// that ratify rejected is staged again on a later boot, because nothing records the rejection in the logs yet.
 
 import { readFileSync } from "node:fs"
 import type { Hash } from "@atlas/contracts"
 import type { CasObject } from "@atlas/kernel"
 import type { CurrentNode, GroundedFact, StoreProjection } from "@atlas/knowledge"
 import { blobPath } from "./layout.js"
-import { readKnowledge } from "./knowledge-log.js"
+import { knowledgeRegresses, readKnowledge } from "./knowledge-log.js"
 import type { KnowledgeEntry } from "./knowledge-log.js"
 import { actorInScope } from "./policy.js"
 import type { AtlasPolicy } from "./policy.js"
@@ -49,9 +50,11 @@ export function replayKnowledge(
 ): KnowledgeReplay {
   const read = readKnowledge(repoPath)
   const projection = rehydrateProjection(disk)
-  const pending = [...read.rows.values()].filter(
-    (e) => !sameRow(projection.current.get(e.row.nodeKey), e.row),
-  )
+  const pending = [...read.rows.values()].filter((e) => {
+    const held = projection.current.get(e.row.nodeKey)
+    if (sameRow(held, e.row)) return false
+    return held === undefined || !knowledgeRegresses(held, e.row, read.lines)
+  })
   const resolved = pending.filter((e) => restoreBlob(repoPath, disk, e))
   const proven = resolved.filter((e) => {
     const fact = disk.get(e.row.contentHash as Hash) as GroundedFact

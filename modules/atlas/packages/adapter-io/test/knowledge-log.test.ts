@@ -169,3 +169,54 @@ describe("migrateLayout knowledge export", () => {
     expect(migrateLayout(repo).knowledge).toBe(0)
   })
 })
+
+describe("replay order", () => {
+  it("keeps the commit that was built on an earlier one when that earlier one is logged later", () => {
+    const disk = store("a")
+    let later: CurrentNode | undefined
+    const built = withKnowledgeLog(disk, {
+      repoPath: repo,
+      seat: "backend",
+      source: {},
+      now: () => "2026-10-28T10:00:00.000Z",
+    })
+    const ahead = withKnowledgeLog(disk, {
+      repoPath: repo,
+      seat: "backend",
+      source: {},
+      now: () => "2026-10-28T12:00:00.000Z",
+      afterCommit: () => {
+        later = emit(built, "nk", { id: "nk", claimNorm: "built on the first", seal: "proven" })
+      },
+    })
+    const earlier = emit(ahead, "nk", { id: "nk", claimNorm: "first", seal: "proven" })
+    if (later === undefined) throw new Error("the later commit did not run")
+
+    expect(readKnowledge(repo).rows.get("nk")?.row.contentHash).toBe(later.contentHash)
+    expect(rehydrateProjection(disk).current.get("nk")?.contentHash).toBe(later.contentHash)
+    replayKnowledge(repo, disk, policy, () => true)
+    expect(rehydrateProjection(disk).current.get("nk")?.contentHash).toBe(later.contentHash)
+
+    const clone = store("clone")
+    replayKnowledge(repo, clone, policy, () => true)
+    expect(rehydrateProjection(clone).current.get("nk")?.contentHash).toBe(later.contentHash)
+    expect(rehydrateProjection(clone).current.get("nk")?.contentHash).not.toBe(earlier.contentHash)
+  })
+
+  it("keeps the later commit when the earlier one ties on time and has the greater hash", () => {
+    const disk = store("a")
+    const alpha = disk.put({ claim: "alpha" })
+    const beta = disk.put({ claim: "beta" })
+    const first = alpha > beta ? { claim: "alpha" } : { claim: "beta" }
+    const second = alpha > beta ? { claim: "beta" } : { claim: "alpha" }
+    const writer = withKnowledgeLog(disk, {
+      repoPath: repo,
+      seat: "backend",
+      source: {},
+      now: () => "2026-10-28T10:00:00.000Z",
+    })
+    emit(writer, "nk", first)
+    const descendant = emit(writer, "nk", second)
+    expect(readKnowledge(repo).rows.get("nk")?.row.contentHash).toBe(descendant.contentHash)
+  })
+})
