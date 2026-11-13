@@ -47,7 +47,7 @@ def retain_private_payloads(run,names):
     fail('private-evidence-source-unsafe')
    before=source.stat()
    data=source.read_bytes()
-   fd=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)
+   fd=os.open(name,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)
    try:
     fst=os.fstat(fd)
     if fst.st_uid!=os.getuid() or fst.st_mode&0o777!=0o600:
