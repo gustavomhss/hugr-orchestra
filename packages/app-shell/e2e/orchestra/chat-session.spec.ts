@@ -292,16 +292,16 @@ test("V2: the composer names its reasoning level and toggles permission auto-acc
   await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
 
   const reasoning = page.getByRole("button", { name: "Choose model variant", exact: true })
-  await expect(reasoning).toHaveText(/^Reasoning: /)
+  await expect(reasoning).toHaveText("Model default")
   await reasoning.click()
   await expect(page.getByRole("menuitemradio")).toHaveText([
-    "Reasoning: default",
-    "Reasoning: low",
-    "Reasoning: high",
-    "Reasoning: max",
+    "Model default",
+    "low",
+    "high",
+    "max",
   ])
-  await page.getByRole("menuitemradio", { name: "Reasoning: high" }).click()
-  await expect(reasoning).toHaveText("Reasoning: high")
+  await page.getByRole("menuitemradio", { name: "high" }).click()
+  await expect(reasoning).toHaveText("high")
 
   const permissions = page.locator('[data-action="prompt-permissions"]')
   await expect(permissions).toHaveText("Ask")
