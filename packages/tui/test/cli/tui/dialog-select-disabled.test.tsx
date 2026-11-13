@@ -24,25 +24,25 @@ test.each(["keyboard", "mouse"] as const)("TUI DialogSelect disabled rows remain
   const observe = (label: string) => fixture.observe(label, { counters: { selected: selected.length, delegated: delegated.length }, dialog: actual.dialog })
   try {
     fixture.context.dialog.replace(() => <DialogSelect ref={(value) => { actual.dialog = value }} showDisabled title="Inspect model availability" current="blocked" options={[
-      { value: "blocked", title: "Disabled choice", disabled: true, footer: "Model is not allowed for this session",
+      { value: "blocked", title: "Blocked row", disabled: true, footer: "Model is not allowed for this session",
         onSelect: (dialog) => { delegated.push("blocked"); dialog.clear() } },
       { value: "ready", title: "Enabled choice", onSelect: (dialog) => { delegated.push("ready"); dialog.clear() } },
     ]} onSelect={(option) => selected.push(option.value)} />)
     observe("original dialog mounted before frame wait")
-    await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Disabled choice") }, "real disabled row rendered")
+    await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Blocked row") }, "real disabled row rendered")
     expect(fixture.app.captureCharFrame()).toContain("Model is not allowed for this session")
     expect(fixture.context.dialog.stack).toHaveLength(1)
     observe("before disabled Enter")
     if (input === "keyboard") await fixture.app.mockInput.pressEnter()
     await fixture.app.renderOnce()
     observe("after render disabled Enter")
-    if (input === "mouse") await click(fixture, "Disabled choice")
+    if (input === "mouse") await click(fixture, "Blocked row")
     await fixture.app.renderOnce()
     expect(selected).toEqual([])
     expect(delegated).toEqual([])
     expect(fixture.context.dialog.stack).toHaveLength(1)
     observe("before enabled down+Enter")
-    if (input === "keyboard") { await fixture.app.mockInput.pressKey("down"); await fixture.app.mockInput.pressEnter() }
+    if (input === "keyboard") { await fixture.app.mockInput.pressArrow("down"); await fixture.app.mockInput.pressEnter() }
     await fixture.app.renderOnce()
     observe("after render enabled down+Enter")
     if (input === "mouse") await click(fixture, "Enabled choice")
@@ -83,10 +83,10 @@ test("TUI DialogSelect footer actions remain available independently of a disabl
     ]} />)
     observe("original footer dialog mounted")
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Connect provider") }, "actual provider footer action rendered")
-    observe("before pressKey(\"tab\")")
-    await fixture.app.mockInput.pressKey("tab")
+    observe("before pressTab()")
+    await fixture.app.mockInput.pressTab()
     await fixture.app.renderOnce()
-    observe("after render pressKey(\"tab\")")
+    observe("after render pressTab()")
     observe("before pressEnter()")
     await fixture.app.mockInput.pressEnter()
     await fixture.app.renderOnce()

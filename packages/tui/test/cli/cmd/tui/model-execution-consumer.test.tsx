@@ -334,10 +334,10 @@ test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A re
     await Bun.sleep(0)
     expect(selecting.mock.calls).toHaveLength(selectionsBeforeMissingB)
     expect(fixture.context.sync.data.provider[0]?.models.blocked, "catalog B remains; only the canonical context list changed").toBeDefined()
-    observe("before pressKey(\"backspace\")")
-    await fixture.app.mockInput.pressKey("backspace")
+    observe("before pressBackspace()")
+    await fixture.app.mockInput.pressBackspace()
     await fixture.app.renderOnce()
-    observe("after render pressKey(\"backspace\")")
+    observe("after render pressBackspace()")
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Consumer model") }, "original dialog restores A after clearing the missing-B search")
     const selectedBefore = selecting.mock.calls.length
     observe("before pressEnter()")
