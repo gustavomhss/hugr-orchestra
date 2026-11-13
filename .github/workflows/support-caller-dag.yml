@@ -14,6 +14,9 @@ jobs:
         working-directory: modules/atlas
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          # The exact pinned base must exist locally for the ancestry guard below.
+          fetch-depth: 0
       - name: Verify isolated branch ancestry
         shell: bash
         run: |
