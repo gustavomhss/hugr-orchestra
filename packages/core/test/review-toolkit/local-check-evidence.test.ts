@@ -127,4 +127,3 @@ test("preflight refusal keeps identity and selection without claiming a native r
   expect(cargo.coverage.caveats).toContain("Native coverage is reported at the tool level.")
   expect(cargo.coverage.caveats).toContain("Workspace analysis respects native manifest ignore metadata.")
 })
-
