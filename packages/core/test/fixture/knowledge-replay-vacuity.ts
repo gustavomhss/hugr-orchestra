@@ -8,7 +8,8 @@ import { Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AtlasParser } from "./atlas-parser"
 
-const SemanticRow = Schema.Record(Schema.String, Schema.Json)
+// Metadata is already JSON-decoded; avoid recursive JSON expansion in matcher inference.
+const SemanticRow = Schema.Record(Schema.String, Schema.Unknown)
 export const modes = ["positive", "testName", "shape"] as const
 export type Mode = typeof modes[number]
 export const Proof = Schema.Struct({

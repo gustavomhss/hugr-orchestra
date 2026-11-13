@@ -32,7 +32,8 @@ export const attacks = [
 
 export type Attack = typeof attacks[number] | "same-hash" | "derivedAt"
 
-const SemanticRow = Schema.Record(Schema.String, Schema.Json)
+// Metadata is already JSON-decoded; avoid recursive JSON expansion in matcher inference.
+const SemanticRow = Schema.Record(Schema.String, Schema.Unknown)
 export const AttackProof = Schema.Struct({
   pid: Schema.Number, mode: Schema.String, source: Row, candidate: SemanticRow,
   changedCandidate: Schema.optionalKey(SemanticRow),

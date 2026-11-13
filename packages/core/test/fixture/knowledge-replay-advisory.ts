@@ -14,7 +14,8 @@ export const modes = [
 ] as const
 export type Mode = typeof modes[number]
 
-const Row = Schema.Record(Schema.String, Schema.Json)
+// Metadata is already JSON-decoded; avoid recursive JSON expansion in matcher inference.
+const Row = Schema.Record(Schema.String, Schema.Unknown)
 export const Proof = Schema.Struct({
   pid: Schema.Number, mode: Schema.String, factIDs: Schema.Array(Schema.String), key: Schema.String,
   claims: Schema.Array(Schema.String), source: Row, candidate: Row, supportCandidate: Schema.optionalKey(Row),
