@@ -30,9 +30,71 @@ def _file_evidence(path):
  data=path.read_bytes()
  return {'present':True,'bytes':len(data),'sha256':sha(data)}
 
+def retain_private_payloads(run,names):
+ # Restricted forensic copy is durable and verified BEFORE public names are unlinked.
+ private=run/'private-failure-evidence'
+ os.mkdir(private,0o700)
+ dfd=os.open(private,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+ copied=[]
+ try:
+  st=os.fstat(dfd)
+  if st.st_uid!=os.getuid() or st.st_mode&0o777!=0o700:
+   fail('private-evidence-directory-permissions')
+  for name in names:
+   source=run/name
+   if not source.exists():continue
+   if source.is_symlink() or not source.is_file() or source.stat().st_nlink!=1:
+    fail('private-evidence-source-unsafe')
+   before=source.stat()
+   data=source.read_bytes()
+   fd=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)
+   try:
+    fst=os.fstat(fd)
+    if fst.st_uid!=os.getuid() or fst.st_mode&0o777!=0o600:
+     fail('private-evidence-file-permissions')
+    view=memoryview(data)
+    while view:
+     written=os.write(fd,view)
+     if written<=0:fail('private-evidence-short-write')
+     view=view[written:]
+    os.fsync(fd)
+    os.lseek(fd,0,os.SEEK_SET)
+    check=b''
+    while len(check)<len(data):
+     chunk=os.read(fd,min(65536,len(data)-len(check)))
+     if not chunk:break
+     check+=chunk
+    if check!=data:fail('private-evidence-readback')
+   finally:os.close(fd)
+   after=source.stat()
+   if (before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)!=(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns):
+    fail('private-evidence-source-drift')
+   copied.append(name)
+  os.fsync(dfd)
+  # Verify every private copy before removing any original public-path payload.
+  for name in copied:
+   original=(run/name).read_bytes()
+   fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+   try:
+    chunks=[]
+    while True:
+     chunk=os.read(fd,65536)
+     if not chunk:break
+     chunks.append(chunk)
+    if b''.join(chunks)!=original:fail('private-evidence-final-verification')
+   finally:os.close(fd)
+  for name in copied:(run/name).unlink()
+  rfd=os.open(run,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+  try:os.fsync(rfd)
+  finally:os.close(rfd)
+  return {'state':'RETAINED_RESTRICTED','directory':'private-failure-evidence',
+          'files':copied,'directory_mode':'0700','file_mode':'0600'}
+ finally:os.close(dfd)
+
 def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
  if run is None:return None
  complete=(process_outcome.get('lifecycle_state')=='TERMINATION_PROVEN' and process_outcome.get('group_absent') is True and process_outcome.get('kernel_probe')=='killpg-zero-ESRCH' and process_outcome.get('members')==[])
+ payload_names=('stdout.json','stderr.txt','response.json')
  outputs={
   'stdout_anonymous':_stream_evidence(out_stream,complete),
   'stderr_anonymous':_stream_evidence(err_stream,complete),
@@ -41,18 +103,19 @@ def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
   'response_persisted':_file_evidence(run/'response.json'),
  }
  lifecycle={name:(run/name).is_file() for name in ('process-start.json','process-release.json','process-exit.json','process-spawn-stop.json','process-spawn-uncertain.json')}
- evidence={'schema':'reader-failure-evidence/v1','status':'UNKNOWN',
+ try:
+  retention=retain_private_payloads(run,payload_names)
+ except BaseException:
+  # Fail closed: never truncate or unlink the only surviving forensic copy.
+  retention={'state':'BLOCKED_NOT_PURGED','directory':None,'files':[],
+             'reason':'restricted-retention-could-not-be-verified'}
+ evidence={'schema':'reader-failure-evidence/v2','status':'UNKNOWN',
   'diagnostic':safe_error_diagnostic(error),'outputs':outputs,'lifecycle_records':lifecycle,
   'capture_completeness':'COMPLETE_AFTER_TERMINATION_PROOF' if complete else 'INCOMPLETE_UNKNOWN',
-  'process_outcome':process_outcome,'payload_retained':False,
-  'payload_policy':'raw child output omitted; byte counts and SHA-256 retained'}
+  'process_outcome':process_outcome,'payload_retained':retention['state']=='RETAINED_RESTRICTED',
+  'payload_retention':retention,
+  'payload_policy':'raw payload retained only in owner-restricted mode 0700 directory with mode 0600 files; public copies removed only after verified durable copy'}
  write(run/'failure-evidence.json',evidence)
- # Keep the forensic digest/length record; remove only raw child-controlled payloads.
- for name in ('stdout.json','stderr.txt','response.json'):
-  path=run/name
-  try:
-   with path.open('wb') as stream:stream.flush();os.fsync(stream.fileno())
-  except FileNotFoundError:pass
  return evidence
 
 def safe_error_diagnostic(error):return _lifecycle.safe_failure_diagnostic(error)
