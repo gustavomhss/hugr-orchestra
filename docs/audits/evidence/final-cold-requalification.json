@@ -126,7 +126,7 @@
     },
     "observedJobs": 70,
     "codeFrozen": true,
-    "postDispatchDelta": "Documentation only; actual code and test source, including the canonical DOM part assertion, are frozen at the source above.",
+    "postDispatchDelta": "Root subsequently added test-fixture and wiring repairs for observed failures. This run qualifies only its immutable c9ffb56c source; later test source needs requalification.",
     "ledgerUnchanged": "63/65, E10 and M13 remain open until aggregate qualification."
   }
 }
