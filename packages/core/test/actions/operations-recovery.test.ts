@@ -142,12 +142,13 @@ it.live("100000-record admission ledger rejects new intent instead of evicting t
   yield* service.operations.execute(service.binding, { id: lease.id, input: {} }, () => Effect.succeed({ runID: "native-run" }))
   const template = yield* f.database.db.select().from(ActionsOperationTable).where(eq(ActionsOperationTable.id, lease.id)).get()
   if (!template) return yield* Effect.die("Expected admission positive control")
-  yield* Effect.forEach(Array.from({ length: Math.ceil((LEDGER_LIMIT - 1) / 200) }, (_, index) => index), (batch) =>
-    f.database.db.insert(ActionsOperationTable).values(Array.from({ length: Math.min(200, LEDGER_LIMIT - 1 - batch * 200) }, (_, offset) => ({
+  // Bulk fixture setup commits once instead of autocommitting each existing seed batch.
+  yield* f.database.db.transaction((tx) => Effect.forEach(Array.from({ length: Math.ceil((LEDGER_LIMIT - 1) / 200) }, (_, index) => index), (batch) =>
+    tx.insert(ActionsOperationTable).values(Array.from({ length: Math.min(200, LEDGER_LIMIT - 1 - batch * 200) }, (_, offset) => ({
       ...template, id: Actions.OperationID.make(`aop_ledger_${batch * 200 + offset}`), client_id: `ledger-${batch * 200 + offset}`,
       state: "expired" as const, result: null, reason: RECEIPT_EXPIRED,
     }))).run(),
-  )
+  ))
   expect((yield* f.database.db.select({ total: count() }).from(ActionsOperationTable).get())?.total).toBe(LEDGER_LIMIT)
   yield* fault(service.operations.prepare(service.binding, intent(service.binding)), "maintenance_required")
   expect((yield* service.operations.prepare(service.binding, command)).id).toBe(lease.id)
