@@ -112,5 +112,21 @@
       "conclusion": "failure"
     }
   ],
-  "followup": "Corrections and hosted qualification continue; next complete run not dispatched. No aggregate green or ledger closure."
+  "followup": "Corrections and hosted qualification continue; next complete run not dispatched. No aggregate green or ledger closure.",
+  "thirdCold": {
+    "run": 43479893813,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43479893813",
+    "source": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+    "integratedDev": "5804b4f794ba31f49890b79565cff62b65e37725",
+    "status": "in_progress",
+    "inputs": {
+      "packages": "",
+      "cold": true,
+      "windows_e2e": false
+    },
+    "observedJobs": 70,
+    "codeFrozen": true,
+    "postDispatchDelta": "Documentation only; actual code and test source, including the canonical DOM part assertion, are frozen at the source above.",
+    "ledgerUnchanged": "63/65, E10 and M13 remain open until aggregate qualification."
+  }
 }
