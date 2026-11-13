@@ -323,6 +323,16 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Upload configuration schema qualification evidence
+        if: always() && runner.os == 'Linux' && hashFiles('test-ci-evidence/config-generated/provenance.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: config-generated-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: test-ci-evidence/config-generated/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload Lean dashboard previews (extension)
         if: always() && hashFiles(format('{0}/e2e/test-results/lean-visual/*.png', steps.request.outputs.directory)) != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
