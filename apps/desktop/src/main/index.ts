@@ -290,10 +290,11 @@ const main = Effect.gen(function* () {
     const completed = Promise.withResolvers<void>()
     shutdown.promise = completed.promise
     const acquisitions = shutdown.startup.close()
+      .catch((error: unknown) => logger.error("desktop startup cleanup failed", error))
     const stopping = shutdown.live?.shutdown(flushWindows) ?? Promise.resolve().then(flushWindows)
     void stopping
       .catch((error: unknown) => logger.error("failed to flush Live and windows", error))
-      .then(() => acquisitions.catch((error: unknown) => logger.error("desktop startup cleanup failed", error)))
+      .then(() => acquisitions)
       .then(() => Promise.allSettled([...shutdown.liveJobs]))
       .then(() =>
         Promise.all([
