@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "scope": "Existing Session first-Send Local/follower ownership controls and whole consumer/retry focused hosted gate.",
+  "red": {
+    "runID": "43477836650",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43477836650",
+    "snapshot": "5acae32ef5d23cde06b584993e7bb23cc9f1c6d5",
+    "jobID": 132066243805,
+    "platform": "linux",
+    "conclusion": "failure",
+    "pass": 7,
+    "fail": 5,
+    "assertions": 38,
+    "tests": 12,
+    "files": 1,
+    "omni": "not applicable; zero spawns/delegations",
+    "oldSubmit": {
+      "equalsCommit": "2fe2c7e421d9b43a99105dd4e7a25e928fc6bb05",
+      "sha256": "428c5dab5d4c9f6be0fe471cb3cf7738ac686d0a67566b2c0029d3e162a79ab4",
+      "verifiedAgainstSnapshotBytes": true
+    },
+    "failureAssertions": [
+      "Default and high first Send: send returned false at consumer.test.tsx:655.",
+      "Lost-ACK control: canonical-before-ACK hook was never reached, projected.observed remained false at line682.",
+      "Human-change control: expected blocked choice remained undefined at line709 because its pin prerequisite assertion stopped the observer first.",
+      "Unknown slash first prompt: send returned false at line765."
+    ],
+    "passingControls": "Loaded-history/remote model follower and all six materialization exclusions passed.",
+    "qualification": "Reached actual Local readiness and test assertions, not module/parser/setup failure. Human negative is a prerequisite failure on RED, not evidence that the genuine-change fence itself regressed."
+  },
+  "green": {
+    "runID": "43478144632",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43478144632",
+    "snapshot": "cf0a44f114fa9c3493be83410137c315579881b7",
+    "conclusion": "success",
+    "cleanup": "success",
+    "files": [
+      "packages/app-shell/test-browser/model-execution-consumer.test.tsx",
+      "packages/app-shell/test-browser/prompt-retry.test.ts"
+    ],
+    "linux": {
+      "jobID": 132067346145,
+      "pass": 94,
+      "fail": 0,
+      "assertions": 692,
+      "testFiles": 2,
+      "elapsedSeconds": 15.29
+    },
+    "windows": {
+      "jobID": 132067345302,
+      "pass": 94,
+      "fail": 0,
+      "assertions": 692,
+      "testFiles": 2,
+      "elapsedSeconds": 45.6
+    },
+    "omniPerOS": [
+      {
+        "file": "model-execution-consumer.test.tsx",
+        "declared": 2,
+        "spawns": 2,
+        "delegated": 0,
+        "verdict": "pass"
+      },
+      {
+        "file": "prompt-retry.test.ts",
+        "declared": 3,
+        "spawns": 3,
+        "delegated": 0,
+        "verdict": "pass"
+      }
+    ],
+    "newControls": "All twelve real-Local/follower controls passed, including before-optimistic/HTTP model-default-null and inherited-high pin, canonical echo before lost ACK, identical retry body/ID/parts, genuine human change, history/remote following and exclusions."
+  },
+  "sourceIdentity": {
+    "comparedRoot": "7ff5376f007a5be01cf7cfee1033bd49cd36a7d9",
+    "allSelectedCurrentBytesEqualSnapshot": true,
+    "vectors": [
+      {"path": "packages/app-shell/src/components/prompt-input/submit.ts", "snapshotBlob": "3745d33ad8b60b3957bf2f7cbd0f3ddc9131190d", "currentRootBlob": "3745d33ad8b60b3957bf2f7cbd0f3ddc9131190d", "equal": true, "sha256": "1b6adc2791ad9be92f9eaaa2ab4451ee15d43253ca54a2703b38efb2dbd0083f"},
+      {"path": "packages/app-shell/src/components/prompt-input/submit-harness.ts", "snapshotBlob": "3fc5a501f36a930b1dc11d81aa2948afc13bb990", "currentRootBlob": "3fc5a501f36a930b1dc11d81aa2948afc13bb990", "equal": true, "sha256": "66d860eda729cc781fc8410bc7dc728a36c78b2ee38cfafacbf11e5678935c6e"},
+      {"path": "packages/app-shell/test-browser/model-execution-consumer.test.tsx", "snapshotBlob": "b9a21026d4d2ec29807070afc0d0b1f52021338c", "currentRootBlob": "b9a21026d4d2ec29807070afc0d0b1f52021338c", "equal": true, "sha256": "48c4bfef9e1b14dc54c742e7eda80f798f8ebc8dcb41b8705160be06969c0d69"},
+      {"path": "packages/app-shell/test-browser/model-execution-consumer.fixture.tsx", "snapshotBlob": "26a6379892264fae13233d03b210d2747c814c6a", "currentRootBlob": "26a6379892264fae13233d03b210d2747c814c6a", "equal": true, "sha256": "152aeb13c8083f32ddc06a351bed2e1e5028b5ca7fd6f37dfdeeca38318fef3d"},
+      {"path": "packages/app-shell/test-browser/prompt-retry.test.ts", "snapshotBlob": "c49b43d356a29d895461a3a036cea0a906508a51", "currentRootBlob": "c49b43d356a29d895461a3a036cea0a906508a51", "equal": true, "sha256": "984f26ec355bfa4de9acd5edd3cfd1f39c54bc956a9beb57cdbd0e1a40a501c6"},
+      {"path": "packages/app-shell/src/context/local.tsx", "snapshotBlob": "9d35f0e7046d42fdae551b79885f5e64c3f2c7fd", "currentRootBlob": "9d35f0e7046d42fdae551b79885f5e64c3f2c7fd", "equal": true, "sha256": "a946bc4b17d3cc1858cabe8baafeee0a02b9fbacdf7c4fddd5cfe16eaa2b6fae"},
+      {"path": "packages/app-shell/src/pages/session/session-model-helpers.ts", "snapshotBlob": "51768d1dbb6be7cde01a6eae4a15718ef1149401", "currentRootBlob": "51768d1dbb6be7cde01a6eae4a15718ef1149401", "equal": true, "sha256": "6137eca7db0b4d59debd94e2d3f37143fee852fa0d30a44fadbde31bce4fc551"},
+      {"path": "packages/app-shell/src/components/prompt-input/submission-execute.ts", "snapshotBlob": "833433155ce455348deec736e4ae3966c5865d9a", "currentRootBlob": "833433155ce455348deec736e4ae3966c5865d9a", "equal": true, "sha256": "e68834b64950a521304aa5f366821bc9a498dd283deb88145a69e79d988f8949"},
+      {"path": "packages/app-shell/src/components/prompt-input/submission-policy.ts", "snapshotBlob": "4383c6ebf2af86dd75ec474828a698b2c886f136", "currentRootBlob": "4383c6ebf2af86dd75ec474828a698b2c886f136", "equal": true, "sha256": "639cb67704bc903a685f334ea707b93414e49450e438d988374a71b87efb91c4"}
+    ],
+    "limit": "Only these selected production, harness and test files were compared; no whole later Root tree equality claim. Downstream E2E marker changes do not alter these unit source vectors."
+  },
+  "proofBoundaries": [
+    "New twelve-case controls run actual createLocal, actual followSessionModel, production composer/SDK and controlled HTTP; they do not establish durable Core SQL admission.",
+    "The separately existing native HTTP/SQL lost-ACK case also passed in prompt-retry.test.ts. It verifies one durable input/admission and exact retry; admission-only execution does not prove provider/tool exactly-once behavior.",
+    "Blank Stop exclusion passed but emitted the caught fixture active[sessionID] undefined readback TypeError on RED and GREEN. This proves no Local materialization for that action, not full Stop/status reconciliation.",
+    "RED pin observers can throw assertions inside the production send catch; downstream false/undefined assertions must not be overstated as independent fence failures.",
+    "HTTP-controlled canonical first-user delivery is not a complete E2E event-stream or renderer proof."
+  ],
+  "rawLogSHA256": {
+    "redLinux": "3c1aa11cbb2f6a55560e37c1823985222329724179daea7b079abef66c53572c",
+    "greenLinux": "09f33e14465fafd950e517f4433f67491537ddcb44ad5e1f8c3d6422580d35fd",
+    "greenWindows": "30ca7d7510cb82103d589c00638d39ed4d54dfdbf0d63191f1ec7a675a1c718a"
+  },
+  "limits": [
+    "Full cold aggregate acceptance remains pending; no ledger closure.",
+    "No code changes, local tests, typecheck, build, generation or CI dispatch in this evidence task."
+  ]
+}
