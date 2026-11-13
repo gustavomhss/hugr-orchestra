@@ -278,7 +278,8 @@ jobs:
                     -*)
                       common+=("$arg")
                       ;;
-                    test-browser|test-browser/*|./test-browser/*) browser+=("$arg") ;;
+                    test-browser|./test-browser) browser+=("./test-browser") ;;
+                    test-browser/*|./test-browser/*) browser+=("$arg") ;;
                     *) unit+=("$arg") ;;
                   esac
                 done
