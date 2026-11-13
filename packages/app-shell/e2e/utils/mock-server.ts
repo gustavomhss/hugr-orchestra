@@ -215,8 +215,8 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
             : { status: "unavailable", reason: "model-missing", engine: "orchestra", ref: { ...selected } },
         }),
       }
-      Schema.decodeUnknownSync(ModelExecution.Response)(data)
       const response: ModelsExecutionOutput = { location: Schema.decodeUnknownSync(Location.Info)(location(config)), data }
+      Schema.decodeUnknownSync(Schema.fromJsonString(Location.response(ModelExecution.Response)))(JSON.stringify(response))
       return json(route, response)
     }
     if (path === "/api/provider" || path === "/api/model" || path === "/api/model/default") {
