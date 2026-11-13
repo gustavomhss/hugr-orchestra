@@ -40,9 +40,9 @@ class DescendantLifecycle(unittest.TestCase):
         # and optionally leaves an orphaned descendant for the supervisor to reap.
         self.child.write_text("""import json,os,subprocess,sys,time
 grant=json.load(open(sys.argv[1]))
-if grant.get('mode') in ('descendant','parent-kill'):
+if grant.get('mode') in ('descendant','parent-kill','descendant-timeout'):
  subprocess.Popen([sys.executable,'-c','import signal,time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)'])
-payload=b'synthetic-proof'
+if grant.get('mode') in ('timeout','descendant-timeout'): time.sleep(30)\npayload=b'synthetic-proof'
 sys.stdout.buffer.write(payload);sys.stdout.buffer.flush()
 print(json.dumps({'start':int(sys.argv[3]),'end_exclusive':int(sys.argv[3])+len(payload),'chunk_sha256':'"""+H(b'synthetic-proof')+"""','response_sha256':'"""+H(b'synthetic-proof')+"""','total_bytes':len(payload),'immutable_checks':3}),file=sys.stderr,flush=True)
 """)
@@ -51,7 +51,7 @@ print(json.dumps({'start':int(sys.argv[3]),'end_exclusive':int(sys.argv[3])+len(
         source = source.replace("'/synthetic-not-live/python3.12'", repr(sys.executable))
         source = source.replace('fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7',
                                 H(pathlib.Path(sys.executable).read_bytes()))
-        (self.code / 'supervisor.py').write_text(source)
+        source = source.replace('TREE_TIMEOUT = 5.0', 'TREE_TIMEOUT = 0.8').replace('proc.wait(timeout=120)', 'proc.wait(timeout=0.15)')\n        (self.code / 'supervisor.py').write_text(source)
         self.pins = {'courier_sha256': H(self.child.read_bytes())}
         (self.code / 'pins.json').write_text(json.dumps(self.pins))
         self.grant = {'case': 'S3-C5', 'sequence': 1,
