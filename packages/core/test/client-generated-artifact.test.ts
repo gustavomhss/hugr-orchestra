@@ -86,7 +86,11 @@ test.skipIf(!isClientGeneratedRequest(request))("official Client generation qual
       expect(outcome.value.stdoutTruncated).toBe(false)
       expect(outcome.value.stderrTruncated).toBe(false)
       expect(outcome.value.outputTruncated ?? false).toBe(false)
-      expect(outcome.value.exitCode, `${stage}: ${outcome.value.stderr.toString("utf8").slice(0, 16_384)}`).toBe(0)
+      const stderr = outcome.value.stderr.toString("utf8")
+      expect(
+        outcome.value.exitCode,
+        `${stage}: ${stderr.length <= 16_384 ? stderr : stderr.slice(0, 8192) + stderr.slice(-8192)}`,
+      ).toBe(0)
       return outcome.value
     })
     const head = yield* command("snapshot", "git", ["rev-parse", "HEAD"], root, 15_000)

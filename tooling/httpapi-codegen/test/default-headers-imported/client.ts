@@ -24,9 +24,11 @@ type Endpoint0_1Input = {
 const Endpoint0_1 = (raw: RawClient["probe"]) => (input?: Endpoint0_1Input) =>
   raw["override"]({
     headers: {
-      aUtHoRiZaTiOn: input?.["aUtHoRiZaTiOn"],
-      "X-Factory": input?.["X-Factory"],
-      "x-orchestra-location": input?.["x-orchestra-location"],
+      ...(input?.["aUtHoRiZaTiOn"] === undefined ? {} : { aUtHoRiZaTiOn: input?.["aUtHoRiZaTiOn"] }),
+      ...(input?.["X-Factory"] === undefined ? {} : { "X-Factory": input?.["X-Factory"] }),
+      ...(input?.["x-orchestra-location"] === undefined
+        ? {}
+        : { "x-orchestra-location": input?.["x-orchestra-location"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -44,7 +46,9 @@ type Endpoint0_4Request = Parameters<RawClient["probe"]["events"]>[0]
 type Endpoint0_4Input = { readonly authorization?: Endpoint0_4Request["headers"]["authorization"] }
 const Endpoint0_4 = (raw: RawClient["probe"]) => (input?: Endpoint0_4Input) =>
   Stream.unwrap(
-    raw["events"]({ headers: { authorization: input?.["authorization"] } }).pipe(
+    raw["events"]({
+      headers: { ...(input?.["authorization"] === undefined ? {} : { authorization: input?.["authorization"] }) },
+    }).pipe(
       Effect.mapError(mapClientError),
       Effect.map((stream) => stream.pipe(Stream.mapError(mapClientError))),
     ),

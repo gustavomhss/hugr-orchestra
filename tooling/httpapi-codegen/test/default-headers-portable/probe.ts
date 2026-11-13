@@ -73,9 +73,11 @@ const mapEndpoint1Error = (error: unknown) =>
 const Endpoint1 = (raw: RawGroup) => (input?: Endpoint1Input) =>
   raw["override"]({
     headers: {
-      aUtHoRiZaTiOn: input?.["aUtHoRiZaTiOn"],
-      "X-Factory": input?.["X-Factory"],
-      "x-orchestra-location": input?.["x-orchestra-location"],
+      ...(input?.["aUtHoRiZaTiOn"] === undefined ? {} : { aUtHoRiZaTiOn: input?.["aUtHoRiZaTiOn"] }),
+      ...(input?.["X-Factory"] === undefined ? {} : { "X-Factory": input?.["X-Factory"] }),
+      ...(input?.["x-orchestra-location"] === undefined
+        ? {}
+        : { "x-orchestra-location": input?.["x-orchestra-location"] }),
     },
   }).pipe(Effect.mapError(mapEndpoint1Error))
 
@@ -111,7 +113,9 @@ const mapEndpoint4Error = (error: unknown) =>
       : new ClientError({ cause: error })
 const Endpoint4 = (raw: RawGroup) => (input?: Endpoint4Input) =>
   Stream.unwrap(
-    raw["events"]({ headers: { authorization: input?.["authorization"] } }).pipe(
+    raw["events"]({
+      headers: { ...(input?.["authorization"] === undefined ? {} : { authorization: input?.["authorization"] }) },
+    }).pipe(
       Effect.mapError(mapEndpoint4Error),
       Effect.map((stream) => stream.pipe(Stream.mapError(mapEndpoint4Error))),
     ),
