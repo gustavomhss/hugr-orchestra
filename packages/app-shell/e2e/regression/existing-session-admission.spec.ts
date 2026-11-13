@@ -105,7 +105,8 @@ test("existing empty Session retains first Send identity across canonical projec
     await expect.poll(() => prompts).toEqual([sent.postData()])
     expect(writes).toEqual([`POST /api/session/${sessionID}/agent`, `POST /api/session/${sessionID}/model`, `POST ${promptPath}`])
     await expect(page.locator(admitting)).toHaveAttribute("data-prompt-admitting", "true")
-    await expect(page.locator(editor)).toHaveText(text)
+    // Existing Sessions clear in flight; the captured snapshot restores the editor after failure.
+    await expect(page.locator(editor)).toHaveText("")
     const payload = sent.postDataJSON()
     expect(payload).toMatchObject({ id: expect.stringMatching(/^msg_/), prompt: { text } })
     canonical.message = Schema.decodeUnknownSync(SessionMessage.User)({ id: payload.id, type: "user", text,
@@ -125,7 +126,7 @@ test("existing empty Session retains first Send identity across canonical projec
     expect(delivery.bytes).toBeGreaterThan(0)
     await expect(page.locator(user)).toHaveCount(1)
     await expect(page.locator(`${user} [data-slot="user-message-text"]`)).toHaveText(text)
-    await expect(page.locator(editor)).toHaveText(text)
+    await expect(page.locator(editor)).toHaveText("")
     await expect(page.locator(admitting)).toHaveAttribute("data-prompt-admitting", "true")
     gate.resolve()
     expect(await failed).toBe(sent)
