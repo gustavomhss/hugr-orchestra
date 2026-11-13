@@ -167,7 +167,7 @@ describe("maintenance caller cumulative host caps, synthetic public fifteen-entr
     expect(out.result.kind).toBe("hold")
     if (out.result.kind !== "hold") throw Error("expected HOLD")
     expect(out.result.evidence).toContain("maintenance-host-output-cap")
-    expect(out.accounting.recipeCalls).toEqual(f.keys)
+    expect(out.accounting.recipeCalls).toEqual([...f.keys].sort())
     expect(out.accounting.outputBytes).toBe(bodyBytes * 15)
     expect(out.accounting.capturedBytes).toBe(bodyBytes + new TextEncoder().encode("recipe bytes").byteLength)
     expect(out.releaseReference).toBe(f.envelope.releaseReference)
