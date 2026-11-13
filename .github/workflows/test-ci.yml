@@ -294,6 +294,7 @@ jobs:
         with:
           name: client-generated-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: test-ci-evidence/client-generated/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
 
