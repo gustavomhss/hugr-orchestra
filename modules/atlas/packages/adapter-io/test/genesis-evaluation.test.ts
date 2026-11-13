@@ -157,7 +157,7 @@ describe("isolated evaluation composed admission, synthetic CI only", () => {
     writeFileSync(join(aliasRoot, ".atlas/policy.json"), readFileSync(join(original.repoPath, ".atlas/policy.json")))
     const aliasBefore = snapshot(join(aliasRoot, ".atlas")), evaluationBefore = snapshot(join(root, ".atlas"))
     for (let restart = 0; restart < 2; restart++) {
-      const aliasedStore = createDiskStore(nativeCasDirectory(aliasRoot))
+      const aliasedStore = createDiskStore(join(aliasRoot, ".atlas", "cas"))
       for (const evaluation of [undefined]) {
         const result = createGovernedEmit({ store: aliasedStore, policy: loadPolicy(aliasRoot), actor: "alice",
           gate: { gateHolds: () => "HOLDS" }, ...(evaluation === undefined ? {} : { evaluation }) })
@@ -213,7 +213,7 @@ describe("isolated evaluation composed admission, synthetic CI only", () => {
     const admittedPayload = admittedStore.get(admittedRow.contentHash as import("@atlas/contracts").Hash) as GroundedFact
     const admittedBefore = snapshot(join(root, ".atlas"))
     for (let reopen = 0; reopen < 2; reopen++) {
-      const aliasedStore = createDiskStore(nativeCasDirectory(aliasRoot)), evaluation = loadEvaluationAccess(root)
+      const aliasedStore = createDiskStore(join(aliasRoot, ".atlas", "cas")), evaluation = loadEvaluationAccess(root)
       expect(createGovernedEmit({ store: aliasedStore, policy: loadPolicy(aliasRoot), actor: "alice", evaluation,
         gate: { gateHolds: () => "HOLDS" } }).emit(admittedPayload, id({ aliasEvaluation: reopen })))
         .toEqual({ emitted: false, rejected: "evaluation-operation-denied" })
