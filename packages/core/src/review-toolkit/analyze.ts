@@ -72,6 +72,8 @@ type Pipeline = typeof ReviewNoise.pipeline
 type PipelineInput = Parameters<Pipeline>[0]
 
 export type RunInput = {
+  /** Host-only immutable repository scope; omission keeps the existing diff analysis. */
+  readonly repositoryFiles?: ReadonlyArray<string>
   readonly worktree: string
   /** The base revision: the new-only step's tree and the source of the repository's declared gates. */
   readonly base: string
@@ -138,6 +140,9 @@ const baseCache = new Map<string, { results: ReadonlyArray<ReviewSarif.Raw>; uri
 
 /** Host only: runs the routed packs and the noise pipeline once, before any model turn. */
 export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pipeline: Pipeline = ReviewNoise.pipeline) {
+  if (input.repositoryFiles !== undefined && !repositoryAdmitted(input)) {
+    return yield* new Failed({ reason: "repository-scope-invalid" })
+  }
   const catalog = input.catalog ?? ReviewCatalog.current
   const observeCatalog = yield* ObserveCatalog
   observeCatalog(catalog)
@@ -195,6 +200,7 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
     changed: input.changed,
     ...(impact === undefined ? {} : { blastRadius: impact.ranges }),
     ...(input.addedSuppressions === undefined ? {} : { addedSuppressions: input.addedSuppressions }),
+    ...(input.repositoryFiles === undefined ? {} : { repositoryFiles: input.repositoryFiles }),
     tier: input.tier,
     catalog,
   })
@@ -209,6 +215,24 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
     debt: { uri: debt, total: result.debt.length },
   }
 }, Effect.scoped)
+
+function repositoryAdmitted(input: RunInput) {
+  const listed = input.repositoryFiles
+  if (listed === undefined || listed.length === 0 || input.scope !== "files") return false
+  if (input.head === undefined || !/^[0-9a-f]{40}$|^[0-9a-f]{64}$/.test(input.head) || input.base !== input.head) return false
+  if (input.profile !== "audit" && input.profile !== "diligence" && input.profile !== "artifact" && input.profile !== "compliance") return false
+  if (!sameFileSet(input.files, listed) || !listed.every(canonicalFile)) return false
+  return Object.values(input.changed).every((ranges) => ranges.length === 0)
+}
+
+function sameFileSet(files: ReadonlyArray<string> | undefined, listed: ReadonlyArray<string>) {
+  return files !== undefined && files.length === listed.length && new Set(files).size === files.length && files.every((file) => listed.includes(file))
+}
+
+function canonicalFile(file: string) {
+  if (file.includes("\0") || file.includes("\\") || /^[A-Za-z]:/.test(file) || file.startsWith("/")) return false
+  return file.split("/").every((part) => part !== "" && part !== "." && part !== "..")
+}
 
 /** A lens child pages its own lens of the retained artifact; the host binds `lens` to the caller's routed lens. */
 export const page = Effect.fn("ReviewAnalyze.page")(function* (input: {
