@@ -156,8 +156,7 @@ const getBase = (appId: string): Configuration => ({
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { verifyClaudeAsset } = await import("./scripts/stage-claude")
     const { Arch } = await import("electron-builder")
-    // The asar copy of tree-sitter is excluded and is not repaired here. A missing node_modules binding does not fail
-    // the pack. The CLI copy beside the binary is checked by verifyPackagedCli.
+    // The CLI copy of tree-sitter beside the binary is checked by verifyPackagedCli.
     await verifyPackagedCli(
       path.join(packageDir, "resources/cli"),
       context.electronPlatformName,

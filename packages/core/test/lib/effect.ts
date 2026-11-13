@@ -32,7 +32,7 @@ const make = <R, E>(testLayer: Layer.Layer<R, E>, liveLayer: Layer.Layer<R, E>, 
     test.only(name, () => noted(value, testLayer), opts)
 
   effect.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.skip(name, () => noted(value, testLayer), opts)
+    test.skip(name, () => run(value, testLayer), opts)
 
   const live = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
     test(name, () => noted(value, liveLayer), opts)
@@ -41,7 +41,7 @@ const make = <R, E>(testLayer: Layer.Layer<R, E>, liveLayer: Layer.Layer<R, E>, 
     test.only(name, () => noted(value, liveLayer), opts)
 
   live.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
-    test.skip(name, () => noted(value, liveLayer), opts)
+    test.skip(name, () => run(value, liveLayer), opts)
 
   // Counted as skipped by the runner when the condition holds, instead of passing with an early return.
   effect.skipIf = (condition: boolean) => <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
