@@ -1,0 +1,50 @@
+{
+  "schema": "genesis-s1-economy-impact/1",
+  "task": "S1 DELTA CONCRETO — apoio 2/2",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-campaign-s1-economy-impact-2",
+  "parent": "158e612d4d7bd0f486a4bac91e812d7b615375da",
+  "sourcePin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source": {
+    "path": "packages/core/src/economy/admission.ts",
+    "blob": "914a0b925dd282e264292b2247189c549c993a3f"
+  },
+  "deltaIds": [
+    "B15.validateBound-attempts",
+    "B15.existing-completionRef"
+  ],
+  "assignedBodies": {
+    "s1.l4.ownership-entry": {
+      "sha256": "aac50370d83ee11af40206d6ee1cc542d1868a45397e1849b0c0c896c5e67a7b",
+      "disposition": "NO_CHANGE"
+    },
+    "s1.l4.safe-change": {
+      "sha256": "64ccbc99fbbe86d975563f429117198ed662e126c63502965c6cb5f2399f25a0",
+      "disposition": "NO_CHANGE"
+    },
+    "s1.l4.diagnosis-maintenance": {
+      "sha256": "8ab87cd4bbebb0cb902e3b59657237a6b42b015f0376fa921385bd6d13f9e493",
+      "disposition": "NO_CHANGE"
+    }
+  },
+  "changedBodies": [
+    "B15"
+  ],
+  "outputs": [
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/bodies/b15-economy.md",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/findings.md",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/manifest.json"
+  ],
+  "limits": [
+    "source-only",
+    "no private oracles",
+    "no code/CI/runtime/infrastructure",
+    "no package 1/2",
+    "no historical-vote replacement",
+    "no ADMIT/PASS/global acceptance",
+    "no real consumer/maintenance execution",
+    "no provider calls"
+  ],
+  "reviewerSessions": [],
+  "status": "documentary propagation only; no Genesis acceptance"
+}
