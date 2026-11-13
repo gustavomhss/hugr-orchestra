@@ -2,7 +2,7 @@
 Only explicit reviewed recovery may remove a sticky lock/STOP after uncertainty.
 """
 from pathlib import Path
-import sys,json,os,hashlib,subprocess,datetime,signal,re,importlib.util
+import sys,json,os,hashlib,subprocess,datetime,signal,re,importlib.util,tempfile
 _lifecycle_path=Path(__file__).with_name("evaluation-reader-lifecycle.py")
 _spec=importlib.util.spec_from_file_location("evaluation_reader_lifecycle",_lifecycle_path)
 _lifecycle=importlib.util.module_from_spec(_spec);_spec.loader.exec_module(_lifecycle)
@@ -203,14 +203,17 @@ def main():
   write(run/'attempt.json',{'identity':identity(c,cfg),'sequence':seq+1,'ledger_before':live,'authorization_sha256':authhash,'policy_sha256':c['policy_sha256'],'argv':argv,'cwd':str(cwd),'request':req,'authorized_read_depth':a.get('read_depth'),'started':now()})
   if authorization(case_id)[3]!=authhash:fail('authorization-drift-before-spawn')
   policycheck(c,cfg)
-  with (run/'stdout.json').open('xb') as out,(run/'stderr.txt').open('xb') as err:
+  # Child-controlled bytes stay in anonymous temporary storage until exit is proven.
+  # stderr is discarded; on UNKNOWN there is no named output file for a live child to keep writing.
+  with tempfile.TemporaryFile() as out,open(os.devnull,'wb') as err:
    proc,anchor=_lifecycle.gated_spawn(argv,cwd,env,out,err,run,SETTINGS['timeout_seconds'])
-   # On timeout/interruption the BaseException path kills and reaps the process group, but still retains sticky lock.
+   # On timeout/interruption the BaseException path retains sticky lock and UNKNOWN.
    _lifecycle.wait_unreaped(proc,SETTINGS['timeout_seconds'])
-   out.flush();err.flush();os.fsync(out.fileno());os.fsync(err.fileno())
-  code,absence=_lifecycle.finish_group(proc,anchor)
+   out.flush();os.fsync(out.fileno())
+   code,absence=_lifecycle.finish_group(proc,anchor)
+   out.seek(0);raw=out.read()
   write(run/'process-exit.json',absence)
-  raw=filebytes(run/'stdout.json');result=json.loads(raw) if code==0 else None
+  result=json.loads(raw) if code==0 else None
   current=ledger(c,cfg,a['ledger_name']);after=snapshot();write(run/'after.json',after)
   changes={k for k in set(before)|set(after) if before.get(k)!=after.get(k)}
   if changes- {'.atlas/'+a['ledger_name']}:fail('unexpected-state-mutation')
@@ -223,6 +226,8 @@ def main():
   expected=counts(live);expected[req['operation']+'_calls']+=1;expected['body_bytes_total']+=body
   valid=valid and current['exists'] and counts(current)==expected
   if not valid:fail('runtime-hold-or-capture-not-confirmed')
+  # Only a fully validated response is copied from anonymous storage into the durable history.
+  durable(run/'stdout.json',raw);durable(run/'stderr.txt',b'')
   # Persist the COMPLETE response BEFORE describing it as persisted. Delivery remains UNKNOWN.
   durable(run/'response.json',raw)
   if filebytes(run/'response.json')!=raw:fail('response-write-verification')
