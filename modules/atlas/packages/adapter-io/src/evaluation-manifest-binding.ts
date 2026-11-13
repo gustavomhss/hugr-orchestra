@@ -19,8 +19,15 @@ export function evaluationManifestRefusal(store: StoreApi, manifestHash: Hash, a
       const observation = nativeRecord(raw, "observation")
       if (typeof observation.key !== "string" || current(observation.key) !== observation.version) return "evaluation-input-drift"
     }
+    // Build a fresh per-call index. Keep the first occurrence to match Array.find semantics;
+    // never retain candidate/policy/runtime state across calls.
+    const entriesByKey = new Map<string, ReturnType<typeof nativeRecord>>()
+    for (const raw of candidate.entries) {
+      const expected = nativeRecord(raw, "candidate entry")
+      if (!entriesByKey.has(String(expected.key))) entriesByKey.set(String(expected.key), expected)
+    }
     for (const entry of manifest.entries) {
-      const expected = candidate.entries.map((x) => nativeRecord(x, "candidate entry")).find((x) => x.key === entry.key)
+      const expected = entriesByKey.get(entry.key)
       if (!expected) return "evaluation-entry-missing"
       const artifact = store.get(entry.artifact), recipe = nativeRecord(expected.artifact, "candidate artifact")
       if (!isEvaluationOwnershipArtifact(artifact) || id(artifact) !== entry.artifact) return "evaluation-artifact-integrity"
