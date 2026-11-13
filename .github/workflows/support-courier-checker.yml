@@ -1,0 +1,22 @@
+name: Support courier checker synthetic
+on:
+  workflow_dispatch:
+  push:
+    branches: [genesis-support-02-courier-checker]
+    paths:
+      - 'courier-synthetic/test_courier.py'
+      - 'courier-synthetic/native_caller_check.py'
+      - '.github/workflows/support-courier-checker.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-checker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run synthetic courier checker tests only
+        run: python -I -S -B courier-synthetic/test_courier.py
