@@ -125,6 +125,7 @@ test("existing empty Session retains first Send identity across canonical projec
     expect(reads).toEqual([canonicalPath])
     expect(delivery.bytes).toBeGreaterThan(0)
     await expect(page.locator(user)).toHaveCount(1)
+    await expect(page.locator(user)).toHaveAttribute("data-timeline-part-id", `${payload.id}:text:0`)
     await expect(page.locator(`${user} [data-slot="user-message-text"]`)).toHaveText(text)
     await expect(page.locator(editor)).toHaveText("")
     await expect(page.locator(admitting)).toHaveAttribute("data-prompt-admitting", "true")
