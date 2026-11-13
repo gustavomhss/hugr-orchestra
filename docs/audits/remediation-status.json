@@ -646,7 +646,15 @@
         "6229d287b1",
         "450dc9bad7",
         "412ef9205a",
-        "5024bbf7b2"
+        "5024bbf7b2",
+        "30b6151bcc",
+        "851c0b6d72",
+        "4e4beaab61",
+        "76ccf04378",
+        "816e98492e",
+        "a4a68c5f1d",
+        "5e74c47dc6",
+        "ed27b27f94"
       ],
       "evidence": [
         {
@@ -768,9 +776,16 @@
             "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43342504803"
           ],
           "result": "Baseline20 BOTH8pass12fail72assertions: eleven valid behavioral REDs and one caller-IRQ handshake failure, not twelve product REDs. One explicit yield permits actual child registration before caller IRQ; focusedcorrective2 BOTH1pass1fail9assertions: pureIRQ/cleanup1/noEnd pass; uncaught late refusal returns ToolFailure insteadTimeoutExceeded. Composed9controls/12behavioralREDs BOTH; all21 not rerun. Root independently fetched alljobs/raw and checkedactual source/test snapshotblobs; private optionalguard scaffold type0. Root+Lamport full acceptance/architecture approve; sourceGO ONLYruntime/tool-runtime absolute deadline guards/outcome barrier, no native process/parser wiring or product closure."
+        },
+        {
+          "kind": "absolute_deadline_integrated_full_package_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43345280622",
+          "snapshot": "c146351148a61aee7bdbe45e3aae71fcd908e3a8",
+          "source": "8355a3b591832155a1a66761dc5df4eb1129c558",
+          "result": "Both OS379pass/0fail1210assertions across all10 current package files:269 original runtime cases,89 private parser and21 deadline acceptance. Earlier rejected Worker prototype280 included11 prototype cases absent from this tree; no current case excluded. All original100ms, eager parallelism, Scope and pure caller interruption controls pass. Root independently verified jobs/raw, snapshot blobs and whole CodeMode tree equal integrateded27. CodeMode type0, Root guards/boundaries/spawn0. Preparatory absolute deadline guards only; native regex still requires isolated operation wiring."
         }
       ],
-      "remaining": "Worker prototype rejected and not integrated. OS-process preemption and private parser stage verified, but hardened source/compiled child capability, native operation codec/factory, original-scope tool barriers and deadline semantics still require exact contract and acceptance before production execution changes. No product timeout GREEN or general parent CPU-preemption claim."
+      "remaining": "Private parser, hardened Linux/Windows source+compiled helper capability and absolute execution deadline stage verified and integrated. Worker prototype rejected, absent. macOS capability, typed native codec/factory/interpreter representation and original CPU acceptance remain open. No general parent CPU preemption or whole E10 closure."
     },
     {
       "id": "E11",
@@ -2760,7 +2775,24 @@
         "e43559eb0b",
         "34071d747d",
         "e724fc8c52",
-        "80555b5f5f"
+        "80555b5f5f",
+        "114f1ecc35",
+        "f4f34349e0",
+        "bbe4f155ff",
+        "f788febe37",
+        "56d4536a07",
+        "bb2bfddcab",
+        "1aa41359fc",
+        "2474a806cf",
+        "11c68108ee",
+        "cc466b408f",
+        "ef158edff4",
+        "ecadc57481",
+        "34f71f454d",
+        "6f7ad9b573",
+        "aadd12445d",
+        "f256d3e61b",
+        "c9861968b9"
       ],
       "evidence": [
         {
@@ -2853,9 +2885,16 @@
             "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43337238305"
           ],
           "result": "Focused manager two-case Linux1pass1fail; independent nativefetch control0pass1fail7.021s, both cleanup success. Exact same2,686,988body bytes offered and read by nativecontrol, headers200 resolved, readCalls44/readSettled43, drain40; producer awaits next drain while consumer awaits next chunk. This localizes the observed stall to transport fixture progress independently of Manager, without naming an unproven Node defect or proving manager byte-cap correctness. Root plans write-callback completion fixture repair only, preserving UTF8/openbody/limits/7s/10s; source0c63 unchanged."
+        },
+        {
+          "kind": "private_manager_final_green_integrated",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43347085870",
+          "snapshot": "1408937d24f62ccd12bcd80526763abc53784f4a",
+          "source": "c2d0284730243d9094d2905a4999e78467f36190",
+          "result": "Both OS108pass/0fail/0skip, cleanup/wrapper0. Root independently checked jobs/raw and all18 snapshot blobs; integrated17 own commits throughc9861968b9 match exactly. Three actual Core SQL bridges remain green43328345986 with identical four production/two actor blobs. Desktop type0 on unchanged production source; tsconfig excludes test harness. Real native HTTP fixture was repaired using write-completion callbacks and observed peer close while preserving original cap/time/strict error criteria; production unchanged after0c63. No Main/Senses/IPC/UI or Electron wiring."
         }
       ],
-      "remaining": "Private store verified/integrated. Manager implementation now authorized against frozen private API and cold-reviewed acceptance, without changing legacy client/Senses/Main/IPC/UI yet. Original3 failures and production capture/target/quit wiring remain open; controls do not prove manager behavior."
+      "remaining": "Private Store and Manager verified and integrated. Actual Electron SQLite capability planned before production wiring. Original three legacy client failures, target/capture/STT/IPC/UI/quit and M11 lifetime integration remain open."
     },
     {
       "id": "M14",
@@ -3574,7 +3613,7 @@
     "remaining": 8,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
-  "integration_checkpoint": "717b06c359",
+  "integration_checkpoint": "c9861968b9",
   "complex_wave_2": {
     "base": "78b8e1a46b",
     "units": {
@@ -3686,6 +3725,16 @@
       "existing_advisories": 1,
       "new_boundary_violations": 0,
       "stale_boundary_violations": 0
+    },
+    "manager_deadline_checkpoint": {
+      "head": "c9861968b9",
+      "guards": 0,
+      "boundaries": 0,
+      "spawn_imports": 0,
+      "rules": 78,
+      "changed_paths": 442,
+      "warnings": 4,
+      "explanation": "Existing Drizzle test devDependency plus three real-deadline fixture advisories: two14s cases measure actual10s deadlines; independent transport control outer10s contains original7s oracle and1s cleanup. No ignore or approval label."
     }
   },
   "next_contracts": {
