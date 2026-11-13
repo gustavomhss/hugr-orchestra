@@ -1,0 +1,75 @@
+{
+  "schema": "platform-200-public-review-summary/v1",
+  "execution_id": "e37ea00f-15fd-4383-b64c-4448ac34c9fe",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "state": "IN_PROGRESS",
+  "method": "Two new persistent judge contexts, independent from authorship; same literal bodies, decisive source excerpts, frozen criteria and private cases; no judge tools or product execution.",
+  "review_identity": "J1 fidelity/authority and J2 completeness/utility; both apply all applicable criteria. Real handles and original decisions retained privately. No claim of model diversity or OS-enforced context isolation.",
+  "counts": {
+    "inventoried": 200,
+    "produced": 200,
+    "reviewed_by_both": 11,
+    "documentary_pair_accepted": 11,
+    "pending": 189
+  },
+  "accepted_units": [
+    {
+      "id": "A-01",
+      "body": {
+        "path": "bodies/a-01.md",
+        "sha256": "9ba73c99cdc6c0c05e5cac895320a463d9468b7e4d778ef81486dfd8b83f656e"
+      },
+      "source_ids": [
+        "P014",
+        "P015",
+        "P016",
+        "P017",
+        "P018",
+        "P019",
+        "P020",
+        "P021",
+        "P023",
+        "P024",
+        "P042"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS_AFTER_SUPPLEMENT",
+        "J2": "DOCUMENTARY_LOCAL_PASS_CONFIRMED_AFTER_SUPPLEMENT"
+      },
+      "body_changed_for_review": false,
+      "resolved_findings": [
+        "Reading method/coverage supplied explicitly, distinct from byte identity.",
+        "Applicable inherited criteria supplied in full; no extension to runtime/global acceptance."
+      ]
+    }
+  ],
+  "open_semantic_findings_in_accepted_units": [],
+  "pending_units": [
+    "A-02",
+    "A-03",
+    "A-04",
+    "A-05",
+    "A-06",
+    "B-01",
+    "B-02",
+    "B-03",
+    "B-04",
+    "B-05",
+    "B-06",
+    "B-07",
+    "C-01",
+    "C-02",
+    "C-03",
+    "C-04",
+    "C-05",
+    "C-06",
+    "C-07",
+    "C-08"
+  ],
+  "limits": [
+    "Acceptance is documentary and local to the exact listed body.",
+    "Other source bodies are authored, not accepted by extrapolation.",
+    "No product/tests/CI/runtime/consumers/maintenance exercised.",
+    "No global PASS. Private original judgments are not published here."
+  ]
+}

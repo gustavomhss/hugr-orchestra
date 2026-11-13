@@ -47,3 +47,9 @@ Os sete corpos `bodies/b-01.md` a `bodies/b-07.md` cobrem as 69 fontes de B. A l
 ## Checkpoint de autoria completa
 
 Os 200 caminhos têm seção semântica própria e mapeamento em `coverage-a.json`, `coverage-b.json` e `coverage-c.json`. Há 198 leituras textuais integrais, uma constatação integral de blob vazio (`.sh`, zero bytes/linhas) e uma leitura estrutural integral de `bun.lock`. Não se inventa comportamento para o blob vazio nem semântica individual das dependências do lockfile. A verificação documental conferiu todos os bindings e faixas possíveis, sem erro. Revisão independente permanece em andamento; produção completa não é aceitação.
+
+## Checkpoint de revisão A-01
+
+O par independente aceitou documentalmente o corpo `bodies/a-01.md`, com 11 fontes, após complemento explícito sobre método de leitura e critérios herdados. O corpo permaneceu inalterado. As duas pendências documentais do primeiro juiz foram resolvidas; o segundo confirmou sua decisão com o mesmo complemento. Os outros 189 caminhos continuam pendentes de revisão. [review-summary.json](review-summary.json) registra o alcance exato; não contém os pareceres privados.
+
+Os critérios da síntese integrada final estão congelados em [layer-criteria.md](layer-criteria.md), antes do respectivo despacho. Casos adicionais têm custódia real `libfile_fde3_f-f844acdc30508191a34085a0e5416579_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `7ec1eca16ccc6bffc8a078d46e8414bed529ea516168b3f81dfbef29d5fa8b44`. Aplicam-se à nova síntese integrada, sem aprovação retroativa de propostas privadas anteriores. A liberação de L3–L4 continua condicionada aos predecessores aceitos.
