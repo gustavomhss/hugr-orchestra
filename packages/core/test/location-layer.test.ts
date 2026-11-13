@@ -33,19 +33,15 @@ import { Reference } from "../src/reference"
 import { ToolRegistry } from "../src/tool/registry"
 import { ApplicationTools } from "../src/tool/application-tools"
 
-const it = testEffect(
-  AppNodeBuilder.build(
-    LayerNode.group([
-      ApplicationTools.node,
-      Database.node,
-      EventV2.node,
-      LocationServiceMap.node,
-      SessionV2.node,
-      SessionExecution.node,
-    ]),
-    [[SessionExecution.node, SessionExecutionLocal.node]],
-  ),
-)
+const nodes = LayerNode.group([
+  ApplicationTools.node,
+  Database.node,
+  EventV2.node,
+  LocationServiceMap.node,
+  SessionV2.node,
+  SessionExecution.node,
+])
+const it = testEffect(AppNodeBuilder.build(nodes, [[SessionExecution.node, SessionExecutionLocal.node]]))
 
 describe("LocationServiceMap", () => {
   it.live("reuses cached services for constructed and decoded location refs", () =>
@@ -220,25 +216,45 @@ describe("LocationServiceMap", () => {
               }),
             ),
           )
-          const sessions = yield* SessionV2.Service
-          const session = yield* sessions.create({
-            id: SessionV2.ID.make("ses_unavailable_model"),
-            model: {
-              id: ModelV2.ID.make("chat"),
-              providerID: ProviderV2.ID.make("unavailable"),
-            },
-            location,
+          const config = path.join(dir.path, ".user-config")
+          yield* Effect.promise(async () => {
+            await fs.mkdir(config)
+            await fs.writeFile(path.join(config, "orchestra.json"), JSON.stringify({ trusted_projects: [dir.path] }))
           })
-          const failure = yield* SessionRunnerModel.Service.use((models) => models.resolve(session)).pipe(
-            Effect.provide(LocationServiceMap.Service.get(location)),
-            Effect.flip,
-          )
+          // Approval belongs to this fixture's isolated user document, never the ambient user's config.
+          yield* Effect.gen(function* () {
+            const sessions = yield* SessionV2.Service
+            const session = yield* sessions.create({
+              id: SessionV2.ID.make("ses_unavailable_model"),
+              model: {
+                id: ModelV2.ID.make("chat"),
+                providerID: ProviderV2.ID.make("unavailable"),
+              },
+              location,
+            })
+            const failure = yield* Effect.gen(function* () {
+              const catalog = yield* Catalog.Service
+              expect(
+                (yield* catalog.model.get(ProviderV2.ID.make("unavailable"), ModelV2.ID.make("chat")))?.enabled,
+              ).toBe(false)
+              const models = yield* SessionRunnerModel.Service
+              return yield* models.resolve(session)
+            }).pipe(Effect.provide(LocationServiceMap.Service.get(location)), Effect.flip)
 
-          expect(failure).toMatchObject({
-            _tag: "SessionRunnerModel.ModelUnavailableError",
-            providerID: "unavailable",
-            modelID: "chat",
-          })
+            expect(failure).toMatchObject({
+              _tag: "SessionRunnerModel.ModelUnavailableError",
+              providerID: "unavailable",
+              modelID: "chat",
+            })
+          }).pipe(
+            Effect.provide(
+              AppNodeBuilder.build(nodes, [
+                [SessionExecution.node, SessionExecutionLocal.node],
+                [Global.node, Global.layerWith({ config })],
+              ]),
+            ),
+            Effect.scoped,
+          )
         }),
       ),
     ),
