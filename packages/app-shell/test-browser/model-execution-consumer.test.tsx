@@ -1,5 +1,5 @@
 import { registerSubmitHarnessLifecycle } from "@/components/prompt-input/submit-harness"
-import { expect, test } from "bun:test"
+import { beforeAll, expect, test } from "bun:test"
 import { Schema } from "effect"
 import { unwrap } from "solid-js/store"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
@@ -9,9 +9,10 @@ import { createPromptState } from "@/context/prompt-state"
 import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
 import type { FollowupDraft } from "@/components/prompt-input/submit"
-import { bind, composer, decision, draftSelection, json, liveSDK, nativeServer, ref, selection, selectorDOM, send, text, transport, wait } from "./model-execution-consumer.fixture"
+import { bind, composer, decision, draftSelection, json, liveSDK, nativeServer, ref, selection, selectorDOM, send, text, transport, wait, initializeModelExecutionConsumers } from "./model-execution-consumer.fixture"
 
 registerSubmitHarnessLifecycle()
+beforeAll(initializeModelExecutionConsumers)
 
 // Controls prove generated serialization and current public consumers, not the server's eligibility algorithm.
 // All sources remain at the baseline. Missing canonical queries are behavioral failures, never missing-export red.

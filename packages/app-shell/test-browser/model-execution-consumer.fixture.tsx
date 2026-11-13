@@ -168,16 +168,10 @@ export async function nativeServer(run: (server: NativeServer) => Promise<void>)
 }
 
 
-Bun.plugin({ name: "canonical-model-consumer-local", setup(build) {
-  build.onLoad({ filter: /local\.tsx\?canonical-model-consumer$/ }, async (args) => ({
-    contents: await Bun.file(args.path.replace(/\?canonical-model-consumer$/, "")).text(), loader: "ts",
-  }))
-} })
-const localModule: typeof import("../src/context/local") = await import(`${Bun.resolveSync("../src/context/local.tsx", import.meta.dir)}?canonical-model-consumer`)
-
 // createLocal receives context-boundary values, but its selection, explicit state and fallback rules are production code.
 // The SDK uses the generated serializer above; no decision algorithm is reproduced in this fixture.
 export function selection(calls: ReturnType<typeof transport>, sessionID?: string, actual?: ReturnType<typeof liveSDK>) {
+  const localModule = initialized().localModule
   const normalized = () => normalizeProviderList(
     [Provider.Info.empty(Provider.ID.make(ref.providerID))], [model, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }],
     { providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id) },
@@ -214,30 +208,12 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
   })
 }
 
-const loadRows = isolatedSolid("canonical-model-consumer-rows")
 const currentRows: { local?: ReturnType<typeof selection>["local"] } = {}
 const measuredRows = new WeakSet<HTMLElement>()
-mock.module(`${Bun.resolveSync("../src/components/virtual-scroll-element.ts", import.meta.dir)}?canonical-model-consumer-rows`, () => ({
-  virtualScrollElement(root: HTMLElement | undefined) {
-    const viewport = virtualScrollElement(root)
-    if (!viewport || measuredRows.has(viewport)) return viewport
-    // Synthetic layout for this owned viewport only; the controller and TanStack still compute all visible rows.
-    Object.defineProperties(viewport, {
-      offsetWidth: { configurable: true, value: 600 },
-      offsetHeight: { configurable: true, value: 220 },
-    })
-    measuredRows.add(viewport)
-    return viewport
-  },
-}))
-mock.module(`${Bun.resolveSync("../src/context/local.tsx", import.meta.dir)}?canonical-model-consumer-rows`, () => ({
-  useLocal: () => { if (!currentRows.local) throw new Error("Selector not mounted"); return currentRows.local },
-}))
-mock.module(`${Bun.resolveSync("@orchestra/ui/context/dialog", import.meta.dir)}?canonical-model-consumer-rows`, () => ({ useDialog: () => ({ show: async () => {} }) }))
-const rowsModule: typeof import("../src/components/dialog-select-model") = await loadRows(Bun.resolveSync("../src/components/dialog-select-model.tsx", import.meta.dir))
-const languageModule: typeof import("../src/context/language") = await loadRows(Bun.resolveSync("../src/context/language.tsx", import.meta.dir))
-const platformModule: typeof import("../src/context/platform") = await loadRows(Bun.resolveSync("../src/context/platform.tsx", import.meta.dir))
 export async function selectorDOM(owner: ReturnType<typeof selection>) {
+  const rowsModule = initialized().rowsModule
+  const languageModule = initialized().languageModule
+  const platformModule = initialized().platformModule
   currentRows.local = owner.local
   const root = document.createElement("div")
   document.body.append(root)
@@ -298,19 +274,8 @@ const draftHooks = {
   router: { useSearchParams: () => [{ draftId: "draft-1" }] },
   providers: { useProviders: () => draftBoundary.current!.source.providers },
 }
-Bun.plugin({ name: "canonical-model-consumer-draft", setup(build) {
-  build.onResolve({ filter: /^consumer-draft:/ }, (args) => ({ path: args.path.slice("consumer-draft:".length), namespace: "consumer-draft" }))
-  build.onLoad({ filter: /.*/, namespace: "consumer-draft" }, (args) => ({ loader: "object", exports: draftHooks[args.path as keyof typeof draftHooks] }))
-  build.onLoad({ filter: /prompt-model-selection\.ts\?consumer-draft$/ }, async (args) => ({ loader: "ts",
-    contents: (await Bun.file(args.path.replace(/\?consumer-draft$/, "")).text())
-      .replace('"@/context/models"', '"consumer-draft:models"').replace('"@/context/prompt"', '"consumer-draft:prompt"')
-      .replace('"@/context/sdk"', '"consumer-draft:sdk"').replace('"@/context/sync"', '"consumer-draft:sync"')
-      .replace('"@/context/tabs"', '"consumer-draft:tabs"').replace('"@solidjs/router"', '"consumer-draft:router"')
-      .replace('"@/hooks/use-providers"', '"consumer-draft:providers"'),
-  }))
-} })
-const draftModule: typeof import("../src/pages/session/composer/prompt-model-selection") = await import(`${Bun.resolveSync("../src/pages/session/composer/prompt-model-selection.ts", import.meta.dir)}?consumer-draft`)
 export function draftSelection(calls: ReturnType<typeof transport>) {
+  const draftModule = initialized().draftModule
   const source = selection(calls)
   return createRoot((dispose) => {
     const prompt = createPromptState({ prompt: "draft choice" })
@@ -320,9 +285,9 @@ export function draftSelection(calls: ReturnType<typeof transport>) {
   })
 }
 
-const sdkModule: typeof import("../src/context/server-sdk") = await loadRows(Bun.resolveSync("../src/context/server-sdk.tsx", import.meta.dir))
-const sdkRegistry: typeof import("../src/utils/session-model-execution") = await loadRows(Bun.resolveSync("../src/utils/session-model-execution.ts", import.meta.dir))
 export function liveSDK(calls: ReturnType<typeof transport>) {
+  const sdkModule = initialized().sdkModule
+  const sdkRegistry = initialized().sdkRegistry
   return createRoot((dispose) => {
     const sdk = sdkModule.createServerSdkContext({ type: "http", http: { url: calls.url, username: "fixture", password: "none" } }, serverFor().scope,
       { platform: "web", fetch: calls.fetch, openExternal() {}, restart: async () => {}, notify: async () => {} })
@@ -349,6 +314,71 @@ export async function wait(predicate: () => boolean, label: string) {
   }
 }
 
+
+type ConsumerModules = {
+  localModule: typeof import("../src/context/local")
+  rowsModule: typeof import("../src/components/dialog-select-model")
+  languageModule: typeof import("../src/context/language")
+  platformModule: typeof import("../src/context/platform")
+  draftModule: typeof import("../src/pages/session/composer/prompt-model-selection")
+  sdkModule: typeof import("../src/context/server-sdk")
+  sdkRegistry: typeof import("../src/utils/session-model-execution")
+}
+const initialization: { pending?: Promise<void>; modules?: ConsumerModules } = {}
+
+/** Every importing suite awaits this setup; only module exports are shared, never an SDK or Solid owner. */
+export function initializeModelExecutionConsumers(): Promise<void> {
+  return initialization.pending ??= (async () => {
+    Bun.plugin({ name: "canonical-model-consumer-local", setup(build) {
+      build.onLoad({ filter: /local\.tsx\?canonical-model-consumer$/ }, async (args) => ({
+        contents: await Bun.file(args.path.replace(/\?canonical-model-consumer$/, "")).text(), loader: "ts",
+      }))
+    } })
+    const localModule: typeof import("../src/context/local") = await import(`${Bun.resolveSync("../src/context/local.tsx", import.meta.dir)}?canonical-model-consumer`)
+
+    const loadRows = isolatedSolid("canonical-model-consumer-rows")
+    mock.module(`${Bun.resolveSync("../src/components/virtual-scroll-element.ts", import.meta.dir)}?canonical-model-consumer-rows`, () => ({
+      virtualScrollElement(root: HTMLElement | undefined) {
+        const viewport = virtualScrollElement(root)
+        if (!viewport || measuredRows.has(viewport)) return viewport
+        // Synthetic layout for this owned viewport only; the controller and TanStack still compute all visible rows.
+        Object.defineProperties(viewport, {
+          offsetWidth: { configurable: true, value: 600 },
+          offsetHeight: { configurable: true, value: 220 },
+        })
+        measuredRows.add(viewport)
+        return viewport
+      },
+    }))
+    mock.module(`${Bun.resolveSync("../src/context/local.tsx", import.meta.dir)}?canonical-model-consumer-rows`, () => ({
+      useLocal: () => { if (!currentRows.local) throw new Error("Selector not mounted"); return currentRows.local },
+    }))
+    mock.module(`${Bun.resolveSync("@orchestra/ui/context/dialog", import.meta.dir)}?canonical-model-consumer-rows`, () => ({ useDialog: () => ({ show: async () => {} }) }))
+    const rowsModule: typeof import("../src/components/dialog-select-model") = await loadRows(Bun.resolveSync("../src/components/dialog-select-model.tsx", import.meta.dir))
+    const languageModule: typeof import("../src/context/language") = await loadRows(Bun.resolveSync("../src/context/language.tsx", import.meta.dir))
+    const platformModule: typeof import("../src/context/platform") = await loadRows(Bun.resolveSync("../src/context/platform.tsx", import.meta.dir))
+    Bun.plugin({ name: "canonical-model-consumer-draft", setup(build) {
+      build.onResolve({ filter: /^consumer-draft:/ }, (args) => ({ path: args.path.slice("consumer-draft:".length), namespace: "consumer-draft" }))
+      build.onLoad({ filter: /.*/, namespace: "consumer-draft" }, (args) => ({ loader: "object", exports: draftHooks[args.path as keyof typeof draftHooks] }))
+      build.onLoad({ filter: /prompt-model-selection\.ts\?consumer-draft$/ }, async (args) => ({ loader: "ts",
+        contents: (await Bun.file(args.path.replace(/\?consumer-draft$/, "")).text())
+          .replace('"@/context/models"', '"consumer-draft:models"').replace('"@/context/prompt"', '"consumer-draft:prompt"')
+          .replace('"@/context/sdk"', '"consumer-draft:sdk"').replace('"@/context/sync"', '"consumer-draft:sync"')
+          .replace('"@/context/tabs"', '"consumer-draft:tabs"').replace('"@solidjs/router"', '"consumer-draft:router"')
+          .replace('"@/hooks/use-providers"', '"consumer-draft:providers"'),
+      }))
+    } })
+    const draftModule: typeof import("../src/pages/session/composer/prompt-model-selection") = await import(`${Bun.resolveSync("../src/pages/session/composer/prompt-model-selection.ts", import.meta.dir)}?consumer-draft`)
+    const sdkModule: typeof import("../src/context/server-sdk") = await loadRows(Bun.resolveSync("../src/context/server-sdk.tsx", import.meta.dir))
+    const sdkRegistry: typeof import("../src/utils/session-model-execution") = await loadRows(Bun.resolveSync("../src/utils/session-model-execution.ts", import.meta.dir))
+    initialization.modules = { localModule, rowsModule, languageModule, platformModule, draftModule, sdkModule, sdkRegistry }
+  })()
+}
+
+function initialized() {
+  if (!initialization.modules) throw new Error("Model execution consumer fixture must be initialized in beforeAll")
+  return initialization.modules
+}
 
 async function admittedResponse(request: Request, admittedSeq: number) {
   const input = Schema.decodeUnknownSync(Schema.Struct({

@@ -10,9 +10,10 @@ import type { PromptInputV2SelectControl } from "@orchestra/session-ui/v2/prompt
 import type { PromptInputV2StoreInput } from "@orchestra/session-ui/v2/prompt-input/store"
 import type { useLanguage } from "@/context/language"
 import { solidDom } from "./solid-dom"
-import { composer, decision, json, model, ref, selection, send, transport, wait } from "./model-execution-consumer.fixture"
+import { composer, decision, json, model, ref, selection, send, transport, wait, initializeModelExecutionConsumers } from "./model-execution-consumer.fixture"
 
 registerSubmitHarnessLifecycle()
+beforeAll(initializeModelExecutionConsumers)
 
 const consumer = Bun.resolveSync("../src/components/prompt-input-v2.tsx", import.meta.dir)
 beforeAll(() => {
