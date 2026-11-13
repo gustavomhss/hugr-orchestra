@@ -55,7 +55,7 @@ type SubmissionCapture = {
   readonly currentAgent: { id: string; name: string } | undefined
   readonly variant: string | undefined
   delivery: "steer" | "queue" | undefined
-  shouldQueue: boolean
+  shouldQueue: boolean | undefined
   directorySDK: DirectorySDK
   client: DirectorySDK["orchestra"]
   api: DirectorySDK["api"]

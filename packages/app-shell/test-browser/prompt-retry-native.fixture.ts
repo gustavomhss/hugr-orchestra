@@ -39,7 +39,7 @@ export type NativeServer = typeof Ready.Type & {
   releasePromptAck: () => Promise<void>
 }
 
-async export function nativeServer(run: (server: NativeServer) => Promise<void>) {
+export async function nativeServer(run: (server: NativeServer) => Promise<void>) {
   const scratch = await mkdtemp(path.join(tmpdir(), "orchestra-prompt-retry-"))
   const project = path.join(scratch, "project")
   await mkdir(project)
