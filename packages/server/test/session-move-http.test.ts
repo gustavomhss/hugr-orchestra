@@ -85,7 +85,7 @@ async function initRepo(directory: string) {
 }
 
 it.live(
-  "real HTTP move with moveChanges carries uncommitted changes to the destination and resets the source",
+  "real HTTP move with moveChanges copies uncommitted changes to the destination and retains the source",
   () =>
     Effect.gen(function* () {
       expectSpawn(import.meta.path)
@@ -112,7 +112,7 @@ it.live(
       })
       expect(moved.status).toBe(204)
       expect(yield* Effect.promise(() => fs.readFile(path.join(destination, "tracked.txt"), "utf8"))).toBe("changed\n")
-      expect(yield* Effect.promise(() => fs.readFile(path.join(source, "tracked.txt"), "utf8"))).toBe("initial\n")
+      expect(yield* Effect.promise(() => fs.readFile(path.join(source, "tracked.txt"), "utf8"))).toBe("changed\n")
       const read = yield* request(`/api/session/${created.data.id}`).pipe(
         Effect.flatMap(HttpClientResponse.schemaBodyJson(Info)),
       )
@@ -120,3 +120,45 @@ it.live(
     }),
   30_000,
 )
+
+for (const moveChanges of [undefined, false]) {
+  it.live(
+    `real HTTP move with moveChanges ${moveChanges} changes only Session placement`,
+    () =>
+      Effect.gen(function* () {
+        expectSpawn(import.meta.path)
+        const tmp = yield* Effect.acquireRelease(
+          Effect.promise(() => tmpdir()),
+          (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+        )
+        yield* Effect.promise(() => initRepo(tmp.path))
+        const source = yield* Effect.promise(() => fs.realpath(tmp.path))
+        const copy = `${tmp.path}-move-http-without-changes`
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => fs.rm(copy, { recursive: true, force: true })).pipe(Effect.ignore),
+        )
+        yield* Effect.promise(() => $`git worktree add --detach ${copy} HEAD`.cwd(source).quiet())
+        const destination = yield* Effect.promise(() => fs.realpath(copy))
+        const created = yield* post("/api/session", { location: { directory: source } }).pipe(
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(Info)),
+        )
+        yield* Effect.promise(() => fs.writeFile(path.join(source, "tracked.txt"), "changed\n"))
+        yield* Effect.promise(() => fs.writeFile(path.join(source, "untracked.txt"), "new\n"))
+
+        const moved = yield* post(`/api/session/${created.data.id}/move`, {
+          location: { directory: destination },
+          moveChanges,
+        })
+        expect(moved.status).toBe(204)
+        expect(yield* Effect.promise(() => fs.readFile(path.join(destination, "tracked.txt"), "utf8"))).toBe("initial\n")
+        expect(yield* Effect.promise(() => Bun.file(path.join(destination, "untracked.txt")).exists())).toBe(false)
+        expect(yield* Effect.promise(() => fs.readFile(path.join(source, "tracked.txt"), "utf8"))).toBe("changed\n")
+        expect(yield* Effect.promise(() => fs.readFile(path.join(source, "untracked.txt"), "utf8"))).toBe("new\n")
+        const read = yield* request(`/api/session/${created.data.id}`).pipe(
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(Info)),
+        )
+        expect<string>(read.data.location.directory).toBe(destination)
+      }),
+    30_000,
+  )
+}
