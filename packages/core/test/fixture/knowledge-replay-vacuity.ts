@@ -25,7 +25,9 @@ export async function make(mode: Mode = "positive") {
   const root = mkdtempSync(path.join(tmpdir(), "atlas-replay-vacuity-"))
   return build(root, mode).catch((error: unknown) => {
     rmSync(root, { recursive: true, force: true })
-    throw error
+    const causes = error instanceof AggregateError ? error.errors : [error]
+    const details = causes.map((cause: unknown) => cause instanceof Error ? cause.stack ?? cause.message : String(cause)).join("\n")
+    throw new Error(`Actual vacuity fixture setup failed: ${details.slice(0, 16_384)}${details.length > 16_384 ? "\n[diagnostic truncated]" : ""}`, { cause: error })
   })
 }
 
@@ -48,7 +50,7 @@ async function build(root: string, mode: Mode = "positive") {
   }, astWarmup: true, scip: "actual serialized SCIP fixture; vacuity oracle is the real AST scan" }
   const entry = path.join(root, "entry.ts")
   const grammarOutcomes = await Promise.allSettled(["tree-sitter-typescript.wasm", "tree-sitter-tsx.wasm"].map(async (name) => {
-    const resolved = realpathSync(Bun.resolveSync(`tree-sitter-typescript/${name}`, path.join(packages, "adapter-io")))
+    const resolved = realpathSync(path.join(source, "packages/core/node_modules/tree-sitter-typescript", name))
     const bytes = await Bun.file(resolved).arrayBuffer()
     await Bun.write(path.join(root, "node_modules/tree-sitter-typescript", name), bytes)
     return { name, resolved, sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex") }
@@ -83,6 +85,10 @@ async function build(root: string, mode: Mode = "positive") {
       builder.onResolve({ filter: /^@noble\/hashes\// }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@bufbuild\/protobuf(\/.*)?$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@c4312\/scip$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
+      // Use the same physically installed Core grammar resolver as the qualified negation fixture.
+      builder.onResolve({ filter: /^tree-sitter-typescript\/tree-sitter-(typescript|tsx)\.wasm$/ }, (args) => ({
+        path: Bun.resolveSync(args.path, path.join(source, "packages/core")), external: true,
+      }))
       // The bridge's literal external is already absolute; no bare external rewrite is assumed.
       builder.onResolve({ filter: /^web-tree-sitter$/ }, () => ({ path: "parser", namespace: "atlas-pinned-parser" }))
       builder.onLoad({ filter: /.*/, namespace: "atlas-pinned-parser" }, () => ({
