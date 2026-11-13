@@ -109,7 +109,7 @@ function fixture() {
   const descriptor: MaintenanceCallerDescriptor = {
     schema: "evaluation-maintenance-caller/v1", baselineCandidate: candidateId,
     baselineManifest: ports.manifest, baselineGeneration: context.generation,
-    targetRoot: envelope.targetRoot, targetGeneration: envelope.targetGeneration,
+    targetRoot: envelope.targetRoot, targetGeneration,
     recipes, produced: [],
   }
   const changedDescriptor = (): MaintenanceCallerDescriptor => {
