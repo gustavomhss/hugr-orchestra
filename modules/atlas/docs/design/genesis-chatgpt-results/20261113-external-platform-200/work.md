@@ -102,3 +102,11 @@ A dupla fixa concluiu B-05 sem alteração de corpo; são 16 unidades L2 e 164 f
 B-07 recebeu suporte literal complementar do bloco patchedDependencies de bun.lock, com 19 entradas e sem vínculo para o patch standard-openapi. Um juiz encerrou essa pendência; a unidade ainda aguarda a dupla. Em B-06, o segundo juiz informou indisponibilidade literal das mensagens apesar de retornos de envio sem erro; a retransmissão usa confirmação por parte. Esses estados não foram contados como aprovação.
 
 A observação estática de ownership-input.ts, no baseline, identifica limite de 256.000 bytes para leitura de arquivo. bun.lock tem 489.909 bytes e continua no escopo de 200: seu transporte a esse observador permanece uma lacuna de integração, sem prova de remoção nem tentativa operacional nesta sessão. A fonte de apoio não é entrada adicional da fatia.
+
+## Checkpoint: 184 fontes aceitas
+
+B-06 e B-07 completaram o aceite dos mesmos dois juízes, sem mudança de corpo. São 18 unidades L2 e 184 fontes primárias aceitas; restam 16 fontes em C-06, C-07 e C-08. O manifesto L1 permanece aceito pela dupla. C-06 recebeu uma correção de cardinalidade: App Dock é um módulo lógico distribuído por três pacotes. A condição de recusa de prefixação node: também foi explicitada. O primeiro juiz fechou os dois apontamentos; o segundo está recebendo a versão completa corrigida. C-07 tem um parecer favorável e C-08 está em transporte; nenhum desses estados parciais foi convertido em aceite da dupla.
+
+Duas transcrições de evidência de P171 foram corrigidas e preservadas. A comparação dos bytes capturados confirmou as 68 correspondências de compactação dos patches B-06/B-07; o erro estava nas cópias enviadas, não na fonte ou no corpo. O mesmo juiz recebeu o complemento correto e manteve o aceite. Retorno de envio sem erro, confirmação literal e decisão semântica permanecem registros distintos.
+
+Custódia privada confirmada: `libfile_fde3_f-85c3faf588908191ade2fc93b8e0d583_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `3ca1fb301cc0a4f267fb83ebdaf33e16a1807203f8d4d796e240e5b70055c4cc`. A síntese final L3–L4 ainda não foi liberada. Esta publicação é checkpoint documental, sem execução operacional ou conclusão global.

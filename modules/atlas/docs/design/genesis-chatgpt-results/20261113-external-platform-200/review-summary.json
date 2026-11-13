@@ -8,11 +8,11 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 164,
-    "documentary_pair_accepted": 164,
+    "reviewed_by_both": 184,
+    "documentary_pair_accepted": 184,
     "reviewed_with_material_findings": 0,
-    "awaiting_initial_pair_review": 36,
-    "pending_acceptance": 36
+    "awaiting_initial_pair_review": 16,
+    "pending_acceptance": 16
   },
   "accepted_units": [
     {
@@ -326,6 +326,64 @@
       ]
     },
     {
+      "id": "B-06",
+      "body": {
+        "path": "bodies/b-06.md",
+        "sha256": "08b1000e5f8222e36200858ebc42d7217c07f0e0c38423af4ff4c96ede0a2311",
+        "byte_length": 14318
+      },
+      "source_ids": [
+        "P153",
+        "P154",
+        "P155",
+        "P156",
+        "P157",
+        "P158",
+        "P159"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [],
+      "optional_open": [
+        "O caminho externo providerMetadata.anthropic permanece inferência delimitada; hunk mostra somente inclusão do campo.",
+        "Opção promptCacheKey aparece também nas declarações; comentário de roteamento aparece nos hunks de fonte e JavaScript distribuído."
+      ]
+    },
+    {
+      "id": "B-07",
+      "body": {
+        "path": "bodies/b-07.md",
+        "sha256": "5737f501719e35a5cf4149c5fbdd41cd9e547fd3c7a6feaaedb678960d0392da",
+        "byte_length": 17165
+      },
+      "source_ids": [
+        "P160",
+        "P161",
+        "P162",
+        "P163",
+        "P164",
+        "P165",
+        "P166",
+        "P167",
+        "P168",
+        "P169",
+        "P170",
+        "P171",
+        "P172"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Ausência do patch P166 entre os 19 patchedDependencies vinculada ao recorte integral do lockfile, sem inferir ausência de qualquer aplicador.",
+        "Duas ocorrências de transcrição de P171 foram preservadas e corrigidas; o corpo permaneceu inalterado e o mesmo J2 manteve o aceite documental."
+      ],
+      "optional_open": []
+    },
+    {
       "id": "C-01",
       "body": {
         "path": "bodies/c-01.md",
@@ -474,8 +532,6 @@
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [
-    "B-06",
-    "B-07",
     "C-06",
     "C-07",
     "C-08"
@@ -487,10 +543,10 @@
     "No global PASS. Private original judgments are not published here."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-6ce2d5dd67108191906ca29fdc78d60e_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-85c3faf588908191ade2fc93b8e0d583_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "94908b864d0c6d480d682da0c6ab2bd3e1d3591c09f0c992f3a7071b9b908740",
-    "scope": "Visible originals and source/artifact records through 16 accepted L2 units (164 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
+    "sha256": "3ca1fb301cc0a4f267fb83ebdaf33e16a1807203f8d4d796e240e5b70055c4cc",
+    "scope": "Visible originals and source/artifact records through 18 accepted L2 units (184 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
   },
   "reviewed_pending_units": [],
   "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes."
