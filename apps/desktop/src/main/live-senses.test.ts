@@ -15,6 +15,7 @@ test.each(["permission", "meeting"])("cancels senses held at %s without starting
   const server = Bun.serve({
     port: 0,
     async fetch(request) {
+      await request.json()
       if (new URL(request.url).pathname === "/api/meeting/start") {
         seen.started++
         entered.resolve()
