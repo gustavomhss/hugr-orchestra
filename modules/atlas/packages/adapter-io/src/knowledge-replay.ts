@@ -5,7 +5,10 @@
 //
 //   applied  the fact's bytes carry `seal:'proven'`, its seat is in the row's scope (`actorInScope`), and it
 //            RE-PROVES now against this checkout's index (`reproven`, the same oracle `atlas verify-store`
-//            rides). One batched `commitProjection`, through the raw store, so a replayed row is not logged twice.
+//            rides). The row's key must be that fact's id, and every claim on the row must be that fact's
+//            own sentence. A line can name the fact's hash and still carry another key or extra claims;
+//            those are staged, not applied. One batched `commitProjection`, through the raw store, so a
+//            replayed row is not logged twice.
 //   staged   every other line: a candidate in the staging sidecar (ADR-0008), held for ratify like any mined
 //            candidate. There is no merged-PR check; the ratify door is where a person decides.
 //   missing  the row's bytes are not under `.atlas/blobs/`, or they do not hash to the row's `contentHash`.
@@ -52,7 +55,7 @@ export function replayKnowledge(
   const resolved = pending.filter((e) => restoreBlob(repoPath, disk, e))
   const proven = resolved.filter((e) => {
     const fact = disk.get(e.row.contentHash as Hash) as GroundedFact
-    return fact.seal === "proven" && actorInScope(policy, e.seat, e.row.scope) && reproven(e.row, fact)
+    return fact.seal === "proven" && actorInScope(policy, e.seat, e.row.scope) && boundToFact(e.row, fact) && reproven(e.row, fact)
   })
   const candidates = resolved.filter((e) => !proven.includes(e))
   const applied = proven.length === 0 ? undefined : disk.commitProjection((p) => ({ out: proven.length, next: withRows(p, proven) }))
@@ -98,6 +101,13 @@ function sameRow(held: CurrentNode | undefined, logged: CurrentNode): boolean {
   const { derivedAt: _held, ...heldRest } = held
   const { derivedAt: _logged, ...loggedRest } = logged
   return JSON.stringify(heldRest) === JSON.stringify(loggedRest)
+}
+
+// The fact authenticates its own id and its own sentence. A logged row is not that fact.
+function boundToFact(row: CurrentNode, fact: GroundedFact) {
+  if (typeof fact.id !== "string" || row.nodeKey !== fact.id) return false
+  const sentence = "claimNorm" in fact && typeof fact.claimNorm === "string" ? fact.claimNorm : undefined
+  return row.claims.every((claim) => claim === sentence)
 }
 
 const withRows = (p: StoreProjection, entries: readonly KnowledgeEntry[]): StoreProjection => ({
