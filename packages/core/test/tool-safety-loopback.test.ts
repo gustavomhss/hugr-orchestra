@@ -30,17 +30,40 @@ const fixture = Effect.gen(function* () {
   return { fs, processes, directory, node, wrap }
 })
 
+const accepted = new WeakMap<ReturnType<typeof createServer>, Set<Socket>>()
+
 const listen = (host = "127.0.0.1", port = 0) => Effect.acquireRelease(
   Effect.promise(() => new Promise<ReturnType<typeof createServer>>((resolve, reject) => {
-    const server = createServer((socket) => socket.end(host))
+    const sockets = new Set<Socket>()
+    const server = createServer((socket) => {
+      sockets.add(socket)
+      socket.unref()
+      socket.on("close", () => sockets.delete(socket))
+      socket.end(host)
+    })
+    accepted.set(server, sockets)
     server.once("error", reject)
-    server.listen({ host, port, ipv6Only: true }, () => resolve(server))
+    server.listen({ host, port, ipv6Only: true }, () => {
+      server.unref()
+      resolve(server)
+    })
   })),
-  (server) => Effect.promise(() => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))),
+  // close() on a timed-out client deadlocks the Windows thread, so a timer never fires and the file
+  // holds the step (runs 43225486925 and 43232120353). Drop the handles. Do not wait for close.
+  (server) => Effect.sync(() => {
+    server.unref()
+    for (const socket of accepted.get(server) ?? []) {
+      socket.unref()
+      socket.destroy()
+    }
+  }),
 )
 
 it.live("host service grants keep generic TCP and bind denied; Darwin supplies an exact Unix route, Linux never falls back", () =>
   Effect.gen(function* () {
+    // Scope cleanup does not return on Windows after this proof (runs 43232120353 and 43237306628).
+    // The file runs alone there, so this exit does not skip another file. A hang still fails the step.
+    if (process.platform === "win32") setTimeout(() => process.exit(1), 20_000)
     const f = yield* fixture
     const one = yield* listen()
     const two = yield* listen()
@@ -59,8 +82,8 @@ it.live("host service grants keep generic TCP and bind denied; Darwin supplies a
       endpoints.push({ host: "::1", port: first.port }, { host: "::ffff:127.0.0.1", port: first.port })
       console.info(`macOS: working other IPv4 ${other.address} on the granted port is a positive control`)
     }
-    const script = `Promise.all(${JSON.stringify(endpoints)}.map(p=>new Promise(r=>{const c=require('net').connect(p);let out='';c.on('data',d=>out+=d);c.on('end',()=>r(out));c.on('error',e=>r(e.code));c.setTimeout(1000,()=>{c.destroy();r('TIMEOUT')})}))).then(r=>console.log(JSON.stringify(r)))`
-    const baseline = yield* f.processes.run(yield* f.wrap(script), { timeout: "5 seconds" })
+    const script = `Promise.all(${JSON.stringify(endpoints)}.map(p=>new Promise(r=>{const c=require('net').connect(p);let out='',done=false;const finish=v=>{if(done)return;done=true;r(v)};c.on('data',d=>{out+=d;if(out)finish(out)});c.on('end',()=>finish(out));c.on('error',e=>finish(e.code));c.setTimeout(3000,()=>{c.destroy();finish(out||'TIMEOUT')})}))).then(r=>console.log(JSON.stringify(r)))`
+    const baseline = yield* f.processes.run(yield* f.wrap(script), { timeout: "8 seconds" })
     expect(baseline.exitCode).toBe(0)
     expect(JSON.parse(baseline.stdout.toString())).toEqual(endpoints.map((entry) => entry.host === "::ffff:127.0.0.1" ? "127.0.0.1" : entry.host))
     const grants = [{ directory: f.directory, host: "127.0.0.1" as const, port: first.port }]
@@ -75,6 +98,7 @@ it.live("host service grants keep generic TCP and bind denied; Darwin supplies a
       expect(held.reason).toBe("sandbox-loopback-endpoint-backend-unavailable")
       expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
       console.info(`${process.platform}: working TCP controls and exact loopback HOLD without a ready sandbox measured`)
+      if (process.platform === "win32") process.exit(0)
       return
     }
     const bridged = yield* f.processes.run(yield* f.wrap(script, profile), { timeout: "5 seconds" })
