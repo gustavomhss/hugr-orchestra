@@ -19,8 +19,8 @@ export const ServerRowMenu: Component<{
     <ServerRowMenuView
       server={props.server}
       labels={serverMenuLabels(language)}
-      canDefault={props.controller.canDefault()}
-      isDefault={props.controller.defaultKey() === key}
+      canDefault={props.controller.canDefault() && props.controller.defaultKnown()}
+      isDefault={props.controller.defaultKnown() && props.controller.defaultKey() === key}
       onEdit={props.onEdit}
       onSetDefault={() => props.controller.setDefault(key)}
       onRemoveDefault={() => props.controller.setDefault(null)}

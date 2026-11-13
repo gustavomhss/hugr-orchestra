@@ -287,7 +287,7 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     },
 
     getDefaultServer: async () => {
-      const url = await window.api.getDefaultServerUrl().catch(() => null)
+      const url = await window.api.getDefaultServerUrl()
       if (!url) return null
       return ServerConnection.Key.make(url)
     },
